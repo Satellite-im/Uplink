@@ -88,3 +88,12 @@
 	display: inline-flex;
 	flex-direction: column;
 }
+
+.pin-indicator {
+	position: absolute; 
+	right: -6px; 
+	top: -6px; 
+	height: 12px; 
+	width: 12px; 
+	color: var(--text-color);
+}

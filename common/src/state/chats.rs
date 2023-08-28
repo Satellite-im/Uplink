@@ -78,6 +78,10 @@ pub struct ChatBase<T> {
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
     pub files_attached_to_send: Vec<PathBuf>,
+    #[serde(skip)]
+    pub pinned_messages: Vec<raygun::Message>,
+    #[serde(skip, default)]
+    pub scroll_to: Option<Uuid>,
 }
 
 impl Chat {

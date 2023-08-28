@@ -11,6 +11,7 @@ use kit::elements::{
     Appearance,
 };
 
+use crate::utils::format_timestamp::format_timestamp_timeago;
 use common::state::{Action, State};
 use common::{
     icons::outline::Shape as Icon,
@@ -18,8 +19,6 @@ use common::{
     WARP_CMD_CH,
 };
 use uuid::Uuid;
-
-use crate::utils::format_timestamp::format_timestamp_timeago;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -45,6 +44,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let active_call_answer_time = active_call.as_ref().map(|x| x.answer_time);
     let scope_id = cx.scope_id();
     let update_fn = cx.schedule_update_any();
+
     use_future(
         cx,
         (&scope_id, &active_call_id, &active_call_answer_time),
@@ -138,7 +138,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                                 log::error!("warp_runner failed to unmute self: {e}");
                             }
                         }
-                    }
+                    } // TODO: Method to end call before a connection is made
                 }
             }
         }
@@ -201,6 +201,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                     ch.send(CallDialogCmd::Hangup(call.id));
                 },
             }
+
         }
     }))
 }

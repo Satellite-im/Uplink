@@ -24,7 +24,7 @@ use common::{
     language::get_local_text_args_builder,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
-        ui::EmojiDestination, GroupedMessage, MessageGroup,
+        ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -35,7 +35,6 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::use_eval;
 use rfd::FileDialog;
 
 use uuid::Uuid;
@@ -43,7 +42,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, ReactionState},
+    raygun::{self, PinState, ReactionState},
 };
 
 use crate::{
@@ -85,9 +84,16 @@ enum MessagesCommand {
         to_fetch: usize,
         current_len: usize,
     },
+    Pin(raygun::Message),
 }
 
 type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
+
+struct NewelyFetchedMessages {
+    conversation_id: Uuid,
+    messages: Vec<ui_adapter::Message>,
+    has_more: bool,
+}
 
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
@@ -102,18 +108,24 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
-        use_ref(cx, || None);
+    let newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    if let Some((id, m, has_more)) = newely_fetched_messages.write_silent().take() {
-        state.write().update_chat_messages(id, m);
+    if let Some(NewelyFetchedMessages {
+        conversation_id,
+        messages,
+        has_more,
+    }) = newely_fetched_messages.write_silent().take()
+    {
+        state
+            .write()
+            .update_chat_messages(conversation_id, messages);
         if !has_more {
-            log::debug!("finished loading chat: {id}");
-            state.write().finished_loading_chat(id);
+            log::debug!("finished loading chat: {conversation_id}");
+            state.write().finished_loading_chat(conversation_id);
         }
     }
 
@@ -134,6 +146,21 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
+    use_effect(cx, &data.active_chat.scroll_to, |_| {
+        to_owned![state, eval, currently_active];
+        async move {
+            let currently_active = match currently_active {
+                Some(r) => r,
+                None => return,
+            };
+            if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
+                let _ = eval(
+                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
+                );
+            }
+        }
+    });
+
     use_effect(cx, &data.active_chat.id, |id| {
         to_owned![eval, prev_chat_id];
         async move {
@@ -143,14 +170,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
                 let script = include_str!("../scroll_to_bottom.js");
-                eval(script.to_string());
+                _ = eval(script);
             }
-            eval(SETUP_CONTEXT_PARENT.to_string());
+            _ = eval(SETUP_CONTEXT_PARENT);
         }
     });
 
     let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![newely_fetched_messages, pending_downloads];
+        to_owned![state, newely_fetched_messages, pending_downloads];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -168,7 +195,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),
                             reaction_state,
-                            emoji,
+                            emoji: emoji.clone(),
                             rsp: tx,
                         })) {
                             log::error!("failed to send warp command: {}", e);
@@ -176,8 +203,15 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
 
                         let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            // failed to add/remove reaction
+                        match res {
+                            Ok(_) => state.write().mutate(Action::AddReaction(
+                                message.conversation_id(),
+                                message.id(),
+                                emoji,
+                            )),
+                            Err(e) => {
+                                log::error!("failed to add/remove reaction: {}", e);
+                            }
                         }
                     }
                     MessagesCommand::DeleteMessage { conv_id, msg_id } => {
@@ -276,12 +310,38 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
 
                         match rx.await.expect("command canceled") {
-                            Ok((m, has_more)) => {
-                                newely_fetched_messages.set(Some((conv_id, m, has_more)));
+                            Ok((messages, has_more)) => {
+                                newely_fetched_messages.set(Some(NewelyFetchedMessages {
+                                    conversation_id: conv_id,
+                                    messages,
+                                    has_more,
+                                }));
                             }
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
                             }
+                        }
+                    }
+                    MessagesCommand::Pin(msg) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let pinstate = if msg.pinned() {
+                            PinState::Unpin
+                        } else {
+                            PinState::Pin
+                        };
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
+                            conversation_id: msg.conversation_id(),
+                            message_id: msg.id(),
+                            pinstate,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to pin message: {}", e);
                         }
                     }
                 }
@@ -322,7 +382,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             span {
                 rsx!(
                     msg_container_end,
-                    render_message_groups{
+                    render_message_groups {
                         groups: group_messages(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
@@ -557,17 +617,19 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     cx.render(rsx!(
         blocked_element,
         MessageGroup {
-            user_image: cx.render(rsx!(UserImage {
+            user_image: render!(UserImage {
                 image: sender.profile_picture(),
                 platform: sender.platform().into(),
                 status: sender_status,
                 on_press: move |e| {
                     cx.props.on_context_menu_action.call((e, sender.to_owned()));
-                }
+                },
                 oncontextmenu: move |e| {
-                    cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+                    cx.props
+                        .on_context_menu_action
+                        .call((e, sender_clone.to_owned()));
                 }
-            })),
+            }),
             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
             sender: sender_name.clone(),
             remote: group.remote,
@@ -631,15 +693,15 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
     let conversation_id = message.read().inner.conversation_id();
 
     // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
-    let is_editing = cx
-        .props
-        .edit_msg
+    let is_editing = edit_msg
         .get()
-        .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
+        .map(|id| !cx.props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
-    let context_key = format!("message-{}-{}", &message.read().key, is_editing);
-    let message_key = format!("{}-{:?}", &message.read().key, is_editing);
-    let msg_uuid = message.read().inner.id();
+    let message_key = format!("{}-{:?}", &message.key, is_editing);
+    let message_id = format!("{}-{:?}", &message.inner.id(), is_editing);
+    let context_key = format!("message-{}", &message_id);
+    let msg_uuid = message.inner.id();
+    let conversation_id = message.inner.conversation_id();
 
     if cx.props.pending {
         return cx.render(rsx!(render_message {
@@ -683,7 +745,25 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
                         },
                         apply_to: EmojiDestination::Message(conversation_id, msg_uuid),
                     }
-                }
+                },
+                ContextItem {
+                    icon: Icon::Pin,
+                    aria_label: "messages-pin".into(),
+                    text: if message.inner.pinned() {get_local_text("messages.unpin")} else {get_local_text("messages.pin")},
+                    onpress: move |_| {
+                        log::trace!("pinning message: {}", message.inner.id());
+                        if state.read().reached_max_pinned(&message.inner.conversation_id()) {
+                            state.write().mutate(Action::AddToastNotification(ToastNotification::init(
+                                "".into(),
+                                get_local_text("messages.pinned-max"),
+                                None,
+                                3,
+                            )));
+                        } else {
+                            ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                        }
+                    }
+                },
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
                     aria_label: "messages-reply".into(),
@@ -821,7 +901,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         //             class: "{reactions_class} pointer",
         //             tabindex: "0",
         //             onmouseleave: |_| {
-        //                 #[cfg(not(target_os = "macos"))] 
+        //                 #[cfg(not(target_os = "macos"))]
         //                 {
         //                     eval(focus_script.to_string());
         //                 }
@@ -876,6 +956,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     ch.send(MessagesCommand::React((user_did.clone(), message.read().inner.clone(), emoji)));
                 },
                 pending: cx.props.pending,
+                pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {

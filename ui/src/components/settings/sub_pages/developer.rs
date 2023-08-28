@@ -143,7 +143,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentChartBar,
                     onpress: move |_| {
-                        log::debug!("{:#?}", state.read());
+                        log::debug!("{:#?}", &*state.read());
                     }
                 }
             },

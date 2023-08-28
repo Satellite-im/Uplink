@@ -2,11 +2,11 @@ use std::{collections::HashMap, path::PathBuf, rc::Weak};
 
 use derive_more::Display;
 
+use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
-use wry::webview::WebView;
 
 use crate::warp_runner::ui_adapter;
 
@@ -57,6 +57,8 @@ pub enum Action<'a> {
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]
     AnswerCall(Uuid),
+    #[display(fmt = "RejectCall")]
+    RejectCall(Uuid),
     /// creates a Call struct and joins the call
     #[display(fmt = "OfferCall")]
     OfferCall(call::Call),
@@ -68,7 +70,7 @@ pub enum Action<'a> {
     SetId(Identity),
     /// adds an overlay. currently only used for demonstration purposes
     #[display(fmt = "AddOverlay")]
-    AddOverlay(Weak<WebView>),
+    AddOverlay(Weak<DesktopService>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
     SetCallPopout(WindowId),

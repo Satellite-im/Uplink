@@ -11,6 +11,7 @@ use warp::logging::tracing::log;
 
 use once_cell::sync::Lazy;
 use tokio::sync::{
+    broadcast,
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex,
 };
@@ -30,16 +31,12 @@ pub enum NotificationAction {
 }
 
 pub struct NotificationChannel {
-    pub tx: UnboundedSender<NotificationAction>,
-    pub rx: Arc<Mutex<UnboundedReceiver<NotificationAction>>>,
+    pub tx: broadcast::Sender<NotificationAction>,
 }
 
 pub static NOTIFICATION_LISTENER: Lazy<NotificationChannel> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    NotificationChannel {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
+    let (tx, _) = tokio::sync::broadcast::channel(128);
+    NotificationChannel { tx }
 });
 
 pub struct FocusChannel {

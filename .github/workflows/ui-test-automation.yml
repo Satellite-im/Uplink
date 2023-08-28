@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Checkout Repo 🔖
         uses: actions/checkout@v3
@@ -96,7 +96,7 @@ jobs:
           cp -r ./target/release/emoji_selector.dll ./ui/extra/extensions/
           cp -r ./target/release/emoji_selector.dll.exp ./ui/extra/extensions/
           cp -r ./target/release/emoji_selector.dll.lib ./ui/extra/extensions/
-          cp -r ./target/release/emoji_selector.dll.pdb ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.pdb ./ui/extra/extensions/
 
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
@@ -127,7 +127,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout working directory 🔖
@@ -558,9 +558,9 @@ jobs:
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
-            Uplink-windows-latest
+            Uplink-Windows
             uplink-windows-assets
-            Uplink-macos-latest
+            app-macos
             test-report-macos-ci
             test-report-windows-ci
             test-report-windows-chats

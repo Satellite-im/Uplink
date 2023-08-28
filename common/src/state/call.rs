@@ -2,9 +2,9 @@ use std::collections::HashSet;
 
 use anyhow::bail;
 use chrono::{DateTime, Local};
+use dioxus_desktop::wry::application::window::WindowId;
 use uuid::Uuid;
 use warp::crypto::DID;
-use wry::application::window::WindowId;
 
 #[derive(Clone, Default)]
 pub struct CallInfo {
@@ -86,6 +86,10 @@ impl CallInfo {
         self.pending_calls
             .push(Call::new(id, conversation_id, participants));
         Ok(())
+    }
+
+    pub fn remove_pending_call(&mut self, id: Uuid) {
+        self.pending_calls.retain(|x| x.id != id);
     }
 
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {

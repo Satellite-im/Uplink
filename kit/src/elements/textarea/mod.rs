@@ -52,7 +52,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
-    let eval = dioxus_desktop::use_eval(cx);
+    let eval = use_eval(cx);
 
     let Props {
         id: _,
@@ -75,16 +75,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.id.clone()
     };
     let id_char_counter = id.clone();
-
-    let height_script = include_str!("./update_input_height.js");
     let focus_script = if cx.props.ignore_focus {
         String::new()
     } else {
         include_str!("./focus.js").replace("$UUID", &id)
     };
 
-    eval(height_script.to_string());
-    eval(focus_script.clone());
+    let _ = eval(&focus_script);
 
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
@@ -101,7 +98,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
 
     if *show_char_counter {
-        eval(update_char_counter_script);
+        let _ = eval(&update_char_counter_script);
     }
 
     let cv2 = current_val.clone();
@@ -143,7 +140,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
                         if enter_pressed && !shift_key_as_modifier {
                             if *show_char_counter {
-                                eval(clear_counter_script.to_string());
+                                let _ = eval(&clear_counter_script);
                             }
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         }

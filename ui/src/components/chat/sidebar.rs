@@ -1,17 +1,19 @@
+use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::{self, identity_search_result, Action, State};
+use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
+use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::invisible_closer::InvisibleCloser;
 use kit::components::message::markdown;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
         indicator::{Platform, Status},
-        nav::Nav,
         user::User,
         user_image::UserImage,
         user_image_group::UserImageGroup,
@@ -35,7 +37,8 @@ use warp::{
 
 use crate::components::chat::create_group::CreateGroup;
 use crate::components::media::remote_control::RemoteControls;
-use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
+use crate::utils::build_participants;
+use crate::UplinkRoute;
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
@@ -43,51 +46,281 @@ enum MessagesCommand {
     DeleteConversation { conv_id: Uuid },
 }
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
-
 #[derive(Props)]
 pub struct SearchProps<'a> {
-    // username, did
+    search_typed_chars: UseRef<String>,
+    search_friends_is_focused: UseRef<bool>,
     search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
+    friends_identities: UseState<Vec<Identity>>,
+    chats: UseState<Vec<Chat>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
+
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
-    if cx.props.identities.get().is_empty() {
+    let state = use_shared_state::<State>(cx)?;
+    if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
-    let mut identities = cx.props.identities.get().clone();
-    identities.sort_by_key(|entry| entry.display_name.clone());
+
+    let mut friends_identities = cx.props.friends_identities.get().clone();
+    let chats = cx.props.chats.get().clone();
+
+    friends_identities.sort_by_key(|identity| identity.username());
+
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
+            onblur: |_| {
+                *cx.props.search_friends_is_focused.write() = false;
+            },
             onmouseenter: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = true;
             },
             onmouseleave: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
-            identities.iter().cloned().enumerate().map(|(k, entry)| {
+            if !friends_identities.is_empty() {
                 rsx!(
-                    a {
-                        class: "search-friends-dropdown",
-                        aria_label: "search-friends-result",
-                        href: "#{entry.display_name}",
+                    div {
+                        id: "users-searchdropdown-label",
+                        class: "users-groups-label",
+                        aria_label: "users-groups-label",
+                        p {
+                            get_local_text("uplink.users")
+                        }
+                    })
+            }
+            friends_identities.iter().cloned().map(|identity| {
+                let username = identity.username();
+                let did = identity.did_key();
+                let did2 = did.clone();
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
+                let end = start + search_typed_chars.len();
+                let blocked_friends: Vec<DID> = state
+                    .read()
+                    .blocked_fr_identities()
+                    .iter()
+                    .map(|f| f.did_key())
+                    .collect();
+
+                rsx!(
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "search-result-user",
+                        opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
                         prevent_default: "onclick",
-                        rel: "noopener noreferrer",
                         onclick: move |evt| {
-                            evt.stop_propagation();
-                            cx.props.onclick.call(entry.id.clone());
+                            if !blocked_friends.contains(&did2) {
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                            }
                         },
-                        "{entry.display_name}"
-                    },
-                    if (cx.props.identities.get().len() - 1) != k {
-                        rsx!(div { class:"border", })
+                        UserImage {
+                            platform: identity.platform().into(),
+                            status: identity.identity_status().into(),
+                            image: identity.profile_picture()
+                        },
+                        div {
+                            class: "search-friends-dropdown-name",
+                            aria_label: "search-friends-dropdown-name",
+                            rsx!(
+                                span { &username[0..start] },
+                                span {
+                                    class: "highlight-search-typed-chars",
+                                    aria_label: "highlight-search-typed-chars",
+                                    &username[start..end]
+                                },
+                                span {
+                                    aria_label: "remaining-match-search",
+                                    &username[end..]
+                                },
+                            )
+                        }
+                        if blocked_friends.contains(&did2) {
+                            rsx!(
+                                div {
+                                    padding_right: "32px",
+                                    aria_label: "search-result-blocked-user",
+                                    IconElement {
+                                        size: 40,
+                                        fill: "var(--text-color-muted)",
+                                        icon: Icon::NoSymbol,
+                                    },
+                                }
+                            )
+                        }
                     }
+                )
+            })
+            if !chats.is_empty() && !friends_identities.is_empty() {
+                rsx!(div { class:"border", })
+            }
+            if !chats.is_empty() {
+                rsx!(
+                    div {
+                        id: "groups-searchdropdown-label",
+                        class: "users-groups-label",
+                        aria_label: "users-groups-label",
+                        p {
+                            get_local_text("uplink.groups")
+                        }
+                    }
+                )
+            }
+            chats.iter().cloned().map(|chat| {
+                let id = chat.id;
+                let participants = state.read().chat_participants(&chat);
+                let participants2 = participants.clone();
+
+                let other_participants_names = State::join_usernames(&participants);
+                let conversation_title = match chat.conversation_name.as_ref() {
+                    Some(n) => n.clone(),
+                    None => other_participants_names,
+                };
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let text_to_find = search_typed_chars.to_lowercase();
+                let search_typed_chars2 = search_typed_chars.clone();
+
+                rsx!(
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "search-result-group",
+                        prevent_default: "onclick",
+                        onclick: move |evt|  {
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
+                        },
+                        rsx! (
+                            div {
+                                class: "user-image-group",
+                                div {
+                                    aria_label: "user-image-group-wrap",
+                                    class: "user-image-group-wrap group",
+                                    rsx!(
+                                        UserImageGroup {
+                                            loading: false,
+                                            participants: build_participants(&participants),
+                                        }
+                                    )
+                                },
+                            }
+                        div {
+                                class: "search-friends-dropdown-name",
+                                aria_label: "search-friends-dropdown-name",
+                                if let Some(start) = conversation_title.to_lowercase().find(&text_to_find) {
+                                    let end = start + search_typed_chars2.len();
+                                    rsx!(
+                                        span { &conversation_title[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars",
+                                            aria_label: "highlight-search-typed-chars",
+                                            &conversation_title[start..end]
+                                        },
+                                        span {
+                                            aria_label: "remaining-match-search",
+                                            &conversation_title[end..]
+                                        },
+                                    )
+                                } else {
+                                    rsx!(span { conversation_title})
+                                }
+                            }
+                        )
+                    }
+                    if !participants2.is_empty() &&
+                    participants2.iter().any(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
+                    &&
+                    identity.did_key() != state.read().did_key()
+                ) {
+                        rsx!(
+                            div {
+                                id: "members-searchdropdown-label",
+                                aria_label: "members-searchdropdown-label",
+                                padding_left: "48px",
+                                padding_top: "4px",
+                                p {
+                                    color: "var(--text-color)",
+                                    font_size: "12px",
+                                    get_local_text("uplink.members")
+                                }
+                            }
+                        )
+                    },
+                    participants2.iter().cloned()
+                    .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
+                    &&
+                    identity.did_key() != state.read().did_key()
+                )
+                    .map(|identity| {
+                        let typed_chars = search_typed_chars.clone();
+                        let username = identity.username();
+                        let did = identity.did_key();
+                        let did2 = did.clone();
+                        let start = username.to_lowercase().find(&typed_chars.to_lowercase()).unwrap_or(0);
+                        let end = start + typed_chars.len();
+                        let blocked_friends: Vec<DID> = state
+                        .read()
+                        .blocked_fr_identities()
+                        .iter()
+                        .map(|f| f.did_key())
+                        .collect();
+
+
+                        rsx!(
+                            div {
+                                class: "identity-header-sidebar-participants-in-group",
+                                opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
+                                aria_label: "search-result-participant-in-group",
+                                prevent_default: "onclick",
+                                onclick: move |evt| {
+                                    if !blocked_friends.contains(&did2) {
+                                        evt.stop_propagation();
+                                        *cx.props.search_friends_is_focused.write_silent() = false;
+                                        cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                    }
+                                },
+                                UserImage {
+                                    platform: identity.platform().into(),
+                                    status: identity.identity_status().into(),
+                                    image: identity.profile_picture()
+                                },
+                                div {
+                                    class: "search-friends-dropdown-name",
+                                    aria_label: "search-friends-dropdown-name",
+                                    rsx!(
+                                        span { &username[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars",
+                                            aria_label: "highlight-search-typed-chars",
+                                            &username[start..end]
+                                        },
+                                        span {
+                                            aria_label: "remaining-match-search",
+                                            &username[end..]
+                                        },
+                                    )
+                                }
+                                if blocked_friends.contains(&did2) {
+                                    rsx!(
+                                        div {
+                                            padding_right: "32px",
+                                            aria_label: "search-result-blocked-user-in-group",
+                                            IconElement {
+                                                size: 40,
+                                                fill: "var(--text-color-muted)",
+                                                icon: Icon::NoSymbol,
+                                            },
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    })
                 )
             })
         }
@@ -95,76 +328,27 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope<Props>) -> Element {
+pub fn Sidebar(cx: Scope) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
+    let search_results_friends_identities = use_state(cx, Vec::<Identity>::new);
+    let search_results_chats = use_state(cx, Vec::<Chat>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
-    let router = use_router(cx);
+    let router = use_navigator(cx);
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
+    let search_friends_is_focused = use_ref(cx, || false);
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
-        if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-            router.replace_route(UPLINK_ROUTES.chat, None, None);
-        }
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![chat_with, show_delete_conversation];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    MessagesCommand::CreateConversation { recipient } => {
-                        // if not, create the chat
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                recipient,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-
-                        match rsp {
-                            Ok(c) => chat_with.set(Some(c)),
-                            Err(e) => {
-                                log::error!("failed to create conversation: {}", e);
-                                continue;
-                            }
-                        };
-                    }
-                    MessagesCommand::DeleteConversation { conv_id } => {
-                        *show_delete_conversation.write_silent() = false;
-                        let (tx, rx) = futures::channel::oneshot::channel();
-
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
-                                conv_id,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            log::error!("failed to delete conversation");
-                        }
-                        *show_delete_conversation.write_silent() = true;
-                    }
-                };
-            }
-        }
+    let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
+        conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
     let select_identifier = move |id: identity_search_result::Identifier| match id {
@@ -185,14 +369,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, favorites, active_media_chat) = if state.read().initialized {
-        (
-            state.read().chats_sidebar(),
-            state.read().chats_favorites(),
-            state.read().get_active_chat(),
-        )
+    let (sidebar_chats, active_media_chat) = if state.read().initialized {
+        (state.read().chats_sidebar(), state.read().get_active_chat())
     } else {
-        (vec![], vec![], None)
+        (vec![], None)
     };
 
     let show_create_group = use_state(cx, || false);
@@ -204,6 +384,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         .filter(|ext| ext.details().location == extensions::Location::Sidebar)
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
+    let search_typed_chars = use_ref(cx, String::new);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -224,10 +405,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             clear_on_submit: true,
                             ..Options::default()
                         },
-                        onreturn: move |(v, _, _): (String, _, _)| {
-                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
+                        onreturn: move |(v, _, key): (String, _, Code)| {
+                            if key == Code::Escape {
+                                *search_friends_is_focused.write() = false;
+                            }
+                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i))  {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_identifier(entry.id.clone());
+                                    if !*search_friends_is_focused.read() {
+                                        select_identifier(entry.id.clone());
+                                    }
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -235,33 +421,35 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         onchange: move |(v, _): (String, _)| {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
+                                *search_friends_is_focused.write_silent() = false;
                             } else {
-                                let mut friends = state.read().search_identities(&v);
-                                let chats = state.read().search_group_chats(&v);
+                                let (mut friends_entries, friends_identities) = state.read().search_identities(&v);
+                                let (chats_entries, chats) = state.read().search_group_chats(&v);
+                                friends_entries.extend(chats_entries);
                                 // todo: sort this somehow
-                                friends.extend(chats);
-                                search_results.set(friends);
+                                search_results.set(friends_entries);
+                                search_results_friends_identities.set(friends_identities);
+                                search_results_chats.set(chats);
+                                *search_typed_chars.write_silent() = v;
+                                *search_friends_is_focused.write_silent() = true;
                                 on_search_dropdown_hover.with_mut(|i| *i = false);
-
                             }
                         },
                     }
                 }
-            ))
+            )),
             with_nav: cx.render(rsx!(
-                Nav {
-                    routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
-                    onnavigate: move |r| {
+                crate::AppNav {
+                    active: UplinkRoute::ChatLayout{},
+                    onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
                         if state.read().ui.is_minimal_view() {
                             state.write().mutate(Action::SidebarHidden(true));
                         }
-                        router.replace_route(r, None, None);
                     }
-                },
+                }
             )),
             with_call_controls: cx.render(rsx!(
                 active_media_chat.is_some().then(|| rsx!(
@@ -275,90 +463,26 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
             )),
-            search_friends{
-                identities: search_results.clone(),
-                search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |identifier: identity_search_result::Identifier| {
-                    select_identifier(identifier);
-                    search_results.set(Vec::new());
-                    reset_searchbar.set(true);
-                    on_search_dropdown_hover.with_mut(|i| *i = false);
-                }
+            if *search_friends_is_focused.read() {
+                render! { search_friends {
+                    search_typed_chars: search_typed_chars.clone(),
+                    search_friends_is_focused: search_friends_is_focused.clone(),
+                    identities: search_results.clone(),
+                    friends_identities: search_results_friends_identities.clone(),
+                    chats: search_results_chats.clone(),
+                    search_dropdown_hover: on_search_dropdown_hover.clone(),
+                    onclick: move |identifier: identity_search_result::Identifier| {
+                        select_identifier(identifier);
+                        search_results.set(Vec::new());
+                        reset_searchbar.set(true);
+                        on_search_dropdown_hover.with_mut(|i| *i = false);
+                    }
+                }}
             },
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
             },
-            // Only display favorites if we have some.
-            (!favorites.is_empty()).then(|| rsx!(
-                div {
-                    id: "favorites",
-                    aria_label: "Favorites",
-                    Label {
-                        text: get_local_text("favorites.favorites"),
-                        aria_label: "favorites-label".into(),
-                    },
-                    div {
-                        class: "horizontally-scrollable",
-                        favorites.iter().cloned().map(|chat| {
-                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
-                            let favorites_chat = chat.clone();
-                            let remove_favorite = chat.clone();
-                            let chat_id = chat.id;
-                            let participants = state.read().chat_participants(&chat);
-                            let other_participants: Vec<_> = state.read().remove_self(&participants);
-                            let participants_name = match chat.conversation_name {
-                                Some(name) => name,
-                                None => State::join_usernames(&other_participants)
-                            };
-                            rsx! (
-                                ContextMenu {
-                                    key: "{chat_id}-favorite",
-                                    id: chat_id.to_string(),
-                                    items: cx.render(rsx!(
-                                        ContextItem {
-                                            aria_label: "favorites-chat".into(),
-                                            icon: Icon::ChatBubbleBottomCenterText,
-                                            text: get_local_text("uplink.chat"),
-                                            onpress: move |_| {
-                                                if state.read().ui.is_minimal_view() {
-                                                    state.write().mutate(Action::SidebarHidden(true));
-                                                }
-                                                state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                                }
-                                            }
-                                        },
-                                        ContextItem {
-                                            aria_label: "favorites-remove".into(),
-                                            icon: Icon::HeartSlash,
-                                            text: get_local_text("favorites.remove"),
-                                            onpress: move |_| {
-                                                state.write().mutate(Action::ToggleFavorite(&remove_favorite.id));
-                                            }
-                                        }
-                                    )),
-                                    UserImageGroup {
-                                        participants: build_participants(&other_participants),
-                                        with_username: participants_name,
-                                        typing: users_typing,
-                                        onpress: move |_| {
-                                            if state.read().ui.is_minimal_view() {
-                                                state.write().mutate(Action::SidebarHidden(true));
-                                            }
-                                            state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                            }
-                                        }
-                                    }
-                                }
-                            )
-                        })
-                    }
-                }
-            )),
             div {
                 id: "chats",
                 aria_label: "Chats",
@@ -387,6 +511,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     show_create_group.then(|| rsx!(
                         CreateGroup {
                             oncreate: move |_| {
+                                show_create_group.set(false);
+                            }
+                        }
+                        InvisibleCloser {
+                            onclose: move |_| {
                                 show_create_group.set(false);
                             }
                         }
@@ -419,7 +548,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name? 
+                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                     let participants_name = match chat.conversation_name {
                         Some(name) => name,
                         None => State::join_usernames(&other_participants)
@@ -474,10 +603,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
-                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")} 
-                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")} 
+                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")}
+                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")}
                                             else {get_local_text("uplink.delete-conversation")},
-                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()} 
+                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()}
                                             else if is_group_conv && !is_creator {"chats-leave-group".into()}
                                             else {"chats-delete-conversation".into()},
                                             onpress: move |_| {
@@ -510,12 +639,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
+
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
-                                    if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                    }
+                                    router.replace(UplinkRoute::ChatLayout {  });
                                 }
                             }
                         }
@@ -565,4 +693,55 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             },
         }
     ))
+}
+
+async fn conversation_coroutine(
+    mut rx: UnboundedReceiver<MessagesCommand>,
+    chat_with: UseState<Option<Uuid>>,
+    show_delete_conversation: UseRef<bool>,
+) {
+    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+    while let Some(cmd) = rx.next().await {
+        match cmd {
+            MessagesCommand::CreateConversation { recipient } => {
+                // if not, create the chat
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                    recipient,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                match rsp {
+                    Ok(c) => chat_with.set(Some(c)),
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+            }
+            MessagesCommand::DeleteConversation { conv_id } => {
+                *show_delete_conversation.write_silent() = false;
+                let (tx, rx) = futures::channel::oneshot::channel();
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
+                    conv_id,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let res = rx.await.expect("command canceled");
+                if res.is_err() {
+                    log::error!("failed to delete conversation");
+                }
+                *show_delete_conversation.write_silent() = true;
+            }
+        };
+    }
 }

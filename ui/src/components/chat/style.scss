@@ -8,6 +8,7 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  padding-right: var(--gap);
   label {
     align-self: center;
   }
@@ -23,7 +24,6 @@
   .sidebar-chats-header {
     display: inline-flex;
     justify-content: space-between;
-    margin-right: 8px;
 
     .btn {
       height: var(--height-input-less);
@@ -68,19 +68,30 @@
 }
 
 #create-group {
+  margin-left: 315px;
+  margin-top: 100px;
+  z-index: 10;
+  top: 0;
+  left: 0;
   color: var(--text-color);
-  border-top: 1px solid var(--border-subtle-color);
-  border-bottom: 1px solid var(--border-subtle-color);
-  padding-bottom: var(--padding);
   display: inline-flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: var(--gap-less);
+  position: absolute;
+  background-color: var(--background);
+  z-index: 2;
+  width: fit-content;
+  height: calc(var(--width-sidebar) * 1.3);
+  border-radius: var(--border-radius);
+  padding: var(--gap);
+  border: 1px solid var(--border-subtle-color);
+  right: calc(var(--width-sidebar) * -1);
 
   .friend-list {
     display: inline-flex;
     flex-direction: column;
     gap: 0;
-    max-height: 20vh;
+    min-height: 0;
     overflow: scroll;
     .friend-group {
       display: inline-flex;
@@ -107,7 +118,12 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  z-index: 2;
   overflow: hidden;
+  width: calc(var(--width-sidebar) * 1.5);
+  align-self: flex-end;
+  border: 1px solid var(--border-subtle-color);
+  border-radius: var(--border-radius);
 
   .friend-list {
     display: inline-flex;
@@ -116,7 +132,7 @@
     flex: 1;
     min-height: 0;
     overflow-y: scroll;
-    max-height: 150px;
+    max-height: 225px;
 
     .friend-group {
       display: inline-flex;
@@ -142,10 +158,10 @@
   justify-content: center;
   align-items: stretch;
   margin-right: 8px;
+  z-index: 2;
 }
 
 .create-group-name {
-  margin-top: 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -194,33 +210,112 @@
 }
 
 .sidebar {
+  .identity-header-sidebar {
+    display: flex;
+    // TODO(Lucas): Look it later, should be height: x%;
+    background-size: cover;
+    background-color: var(--secondary-dark);
+    padding-top: 4px;
+    padding-left: 16px;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    #profile-image {
+      margin: var(--gap-less);
+      //TODO(Lucas): Look to it, should be width: var(--height-input);
+      width: 45px;
+      height: var(--height-input);
+      border-radius: 50%;
+      background-size: cover;
+      background-color: var(--secondary);
+      border: 1px solid var(--background);
+      .indicator {
+        position: relative;
+        color: var(--background);
+        top: calc(100% - 1rem);
+        left: calc(100% - 1rem);
+      }
+    }
+  }
+  .identity-header-sidebar:hover {
+    background-color: var(--background-light);
+  }
+
+  .identity-header-sidebar-participants-in-group {
+    display: flex;
+    // TODO(Lucas): Look it later, should be height: x%;
+    min-height: 50px;
+    background-size: cover;
+    background-color: var(--secondary-dark);
+    padding-top: 4px;
+    padding-left: 64px;
+    margin-bottom: 4px;
+    #profile-image {
+      margin: var(--gap-less);
+      //TODO(Lucas): Look to it, should be width: var(--height-input);
+      width: 45px;
+      height: var(--height-input);
+      border-radius: 50%;
+      background-size: cover;
+      background-color: var(--secondary);
+      border: 1px solid var(--background);
+      .indicator {
+        position: relative;
+        color: var(--background);
+        top: calc(100% - 1rem);
+        left: calc(100% - 1rem);
+      }
+    }
+  }
+  .identity-header-sidebar-participants-in-group:hover {
+    background-color: var(--background-light);
+  }
+
+  .highlight-search-typed-chars {
+    font-weight: bold;
+    background-color: var(--text-color-link);
+    color: var(--text-color-dark);
+}
+
   .searchbar-dropdown {
     position: absolute;
     display: inline-flex;
     flex-direction: column;
-    box-shadow: 0px 0px 8px var(--text-color-muted);
-    width: 270px;
+    border-radius: var(--border-radius);
+    border: 1.2px solid var(--text-color-dark);
+    top: 75px;
+    max-width: 60%;
+    min-width: 288px;
+    max-height: 80%;
+    overflow-y: auto;
+    padding-bottom: 12px;
     z-index: 100;
     cursor: pointer;
-    background-color: var(--background);
-    
-    a {
-      z-index: 110;
-      color: var(--text-color);
-      text-decoration: none;
-      padding: 8px 12px;
-      word-wrap: break-word;
-      width: 100%;
+    background-color: var(--secondary-dark);
+
+    .search-friends-dropdown-name {
+        z-index: 110;
+        color: var(--text-color);
+        text-decoration: none;
+        padding-left: 12px;
+        padding-top: 4px;
+        padding-right: 8px;
+        word-wrap: break-word;
+        width: 100%;
     }
-    a:hover {
-      background-color: var(--background-light);
+    
+    .users-groups-label {
+      padding-left: 8px;
+      padding-top: 4px;
+      font-weight: bold;
+      color: var(--text-color);
     }
 
     .border {
-      width: 80%; 
+      width: 95%;
       height: 1px;
-      background: var(--background-light);
+      background: var(--secondary);
       margin: 0 auto;
+      margin-top: 8px;
     }
   }
 }
@@ -290,6 +385,7 @@
     .msg-wrapper {
       display: flex;
       flex-direction: column;
+      position: relative;
     }
   }
 
@@ -329,14 +425,6 @@
   line-clamp: 1;
   -webkit-box-orient: vertical;
   word-wrap: anywhere;
-}
-
-#favorites {
-  display: inline-flex;
-  flex-direction: column;
-  align-content: flex-start;
-  gap: var(--gap);
-  padding: 0 var(--gap);
 }
 
 .user-info {
