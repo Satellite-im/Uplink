@@ -33,7 +33,12 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 .input-char-counter {
 	padding: 2px 9px;
     position: absolute;
-    font-size: var(--text-size-less);
     right: 0;
     bottom: -17px;
+	flex-direction: row;
+	display: flex;
+}
+
+.char-counter-p-element {
+    font-size: var(--text-size-less);
 }
