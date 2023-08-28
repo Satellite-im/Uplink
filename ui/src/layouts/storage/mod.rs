@@ -93,7 +93,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         Some(d) => d,
         None => use_state(cx, || false),
     };
-    let chat_id = cx.props.chat_id.unwrap_or_default().clone();
+    let chat_id = cx.props.chat_id.unwrap_or_default();
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
@@ -181,10 +181,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if !*select_files_to_send_mode.get() {
-                    if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
-                        upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
-                    };
+                if !*select_files_to_send_mode.get() && upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
+                    upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                 }
                 },
             onclick: |_| {
@@ -324,7 +322,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     ch.send(ChanCmd::SendFileToChat { 
                                         files_path: files_selected_to_send.read().clone()
                                         .into_iter()
-                                        .map(|s| PathBuf::from(s))
+                                        .map(PathBuf::from)
                                         .collect(), 
                                         conversation_id: chat_id });
                                         select_files_to_send_mode.set(false);
@@ -486,8 +484,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file_name3 = file.name();
-                            let file_path = format!("{}/{}", current_dir_path, file_name3.clone());
-                            let file_path2 = format!("{}/{}", current_dir_path, file_name3.clone());
+                            let file_path = format!("{}/{}", current_dir_path, file_name3);
+                            let file_path2 = format!("{}/{}", current_dir_path, file_name3);
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -540,12 +538,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         let mut files_selected = files_selected_to_send.write();
                                                         if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path.clone()) {
                                                             files_selected.remove(index);
-                                                        } else {
-                                                            if files_selected.len() < MAX_FILES_PER_MESSAGE {
-                                                                files_selected.push(file_path.clone());
-                                                            }
+                                                        } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
+                                                            files_selected.push(file_path.clone());
                                                         }
-                                                        return;
                                                     }
                                                 }
                                             }
@@ -562,10 +557,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 let mut files_selected = files_selected_to_send.write();
                                                 if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path2.clone()) {
                                                     files_selected.remove(index);
-                                                } else {
-                                                    if files_selected.len() < MAX_FILES_PER_MESSAGE {
-                                                        files_selected.push(file_path2.clone());
-                                                    }
+                                                } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
+                                                    files_selected.push(file_path2.clone());
                                                 }
                                                 return;
                                             }
