@@ -140,18 +140,21 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         upload_file_controller.are_files_hovering_app,
     );
 
-    functions::start_upload_file_listener(
-        cx,
-        window,
-        state,
-        storage_controller,
-        upload_file_controller.clone(),
-    );
+    if !*select_files_to_send_mode.get() {
+        functions::start_upload_file_listener(
+            cx,
+            window,
+            state,
+            storage_controller,
+            upload_file_controller.clone(),
+        );
+    }
+
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused {
+        if state.read().ui.metadata.focused && !*select_files_to_send_mode.get() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
                     add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
@@ -178,9 +181,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
+                if !*select_files_to_send_mode.get() {
                     if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                         upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                     };
+                }
                 },
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
@@ -289,19 +294,20 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 )
                             }
                         }
-                    })
-                }
-                UploadProgressBar {
-                    are_files_hovering_app: upload_file_controller.are_files_hovering_app,
-                    files_been_uploaded: upload_file_controller.files_been_uploaded,
-                    disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
-                    on_update: move |files_to_upload: Vec<PathBuf>|  {
-                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
-                    },
-                    on_cancel: move |_| {
-                        let _ = tx_cancel_file_upload.send(true);
-                        let _ = tx_cancel_file_upload.send(false);
-                    },
+                    }
+                    UploadProgressBar {
+                        are_files_hovering_app: upload_file_controller.are_files_hovering_app,
+                        files_been_uploaded: upload_file_controller.files_been_uploaded,
+                        disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
+                        on_update: move |files_to_upload: Vec<PathBuf>|  {
+                            add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
+                        },
+                        on_cancel: move |_| {
+                            let _ = tx_cancel_file_upload.send(true);
+                            let _ = tx_cancel_file_upload.send(false);
+                        },
+                    }
+                 )
                 }
                 if *select_files_to_send_mode.get() {
                     rsx! (div {
@@ -499,25 +505,27 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        ContextItem {
-                                            icon: Icon::ArrowDownCircle,
-                                            aria_label: "files-download".into(),
-                                            text: get_local_text("files.download"),
-                                            onpress: move |_| {
-                                                download_file(&file_name2, ch);
+                                        if !*select_files_to_send_mode.get() {
+                                            rsx!(  ContextItem {
+                                                icon: Icon::ArrowDownCircle,
+                                                aria_label: "files-download".into(),
+                                                text: get_local_text("files.download"),
+                                                onpress: move |_| {
+                                                    download_file(&file_name2, ch);
+                                                },
                                             },
-                                        },
-                                        hr {},
-                                        ContextItem {
-                                            icon: Icon::Trash,
-                                            danger: true,
-                                            aria_label: "files-delete".into(),
-                                            text: get_local_text("uplink.delete"),
-                                            onpress: move |_| {
-                                                let item = Item::from(file2.clone());
-                                                ch.send(ChanCmd::DeleteItems(item));
-                                            }
-                                        },
+                                            hr {},
+                                            ContextItem {
+                                                icon: Icon::Trash,
+                                                danger: true,
+                                                aria_label: "files-delete".into(),
+                                                text: get_local_text("uplink.delete"),
+                                                onpress: move |_| {
+                                                    let item = Item::from(file2.clone());
+                                                    ch.send(ChanCmd::DeleteItems(item));
+                                                }
+                                            },)
+                                        }
                                     )),
                                     if *select_files_to_send_mode.get() {
                                         rsx!( div {
