@@ -86,7 +86,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope) -> Element {
+pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let select_files_to_send_mode = match cx.props.send_files_to_chat_mode.as_ref() {
