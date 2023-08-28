@@ -543,7 +543,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     background_color: "var(--background)",
                                     background: "var(--background)",
                                     max_height: "90vh",
-                                    width: "600px",
+                                    width: "80vw",
                                     FilesLayout {
                                         send_files_to_chat_mode: show_storage_modal.clone(),
                                         chat_id: chat_id.clone(),

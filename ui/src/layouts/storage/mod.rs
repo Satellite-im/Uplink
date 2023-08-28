@@ -87,13 +87,11 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode {
-        Some(_) => use_state(cx, || true),
+    state.write_silent().ui.current_layout = ui::Layout::Storage;
+    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode.as_ref() {
+        Some(d) => d,
         None => use_state(cx, || false),
     };
-    if !*select_files_to_send_mode.get() {
-        state.write_silent().ui.current_layout = ui::Layout::Storage;
-    }
     let chat_id = cx.props.chat_id.unwrap_or_default().clone();
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
@@ -291,27 +289,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         }
                     })
-                } else {
-                    rsx! (div {
-                        background: "grey", 
-                        height: "100px",
-                        Button {
-                            text: "Send File(s)".into(),
-                            aria_label: "Send File(s)".into(),
-                            appearance: Appearance::Success,
-                            onpress: move |_| {
-                                ch.send(ChanCmd::SendFileToChat { 
-                                    files_path: files_selected_to_send.read().clone()
-                                    .into_iter()
-                                    .map(|s| PathBuf::from(s))
-                                    .collect(), 
-                                    conversation_id: chat_id });
-                            }
-                        },
-                        p {
-                            format!("File(s) selected: {:?}", files_selected_to_send.read()),
-                        }
-                    })
                 }
                 UploadProgressBar {
                     are_files_hovering_app: upload_file_controller.are_files_hovering_app,
@@ -324,6 +301,42 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let _ = tx_cancel_file_upload.send(true);
                         let _ = tx_cancel_file_upload.send(false);
                     },
+                }
+                if *select_files_to_send_mode.get() {
+                    rsx! (div {
+                        background: "var(--secondary)", 
+                        justify_content: "center",
+                        align_items: "center",
+                        height: "60px",
+                        div {
+                            position: "relative",
+                            z_index: "2", 
+                            right: "16px",
+                            Button {
+                                text: format!("Send {} File(s)", files_selected_to_send.read().len()),
+                                aria_label: "send_files_modal_send_button".into(),
+                                appearance: Appearance::Success,
+                                onpress: move |_| {
+                                    ch.send(ChanCmd::SendFileToChat { 
+                                        files_path: files_selected_to_send.read().clone()
+                                        .into_iter()
+                                        .map(|s| PathBuf::from(s))
+                                        .collect(), 
+                                        conversation_id: chat_id });
+                                        select_files_to_send_mode.set(false);
+                                }
+                            },
+                        }
+                        p {
+                            color: "var(--text-color)",
+                            padding_left: "8px",
+                            max_width:  "50vw",
+                            white_space: "nowrap",
+                            overflow: "hidden",
+                            text_overflow: "ellipsis",
+                            format!("File(s) selected: {:?}", files_selected_to_send.read()),
+                        }
+                    })
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -360,8 +373,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: "{folder_name_formatted}",
                                     "{folder_name_formatted}"
                                 }
+                                
                             },)
                         }
+                        
                     })
                 },
                 span {
