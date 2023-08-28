@@ -347,6 +347,8 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     let mut config = Config::production(path);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
+    config.ipfs_setting.dht_client = true;
+    config.ipfs_setting.bootstrap = false;
     config.store_setting.emit_online_event = true;
     config.store_setting.share_platform = true;
     config.store_setting.update_events = UpdateEvents::Enabled;
