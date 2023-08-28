@@ -25,7 +25,7 @@ use crate::components::files::upload_progress_bar;
 
 use super::{
     controller::{StorageController, UploadFileController},
-    ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME,
+    ChanCmd, MAX_LEN_TO_FORMAT_NAME,
 };
 
 pub fn run_verifications_and_update_storage(
@@ -51,7 +51,7 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanCmd>) {
+pub fn get_items_from_current_directory(cx: &Scoped, ch: &Coroutine<ChanCmd>) {
     use_future(cx, (), |_| {
         to_owned![ch];
         async move {
