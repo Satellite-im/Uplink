@@ -251,7 +251,7 @@ fn render_selector<'a>(
                                                             .replace("$DRAFT_VALUE", &new_draft2)
                                                             .replace("$LINE_BREAK_COUNT", &line_break_count.to_string());
 
-                                                        eval(update_char_counter_script);
+                                                        let _ = eval(&update_char_counter_script);
                                                         state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
                                                         if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
                                                             cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
