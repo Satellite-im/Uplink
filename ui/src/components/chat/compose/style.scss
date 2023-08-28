@@ -1,11 +1,8 @@
 .modal-div-files-layout {
-    top: 40%;
     border: 1px solid var(--primary);
-    background-color: var(--background);
     background: var(--background);
     max-height: 90vh;
-    width: 75vw;
-    z-index: 9999;
+    width: 80vw;
 }
 
 @media (max-width: 400px) {
