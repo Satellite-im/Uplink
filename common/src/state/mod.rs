@@ -592,7 +592,7 @@ impl State {
                                     let _ = self
                                         .ui
                                         .call_info
-                                        .remove_participants(call.call.id, did.clone());
+                                        .remove_participant(call.call.id, did.clone());
                                 }
                             }
                         }

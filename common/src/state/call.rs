@@ -95,7 +95,7 @@ impl CallInfo {
         self.pending_calls.retain(|x| x.id != id);
     }
 
-    pub fn remove_participants(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
+    pub fn remove_participant(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
@@ -103,7 +103,7 @@ impl CallInfo {
         if active_call.call.id != call_id {
             bail!("wrong call id");
         }
-        active_call.call.remove_participants(id);
+        active_call.call.remove_participant(id);
         Ok(())
     }
 
@@ -212,7 +212,7 @@ impl Call {
         }
     }
 
-    fn remove_participants(&mut self, id: DID) {
+    fn remove_participant(&mut self, id: DID) {
         self.participants.retain(|x| x != &id);
         self.participant_left(id.clone());
         self.participant_not_speaking(id);
