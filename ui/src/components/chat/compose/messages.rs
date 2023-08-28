@@ -182,21 +182,6 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         }
     });
 
-    use_effect(cx, &data.active_chat.scroll_to, |_| {
-        to_owned![state, eval, currently_active];
-        async move {
-            let currently_active = match currently_active {
-                Some(r) => r,
-                None => return,
-            };
-            if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
-                let _ = eval(
-                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
-                );
-            }
-        }
-    });
-
     let scroll = data.active_chat.scroll_value;
     let unreads = data.active_chat.unreads;
     use_effect(cx, &data.active_chat.id, |id| {
