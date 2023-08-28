@@ -161,13 +161,13 @@ impl State {
                 }
             }
             Action::RegisterExtensions(extensions) => {
-                for (name, mut ext) in extensions {
-                    if self.configuration.extensions.enable_automatically
-                        || name.eq("emoji_selector")
-                    {
-                        ext.set_enabled(true);
-                    }
-                    self.ui.extensions.insert(name.clone(), ext);
+                for (name, ext) in extensions {
+                    self.ui.extensions.insert(
+                        name.clone(),
+                        ext,
+                        self.configuration.extensions.enable_automatically
+                            || name.eq("emoji_selector"),
+                    );
                 }
             }
             // ===== Notifications =====

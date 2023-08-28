@@ -198,30 +198,28 @@ pub struct Extensions {
 
 impl Extensions {
     pub fn enable(&mut self, name: String) {
-        if let Some(ext) = self.map.get_mut(&name) {
+        if let Some(_) = self.map.get_mut(&name) {
             self.enabled.insert(name, true);
-            ext.set_enabled(true)
         }
     }
 
     pub fn disable(&mut self, name: String) {
-        if let Some(ext) = self.map.get_mut(&name) {
+        if let Some(_) = self.map.get_mut(&name) {
             self.enabled.insert(name, false);
-            ext.set_enabled(false)
         }
     }
 
-    pub fn insert(&mut self, name: String, mut extension: UplinkExtension) {
-        if let Some(enabled) = self.enabled.get(&name) {
-            extension.set_enabled(*enabled);
-        } else {
-            self.enabled.insert(name.clone(), extension.enabled());
+    pub fn insert(&mut self, name: String, extension: UplinkExtension, enabled: bool) {
+        if let None = self.enabled.get(&name) {
+            self.enabled.insert(name.clone(), enabled);
         }
         self.map.insert(name, extension);
     }
 
-    pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
-        self.map.values()
+    pub fn values(&self) -> impl Iterator<Item = (bool, &UplinkExtension)> {
+        self.map
+            .iter()
+            .map(|(id, ext)| (self.enabled_extension(id), ext))
     }
 
     pub fn ext(&self) -> hash_map::Keys<String, UplinkExtension> {
