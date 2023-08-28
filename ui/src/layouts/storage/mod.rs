@@ -93,7 +93,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         Some(d) => d,
         None => use_state(cx, || false),
     };
-    let chat_id = cx.props.chat_id.unwrap_or_default();
+    let chat_id = match cx.props.chat_id {
+        Some(id) => id,
+        None => {
+            if *select_files_to_send_mode.get() {
+                select_files_to_send_mode.set(false);
+            }
+            Uuid::new_v4()
+        }
+    };
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
