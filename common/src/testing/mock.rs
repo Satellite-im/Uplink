@@ -5,6 +5,7 @@ use std::{
 
 use base64::encode;
 use chrono::{Duration, Utc};
+use dioxus_signals::Signal;
 use image::{ImageBuffer, Rgb, RgbImage};
 use lipsum::lipsum;
 use names::Generator;
@@ -19,10 +20,7 @@ use warp::{
     raygun::{ConversationType, Message},
 };
 
-use crate::state::{
-    local_state::LocalSubscription, storage::Storage, Chat, Chats, Friends, Identity, State,
-    ToastNotification,
-};
+use crate::state::{storage::Storage, Chat, Chats, Friends, Identity, State, ToastNotification};
 
 use crate::warp_runner::ui_adapter;
 
@@ -95,7 +93,7 @@ pub fn generate_mock() -> State {
 
 fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
     let default_id = Identity::default();
-    let mut messages = VecDeque::<LocalSubscription<ui_adapter::Message>>::new();
+    let mut messages = VecDeque::<Signal<ui_adapter::Message>>::new();
 
     let mut rng = rand::thread_rng();
 
@@ -109,7 +107,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_reactions(vec![]);
         default_message.set_value(vec![lipsum(word_count)]);
 
-        messages.push_back(LocalSubscription::create(ui_adapter::Message {
+        messages.push_back(Signal::new(ui_adapter::Message {
             inner: default_message,
             in_reply_to: None,
             key: Uuid::new_v4().to_string(),
@@ -118,9 +116,13 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
 
     let pinned_messages: Vec<_> = messages
         .iter()
-        .filter(|m| m.inner.pinned())
-        .cloned()
-        .map(|m| m.inner)
+        .filter_map(|m| {
+            if m.read().inner.pinned() {
+                Some(m.read().inner.clone())
+            } else {
+                None
+            }
+        })
         .rev()
         .collect();
 
@@ -164,7 +166,7 @@ fn generate_random_chat(me: Identity, identities: &[Identity]) -> Chat {
     for _ in 0..num_messages {
         // Generate a random message and add it to the chat
         let message = generate_fake_message(chat.id, identities);
-        chat.messages.push_back(LocalSubscription::create(message));
+        chat.messages.push_back(Signal::new(message));
     }
 
     chat

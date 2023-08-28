@@ -1381,6 +1381,7 @@ dependencies = [
  "derive_more",
  "dioxus",
  "dioxus-desktop",
+ "dioxus-signals",
  "dirs",
  "either",
  "extensions",
@@ -2127,7 +2128,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "734b13d4894daf5cee7d4a1d7960da207acd7d4b4e427c05c201a2ba87a5c032"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-core-macro",
  "dioxus-hooks",
  "dioxus-hot-reload",
@@ -2148,6 +2149,21 @@ dependencies = [
  "longest-increasing-subsequence",
  "rustc-hash",
  "serde",
+ "slab",
+ "smallbox",
+]
+
+[[package]]
+name = "dioxus-core"
+version = "0.4.2"
+source = "git+https://github.com/DioxusLabs/dioxus/#37eb929d6988c3c762b48cefe244292ffbb69e65"
+dependencies = [
+ "bumpalo",
+ "futures-channel",
+ "futures-util",
+ "log",
+ "longest-increasing-subsequence",
+ "rustc-hash",
  "slab",
  "smallbox",
 ]
@@ -2178,7 +2194,7 @@ checksum = "9cfd6773b6ed9f2aea084e3d3f8da57a39d644682a73083d2e6ae84a57ecb5c9"
 dependencies = [
  "async-trait",
  "core-foundation",
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-hot-reload",
  "dioxus-html",
  "dioxus-interpreter-js",
@@ -2206,7 +2222,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "808e553203e4c2534e186a8a9da0f4032027ff5413067307ea8ecbd793e37f57"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-debug-cell",
  "futures-channel",
  "log",
@@ -2220,7 +2236,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ceb8aca167a64e4b0afaff447b13052402a9ade3f21b9e7d031b6b72669994a"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-html",
  "dioxus-rsx",
  "interprocess-docfix",
@@ -2236,7 +2252,7 @@ checksum = "fb712fe56650dafddb626f8aed3d6ae194706c0299e175e99b45464add8b7af1"
 dependencies = [
  "async-channel",
  "async-trait",
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -2292,10 +2308,22 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "531a6b418fb75d08389920c024d1c082b500844cf50ccb16ad8d9ee33a1907a1"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "syn 2.0.29",
+]
+
+[[package]]
+name = "dioxus-signals"
+version = "0.0.0"
+source = "git+https://github.com/DioxusLabs/dioxus/#37eb929d6988c3c762b48cefe244292ffbb69e65"
+dependencies = [
+ "dioxus-core 0.4.2 (git+https://github.com/DioxusLabs/dioxus/)",
+ "generational-box",
+ "log",
+ "serde",
+ "simple_logger",
 ]
 
 [[package]]
@@ -3116,6 +3144,14 @@ dependencies = [
  "libc",
  "system-deps",
  "x11",
+]
+
+[[package]]
+name = "generational-box"
+version = "0.0.0"
+source = "git+https://github.com/DioxusLabs/dioxus/#37eb929d6988c3c762b48cefe244292ffbb69e65"
+dependencies = [
+ "bumpalo",
 ]
 
 [[package]]
@@ -4410,7 +4446,7 @@ dependencies = [
  "common",
  "derive_more",
  "dioxus",
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-html",
@@ -6037,6 +6073,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.29",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -7929,6 +7974,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
 
 [[package]]
+name = "simple_logger"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2230cd5c29b815c9b699fb610b49a5ed65588f3509d9f0108be3a885da629333"
+dependencies = [
+ "colored",
+ "log",
+ "time 0.3.27",
+ "windows-sys 0.42.0",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8523,6 +8580,8 @@ checksum = "0bb39ee79a6d8de55f48f2293a830e040392f1c5f16e336bdd1788cd0aadce07"
 dependencies = [
  "deranged",
  "itoa 1.0.9",
+ "libc",
+ "num_threads",
  "serde",
  "time-core",
  "time-macros",
@@ -9042,7 +9101,7 @@ dependencies = [
  "core-foundation",
  "derive_more",
  "dioxus",
- "dioxus-core",
+ "dioxus-core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-router",

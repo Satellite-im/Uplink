@@ -404,7 +404,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         }
                     }
                 } else {
-                    state.write().process_warp_event(schedule.clone(), evt);
+                    state.write().process_warp_event(evt);
                 }
             }
         }

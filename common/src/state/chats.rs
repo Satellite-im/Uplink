@@ -5,6 +5,7 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
+use dioxus_signals::Signal;
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::{
@@ -15,12 +16,9 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::{
-    local_state::LocalSubscription,
-    pending_message::{progress_file, PendingMessage},
-};
+use super::pending_message::{progress_file, PendingMessage};
 
-pub type Chat = ChatBase<LocalSubscription<ui_adapter::Message>>;
+pub type Chat = ChatBase<Signal<ui_adapter::Message>>;
 
 // A version that can be send across threads. Used for warp events
 pub type SendableChat = ChatBase<ui_adapter::Message>;
@@ -154,7 +152,7 @@ impl From<SendableChat> for Chat {
             messages: {
                 let mut vec = VecDeque::new();
                 for msg in value.messages.iter() {
-                    vec.push_front(LocalSubscription::create(msg.clone()));
+                    vec.push_front(Signal::new(msg.clone()));
                 }
                 vec
             },
@@ -165,6 +163,8 @@ impl From<SendableChat> for Chat {
             has_more_messages: value.has_more_messages,
             pending_outgoing_messages: value.pending_outgoing_messages,
             files_attached_to_send: value.files_attached_to_send,
+            pinned_messages: value.pinned_messages,
+            scroll_to: value.scroll_to,
         }
     }
 }
@@ -246,7 +246,6 @@ impl Serialize for Chat {
         state.serialize_field("participants", &self.participants)?;
         state.serialize_field("conversation_type", &self.conversation_type)?;
         state.serialize_field("creator", &self.creator)?;
-
         if STATIC_ARGS.use_mock {
             state.serialize_field("messages", &self.messages)?;
         } else {

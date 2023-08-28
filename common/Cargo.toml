@@ -48,6 +48,7 @@ warp-blink-wrtc = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-desktop = { workspace = true, features = ["transparent"] }
+dioxus-signals =  { workspace = true }
 derive_more = { workspace = true }
 either = { workspace = true }
 

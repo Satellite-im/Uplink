@@ -4,7 +4,6 @@ pub mod chats;
 pub mod configuration;
 pub mod friends;
 pub mod identity;
-pub mod local_state;
 pub mod notifications;
 pub mod pending_message;
 pub mod route;
@@ -22,6 +21,7 @@ use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
 pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
+use dioxus_signals::Signal;
 pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
@@ -57,7 +57,6 @@ use warp::{
     raygun::{self},
 };
 
-use self::local_state::{LocalSubscription, ScopeUpdate};
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -315,12 +314,12 @@ impl State {
         self.settings = settings::Settings::default();
     }
 
-    pub fn process_warp_event(&mut self, update: ScopeUpdate, event: WarpEvent) {
+    pub fn process_warp_event(&mut self, event: WarpEvent) {
         log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
-            WarpEvent::Message(evt) => self.process_message_event(update, evt),
+            WarpEvent::Message(evt) => self.process_message_event(evt),
             WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
@@ -409,7 +408,7 @@ impl State {
         }
     }
 
-    fn process_message_event(&mut self, update: ScopeUpdate, event: MessageEvent) {
+    fn process_message_event(&mut self, event: MessageEvent) {
         match event {
             MessageEvent::Received {
                 conversation_id,
@@ -469,7 +468,7 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 let message_clone = message.clone();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push_back(message.into());
+                    chat.messages.push_back(Signal::new(message));
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
                 self.decrement_outgoing_messages(
@@ -495,7 +494,7 @@ impl State {
                         .iter_mut()
                         .find(|msg| msg.read().inner.id() == message.inner.id())
                     {
-                        *msg = message.clone();
+                        *msg.write() = message.clone();
                     }
                     if let Some(msg) = chat
                         .pinned_messages
@@ -528,7 +527,8 @@ impl State {
                             should_decrement_notifications = true;
                         }
                     }
-                    chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    chat.messages
+                        .retain(|msg| msg.read().inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
                 }
 
@@ -820,7 +820,7 @@ impl State {
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
-            chat.messages.push_back(message.into());
+            chat.messages.push_back(Signal::new(message));
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
@@ -963,8 +963,8 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.messages = messages
                 .iter()
-                .map(|msg| LocalSubscription::create(msg.clone()))
-                .collect::<Vec<LocalSubscription<ui_adapter::Message>>>()
+                .map(|msg| Signal::new(msg.clone()))
+                .collect::<Vec<Signal<ui_adapter::Message>>>()
                 .into();
         }
     }
@@ -1012,7 +1012,9 @@ impl State {
                 return false;
             }
         };
-        conv.messages.iter().any(|m| m.inner.id() == message.id())
+        conv.messages
+            .iter()
+            .any(|m| m.read().inner.id() == message.id())
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
@@ -1032,9 +1034,9 @@ impl State {
         if let Some(msg) = conv
             .messages
             .iter_mut()
-            .find(|m| m.inner.id() == message_id)
+            .find(|m| m.read().inner.id() == message_id)
         {
-            msg.inner.set_pinned(true);
+            msg.write().inner.set_pinned(true);
         }
     }
 
@@ -1053,9 +1055,9 @@ impl State {
         if let Some(msg) = conv
             .messages
             .iter_mut()
-            .find(|m| m.inner.id() == message_id)
+            .find(|m| m.read().inner.id() == message_id)
         {
-            msg.inner.set_pinned(false);
+            msg.write().inner.set_pinned(false);
         }
     }
 
@@ -1073,7 +1075,7 @@ impl State {
         if let Some(msg) = conv
             .messages
             .iter_mut()
-            .find(|m| m.inner.id() == message_id)
+            .find(|m| m.read().inner.id() == message_id)
         {
             let mut reactions: Vec<Reaction> = Vec::new();
             for mut reaction in message.reactions() {
@@ -1083,7 +1085,7 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            msg.inner = message.clone();
+            msg.write().inner = message.clone();
         } else {
             log::warn!("attempted to update a message which wasn't found");
         }
@@ -1702,7 +1704,7 @@ impl<'a> MessageGroup<'a> {
 // Define a struct to represent a message that has been placed into a group.
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
-    pub message: LocalSubscription<ui_adapter::Message>,
+    pub message: Signal<ui_adapter::Message>,
     pub attachment_progress: Option<&'a HashMap<String, Progression>>,
     pub is_pending: bool,
     pub is_first: bool,
@@ -1722,7 +1724,7 @@ pub fn group_messages<'a>(
     when_to_fetch_more: usize,
     // true if the chat has more messages to fetch
     has_more: bool,
-    input: &'a VecDeque<LocalSubscription<ui_adapter::Message>>,
+    input: &'a VecDeque<Signal<ui_adapter::Message>>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
     let mut need_to_fetch_more = when_to_fetch_more;
@@ -1783,7 +1785,7 @@ pub fn pending_group_messages<'a>(
     for (i, msg) in pending.iter().enumerate() {
         if i == size - 1 {
             let g = GroupedMessage {
-                message: LocalSubscription::create(msg.message.clone()),
+                message: Signal::new(msg.message.clone()),
                 attachment_progress: Some(&msg.attachments_progress),
                 is_pending: true,
                 is_first: false,
@@ -1794,7 +1796,7 @@ pub fn pending_group_messages<'a>(
             continue;
         }
         let g = GroupedMessage {
-            message: LocalSubscription::create(msg.message.clone()),
+            message: Signal::new(msg.message.clone()),
             attachment_progress: Some(&msg.attachments_progress),
             is_pending: true,
             is_first: true,
