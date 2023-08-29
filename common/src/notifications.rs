@@ -17,7 +17,7 @@ use tokio::sync::{
 };
 
 #[cfg(target_os = "windows")]
-pub const POWERSHELL_APP_ID: &'static str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\
+pub const POWERSHELL_APP_ID: &str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\
 \\WindowsPowerShell\\v1.0\\powershell.exe";
 
 #[derive(Debug, Clone, Display)]
