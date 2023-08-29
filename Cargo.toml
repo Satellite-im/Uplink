@@ -31,7 +31,7 @@ dioxus-hooks = { version = "0.4" }
 dioxus-html = { version = "0.4" }
 dioxus-router = { version = "0.4" }
 dioxus-desktop = { version = "0.4", features = ["transparent"] }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus/", features = ["serde"]}
+dioxus-signals = { git = "https://github.com/ealmloff/dioxus", branch = "improved-signals", features = ["serde"]}
 raw-window-handle = "0.5"
 dioxus-core = { version = "0.4" }
 fermi = { version = "0.4" }
