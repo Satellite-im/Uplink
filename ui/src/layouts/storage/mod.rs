@@ -6,18 +6,16 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::{get_local_text, get_local_text_args_builder};
+use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
 };
 use common::warp_runner::thumbnail_to_base64;
-use common::MAX_FILES_PER_MESSAGE;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
-use kit::elements::checkbox::Checkbox;
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
     elements::{
@@ -37,12 +35,16 @@ use warp::constellation::item::Item;
 pub mod controller;
 pub mod file_modal;
 pub mod functions;
+pub mod send_files_components;
 
 use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
+use crate::layouts::storage::send_files_components::{
+    add_remove_file_to_send, file_checkbox, send_files_from_chat_topbar,
+};
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -316,35 +318,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }
                  )
                 }
-                if *select_files_to_send_mode.get() {
-                    rsx! (div {
-                        class: "send-files-top-stripe",
-                        div {
-                            class: "send-files-button",
-                            Button {
-                                text: get_local_text_args_builder("files.send-files-text-amount", |m| {
-                                    m.insert("amount", format!("{}/{}", files_selected_to_send.read().len(), MAX_FILES_PER_MESSAGE).into());
-                                }),
-                                aria_label: "send_files_modal_send_button".into(),
-                                appearance: Appearance::Success,
-                                onpress: move |_| {
-                                    ch.send(ChanCmd::SendFileToChat {
-                                        files_path: files_selected_to_send.read().clone()
-                                        .into_iter()
-                                        .map(PathBuf::from)
-                                        .collect(),
-                                        conversation_id: chat_id });
-                                        select_files_to_send_mode.set(false);
-                                }
-                            },
-                        }
-                        p {
-                            class: "files-selected-text",
-                            get_local_text_args_builder("files.files-selected-paths", |m| {
-                                m.insert("files_path", files_selected_to_send.read().join(", ").into());
-                            })
-                        }
-                    })
+                send_files_from_chat_topbar {
+                    ch: ch.clone(),
+                    files_selected_to_send: files_selected_to_send.clone(),
+                    chat_id: chat_id.clone(),
+                    select_files_to_send_mode: select_files_to_send_mode.clone(),
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -511,7 +489,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                         if !*select_files_to_send_mode.get() {
-                                            rsx!(  ContextItem {
+                                            rsx!( ContextItem {
                                                 icon: Icon::ArrowDownCircle,
                                                 aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
@@ -532,27 +510,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },)
                                         }
                                     )),
-                                    if *select_files_to_send_mode.get() {
-                                        rsx!( div {
-                                            class: "checkbox-position",
-                                            Checkbox {
-                                                disabled: files_selected_to_send.read().len() >= MAX_FILES_PER_MESSAGE,
-                                                width: "1em".into(),
-                                                height: "1em".into(),
-                                                is_checked: files_selected_to_send.read().contains(&file_path.clone()),
-                                                on_click: move |_| {
-                                                    if *select_files_to_send_mode.get() {
-                                                        let mut files_selected = files_selected_to_send.write();
-                                                        if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path.clone()) {
-                                                            files_selected.remove(index);
-                                                        } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
-                                                            files_selected.push(file_path.clone());
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },)
-                                    }
+                                    file_checkbox {
+                                        file_path: file_path.clone(),
+                                        files_selected_to_send: files_selected_to_send.clone(),
+                                        select_files_to_send_mode:select_files_to_send_mode.clone(),
+                                    },
                                     File {
                                         key: "{key}-file",
                                         thumbnail: thumbnail_to_base64(file),
@@ -561,12 +523,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onpress: move |_| {
                                             if *select_files_to_send_mode.get() {
-                                                let mut files_selected = files_selected_to_send.write();
-                                                if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path2.clone()) {
-                                                    files_selected.remove(index);
-                                                } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
-                                                    files_selected.push(file_path2.clone());
-                                                }
+                                                add_remove_file_to_send(files_selected_to_send.clone(), file_path2.clone());
                                                 return;
                                             }
                                             let key = file_id;
