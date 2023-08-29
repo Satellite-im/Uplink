@@ -84,7 +84,7 @@ pub fn Installed(cx: Scope) -> Element {
         .ui
         .extensions
         .values()
-        .map(|ext| (ext.enabled(), ext.details().meta.clone()))
+        .map(|(enabled, ext)| (enabled, ext.details().meta.clone()))
         .collect();
 
     cx.render(rsx!(
