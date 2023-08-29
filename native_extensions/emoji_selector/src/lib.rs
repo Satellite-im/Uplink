@@ -4,7 +4,6 @@ use common::{
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use futures::StreamExt;
@@ -19,6 +18,17 @@ use warp::{logging::tracing::log, raygun::ReactionState};
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 export_extension!(EXTENSION);
+
+const UPDATE_CHAR_COUNTER_WITH_EMOJI: &str = r#"
+var charCounter = document.getElementById('$UUID-char-counter');
+var draft_value = '$DRAFT_VALUE'
+var line_breaks_count = '$LINE_BREAK_COUNT'
+var intValue = parseInt(line_breaks_count);
+
+const charCount = Array.from(draft_value).length
+
+charCounter.innerText = charCount + intValue
+"#;
 
 pub struct EmojiSelector;
 
@@ -106,10 +116,10 @@ fn build_nav(cx: Scope) -> Element<'a> {
 
     cx.render(rsx!(Nav {
         routes: routes.clone(),
-        active: routes[0].clone(),
+        active: routes[0].to,
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
-            eval(scroll_script);
+            let _ = eval(&scroll_script);
         }
     }))
 }
@@ -128,7 +138,7 @@ fn render_selector<'a>(
     let state = use_shared_state::<State>(cx)?;
     #[cfg(not(target_os = "macos"))]
     let mouse_over_emoji_selector = use_ref(cx, || false);
-    #[cfg(not(target_os = "macos"))]
+
     let eval = use_eval(cx);
 
     let focus_script = r#"
@@ -168,16 +178,16 @@ fn render_selector<'a>(
     cx.render(rsx! (
             div {
                 onmouseenter: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = true;
                     }
                 },
                 onmouseleave: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = false;
-                        eval(focus_script.to_string());
+                        let _ = eval(focus_script);
                     }
                 },
                 id: "emoji_selector",
@@ -194,7 +204,7 @@ fn render_selector<'a>(
                             state.write().mutate(Action::SetEmojiPickerVisible(false));
                         }
                     }
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
                             state.write().mutate(Action::SetEmojiPickerVisible(false));
@@ -233,6 +243,15 @@ fn render_selector<'a>(
                                                         };
                                                         let draft: String = c.draft.unwrap_or_default();
                                                         let new_draft = format!("{draft}{emoji}");
+                                                        let new_draft2 = new_draft.replace('\n', "");
+                                                        let line_break_count = new_draft.matches('\n').count();
+
+                                                        let update_char_counter_script = UPDATE_CHAR_COUNTER_WITH_EMOJI
+                                                            .replace("$UUID", &c.id.to_string())
+                                                            .replace("$DRAFT_VALUE", &new_draft2)
+                                                            .replace("$LINE_BREAK_COUNT", &line_break_count.to_string());
+
+                                                        let _ = eval(&update_char_counter_script);
                                                         state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
                                                         if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
                                                             cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));

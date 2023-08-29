@@ -11,12 +11,13 @@ use warp::logging::tracing::log;
 
 use once_cell::sync::Lazy;
 use tokio::sync::{
+    broadcast,
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex,
 };
 
 #[cfg(target_os = "windows")]
-pub const POWERSHELL_APP_ID: &'static str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\
+pub const POWERSHELL_APP_ID: &str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\
 \\WindowsPowerShell\\v1.0\\powershell.exe";
 
 #[derive(Debug, Clone, Display)]
@@ -30,16 +31,12 @@ pub enum NotificationAction {
 }
 
 pub struct NotificationChannel {
-    pub tx: UnboundedSender<NotificationAction>,
-    pub rx: Arc<Mutex<UnboundedReceiver<NotificationAction>>>,
+    pub tx: broadcast::Sender<NotificationAction>,
 }
 
 pub static NOTIFICATION_LISTENER: Lazy<NotificationChannel> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    NotificationChannel {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
+    let (tx, _) = tokio::sync::broadcast::channel(128);
+    NotificationChannel { tx }
 });
 
 pub struct FocusChannel {

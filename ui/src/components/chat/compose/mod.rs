@@ -45,7 +45,7 @@ use warp::{
     raygun::ConversationType,
 };
 
-use wry::webview::FileDropEvent;
+use dioxus_desktop::wry::webview::FileDropEvent;
 
 use crate::{
     components::chat::{edit_group::EditGroup, group_users::GroupUsers},
@@ -145,7 +145,7 @@ pub fn Compose(cx: Scope) -> Element {
                     let mut new_files_to_upload: Vec<_> = state
                         .read()
                         .get_active_chat()
-                        .and_then(|f| Some(f.files_attached_to_send))
+                        .map(|f| f.files_attached_to_send)
                         .unwrap_or_default()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
@@ -180,27 +180,34 @@ pub fn Compose(cx: Scope) -> Element {
 
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
+    let upload_files = move |_| {
+        if drag_event.with(|i| i.clone()).is_none() {
+            cx.spawn({
+                to_owned![drag_event, window, state];
+                async move {
+                    let new_files = drag_and_drop_function(&window, &drag_event).await;
+                    let mut new_files_to_upload: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                }
+            });
+        }
+    };
+
     cx.render(rsx!(
         div {
             id: "compose",
-            ondragover: move |_| {
-                if drag_event.with(|i| i.clone()).is_none() {
-                    cx.spawn({
-                        to_owned![drag_event, window, state];
-                        async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event).await;
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                .unwrap_or_default()
-                                .iter()
-                                .filter(|file_name| !new_files.contains(file_name))
-                                .cloned()
-                                .collect();
-                            new_files_to_upload.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                        }
-                    });
-                }
-            },
+            ondragover: upload_files,
             div {
                 id: "overlay-element",
                 class: "overlay-element",
@@ -231,10 +238,10 @@ pub fn Compose(cx: Scope) -> Element {
                     is_edit_group: is_edit_group,
                 }
             },
-            // may need this later when video calling is possible. 
+            // may need this later when video calling is possible.
             // data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
             //     MediaPlayer {
-            //         settings_text: get_local_text("settings.settings"), 
+            //         settings_text: get_local_text("settings.settings"),
             //         enable_camera_text: get_local_text("media-player.enable-camera"),
             //         fullscreen_text: get_local_text("media-player.fullscreen"),
             //         popout_player_text: get_local_text("media-player.popout-player"),
@@ -718,7 +725,7 @@ async fn drag_and_drop_function(
                             ),
                         ));
                     }
-                    window.eval(&script);
+                    _ = window.webview.evaluate_script(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
@@ -729,14 +736,14 @@ async fn drag_and_drop_function(
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
-                    window.eval(&script);
+                    _ = window.webview.evaluate_script(&script);
                     break;
                 }
             }
             _ => {
                 *drag_event.write_silent() = None;
                 let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
-                window.eval(&script);
+                _ = window.webview.evaluate_script(&script);
                 break;
             }
         };

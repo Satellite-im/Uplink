@@ -127,7 +127,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: Checkout working directory 🔖
@@ -187,8 +187,13 @@ jobs:
           cp -r ./appium-tests/tests/fixtures/users/FriendsTestUser/ ./appium-tests/tests/fixtures/users/mac2/FriendsTestUser
 
       - name: Run Tests on MacOS 🧪
-        working-directory: ./appium-tests
-        run: npm run mac.ci
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 2
+          command: |
+            cd ./appium-tests
+            npm run mac.ci
 
       - name: Upload Test Report - MacOS CI
         if: always()

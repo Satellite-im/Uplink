@@ -84,7 +84,7 @@ pub fn Installed(cx: Scope) -> Element {
         .ui
         .extensions
         .values()
-        .map(|ext| (ext.enabled(), ext.details().meta.clone()))
+        .map(|(enabled, ext)| (enabled, ext.details().meta.clone()))
         .collect();
 
     cx.render(rsx!(
@@ -140,7 +140,7 @@ pub fn ExtensionsBrowser(cx: Scope) -> Element {
             id: "extensions-browser",
             aria_label: "extensions-browser",
             Nav {
-                active: routes[0].clone(),
+                active: routes[0].to,
                 bubble: true,
                 routes: routes,
                 onnavigate: move |r| {

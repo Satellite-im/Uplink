@@ -52,7 +52,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
-    let eval = dioxus_desktop::use_eval(cx);
+    let eval = use_eval(cx);
 
     let Props {
         id: _,
@@ -81,7 +81,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         include_str!("./focus.js").replace("$UUID", &id)
     };
 
-    eval(focus_script.clone());
+    let _ = eval(&focus_script);
 
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
@@ -96,9 +96,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
             .replace("$UUID", &id)
             .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
-
     if *show_char_counter {
-        eval(update_char_counter_script);
+        let _ = eval(&update_char_counter_script);
     }
 
     let cv2 = current_val.clone();
@@ -140,20 +139,31 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
                         if enter_pressed && !shift_key_as_modifier {
                             if *show_char_counter {
-                                eval(clear_counter_script.to_string());
+                                let _ = eval(&clear_counter_script);
                             }
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         }
                     },
                 }
                 if *show_char_counter {
-                    rsx!( p {
-                        key: "{id_char_counter}-char-counter",
-                        id: "{id_char_counter}-char-counter",
-                        class: "input-char-counter",
-                        aria_label: "input-char-counter",
-                        format!("{}/{}", cv3.len(), max_length - 1),
-                    })
+                    rsx!(
+                        div {
+                            class: "input-char-counter",
+                            p {
+                                key: "{id_char_counter}-char-counter",
+                                id: "{id_char_counter}-char-counter",
+                                aria_label: "input-char-counter",
+                                class: "char-counter-p-element",
+                                format!("{}", cv3.len()),
+                            },
+                            p {
+                                key: "{id_char_counter}-char-max-length",
+                                id: "{id_char_counter}-char-max-length",
+                                class: "char-counter-p-element",
+                                format!("/{}", max_length - 1),
+                            }
+                        }
+                        )
                 }
             },
         }
