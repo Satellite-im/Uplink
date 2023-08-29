@@ -36,7 +36,7 @@ pub type SendableChat = ChatBase<ui_adapter::Message>;
 // }
 
 // warning: Chat implements Serialize
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ChatBase<T> {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
@@ -81,6 +81,8 @@ pub struct ChatBase<T> {
     #[serde(skip, default)]
     pub scroll_to: Option<Uuid>,
 }
+
+impl Eq for Chat {}
 
 impl Chat {
     pub fn append_pending_msg(
