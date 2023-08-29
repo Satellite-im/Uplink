@@ -18,8 +18,6 @@ use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
 use warp::raygun::Location;
-#[cfg(not(target_os = "macos"))]
-use wry::webview::FileDropEvent;
 
 use crate::components::files::upload_progress_bar;
 
