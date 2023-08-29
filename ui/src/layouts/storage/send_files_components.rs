@@ -56,7 +56,7 @@ pub fn send_files_from_chat_topbar(
                             .into_iter()
                             .map(PathBuf::from)
                             .collect(),
-                            conversation_id: chat_id.clone() });
+                            conversation_id: *chat_id });
                             select_files_to_send_mode.set(false);
                     }
                 },

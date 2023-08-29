@@ -321,7 +321,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 send_files_from_chat_topbar {
                     ch: ch.clone(),
                     files_selected_to_send: files_selected_to_send.clone(),
-                    chat_id: chat_id.clone(),
+                    chat_id: chat_id,
                     select_files_to_send_mode: select_files_to_send_mode.clone(),
                 }
                 div {
