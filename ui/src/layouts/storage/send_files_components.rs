@@ -37,12 +37,11 @@ pub fn file_checkbox(
 }
 
 #[inline_props]
-pub fn send_files_from_chat_topbar(
+pub fn send_files_from_chat_topbar<'a>(
     cx: Scope<'a>,
-    ch: Coroutine<ChanCmd>,
     files_selected_to_send: UseRef<Vec<Location>>,
-    chat_id: Uuid,
     select_files_to_send_mode: UseState<bool>,
+    on_press_send_files_button: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
     if *select_files_to_send_mode.get() {
         return cx.render(rsx! (div {
@@ -56,10 +55,8 @@ pub fn send_files_from_chat_topbar(
                     aria_label: "send_files_modal_send_button".into(),
                     appearance: Appearance::Success,
                     onpress: move |_| {
-                        ch.send(ChanCmd::SendFileToChat {
-                            files_path: files_selected_to_send.read().clone(),
-                            conversation_id: *chat_id });
-                            select_files_to_send_mode.set(false);
+                        on_press_send_files_button.call(files_selected_to_send.read().clone());
+                        select_files_to_send_mode.set(false);
                     }
                 },
             }

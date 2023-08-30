@@ -536,10 +536,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     .unwrap_or_default()
                                     .iter()
                                     .filter(|file_location| {
-                                        if let Location::Disk { path } = file_location {
-                                            !new_files.contains(path)
-                                        } else {
-                                            false
+                                        match file_location {
+                                            Location::Disk { path } => { 
+                                                !new_files.contains(path)
+                                            },
+                                            Location::Constellation { .. } => {
+                                                true
+                                            }
                                         }
                                     })
                                     .cloned()
@@ -562,8 +565,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 div {
                                     class: "modal-div-files-layout",
                                     FilesLayout {
-                                        send_files_to_chat_mode: show_storage_modal.clone(),
-                                        chat_id: chat_id,
+                                        storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
+                                        on_files_selected_to_send: move |files_location| {
+                                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                            .unwrap_or_default()
+                                            .iter()
+                                            .cloned()
+                                            .collect();
+                                            new_files_to_upload.extend(files_location);
+                                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                                            update_send();
+                                        },
                                     }
                                 }
                             }
@@ -596,10 +608,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             .unwrap_or_default()
                             .iter()
                             .filter(|file_location| {
-                                if let Location::Disk { path } = file_location {
-                                    !files_local_path.contains(path)
-                                } else {
-                                    false
+                                match file_location {
+                                    Location::Disk { path } => { 
+                                        !files_local_path.contains(path)
+                                    },
+                                    Location::Constellation { .. } => {
+                                        true
+                                    }
                                 }
                             })
                             .cloned()

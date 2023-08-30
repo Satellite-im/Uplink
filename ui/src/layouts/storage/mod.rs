@@ -28,7 +28,6 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
 use warp::raygun::Location;
@@ -76,35 +75,24 @@ pub enum ChanCmd {
         new_name: String,
     },
     DeleteItems(Item),
-    SendFileToChat {
-        files_path: Vec<Location>,
-        conversation_id: Uuid,
-    },
 }
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    send_files_to_chat_mode: Option<UseState<bool>>,
-    chat_id: Option<Uuid>,
+#[derive(Props)]
+pub struct Props<'a> {
+    storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
+    on_files_selected_to_send: Option<EventHandler<'a, Vec<Location>>>,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope<Props>) -> Element {
+pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode.as_ref() {
-        Some(d) => d,
-        None => use_state(cx, || false),
-    };
-    let chat_id = match cx.props.chat_id {
-        Some(id) => id,
-        None => {
-            if *select_files_to_send_mode.get() {
-                select_files_to_send_mode.set(false);
-            }
-            Uuid::new_v4()
-        }
-    };
+    let on_files_selected_to_send = cx.props.on_files_selected_to_send.as_ref();
+    let storage_files_to_chat_mode_is_active =
+        match cx.props.storage_files_to_chat_mode_is_active.as_ref() {
+            Some(d) => d,
+            None => use_state(cx, || false),
+        };
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
@@ -148,7 +136,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     functions::get_items_from_current_directory(cx, ch);
 
-    if !*select_files_to_send_mode.get() {
+    if !*storage_files_to_chat_mode_is_active.get() {
         #[cfg(not(target_os = "macos"))]
         functions::allow_drag_event_for_non_macos_systems(
             cx,
@@ -166,7 +154,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused && !*select_files_to_send_mode.get() {
+        if state.read().ui.metadata.focused && !*storage_files_to_chat_mode_is_active.get() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
                     add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
@@ -193,14 +181,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if !*select_files_to_send_mode.get() && upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
+                if !*storage_files_to_chat_mode_is_active.get() && upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                     upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                 }
                 },
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            if !*select_files_to_send_mode.get() {
+            if !*storage_files_to_chat_mode_is_active.get() {
                 rsx!(
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
@@ -211,7 +199,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
-                if !*select_files_to_send_mode.get() {
+                if !*storage_files_to_chat_mode_is_active.get() {
                     rsx!(Topbar {
                         with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                         onback: move |_| {
@@ -320,10 +308,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                  )
                 }
                 send_files_from_chat_topbar {
-                    ch: ch.clone(),
                     files_selected_to_send: files_selected_to_send.clone(),
-                    chat_id: chat_id,
-                    select_files_to_send_mode: select_files_to_send_mode.clone(),
+                    select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
+                    on_press_send_files_button: move |files_location_path| {
+                        if let Some(f) = on_files_selected_to_send {
+                            f.call(files_location_path);
+                        }
+                    }
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -489,7 +480,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        if !*select_files_to_send_mode.get() {
+                                        if !*storage_files_to_chat_mode_is_active.get() {
                                             rsx!( ContextItem {
                                                 icon: Icon::ArrowDownCircle,
                                                 aria_label: "files-download".into(),
@@ -514,7 +505,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     file_checkbox {
                                         file_path: file_path.clone(),
                                         files_selected_to_send: files_selected_to_send.clone(),
-                                        select_files_to_send_mode:select_files_to_send_mode.clone(),
+                                        select_files_to_send_mode:storage_files_to_chat_mode_is_active.clone(),
                                     },
                                     File {
                                         key: "{key}-file",
@@ -523,7 +514,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         aria_label: file.name(),
                                         with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onpress: move |_| {
-                                            if *select_files_to_send_mode.get() {
+                                            if *storage_files_to_chat_mode_is_active.get() {
                                                 add_remove_file_to_send(files_selected_to_send.clone(), file_path2.clone());
                                                 return;
                                             }

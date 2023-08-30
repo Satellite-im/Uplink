@@ -306,37 +306,6 @@ pub fn init_coroutine<'a>(
                             }
                         }
                     }
-                    ChanCmd::SendFileToChat {
-                        files_path,
-                        conversation_id,
-                    } => {
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessage {
-                            conv_id: conversation_id,
-                            msg: vec![],
-                            attachments: files_path,
-                            ui_msg_id: None,
-                            rsp: tx,
-                        })) {
-                            log::error!(
-                                "failed to send file(s) from storage to chat. Error: {:?}",
-                                e
-                            );
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(_) => {
-                                // controller.with_mut(|i| i.storage_state = Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to send file(s) to chat. Error: {:?}", e);
-                                continue;
-                            }
-                        }
-                    }
                 }
             }
         }
