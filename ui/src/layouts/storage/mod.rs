@@ -98,7 +98,18 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let files_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
+
+    let new_files_to_upload: Vec<_> = state
+        .read()
+        .get_active_chat()
+        .map(|f| f.files_attached_to_send)
+        .unwrap_or_default()
+        .iter()
+        .cloned()
+        .collect();
+
+    let files_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, || new_files_to_upload);
+
     let current_dir_path = storage_controller
         .read()
         .dirs_opened_ref
