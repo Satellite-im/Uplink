@@ -546,7 +546,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     .collect();
                                 let local_disk_files: Vec<Location> = new_files
                                     .iter()
-                                    .map(|path| Location::Disk { path: path.clone() }) 
+                                    .map(|path| Location::Disk { path: path.clone() })
                                     .collect();
                                 new_files_to_upload.extend(local_disk_files);
                                 state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
@@ -606,7 +606,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             .collect();
                         let local_disk_files: Vec<Location> = files_local_path
                             .iter()
-                            .map(|path| Location::Disk { path: path.clone() }) 
+                            .map(|path| Location::Disk { path: path.clone() })
                             .collect();
                     new_files_to_upload.extend(local_disk_files);
                     state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
@@ -643,10 +643,18 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .iter()
         .map(|location| {
             let filename = match location {
-                Location::Constellation { path } => PathBuf::from(path).file_name().unwrap_or_default().to_string_lossy().to_string(),
-                Location::Disk { path } => path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                Location::Constellation { path } => PathBuf::from(path)
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
+                Location::Disk { path } => path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
             };
-    
+
             rsx!(FileEmbed {
                 filename: filename.clone(),
                 filepath: match location {
@@ -661,30 +669,36 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         .get_active_chat()
                         .map(|f| f.files_attached_to_send)
                         .unwrap_or_default();
-                    
+
                     attachments.retain(|x| {
                         let s = match x {
-                            Location::Constellation { path } => PathBuf::from(path).file_name().unwrap_or_default().to_string_lossy().to_string(),
-                Location::Disk { path } => path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                            Location::Constellation { path } => PathBuf::from(path)
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .to_string(),
+                            Location::Disk { path } => path
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .to_string(),
                         };
                         s != filename
                     });
-    
                     state
                         .write()
                         .mutate(Action::SetChatAttachments(cx.props.chat_id, attachments));
                     cx.props.on_remove.call(());
                 },
             })
-        })
-    ));
-    
+        })));
+
     let attachments_vec = state
         .read()
         .get_active_chat()
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default();
-    
+
     if attachments_vec.is_empty() {
         return None;
     }
