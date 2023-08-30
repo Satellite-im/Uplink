@@ -18,7 +18,7 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::Location};
+use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UplinkRoute;
 

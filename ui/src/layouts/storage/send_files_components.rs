@@ -91,7 +91,7 @@ pub fn add_remove_file_to_send(files_selected_to_send: UseRef<Vec<Location>>, fi
             Location::Constellation { path } => path.clone(),
             _ => String::new(),
         };
-        path.clone() == file_path.clone()
+        path == file_path.clone()
     }) {
         files_selected.remove(index);
     } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
