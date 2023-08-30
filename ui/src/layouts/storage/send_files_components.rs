@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use common::{language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
 use dioxus::prelude::*;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
@@ -68,7 +66,7 @@ pub fn send_files_from_chat_topbar(
             p {
                 class: "files-selected-text",
                 get_local_text_args_builder("files.files-selected-paths", |m| {
-                    m.insert("files_path", files_selected_to_send.read().into_iter()
+                    m.insert("files_path", files_selected_to_send.read().clone().into_iter()
                     .filter(|location| matches!(location, Location::Constellation { .. }))
                     .map(|location| {
                         if let Location::Constellation { path } = location {

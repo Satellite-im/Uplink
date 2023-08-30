@@ -198,7 +198,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let chat2 = chat.clone();
                             let chat3 = chat.clone();
                             let favorite = chat.clone().map(|c| state.read().is_favorite(&c));
-                            let did_suffix: String = friend.short_id();
+                            let did_suffix: String = friend.short_id().to_string();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = friend.clone();
                             let chat_with_friend = friend.clone();
