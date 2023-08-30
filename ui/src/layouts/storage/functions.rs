@@ -18,7 +18,6 @@ use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
 
-
 use crate::components::files::upload_progress_bar;
 
 use super::{
