@@ -1,10 +1,7 @@
 use common::{language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
 use dioxus::prelude::*;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
-use uuid::Uuid;
 use warp::raygun::Location;
-
-use crate::layouts::storage::ChanCmd;
 
 #[inline_props]
 pub fn file_checkbox(
