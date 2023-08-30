@@ -5,7 +5,7 @@ use crate::utils::verify_valid_paths::decoded_pathbufs;
 
 use arboard::Clipboard as Arboard;
 #[cfg(target_os = "windows")]
-use clipboard_win::{formats, get_clipboard, set_clipboard};
+use clipboard_win::{formats, get_clipboard};
 use image::DynamicImage;
 use image::ImageBuffer;
 use image::ImageOutputFormat;

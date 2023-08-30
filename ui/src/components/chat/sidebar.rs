@@ -380,9 +380,8 @@ pub fn Sidebar(cx: Scope) -> Element {
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .values()
-        .filter(|ext| ext.enabled())
-        .filter(|ext| ext.details().location == extensions::Location::Sidebar)
-        .map(|ext| rsx!(ext.render(cx.scope)))
+        .filter(|(_, ext)| ext.details().location == extensions::Location::Sidebar)
+        .map(|(_, ext)| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
 
