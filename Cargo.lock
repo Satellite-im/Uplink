@@ -7331,9 +7331,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff5add4236d8f4abcca1f25ac24651954282312b00e9869f865ad5bae653e7b5"
+checksum = "954f1bc6c204d8245029fa5c21768c4ded6700dd7176da1496081ca7b023d19c"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -9233,7 +9233,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901#cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901"
+source = "git+https://github.com/Satellite-im/Warp?rev=fc566e8abb977705dfc8ae95eb9c47a6b329e194#fc566e8abb977705dfc8ae95eb9c47a6b329e194"
 dependencies = [
  "aes-gcm 0.10.2",
  "anyhow",
@@ -9289,7 +9289,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901#cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901"
+source = "git+https://github.com/Satellite-im/Warp?rev=fc566e8abb977705dfc8ae95eb9c47a6b329e194#fc566e8abb977705dfc8ae95eb9c47a6b329e194"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9320,7 +9320,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901#cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901"
+source = "git+https://github.com/Satellite-im/Warp?rev=fc566e8abb977705dfc8ae95eb9c47a6b329e194#fc566e8abb977705dfc8ae95eb9c47a6b329e194"
 dependencies = [
  "paste",
  "quote",
@@ -9330,7 +9330,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901#cfd1e4aa0fa8f1904aa714c34b6e83f7f0a9c901"
+source = "git+https://github.com/Satellite-im/Warp?rev=fc566e8abb977705dfc8ae95eb9c47a6b329e194#fc566e8abb977705dfc8ae95eb9c47a6b329e194"
 dependencies = [
  "anyhow",
  "async-stream",
