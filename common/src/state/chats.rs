@@ -10,7 +10,7 @@ use uuid::Uuid;
 use warp::{
     constellation::Progression,
     crypto::DID,
-    raygun::{self, ConversationType},
+    raygun::{self, ConversationType, Location},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
@@ -69,7 +69,7 @@ pub struct Chat {
     #[serde(skip)]
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
-    pub files_attached_to_send: Vec<PathBuf>,
+    pub files_attached_to_send: Vec<Location>,
     #[serde(skip)]
     pub pinned_messages: Vec<raygun::Message>,
     #[serde(skip, default)]
@@ -82,7 +82,7 @@ impl Chat {
         chat_id: Uuid,
         did: DID,
         msg: Vec<String>,
-        attachments: &[PathBuf],
+        attachments: &[Location],
     ) -> Uuid {
         let new = PendingMessage::new(chat_id, did, msg, attachments);
         let uuid = new.message.inner.id();

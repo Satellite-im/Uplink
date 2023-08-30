@@ -206,7 +206,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         let cmd = RayGunCmd::SendMessage {
                             conv_id: c,
                             msg,
-                            location: Location::Disk,
                             attachments: Vec::new(),
                             ui_msg_id: uuid,
                             rsp: tx,

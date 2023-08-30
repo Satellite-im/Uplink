@@ -43,7 +43,7 @@ use warp::{
     blink::{self},
     crypto::DID,
     logging::tracing::log,
-    raygun::ConversationType,
+    raygun::{ConversationType, Location},
 };
 
 use dioxus_desktop::wry::webview::FileDropEvent;
@@ -193,10 +193,20 @@ pub fn Compose(cx: Scope) -> Element {
                         .map(|f| f.files_attached_to_send)
                         .unwrap_or_default()
                         .iter()
-                        .filter(|file_name| !new_files.contains(file_name))
+                        .filter(|file_location| {
+                            if let Location::Disk { path } = file_location {
+                                !new_files.contains(path)
+                            } else {
+                                false
+                            }
+                        })
                         .cloned()
                         .collect();
-                    new_files_to_upload.extend(new_files);
+                    let local_disk_files: Vec<Location> = new_files
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    new_files_to_upload.extend(local_disk_files);
                     state
                         .write()
                         .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));

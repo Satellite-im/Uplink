@@ -316,7 +316,6 @@ pub fn init_coroutine<'a>(
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessage {
                             conv_id: conversation_id,
                             msg: vec![],
-                            location: Location::Constellation,
                             attachments: files_path,
                             ui_msg_id: None,
                             rsp: tx,

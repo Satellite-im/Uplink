@@ -31,6 +31,7 @@ use rfd::FileDialog;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
+use warp::raygun::Location;
 
 pub mod controller;
 pub mod file_modal;
@@ -76,7 +77,7 @@ pub enum ChanCmd {
     },
     DeleteItems(Item),
     SendFileToChat {
-        files_path: Vec<PathBuf>,
+        files_path: Vec<Location>,
         conversation_id: Uuid,
     },
 }
@@ -109,7 +110,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let files_selected_to_send: &UseRef<Vec<String>> = use_ref(cx, Vec::new);
+    let files_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let current_dir_path = storage_controller
         .read()
         .dirs_opened_ref

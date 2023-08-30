@@ -28,7 +28,11 @@ use kit::{
 };
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun};
+use warp::{
+    crypto::DID,
+    logging::tracing::log,
+    raygun::{self, Location},
+};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 
@@ -147,7 +151,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     None => RayGunCmd::SendMessage {
                         conv_id,
                         msg,
-                        location: raygun::Location::Disk,
                         attachments,
                         ui_msg_id,
                         rsp: tx,
@@ -163,11 +166,25 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     .mutate(Action::ClearChatAttachments(conv_id));
                 let attachment_files: Vec<String> = attachments
                     .iter()
-                    .map(|p| {
-                        p.file_name()
-                            .map(|os| os.to_str().unwrap_or_default())
-                            .unwrap_or_default()
-                            .to_string()
+                    .map(|p| match p {
+                        Location::Disk { path } => {
+                            if let Some(name) = path
+                                .file_name()
+                                .map(|ostr| ostr.to_str().unwrap_or_default())
+                            {
+                                return name.to_string();
+                            }
+                            String::new()
+                        }
+                        Location::Constellation { path } => {
+                            if let Some(name) = PathBuf::from(path)
+                                .file_name()
+                                .map(|ostr| ostr.to_str().unwrap_or_default())
+                            {
+                                return name.to_string();
+                            }
+                            String::new()
+                        }
                     })
                     .collect();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
@@ -518,10 +535,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                     .unwrap_or_default()
                                     .iter()
-                                    .filter(|file_name| !new_files.contains(file_name))
+                                    .filter(|file_location| {
+                                        if let Location::Disk { path } = file_location {
+                                            !new_files.contains(path)
+                                        } else {
+                                            false
+                                        }
+                                    })
                                     .cloned()
                                     .collect();
-                                new_files_to_upload.extend(new_files);
+                                let local_disk_files: Vec<Location> = new_files
+                                    .iter()
+                                    .map(|path| Location::Disk { path: path.clone() }) 
+                                    .collect();
+                                new_files_to_upload.extend(local_disk_files);
                                 state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                                 update_send();
                             }
@@ -568,10 +595,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                             .unwrap_or_default()
                             .iter()
-                            .filter(|file_name| !files_local_path.contains(file_name))
+                            .filter(|file_location| {
+                                if let Location::Disk { path } = file_location {
+                                    !files_local_path.contains(path)
+                                } else {
+                                    false
+                                }
+                            })
                             .cloned()
                             .collect();
-                    new_files_to_upload.extend(files_local_path);
+                        let local_disk_files: Vec<Location> = files_local_path
+                            .iter()
+                            .map(|path| Location::Disk { path: path.clone() }) 
+                            .collect();
+                    new_files_to_upload.extend(local_disk_files);
                     state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                     }
                 },
@@ -604,11 +641,18 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default()
         .iter()
-        .map(|file_path| {
-            let filename = file_path.to_string_lossy().to_string();
+        .map(|location| {
+            let filename = match location {
+                Location::Constellation { path } => PathBuf::from(path).file_name().unwrap_or_default().to_string_lossy().to_string(),
+                Location::Disk { path } => path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+            };
+    
             rsx!(FileEmbed {
-                filename: file_path.to_string_lossy().to_string(),
-                filepath: file_path.clone(),
+                filename: filename.clone(),
+                filepath: match location {
+                    Location::Constellation { path } => PathBuf::from(&path),
+                    Location::Disk { path } => path.clone(),
+                },
                 remote: false,
                 button_icon: icons::outline::Shape::Trash,
                 on_press: move |_| {
@@ -617,24 +661,30 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         .get_active_chat()
                         .map(|f| f.files_attached_to_send)
                         .unwrap_or_default();
+                    
                     attachments.retain(|x| {
-                        let s = x.to_string_lossy().to_string();
+                        let s = match x {
+                            Location::Constellation { path } => PathBuf::from(path).file_name().unwrap_or_default().to_string_lossy().to_string(),
+                Location::Disk { path } => path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                        };
                         s != filename
                     });
+    
                     state
                         .write()
                         .mutate(Action::SetChatAttachments(cx.props.chat_id, attachments));
                     cx.props.on_remove.call(());
                 },
             })
-        })));
-
+        })
+    ));
+    
     let attachments_vec = state
         .read()
         .get_active_chat()
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default();
-
+    
     if attachments_vec.is_empty() {
         return None;
     }

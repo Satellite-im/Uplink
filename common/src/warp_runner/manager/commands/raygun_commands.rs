@@ -96,8 +96,7 @@ pub enum RayGunCmd {
     SendMessage {
         conv_id: Uuid,
         msg: Vec<String>,
-        attachments: Vec<PathBuf>,
-        location: Location,
+        attachments: Vec<Location>,
         ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
@@ -127,7 +126,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         reply_to: Uuid,
         msg: Vec<String>,
-        attachments: Vec<PathBuf>,
+        attachments: Vec<Location>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
@@ -251,7 +250,6 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
-            location,
             ui_msg_id: ui_id,
             rsp,
         } => {
@@ -260,7 +258,7 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, None, location, attachments.clone(), msg.clone())
+                    .attach(conv_id, None, attachments.clone(), msg.clone())
                     .await
                 {
                     Ok(mut stream) => loop {
@@ -340,7 +338,7 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, Some(reply_to), Location::Disk, attachments, msg)
+                    .attach(conv_id, Some(reply_to), attachments, msg)
                     .await
                 {
                     Ok(mut stream) => loop {

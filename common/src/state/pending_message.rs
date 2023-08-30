@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use uuid::Uuid;
-use warp::{constellation::Progression, crypto::DID};
+use warp::{constellation::Progression, crypto::DID, raygun::Location};
 
 use crate::warp_runner::ui_adapter::Message;
 // We can improve message equality detection if warp e.g. can send us their assigned uuid.
@@ -15,7 +15,7 @@ pub struct PendingMessage {
 
 impl PendingMessage {
     // Use this for comparison cases
-    pub fn for_compare(text: Vec<String>, attachments: &[PathBuf], id: Option<Uuid>) -> Self {
+    pub fn for_compare(text: Vec<String>, attachments: &[Location], id: Option<Uuid>) -> Self {
         let mut inner = warp::raygun::Message::default();
         if let Some(m_id) = id {
             inner.set_id(m_id);
@@ -29,12 +29,25 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| {
-                    if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
-                    {
-                        return name.to_string();
+                .map(|p| match p {
+                    Location::Disk { path } => {
+                        if let Some(name) = path
+                            .file_name()
+                            .map(|ostr| ostr.to_str().unwrap_or_default())
+                        {
+                            return name.to_string();
+                        }
+                        String::new()
                     }
-                    String::new()
+                    Location::Constellation { path } => {
+                        if let Some(name) = PathBuf::from(path)
+                            .file_name()
+                            .map(|ostr| ostr.to_str().unwrap_or_default())
+                        {
+                            return name.to_string();
+                        }
+                        String::new()
+                    }
                 })
                 .collect(),
             attachments_progress: HashMap::new(),
@@ -42,7 +55,7 @@ impl PendingMessage {
         }
     }
 
-    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &[PathBuf]) -> Self {
+    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &[Location]) -> Self {
         // Create a dummy message
         let mut inner = warp::raygun::Message::default();
         inner.set_id(Uuid::new_v4());
@@ -51,7 +64,10 @@ impl PendingMessage {
         inner.set_value(text);
         let attachments = attachments
             .iter()
-            .filter(|path| path.is_file())
+            .filter(|location| match location {
+                Location::Disk { path } => path.is_file(),
+                Location::Constellation { .. } => true,
+            })
             .cloned()
             .collect::<Vec<_>>();
 
@@ -63,12 +79,25 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| {
-                    if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
-                    {
-                        return name.to_string();
+                .map(|p| match p {
+                    Location::Disk { path } => {
+                        if let Some(name) = path
+                            .file_name()
+                            .map(|ostr| ostr.to_str().unwrap_or_default())
+                        {
+                            return name.to_string();
+                        }
+                        String::new()
                     }
-                    String::new()
+                    Location::Constellation { path } => {
+                        if let Some(name) = PathBuf::from(path)
+                            .file_name()
+                            .map(|ostr| ostr.to_str().unwrap_or_default())
+                        {
+                            return name.to_string();
+                        }
+                        String::new()
+                    }
                 })
                 .collect(),
             attachments_progress: HashMap::new(),
