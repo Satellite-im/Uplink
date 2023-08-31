@@ -98,6 +98,8 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
 
+    let share_files_from_storage_mode = use_state(cx, || false);
+
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
@@ -463,6 +465,15 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     id: file.id().to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
+                                            icon: Icon::Share,
+                                            aria_label: "files-download".into(),
+                                            text: "Share Files".into(),
+                                            onpress: move |_| {
+                                                share_files_from_storage_mode.set(!share_files_from_storage_mode);
+                                            },
+                                        },
+                                        hr {},
+                                        ContextItem {
                                             icon: Icon::Pencil,
                                             aria_label: "files-rename".into(),
                                             text: get_local_text("files.rename"),
@@ -471,7 +482,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             }
                                         },
                                         if !*storage_files_to_chat_mode_is_active.get() {
-                                            rsx!( ContextItem {
+                                            rsx!(ContextItem {
                                                 icon: Icon::ArrowDownCircle,
                                                 aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
@@ -495,7 +506,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     file_checkbox {
                                         file_path: file_path.clone(),
                                         storage_controller: storage_controller.clone(),
-                                        select_files_to_send_mode:storage_files_to_chat_mode_is_active.clone(),
+                                        send_files_mode: *storage_files_to_chat_mode_is_active.get() || *share_files_from_storage_mode.get(),
                                     },
                                     File {
                                         key: "{key}-file",
@@ -504,7 +515,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         aria_label: file.name(),
                                         with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onpress: move |_| {
-                                            if *storage_files_to_chat_mode_is_active.get() {
+                                            if *storage_files_to_chat_mode_is_active.get() || *share_files_from_storage_mode.get() {
                                                 add_remove_file_to_send(storage_controller.clone(), file_path2.clone());
                                                 return;
                                             }

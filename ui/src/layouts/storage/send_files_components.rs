@@ -10,9 +10,9 @@ pub fn file_checkbox(
     cx: Scope<'a>,
     file_path: String,
     storage_controller: UseRef<StorageController>,
-    select_files_to_send_mode: UseState<bool>,
+    send_files_mode: bool,
 ) -> Element<'a> {
-    if *select_files_to_send_mode.get() {
+    if *send_files_mode {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return cx.render(rsx!( div {
             class: "checkbox-position",
