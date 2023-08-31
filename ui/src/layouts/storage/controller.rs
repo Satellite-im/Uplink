@@ -1,10 +1,13 @@
 use std::path::PathBuf;
 
-use common::state::{storage::Storage, State};
+use common::{
+    state::{storage::Storage, State},
+    ROOT_DIR_NAME,
+};
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_ref, UseRef, UseSharedState};
 use uuid::Uuid;
-use warp::constellation::directory::Directory;
+use warp::{constellation::directory::Directory, raygun::Location};
 
 use super::functions::{self, format_item_size};
 
@@ -19,6 +22,8 @@ pub struct StorageController {
     pub add_new_folder: bool,
     pub first_render: bool,
     pub show_file_modal: Option<warp::constellation::file::File>,
+    pub files_selected_to_send: Vec<Location>,
+    pub current_dir_path_as_string: String,
 }
 
 impl StorageController {
@@ -37,6 +42,21 @@ impl StorageController {
             add_new_folder: false,
             first_render: true,
             show_file_modal: None,
+            files_selected_to_send: state
+                .read()
+                .get_active_chat()
+                .map(|f| f.files_attached_to_send)
+                .unwrap_or_default()
+                .to_vec(),
+            current_dir_path_as_string: state
+                .read()
+                .storage
+                .directories_opened
+                .iter()
+                .filter(|dir| dir.name() != ROOT_DIR_NAME)
+                .map(|dir| dir.name())
+                .collect::<Vec<_>>()
+                .join("/"),
         };
         use_ref(cx, || controller)
     }

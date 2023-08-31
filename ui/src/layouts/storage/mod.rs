@@ -98,24 +98,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
 
-    let new_files_to_upload: Vec<_> = state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default()
-        .to_vec();
-
-    let files_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, || new_files_to_upload);
-
-    let current_dir_path = storage_controller
-        .read()
-        .dirs_opened_ref
-        .iter()
-        .filter(|dir| dir.name() != ROOT_DIR_NAME)
-        .map(|dir| dir.name())
-        .collect::<Vec<_>>()
-        .join("/");
-
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
@@ -316,7 +298,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                  )
                 }
                 send_files_from_chat_topbar {
-                    files_selected_to_send: files_selected_to_send.clone(),
+                    storage_controller: storage_controller.clone(),
                     select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
                     on_press_send_files_button: move |files_location_path| {
                         if let Some(f) = on_files_selected_to_send {
@@ -469,8 +451,8 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file_name3 = file.name();
-                            let file_path = format!("{}/{}", current_dir_path, file_name3);
-                            let file_path2 = format!("{}/{}", current_dir_path, file_name3);
+                            let file_path = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
+                            let file_path2 = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -512,7 +494,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     )),
                                     file_checkbox {
                                         file_path: file_path.clone(),
-                                        files_selected_to_send: files_selected_to_send.clone(),
+                                        storage_controller: storage_controller.clone(),
                                         select_files_to_send_mode:storage_files_to_chat_mode_is_active.clone(),
                                     },
                                     File {
@@ -523,7 +505,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onpress: move |_| {
                                             if *storage_files_to_chat_mode_is_active.get() {
-                                                add_remove_file_to_send(files_selected_to_send.clone(), file_path2.clone());
+                                                add_remove_file_to_send(storage_controller.clone(), file_path2.clone());
                                                 return;
                                             }
                                             let key = file_id;
