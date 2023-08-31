@@ -537,7 +537,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     .iter()
                                     .filter(|file_location| {
                                         match file_location {
-                                            Location::Disk { path } => { 
+                                            Location::Disk { path } => {
                                                 !new_files.contains(path)
                                             },
                                             Location::Constellation { .. } => {
@@ -612,7 +612,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             .iter()
                             .filter(|file_location| {
                                 match file_location {
-                                    Location::Disk { path } => { 
+                                    Location::Disk { path } => {
                                         !files_local_path.contains(path)
                                     },
                                     Location::Constellation { .. } => {
