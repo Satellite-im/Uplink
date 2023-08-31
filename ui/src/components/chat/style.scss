@@ -171,7 +171,7 @@
   justify-content: center;
   align-items: stretch;
   margin-right: 8px;
-  z-index: 2;
+  z-index: 10002; // To be above the modal
 }
 
 .create-group-name {
