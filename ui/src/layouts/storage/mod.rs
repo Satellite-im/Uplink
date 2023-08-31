@@ -13,6 +13,7 @@ use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
 };
 use common::warp_runner::thumbnail_to_base64;
+use common::ROOT_DIR_NAME;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
@@ -49,8 +50,6 @@ use crate::layouts::storage::send_files_components::{
 use self::controller::{StorageController, UploadFileController};
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
-
-pub const ROOT_DIR_NAME: &str = "root";
 
 static ALLOW_FOLDER_NAVIGATION: &str = r#"
     var folders_element = document.getElementById('files-list');
