@@ -102,10 +102,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .read()
         .get_active_chat()
         .map(|f| f.files_attached_to_send)
-        .unwrap_or_default()
-        .iter()
-        .cloned()
-        .collect();
+        .unwrap_or_default().to_vec();
 
     let files_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, || new_files_to_upload);
 
