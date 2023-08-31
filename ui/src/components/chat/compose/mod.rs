@@ -144,7 +144,7 @@ pub fn Compose(cx: Scope) -> Element {
                     let mut new_files_to_upload: Vec<_> = state
                         .read()
                         .get_active_chat()
-                        .and_then(|f| Some(f.files_attached_to_send))
+                        .map(|f| f.files_attached_to_send)
                         .unwrap_or_default()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
