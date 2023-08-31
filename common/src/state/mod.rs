@@ -1744,7 +1744,7 @@ pub fn group_messages<'a>(
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.read().inner.sender() {
                 let g = GroupedMessage {
-                    message: msg.clone(),
+                    message: *msg,
                     attachment_progress: None,
                     is_pending: false,
                     is_first: false,
@@ -1764,7 +1764,7 @@ pub fn group_messages<'a>(
         // new group
         let mut grp = MessageGroup::new(msg.read().inner.sender(), &my_did);
         let g = GroupedMessage {
-            message: msg.clone(),
+            message: *msg,
             attachment_progress: None,
             is_pending: false,
             is_first: true,
