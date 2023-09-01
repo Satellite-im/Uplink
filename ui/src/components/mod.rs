@@ -1,5 +1,6 @@
 pub mod calldialog;
 pub mod chat;
+pub mod community;
 pub mod debug_logger;
 pub mod emoji_group;
 pub mod files;

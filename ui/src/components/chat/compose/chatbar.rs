@@ -4,14 +4,15 @@ use std::{
 };
 
 use common::{
-    icons,
+    icons::{self},
     language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::layout::modal::Modal;
 use kit::{
     components::{
         embeds::file_embed::FileEmbed,
@@ -30,10 +31,14 @@ use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun};
 
 const MAX_CHARS_LIMIT: usize = 1024;
-const MAX_FILES_PER_MESSAGE: usize = 8;
+const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 use crate::{
-    components::paste_files_with_shortcut,
+    components::{
+        chat::compose::context_file_location::FileLocationContext,
+        chat::compose::messages::SCROLL_BOTTOM, paste_files_with_shortcut,
+    },
+    layouts::storage::FilesLayout,
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -74,7 +79,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .map(|data| data.active_chat.id)
         .unwrap_or(Uuid::nil());
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
+    let update_script = use_state(cx, String::new);
+    let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let show_storage_modal = use_state(cx, || false);
 
+    let with_scroll_btn = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.scroll_value.unwrap_or_default())
+        .unwrap_or_default()
+        < SCROLL_BTN_THRESHOLD;
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -141,6 +155,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     None => RayGunCmd::SendMessage {
                         conv_id,
                         msg,
+                        location: raygun::Location::Disk,
                         attachments,
                         ui_msg_id,
                         rsp: tx,
@@ -479,7 +494,28 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         disabled: is_loading || disabled,
                         aria_label: "upload-button".into(),
                         appearance: Appearance::Primary,
-                        onpress: move |_| {
+                        onpress: move |e: Event<MouseData>| {
+                            let mouse_data = e;
+                            let script = include_str!("../show_context.js")
+                                .replace("UUID", upload_button_menu_uuid)
+                                .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
+                                .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string());
+                            update_script.set(script);
+                        },
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: get_local_text("files.upload"),
+                            }
+                        )),
+                    }
+                    FileLocationContext {
+                        id: upload_button_menu_uuid,
+                        update_script: update_script,
+                        on_press_storage: move |_| {
+                            show_storage_modal.set(true);
+                        },
+                        on_press_local_disk: move |_| {
                             if disabled {
                                 return;
                             }
@@ -498,12 +534,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 update_send();
                             }
                         },
-                        tooltip: cx.render(rsx!(
-                            Tooltip {
-                                arrow_position: ArrowPosition::Bottom,
-                                text: get_local_text("files.upload"),
+                    }
+                    if *show_storage_modal.get() {
+                        rsx!(
+                            Modal {
+                                open: *show_storage_modal.clone(),
+                                transparent: false,
+                                onclose: move |_| show_storage_modal.set(false),
+                                div {
+                                    class: "modal-div-files-layout",
+                                    FilesLayout {
+                                        send_files_to_chat_mode: show_storage_modal.clone(),
+                                        chat_id: chat_id,
+                                    }
+                                }
                             }
-                        )),
+                        )
                     }
                 ),
             )
@@ -524,29 +570,41 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     ));
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path: Vec<PathBuf>| {
-                    if !files_local_path.is_empty() {
-                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default()
-                            .iter()
-                            .filter(|file_name| !files_local_path.contains(file_name))
-                            .cloned()
-                            .collect();
-                    new_files_to_upload.extend(files_local_path);
-                    state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                    }
-                },
+        div {
+            class: "chatbar-container",
+            with_scroll_btn.then(|| {
+                rsx!(div {
+                    class: "btn scroll-bottom-btn",
+                    onclick: |_| {
+                        let _ = use_eval(cx)(SCROLL_BOTTOM);
+                    },
+                    get_local_text("messages.scroll-bottom"),
+                })
             })
-        }
-        Attachments {
-            chat_id: chat_id,
-            on_remove: move |_| {
-                update_send();
+            if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
+                rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                    on_paste: move |files_local_path: Vec<PathBuf>| {
+                        if !files_local_path.is_empty() {
+                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                .unwrap_or_default()
+                                .iter()
+                                .filter(|file_name| !files_local_path.contains(file_name))
+                                .cloned()
+                                .collect();
+                        new_files_to_upload.extend(files_local_path);
+                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        }
+                    },
+                })
             }
+            Attachments {
+                chat_id: chat_id,
+                on_remove: move |_| {
+                    update_send();
+                }
+            }
+            chatbar
         }
-        chatbar
     ))
 }
 

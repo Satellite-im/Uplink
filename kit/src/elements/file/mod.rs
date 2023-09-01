@@ -88,9 +88,9 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     format_args!("file {}", if disabled { "disabled" } else { "" })
                 },
                 aria_label: "{aria_label}",
+                onclick: move |_| emit_press(&cx),
                 div {
                     class: "icon alignment",
-                    onclick: move |_| emit_press(&cx),
                     div {
                         position: "relative",
                         padding_top: "5px",

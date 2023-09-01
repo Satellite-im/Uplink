@@ -97,6 +97,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<PathBuf>,
+        location: Location,
         ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
@@ -250,6 +251,7 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
+            location,
             ui_msg_id: ui_id,
             rsp,
         } => {
@@ -258,13 +260,7 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(
-                        conv_id,
-                        None,
-                        Location::Disk,
-                        attachments.clone(),
-                        msg.clone(),
-                    )
+                    .attach(conv_id, None, location, attachments.clone(), msg.clone())
                     .await
                 {
                     Ok(mut stream) => loop {
@@ -413,7 +409,6 @@ async fn init_warp(
 ) -> Result<WarpInit, Error> {
     log::trace!("init_warp starting");
     let conversations = messaging.list_conversations().await?;
-
     //let mut all_conv_ids = HashSet::new();
     let mut all_identities = HashSet::new();
     let friends = Friends {

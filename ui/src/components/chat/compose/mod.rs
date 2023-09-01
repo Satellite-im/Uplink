@@ -1,4 +1,5 @@
 mod chatbar;
+mod context_file_location;
 mod messages;
 mod quick_profile;
 
@@ -9,8 +10,7 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        indicator::Platform, invisible_closer::InvisibleCloser,
-        message_group::MessageGroupSkeletal, user_image::UserImage,
+        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
@@ -19,7 +19,7 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    layout::topbar::Topbar,
+    layout::{modal::Modal, topbar::Topbar},
 };
 
 use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
@@ -251,17 +251,28 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
-            InvisibleCloser {
-                onclose: move |_| {
-                    show_edit_group.set(None);
+                Modal {
+                    open: show_edit_group.is_some(),
+                    transparent: true,
+                    with_title: get_local_text("friends.edit-group"),
+                    onclose: move |_| {
+                        show_edit_group.set(None);
+                    },
+                    EditGroup {}
                 }
-            }
-            EditGroup {}
-        )),
+            )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
-                GroupUsers {
-                    active_chat: state.read().get_active_chat(),
+                Modal {
+                    open: show_group_users.is_some(),
+                    transparent: true,
+                    with_title: get_local_text("friends.view-group"),
+                    onclose: move |_| {
+                        show_group_users.set(None);
+                    },
+                    GroupUsers {
+                        active_chat: state.read().get_active_chat(),
+                    }
                 }
         )),
         match data.as_ref() {
@@ -378,6 +389,8 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let call_pending = use_state(cx, || false);
     let active_call = state.read().ui.call_info.active_call();
     let call_in_progress = active_call.is_some(); // active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
+
+    let show_pinned = use_state(cx, || false);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
         to_owned![call_pending, state];
@@ -508,23 +521,31 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
-        div {
-            position: "relative",
-            match state.read().get_active_chat() {
-                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
-                None => cx.render(rsx!(())),
-            },
-            div {
-                id: "pin-button",
-                Button {
-                    icon: Icon::Pin,
-                    aria_label: "pin-label".into(),
-                    appearance: Appearance::Secondary,
-                    tooltip: cx.render(rsx!(Tooltip {
-                        arrow_position: ArrowPosition::TopRight,
-                        text: get_local_text("messages.pin-view"),
-                    })),
+        show_pinned.then(|| rsx!(
+            Modal {
+                open: true,
+                transparent: true,
+                with_title: get_local_text("messages.pin-view"),
+                onclose: move |_| {
+                    show_pinned.set(false);
+                },
+                if let Some(chat) = active_chat {
+                    rsx!(PinnedMessages{ active_chat: chat.clone(), onclose: move |_| {
+                        show_pinned.set(false);
+                    } })
                 }
+            }
+        )),
+        Button {
+            icon: Icon::Pin,
+            aria_label: "pin-label".into(),
+            appearance: if *show_pinned.clone() { Appearance::Primary } else { Appearance::Secondary },
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::Top,
+                text: get_local_text("messages.pin-view"),
+            })),
+            onpress: move |_| {
+                show_pinned.set(true);
             }
         }
         Button {
