@@ -3,7 +3,7 @@
     display: inline-flex;
     justify-content: space-between;
     padding: var(--padding);
-    border: 1px solid var(--border-subtle-color);
+    border-top: 1px solid var(--border-subtle-color);
 
     &.bubble {
         flex-direction: column;
