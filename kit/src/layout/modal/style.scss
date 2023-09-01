@@ -1,7 +1,8 @@
 
-.modal {
+.modal-wrap {
     display: inline-flex;
     justify-content: center;
+    align-items: center;
     position: fixed;
     z-index: 1001;
     top: 1.5rem;
@@ -10,7 +11,7 @@
     right: 0;
     background: rgba(0,0,0, 0.9);
 
-    .btn-wrap {
+    .close-btn {
       position: absolute;
       top: var(--gap);
       right: var(--gap);
@@ -18,5 +19,29 @@
 
     img {
       align-self: center;
+    }
+
+    .modal {
+      background-color: var(--secondary-dark);
+      padding: var(--gap);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-subtle-color);
+      z-index: 1001;
+    }
+
+    &.transparent {
+      background: transparent;
+
+      .modal { 
+        position: absolute;
+        top: calc(var(--height-topbar) + var(--gap-less));
+        right: var(--gap-less);
+        display: inline-flex;
+        flex-direction: column;
+
+        label:first-of-type  {
+          margin-bottom: var(--gap);
+        }
+      }
     }
 }
