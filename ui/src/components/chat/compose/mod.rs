@@ -1,4 +1,5 @@
 mod chatbar;
+mod context_file_location;
 mod messages;
 mod quick_profile;
 
