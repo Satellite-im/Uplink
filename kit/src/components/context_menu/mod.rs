@@ -146,6 +146,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 id: "{id}",
+                class: "context-inner",
                 &cx.props.children,
             },
             div {

@@ -43,6 +43,7 @@ use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
+use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
@@ -130,6 +131,9 @@ pub enum UplinkRoute {
 
     #[route("/files")]
     FilesLayout {},
+
+    #[route("/community")]
+    CommunityLayout {},
 }
 
 fn app(cx: Scope) -> Element {
@@ -771,6 +775,7 @@ pub fn get_download_modal<'a>(
     cx.render(rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
+        transparent: false,
         children: cx.render(rsx!(
             div {
             class: "download-modal disp-flex col",
@@ -1008,6 +1013,7 @@ fn AppNav<'a>(
             UplinkRoute::SettingsLayout {} => "/settings",
             UplinkRoute::FriendsLayout {} => "/friends",
             UplinkRoute::FilesLayout {} => "/files",
+            _ => "",
         },
         onnavigate: move |r| {
             if let Some(f) = onnavigate {

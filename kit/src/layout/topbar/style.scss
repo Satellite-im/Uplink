@@ -6,13 +6,14 @@
 	width: 100%;
 	border-bottom: 1px solid var(--border-subtle-color);
 	padding: var(--gap);
+	display: inline-flex;
+	align-items: center;
+	padding: var(--gap);
+	height: var(--height-topbar);
 	.children {
 		flex: 1;
 		display: inline-flex;
 		gap: var(--gap);
 		overflow: hidden;
-		margin: calc(-1*var(--gap));
-		padding: var(--gap);
 	}
-	
 }

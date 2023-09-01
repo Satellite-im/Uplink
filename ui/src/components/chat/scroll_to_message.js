@@ -1,6 +1,3 @@
-var pinned = document.getElementById("pinned-messages-container")
-pinned.classList.add("hidden")
-
 var message = document.getElementById("message-$UUID-false")
 message.scrollIntoView({ behavior: 'smooth', block: 'end' })
 

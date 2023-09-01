@@ -1,95 +1,86 @@
 #pinned-messages-container {
-    position: absolute; 
-    right: 0; 
-    top: 120%; 
-    width: 400px; 
+    max-width: 400px; 
     max-height: 500px;
-    background-color: var(--secondary); 
-    border-radius: 10px; 
     overflow: hidden;
-    z-index: 10;
-    &.hidden {
-        display: none;
-    }
 }
 
 .pinned-messages {
-    border: 1px solid var(--primary-dark);
-    border-top: none;
-    border-radius: 0px 0px 10px 10px;
     display: flex;
     flex-direction: column;
     max-height: 300px;
     overflow-y: auto;
+    flex: 1;
+    gap: var(--gap);
+    min-width: var(--width-sidebar);
 }
 
+.full-flex {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap);
+}
 .pinned-empty {
     width: 100%; 
-    height: 200px; 
-    font-size: var(--text-size-more); 
     display: flex; 
     align-items: center; 
     text-align: center; 
-    padding: var(--padding-more);
     color: var(--text-color);
+    font-size: var(--text-size-less);
 }
 
 .pinned-message-wrap {
     position: relative;
     display: inline-flex;
-    border: 1px solid var(--primary-dark);
-    border-radius: 5px;
-    margin: 4px;
-    padding: 4px;
+    background-color: var(--secondary);
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+    gap: var(--gap);
 }
 
 .pinned-button-container {
     display: flex; 
-    margin-left: auto; 
-    margin-right: -4px;
+    gap: var(--gap-less);
 }
 
 .pinned-buttons {
-    height: fit-content;
-    width: fit-content; 
+    height: var(--height-input-less);
     display: inline-flex;
-    font-size: var(--text-size-less); 
-    background: var(--background-dark); 
-    padding: 4px; 
-    border-radius: var(--border-radius); 
-    margin-left: 4px;
+    font-size: var(--text-size-less);
+    background: var(--secondary-dark);
+    padding: 0 var(--gap);
+    border-radius: var(--border-radius);
     white-space: nowrap;
+    border-radius: var(--border-radius-more);
+    align-items: center;
 }
 
 .pinned-message { 
     white-space: pre-wrap; 
-    width: fit-content; 
     overflow: hidden; 
     overflow-wrap: anywhere;
-}
-
-.pinned-header {
-    width: 100%; 
-    height: 40px; 
-    background: var(--secondary-dark);
-    padding: var(--padding-less);
-    color: var(--text-color);
+    width: 100%;
 }
 
 .pinned-content-container {
     display: flex; 
     flex-direction: column; 
-    padding: var(--padding-less); 
-    padding-top: 0; 
     color: var(--text-color);
+    width: 100%;
 }
 
 .pinned-sender-container {
-    margin-bottom: var(--padding-less);
+    width: 100%;
 }
 
 .pinned-sender-time {
     font-size: var(--text-size-less);
+    color: var(--text-color-muted);
+}
+
+.pinned-sender {
+    flex: 1;
+    min-width: 0;
 }
 
 .background-highlight {

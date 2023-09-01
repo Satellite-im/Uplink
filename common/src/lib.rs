@@ -158,6 +158,8 @@ pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
     }
 });
 
+pub const MAX_FILES_PER_MESSAGE: usize = 8;
+
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
 ];

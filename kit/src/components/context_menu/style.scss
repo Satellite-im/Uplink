@@ -1,7 +1,7 @@
 .context-menu {
 	position: fixed;
 	border-radius: var(--border-radius);
-	background-color: rgba(0,0,0,0.2);
+	background-color: var(--secondary-dark);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
 	z-index: 1000;
@@ -10,7 +10,8 @@
 	padding: var(--gap-less);
 	gap: var(--gap-less);
 	color: var(--text-color-bright);
-	border: 1px solid var(--secondary);
+	border: 1px solid var(--border-subtle-color);
+
 	.context-item {
 		display: flex;
 		border-radius: var(--border-radius-less);
@@ -41,7 +42,7 @@
 	}
 	hr {
 		border: none;
-		border-bottom: 1px solid var(--background);
+		border-bottom: 1px solid var(--secondary);
 	}
 }
 .context-wrap {
@@ -72,12 +73,13 @@
 
 .identity-header {
 	display: flex;
-	height: 80px;
-	min-width: 240px;
+	height: calc(var(--height-input) * 3);
+	min-width: var(--width-sidebar);
 	background-size: cover;
 	background-color: var(--secondary);
-	margin: calc(-1*var(--gap-less));
+	margin-bottom: var(--height-input);
 	padding: 0;
+
 	#banner-image {
 		display: flex;
 		align-items: flex-end;
@@ -86,17 +88,24 @@
 		margin: 0;
 		padding: 0;
 		background-size: cover;
+		background-position: center;
 		background-color: rgba(0,0,0,0);
+		border-radius: var(--border-radius) var(--border-radius) 0 0;
 		border: 0px solid var(--background);
+		position: relative;
 	}
 	#profile-image {
 		margin: var(--gap-less);
-		width: var(--height-input);
-		height: var(--height-input);
+		width: calc(var(--height-input) * 2);
+		height: calc(var(--height-input) * 2);
 		border-radius: 50%;
 		background-size: cover;
 		background-color: var(--secondary);
-		border: 1px solid var(--background);
+		position: absolute;
+		bottom: calc(var(--height-input) * -1);
+		left: var(--gap);
+		border: 4px solid var(--secondary-dark);
+
 		.indicator {
 			position: relative;
 			color: var(--background);
