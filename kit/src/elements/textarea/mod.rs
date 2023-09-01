@@ -74,6 +74,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         cx.props.id.clone()
     };
+    let id2 = id.clone();
     let id_char_counter = id.clone();
     let focus_script = if cx.props.ignore_focus {
         String::new()
@@ -106,7 +107,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text_value = Rc::new(RefCell::new(value.to_string()));
     let text_value_onchange = Rc::clone(&text_value);
     let text_value_onreturn = Rc::clone(&text_value);
-
+    let eval = use_eval(cx);
+    let cursor_eval = format!("return document.getElementById(\"{id2}\").selectionEnd;");
     cx.render(rsx! (
         div {
             id: "input-group-{id}",
@@ -127,11 +129,22 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onblur: move |_| {
                         onreturn.call((cv2.to_string(), false, Code::Enter));
                     },
-                    oninput: move |evt| {
-                        let current_val = evt.value.clone();
-                        text_value_onchange.borrow_mut().clear();
-                        text_value_onchange.borrow_mut().push_str(&current_val);
-                        onchange.call((current_val, true));
+                    oninput: {
+                        to_owned![eval, cursor_eval];
+                        move |evt| {
+                            let current_val = evt.value.clone();
+                            text_value_onchange.borrow_mut().clear();
+                            text_value_onchange.borrow_mut().push_str(&current_val);
+                            onchange.call((current_val, true));
+                            to_owned![eval, cursor_eval];
+                            async move {
+                                if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(val) = r.join().await {
+                                        log::debug!("cursor {:?}", val);
+                                    }
+                                }
+                            }
+                        }
                     },
                     onkeyup: move |evt| {
                         let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
@@ -144,6 +157,33 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         }
                     },
+                    onmousedown: {                            
+                        to_owned![eval, cursor_eval];
+                        move |_| {
+                            to_owned![eval, cursor_eval];
+                            async move {
+                                if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(val) = r.join().await {
+                                        log::debug!("cursor {:?}", val);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onkeypress: {                            
+                        to_owned![eval, cursor_eval];
+                        move |evt| {
+                            log::debug!("key {:?}", evt);
+                            to_owned![eval, cursor_eval];
+                            async move {
+                                if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(val) = r.join().await {
+                                        log::debug!("cursor {:?}", val);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 if *show_char_counter {
                     rsx!(

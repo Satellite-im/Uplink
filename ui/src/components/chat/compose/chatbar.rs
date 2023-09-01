@@ -25,6 +25,7 @@ use kit::{
     },
     layout::chatbar::{Chatbar, Reply},
 };
+use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun};
@@ -420,6 +421,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     let mut replaced = false;
                     if v.contains(':') {
                         let mut semicolon = v.split(':');
+                        let reg = Regex::new(":[^:]+:?$").unwrap();
+                        log::debug!("reg {:?}", reg.captures(&v));
                         if let Some(emoji) = semicolon.next_back() {
                             let next = semicolon.next_back();
                             // Try replace with emoji
