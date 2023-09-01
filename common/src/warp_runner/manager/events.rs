@@ -104,33 +104,14 @@ pub async fn handle_message_event(
     Ok(())
 }
 
-pub async fn handle_blink_event(evt: BlinkEventKind, warp: &mut super::Warp) -> anyhow::Result<()> {
+// currently there's no need for warp runner to respond to blink events. all the other handle_x_event functions send forward the event over the WARP_EVENT_CH
+// this function does the same.
+pub async fn handle_blink_event(
+    evt: BlinkEventKind,
+    _warp: &mut super::Warp,
+) -> anyhow::Result<()> {
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
-    warp_event_tx.send(WarpEvent::Blink(evt.clone()))?;
-
-    if let BlinkEventKind::ParticipantLeft {
-        call_id,
-        peer_id: _,
-    } = &evt
-    {
-        if warp
-            .blink
-            .current_call()
-            .await
-            .map(|call_info| &call_info.call_id() == call_id && call_info.participants().len() == 2)
-            .unwrap_or(false)
-        {
-            if let Err(e) = warp.blink.leave_call().await {
-                anyhow::bail!("failed to leave call: {e}")
-            } else {
-                warp_event_tx.send(WarpEvent::Blink(BlinkEventKind::ParticipantLeft {
-                    call_id: *call_id,
-                    peer_id: warp.multipass.get_own_identity().await?.did_key(),
-                }))?;
-            }
-        }
-    }
-
+    warp_event_tx.send(WarpEvent::Blink(evt))?;
     Ok(())
 }
 
