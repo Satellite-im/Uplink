@@ -200,7 +200,6 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                         aria_label: "pin-button-go-to",
                                         onclick: move |_| {
                                             cx.props.onclose.call(());
-                                            
                                             if cx.props.is_loaded {
                                                 let _ = eval(&include_str!("../scroll_to_message.js").replace("$UUID", &id.to_string()));
                                             } else {
