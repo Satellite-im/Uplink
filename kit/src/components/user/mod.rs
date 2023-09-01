@@ -17,6 +17,7 @@ pub struct Props<'a> {
     user_image: Element<'a>,
     subtext: String,
     timestamp: Option<DateTime<Utc>>,
+    aria_label: Option<String>,
     #[props(optional)]
     loading: Option<bool>,
     #[props(optional)]
@@ -41,6 +42,10 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
     f.convert(duration)
 }
 
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    cx.props.aria_label.clone().unwrap_or_default()
+}
+
 /// Generates the optional badge for the user.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
@@ -58,6 +63,7 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
+    let aria_label = get_aria_label(&cx);
     let active = cx.props.active.unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
 
@@ -74,7 +80,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
                     },
                     onclick: move |e| emit(&cx, e),
-                    aria_label: "User",
+                    aria_label: "{aria_label}",
                     (!badge.is_empty()).then(|| rsx!(
                         span {
                             class: "badge",

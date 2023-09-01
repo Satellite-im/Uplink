@@ -626,6 +626,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                                 )
                             )),
                             User {
+                                aria_label: participants_name.clone().into(),
                                 username: participants_name,
                                 subtext: subtext_val,
                                 timestamp: datetime,
@@ -664,6 +665,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {
@@ -676,6 +678,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {
@@ -688,6 +691,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {

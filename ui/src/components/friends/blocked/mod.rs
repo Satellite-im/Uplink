@@ -92,6 +92,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                         )),
                         Friend {
                             username: blocked_user.username(),
+                            aria_label: blocked_user.username().clone().into(),
                             suffix: did_suffix,
                             status_message: blocked_user.status_message().unwrap_or_default(),
                             relationship: relationship,

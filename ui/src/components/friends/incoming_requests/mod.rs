@@ -143,6 +143,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                             }
                         )),
                         Friend {
+                            aria_label: _username.clone().into(),
                             username: _username,
                             suffix: did_suffix,
                             status_message: _status_message,
