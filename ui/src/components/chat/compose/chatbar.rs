@@ -414,10 +414,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             ignore_focus: cx.props.ignore_focus,
             onchange: move |v: String| {
                 if let Some(id) = &active_chat_id {
-                    state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                    state.write_silent().mutate(Action::SetChatDraft(*id, v.clone()));
                     validate_max();
                     update_send();
                     local_typing_ch.send(TypingIndicator::Typing(*id));
+                    if v.contains(':') {
+                        let mut semicolon = v.split(':');
+                        if let Some(emoji) = semicolon.next_back() {
+                            let next = semicolon.next_back();
+                            log::debug!("emoji attempt {emoji} next {next:?}");
+                            if emoji.chars().count() > 1 && next.filter(|s|s.ends_with('\n') || s.ends_with(' ')).is_none(){
+                                log::debug!("emoj {:?}", state.read().ui.emojis.get_matching_emoji(emoji))
+                            }
+                        }
+                    }
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),

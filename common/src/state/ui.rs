@@ -3,6 +3,7 @@ use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
+use std::rc::Rc;
 use std::{
     cmp::Ordering,
     collections::{hash_map, HashMap},
@@ -18,17 +19,23 @@ pub type EmojiList = HashMap<String, u64>;
 #[derive(Clone, Deserialize, Serialize)]
 pub struct EmojiCounter {
     list: EmojiList,
+    #[serde(skip)]
+    emoji_filters: Vec<Rc<dyn Fn(&str) -> Vec<String>>>,
 }
 
 impl EmojiCounter {
     pub fn new() -> Self {
         Self {
             list: EmojiList::new(),
+            emoji_filters: vec![],
         }
     }
 
     pub fn new_with(list: EmojiList) -> Self {
-        Self { list }
+        Self {
+            list,
+            emoji_filters: vec![],
+        }
     }
 
     pub fn increment_emoji(&mut self, emoji: String) {
@@ -51,6 +58,27 @@ impl EmojiCounter {
             .take(to_take)
             .map(|(emoji, usage)| (emoji.clone(), *usage))
             .collect()
+    }
+
+    pub fn get_matching_emoji(&self, pattern: &str) -> Vec<String> {
+        let mut matches: Vec<String> = default_emoji_list()
+            .iter()
+            .filter_map(|(emoji, alias)| {
+                if alias.starts_with(pattern) {
+                    Some(emoji.to_string())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        for matcher in self.emoji_filters.iter() {
+            matches.append(&mut matcher(pattern))
+        }
+        matches
+    }
+
+    pub fn register_emoji_filter(&mut self, filter: impl Fn(&str) -> Vec<String> + 'static) {
+        self.emoji_filters.push(Rc::new(filter))
     }
 }
 
@@ -88,13 +116,22 @@ fn bool_true() -> bool {
 }
 
 fn default_emojis() -> EmojiCounter {
-    EmojiCounter::new_with(HashMap::from([
-        ("👍".to_string(), 0),
-        ("👎".to_string(), 0),
-        ("❤️".to_string(), 0),
-        ("🖖".to_string(), 0),
-        ("😂".to_string(), 0),
-    ]))
+    EmojiCounter::new_with(
+        default_emoji_list()
+            .into_iter()
+            .map(|(emoji, _)| (emoji, 0))
+            .collect(),
+    )
+}
+
+fn default_emoji_list() -> Vec<(String, &'static str)> {
+    vec![
+        ("👍".to_string(), "thumbsup"),
+        ("👎".to_string(), "thumbsdown"),
+        ("❤️".to_string(), "heart"),
+        ("🖖".to_string(), "vulcan_salute"),
+        ("😂".to_string(), "joy"),
+    ]
 }
 
 /// Used to determine where the Emoji should be routed.

@@ -287,6 +287,29 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
 
+    use_effect(cx, (), |_| {
+        to_owned![state];
+        async move {
+            state
+                .write_silent()
+                .ui
+                .emojis
+                .register_emoji_filter(|pattern| {
+                    emojis::Group::iter()
+                        .map(|group| group.emojis())
+                        .flatten()
+                        .filter_map(|emoji| {
+                            if emoji.to_string().starts_with(pattern) {
+                                emoji.shortcode().map(|s| s.to_string())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect()
+                })
+        }
+    });
+
     cx.render(rsx! (
         // If enabled, render the selector popup.
         visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
