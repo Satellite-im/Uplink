@@ -169,6 +169,7 @@ impl From<SendableChat> for Chat {
             files_attached_to_send: value.files_attached_to_send,
             pinned_messages: value.pinned_messages,
             scroll_to: value.scroll_to,
+            scroll_value: None,
         }
     }
 }
