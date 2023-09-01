@@ -73,11 +73,10 @@ pub fn set_app_panic_hook() {
         );
         println!("{crash_report}");
         if let Some(p) = path.parent() {
-            if fs::create_dir_all(p).is_ok() {
-                match fs::write(path.clone(), log) {
-                    Ok(_) => println!("The crash has been saved to {}", path.to_string_lossy()),
-                    Err(e) => println!("Unable to save crash log {}", e),
-                }
+            let _ = fs::create_dir_all(p);
+            match fs::write(&path, log) {
+                Ok(_) => println!("The crash has been saved to {}", path.to_string_lossy()),
+                Err(e) => println!("Unable to save crash log {}", e),
             }
         }
     }))
