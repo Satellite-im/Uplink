@@ -204,6 +204,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     rsx!(
                                         UserImageGroup {
                                             loading: false,
+                                            aria_label: "user-image-group".into(),
                                             participants: build_participants(&participants),
                                         }
                                     )
@@ -642,6 +643,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                                     )} else {rsx! (
                                         UserImageGroup {
                                             participants: build_participants(&participants),
+                                            aria_label: "user-image-group".into(),
                                             typing: users_typing,
                                         }
                                     )}

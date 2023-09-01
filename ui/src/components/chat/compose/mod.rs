@@ -588,6 +588,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             return cx.render(rsx!(
                 UserImageGroup {
                     loading: true,
+                    aria_label: "user-image-group".into(),
                     participants: vec![]
                 },
                 div {
@@ -662,6 +663,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         )} else {rsx! (
             UserImageGroup {
                 loading: false,
+                aria_label: "user-image-group".into(),
                 participants: build_participants(&all_participants),
             }
         )}

@@ -16,6 +16,11 @@ pub struct Props<'a> {
     typing: Option<bool>,
     with_username: Option<String>,
     use_tooltip: Option<bool>,
+    aria_label: Option<String>,
+}
+
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    cx.props.aria_label.clone().unwrap_or_default()
 }
 
 #[allow(non_snake_case)]
@@ -30,6 +35,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let loading = cx.props.loading.unwrap_or_default() || cx.props.participants.is_empty();
     let tooltip_visible = use_state(cx, || false);
+    let aria_label = get_aria_label(&cx);
 
     cx.render(rsx! (
         if loading {
@@ -45,6 +51,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             rsx! (
                 div {
                     class: "user-image-group",
+                    aria_label: "{aria_label}",
                     onmouseenter: move |_| {
                         tooltip_visible.set(true);
                     },
