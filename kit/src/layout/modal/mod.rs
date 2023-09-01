@@ -17,7 +17,11 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let transparent_class = cx.props.transparent.then(|| "transparent").unwrap_or("");
+    let transparent_class = if cx.props.transparent {
+        "transparent"
+    } else {
+        ""
+    };
     let title = cx.props.with_title.clone().unwrap_or_default();
 
     cx.render(rsx!(cx.props.open.then(|| rsx!(
