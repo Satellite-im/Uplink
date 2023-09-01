@@ -201,13 +201,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             src: "{thumbnail}",
                         }
                         if with_download_button {
-                            rsx!(
-                                Button {
-                                    icon: btn_icon,
-                                    appearance: Appearance::Primary,
-                                    aria_label: "attachment-button".into(),
-                                    onpress: move |_| cx.props.on_press.call(()),
-                                }
+                            rsx!(Button {
+                                        icon: btn_icon,
+                                        appearance: Appearance::Primary,
+                                        aria_label: "attachment-button".into(),
+                                        onpress: move |_| cx.props.on_press.call(()),
+                            }
                             )
                         }
                         if is_pending {
@@ -287,11 +286,16 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     if with_download_button {
                         rsx!(
-                            Button {
-                                icon: btn_icon,
-                                appearance: Appearance::Primary,
-                                aria_label: "attachment-button".into(),
-                                onpress: move |_| cx.props.on_press.call(()),
+                            div {
+                                id: "file-embed-action-button", 
+                                position: "relative",
+                                display: "inline-flex",
+                                Button {
+                                    icon: btn_icon,
+                                    appearance: Appearance::Primary,
+                                    aria_label: "attachment-button".into(),
+                                    onpress: move |_| cx.props.on_press.call(()),
+                                }
                             }
                         )
                     }

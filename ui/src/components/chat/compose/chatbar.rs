@@ -5,7 +5,7 @@ use std::{
 
 use common::{
     icons::{self},
-    language::{get_local_text, get_local_text_args_builder},
+    language::get_local_text,
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
@@ -15,7 +15,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::layout::modal::Modal;
 use kit::{
     components::{
-        embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
         user_image::UserImage,
     },
@@ -38,7 +37,8 @@ const MAX_CHARS_LIMIT: usize = 1024;
 
 use crate::{
     components::{
-        chat::compose::context_file_location::FileLocationContext, paste_files_with_shortcut,
+        chat::compose::context_file_location::FileLocationContext, files::attachments::Attachments,
+        paste_files_with_shortcut,
     },
     layouts::storage::FilesLayout,
     utils::{
@@ -634,115 +634,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         }
         Attachments {
             chat_id: chat_id,
-            on_remove: move |_| {
+            files_to_attach: state
+            .read()
+            .get_active_chat()
+            .map(|f| f.files_attached_to_send)
+            .unwrap_or_default(),
+            on_remove: move |files_selected| {
+                state.write().mutate(Action::SetChatAttachments(chat_id, files_selected));
                 update_send();
             }
         }
         chatbar
     ))
-}
-
-#[derive(Props)]
-pub struct AttachmentProps<'a> {
-    chat_id: Uuid,
-    on_remove: EventHandler<'a, ()>,
-}
-
-#[allow(non_snake_case)]
-fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-
-    // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default()
-        .iter()
-        .map(|location| {
-            let filename = match location {
-                Location::Constellation { path } => PathBuf::from(path)
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string(),
-                Location::Disk { path } => path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string(),
-            };
-
-            rsx!(FileEmbed {
-                filename: filename.clone(),
-                filepath: match location {
-                    Location::Constellation { path } => PathBuf::from(&path),
-                    Location::Disk { path } => path.clone(),
-                },
-                remote: false,
-                button_icon: icons::outline::Shape::Trash,
-                on_press: move |_| {
-                    let mut attachments = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default();
-
-                    attachments.retain(|x| {
-                        let s = match x {
-                            Location::Constellation { path } => PathBuf::from(path)
-                                .file_name()
-                                .unwrap_or_default()
-                                .to_string_lossy()
-                                .to_string(),
-                            Location::Disk { path } => path
-                                .file_name()
-                                .unwrap_or_default()
-                                .to_string_lossy()
-                                .to_string(),
-                        };
-                        s != filename
-                    });
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(cx.props.chat_id, attachments));
-                    cx.props.on_remove.call(());
-                },
-            })
-        })));
-
-    let attachments_vec = state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default();
-
-    if attachments_vec.is_empty() {
-        return None;
-    }
-
-    cx.render(rsx!(div {
-        id: "compose-attachments",
-        aria_label: "compose-attachments",
-            div {
-                id: "attachments-error",
-                flex_direction: "column",
-                if attachments_vec.len() >= MAX_FILES_PER_MESSAGE {
-                    rsx!(p {
-                        class: "error",
-                        aria_label: "input-error",
-                        margin_left: "var(--gap)",
-                        margin_top: "var(--gap)",
-                        margin_bottom: "var(--gap)",
-                        color: "var(--warning-light)",
-                        get_local_text_args_builder("messages.maximum-amount-files-per-message", |m| {
-                            m.insert("amount", MAX_FILES_PER_MESSAGE.into());
-                        })
-                    })
-                }
-            attachments
-            }
-    }))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {

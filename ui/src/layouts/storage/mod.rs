@@ -7,7 +7,7 @@ use std::{ffi::OsStr, path::PathBuf};
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::ToastNotification;
+use common::state::{ToastNotification, self};
 use common::state::{ui, Action, State};
 use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
@@ -17,6 +17,10 @@ use common::ROOT_DIR_NAME;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
+use kit::components::user::User;
+use kit::components::user_image::UserImage;
+use kit::components::user_image_group::UserImageGroup;
+use kit::layout::modal::Modal;
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
     elements::{
@@ -29,9 +33,10 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
+use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
-use warp::raygun::Location;
+use warp::raygun::{Location, ConversationType, self};
 
 pub mod controller;
 pub mod file_modal;
@@ -39,6 +44,7 @@ pub mod functions;
 pub mod send_files_components;
 
 use crate::components::chat::sidebar::Sidebar as ChatSidebar;
+use crate::components::files::attachments::Attachments;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
@@ -46,6 +52,7 @@ use crate::layouts::storage::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_components::{
     add_remove_file_to_send, file_checkbox, send_files_from_chat_topbar,
 };
+use crate::utils::build_participants;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -99,6 +106,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
 
     let share_files_from_storage_mode = use_state(cx, || false);
+    let show_modal_to_select_chats_to_send_files = use_state(cx, || false);
 
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
@@ -200,6 +208,17 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         },
                         controls: cx.render(
                             rsx! (
+                                if *share_files_from_storage_mode.get() {
+                                    rsx!(Button {
+                                        disabled: *upload_file_controller.files_been_uploaded.read(),
+                                        appearance: Appearance::Success,
+                                        aria_label: "add-folder".into(),
+                                        text: "Send files".into(),
+                                        onpress: move |_| {
+                                            show_modal_to_select_chats_to_send_files.set(true);
+                                        },
+                                    })
+                                }
                                 Button {
                                     icon: Icon::FolderPlus,
                                     disabled: *upload_file_controller.files_been_uploaded.read(),
@@ -298,6 +317,70 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         },
                     }
                  )
+                },
+                if *show_modal_to_select_chats_to_send_files.get() {
+                    rsx!(
+                        Modal {
+                            open: *show_modal_to_select_chats_to_send_files.clone(),
+                            onclose: move |_| show_modal_to_select_chats_to_send_files.set(false),
+                            div {
+                                class: "modal-div-attachments-layout",
+                                state.read().chats_sidebar().iter().cloned().map(|chat| {
+                                    let participants = state.read().chat_participants(&chat);
+                                    let other_participants =  state.read().remove_self(&participants);
+                                    let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
+                                    let platform = user.platform().into();
+                                    let is_active = state.read().get_active_chat().map(|c| c.id) == Some(chat.id);
+
+                                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
+                                    let participants_name = match chat.conversation_name {
+                                        Some(name) => name,
+                                        None => State::join_usernames(&other_participants)
+                                    };
+
+                                    rsx!( 
+                                        div {
+                                            id: "chat-selector-to-send-files",
+                                            height: "80px",
+                                            padding_left: "32px",
+                                            User {
+                                                username: participants_name,
+                                                subtext: get_local_text("sidebar.chat-new"),
+                                                timestamp: raygun::Message::default().date(),
+                                                active: is_active,
+                                                user_image: cx.render(rsx!(
+                                                    if chat.conversation_type == ConversationType::Direct {rsx! (
+                                                        UserImage {
+                                                            platform: platform,
+                                                            status:  user.identity_status().into(),
+                                                            image: user.profile_picture(),
+                                                            typing: false,
+                                                        }
+                                                    )} else {rsx! (
+                                                        UserImageGroup {
+                                                            participants: build_participants(&participants),
+                                                            typing: false,
+                                                        }
+                                                    )}
+                                                )),
+                                                with_badge: "".into(),
+                                                onpress: move |_| {                
+                                                }
+                                            }
+                                        }
+                                        
+                                    )
+                                }),
+                                Attachments {
+                                    chat_id: Uuid::new_v4(),
+                                    files_to_attach: storage_controller.read().files_selected_to_send.clone(),
+                                    on_remove: move |files_selected| {
+                                        storage_controller.with_mut(|f| f.files_selected_to_send = files_selected);
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
                 send_files_from_chat_topbar {
                     storage_controller: storage_controller.clone(),
@@ -464,14 +547,17 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     key: "{key}-menu",
                                     id: file.id().to_string(),
                                     items: cx.render(rsx!(
-                                        ContextItem {
+                                        if !*storage_files_to_chat_mode_is_active.get() {
+                                        rsx!(
+                                            // TODO: Add translate to text
+                                            ContextItem {
                                             icon: Icon::Share,
                                             aria_label: "files-download".into(),
                                             text: "Share Files".into(),
                                             onpress: move |_| {
                                                 share_files_from_storage_mode.set(!share_files_from_storage_mode);
                                             },
-                                        },
+                                        })},
                                         hr {},
                                         ContextItem {
                                             icon: Icon::Pencil,

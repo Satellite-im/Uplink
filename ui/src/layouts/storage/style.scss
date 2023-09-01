@@ -45,3 +45,16 @@
     align-items: center;
     height: 60px;
 }
+
+.modal-div-attachments-layout {
+  border: 1px solid var(--primary);
+  background: var(--background);
+  max-height: 90vh;
+  width: 80vw;
+}
+
+@media (max-width: 400px) {
+  .modal-div-attachments-layout {
+      width: 60vw;
+  }
+}
