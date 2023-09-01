@@ -39,6 +39,7 @@ pub struct Props<'a> {
     #[props(default = false)]
     is_disabled: bool,
     ignore_focus: bool,
+    emoji_suggestions: &'a Vec<(String, String)>,
 }
 
 #[derive(Props)]
@@ -157,7 +158,28 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "controls",
                 cx.props.controls.as_ref()
-            }
+            },
+            (!cx.props.emoji_suggestions.is_empty()).then(|| rsx!(EmojiSuggesions {
+                suggestions: cx.props.emoji_suggestions
+            })),
         }
     ))
+}
+
+#[derive(Props)]
+pub struct EmojiSuggestionProps<'a> {
+    suggestions: &'a Vec<(String, String)>,
+}
+
+#[allow(non_snake_case)]
+fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
+    cx.render(rsx!(div {
+        class: "emoji-suggestions",
+        cx.props.suggestions.iter().map(|(emoji,alias)| {
+            cx.render(rsx!(div {
+                class: "emoji-suggestion",
+                format_args!("{emoji}  :{alias}:")
+            }))
+        })
+    }))
 }

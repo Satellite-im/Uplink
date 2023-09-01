@@ -20,21 +20,21 @@ pub type EmojiList = HashMap<String, u64>;
 pub struct EmojiCounter {
     list: EmojiList,
     #[serde(skip)]
-    emoji_filters: Vec<Rc<dyn Fn(&str) -> Vec<String>>>,
+    emoji_filters: HashMap<String, Rc<dyn Fn(&str, bool) -> Vec<(String, String)>>>,
 }
 
 impl EmojiCounter {
     pub fn new() -> Self {
         Self {
             list: EmojiList::new(),
-            emoji_filters: vec![],
+            emoji_filters: HashMap::new(),
         }
     }
 
     pub fn new_with(list: EmojiList) -> Self {
         Self {
             list,
-            emoji_filters: vec![],
+            emoji_filters: HashMap::new(),
         }
     }
 
@@ -60,25 +60,49 @@ impl EmojiCounter {
             .collect()
     }
 
-    pub fn get_matching_emoji(&self, pattern: &str) -> Vec<String> {
-        let mut matches: Vec<String> = default_emoji_list()
+    pub fn get_matching_emoji(&self, pattern: &str, exact: bool) -> Vec<(String, String)> {
+        if pattern.is_empty() {
+            return vec![];
+        }
+        let mut matches: HashMap<String, String> = default_emoji_list()
             .iter()
             .filter_map(|(emoji, alias)| {
-                if alias.starts_with(pattern) {
-                    Some(emoji.to_string())
+                if (exact && (*alias).eq(pattern)) || (!exact && alias.starts_with(pattern)) {
+                    Some((emoji.to_string(), alias.to_string()))
                 } else {
                     None
                 }
             })
             .collect();
-        for matcher in self.emoji_filters.iter() {
-            matches.append(&mut matcher(pattern))
+        for (_, matcher) in self.emoji_filters.iter() {
+            matcher(pattern, exact).iter().for_each(|(emoji, alias)| {
+                matches.insert(emoji.clone(), alias.clone());
+            });
         }
+        let mut matches: Vec<(String, String)> = matches
+            .iter()
+            .map(|(emoji, alias)| (emoji.clone(), alias.clone()))
+            .collect();
+        matches.sort_by(|(emoji, _), (emoji2, _)| {
+            let first = self.list.get(emoji).unwrap_or(&(0 as u64));
+            let second = self.list.get(emoji2).unwrap_or(&(0 as u64));
+            match second.cmp(first) {
+                Ordering::Equal => emoji.cmp(emoji2),
+                x => x,
+            }
+        });
         matches
     }
 
-    pub fn register_emoji_filter(&mut self, filter: impl Fn(&str) -> Vec<String> + 'static) {
-        self.emoji_filters.push(Rc::new(filter))
+    // Register an emoji filter that should return a tuple of strings where the first is the emoji and the second is its alias
+    pub fn register_emoji_filter(
+        &mut self,
+        id: String,
+        filter: impl Fn(&str, bool) -> Vec<(String, String)> + 'static,
+    ) {
+        if !self.emoji_filters.contains_key(&id) {
+            self.emoji_filters.insert(id, Rc::new(filter));
+        }
     }
 }
 

@@ -290,23 +290,29 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
     use_effect(cx, (), |_| {
         to_owned![state];
         async move {
-            state
-                .write_silent()
-                .ui
-                .emojis
-                .register_emoji_filter(|pattern| {
+            state.write_silent().ui.emojis.register_emoji_filter(
+                String::from("emoji_picker"),
+                |pattern, exact| {
                     emojis::Group::iter()
                         .map(|group| group.emojis())
                         .flatten()
                         .filter_map(|emoji| {
-                            if emoji.to_string().starts_with(pattern) {
-                                emoji.shortcode().map(|s| s.to_string())
-                            } else {
+                            if emoji.shortcode().is_none() {
                                 None
+                            } else {
+                                let short = emoji.shortcode().unwrap();
+                                if (exact && short.eq(pattern))
+                                    || (!exact && short.starts_with(pattern))
+                                {
+                                    Some((emoji.to_string(), short.to_string()))
+                                } else {
+                                    None
+                                }
                             }
                         })
                         .collect()
-                })
+                },
+            )
         }
     });
 
