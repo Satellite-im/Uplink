@@ -13,10 +13,9 @@
 .file-embed {
   display: inline-flex;
   gap: var(--gap);
-  width: 95%;
+  width: 100%;
   margin-left: var(--gap);
   color: var(--text-color);
-  padding: var(--padding-less);
   align-content: center;
   align-self: flex-end;
 
@@ -65,7 +64,7 @@
   }
 }
 .file-embed:hover {
-  background-color: var(--background-light);
+  cursor: pointer;
 }
 
 .icon {
