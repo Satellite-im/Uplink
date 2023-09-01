@@ -4,7 +4,7 @@ use common::{
     language::get_local_text,
     state::{storage::Storage, Action, State, ToastNotification},
     upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
-    warp_runner::{ConstellationCmd, WarpCmd},
+    warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 use dioxus_core::{ScopeState, Scoped};
@@ -17,12 +17,13 @@ use dioxus_hooks::{
 use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
+use warp::raygun::Location;
 
 use crate::components::files::upload_progress_bar;
 
 use super::{
     controller::{StorageController, UploadFileController},
-    ChanCmd, MAX_LEN_TO_FORMAT_NAME,
+    ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME,
 };
 
 pub fn run_verifications_and_update_storage(
@@ -48,7 +49,7 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory(cx: &Scoped, ch: &Coroutine<ChanCmd>) {
+pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanCmd>) {
     use_future(cx, (), |_| {
         to_owned![ch];
         async move {
@@ -59,7 +60,10 @@ pub fn get_items_from_current_directory(cx: &Scoped, ch: &Coroutine<ChanCmd>) {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn allow_drag_event_for_non_macos_systems(cx: &Scoped, are_files_hovering_app: &UseRef<bool>) {
+pub fn allow_drag_event_for_non_macos_systems(
+    cx: &Scoped<Props>,
+    are_files_hovering_app: &UseRef<bool>,
+) {
     use_future(cx, (), |_| {
         to_owned![are_files_hovering_app];
         async move {
@@ -303,6 +307,38 @@ pub fn init_coroutine<'a>(
                             }
                         }
                     }
+                    ChanCmd::SendFileToChat {
+                        files_path,
+                        conversation_id,
+                    } => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessage {
+                            conv_id: conversation_id,
+                            msg: vec![],
+                            location: Location::Constellation,
+                            attachments: files_path,
+                            ui_msg_id: None,
+                            rsp: tx,
+                        })) {
+                            log::error!(
+                                "failed to send file(s) from storage to chat. Error: {:?}",
+                                e
+                            );
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(_) => {
+                                // controller.with_mut(|i| i.storage_state = Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!("failed to send file(s) to chat. Error: {:?}", e);
+                                continue;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -310,12 +346,12 @@ pub fn init_coroutine<'a>(
     ch
 }
 
-// Upload files has many states to manage
-// 1. It is necessary to check if any file is being uploaded, hence the use of `use_future`.
-// 2. It was necessary to use the global channel to send the command to upload the files,
-// to fix a specific behavior (when the user leaves the page, returns,
-// and tries to upload a second file, then leaves and returns again,
-// it was not possible to cancel that upload in the coroutine).
+/// Upload files has many states to manage
+/// 1. It is necessary to check if any file is being uploaded, hence the use of `use_future`.
+/// 2. It was necessary to use the global channel to send the command to upload the files,
+/// to fix a specific behavior (when the user leaves the page, returns,
+/// and tries to upload a second file, then leaves and returns again,
+/// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
     cx: &ScopeState,
     window: &DesktopContext,
