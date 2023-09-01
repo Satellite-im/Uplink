@@ -51,6 +51,12 @@
   }
 }
 
+.chatbar-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 .chatbar-error-input-message {
   margin-bottom: 1%;
   margin-top: -2%;
@@ -550,6 +556,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 182px;
+}
+
+.scroll-bottom-btn {
+  color: var(--text-color);
+  background-color: var(--secondary-dark);
+  width: 90%; 
+  border-radius: 10px 10px 0 0; 
+  padding: 2px; 
+  height: fit-content; 
+  position: absolute; 
+  bottom: 100%; 
+  left: 0;
+  right: 0; 
+  margin-left: auto;
+  margin-right: auto;
+
+  &:hover {
+    background-color: var(--secondary);
+  }
 }
 
 .float-right-link {

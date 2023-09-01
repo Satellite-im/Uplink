@@ -293,6 +293,7 @@ pub async fn conversation_to_chat(
         has_more_messages,
         pending_outgoing_messages: vec![],
         files_attached_to_send: vec![],
+        scroll_value: None,
         pinned_messages,
         scroll_to: None,
     })
