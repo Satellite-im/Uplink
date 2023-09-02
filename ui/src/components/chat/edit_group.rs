@@ -15,6 +15,7 @@ use kit::{
     elements::{
         button::Button,
         input::{Input, Options},
+        Appearance,
     },
     layout::topbar::Topbar,
 };
@@ -81,22 +82,24 @@ pub fn EditGroup(cx: Scope) -> Element {
 
     friends.sort_by_key(|d| d.username());
 
-    let add_friends = rsx!(a {
-        class: "float-right-link",
-        aria_label: "edit-group-add-members",
-        onclick: move |_| {
+    let add_friends = rsx!(Button {
+        aria_label: "edit-group-add-members".into(),
+        icon: Icon::UserPlus,
+        appearance: Appearance::Secondary,
+        text: get_local_text("uplink.add-members"),
+        onpress: move |_| {
             edit_group_action.set(EditGroupAction::Add);
-        },
-        get_local_text("uplink.add-members")
+        }
     });
 
-    let remove_friends = rsx!(a {
-        class: "float-right-link",
-        aria_label: "edit-group-current-members",
-        onclick: move |_| {
+    let remove_friends = rsx!(Button {
+        aria_label: "edit-group-remove-members".into(),
+        icon: Icon::UserMinus,
+        appearance: Appearance::Secondary,
+        text: get_local_text("uplink.current-members"),
+        onpress: move |_| {
             edit_group_action.set(EditGroupAction::Remove);
-        },
-        get_local_text("uplink.current-members")
+        }
     });
 
     cx.render(rsx!(
@@ -122,16 +125,16 @@ pub fn EditGroup(cx: Scope) -> Element {
                         onchange: move |(v, _): (String, _)| {
                             friend_prefix.set(v);
                         },
-                    }
+                    },
                     if *edit_group_action.get() == EditGroupAction::Remove {
                         rsx! {
                             add_friends,
                         }
-                        } else {
-                            rsx! {
+                    } else {
+                        rsx! {
                             remove_friends,
-                            }
-                        },
+                        }
+                    },
                 },
 
             },

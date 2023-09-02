@@ -55,10 +55,12 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 cx.props.children.as_ref()
             },
-            div {
-                class: "controls",
-                cx.props.controls.as_ref()
-            }
+            cx.props.controls.is_some().then(|| rsx!(
+                div {
+                    class: "controls",
+                    cx.props.controls.as_ref()
+                }
+            ))
         }
     ))
 }

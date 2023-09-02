@@ -569,6 +569,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         rsx!(
                             Modal {
                                 open: *show_storage_modal.clone(),
+                                transparent: false,
                                 onclose: move |_| show_storage_modal.set(false),
                                 div {
                                     class: "modal-div-files-layout",

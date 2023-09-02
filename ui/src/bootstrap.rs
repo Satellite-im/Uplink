@@ -1,6 +1,9 @@
+use std::backtrace::Backtrace;
+
 use super::*;
 
 use crate::utils::auto_updater::DownloadState;
+use chrono::Local;
 use common::state::ui::WindowMeta;
 use common::state::State;
 use common::STATIC_ARGS;
@@ -59,18 +62,23 @@ pub(crate) fn use_boostrap<'a>(
 
 pub fn set_app_panic_hook() {
     panic::set_hook(Box::new(|panic_info| {
-        let intro = match panic_info.payload().downcast_ref::<&str>() {
-            Some(s) => format!("panic occurred: {s:?}"),
-            None => "panic occurred".into(),
-        };
-        let location = match panic_info.location() {
-            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
-            None => "".into(),
-        };
-
         let logs = logger::dump_logs();
-        let crash_report = format!("{intro}{location}\n{logs}\n");
+        let crash_report = format!("{panic_info}\n{logs}\n");
+        let backtrace = Backtrace::force_capture();
+        let time = Local::now().format("%d-%m-%Y_%H-%M-%S").to_string();
+        let path = STATIC_ARGS.crash_logs.join(format!("{}.log", time));
+        let log = format!(
+            "Uplink crashed:\n{}\nBackTrace:\n{}",
+            crash_report, backtrace
+        );
         println!("{crash_report}");
+        if let Some(p) = path.parent() {
+            let _ = fs::create_dir_all(p);
+            match fs::write(&path, log) {
+                Ok(_) => println!("The crash has been saved to {}", path.to_string_lossy()),
+                Err(e) => println!("Unable to save crash log {}", e),
+            }
+        }
     }))
 }
 
