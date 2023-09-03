@@ -28,18 +28,17 @@ pub fn FileLocationContext<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element<
         id: format!("{id}"),
         items: cx.render(rsx!(
             ContextItem {
-                icon: Icon::ComputerDesktop,
+                icon: Icon::Plus,
                 aria_label: "quick-profile-self-edit".into(),
-                text: "Local Disk".into(),
+                text: "Add File".into(),
                 onpress: move |_| {
                     cx.props.on_press_local_disk.call(());
                 }
             },
-            hr {},
             ContextItem {
-                icon: Icon::Cloud,
+                icon: Icon::FolderOpen,
                 aria_label: "quick-profile-self-edit".into(),
-                text: "Uplink Storage".into(),
+                text: "Browse Files".into(),
                 onpress: move |_| {
                     cx.props.on_press_storage.call(());
                 }

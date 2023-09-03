@@ -327,8 +327,13 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     ))
 }
 
+#[derive(PartialEq, Props)]
+pub struct SidebarProps {
+    pub active_route: UplinkRoute,
+}
+
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope) -> Element {
+pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
@@ -385,6 +390,8 @@ pub fn Sidebar(cx: Scope) -> Element {
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
 
+    let active_route = cx.props.active_route.clone();
+
     cx.render(rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,
@@ -439,7 +446,7 @@ pub fn Sidebar(cx: Scope) -> Element {
             )),
             with_nav: cx.render(rsx!(
                 crate::AppNav {
-                    active: UplinkRoute::ChatLayout{},
+                    active: cx.props.active_route.clone(),
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);

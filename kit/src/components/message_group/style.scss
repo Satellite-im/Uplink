@@ -10,7 +10,7 @@
         display: inline-flex;
         width: 100%;
         flex-direction: column;
-        gap: var(--gap);
+        gap: var(--gap-less);
         justify-content: flex-end;
         position: relative;
         margin-left: calc(var(--height-input) + var(--gap));
