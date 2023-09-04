@@ -14,15 +14,17 @@
         }
 
         .files-list {
-          display: flex;
-          flex-wrap: wrap;
-          width: 100%;
-          gap: var(--gap);
-          justify-content: flex-start;
-          background-color: var(--secondary);
-          padding: var(--gap);
-          border-radius: var(--border-radius);
-          border: 1px solid var(--border-subtle-color);
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            gap: var(--gap);
+            justify-content: flex-start;
+            background-color: var(--secondary);
+            padding: var(--gap);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-subtle-color);
+            min-width: 280px;
+            min-height: 200px;
         }      
 
         .file-parent {

@@ -390,8 +390,6 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
 
-    let active_route = cx.props.active_route.clone();
-
     cx.render(rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,

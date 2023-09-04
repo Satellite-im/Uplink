@@ -69,6 +69,15 @@
     gap: var(--gap) var(--padding);
     padding-right: 40%;
     width: 100%;
+    opacity: 0.45;
+
+    &:nth-child(2) {
+        opacity: 0.65;
+    }
+
+    &:nth-child(3) {
+        opacity: 0.85;
+    }
 
     &.alt{
         transform: scaleX(-1);
@@ -85,13 +94,14 @@
         width: 120px;
         align-self: flex-end;
         height: var(--text-size-less);
-        background: #1d1d2179;
+        background: var(--secondary-dark);
         border-radius: var(--border-radius-less);
     }
     .skeletal-message {
-        background: #1d1d2179;
+        background: var(--secondary-dark);
         border-radius: var(--border-radius-more);
         border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
         min-height: var(--height-input);
         display: inline-flex;
         align-items: center;
@@ -107,11 +117,12 @@
         }
 
         &:nth-child(2) {
-            border-top-left-radius: var(--border-radius);
+            border-radius: var(--border-radius);
         }
 
         &:nth-child(3) {
-            border-top-left-radius: var(--border-radius);
+            border-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius-more);
         }
     }
 }

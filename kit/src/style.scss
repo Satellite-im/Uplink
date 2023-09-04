@@ -265,8 +265,9 @@ pre code {
 }
 
 .skeletal {
-  background: var(--secondary);
+  background: var(--secondary-dark);
   animation: skeletal 1s infinite;
+  opacity: 0.75;
 }
 
 .skeletal-inline {
