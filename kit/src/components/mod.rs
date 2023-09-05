@@ -16,6 +16,9 @@ pub mod message_group;
 pub mod message_reply;
 pub mod message_typing;
 
+pub mod channel;
+pub mod channel_group;
+
 pub mod embeds;
 
 pub mod context_menu;

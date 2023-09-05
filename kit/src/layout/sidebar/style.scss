@@ -20,7 +20,6 @@
     flex-direction: column;
     max-height: 100%;
     padding: var(--gap);
-    padding-right: 0;
     gap: var(--gap);
     /* overflow scroll adds padding that disrupt the grab handle resizer.
 			this keeps functionality but hides scroller
