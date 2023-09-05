@@ -653,7 +653,7 @@ impl State {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
             }
-            BlinkEventKind::CallTerminated { .. } => {},
+            BlinkEventKind::CallTerminated { .. } => {}
         }
     }
 }
