@@ -286,8 +286,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx!(
                             div {
                                 id: "file-embed-action-button", 
-                                position: "relative",
-                                display: "inline-flex",
                                 Button {
                                     icon: btn_icon,
                                     appearance: Appearance::Primary,
