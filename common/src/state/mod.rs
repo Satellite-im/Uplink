@@ -1206,6 +1206,12 @@ impl State {
     fn unfavorite(&mut self, chat_id: Uuid) {
         self.chats.favorites.retain(|uid| *uid != chat_id);
     }
+
+    pub fn update_chat_scroll(&mut self, chat_id: Uuid, scroll: i64) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.scroll_value = Some(scroll);
+        }
+    }
 }
 
 // for friends

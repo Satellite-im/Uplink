@@ -1,0 +1,12 @@
+.modal-div-files-layout {
+    border: 1px solid var(--primary);
+    background: var(--background);
+    max-height: 90vh;
+    width: 80vw;
+}
+
+@media (max-width: 400px) {
+    .modal-div-files-layout {
+        width: 60vw;
+    }
+}

@@ -92,6 +92,7 @@ messages = Messages
     .users-typing = { $users } are typing
     .users-multiple-typing = Multiple users are typing
     .maximum-amount-files-per-message = You reached { $amount } files per message limit
+    .scroll-bottom = Scroll to bottom
     .pin = Pin Message
     .unpin = Unpin Message
     .pin-view = Pinned Messages
@@ -168,6 +169,9 @@ files = Files
     .checking-thumbnail = Checking thumbnail...
     .files-in-queue = Files in queue
     .error-to-upload = Error to upload
+    .send-to-chat = Send to chat
+    .send-files-text-amount = Send { $amount } File(s)
+    .files-selected-paths = File(s) Selected: { $files_path }
 
 settings = Settings
     .settings = Settings

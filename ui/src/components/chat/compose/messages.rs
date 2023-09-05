@@ -24,7 +24,7 @@ use common::{
     language::get_local_text_args_builder,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
-        ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
+        scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -60,6 +60,27 @@ const SETUP_CONTEXT_PARENT: &str = r#"
         })
     }
 "#;
+
+pub const SCROLL_TO: &str = r#"
+    const chat = document.getElementById("messages")
+    chat.scrollTo(0, $VALUE)
+"#;
+
+pub const SCROLL_UNREAD: &str = r#"
+    const chat = document.getElementById("messages")
+    const child = chat.children[chat.childElementCount - $UNREADS]
+    chat.scrollTop = chat.scrollHeight
+    child.scrollIntoView({ behavior: 'smooth', block: 'end' })
+"#;
+
+pub const SCROLL_BOTTOM: &str = r#"
+    const chat = document.getElementById("messages")
+    const lastChild = chat.lastElementChild
+    chat.scrollTop = chat.scrollHeight
+    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
+"#;
+
+const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
@@ -161,6 +182,8 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         }
     });
 
+    let scroll = data.active_chat.scroll_value;
+    let unreads = data.active_chat.unreads;
     use_effect(cx, &data.active_chat.id, |id| {
         to_owned![eval, prev_chat_id];
         async move {
@@ -169,8 +192,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             // switch to settings or whatnot, then come back to the chats view and not lose your place.
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
-                let script = include_str!("../scroll_to_bottom.js");
-                _ = eval(script);
+                let script = if let Some(val) = scroll {
+                    SCROLL_TO.replace("$VALUE", &val.to_string())
+                } else if unreads > 0 {
+                    SCROLL_UNREAD.replace("$UNREADS", &unreads.to_string())
+                } else {
+                    SCROLL_BOTTOM.to_string()
+                };
+                _ = eval(&script);
             }
             _ = eval(SETUP_CONTEXT_PARENT);
         }
@@ -376,9 +405,27 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         )
     };
 
+    let eval = use_eval(cx);
+
     cx.render(rsx!(
         div {
             id: "messages",
+            onscroll: move |_| {
+                let update = cx.schedule_update_any();
+                to_owned![eval, update, state, active_chat];
+                async move {
+                    if let Ok(val) = eval(READ_SCROLL) {
+                        if let Ok(result) = val.join().await {
+                            if let Some(uuid) = active_chat.read().as_ref() {
+                                state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
+                                if let Some(id) = state.read().scope_ids.chatbar{
+                                    update(ScopeIds::scope_id_from_usize(id));
+                                };
+                            }
+                        }
+                    }
+                }
+            },
             span {
                 rsx!(
                     msg_container_end,
