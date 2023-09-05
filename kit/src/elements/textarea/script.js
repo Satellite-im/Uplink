@@ -8,6 +8,7 @@ for (let i = 0; i < textareas.length; i++) {
     if (!txt.event_listener) {
         txt.addEventListener("input", inputListener);
         txt.addEventListener("keypress", keyPressListener);
+        txt.addEventListener("keydown", arrowHandlerListener);
         txt.event_listener = true;
         if (i == 0) {
             txt.addEventListener("keypress", (event) => {
@@ -33,6 +34,12 @@ function updateHeight(element) {
 }
 function keyPressListener(e) {
     if (e.key == "Enter" && MULTI_LINE && !e.shiftKey) {
+        e.preventDefault();
+    } 
+}
+
+function arrowHandlerListener(e) {
+    if (this.classList.contains("up-down-disabled") && (e.key == "ArrowUp" || e.key == "ArrowDown")) {
         e.preventDefault();
     } 
 }

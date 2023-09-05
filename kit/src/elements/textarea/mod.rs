@@ -46,6 +46,9 @@ pub struct Props<'a> {
     is_disabled: bool,
     #[props(default = false)]
     show_char_counter: bool,
+    #[props(default = false)]
+    prevent_up_down_arrows: bool,
+    onup_down_arrow: Option<EventHandler<'a, Code>>,
 }
 
 #[allow(non_snake_case)]
@@ -69,6 +72,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         value,
         is_disabled,
         show_char_counter,
+        prevent_up_down_arrows,
+        onup_down_arrow,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -132,7 +137,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
-                    class: "input_textarea",
+                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
                     id: "{id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
@@ -190,7 +195,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         to_owned![eval, cursor_eval];
                         move |evt| {
                             let arrow = match evt.code() {
-                                Code::ArrowDown |Code::ArrowLeft|Code::ArrowRight|Code::ArrowUp => {
+                                Code::ArrowDown|Code::ArrowUp => {
+                                    if let Some(e) = onup_down_arrow {
+                                        e.call(evt.code());
+                                    };
+                                    true
+                                }
+                                Code::ArrowLeft|Code::ArrowRight => {
                                     true
                                 }
                                 _ => {

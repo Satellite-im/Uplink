@@ -596,6 +596,9 @@
   display: flex;
   align-items: center;
   border-radius: var(--border-radius);
+  &.emoji-selected {
+    background-color: var(--secondary-dark); 
+  }
   &:hover {
     cursor: pointer;
     background-color: var(--secondary-dark); 

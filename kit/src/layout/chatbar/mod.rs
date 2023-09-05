@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_elements::input_data::keyboard_types::Code;
 use warp::constellation::file::File;
 
 use crate::{
@@ -127,6 +128,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
     let is_typing = !cx.props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
+    let selected_emoji: &UseRef<Option<usize>> = use_ref(cx, || None);
+    let eval = use_eval(cx);
 
     cx.render(rsx!(
         div {
@@ -145,6 +148,15 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
                     onchange: move |(v, _)| cx.props.onchange.call(v),
                     onreturn: move |(v, is_valid, _)| {
+                        if let Some(i) = selected_emoji.write_silent().take() {
+                            if let Some(e) = cx.props.on_emoji_click.as_ref() {
+                                if let Some(p) = cursor_position.read().as_ref() {
+                                    let (emoji, alias) = cx.props.emoji_suggestions[i].clone();
+                                    e.call((emoji, alias,*p));
+                                    return;
+                                }
+                            }
+                        }
                         if is_valid {
                             cx.props.onreturn.call(v);
                         }
@@ -156,6 +168,24 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         *cursor_position.write_silent() = Some(p)
                     },
                     is_disabled: cx.props.is_disabled,
+                    prevent_up_down_arrows: !cx.props.emoji_suggestions.is_empty(),
+                    onup_down_arrow: 
+                        move |code| {
+                            let current = &mut *selected_emoji.write_silent();
+                            let amount = cx.props.emoji_suggestions.len();
+                            if code == Code::ArrowDown {
+                                match current.as_ref() {
+                                    Some(v) => *current = if v + 1 < amount {Some(v+1)} else {Some(0)},
+                                    None => *current = Some(0),
+                                }
+                            } else {
+                                match current.as_ref() {
+                                    Some(v) => *current = if v > &0 {Some(v-1)} else {Some(amount-1)},
+                                    None => *current = Some(amount-1),
+                                }
+                            }
+                            let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &current.unwrap().to_string()));
+                        }   
                 },
                 is_typing.then(|| {
                     rsx!(MessageTyping {
@@ -174,7 +204,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if let Some(e) = cx.props.on_emoji_click.as_ref() {
                         e.call((emoji, alias, cursor_position.read().unwrap()))
                     }
-                }
+                },
+                selected: selected_emoji.clone(),
             })),
         }
     ))
@@ -184,15 +215,25 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 pub struct EmojiSuggestionProps<'a> {
     suggestions: &'a Vec<(String, String)>,
     on_emoji_click: EventHandler<'a, (String, String)>,
+    selected: UseRef<Option<usize>>,
 }
 
 #[allow(non_snake_case)]
 fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(div {
         class: "emoji-suggestions",
-        cx.props.suggestions.iter().map(|(emoji,alias)| {
+        onmouseenter: move |_| {
+            *cx.props.selected.write() = None;
+        },
+        onmouseleave: move |_| {
+            *cx.props.selected.write() = None;
+        },
+        cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
             cx.render(rsx!(div {
-                class: "emoji-suggestion",
+                class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
+                    Some(v) => if *v == num {"emoji-selected"} else {""},
+                    None => ""
+                }),
                 onclick: move |_| {
                     cx.props.on_emoji_click.call((emoji.clone(), alias.clone()))
                 },
