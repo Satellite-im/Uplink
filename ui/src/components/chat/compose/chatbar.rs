@@ -25,6 +25,7 @@ use kit::{
     },
     layout::chatbar::{Chatbar, Reply},
 };
+use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
@@ -32,6 +33,8 @@ use warp::{crypto::DID, logging::tracing::log, raygun};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 const MAX_FILES_PER_MESSAGE: usize = 8;
+
+pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
 
 use crate::{
     components::paste_files_with_shortcut,
@@ -342,6 +345,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 .mutate(Action::SetChatDraft(id, String::new()));
         }
 
+        emoji_suggestions.set(vec![]);
+
         if !msg_valid(&msg) {
             return;
         }
@@ -416,60 +421,63 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             emoji_suggestions: emoji_suggestions,
-            onchange: move |mut v: String| {
+            onchange: move |v: String| {
                 if let Some(id) = &active_chat_id {
-                    let mut replaced = false;
-                    if v.contains(':') {
-                        let mut semicolon = v.split(':');
-                        let reg = Regex::new(":[^:]+:?$").unwrap();
-                        log::debug!("reg {:?}", reg.captures(&v));
-                        if let Some(emoji) = semicolon.next_back() {
-                            let next = semicolon.next_back();
-                            // Try replace with emoji
-                            if v.ends_with(':') {
-                                if let Some(alias) =
-                                    next.filter(|s| !s.contains(char::is_whitespace))
-                                {
-                                    if let Some((emoji, _)) = state
-                                        .read()
-                                        .ui
-                                        .emojis
-                                        .get_matching_emoji(alias, true)
-                                        .first()
-                                    {
-                                        v = v.replace(&format!(":{alias}:"), emoji);
-                                        replaced = true;
-                                    }
+                    state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                    validate_max();
+                    update_send();
+                    local_typing_ch.send(TypingIndicator::Typing(*id));
+                }
+            },
+            oncursor_update: move |(mut v, p): (String, i64)| {
+                if let Some(id) = &active_chat_id {
+                    let sub: String = v.chars().take(p.try_into().unwrap()).collect();
+                    let capture = EMOJI_REGEX.captures(&sub);
+                    match capture {
+                        Some(emoji) => {
+                            let emoji = &emoji[0];
+                            if emoji.contains(char::is_whitespace) {
+                                emoji_suggestions.set(vec![]);
+                                return;
+                            }
+                            if emoji.ends_with(':') {
+                                // Replace emoji alias
+                                let alias = emoji.replace(":", "");
+                                let s = state.read().ui.emojis.get_matching_emoji(&alias, true);
+                                let replacement = s.first();
+                                if let Some((emoji, _)) = replacement {
+                                    v = v.replace(&sub, &sub.replace(&format!(":{alias}:"), emoji));
+                                    state.write().mutate(Action::SetChatDraft(*id, v.clone()));
                                 }
                                 emoji_suggestions.set(vec![])
                             } else {
                                 //Suggest emojis
-                                if emoji.chars().count() > 1
-                                    && next
-                                        .filter(|s| {
-                                            !(s.is_empty() || s.ends_with('\n') || s.ends_with(' '))
-                                        })
-                                        .is_none()
-                                {
-                                    emoji_suggestions.set(
-                                        state.read().ui.emojis.get_matching_emoji(emoji, false),
-                                    )
-                                }
+                                let alias = emoji.replace(":", "");
+                                emoji_suggestions
+                                    .set(state.read().ui.emojis.get_matching_emoji(&alias, false))
                             }
                         }
-                    } else {
-                        emoji_suggestions.set(vec![])
+                        None => emoji_suggestions.set(vec![]),
                     }
-                    if replaced {
-                        state.write().mutate(Action::SetChatDraft(*id, v.clone()));
-                    } else {
+                }
+            },
+            on_emoji_click: move |(emoji, _, p): (String, String, i64)| {
+                if let Some(id) = &active_chat_id {
+                    let mut draft = state
+                        .read()
+                        .get_active_chat()
+                        .as_ref()
+                        .and_then(|d| d.draft.clone())
+                        .unwrap_or_default();
+                    let sub: String = draft.chars().take(p.try_into().unwrap()).collect();
+                    let capture = EMOJI_REGEX.captures(&sub);
+                    if let Some(e) = capture {
+                        draft = draft.replace(&sub, &sub.replace(&format!("{}", &e[0]), &emoji));
                         state
-                            .write_silent()
-                            .mutate(Action::SetChatDraft(*id, v.clone()));
+                            .write()
+                            .mutate(Action::SetChatDraft(*id, draft.clone()));
                     }
-                    validate_max();
-                    update_send();
-                    local_typing_ch.send(TypingIndicator::Typing(*id));
+                    emoji_suggestions.set(vec![])
                 }
             },
             value: state

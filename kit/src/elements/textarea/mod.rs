@@ -102,6 +102,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let _ = eval(&update_char_counter_script);
     }
 
+    let eval = use_eval(cx);
+    let cursor_eval = include_str!("./caret_position.js")
+        .replace("$ID", &id2);
+
     let text_value = use_ref(cx, || value.clone());
     use_future(cx, value, |val|{
         to_owned![text_value];
@@ -109,9 +113,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             *text_value.write_silent() = val;
         }
     });
-
-    let eval = use_eval(cx);
-    let cursor_eval = format!("return document.getElementById(\"{id2}\").selectionEnd;");
 
     let do_cursor_update = oncursor_update.is_some();
 

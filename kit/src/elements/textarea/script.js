@@ -9,15 +9,16 @@ for (let i = 0; i < textareas.length; i++) {
         txt.addEventListener("input", inputListener);
         txt.addEventListener("keypress", keyPressListener);
         txt.event_listener = true;
+        if (i == 0) {
+            txt.addEventListener("keypress", (event) => {
+            if (event.keyCode === 13 && !event.shiftKey) {
+              textareas[0].style.height = "22px";
+              textareas[0].value = "";
+            }
+          });
+        }
     }
 }
-
-textareas[0].addEventListener("keypress", (event) => {
-    if (event.keyCode === 13 && !event.shiftKey) {
-      textareas[0].style.height = "22px";
-      textareas[0].value = "";
-    }
-  });
 
 function inputListener(e) {
     updateHeight(this);

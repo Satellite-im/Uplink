@@ -41,6 +41,7 @@ pub struct Props<'a> {
     ignore_focus: bool,
     emoji_suggestions: &'a Vec<(String, String)>,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
+    on_emoji_click: Option<EventHandler<'a, (String, String, i64)>>,
 }
 
 #[derive(Props)]
@@ -125,6 +126,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
     let is_typing = !cx.props.typing_users.is_empty();
+    let cursor_position = use_ref(cx, || None);
 
     cx.render(rsx!(
         div {
@@ -151,6 +153,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if let Some(e) = cx.props.oncursor_update.as_ref() {
                             e.call((v,p))
                         }
+                        *cursor_position.write_silent() = Some(p)
                     },
                     is_disabled: cx.props.is_disabled,
                 },
@@ -166,7 +169,12 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.controls.as_ref()
             },
             (!cx.props.emoji_suggestions.is_empty()).then(|| rsx!(EmojiSuggesions {
-                suggestions: cx.props.emoji_suggestions
+                suggestions: cx.props.emoji_suggestions,
+                on_emoji_click: move |(emoji, alias)| {
+                    if let Some(e) = cx.props.on_emoji_click.as_ref() {
+                        e.call((emoji, alias, cursor_position.read().unwrap()))
+                    }
+                }
             })),
         }
     ))
@@ -175,6 +183,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 #[derive(Props)]
 pub struct EmojiSuggestionProps<'a> {
     suggestions: &'a Vec<(String, String)>,
+    on_emoji_click: EventHandler<'a, (String, String)>,
 }
 
 #[allow(non_snake_case)]
@@ -184,7 +193,10 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
         cx.props.suggestions.iter().map(|(emoji,alias)| {
             cx.render(rsx!(div {
                 class: "emoji-suggestion",
-                format_args!("{emoji}  :{alias}:")
+                onclick: move |_| {
+                    cx.props.on_emoji_click.call((emoji.clone(), alias.clone()))
+                },
+                format_args!("{emoji}  :{alias}:"),
             }))
         })
     }))

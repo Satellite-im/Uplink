@@ -597,6 +597,7 @@
   align-items: center;
   border-radius: var(--border-radius);
   &:hover {
+    cursor: pointer;
     background-color: var(--secondary-dark); 
   }
 }
