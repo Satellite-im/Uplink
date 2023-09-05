@@ -8,8 +8,8 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::components::invisible_closer::InvisibleCloser;
 use kit::components::message::markdown;
+use kit::layout::modal::Modal;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -439,7 +439,13 @@ pub fn Sidebar(cx: Scope) -> Element {
             )),
             with_nav: cx.render(rsx!(
                 crate::AppNav {
-                    active: UplinkRoute::ChatLayout{},
+                    active: match state.read().ui.current_layout {
+                        state::ui::Layout::Welcome => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Compose => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Friends => UplinkRoute::FriendsLayout {},
+                        state::ui::Layout::Settings => UplinkRoute::SettingsLayout {},
+                        state::ui::Layout::Storage => UplinkRoute::FilesLayout {},
+                    },
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
@@ -508,14 +514,18 @@ pub fn Sidebar(cx: Scope) -> Element {
                         }
                     }
                     show_create_group.then(|| rsx!(
-                        CreateGroup {
-                            oncreate: move |_| {
-                                show_create_group.set(false);
-                            }
-                        }
-                        InvisibleCloser {
+                        Modal {
+                            class: "create-group-modal",
+                            open: *show_create_group.clone(),
+                            with_title: get_local_text("messages.create-group-chat"),
+                            transparent: true,
                             onclose: move |_| {
                                 show_create_group.set(false);
+                            },
+                            CreateGroup {
+                                oncreate: move |_| {
+                                    show_create_group.set(false);
+                                }
                             }
                         }
                     )),

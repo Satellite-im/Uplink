@@ -118,7 +118,7 @@
     height: 100%;
     display: inline-flex;
     flex-direction: column;
-    overflow: scroll;
+    overflow-y: scroll;
   }
   // hide scrollbar to prevent issues with 6 pixel scrollbar
   .files-list::-webkit-scrollbar {
@@ -131,6 +131,7 @@
   .files-list {
     display: flex;
     flex-wrap: wrap;
+    padding-left: 16px;
     width: 100%;
     gap: var(--gap);
   }

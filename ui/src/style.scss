@@ -24,7 +24,7 @@ body {
 }
 
 .titlebar {
-  height: fit-content;
+  height: var(--height-titlebar);
   width: 100%;
   background-color: var(--background);
   border-bottom: 1px solid var(--border-subtle-color);
@@ -111,6 +111,7 @@ body {
 /* Track */
 ::-webkit-scrollbar-track {
   background: var(--background);
+  border-radius: var(--border-radius);
 }
 
 /* Handle */

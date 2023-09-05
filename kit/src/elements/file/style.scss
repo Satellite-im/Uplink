@@ -1,15 +1,22 @@
 .file {
-	width: 100%;
+	width: 100px;
+	min-height: 100px;
+	border: 1.5px solid var(--secondary);
 	display: inline-flex;
 	flex-direction: column;
 	align-content: center;
-	justify-content: center;
-	max-width: 100px;
+	justify-content: space-between;
 	transition: background-color var(--animation-time);
 	align-self: flex-start;
 	margin: 5px;
 	border-radius: var(--border-radius-less);
 	transition: background-color var(--animation-time) ease;
+
+	&:hover {
+		background: var(--secondary);
+		cursor: pointer;
+	}
+
 	.icon {
 		svg {
 			transition: stroke var(--animation-time);
@@ -34,6 +41,11 @@
 	}
 }
 
+.checkbox-position {
+	position: relative;
+	top: 22%;
+	left: 78%;
+}
 
 .thumbnail-container {
 	border-radius: 8px;
@@ -54,6 +66,7 @@
 .alignment {
 	width: var(--icon-size-more);
 	display: inline-flex;
+	margin-top: 15px;
 	align-content: center;
 	align-self: center;
 	cursor: pointer;

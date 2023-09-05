@@ -12,7 +12,8 @@
   display: inline-flex;
   align-items: center;
   transition: background-color var(--animation-time);
-
+  white-space: nowrap;
+  
   button {
     display: inline-flex;
   }

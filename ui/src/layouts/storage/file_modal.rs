@@ -13,6 +13,7 @@ pub fn get_file_modal<'a>(
     cx.render(rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
+        transparent: false,
         children: cx.render(rsx!(FilePreview {
             file: file,
             on_download: |_| {
