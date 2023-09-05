@@ -439,7 +439,13 @@ pub fn Sidebar(cx: Scope) -> Element {
             )),
             with_nav: cx.render(rsx!(
                 crate::AppNav {
-                    active: UplinkRoute::ChatLayout{},
+                    active: match state.read().ui.current_layout {
+                        state::ui::Layout::Welcome => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Compose => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Friends => UplinkRoute::FriendsLayout {},
+                        state::ui::Layout::Settings => UplinkRoute::SettingsLayout {},
+                        state::ui::Layout::Storage => UplinkRoute::FilesLayout {},
+                    },
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
