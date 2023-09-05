@@ -35,13 +35,18 @@
 
 .send-files-button {
     position: relative;
-    z-index: 2;
-    right: 8px;
+    align-self: flex-end;
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: var(--gap);
+    width: 100%;
 }
 
 .send-files-top-stripe{
     background: var(--secondary);
     justify-content: center;
     align-items: center;
-    height: 60px;
+    padding: var(--padding-less);
+    margin-top: var(--gap);
+    border-radius: var(--border-radius);
 }

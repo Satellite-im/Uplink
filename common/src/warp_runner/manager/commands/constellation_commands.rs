@@ -324,10 +324,7 @@ fn open_new_directory(
 
     warp_storage.set_path(current_path);
 
-    log::info!(
-        "Navigation to directory {:?} worked!",
-        warp_storage.get_path()
-    );
+    log::info!("Navigated to directory {:?}", warp_storage.get_path());
     get_items_from_current_directory(warp_storage)
 }
 
@@ -351,7 +348,7 @@ fn go_back_to_previous_directory(
             return Err(error);
         };
     }
-    log::info!("Navigation to directory {} worked!", directory.name());
+    log::debug!("Navigated to directory: {}", directory.name());
     get_items_from_current_directory(warp_storage)
 }
 
