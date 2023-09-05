@@ -294,8 +294,7 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
                 String::from("emoji_picker"),
                 |pattern, exact| {
                     emojis::Group::iter()
-                        .map(|group| group.emojis())
-                        .flatten()
+                        .flat_map(|group| group.emojis())
                         .filter_map(|emoji| {
                             if emoji.shortcode().is_none() {
                                 None

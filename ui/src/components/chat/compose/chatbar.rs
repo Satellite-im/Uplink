@@ -86,7 +86,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let show_storage_modal = use_state(cx, || false);
 
-    let emoji_suggestions = use_state(cx, || vec![]);
+    let emoji_suggestions = use_state(cx, Vec::new);
 
     let with_scroll_btn = state
         .read()
@@ -459,17 +459,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             }
                             if emoji.ends_with(':') {
                                 // Replace emoji alias
-                                let alias = emoji.replace(":", "");
+                                let alias = emoji.replace(':', "");
                                 let s = state.read().ui.emojis.get_matching_emoji(&alias, true);
                                 let replacement = s.first();
                                 if let Some((emoji, _)) = replacement {
                                     v = v.replace(&sub, &sub.replace(&format!(":{alias}:"), emoji));
-                                    state.write().mutate(Action::SetChatDraft(*id, v.clone()));
+                                    state.write().mutate(Action::SetChatDraft(*id, v));
                                 }
                                 emoji_suggestions.set(vec![])
                             } else {
                                 //Suggest emojis
-                                let alias = emoji.replace(":", "");
+                                let alias = emoji.replace(':', "");
                                 emoji_suggestions
                                     .set(state.read().ui.emojis.get_matching_emoji(&alias, false))
                             }
@@ -489,10 +489,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     let sub: String = draft.chars().take(p.try_into().unwrap()).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     if let Some(e) = capture {
-                        draft = draft.replace(&sub, &sub.replace(&format!("{}", &e[0]), &emoji));
+                        draft = draft.replace(&sub, &sub.replace(&format!("{}", (&e[0]).to_string()), &emoji));
                         state
                             .write()
-                            .mutate(Action::SetChatDraft(*id, draft.clone()));
+                            .mutate(Action::SetChatDraft(*id, draft));
                     }
                     emoji_suggestions.set(vec![])
                 }
