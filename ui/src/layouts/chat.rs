@@ -29,7 +29,9 @@ pub fn ChatLayout(cx: Scope) -> Element {
             SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
             // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
             // creating a new account on a mobile device.
-            ChatSidebar { },
+            ChatSidebar {
+                active_route: crate::UplinkRoute::ChatLayout {},
+            },
             show_welcome.then(|| rsx!(Welcome {})),
             (!show_welcome && (sidebar_hidden  || !state.read().ui.is_minimal_view())).then(|| rsx!(Compose {}))
         }

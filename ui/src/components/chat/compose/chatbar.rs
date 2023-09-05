@@ -728,7 +728,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                     Location::Disk { path } => path.clone(),
                 },
                 remote: false,
-                button_icon: icons::outline::Shape::Trash,
+                button_icon: icons::outline::Shape::Minus,
                 on_press: move |_| {
                     let mut attachments = state
                         .read()
@@ -774,7 +774,6 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         aria_label: "compose-attachments",
             div {
                 id: "attachments-error",
-                flex_direction: "column",
                 if attachments_vec.len() >= MAX_FILES_PER_MESSAGE {
                     rsx!(p {
                         class: "error",

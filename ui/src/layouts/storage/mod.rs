@@ -183,7 +183,9 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
                     },
-                    ChatSidebar {},
+                    ChatSidebar {
+                        active_route: crate::UplinkRoute::FilesLayout {},
+                    },
                 )
             }
             div {
@@ -492,76 +494,79 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             },)
                                         }
                                     )),
-                                    file_checkbox {
-                                        file_path: file_path.clone(),
-                                        storage_controller: storage_controller.clone(),
-                                        select_files_to_send_mode:storage_files_to_chat_mode_is_active.clone(),
-                                    },
-                                    File {
-                                        key: "{key}-file",
-                                        thumbnail: thumbnail_to_base64(file),
-                                        text: file.name(),
-                                        aria_label: file.name(),
-                                        with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
-                                        onpress: move |_| {
-                                            if *storage_files_to_chat_mode_is_active.get() {
-                                                add_remove_file_to_send(storage_controller.clone(), file_path2.clone());
-                                                return;
-                                            }
-                                            let key = file_id;
-                                            if state.read().ui.file_previews.contains_key(&key) {
-                                                state
-                                                .write()
-                                                .mutate(common::state::Action::AddToastNotification(
-                                                    ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("files.file-already-opened"),
-                                                        None,
-                                                        2,
-                                                    ),
-                                                ));
-                                                return;
-                                            }
-                                            if file3.thumbnail().is_empty() {
-                                                state
-                                                .write()
-                                                .mutate(common::state::Action::AddToastNotification(
-                                                    ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("files.no-thumbnail-preview"),
-                                                        None,
-                                                        3,
-                                                    ),
-                                                ));
-                                                return;
-                                            }
-                                            let file4 = file3.clone();
-                                            storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                    div {
+                                        class: "file-wrap",
+                                        file_checkbox {
+                                            file_path: file_path.clone(),
+                                            storage_controller: storage_controller.clone(),
+                                            select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
                                         },
-                                        onrename: move |(val, key_code)| {
-                                            let new_name: String = val;
-                                            if new_name == file_name3 {
+                                        File {
+                                            key: "{key}-file",
+                                            thumbnail: thumbnail_to_base64(file),
+                                            text: file.name(),
+                                            aria_label: file.name(),
+                                            with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
+                                            onpress: move |_| {
+                                                if *storage_files_to_chat_mode_is_active.get() {
+                                                    add_remove_file_to_send(storage_controller.clone(), file_path2.clone());
+                                                    return;
+                                                }
+                                                let key = file_id;
+                                                if state.read().ui.file_previews.contains_key(&key) {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.file-already-opened"),
+                                                            None,
+                                                            2,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
+                                                if file3.thumbnail().is_empty() {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.no-thumbnail-preview"),
+                                                            None,
+                                                            3,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
+                                                let file4 = file3.clone();
+                                                storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                            },
+                                            onrename: move |(val, key_code)| {
+                                                let new_name: String = val;
+                                                if new_name == file_name3 {
+                                                    storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                    storage_controller.write().finish_renaming_item(false);
+                                                    return;
+                                                };
+                                                if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.file-already-with-name"),
+                                                            None,
+                                                            3,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
                                                 storage_controller.with(|i| i.is_renaming_map.is_none());
                                                 storage_controller.write().finish_renaming_item(false);
-                                                return;
-                                            };
-                                            if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
-                                                state
-                                                .write()
-                                                .mutate(common::state::Action::AddToastNotification(
-                                                    ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("files.file-already-with-name"),
-                                                        None,
-                                                        3,
-                                                    ),
-                                                ));
-                                                return;
-                                            }
-                                            storage_controller.with(|i| i.is_renaming_map.is_none());
-                                            storage_controller.write().finish_renaming_item(false);
-                                            if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
+                                                if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
+                                                }
                                             }
                                         }
                                     }

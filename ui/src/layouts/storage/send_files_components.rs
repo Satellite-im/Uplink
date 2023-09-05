@@ -1,3 +1,4 @@
+use common::icons::outline::Shape as Icon;
 use common::{language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
 use dioxus::prelude::*;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
@@ -18,8 +19,6 @@ pub fn file_checkbox(
             class: "checkbox-position",
             Checkbox {
                 disabled: files_selected_to_send.len() >= MAX_FILES_PER_MESSAGE,
-                width: "1em".into(),
-                height: "1em".into(),
                 is_checked:files_selected_to_send.iter()
                 .any(|location| {
                     match location {
@@ -44,39 +43,32 @@ pub fn send_files_from_chat_topbar<'a>(
     on_press_send_files_button: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
     if *select_files_to_send_mode.get() {
-        return cx.render(rsx! (div {
-            class: "send-files-top-stripe",
+        return cx.render(rsx! (
             div {
                 class: "send-files-button",
+                Button {
+                    text: "Go to Files".into(),
+                    icon: Icon::FolderPlus,
+                    aria_label: "go_to_files_btn".into(),
+                    appearance: Appearance::Secondary,
+                    onpress: move |_| {
+                        // TODO:
+                    },
+                },
                 Button {
                     text: get_local_text_args_builder("files.send-files-text-amount", |m| {
                         m.insert("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE).into());
                     }),
                     aria_label: "send_files_modal_send_button".into(),
-                    appearance: Appearance::Success,
+                    appearance: Appearance::Primary,
+                    icon: Icon::ChevronRight,
                     onpress: move |_| {
                         on_press_send_files_button.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
                         select_files_to_send_mode.set(false);
                     }
                 },
             }
-            p {
-                class: "files-selected-text",
-                get_local_text_args_builder("files.files-selected-paths", |m| {
-                    m.insert("files_path",storage_controller.with(|f| f.files_selected_to_send.clone()).into_iter()
-                    .filter(|location| matches!(location, Location::Constellation { .. }))
-                    .map(|location| {
-                        if let Location::Constellation { path } = location {
-                            path
-                        } else {
-                            String::new()
-                        }
-                    })
-                    .collect::<Vec<String>>()
-                    .join(", ").into());
-                })
-            }
-        }));
+        ));
     }
     None
 }
