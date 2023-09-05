@@ -162,7 +162,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let did_string = state.read().get_own_identity().did_key().to_string();
 
     let mut did_short = "#".to_string();
-    did_short.push_str(&state.read().get_own_identity().short_id());
+    did_short.push_str(&state.read().get_own_identity().short_id().to_string());
     let show_welcome = &state.read().ui.active_welcome;
 
     let image_path = get_images_dir()
