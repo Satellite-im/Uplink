@@ -16,11 +16,13 @@ use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
 
+pub type EmojiFilter = HashMap<String, Rc<dyn Fn(&str, bool) -> Vec<(String, String)>>>;
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct EmojiCounter {
     list: EmojiList,
     #[serde(skip)]
-    emoji_filters: HashMap<String, Rc<dyn Fn(&str, bool) -> Vec<(String, String)>>>,
+    emoji_filters: EmojiFilter,
 }
 
 impl EmojiCounter {
@@ -84,8 +86,8 @@ impl EmojiCounter {
             .map(|(emoji, alias)| (emoji.clone(), alias.clone()))
             .collect();
         matches.sort_by(|(emoji, _), (emoji2, _)| {
-            let first = self.list.get(emoji).unwrap_or(&(0 as u64));
-            let second = self.list.get(emoji2).unwrap_or(&(0 as u64));
+            let first = self.list.get(emoji).unwrap_or(&0_u64);
+            let second = self.list.get(emoji2).unwrap_or(&0_u64);
             match second.cmp(first) {
                 Ordering::Equal => emoji.cmp(emoji2),
                 x => x,
@@ -100,9 +102,9 @@ impl EmojiCounter {
         id: String,
         filter: impl Fn(&str, bool) -> Vec<(String, String)> + 'static,
     ) {
-        if !self.emoji_filters.contains_key(&id) {
-            self.emoji_filters.insert(id, Rc::new(filter));
-        }
+        self.emoji_filters
+            .entry(id)
+            .or_insert_with(|| Rc::new(filter));
     }
 }
 
