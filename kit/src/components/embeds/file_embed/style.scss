@@ -1,20 +1,19 @@
 .alignment {
   width: var(--icon-label-size-more);
-  height: var(--icon-label-size-more);
+  min-height: 0;
+  flex: 1;
   display: inline-flex;
   align-content: center;
   align-self: center;
   cursor: pointer;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  display: inline-flex;
+  align-items: center;  
 }
 
 .file-embed {
   display: inline-flex;
   gap: var(--gap);
   width: 100%;
-  margin-left: var(--gap);
   color: var(--text-color);
   align-content: center;
   align-self: flex-end;
@@ -24,11 +23,6 @@
     position: relative;
     width: fit-content;
     height: fit-content;
-    .btn-wrap{
-      position: relative;
-      left: var(--padding-less);
-      top: calc(2*var(--padding-less));
-    }
   }
 
   .image {
@@ -60,6 +54,7 @@
 			stroke: var(--warning-light);
       width: 60px;
       height: 60px;
+      margin-top: var(--gap-less);
     }
   }
 }

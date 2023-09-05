@@ -290,7 +290,8 @@ pub fn Compose(cx: Scope) -> Element {
                 div {
                     id: "messages",
                     MessageGroupSkeletal {},
-                    MessageGroupSkeletal { alt: true }
+                    MessageGroupSkeletal { alt: true },
+                    MessageGroupSkeletal {},
                 }
             ),
             Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),

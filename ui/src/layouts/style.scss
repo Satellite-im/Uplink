@@ -119,6 +119,8 @@
     display: inline-flex;
     flex-direction: column;
     overflow-y: scroll;
+    padding-right: var(--gap);
+    overflow-x: hidden;
   }
   // hide scrollbar to prevent issues with 6 pixel scrollbar
   .files-list::-webkit-scrollbar {
@@ -131,9 +133,16 @@
   .files-list {
     display: flex;
     flex-wrap: wrap;
-    padding-left: 16px;
     width: 100%;
     gap: var(--gap);
+    justify-content: flex-start;
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+
+    .context-inner {
+      position: relative;
+    }
+    
   }
 
   .files-info {
@@ -149,12 +158,13 @@
 
   .files-breadcrumbs {
     display: inline-flex;
-    margin: var(--gap);
+    margin: var(--gap) 0;
     width: fit-content;
     align-content: center;
     border-radius: var(--border-radius);
     overflow: hidden;
     border: 1px solid var(--border-subtle-color);
+    
     .crumb {
       display: inline-flex;
       align-content: center;
