@@ -103,7 +103,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let text_value = use_ref(cx, || value.clone());
-    use_effect(cx, value, |val|{
+    use_future(cx, value, |val|{
         to_owned![text_value];
         async move {
             *text_value.write_silent() = val;
