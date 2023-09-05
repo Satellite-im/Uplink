@@ -7,7 +7,8 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
-use kit::elements::tooltip::ArrowPosition;
+use kit::elements::button::Button;
+use kit::elements::tooltip::{ArrowPosition, Tooltip};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -116,6 +117,20 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                     },
                 },
             )),
+            state.read().configuration.developer.experimental_features.then(|| rsx!(
+                Button {
+                    icon: Icon::Plus,
+                    tooltip: cx.render(rsx!(
+                        Tooltip {
+                            arrow_position: ArrowPosition::Left,
+                            text: "Create Community".into()
+                        }
+                    )),
+                    onpress: move |_| {
+                        router.replace(UplinkRoute::CommunityLayout {});
+                    }
+                }
+            ))
         }
     ))
 }

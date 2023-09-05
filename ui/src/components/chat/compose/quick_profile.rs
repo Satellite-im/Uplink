@@ -238,7 +238,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             IdentityHeader {
                 sender_did: identity.did_key()
             },
-            hr{},
             div {
                 id: "profile-name",
                 aria_label: "profile-name",
@@ -250,16 +249,9 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             }
             identity.status_message().and_then(|s|{
                 cx.render(rsx!(
-                    hr{},
                     div {
                         id: "profile-status",
                         aria_label: "profile-status",
-                        p {
-                            class: "text bold",
-                            aria_label: "profile-status-header",
-                            get_local_text("uplink.status")
-                        },
-                        hr {},
                         p {
                             class: "text",
                             aria_label: "profile-status-value",
@@ -268,82 +260,85 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                 ))
             }),
-            hr{},
-            if is_self {
-                rsx!(ContextItem {
-                    icon: Icon::UserCircle,
-                    aria_label: "quick-profile-self-edit".into(),
-                    text: get_local_text("quickprofile.self-edit"),
-                    onpress: move |_| {
-                        router.replace(UplinkRoute::SettingsLayout {});
-                    }
-                })
-            } else {
-                rsx!(
-                    /*ContextItem {
-                    icon: Icon::UserCircle,
-                    text: get_local_text("quickprofile.profile"),
-                    // TODO: Show a profile popup
-                },*/
-                if is_friend {
-                    rsx!(
-                        if !chat_is_current {
-                            rsx!(
-                                ContextItem {
-                                icon: Icon::ChatBubbleBottomCenterText,
-                                aria_label: "quick-profile-message".into(),
-                                text: get_local_text("quickprofile.message"),
-                                onpress: move |_| {
-                                    ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
-                                }
-                            })
-                        }
-                        /*ContextItem {
-                            icon: Icon::PhoneArrowUpRight,
-                            text: get_local_text("quickprofile.call"),
-                            // TODO: Impl missing
-                        }*/
-                    )
-                }
-                hr{},
-                if is_friend {
-                    rsx!(ContextItem {
-                        icon: Icon::UserMinus,
-                        text: get_local_text("quickprofile.friend-remove"),
-                        aria_label: "quick-profile-friend-remove".into(),
+            div {
+                class: "profile-context-items",
+                if is_self {
+                    rsx!(hr{},
+                        ContextItem {
+                        icon: Icon::UserCircle,
+                        aria_label: "quick-profile-self-edit".into(),
+                        text: get_local_text("quickprofile.self-edit"),
                         onpress: move |_| {
-                            ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
-                            ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
+                            router.replace(UplinkRoute::SettingsLayout {});
                         }
                     })
-                }
-                ContextItem {
-                    icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
-                    aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
-                    text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
-                    onpress: move |_| {
-                        if blocked {
-                            ch.send(QuickProfileCmd::UnBlockFriend(block_identity.did_key()));
-                        } else {
-                            ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
-                            ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
-                        }
-                    }
-                },
-                if is_friend && !chat_is_current {
+                } else {
                     rsx!(
-                        hr{},
-                        Input {
-                            placeholder: get_local_text("quickprofile.chat-placeholder"),
-                            onreturn: move |(val, _,_): (String,bool,Code)|{
-                                let ui_id = state
-                                    .write_silent()
-                                    .increment_outgoing_messages(vec![val.clone()], &[]);
-                                ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                        /*ContextItem {
+                        icon: Icon::UserCircle,
+                        text: get_local_text("quickprofile.profile"),
+                        // TODO: Show a profile popup
+                    },*/
+                    if is_friend {
+                        rsx!(
+                            if !chat_is_current {
+                                rsx!(
+                                    ContextItem {
+                                    icon: Icon::ChatBubbleBottomCenterText,
+                                    aria_label: "quick-profile-message".into(),
+                                    text: get_local_text("quickprofile.message"),
+                                    onpress: move |_| {
+                                        ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
+                                    }
+                                })
+                            }
+                            /*ContextItem {
+                                icon: Icon::PhoneArrowUpRight,
+                                text: get_local_text("quickprofile.call"),
+                                // TODO: Impl missing
+                            }*/
+                        )
+                    }
+                    hr{},
+                    if is_friend {
+                        rsx!(ContextItem {
+                            icon: Icon::UserMinus,
+                            text: get_local_text("quickprofile.friend-remove"),
+                            aria_label: "quick-profile-friend-remove".into(),
+                            onpress: move |_| {
+                                ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
+                                ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
+                            }
+                        })
+                    }
+                    ContextItem {
+                        icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
+                        aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
+                        text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
+                        onpress: move |_| {
+                            if blocked {
+                                ch.send(QuickProfileCmd::UnBlockFriend(block_identity.did_key()));
+                            } else {
+                                ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
+                                ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
                             }
                         }
-                    )
-                })
+                    },
+                    if is_friend && !chat_is_current {
+                        rsx!(
+                            hr{},
+                            Input {
+                                placeholder: get_local_text("quickprofile.chat-placeholder"),
+                                onreturn: move |(val, _,_): (String,bool,Code)|{
+                                    let ui_id = state
+                                        .write_silent()
+                                        .increment_outgoing_messages(vec![val.clone()], &[]);
+                                    ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                                }
+                            }
+                        )
+                    })
+                }
             }
         ))
         ,

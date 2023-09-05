@@ -1,8 +1,7 @@
 use std::path::PathBuf;
 
-use common::{icons, language::get_local_text_args_builder, state::State, MAX_FILES_PER_MESSAGE};
+use common::{icons, language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
 use dioxus::prelude::*;
-use dioxus_hooks::use_shared_state;
 use kit::components::embeds::file_embed::FileEmbed;
 use uuid::Uuid;
 use warp::raygun::Location;

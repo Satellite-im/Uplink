@@ -72,16 +72,24 @@
 }
 
 .emoji-reaction {
-	border: 1px solid var(--secondary);
+	border: 1px solid var(--border-subtle-color);
 	border-radius: var(--border-radius-more);
+	background-color: var(--secondary-dark);
 	margin-left: 5px;
 	margin-top: 3px;
 	padding: 2px 5px;
 	cursor: pointer;
+	border: none;
+	padding: var(--gap-less) var(--gap);
+	display: inline-flex;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
 }
 
 .emoji-reaction-self {
-	border: 1px solid var(--primary);
+	background-color: var(--primary);
+	color: var(--text-color-dark);
 }
 
 .attachment-list {
@@ -96,4 +104,8 @@
 	height: 12px; 
 	width: 12px; 
 	color: var(--text-color);
+	svg {
+		fill: transparent;
+		stroke: var(--text-color-link);
+	}
 }

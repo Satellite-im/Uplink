@@ -322,6 +322,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     rsx!(
                         Modal {
                             open: *show_modal_to_select_chats_to_send_files.clone(),
+                            transparent: true,
                             onclose: move |_| show_modal_to_select_chats_to_send_files.set(false),
                             div {
                                 class: "modal-div-attachments-layout",

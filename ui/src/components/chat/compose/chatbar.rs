@@ -34,10 +34,12 @@ use warp::{
 };
 
 const MAX_CHARS_LIMIT: usize = 1024;
+const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 use crate::{
     components::{
-        chat::compose::context_file_location::FileLocationContext, files::attachments::Attachments,
+        chat::compose::context_file_location::FileLocationContext,
+        chat::compose::messages::SCROLL_BOTTOM, files::attachments::Attachments,
         paste_files_with_shortcut,
     },
     layouts::storage::FilesLayout,
@@ -85,6 +87,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let show_storage_modal = use_state(cx, || false);
 
+    let with_scroll_btn = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.scroll_value.unwrap_or_default())
+        .unwrap_or_default()
+        < SCROLL_BTN_THRESHOLD;
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -561,6 +569,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         rsx!(
                             Modal {
                                 open: *show_storage_modal.clone(),
+                                transparent: false,
                                 onclose: move |_| show_storage_modal.set(false),
                                 div {
                                     class: "modal-div-files-layout",
@@ -629,7 +638,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     new_files_to_upload.extend(local_disk_files);
                     state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                     }
-                },
+                }})}
+        div {
+            class: "chatbar-container",
+            with_scroll_btn.then(|| {
+                rsx!(div {
+                    class: "btn scroll-bottom-btn",
+                    onclick: |_| {
+                        let _ = use_eval(cx)(SCROLL_BOTTOM);
+                    },
+                    get_local_text("messages.scroll-bottom"),
+                })
             })
         }
         Attachments {
@@ -643,9 +662,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 state.write().mutate(Action::SetChatAttachments(chat_id, files_selected));
                 update_send();
             }
-        }
-        chatbar
-    ))
+            }
+            chatbar
+        ))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {
