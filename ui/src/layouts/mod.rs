@@ -1,4 +1,5 @@
 pub mod chat;
+pub mod community;
 pub mod create_account;
 pub mod friends;
 pub mod loading;
