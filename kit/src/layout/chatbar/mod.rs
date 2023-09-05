@@ -40,6 +40,7 @@ pub struct Props<'a> {
     is_disabled: bool,
     ignore_focus: bool,
     emoji_suggestions: &'a Vec<(String, String)>,
+    oncursor_update: Option<EventHandler<'a, (String, i64)>>,
 }
 
 #[derive(Props)]
@@ -144,6 +145,11 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onreturn: move |(v, is_valid, _)| {
                         if is_valid {
                             cx.props.onreturn.call(v);
+                        }
+                    },
+                    oncursor_update: move |(v,p)| {
+                        if let Some(e) = cx.props.oncursor_update.as_ref() {
+                            e.call((v,p))
                         }
                     },
                     is_disabled: cx.props.is_disabled,

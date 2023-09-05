@@ -2,8 +2,6 @@
 //! this could be merged with kit/src/elements/input and make the input element use a textarea based on a property.
 //! that might helpful if a textarea needed to perform input validation.
 
-use std::{cell::RefCell, rc::Rc};
-
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 use uuid::Uuid;
@@ -42,6 +40,7 @@ pub struct Props<'a> {
     aria_label: String,
     onchange: EventHandler<'a, (String, bool)>,
     onreturn: EventHandler<'a, (String, bool, Code)>,
+    oncursor_update: Option<EventHandler<'a, (String, i64)>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -54,6 +53,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
     let eval = use_eval(cx);
 
+    let cursor_position = use_ref(cx, || None);
+
     let Props {
         id: _,
         ignore_focus: _,
@@ -64,6 +65,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         aria_label,
         onchange,
         onreturn,
+        oncursor_update,
         value,
         is_disabled,
         show_char_counter,
@@ -87,7 +89,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
         .replace("$MULTI_LINE", &format!("{}", true));
-    let current_val = value.to_string();
     let disabled = *loading || *is_disabled;
 
     let update_char_counter_script = include_str!("./update_char_counter.js")
@@ -101,14 +102,25 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let _ = eval(&update_char_counter_script);
     }
 
-    let cv2 = current_val.clone();
-    let cv3 = current_val.clone();
+    let text_value = use_ref(cx, || value.clone());
+    use_effect(cx, value, |val|{
+        to_owned![text_value];
+        async move {
+            *text_value.write_silent() = val;
+        }
+    });
 
-    let text_value = Rc::new(RefCell::new(value.to_string()));
-    let text_value_onchange = Rc::clone(&text_value);
-    let text_value_onreturn = Rc::clone(&text_value);
     let eval = use_eval(cx);
     let cursor_eval = format!("return document.getElementById(\"{id2}\").selectionEnd;");
+
+    let do_cursor_update = oncursor_update.is_some();
+
+    if let Some(val) = cursor_position.write_silent().take() {
+        if let Some(e) = oncursor_update {
+            e.call((text_value.read().clone(), val));
+        }
+    }
+
     cx.render(rsx! (
         div {
             id: "input-group-{id}",
@@ -123,24 +135,25 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: "{current_val}",
+                    value: "{text_value.read()}",
                     maxlength: "{max_length}",
                     placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
                     onblur: move |_| {
-                        onreturn.call((cv2.to_string(), false, Code::Enter));
+                        onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
                     oninput: {
                         to_owned![eval, cursor_eval];
                         move |evt| {
                             let current_val = evt.value.clone();
-                            text_value_onchange.borrow_mut().clear();
-                            text_value_onchange.borrow_mut().push_str(&current_val);
+                            *text_value.write_silent() = current_val.clone();
                             onchange.call((current_val, true));
-                            to_owned![eval, cursor_eval];
+                            to_owned![eval, cursor_eval, cursor_position];
                             async move {
-                                if let Ok(r) = eval(&cursor_eval) {
-                                    if let Ok(val) = r.join().await {
-                                        log::debug!("cursor {:?}", val);
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
                                     }
                                 }
                             }
@@ -154,31 +167,42 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if *show_char_counter {
                                 let _ = eval(&clear_counter_script);
                             }
-                            onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
+                            onreturn.call((text_value.read().clone(), true, evt.code()));
                         }
                     },
                     onmousedown: {                            
                         to_owned![eval, cursor_eval];
                         move |_| {
-                            to_owned![eval, cursor_eval];
+                            to_owned![eval, cursor_eval, cursor_position];
                             async move {
-                                if let Ok(r) = eval(&cursor_eval) {
-                                    if let Ok(val) = r.join().await {
-                                        log::debug!("cursor {:?}", val);
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
                                     }
                                 }
                             }
                         }
                     },
-                    onkeypress: {                            
+                    onkeydown: {                            
                         to_owned![eval, cursor_eval];
                         move |evt| {
-                            log::debug!("key {:?}", evt);
-                            to_owned![eval, cursor_eval];
+                            let arrow = match evt.code() {
+                                Code::ArrowDown |Code::ArrowLeft|Code::ArrowRight|Code::ArrowUp => {
+                                    true
+                                }
+                                _ => {
+                                    false
+                                }
+                            };
+                            to_owned![eval, cursor_eval, cursor_position];
                             async move {
-                                if let Ok(r) = eval(&cursor_eval) {
-                                    if let Ok(val) = r.join().await {
-                                        log::debug!("cursor {:?}", val);
+                                if do_cursor_update && arrow {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
                                     }
                                 }
                             }
@@ -194,7 +218,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "{id_char_counter}-char-counter",
                                 aria_label: "input-char-counter",
                                 class: "char-counter-p-element",
-                                format!("{}", cv3.len()),
+                                format!("{}", text_value.read().len()),
                             },
                             p {
                                 key: "{id_char_counter}-char-max-length",
