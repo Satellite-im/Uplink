@@ -627,7 +627,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                                 )
                             )),
                             User {
-                                aria_label: participants_name.clone().into(),
+                                aria_label: participants_name.clone(),
                                 username: participants_name,
                                 subtext: subtext_val,
                                 timestamp: datetime,

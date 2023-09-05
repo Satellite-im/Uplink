@@ -85,7 +85,7 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                                     )),
                                     UserImageGroup {
                                         participants: build_participants(&other_participants),
-                                        aria_label: participants_name.clone().into(),
+                                        aria_label: participants_name.clone(),
                                         with_username: participants_name,
                                         use_tooltip: true,
                                         typing: users_typing,
