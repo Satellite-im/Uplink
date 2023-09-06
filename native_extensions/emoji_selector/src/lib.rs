@@ -296,10 +296,7 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
                     emojis::Group::iter()
                         .flat_map(|group| group.emojis())
                         .filter_map(|emoji| {
-                            if emoji.shortcode().is_none() {
-                                None
-                            } else {
-                                let short = emoji.shortcode().unwrap();
+                            emoji.shortcode().and_then(|short| {
                                 if (exact && short.eq(pattern))
                                     || (!exact && short.starts_with(pattern))
                                 {
@@ -307,7 +304,7 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
                                 } else {
                                     None
                                 }
-                            }
+                            })
                         })
                         .collect()
                 },
