@@ -173,18 +173,19 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         move |code| {
                             let current = &mut *selected_emoji.write_silent();
                             let amount = cx.props.emoji_suggestions.len();
-                            if code == Code::ArrowDown {
+                            let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
-                                    Some(v) => *current = if v + 1 < amount {Some(v+1)} else {Some(0)},
-                                    None => *current = Some(0),
+                                    Some(v) => if v + 1 < amount {v+1} else {0},
+                                    None => 0,
                                 }
                             } else {
                                 match current.as_ref() {
-                                    Some(v) => *current = if v > &0 {Some(v-1)} else {Some(amount-1)},
-                                    None => *current = Some(amount-1),
+                                    Some(v) => if v > &0 {v-1} else {amount-1},
+                                    None => amount-1,
                                 }
-                            }
-                            let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &current.unwrap().to_string()));
+                            };
+                            *current = Some(selected_idx);
+                            let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &selected_idx.to_string()));
                         }   
                 },
                 is_typing.then(|| {
@@ -202,7 +203,9 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 suggestions: cx.props.emoji_suggestions,
                 on_emoji_click: move |(emoji, alias)| {
                     if let Some(e) = cx.props.on_emoji_click.as_ref() {
-                        e.call((emoji, alias, cursor_position.read().unwrap()))
+                        if let Some(p) = cursor_position.read().as_ref() {
+                            e.call((emoji, alias, *p))
+                        }
                     }
                 },
                 selected: selected_emoji.clone(),
