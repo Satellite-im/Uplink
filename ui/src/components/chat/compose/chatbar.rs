@@ -448,7 +448,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             emoji_suggestions: emoji_suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if let Some(id) = &active_chat_id {
-                    let sub: String = v.chars().take(p.try_into().unwrap()).collect();
+                    let sub: String = v.chars().take(p as usize).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     match capture {
                         Some(emoji) => {
@@ -486,7 +486,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         .as_ref()
                         .and_then(|d| d.draft.clone())
                         .unwrap_or_default();
-                    let sub: String = draft.chars().take(p.try_into().unwrap()).collect();
+                    let sub: String = draft.chars().take(p as usize).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     if let Some(e) = capture {
                         draft = draft.replace(&sub, &sub.replace(&e[0].to_string(), &emoji));
