@@ -489,7 +489,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     let sub: String = draft.chars().take(p.try_into().unwrap()).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     if let Some(e) = capture {
-                        draft = draft.replace(&sub, &sub.replace(&format!("{}", (&e[0]).to_string()), &emoji));
+                        draft = draft.replace(&sub, &sub.replace(&e[0].to_string(), &emoji));
                         state
                             .write()
                             .mutate(Action::SetChatDraft(*id, draft));
