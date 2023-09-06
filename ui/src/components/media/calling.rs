@@ -215,9 +215,16 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 class: format_args!("calling {}", if cx.props.in_chat {"in-chat"} else {""}),
                 div {
                     class: format_args!("user-group-scale {}", if cx.props.in_chat {"in-chat"} else {""}),
-                    UserImageGroup {
-                        participants: build_participants(&other_participants),
-                    },
+                    if other_participants.is_empty() {
+                        rsx!(div {
+                            class: "lonely-call",
+                            get_local_text("remote-controls.empty")
+                        })
+                    } else {
+                        rsx!(UserImageGroup {
+                            participants: build_participants(&other_participants),
+                        })
+                    }
                 }
             }
             (!cx.props.in_chat).then(||rsx!(

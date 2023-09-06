@@ -325,6 +325,7 @@ remote-controls = Remote Controls
     .end = End
     .incoming-call = Incoming Transmission ...
     .outgoing-call = Outgoing Transmission ...
+    .empty = Nobody is here
 
 unlock = Unlock
     .description = Enter your pin or password to unlock your account.

@@ -313,3 +313,10 @@
         padding: var(--padding);
     }
 }
+
+.lonely-call {
+    font-size: var(--text-size); 
+    color: var(--text-color); 
+    text-align: center; 
+    white-space: nowrap;
+}
