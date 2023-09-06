@@ -95,15 +95,17 @@ impl CallInfo {
         self.pending_calls.retain(|x| x.id != id);
     }
 
-    pub fn remove_participant(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-        if active_call.call.id != call_id {
-            bail!("wrong call id");
+    pub fn remove_participant(&mut self, conversation_id: Uuid, id: &DID) -> anyhow::Result<()> {
+        if let Some(active_call) = self.active_call.as_mut() {
+            if active_call.call.conversation_id.eq(&conversation_id) {
+                active_call.call.remove_participant(id);
+            }
         }
-        active_call.call.remove_participant(id);
+        self.pending_calls.iter_mut().for_each(|c| {
+            if c.conversation_id.eq(&conversation_id) {
+                c.remove_participant(id);
+            }
+        });
         Ok(())
     }
 
@@ -119,7 +121,7 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_left(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
+    pub fn participant_left(&mut self, call_id: Uuid, id: &DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
@@ -140,7 +142,7 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_not_speaking(&mut self, id: DID) -> anyhow::Result<()> {
+    pub fn participant_not_speaking(&mut self, id: &DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
@@ -212,9 +214,9 @@ impl Call {
         }
     }
 
-    fn remove_participant(&mut self, id: DID) {
-        self.participants.retain(|x| x != &id);
-        self.participant_left(id.clone());
+    fn remove_participant(&mut self, id: &DID) {
+        self.participants.retain(|x| x != id);
+        self.participant_left(id);
         self.participant_not_speaking(id);
     }
 
@@ -224,16 +226,16 @@ impl Call {
         }
     }
 
-    fn participant_left(&mut self, id: DID) {
-        self.participants_joined.retain(|x| x != &id);
+    fn participant_left(&mut self, id: &DID) {
+        self.participants_joined.retain(|x| x != id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
         self.participants_speaking.insert(id);
     }
 
-    fn participant_not_speaking(&mut self, id: DID) {
-        self.participants_speaking.remove(&id);
+    fn participant_not_speaking(&mut self, id: &DID) {
+        self.participants_speaking.remove(id);
     }
 
     fn mute_self(&mut self) {

@@ -241,7 +241,6 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
         div {
             class: "controls",
             Button {
-                // TODO: we need to add an icon for this `if state.read().ui.silenced { Icon::Microphone } else { Icon::Microphone }`
                 icon: Icon::Microphone,
                 appearance: if call.self_muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(

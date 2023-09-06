@@ -589,17 +589,10 @@ impl State {
             }
             MessageEvent::RecipientRemoved { conversation } => {
                 if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
-                    // Also remove the recipient from the active call if present
-                    if let Some(call) = self.ui.call_info.active_call() {
-                        if call.call.conversation_id.eq(&conversation.id()) {
-                            for did in &chat.participants {
-                                if !conversation.recipients().contains(did) {
-                                    let _ = self
-                                        .ui
-                                        .call_info
-                                        .remove_participant(call.call.id, did.clone());
-                                }
-                            }
+                    // Also remove the recipient from the calls if present
+                    for did in &chat.participants {
+                        if !conversation.recipients().contains(did) {
+                            let _ = self.ui.call_info.remove_participant(conversation.id(), did);
                         }
                     }
                     chat.participants = HashSet::from_iter(conversation.recipients());
@@ -649,7 +642,7 @@ impl State {
                 // seems like kind of a hack but...
                 if peer_id == self.did_key() {
                     self.ui.call_info.end_call();
-                } else if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
+                } else if let Err(e) = self.ui.call_info.participant_left(call_id, &peer_id) {
                     log::error!("failed to process ParticipantLeft event : {e}");
                 }
             }
