@@ -27,7 +27,16 @@
       border-radius: var(--border-radius);
       border: 1px solid var(--border-subtle-color);
       z-index: 1001;
+      position: relative;
+      overflow: hidden;
     }
+
+    &.no-padding {
+      .modal {
+        padding: 0;
+      }
+    }
+    
 
     &.transparent {
       background: transparent;
