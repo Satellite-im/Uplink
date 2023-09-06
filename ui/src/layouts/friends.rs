@@ -80,8 +80,10 @@ pub fn FriendsLayout(cx: Scope) -> Element {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
-            SlimbarLayout { active: crate::UplinkRoute::FriendsLayout{} },
-            ChatSidebar { },
+            SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
+            ChatSidebar {
+                active_route: crate::UplinkRoute::FriendsLayout {},
+            },
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
@@ -106,7 +108,9 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     let route = cx.props.route;
 
     let view = if !state.read().ui.sidebar_hidden {
-        rsx!(ChatSidebar {})
+        rsx!(ChatSidebar {
+            active_route: crate::UplinkRoute::FriendsLayout {},
+        })
     } else {
         rsx!(
             div {
