@@ -328,8 +328,13 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     ))
 }
 
+#[derive(PartialEq, Props)]
+pub struct SidebarProps {
+    pub active_route: UplinkRoute,
+}
+
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope) -> Element {
+pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
