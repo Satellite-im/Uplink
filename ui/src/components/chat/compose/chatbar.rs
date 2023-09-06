@@ -575,7 +575,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     class: "modal-div-files-layout",
                                     FilesLayout {
                                         storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
-                                        on_files_selected_to_send: move |files_location: Vec<Location>| {
+                                        on_files_selected_to_send: move |(files_location, _): (Vec<Location>, _) | {
                                             let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                             .unwrap_or_default()
                                             .iter()

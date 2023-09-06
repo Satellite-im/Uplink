@@ -22,6 +22,7 @@ use kit::components::user::User;
 use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::checkbox::Checkbox;
+use kit::elements::label::Label;
 use kit::layout::modal::Modal;
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
@@ -88,7 +89,8 @@ pub enum ChanCmd {
 #[derive(Props)]
 pub struct Props<'a> {
     storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
-    on_files_selected_to_send: Option<EventHandler<'a, Vec<Location>>>,
+    send_files_from_storage: Option<UseState<bool>>,
+    on_files_selected_to_send: Option<EventHandler<'a, (Vec<Location>, Vec<Uuid>)>>,
 }
 
 #[allow(non_snake_case)]
@@ -98,6 +100,11 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let on_files_selected_to_send = cx.props.on_files_selected_to_send.as_ref();
     let storage_files_to_chat_mode_is_active =
         match cx.props.storage_files_to_chat_mode_is_active.as_ref() {
+            Some(d) => d,
+            None => use_state(cx, || false),
+        };
+    let send_files_from_storage =
+        match cx.props.send_files_from_storage.as_ref() {
             Some(d) => d,
             None => use_state(cx, || false),
         };
@@ -322,119 +329,36 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                  )
                 },
-                if *show_modal_to_select_chats_to_send_files.get() {
+                if *show_modal_to_select_chats_to_send_files.get()  {
                     rsx!(
                         Modal {
                             open: *show_modal_to_select_chats_to_send_files.clone(),
                             transparent: false,
                             onclose: move |_| show_modal_to_select_chats_to_send_files.set(false),
                             div {
-                                class: "modal-div-attachments-layout",
-                                div {
-                                    id: "all_chats", 
-                                    display: "inline-flex",
-                                    flex_direction: "column",
-                                    state.read().chats_sidebar().iter().cloned().map(|chat| {
-                                        let participants = state.read().chat_participants(&chat);
-                                        let other_participants =  state.read().remove_self(&participants);
-                                        let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
-                                        let platform = user.platform().into();
-    
-                                        // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
-                                        let participants_name = match chat.conversation_name {
-                                            Some(name) => name,
-                                            None => State::join_usernames(&other_participants)
-                                        };
-                                        let is_checked = storage_controller.read().chats_selected_to_send.iter()
-                                        .any(|uuid| {
-                                            uuid.eq(&chat.id)
-                                        });
-                                        
-                                        rsx!( 
-                                            div {
-                                                id: "chat-selector-to-send-files",
-                                                height: "80px",
-                                                padding: "16px",
-                                                display: "inline-flex",
-                                                onclick: move |_| {
-                                                    if is_checked {
-                                                        storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                                    } else {
-                                                        storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                                    }
-                                                },
-                                                Checkbox {
-                                                    disabled: false,
-                                                    width: "1em".into(),
-                                                    height: "1em".into(),
-                                                    is_checked: is_checked,
-                                                    on_click: move |_| {
-                                                        if is_checked {
-                                                            storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                                        } else {
-                                                            storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                                        }
-                                                    }
-                                                }
-                                                User {
-                                                    username: participants_name,
-                                                    subtext: get_local_text("sidebar.chat-new"),
-                                                    timestamp: raygun::Message::default().date(),
-                                                    active: false,
-                                                    user_image: cx.render(rsx!(
-                                                        if chat.conversation_type == ConversationType::Direct {rsx! (
-                                                            UserImage {
-                                                                platform: platform,
-                                                                status:  user.identity_status().into(),
-                                                                image: user.profile_picture(),
-                                                                typing: false,
-                                                            }
-                                                        )} else {rsx! (
-                                                            UserImageGroup {
-                                                                participants: build_participants(&participants),
-                                                                typing: false,
-                                                            }
-                                                        )}
-                                                    )),
-                                                    with_badge: "".into(),
-                                                    onpress: move |_| {                
-                                                    }
-                                                }
-                                            }
-                                            
-                                        )
-                                    }),
-                                }
-                                Attachments {
-                                    chat_id: Uuid::new_v4(),
-                                    files_to_attach: storage_controller.read().files_selected_to_send.clone(),
-                                    on_remove: move |files_selected| {
-                                        storage_controller.with_mut(|f| f.files_selected_to_send = files_selected);
-                                    }
-                                }
-                                Button {
-                                    disabled: false,
-                                    appearance: Appearance::Success,
-                                    aria_label: "send-files-to-several-chats-button".into(),
-                                    text: "Send files".into(),
-                                    onpress: move |_| {
-                                            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                                            let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-                                            let msg = vec!["".to_owned()];
-                                            let attachments = storage_controller.read().files_selected_to_send.clone();
-                                            let ui_msg_id = None;
-                                            let convs_id =  storage_controller.with(|f| f.chats_selected_to_send.clone());
-                                            if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                                                convs_id,
-                                                msg,
-                                                attachments,
-                                                ui_msg_id,
-                                                rsp: tx,
-                                            })) {
-                                                log::error!("Failed to send warp command: {}", e);
-                                                return;
-                                            }
-                                            show_modal_to_select_chats_to_send_files.set(false);
+                                class: "modal-div-files-layout",
+                                FilesLayout {
+                                    storage_files_to_chat_mode_is_active: show_modal_to_select_chats_to_send_files.clone(),
+                                    send_files_from_storage: show_modal_to_select_chats_to_send_files.clone(),
+                                    on_files_selected_to_send: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
+                                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                                        let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
+                                        let msg = vec!["".to_owned()];
+                                        let attachments = files_location.clone();
+                                        let ui_msg_id = None;
+                                        let convs_id =  convs_id.clone();
+                                        println!("chats: {:?}, files: {:?}", convs_id, attachments.clone());
+                                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                                            convs_id,
+                                            msg,
+                                            attachments,
+                                            ui_msg_id,
+                                            rsp: tx,
+                                        })) {
+                                            log::error!("Failed to send warp command: {}", e);
+                                            return;
+                                        }
+                                        show_modal_to_select_chats_to_send_files.set(false);
                                     },
                                 }
                             }
@@ -446,9 +370,86 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
                     on_press_send_files_button: move |files_location_path| {
                         if let Some(f) = on_files_selected_to_send {
-                            f.call(files_location_path);
+                            f.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
                         }
                     }
+                }
+                if *storage_files_to_chat_mode_is_active.get() && *send_files_from_storage.get()  {
+                    rsx!(div {
+                        id: "all_chats", 
+                        display: "inline-flex",
+                        flex_direction: "column",
+                        state.read().chats_sidebar().iter().cloned().map(|chat| {
+                            let participants = state.read().chat_participants(&chat);
+                            let other_participants =  state.read().remove_self(&participants);
+                            let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
+                            let platform = user.platform().into();
+
+                            // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
+                            let participants_name = match chat.conversation_name {
+                                Some(name) => name,
+                                None => State::join_usernames(&other_participants)
+                            };
+                            let is_checked = storage_controller.read().chats_selected_to_send.iter()
+                            .any(|uuid| {
+                                uuid.eq(&chat.id)
+                            });
+                            
+                            rsx!( 
+                                div {
+                                    id: "chat-selector-to-send-files",
+                                    height: "80px",
+                                    padding: "16px",
+                                    display: "inline-flex",
+                                    onclick: move |_| {
+                                        if is_checked {
+                                            storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                        } else {
+                                            storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                        }
+                                    },
+                                    Checkbox {
+                                        disabled: false,
+                                        width: "1em".into(),
+                                        height: "1em".into(),
+                                        is_checked: is_checked,
+                                        on_click: move |_| {
+                                            if is_checked {
+                                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                            } else {
+                                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                            }
+                                        }
+                                    }
+                                    User {
+                                        username: participants_name,
+                                        subtext: get_local_text("sidebar.chat-new"),
+                                        timestamp: raygun::Message::default().date(),
+                                        active: false,
+                                        user_image: cx.render(rsx!(
+                                            if chat.conversation_type == ConversationType::Direct {rsx! (
+                                                UserImage {
+                                                    platform: platform,
+                                                    status:  user.identity_status().into(),
+                                                    image: user.profile_picture(),
+                                                    typing: false,
+                                                }
+                                            )} else {rsx! (
+                                                UserImageGroup {
+                                                    participants: build_participants(&participants),
+                                                    typing: false,
+                                                }
+                                            )}
+                                        )),
+                                        with_badge: "".into(),
+                                        onpress: move |_| {                
+                                        }
+                                    }
+                                }
+                                
+                            )
+                        }),
+                    })
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -615,7 +616,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             aria_label: "files-download".into(),
                                             text: "Share Files".into(),
                                             onpress: move |_| {
-                                                share_files_from_storage_mode.set(!share_files_from_storage_mode);
+                                                show_modal_to_select_chats_to_send_files.set(true);
                                             },
                                         })},
                                         hr {},
