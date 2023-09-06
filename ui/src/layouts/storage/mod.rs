@@ -161,6 +161,8 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
+    storage_controller.write_silent().update_current_dir_path(state.clone());
+
     cx.render(rsx!(
         if state.read().ui.metadata.focused && !*storage_files_to_chat_mode_is_active.get() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {

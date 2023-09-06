@@ -63,6 +63,18 @@ impl StorageController {
         use_ref(cx, || controller)
     }
 
+    pub fn update_current_dir_path(&mut self, state: UseSharedState<State>) {
+        self.current_dir_path_as_string = state
+            .read()
+            .storage
+            .directories_opened
+            .iter()
+            .filter(|dir| dir.name() != ROOT_DIR_NAME)
+            .map(|dir| dir.name())
+            .collect::<Vec<_>>()
+            .join("/");
+    }
+
     pub fn update_state(&mut self) -> Option<Storage> {
         if let Some(storage) = self.storage_state.take() {
             self.directories_list = storage.directories.clone();
