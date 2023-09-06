@@ -590,11 +590,12 @@ impl State {
             MessageEvent::RecipientRemoved { conversation } => {
                 if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
                     // Also remove the recipient from the calls if present
-                    for did in &chat.participants {
+                    // Waiting for blink implementation to also kick the user from call?
+                    /*for did in &chat.participants {
                         if !conversation.recipients().contains(did) {
                             let _ = self.ui.call_info.remove_participant(conversation.id(), did);
                         }
-                    }
+                    }*/
                     chat.participants = HashSet::from_iter(conversation.recipients());
                 }
             }
