@@ -20,7 +20,7 @@ pub type EmojiFilter = HashMap<String, Rc<dyn Fn(&str, bool) -> Vec<(String, Str
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct EmojiCounter {
-    list: EmojiList,
+    emoji_tracker: EmojiList,
     #[serde(skip)]
     emoji_filters: EmojiFilter,
 }
@@ -28,25 +28,25 @@ pub struct EmojiCounter {
 impl EmojiCounter {
     pub fn new() -> Self {
         Self {
-            list: EmojiList::new(),
+            emoji_tracker: EmojiList::new(),
             emoji_filters: HashMap::new(),
         }
     }
 
     pub fn new_with(list: EmojiList) -> Self {
         Self {
-            list,
+            emoji_tracker: list,
             emoji_filters: HashMap::new(),
         }
     }
 
     pub fn increment_emoji(&mut self, emoji: String) {
-        let count = self.list.entry(emoji).or_insert(0);
+        let count = self.emoji_tracker.entry(emoji).or_insert(0);
         *count = count.saturating_add(1);
     }
 
     pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
-        let mut emojis: Vec<_> = self.list.iter().collect();
+        let mut emojis: Vec<_> = self.emoji_tracker.iter().collect();
 
         // sort the list by the emoji with the most usage
         emojis.sort_by(|a, b| match b.1.cmp(a.1) {
@@ -86,8 +86,8 @@ impl EmojiCounter {
             .map(|(emoji, alias)| (emoji.clone(), alias.clone()))
             .collect();
         matches.sort_by(|(emoji, _), (emoji2, _)| {
-            let first = self.list.get(emoji).unwrap_or(&0_u64);
-            let second = self.list.get(emoji2).unwrap_or(&0_u64);
+            let first = self.emoji_tracker.get(emoji).unwrap_or(&0_u64);
+            let second = self.emoji_tracker.get(emoji2).unwrap_or(&0_u64);
             match second.cmp(first) {
                 Ordering::Equal => emoji.cmp(emoji2),
                 x => x,
