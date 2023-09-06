@@ -47,7 +47,6 @@ pub mod functions;
 pub mod send_files_components;
 
 use crate::components::chat::sidebar::Sidebar as ChatSidebar;
-use crate::components::files::attachments::Attachments;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
@@ -347,7 +346,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         let attachments = files_location.clone();
                                         let ui_msg_id = None;
                                         let convs_id =  convs_id.clone();
-                                        println!("chats: {:?}, files: {:?}", convs_id, attachments.clone());
                                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
                                             convs_id,
                                             msg,
@@ -379,6 +377,12 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         id: "all_chats", 
                         display: "inline-flex",
                         flex_direction: "column",
+                        div {
+                            padding_left: "16px",
+                            Label {
+                                text: "Select Chats".to_owned(),
+                            }
+                        }
                         state.read().chats_sidebar().iter().cloned().map(|chat| {
                             let participants = state.read().chat_participants(&chat);
                             let other_participants =  state.read().remove_self(&participants);
@@ -456,6 +460,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
                     margin_top: format_args!("{}", if *storage_files_to_chat_mode_is_active.get() {"32px"} else {""}),
+                    margin_left: format_args!("{}", if !*storage_files_to_chat_mode_is_active.get() {""} else {"12px"}),
                     storage_controller.read().dirs_opened_ref.iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
