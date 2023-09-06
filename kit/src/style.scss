@@ -246,7 +246,7 @@ pre code {
   --secondary-dark: #212529;
   --background: #000000;
   --background-light: var(--secondary-light);
-  --background-dark: #474747;
+  --background-dark: #161a21;
   --success: #1dd1a1;
   --success-light: #00c29c;
   --info: #1B9CFC;
@@ -265,8 +265,9 @@ pre code {
 }
 
 .skeletal {
-  background: var(--secondary);
+  background: var(--secondary-dark);
   animation: skeletal 1s infinite;
+  opacity: 0.75;
 }
 
 .skeletal-inline {
@@ -279,6 +280,7 @@ pre code {
   svg {
     animation: skeletal 1s infinite;
     stroke: var(--secondary) !important;
+    height: 1.1rem;
   }
 }
 .skeletal-bars {

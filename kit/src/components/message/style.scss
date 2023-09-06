@@ -95,6 +95,9 @@
 .attachment-list {
 	display: inline-flex;
 	flex-direction: column;
+	gap: var(--gap);
+	margin: var(--gap) 0;
+	
 }
 
 .pin-indicator {
