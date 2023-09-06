@@ -380,7 +380,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             padding_left: "16px",
                             Label {
-                                text: "Select Chats".to_owned(),
+                                text: get_local_text("files.select-chats"),
                             }
                         }
                         state.read().chats_sidebar().iter().cloned().map(|chat| {

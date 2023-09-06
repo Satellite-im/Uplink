@@ -172,6 +172,7 @@ files = Files
     .send-to-chat = Send to chat
     .send-files-text-amount = Send { $amount } File(s)
     .files-selected-paths = File(s) Selected: { $files_path }
+    .select-chats = Select Chats
 
 settings = Settings
     .settings = Settings
