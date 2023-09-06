@@ -107,8 +107,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let _ = eval(&update_char_counter_script);
     }
 
-    let eval = use_eval(cx);
-    let cursor_eval = include_str!("./caret_position.js")
+    let cursor_eval = include_str!("./cursor_script.js")
         .replace("$ID", &id2);
 
     let text_value = use_ref(cx, || value.clone());
