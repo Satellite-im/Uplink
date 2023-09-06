@@ -107,11 +107,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let _ = eval(&update_char_counter_script);
     }
 
-    let cursor_eval = include_str!("./cursor_script.js")
-        .replace("$ID", &id2);
+    let cursor_eval = include_str!("./cursor_script.js").replace("$ID", &id2);
 
     let text_value = use_ref(cx, || value.clone());
-    use_future(cx, value, |val|{
+    use_future(cx, value, |val| {
         to_owned![text_value];
         async move {
             *text_value.write_silent() = val;
@@ -175,7 +174,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             onreturn.call((text_value.read().clone(), true, evt.code()));
                         }
                     },
-                    onmousedown: {                            
+                    onmousedown: {
                         to_owned![eval, cursor_eval];
                         move |_| {
                             to_owned![eval, cursor_eval, cursor_position];
@@ -190,7 +189,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                     },
-                    onkeydown: {                            
+                    onkeydown: {
                         to_owned![eval, cursor_eval];
                         move |evt| {
                             let arrow = match evt.code() {

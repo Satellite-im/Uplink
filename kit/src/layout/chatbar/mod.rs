@@ -169,7 +169,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     is_disabled: cx.props.is_disabled,
                     prevent_up_down_arrows: !cx.props.emoji_suggestions.is_empty(),
-                    onup_down_arrow: 
+                    onup_down_arrow:
                         move |code| {
                             let current = &mut *selected_emoji.write_silent();
                             let amount = cx.props.emoji_suggestions.len();
@@ -186,7 +186,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             };
                             *current = Some(selected_idx);
                             let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &selected_idx.to_string()));
-                        }   
+                        }
                 },
                 is_typing.then(|| {
                     rsx!(MessageTyping {
