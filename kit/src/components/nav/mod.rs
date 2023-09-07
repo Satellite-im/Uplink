@@ -8,16 +8,17 @@ use crate::elements::{
 use common::icons::outline::Shape as Icon;
 pub type To = &'static str;
 
-#[derive(Clone, PartialEq)]
-pub struct Route {
+#[derive(Clone)]
+pub struct Route<'a> {
     pub to: To,
     pub icon: Icon,
     pub name: String,
     pub with_badge: Option<String>,
     pub loading: Option<bool>,
+    pub child: Option<Element<'a>>,
 }
 
-impl Default for Route {
+impl Default for Route<'_> {
     fn default() -> Self {
         Self {
             to: "",
@@ -25,6 +26,7 @@ impl Default for Route {
             name: "Default".to_owned(),
             with_badge: None,
             loading: None,
+            child: None,
         }
     }
 }
@@ -33,7 +35,7 @@ impl Default for Route {
 pub struct Props<'a> {
     #[props(optional)]
     onnavigate: Option<EventHandler<'a, To>>,
-    routes: Vec<Route>,
+    routes: Vec<Route<'a>>,
     #[props(optional)]
     active: Option<To>,
     #[props(optional)]
@@ -119,20 +121,26 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 };
 
                 rsx!(
-                    Button {
+                    div {
+                        position: "relative",
                         key: "{key}",
-                        aria_label: aria_label.to_lowercase() + "-button",
-                        icon: route.icon,
-                        onpress: move |_| {
-                            active.set(route.to);
-                            emit(&cx, &route.to)
+                        Button {
+                            aria_label: aria_label.to_lowercase() + "-button",
+                            icon: route.icon,
+                            onpress: move |_| {
+                                active.set(route.to);
+                                emit(&cx, &route.to)
+                            },
+                            text: {
+                                if bubble { name } else { "".into() }
+                            },
+                            with_badge: badge,
+                            tooltip: tooltip,
+                            appearance: get_appearance(active, route.to)
                         },
-                        text: {
-                            if bubble { name } else { "".into() }
-                        },
-                        with_badge: badge,
-                        tooltip: tooltip,
-                        appearance: get_appearance(active, route.to)
+                        route.child.as_ref().map(|node|{
+                            node
+                        })
                     }
                 )
             })
