@@ -96,9 +96,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
             .replace("$UUID", &id)
             .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
-    if *show_char_counter {
-        let _ = eval(&update_char_counter_script);
-    }
+
+    use_effect(cx, (value, show_char_counter), |(_, show_char_counter)| {
+        to_owned![eval];
+        async move {
+            if show_char_counter {
+                let _ = eval(&update_char_counter_script);
+            }
+        }
+    });
 
     let cv2 = current_val.clone();
     let cv3 = current_val.clone();
