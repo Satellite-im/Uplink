@@ -451,11 +451,14 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-// todo: please add unit tests
 pub fn markdown(text: &str) -> String {
-    let lines: Vec<String> = text
-        .lines()
-        .map(|x| x.trim())
+    let txt = text.trim();
+
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+
+    let modified_lines: Vec<String> = txt
+        .split('\n')
         .map(|line| {
             if line.starts_with('>') {
                 format!("\\{}", line)
@@ -465,20 +468,20 @@ pub fn markdown(text: &str) -> String {
         })
         .collect();
 
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
+    let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
 
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
-    let mut triple_backticks = 0_u32;
+    let mut add_text_language = true;
 
-    for line in lines {
-        if line == "```" {
-            // should not overflow due to limits in message size.
-            triple_backticks += 1;
+    for line in &mut modified_lines_refs {
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
+        let line_trim = line.trim();
+        if line_trim == "```" && add_text_language {
+            *line = "```text";
+            add_text_language = false;
         }
-        let parser = pulldown_cmark::Parser::new_ext(&line, options);
         for event in parser {
             match event {
                 pulldown_cmark::Event::Start(Tag::Paragraph) => {
@@ -500,6 +503,7 @@ pub fn markdown(text: &str) -> String {
                     );
                 }
                 pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
+                    add_text_language = false;
                     in_code_block = true;
                     match code_block_kind {
                         CodeBlockKind::Fenced(language) => {
@@ -516,9 +520,9 @@ pub fn markdown(text: &str) -> String {
                     }
                 }
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                    // the check for triple_backticks may be unnecessary but this preserves the behavior of the code before being refactored.
-                    if in_code_block && (triple_backticks & 1 == 0) {
+                    if in_code_block && line_trim == "```" {
                         in_code_block = false;
+                        add_text_language = true;
                         // HACK: To close block code is necessary to push tags 2 times
                         html_output.push_str("</code></pre>");
                         html_output.push_str("</code></pre>");
