@@ -22,7 +22,10 @@ use kit::{
     layout::{modal::Modal, topbar::Topbar},
 };
 
-use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
+use crate::components::{
+    chat::create_group::get_input_options, chat::pinned_messages::PinnedMessages,
+    media::calling::CallControl,
+};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -275,6 +278,9 @@ pub fn Compose(cx: Scope) -> Element {
                     }
                 }
         )),
+        CallControl {
+            in_chat: true
+        },
         match data.as_ref() {
             None => rsx!(
                 div {
