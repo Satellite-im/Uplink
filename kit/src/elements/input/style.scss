@@ -23,9 +23,8 @@ input {
 	display: flex;
 	align-items: center;
 	gap: var(--gap);
-	padding: 0 var(--padding-less);
+	padding: 0 var(--padding);
 	font-size: var(--text-size);
-	border: 1px solid var(--border-subtle-color);
 	color: var(--text-color);
 	transition: border-color var(--animation-time);
 	flex: 1;

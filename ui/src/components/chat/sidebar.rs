@@ -8,8 +8,8 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::components::invisible_closer::InvisibleCloser;
 use kit::components::message::markdown;
+use kit::layout::modal::Modal;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -36,7 +36,7 @@ use warp::{
 };
 
 use crate::components::chat::create_group::CreateGroup;
-use crate::components::media::remote_control::RemoteControls;
+use crate::components::media::calling::CallControl;
 use crate::utils::build_participants;
 use crate::UplinkRoute;
 
@@ -327,8 +327,13 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     ))
 }
 
+#[derive(PartialEq, Props)]
+pub struct SidebarProps {
+    pub active_route: UplinkRoute,
+}
+
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope) -> Element {
+pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
@@ -369,10 +374,10 @@ pub fn Sidebar(cx: Scope) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, active_media_chat) = if state.read().initialized {
-        (state.read().chats_sidebar(), state.read().get_active_chat())
+    let sidebar_chats = if state.read().initialized {
+        state.read().chats_sidebar()
     } else {
-        (vec![], None)
+        vec![]
     };
 
     let show_create_group = use_state(cx, || false);
@@ -439,7 +444,13 @@ pub fn Sidebar(cx: Scope) -> Element {
             )),
             with_nav: cx.render(rsx!(
                 crate::AppNav {
-                    active: UplinkRoute::ChatLayout{},
+                    active: match state.read().ui.current_layout {
+                        state::ui::Layout::Welcome => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Compose => UplinkRoute::ChatLayout{},
+                        state::ui::Layout::Friends => UplinkRoute::FriendsLayout {},
+                        state::ui::Layout::Settings => UplinkRoute::SettingsLayout {},
+                        state::ui::Layout::Storage => UplinkRoute::FilesLayout {},
+                    },
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
@@ -451,16 +462,9 @@ pub fn Sidebar(cx: Scope) -> Element {
                 }
             )),
             with_call_controls: cx.render(rsx!(
-                active_media_chat.is_some().then(|| rsx!(
-                    RemoteControls {
-                        in_call_text: get_local_text("remote-controls.in-call"),
-                        mute_text: get_local_text("remote-controls.mute"),
-                        unmute_text: get_local_text("remote-controls.unmute"),
-                        listen_text: get_local_text("remote-controls.listen"),
-                        silence_text: get_local_text("remote-controls.silence"),
-                        end_text: get_local_text("remote-controls.end"),
-                    }
-                )),
+                CallControl {
+                    in_chat: false
+                }
             )),
             if *search_friends_is_focused.read() {
                 render! { search_friends {
@@ -508,14 +512,18 @@ pub fn Sidebar(cx: Scope) -> Element {
                         }
                     }
                     show_create_group.then(|| rsx!(
-                        CreateGroup {
-                            oncreate: move |_| {
-                                show_create_group.set(false);
-                            }
-                        }
-                        InvisibleCloser {
+                        Modal {
+                            class: "create-group-modal",
+                            open: *show_create_group.clone(),
+                            with_title: get_local_text("messages.create-group-chat"),
+                            transparent: true,
                             onclose: move |_| {
                                 show_create_group.set(false);
+                            },
+                            CreateGroup {
+                                oncreate: move |_| {
+                                    show_create_group.set(false);
+                                }
                             }
                         }
                     )),

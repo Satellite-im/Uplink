@@ -12,7 +12,8 @@
   display: inline-flex;
   align-items: center;
   transition: background-color var(--animation-time);
-
+  white-space: nowrap;
+  
   button {
     display: inline-flex;
   }
@@ -20,6 +21,8 @@
   svg {
     stroke: var(--text-color-dark);
     fill: transparent;
+    height: 1.1rem;
+    width: 1.1rem;
   }
   &:hover {
     background-color: var(--primary-light);

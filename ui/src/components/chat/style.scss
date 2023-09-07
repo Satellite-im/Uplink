@@ -9,9 +9,6 @@
   flex-direction: column;
   gap: var(--gap);
   padding-right: var(--gap);
-  label {
-    align-self: center;
-  }
   /* overflow scroll adds padding that disrupt the grab handle resizer.
 	   this keeps functionality but hides scroller.
 	*/
@@ -25,6 +22,9 @@
     display: inline-flex;
     justify-content: space-between;
 
+    label {
+      align-self: center;
+    }
     .btn {
       height: var(--height-input-less);
       width: var(--height-input-less);
@@ -51,6 +51,12 @@
   }
 }
 
+.chatbar-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 .chatbar-error-input-message {
   margin-bottom: 1%;
   margin-top: -2%;
@@ -68,24 +74,21 @@
 }
 
 #create-group {
-  margin-left: 315px;
-  margin-top: 100px;
   z-index: 10;
   top: 0;
-  left: 0;
+  left: calc(var(--width-sidebar) + 10px);
   color: var(--text-color);
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap-less);
-  position: absolute;
-  background-color: var(--background);
   z-index: 2;
-  width: fit-content;
-  height: calc(var(--width-sidebar) * 1.3);
+  min-width: fit-content;
+  max-height: 50vh;
   border-radius: var(--border-radius);
-  padding: var(--gap);
-  border: 1px solid var(--border-subtle-color);
-  right: calc(var(--width-sidebar) * -1);
+
+  ::-webkit-scrollbar-track {
+    background: var(--secondary-dark);
+  }
 
   .friend-list {
     display: inline-flex;
@@ -111,39 +114,54 @@
 
 #edit-group {
   color: var(--text-color);
-  border-bottom: 2px solid var(--secondary);
-  padding-bottom: var(--padding);
-  padding-left: 16px;
-  padding-right: 16px;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
   z-index: 2;
   overflow: hidden;
-  width: calc(var(--width-sidebar) * 1.5);
+  max-width: calc(var(--width-sidebar) * 1.5);
   align-self: flex-end;
-  border: 1px solid var(--border-subtle-color);
-  border-radius: var(--border-radius);
+  max-height: 50vh;
 
+
+  .topbar {
+    width: 100%;
+    border-bottom: none;
+    padding: unset;
+    height: fit-content;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--secondary-dark);
+  }
+
+  .search-input {
+    display: inline-flex;
+    justify-items: center;
+    align-items: center;
+    align-content: center;
+    gap: var(--gap);
+  }
+  
   .friend-list {
     display: inline-flex;
     flex-direction: column;
     gap: 0;
     flex: 1;
     min-height: 0;
-    overflow-y: scroll;
+    overflow-y: auto;
     max-height: 225px;
 
     .friend-group {
       display: inline-flex;
       flex-direction: column;
-      margin: 0 var(--gap);
+      gap: var(--gap);
+
       .friend-container {
         display: inline-flex;
         flex-direction: row;
         justify-content: space-between;
         gap: var(--gap);
-        margin: var(--gap-less) 0;
         align-content: center;
         align-items: center;
       }
@@ -158,7 +176,7 @@
   justify-content: center;
   align-items: stretch;
   margin-right: 8px;
-  z-index: 2;
+  z-index: 10002; // To be above the modal
 }
 
 .create-group-name {
@@ -168,17 +186,23 @@
   align-items: stretch;
 }
 
+.create-group-modal {
+  right: unset !important;
+  left: calc(var(--width-sidebar) + var(--gap) * 2) !important;
+  top: calc(var(--height-topbar) + var(--gap) * 2) !important;
+}
+
 #group-users {
   color: var(--text-color);
-  border-bottom: 2px solid var(--secondary);
-  padding-bottom: var(--padding);
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 16px;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  z-index: 2;
   overflow: hidden;
+  max-width: calc(var(--width-sidebar) * 1.5);
+  align-self: flex-end;
+  max-height: 50vh;
+
 
   .friend-list {
     display: inline-flex;
@@ -324,13 +348,83 @@
 
 #compose-attachments {
   display: inline-flex;
-  overflow-y: auto;
   flex-direction: row;
-  margin-left: var(--gap);
-  padding-top: var(--gap);
   z-index: 2;
-  box-shadow: 0px 0px 4px var(--text-color-muted);
-  width: 95%;
+  width: calc(100% - (var(--gap) * 2));
+  background-color: var(--secondary-dark);
+  padding: var(--gap);
+  margin: 0 var(--gap);
+  border-radius: var(--border-radius);
+  height: fit-content;
+  border: 1px solid var(--border-subtle-color);
+  overflow-x: auto;
+  overflow-y: hidden;
+  
+  #attachments-error {
+    display: inline-flex;
+    gap: var(--gap);
+    flex-direction: row;
+
+    .file-embed {
+      background-color: var(--secondary);
+      border-radius: var(--border-radius);
+      flex-direction: column;
+      position: relative;
+      width: 120px;
+      justify-content: center;
+      border: 1px solid var(--border-subtle-color);
+
+      .file-info {
+        height: calc(1rem + var(--gap));
+
+        .name {
+          width: calc(100% - (var(--gap) * 2));
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          font-size: var(--text-size-less);
+          color: var(--text-color-muted);
+          margin: 0 var(--gap);
+          
+        }
+      }
+
+      .btn-wrap {
+        position: absolute;
+        top: calc(var(--gap) * -1);
+        right: calc(var(--gap) * -1);
+        
+
+        .btn {
+          background-color: var(--secondary);
+          transform: scale(0.75);
+          border: 1px solid var(--border-subtle-color);
+
+          svg {
+            stroke: var(--text-color);
+          }
+        }
+      }
+
+      .icon {
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+        height: 120px;
+
+        &:hover {
+          cursor: default;
+        }
+
+        img {
+          object-fit: cover;
+          width: 100%;
+          height: 100%;
+          border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+      }
+    }
+  }
 }
 
 #compose #messages {
@@ -356,7 +450,7 @@
     justify-content: center;
     padding: var(--padding-less);
     background: var(--secondary-dark);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-more);
     text-align: center;
     width: 100%;
     
@@ -364,9 +458,11 @@
       display: inline-flex;
       align-items: center;
       font-size: var(--text-size-less);
+      color: var(--text-color-muted);
+
       svg {
         fill: transparent;
-        stroke: var(--text-color);
+        stroke: var(--text-color-muted);
         margin-right: var(--gap);
       }
     }
@@ -386,6 +482,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      gap: var(--gap-less);
     }
   }
 
@@ -425,6 +522,7 @@
   line-clamp: 1;
   -webkit-box-orient: vertical;
   word-wrap: anywhere;
+  font-size: var(--text-size-less);
 }
 
 .user-info {
@@ -505,7 +603,8 @@
 }
 
 #profile-name {
-  max-width: 240px;
+  max-width: 100%;
+  margin-left: var(--padding);
 
   p {
     width: 100%;
@@ -513,16 +612,26 @@
     text-overflow: ellipsis;
     display: block;
     overflow: hidden;
+    font-size: var(--text-size-more);
+  }
+}
+
+.profile-context-items {
+  margin: var(--padding-less);
+  display: inline-flex;
+  gap: var(--gap);
+  flex-direction: column;
+
+  .context-item {
+    width: 100%;
+    
   }
 }
 
 #profile-status {
   word-break: break-word;
-  max-width: 240px;
-  hr {
-    border-bottom: 5px solid;
-    visibility: hidden;
-  }
+  max-width: 100%;
+  margin-left: var(--padding);
 }
 
 .bold {
@@ -552,16 +661,41 @@
   width: 182px;
 }
 
+.scroll-bottom-btn {
+  color: var(--text-color);
+  background-color: var(--secondary);
+  border-radius: var(--border-radius);
+  width: calc(100% - (var(--gap) * 2));
+  padding: var(--gap-less);
+  height: fit-content;
+  position: absolute;
+  bottom: calc(100% + var(--gap-less));
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  font-size: var(--text-size-less);
+  border: 1px solid var(--border-subtle-color);
+  margin-right: auto;
+
+  &:hover {
+    cursor: pointer;
+    background-color: var(--secondary-light);
+  }
+}
+
 .float-right-link {
-  float: right;
   cursor: pointer;
   color: var(--text-color);
   user-select: none;
-}
+  height: var(--height-input);
+  padding: 0 var(--gap);
+  color: var(--text-color-dark);
+  font-size: var(--text-size-less);
+  text-decoration: none;
+  user-select: none;
+  white-space: nowrap;
 
-// override the kit topbar children just used in the edit_group.rs component
-.topbar {
-  .children {
-    padding: var(--gap) 0 var(--gap) var(--gap);
+  &:hover {
+    text-decoration: none;
   }
 }

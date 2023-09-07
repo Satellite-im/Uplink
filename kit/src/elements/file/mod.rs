@@ -88,42 +88,38 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     format_args!("file {}", if disabled { "disabled" } else { "" })
                 },
                 aria_label: "{aria_label}",
+                onclick: move |_| emit_press(&cx),
                 div {
                     class: "icon alignment",
-                    onclick: move |_| emit_press(&cx),
-                    div {
-                        position: "relative",
-                        padding_top: "5px",
-                        if thumbnail.is_empty() {
-                            let file_extension = file_extension.clone().replace('.', "");
-                            rsx!(span {
-                                label {
-                                    class: "file-type",
-                                    "{file_extension}"
-                                },
-                                IconElement {
-                                icon: Icon::Document,
-                                }
-                            })
-                        } else {
-                            rsx!(img {
-                                class: "thumbnail-container",
-                                height: if is_video {"50px"} else {""},
-                                width: if is_video {"100px"} else {""},
-                                src: "{thumbnail}",
-                            })
-                        }
-                        if is_video {
-                            rsx!(div {
-                                class: "play-button",
-                                Button {
-                                    icon: Icon::Play,
-                                    appearance: Appearance::Transparent,
-                                    small: true,
-                                }
-                            })
-                        }
-                    },
+                    if thumbnail.is_empty() {
+                        let file_extension = file_extension.clone().replace('.', "");
+                        rsx!(
+                            label {
+                                class: "file-type",
+                                "{file_extension}"
+                            },
+                            IconElement {
+                            icon: Icon::Document,
+                            }
+                        )
+                    } else {
+                        rsx!(img {
+                            class: "thumbnail-container",
+                            height: if is_video {"50px"} else {""},
+                            width: if is_video {"100px"} else {""},
+                            src: "{thumbnail}",
+                        })
+                    }
+                    if is_video {
+                        rsx!(div {
+                            class: "play-button",
+                            Button {
+                                icon: Icon::Play,
+                                appearance: Appearance::Transparent,
+                                small: true,
+                            }
+                        })
+                    }
                 },
                 with_rename.then(||
                     rsx! (

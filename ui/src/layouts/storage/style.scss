@@ -1,0 +1,52 @@
+.files-selected-text {
+    color: var(--text-color);
+    padding-left: 8px;
+    padding-top: 20px;
+    max-width:  75vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1740px) {
+    .files-selected-text {
+      max-width: 60vw;
+    }
+}
+
+@media (max-width: 865px) {
+    .files-selected-text {
+      max-width: 50vw;
+    }
+}
+
+@media (max-width: 560px) {
+    .files-selected-text {
+      max-width: 40vw;
+    }
+}
+
+@media (max-width: 400px) {
+    .files-selected-text {
+      max-width: 25vw;
+      opacity: 0;
+    }
+}
+
+.send-files-button {
+    position: relative;
+    align-self: flex-end;
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: var(--gap);
+    width: 100%;
+}
+
+.send-files-top-stripe{
+    background: var(--secondary);
+    justify-content: center;
+    align-items: center;
+    padding: var(--padding-less);
+    margin-top: var(--gap);
+    border-radius: var(--border-radius);
+}

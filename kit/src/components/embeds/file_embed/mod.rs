@@ -172,16 +172,14 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         Modal {
                             open: *fullscreen_preview.clone(),
                             onclose: move |_| fullscreen_preview.set(false),
+                            transparent: false,
+                            dont_pad: true,
                             img {
                                 id: "image-preview-modal-file-embed",
                                 aria_label: "image-preview-modal-file-embed",
                                 src: "{large_thumbnail}",
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: "translate(-50%, -50%)",
-                                max_height: "80%",
-                                max_width: "80%",
+                                max_height: "80vh",
+                                max_width: "80vw",
                                 onclick: move |e| e.stop_propagation(),
                             },
                         }
@@ -232,6 +230,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 rsx!(
                                     div {
                                         height: "60px",
+                                        width: "60px",
+                                        margin: "30px 0",
                                         IconElement {
                                             icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                         }
@@ -244,9 +244,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     }
                                     )
                             } else {
-                                rsx!( img {
-                                    max_width: "120px",
-                                    max_height: "60px",
+                                rsx!(img {
                                     aria_label: "image-preview-modal",
                                     src: "{thubmnail}",
                                     onclick: move |e| e.stop_propagation(),
