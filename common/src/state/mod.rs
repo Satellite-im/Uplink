@@ -640,11 +640,19 @@ impl State {
                 }
             }
             BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
-                // seems like kind of a hack but...
-                if peer_id == self.did_key() {
-                    self.ui.call_info.end_call();
-                } else if let Err(e) = self.ui.call_info.participant_left(call_id, &peer_id) {
+                if let Err(e) = self.ui.call_info.participant_left(call_id, &peer_id) {
                     log::error!("failed to process ParticipantLeft event : {e}");
+                }
+            }
+            BlinkEventKind::CallTerminated { call_id } => {
+                if self
+                    .ui
+                    .call_info
+                    .active_call()
+                    .map(|x| x.call.id == call_id)
+                    .unwrap_or(false)
+                {
+                    self.ui.call_info.end_call();
                 }
             }
             BlinkEventKind::ParticipantSpeaking { peer_id } => {
@@ -664,7 +672,6 @@ impl State {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
             }
-            BlinkEventKind::CallTerminated { .. } => {}
         }
     }
 }
