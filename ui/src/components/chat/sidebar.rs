@@ -36,7 +36,7 @@ use warp::{
 };
 
 use crate::components::chat::create_group::CreateGroup;
-use crate::components::media::remote_control::RemoteControls;
+use crate::components::media::calling::CallControl;
 use crate::utils::build_participants;
 use crate::UplinkRoute;
 
@@ -374,10 +374,10 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, active_media_chat) = if state.read().initialized {
-        (state.read().chats_sidebar(), state.read().get_active_chat())
+    let sidebar_chats = if state.read().initialized {
+        state.read().chats_sidebar()
     } else {
-        (vec![], None)
+        vec![]
     };
 
     let show_create_group = use_state(cx, || false);
@@ -462,16 +462,9 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                 }
             )),
             with_call_controls: cx.render(rsx!(
-                active_media_chat.is_some().then(|| rsx!(
-                    RemoteControls {
-                        in_call_text: get_local_text("remote-controls.in-call"),
-                        mute_text: get_local_text("remote-controls.mute"),
-                        unmute_text: get_local_text("remote-controls.unmute"),
-                        listen_text: get_local_text("remote-controls.listen"),
-                        silence_text: get_local_text("remote-controls.silence"),
-                        end_text: get_local_text("remote-controls.end"),
-                    }
-                )),
+                CallControl {
+                    in_chat: false
+                }
             )),
             if *search_friends_is_focused.read() {
                 render! { search_friends {

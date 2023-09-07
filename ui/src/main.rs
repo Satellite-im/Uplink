@@ -8,11 +8,9 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
-use common::warp_runner::BlinkCmd;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
-use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
@@ -24,8 +22,6 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::topbar_controls::Topbar_Controls;
-use kit::components::user_image::UserImage;
-use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::tooltip::ArrowPosition;
 use kit::elements::Appearance;
@@ -33,8 +29,6 @@ use kit::layout::modal::Modal;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use tokio::sync::broadcast::error::RecvError;
-use utils::build_user_from_identity;
-use uuid::Uuid;
 
 use std::collections::HashMap;
 
@@ -66,7 +60,6 @@ use crate::utils::auto_updater::{
 };
 
 use crate::layouts::chat::ChatLayout;
-use crate::utils::build_participants;
 use crate::window_manager::WindowManagerCmdChannels;
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
@@ -180,8 +173,8 @@ fn app_layout(cx: Scope) -> Element {
         AppStyle {}
         div { id: "app-wrap",
             Titlebar {},
-            Toasts {},
-            InnerCallDialog {},
+            Toasts {
+            },
             Outlet::<UplinkRoute>{},
             AppLogger {},
             PrismScripts {},
@@ -876,104 +869,6 @@ fn Titlebar(cx: Scope) -> Element {
             })),
         },
     ))
-}
-
-enum CallDialogCmd {
-    Accept(Uuid),
-    Reject(Uuid),
-}
-
-fn InnerCallDialog(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let ch = use_coroutine(cx, |mut rx| {
-        to_owned![state];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    CallDialogCmd::Accept(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().mutate(Action::AnswerCall(id));
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
-                    }
-                    CallDialogCmd::Reject(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().ui.call_info.reject_call(id);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    let call = match state.read().ui.call_info.active_call() {
-        Some(_) => return None,
-        None => match state.read().ui.call_info.pending_calls().first() {
-            Some(call) => call.clone(),
-            None => return None,
-        },
-    };
-    let mut participants = state.read().get_identities(&call.participants);
-    let own_id = state.read().did_key();
-    participants.retain(|x| x.did_key() != own_id);
-
-    let my_identity = build_user_from_identity(state.read().get_own_identity());
-
-    cx.render(rsx!(CallDialog {
-        caller: cx.render(rsx!(UserImageGroup {
-            participants: build_participants(&participants),
-            with_username: State::join_usernames(&participants),
-        },)),
-        callee: cx.render(rsx!(UserImage {
-            platform: my_identity.platform,
-            status: my_identity.status,
-            image: my_identity.photo,
-            with_username: my_identity.username,
-        })),
-        description: get_local_text("remote-controls.incoming-call"),
-        with_accept_btn: cx.render(rsx!(Button {
-            icon: Icon::Phone,
-            appearance: Appearance::Success,
-            onpress: move |_| {
-                ch.send(CallDialogCmd::Accept(call.id));
-            }
-        })),
-        with_deny_btn: cx.render(rsx!(Button {
-            icon: Icon::PhoneXMark,
-            appearance: Appearance::Danger,
-            onpress: move |_| {
-                ch.send(CallDialogCmd::Reject(call.id));
-            }
-        })),
-    }))
 }
 
 fn use_router_notification_listener(cx: &ScopeState) -> Option<()> {
