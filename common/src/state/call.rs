@@ -59,10 +59,13 @@ impl CallInfo {
         self.active_call.take();
     }
 
-    pub fn answer_call(&mut self, id: Uuid) -> anyhow::Result<Call> {
+    pub fn answer_call(&mut self, id: Uuid, did: Option<DID>) -> anyhow::Result<Call> {
         match self.pending_calls.iter().position(|x| x.id == id) {
             Some(idx) => {
-                let call = self.pending_calls.remove(idx);
+                let mut call = self.pending_calls.remove(idx);
+                if let Some(did) = did {
+                    call.participant_joined(did);
+                }
                 self.active_call.replace(call.clone().into());
                 Ok(call)
             }
@@ -92,6 +95,20 @@ impl CallInfo {
         self.pending_calls.retain(|x| x.id != id);
     }
 
+    pub fn remove_participant(&mut self, conversation_id: Uuid, id: &DID) -> anyhow::Result<()> {
+        if let Some(active_call) = self.active_call.as_mut() {
+            if active_call.call.conversation_id.eq(&conversation_id) {
+                active_call.call.remove_participant(id);
+            }
+        }
+        self.pending_calls.iter_mut().for_each(|c| {
+            if c.conversation_id.eq(&conversation_id) {
+                c.remove_participant(id);
+            }
+        });
+        Ok(())
+    }
+
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
@@ -104,7 +121,7 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_left(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
+    pub fn participant_left(&mut self, call_id: Uuid, id: &DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
@@ -125,7 +142,7 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_not_speaking(&mut self, id: DID) -> anyhow::Result<()> {
+    pub fn participant_not_speaking(&mut self, id: &DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
@@ -197,22 +214,28 @@ impl Call {
         }
     }
 
+    fn remove_participant(&mut self, id: &DID) {
+        self.participants.retain(|x| x != id);
+        self.participant_left(id);
+        self.participant_not_speaking(id);
+    }
+
     fn participant_joined(&mut self, id: DID) {
         if !self.participants_joined.iter().any(|x| x == &id) {
             self.participants_joined.push(id);
         }
     }
 
-    fn participant_left(&mut self, id: DID) {
-        self.participants_joined.retain(|x| x != &id);
+    fn participant_left(&mut self, id: &DID) {
+        self.participants_joined.retain(|x| x != id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
         self.participants_speaking.insert(id);
     }
 
-    fn participant_not_speaking(&mut self, id: DID) {
-        self.participants_speaking.remove(&id);
+    fn participant_not_speaking(&mut self, id: &DID) {
+        self.participants_speaking.remove(id);
     }
 
     fn mute_self(&mut self) {
