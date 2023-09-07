@@ -974,13 +974,7 @@ fn AppNav<'a>(
     let state = use_shared_state::<State>(cx)?;
     let navigator = use_navigator(cx);
     let pending_friends = state.read().friends().incoming_requests.len();
-    let unreads: u32 = state
-        .read()
-        .chats()
-        .all
-        .iter()
-        .map(|(_, c)| c.unreads)
-        .sum();
+    let unreads: u32 = state.read().chats().all.values().map(|c| c.unreads).sum();
 
     let chat_route = UIRoute {
         to: "/chat",
