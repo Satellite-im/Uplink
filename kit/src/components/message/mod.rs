@@ -471,8 +471,13 @@ pub fn markdown(text: &str) -> String {
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
+    let mut triple_backticks = 0_u32;
 
     for line in lines {
+        if line == "```" {
+            // should not overflow due to limits in message size.
+            triple_backticks += 1;
+        }
         let parser = pulldown_cmark::Parser::new_ext(&line, options);
         for event in parser {
             match event {
@@ -511,7 +516,8 @@ pub fn markdown(text: &str) -> String {
                     }
                 }
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                    if in_code_block && line == "```" {
+                    // the check for triple_backticks may be unnecessary but this preserves the behavior of the code before being refactored.
+                    if in_code_block && (triple_backticks & 1 == 0) {
                         in_code_block = false;
                         // HACK: To close block code is necessary to push tags 2 times
                         html_output.push_str("</code></pre>");
