@@ -451,14 +451,11 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
+// todo: please add unit tests
 pub fn markdown(text: &str) -> String {
-    let txt = text.trim();
-
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
-
-    let modified_lines: Vec<String> = txt
-        .split('\n')
+    let lines: Vec<String> = text
+        .lines()
+        .map(|x| x.trim())
         .map(|line| {
             if line.starts_with('>') {
                 format!("\\{}", line)
@@ -468,20 +465,15 @@ pub fn markdown(text: &str) -> String {
         })
         .collect();
 
-    let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
 
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
-    let mut add_text_language = true;
 
-    for line in &mut modified_lines_refs {
-        let parser = pulldown_cmark::Parser::new_ext(line, options);
-        let line_trim = line.trim();
-        if line_trim == "```" && add_text_language {
-            *line = "```text";
-            add_text_language = false;
-        }
+    for line in lines {
+        let parser = pulldown_cmark::Parser::new_ext(&line, options);
         for event in parser {
             match event {
                 pulldown_cmark::Event::Start(Tag::Paragraph) => {
@@ -503,7 +495,6 @@ pub fn markdown(text: &str) -> String {
                     );
                 }
                 pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
-                    add_text_language = false;
                     in_code_block = true;
                     match code_block_kind {
                         CodeBlockKind::Fenced(language) => {
@@ -520,9 +511,8 @@ pub fn markdown(text: &str) -> String {
                     }
                 }
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                    if in_code_block && line_trim == "```" {
+                    if in_code_block && line == "```" {
                         in_code_block = false;
-                        add_text_language = true;
                         // HACK: To close block code is necessary to push tags 2 times
                         html_output.push_str("</code></pre>");
                         html_output.push_str("</code></pre>");
