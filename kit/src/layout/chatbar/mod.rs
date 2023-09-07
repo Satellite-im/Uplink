@@ -171,17 +171,21 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     prevent_up_down_arrows: !cx.props.emoji_suggestions.is_empty(),
                     onup_down_arrow:
                         move |code| {
+                            if cx.props.emoji_suggestions.is_empty() {
+                                *selected_emoji.write_silent() = None;
+                                return;
+                            }
                             let current = &mut *selected_emoji.write_silent();
                             let amount = cx.props.emoji_suggestions.len();
                             let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
-                                    Some(v) => if v + 1 < amount {v+1} else {0},
+                                    Some(v) => (v + 1) % amount,
                                     None => 0,
                                 }
                             } else {
                                 match current.as_ref() {
-                                    Some(v) => if v > &0 {v-1} else {amount-1},
-                                    None => amount-1,
+                                    Some(v) => (v + amount - 1) % amount,
+                                    None => amount - 1,
                                 }
                             };
                             *current = Some(selected_idx);
