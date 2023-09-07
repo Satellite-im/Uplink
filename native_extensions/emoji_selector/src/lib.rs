@@ -296,13 +296,13 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
                     emojis::Group::iter()
                         .flat_map(|group| group.emojis())
                         .filter_map(|emoji| {
-                            match emoji.shortcodes().find(|short| {
-                                (exact && (*short).eq(pattern))
-                                    || (!exact && (*short).starts_with(pattern))
-                            }) {
-                                Some(short) => Some((emoji.to_string(), short.to_string())),
-                                None => None,
-                            }
+                            emoji
+                                .shortcodes()
+                                .find(|short| {
+                                    (exact && (*short).eq(pattern))
+                                        || (!exact && (*short).starts_with(pattern))
+                                })
+                                .map(|short| (emoji.to_string(), short.to_string()))
                         })
                         .collect()
                 },
