@@ -138,9 +138,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             tooltip: tooltip,
                             appearance: get_appearance(active, route.to)
                         },
-                        route.child.as_ref().map(|node|{
-                            node
-                        })
+                        route.child.as_ref()
                     }
                 )
             })
