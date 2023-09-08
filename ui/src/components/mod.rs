@@ -1,4 +1,3 @@
-pub mod calldialog;
 pub mod chat;
 pub mod community;
 pub mod debug_logger;

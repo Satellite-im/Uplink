@@ -79,25 +79,14 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| match p {
-                    Location::Disk { path } => {
-                        if let Some(name) = path
-                            .file_name()
-                            .map(|ostr| ostr.to_str().unwrap_or_default())
-                        {
-                            return name.to_string();
-                        }
-                        String::new()
-                    }
-                    Location::Constellation { path } => {
-                        if let Some(name) = PathBuf::from(path)
-                            .file_name()
-                            .map(|ostr| ostr.to_str().unwrap_or_default())
-                        {
-                            return name.to_string();
-                        }
-                        String::new()
-                    }
+                .map(|p| {
+                    let pathbuf = match p {
+                        Location::Disk { path } => path.clone(),
+                        Location::Constellation { path } => PathBuf::from(path),
+                    };
+                    pathbuf
+                        .file_name()
+                        .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
                 })
                 .collect(),
             attachments_progress: HashMap::new(),

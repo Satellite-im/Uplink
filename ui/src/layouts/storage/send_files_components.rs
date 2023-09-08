@@ -75,13 +75,12 @@ pub fn send_files_from_chat_topbar<'a>(
 
 pub fn add_remove_file_to_send(storage_controller: UseRef<StorageController>, file_path: String) {
     if let Some(index) = storage_controller.with(|f| {
-        f.files_selected_to_send.iter().position(|location| {
-            let path = match location {
-                Location::Constellation { path } => path.clone(),
-                _ => String::new(),
-            };
-            path == file_path.clone()
-        })
+        f.files_selected_to_send
+            .iter()
+            .position(|location| match location {
+                Location::Constellation { path } => path.eq(&file_path),
+                _ => false,
+            })
     }) {
         storage_controller.with_mut(|f| f.files_selected_to_send.remove(index));
     } else if storage_controller.with(|f| f.files_selected_to_send.len() < MAX_FILES_PER_MESSAGE) {
