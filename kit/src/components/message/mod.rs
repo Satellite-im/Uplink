@@ -422,42 +422,42 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
     let text_type_class = cx.props.pending.then(|| "pending-text").unwrap_or("text");
 
-    use_effect(
-        cx,
-        (&cx.props.text, &cx.props.markdown),
-        |(text, render_markdown)| {
-            to_owned![id, eval];
-            async move {
-                if !render_markdown {
-                    return;
-                }
+    let text = if !cx.props.markdown {
+        cx.props.text.clone()
+    } else {
+        // fix code segments
+        let mut target = replace_code_segments(&cx.props.text);
+        // fix newlines. replicates old behavior
+        target = target.replace("\n\n", "<br/>");
 
-                let target = replace_code_segments(&text);
-                let script = format!(
-                    "document.getElementById('{}').innerHTML = marked.parse('{}')",
-                    id, target
-                );
-                let _ = eval(&script);
-            }
-        },
-    );
+        let mut options = Options::empty();
+        options.insert(Options::ENABLE_STRIKETHROUGH);
+
+        let parser = pulldown_cmark::Parser::new_ext(&target, options);
+        let mut html_output = String::new();
+        pulldown_cmark::html::push_html(&mut html_output, parser);
+        html_output.trim().to_string()
+    };
 
     cx.render(rsx!(
         div {
-            class: format_args!(
-                "{}",
-                if cx.props.pending {
-                    "pending-text"
-                } else { "text" }
-            ),
-            p {
-                id: "{id}",
-                class: format_args!(
-                    "{}",
-                    text_type_class,
-                ),
-                aria_label: "message-text",
-                "{cx.props.text}",
+            class: text_type_class,
+            if cx.props.markdown {
+                render!{
+                    p {
+                        class: text_type_class,
+                        aria_label: "message-text",
+                        dangerous_inner_html: "{text}"
+                    },
+                }
+            } else {
+                render!{
+                    p {
+                        class: text_type_class,
+                        aria_label: "message-text",
+                        text
+                    },
+                }
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
@@ -565,14 +565,13 @@ fn replace_code_segments(text: &str) -> String {
             None => match single_backtick_regex(text) {
                 Some(x) => x,
                 None => text.to_string(),
-            }
-        }
+            },
+        },
     }
 }
 
 fn multiline_code_regex(target: &str) -> Option<String> {
-    let re =
-    Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s+\n)(?<code>(.|\s)+)```)")
+    let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s+\n)(?<code>(.|\s)+)```)")
         .expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = caps.name("language").map_or("text", |m| m.as_str().trim());
@@ -583,7 +582,7 @@ fn multiline_code_regex(target: &str) -> Option<String> {
                 "<pre><code class=\"language-{}\">{}</code></pre>",
                 language, code
             );
-           Some(target.replace(code_block, &new_code_block))
+            Some(target.replace(code_block, &new_code_block))
         } else {
             None
         }
@@ -593,9 +592,7 @@ fn multiline_code_regex(target: &str) -> Option<String> {
 }
 
 fn triple_backtick_regex(target: &str) -> Option<String> {
-    let re =
-    Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)")
-        .expect("invalid regex");
+    let re = Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)").expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = "text";
         let code = caps.name("code").map_or("", |m| m.as_str());
@@ -605,7 +602,7 @@ fn triple_backtick_regex(target: &str) -> Option<String> {
                 "<pre><code class=\"language-{}\">{}</code></pre>",
                 language, code
             );
-           Some(target.replace(code_block, &new_code_block))
+            Some(target.replace(code_block, &new_code_block))
         } else {
             None
         }
@@ -615,9 +612,7 @@ fn triple_backtick_regex(target: &str) -> Option<String> {
 }
 
 fn single_backtick_regex(target: &str) -> Option<String> {
-    let re =
-    Regex::new(r"(?<code_block>`(?<code>(.|\s)+)`)")
-        .expect("invalid regex");
+    let re = Regex::new(r"(?<code_block>`(?<code>(.|\s)+)`)").expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = "text";
         let code = caps.name("code").map_or("", |m| m.as_str());
@@ -627,7 +622,7 @@ fn single_backtick_regex(target: &str) -> Option<String> {
                 "<pre><code class=\"language-{}\">{}</code></pre>",
                 language, code
             );
-           Some(target.replace(code_block, &new_code_block))
+            Some(target.replace(code_block, &new_code_block))
         } else {
             None
         }
