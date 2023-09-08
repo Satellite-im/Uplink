@@ -179,10 +179,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             Location::Disk { path } => path.clone(),
                             Location::Constellation { path } => PathBuf::from(path),
                         };
-                        pathbuf.file_name().map_or_else(
-                            String::new,
-                            |ostr| ostr.to_string_lossy().to_string(),
-                        )
+                        pathbuf
+                            .file_name()
+                            .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
                     })
                     .collect();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
@@ -728,10 +727,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                             Location::Constellation { path } => PathBuf::from(path),
                             Location::Disk { path } => path.clone(),
                         };
-                        path.file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            != filename
+                        path.file_name().unwrap_or_default().to_string_lossy() != filename
                     });
                     state
                         .write()
