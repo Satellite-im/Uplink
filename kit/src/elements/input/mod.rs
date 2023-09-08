@@ -18,7 +18,7 @@ use super::label::LabelWithEllipsis;
 /// If not, is best to use SpecialCharsAction to pass small vecs.
 ///
 /// ## Example:
-/// ```rust
+/// ```no_run
 /// let chars_to_remove = vec!['\\', '/', ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_'];
 /// let mut special_chars = SPECIAL_CHARS.to_vec();
 /// special_chars = special_chars
@@ -63,7 +63,7 @@ pub struct Validation {
     ///
     /// ### Example
     ///
-    /// ```rust
+    /// ```no_run
     ///  options: Options {
     ///        react_to_esc_key: true,
     ///     with_validation: Some(Validation {
