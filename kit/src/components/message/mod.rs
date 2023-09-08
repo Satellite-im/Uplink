@@ -7,6 +7,7 @@ use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
+use regex::Regex;
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -433,13 +434,17 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
                 // use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
                 let mut target = text;
-                let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
-                if let Some(caps) = re.captures(target) {
+                let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+\s+)(?<code>.+)```)")
+                    .expect("invalid regex");
+                if let Some(caps) = re.captures(&target) {
                     let language = caps.name("language").map_or("text", |m| m.as_str());
                     let code = caps.name("code").map_or("", |m| m.as_str());
                     let code_block = caps.name("code_block").map_or("", |m| m.as_str());
                     if !code.is_empty() {
-                        let new_code_block = format!("<code class=\"language-{}\">{}</code>", language, code);
+                        let new_code_block = format!(
+                            "<pre><code class=\"language-{}\">{}</code></pre>",
+                            language, code
+                        );
                         target = target.replace(code_block, &new_code_block);
                     }
                 }
@@ -574,7 +579,8 @@ mod test {
 
     #[test]
     fn message_re_test1() {
-        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
+        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)")
+            .expect("invalid regex");
         let target = r"```rust let a: i32 = 0;```";
         let caps = re.captures(target).expect("no matches");
         let language = caps.name("language").map_or("", |m| m.as_str());
@@ -587,7 +593,8 @@ mod test {
 
     #[test]
     fn message_re_test2() {
-        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
+        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)")
+            .expect("invalid regex");
         let target = "here's some not code. then some code: \n```rust let a: i32 = 0;```";
         let caps = re.captures(target).expect("no matches");
         let language = caps.name("language").map_or("text", |m| m.as_str());
