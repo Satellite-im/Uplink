@@ -309,7 +309,6 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
-                //let new_replacement = replace_tags(&s);
                 cx.props.on_enter.call(s);
             } else {
                 cx.props.on_enter.call(cx.props.text.clone());
