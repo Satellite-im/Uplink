@@ -457,13 +457,25 @@ pub fn markdown(text: &str) -> String {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
 
-    let mut text_lines: Vec<&str> = txt.split('\n').collect();
+    let modified_lines: Vec<String> = txt
+        .split('\n')
+        .map(|line| {
+            if line.starts_with('>') {
+                format!("\\{}", line)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
+
+    let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
+
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
     let mut add_text_language = true;
 
-    for line in &mut text_lines {
+    for line in &mut modified_lines_refs {
         let parser = pulldown_cmark::Parser::new_ext(line, options);
         let line_trim = line.trim();
         if line_trim == "```" && add_text_language {
