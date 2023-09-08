@@ -111,8 +111,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let text_value = use_ref(cx, || value.clone());
     use_future(cx, value, |val| {
-        to_owned![text_value];
+        to_owned![cursor_position, text_value];
         async move {
+            *cursor_position.write_silent() = Some(val.chars().count() as i64);
             *text_value.write_silent() = val;
         }
     });
