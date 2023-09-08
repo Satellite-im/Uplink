@@ -371,6 +371,16 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         "text"
     };
 
+    let markdown_script = if cx.props.markdown {
+        let target = replace_code_segments(&cx.props.text);
+        format!(
+            "document.getElementById('{}').innerHTML = marked.parse('{}')",
+            id, target
+        )
+    } else {
+        String::new()
+    };
+
     cx.render(rsx!(
         div {
             class: text_type_class,
@@ -378,19 +388,9 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                 id: "{id}",
                 class: text_type_class,
                 aria_label: "message-text",
-                onmounted: move |_| {
-                    if !cx.props.markdown {
-                        return;
-                    }
-                    let target = replace_code_segments(&cx.props.text);
-                    let script = format!(
-                        "document.getElementById('{}').innerHTML = marked.parse('{}')",
-                        id, target
-                    );
-                    let _ = eval(&script);
-                },
                 "{cx.props.text}"
             },
+            script { markdown_script },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
                     link: l.to_string(),
