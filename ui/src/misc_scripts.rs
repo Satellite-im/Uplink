@@ -4,8 +4,15 @@ pub const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
 pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
 pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
 
+const MARKED_SCRIPT: &str = include_str!("../extra/assets/scripts/marked.js");
+pub fn MarkedScripts(cx: Scope) -> Element {
+    render! {
+        script { "{MARKED_SCRIPT}" },
+    }
+}
+
 pub fn PrismScripts(cx: Scope) -> Element {
-    let prism_path = prism_paths::use_prism_path(cx);
+    let prism_path = use_prism_path(cx);
 
     render! {
         script { "{PRISM_SCRIPT}" },
@@ -13,7 +20,7 @@ pub fn PrismScripts(cx: Scope) -> Element {
     }
 }
 
-pub fn use_prism_path(cx: &ScopeState) -> &str {
+fn use_prism_path(cx: &ScopeState) -> &str {
     cx.use_hook(|| {
         format!(
             r"Prism.plugins.autoloader.languages_path = '{}';",

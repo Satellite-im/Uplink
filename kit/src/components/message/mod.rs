@@ -163,15 +163,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
-    // if markdown support is enabled, we will create it, otherwise we will just pass text.
-    let mut formatted_text = if cx.props.parse_markdown {
-        markdown(&text)
-    } else {
-        text
-    };
-
-    formatted_text = wrap_links_with_a_tags(&formatted_text);
+    let formatted_text = wrap_links_with_a_tags(&text);
     let formatted_text_clone = formatted_text.clone();
+
+    let loading_class = loading.then(|| "loading").unwrap_or_default();
+    let remote_class = is_remote.then(|| "remote").unwrap_or_default();
+    let order_class = if cx.props.order.is_some() {
+        order.to_string()
+    } else {
+        "".into()
+    };
+    let msg_pending_class = cx
+        .props
+        .pending
+        .then(|| "message-pending")
+        .unwrap_or_default();
 
     cx.render(rsx! (
         cx.props.pinned.then(|| {
@@ -194,18 +200,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: {
                 format_args!(
                     "message {} {} {} {}",
-                    if loading {
-                        "loading"
-                    } else { "" },
-                    if is_remote {
-                        "remote"
-                    } else { "" },
-                    if cx.props.order.is_some() {
-                        order.to_string()
-                    } else { "".into() },
-                    if cx.props.pending {
-                        "message-pending"
-                    } else { "" }
+                   loading_class, remote_class, order_class, msg_pending_class
                 )
             },
             aria_label: {
@@ -248,6 +243,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     text: formatted_text_clone,
                     remote: is_remote,
                     pending: cx.props.pending,
+                    markdown: cx.props.parse_markdown,
                 }
             )),
             has_attachments.then(|| {
@@ -396,10 +392,13 @@ pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
+    markdown: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    let id = use_state(cx, || uuid::Uuid::new_v4().to_string());
+    let eval = use_eval(cx);
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
@@ -420,8 +419,29 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    // not really
-    let dangerous_text = cx.props.text.clone();
+    let text_type_class = cx.props.pending.then(|| "pending-text").unwrap_or("text");
+
+    use_effect(
+        cx,
+        (&cx.props.text, &cx.props.markdown),
+        |(text, render_markdown)| {
+            to_owned![id, eval];
+            async move {
+                if !render_markdown {
+                    return;
+                }
+
+                // todo: use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
+                //let re = re::Regex::new(r"```(?<language>[a-z]+)(?<code>.+)```");
+
+                let script = format!(
+                    "document.getElementById('{}').innerHTML = marked.parse('{}')",
+                    id, text
+                );
+                let _ = eval(&script);
+            }
+        },
+    );
 
     cx.render(rsx!(
         div {
@@ -432,14 +452,13 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                 } else { "text" }
             ),
             p {
+                id: "{id}",
                 class: format_args!(
                     "{}",
-                    if cx.props.pending {
-                        "pending-text"
-                    } else { "text" }
+                    text_type_class,
                 ),
                 aria_label: "message-text",
-                dangerous_inner_html: "{dangerous_text}",
+                "{cx.props.text}",
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
