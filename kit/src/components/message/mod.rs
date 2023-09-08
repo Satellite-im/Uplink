@@ -365,27 +365,11 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    let text_type_class = if cx.props.pending { "pending-text" } else { "text" };
-
-    use_effect(
-        cx,
-        (&cx.props.text, &cx.props.markdown),
-        |(text, render_markdown)| {
-            to_owned![id, eval];
-            async move {
-                if !render_markdown {
-                    return;
-                }
-
-                let target = replace_code_segments(&text);
-                let script = format!(
-                    "document.getElementById('{}').innerHTML = marked.parse('{}')",
-                    id, target
-                );
-                let _ = eval(&script);
-            }
-        },
-    );
+    let text_type_class = if cx.props.pending {
+        "pending-text"
+    } else {
+        "text"
+    };
 
     cx.render(rsx!(
         div {
@@ -394,6 +378,17 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                 id: "{id}",
                 class: text_type_class,
                 aria_label: "message-text",
+                onmounted: move |_| {
+                    if !cx.props.markdown {
+                        return;
+                    }
+                    let target = replace_code_segments(&cx.props.text);
+                    let script = format!(
+                        "document.getElementById('{}').innerHTML = marked.parse('{}')",
+                        id, target
+                    );
+                    let _ = eval(&script);
+                },
                 "{cx.props.text}"
             },
             links.first().and_then(|l| cx.render(rsx!(
@@ -484,35 +479,49 @@ fn single_backtick_regex(target: &str) -> Option<String> {
 #[cfg(test)]
 mod test {
     use super::*;
-    
 
     #[test]
     fn regex_test1() {
         let r = replace_code_segments("```rust\nlet a: i32 = 0;```");
-        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
+        assert_eq!(
+            r,
+            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
+        )
     }
 
     #[test]
     fn regex_test2() {
         let r = replace_code_segments("```rust \nlet a: i32 = 0;```");
-        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
+        assert_eq!(
+            r,
+            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
+        )
     }
 
     #[test]
     fn regex_test3() {
         let r = replace_code_segments("``` let a: i32 = 0;```");
-        assert_eq!(r, "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>")
+        assert_eq!(
+            r,
+            "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>"
+        )
     }
 
     #[test]
     fn regex_test4() {
         let r = replace_code_segments("`let a: i32 = 0;`");
-        assert_eq!(r, "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>")
+        assert_eq!(
+            r,
+            "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>"
+        )
     }
 
     #[test]
     fn regex_test5() {
         let r = replace_code_segments("```rust let a: i32 = 0;```");
-        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
+        assert_eq!(
+            r,
+            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
+        )
     }
 }
