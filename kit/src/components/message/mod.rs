@@ -432,24 +432,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                     return;
                 }
 
-                // use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
-                let mut target = text;
-                let re =
-                    Regex::new(r"(?<code_block>```(?<language>([a-z]+\s+))(?<code>(.|\s)+)```)")
-                        .expect("invalid regex");
-                if let Some(caps) = re.captures(&target) {
-                    let language = caps.name("language").map_or("text", |m| m.as_str().trim());
-                    let code = caps.name("code").map_or("", |m| m.as_str());
-                    let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-                    if !code.is_empty() {
-                        let new_code_block = format!(
-                            "<pre><code class=\"language-{}\">{}</code></pre>",
-                            language, code
-                        );
-                        target = target.replace(code_block, &new_code_block);
-                    }
-                }
-
+                let target = replace_code_segments(&text);
                 let script = format!(
                     "document.getElementById('{}').innerHTML = marked.parse('{}')",
                     id, target
@@ -571,6 +554,86 @@ pub fn markdown(text: &str) -> String {
     }
 
     html_output
+}
+
+// concerning markdown
+fn replace_code_segments(text: &str) -> String {
+    match multiline_code_regex(text) {
+        Some(x) => x,
+        None => match triple_backtick_regex(text) {
+            Some(x) => x,
+            None => match single_backtick_regex(text) {
+                Some(x) => x,
+                None => text.to_string(),
+            }
+        }
+    }
+}
+
+fn multiline_code_regex(target: &str) -> Option<String> {
+    let re =
+    Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s+\n)(?<code>(.|\s)+)```)")
+        .expect("invalid regex");
+    if let Some(caps) = re.captures(&target) {
+        let language = caps.name("language").map_or("text", |m| m.as_str().trim());
+        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+        if !code.is_empty() {
+            let new_code_block = format!(
+                "<pre><code class=\"language-{}\">{}</code></pre>",
+                language, code
+            );
+           Some(target.replace(code_block, &new_code_block))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+fn triple_backtick_regex(target: &str) -> Option<String> {
+    let re =
+    Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)")
+        .expect("invalid regex");
+    if let Some(caps) = re.captures(&target) {
+        let language = "text";
+        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+        if !code.is_empty() {
+            let new_code_block = format!(
+                "<pre><code class=\"language-{}\">{}</code></pre>",
+                language, code
+            );
+           Some(target.replace(code_block, &new_code_block))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+fn single_backtick_regex(target: &str) -> Option<String> {
+    let re =
+    Regex::new(r"(?<code_block>`(?<code>(.|\s)+)`)")
+        .expect("invalid regex");
+    if let Some(caps) = re.captures(&target) {
+        let language = "text";
+        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+        if !code.is_empty() {
+            let new_code_block = format!(
+                "<pre><code class=\"language-{}\">{}</code></pre>",
+                language, code
+            );
+           Some(target.replace(code_block, &new_code_block))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
