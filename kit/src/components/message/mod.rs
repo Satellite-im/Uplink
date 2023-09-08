@@ -431,12 +431,22 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                     return;
                 }
 
-                // todo: use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
-                //let re = re::Regex::new(r"```(?<language>[a-z]+)(?<code>.+)```");
+                // use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
+                let mut target = text;
+                let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
+                if let Some(caps) = re.captures(target) {
+                    let language = caps.name("language").map_or("text", |m| m.as_str());
+                    let code = caps.name("code").map_or("", |m| m.as_str());
+                    let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+                    if !code.is_empty() {
+                        let new_code_block = format!("<code class=\"language-{}\">{}</code>", language, code);
+                        target = target.replace(code_block, &new_code_block);
+                    }
+                }
 
                 let script = format!(
                     "document.getElementById('{}').innerHTML = marked.parse('{}')",
-                    id, text
+                    id, target
                 );
                 let _ = eval(&script);
             }
