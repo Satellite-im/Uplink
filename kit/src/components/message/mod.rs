@@ -434,8 +434,9 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
                 // use a named regex to find code blocks and change the language tag like this: <code class="language-rust">...</code>
                 let mut target = text;
-                let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+\s+)(?<code>.+)```)")
-                    .expect("invalid regex");
+                let re =
+                    Regex::new(r"(?<code_block>```(?<language>([a-z]+\s+))(?<code>(.|\s)+)```)")
+                        .expect("invalid regex");
                 if let Some(caps) = re.captures(&target) {
                     let language = caps.name("language").map_or("text", |m| m.as_str().trim());
                     let code = caps.name("code").map_or("", |m| m.as_str());
