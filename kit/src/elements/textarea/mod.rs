@@ -92,10 +92,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let update_char_counter_script = include_str!("./update_char_counter.js")
         .replace("$UUID", &id)
         .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
-    let clear_counter_script =
-        r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
-            .replace("$UUID", &id)
-            .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+    let clear_counter_script = r#"document.getElementById('$UUID-char-counter').innerText = "0";"#
+        .replace("$UUID", &id)
+        .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
 
     use_effect(cx, (value, show_char_counter), |(_, show_char_counter)| {
         to_owned![eval];
