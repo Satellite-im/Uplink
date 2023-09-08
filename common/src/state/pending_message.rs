@@ -86,7 +86,7 @@ impl PendingMessage {
                     };
                     pathbuf
                         .file_name()
-                        .map_or_else(|| String::new(), |ostr| ostr.to_string_lossy().to_string())
+                        .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
                 })
                 .collect(),
             attachments_progress: HashMap::new(),

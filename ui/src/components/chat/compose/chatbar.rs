@@ -180,7 +180,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             Location::Constellation { path } => PathBuf::from(path),
                         };
                         pathbuf.file_name().map_or_else(
-                            || String::new(),
+                            String::new,
                             |ostr| ostr.to_string_lossy().to_string(),
                         )
                     })
@@ -731,7 +731,6 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         path.file_name()
                             .unwrap_or_default()
                             .to_string_lossy()
-                            .to_string()
                             != filename
                     });
                     state
