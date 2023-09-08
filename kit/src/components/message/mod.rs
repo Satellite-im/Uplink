@@ -563,11 +563,11 @@ fn replace_code_segments(text: &str) -> String {
 }
 
 fn multiline_code_regex(target: &str) -> Option<String> {
-    let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s+\n)(?<code>(.|\s)+)```)")
+    let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s|\n)+(?<code>(.|\s)+)```)")
         .expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = caps.name("language").map_or("text", |m| m.as_str().trim());
-        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
         if !code.is_empty() {
             let new_code_block = format!(
@@ -587,7 +587,7 @@ fn triple_backtick_regex(target: &str) -> Option<String> {
     let re = Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)").expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = "text";
-        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
         if !code.is_empty() {
             let new_code_block = format!(
@@ -604,10 +604,10 @@ fn triple_backtick_regex(target: &str) -> Option<String> {
 }
 
 fn single_backtick_regex(target: &str) -> Option<String> {
-    let re = Regex::new(r"(?<code_block>`(?<code>(.|\s)+)`)").expect("invalid regex");
+    let re = Regex::new(r"(?<code_block>`(?<code>.+)`)").expect("invalid regex");
     if let Some(caps) = re.captures(&target) {
         let language = "text";
-        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
         if !code.is_empty() {
             let new_code_block = format!(
@@ -629,31 +629,32 @@ mod test {
     use regex::Regex;
 
     #[test]
-    fn message_re_test1() {
-        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+\s+)(?<code>.+)```)")
-            .expect("invalid regex");
-        let target = r"```rust let a: i32 = 0;```";
-        let caps = re.captures(target).expect("no matches");
-        let language = caps.name("language").map_or("", |m| m.as_str().trim());
-        let code = caps.name("code").map_or("", |m| m.as_str());
-        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-        assert_eq!(language, "rust");
-        assert_eq!(code, "let a: i32 = 0;");
-        assert_eq!(code_block, target);
+    fn regex_test1() {
+        let r = replace_code_segments("```rust\nlet a: i32 = 0;```");
+        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
     }
 
     #[test]
-    fn message_re_test2() {
-        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+\s+)(?<code>.+)```)")
-            .expect("invalid regex");
-        let target = "here's some not code. then some code: \n```rust let a: i32 = 0;```";
-        let caps = re.captures(target).expect("no matches");
-        let language = caps.name("language").map_or("text", |m| m.as_str().trim());
-        let code = caps.name("code").map_or("", |m| m.as_str());
-        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-        let new_code_block = format!("<code class=\"language-{}\">{}</code>", language, code);
-        let new_target = target.replace(code_block, &new_code_block);
+    fn regex_test2() {
+        let r = replace_code_segments("```rust \nlet a: i32 = 0;```");
+        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
+    }
 
-        assert_eq!(new_target, "here's some not code. then some code: \n<code class=\"language-rust\">let a: i32 = 0;</code>");
+    #[test]
+    fn regex_test3() {
+        let r = replace_code_segments("``` let a: i32 = 0;```");
+        assert_eq!(r, "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>")
+    }
+
+    #[test]
+    fn regex_test4() {
+        let r = replace_code_segments("`let a: i32 = 0;`");
+        assert_eq!(r, "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>")
+    }
+
+    #[test]
+    fn regex_test5() {
+        let r = replace_code_segments("```rust let a: i32 = 0;```");
+        assert_eq!(r, "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>")
     }
 }
