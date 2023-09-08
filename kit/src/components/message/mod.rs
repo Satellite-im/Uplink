@@ -300,17 +300,6 @@ struct EditProps<'a> {
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
-    //let mut input = cx.props.text.clone();
-    //let length = input.len();
-    //if input.ends_with('\n') {
-    //    input.truncate(length - 1);
-    //}
-    //if input.starts_with("<p>") {
-    //    if let Some(remainder) = input.strip_prefix("<p>") {
-    //        input = remainder.to_string();
-    //    }
-    //}
-    //input = restore_tags(&input);
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
