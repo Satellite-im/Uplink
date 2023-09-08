@@ -6,7 +6,6 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::Regex;
 use warp::{
     constellation::{file::File, Progression},
@@ -167,8 +166,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let formatted_text = wrap_links_with_a_tags(&text);
     let formatted_text_clone = formatted_text.clone();
 
-    let loading_class = loading.then(|| "loading").unwrap_or_default();
-    let remote_class = is_remote.then(|| "remote").unwrap_or_default();
+    let loading_class = loading.then_some("loading").unwrap_or_default();
+    let remote_class = is_remote.then_some("remote").unwrap_or_default();
     let order_class = if cx.props.order.is_some() {
         order.to_string()
     } else {
@@ -302,60 +301,6 @@ struct EditProps<'a> {
     on_enter: EventHandler<'a, String>,
 }
 
-fn replace_tags(s: &str) -> String {
-    let mut result = String::new();
-    let mut inside_strong = false;
-    let mut inside_em = false;
-
-    let mut chars = s.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '_' {
-            if let Some(&next) = chars.peek() {
-                if next == '_' {
-                    if inside_strong {
-                        result.push_str("</strong>");
-                    } else {
-                        result.push_str("<strong>");
-                    }
-                    inside_strong = !inside_strong;
-                    chars.next(); // Consume the second underscore
-                } else {
-                    result.push(c);
-                }
-            } else {
-                result.push(c);
-            }
-        } else if c == '*' {
-            if let Some(&next) = chars.peek() {
-                if next == '*' {
-                    if inside_em {
-                        result.push_str("</em>");
-                    } else {
-                        result.push_str("<em>");
-                    }
-                    inside_em = !inside_em;
-                    chars.next(); // Consume the second asterisk
-                } else {
-                    result.push(c);
-                }
-            } else {
-                result.push(c);
-            }
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
-}
-
-fn restore_tags(s: &str) -> String {
-    s.replace("<strong>", "__")
-        .replace("</strong>", "__")
-        .replace("<em>", "*")
-        .replace("</em>", "*")
-}
-
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
@@ -420,7 +365,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    let text_type_class = cx.props.pending.then_some("pending-text").unwrap_or("text");
+    let text_type_class = if cx.props.pending { "pending-text" } else { "text" };
 
     use_effect(
         cx,
@@ -459,93 +404,6 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             ))
         }
     ))
-}
-
-pub fn markdown(text: &str) -> String {
-    let txt = text.trim();
-
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
-
-    let modified_lines: Vec<String> = txt
-        .split('\n')
-        .map(|line| {
-            if line.starts_with('>') {
-                format!("\\{}", line)
-            } else {
-                line.to_string()
-            }
-        })
-        .collect();
-
-    let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
-
-    let mut html_output = String::new();
-    let mut in_paragraph = false;
-    let mut in_code_block = false;
-    let mut add_text_language = true;
-
-    for line in &mut modified_lines_refs {
-        let parser = pulldown_cmark::Parser::new_ext(line, options);
-        let line_trim = line.trim();
-        if line_trim == "```" && add_text_language {
-            *line = "```text";
-            add_text_language = false;
-        }
-        for event in parser {
-            match event {
-                pulldown_cmark::Event::Start(Tag::Paragraph) => {
-                    in_paragraph = true;
-                    html_output.push_str("<p>");
-                }
-                pulldown_cmark::Event::End(Tag::Paragraph) => {
-                    in_paragraph = false;
-                }
-                pulldown_cmark::Event::Text(t) => {
-                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
-                        t.replace("\n\n", "<br/>").into()
-                    } else {
-                        t
-                    };
-                    pulldown_cmark::html::push_html(
-                        &mut html_output,
-                        std::iter::once(pulldown_cmark::Event::Text(txt)),
-                    );
-                }
-                pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
-                    add_text_language = false;
-                    in_code_block = true;
-                    match code_block_kind {
-                        CodeBlockKind::Fenced(language) => {
-                            let language = if language.is_empty() {
-                                "text"
-                            } else {
-                                &language
-                            };
-
-                            html_output
-                                .push_str(&format!("<pre><code class=\"language-{}\">", language))
-                        }
-                        _ => html_output.push_str("<pre><code class=\"language-text\">"),
-                    }
-                }
-                pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                    if in_code_block && line_trim == "```" {
-                        in_code_block = false;
-                        add_text_language = true;
-                        // HACK: To close block code is necessary to push tags 2 times
-                        html_output.push_str("</code></pre>");
-                        html_output.push_str("</code></pre>");
-                    }
-                }
-                _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
-            }
-        }
-
-        html_output.push('\n');
-    }
-
-    html_output
 }
 
 // concerning markdown
@@ -626,7 +484,7 @@ fn single_backtick_regex(target: &str) -> Option<String> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use regex::Regex;
+    
 
     #[test]
     fn regex_test1() {
