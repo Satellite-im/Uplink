@@ -428,7 +428,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let chatbar = cx.render(rsx!(
         Chatbar {
             key: "{id}",
-            id: id.to_string(),
+            id: format!("{}-chatbar", id.to_string()),
             loading: is_loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
             typing_users: typing_users,
