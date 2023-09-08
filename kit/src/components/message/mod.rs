@@ -422,42 +422,34 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
     let text_type_class = cx.props.pending.then(|| "pending-text").unwrap_or("text");
 
-    let text = if !cx.props.markdown {
-        cx.props.text.clone()
-    } else {
-        // fix code segments
-        let mut target = replace_code_segments(&cx.props.text);
-        // fix newlines. replicates old behavior
-        target = target.replace("\n\n", "<br/>");
+    use_effect(
+        cx,
+        (&cx.props.text, &cx.props.markdown),
+        |(text, render_markdown)| {
+            to_owned![id, eval];
+            async move {
+                if !render_markdown {
+                    return;
+                }
 
-        let mut options = Options::empty();
-        options.insert(Options::ENABLE_STRIKETHROUGH);
-
-        let parser = pulldown_cmark::Parser::new_ext(&target, options);
-        let mut html_output = String::new();
-        pulldown_cmark::html::push_html(&mut html_output, parser);
-        html_output.trim().to_string()
-    };
+                let target = replace_code_segments(&text);
+                let script = format!(
+                    "document.getElementById('{}').innerHTML = marked.parse('{}')",
+                    id, target
+                );
+                let _ = eval(&script);
+            }
+        },
+    );
 
     cx.render(rsx!(
         div {
             class: text_type_class,
-            if cx.props.markdown {
-                render!{
-                    p {
-                        class: text_type_class,
-                        aria_label: "message-text",
-                        dangerous_inner_html: "{text}"
-                    },
-                }
-            } else {
-                render!{
-                    p {
-                        class: text_type_class,
-                        aria_label: "message-text",
-                        text
-                    },
-                }
+            p {
+                id: "{id}",
+                class: text_type_class,
+                aria_label: "message-text",
+                "{cx.props.text}"
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
