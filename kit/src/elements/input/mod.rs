@@ -38,7 +38,7 @@ use super::label::LabelWithEllipsis;
 ///    ..Options::default()
 /// }
 /// ...
-/// )
+/// }
 /// ```
 pub static SPECIAL_CHARS: &[char] = &[
     '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\',

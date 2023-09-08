@@ -556,3 +556,36 @@ pub fn markdown(text: &str) -> String {
 
     html_output
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use regex::Regex;
+
+    #[test]
+    fn message_re_test1() {
+        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
+        let target = r"```rust let a: i32 = 0;```";
+        let caps = re.captures(target).expect("no matches");
+        let language = caps.name("language").map_or("", |m| m.as_str());
+        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+        assert_eq!(language, "rust");
+        assert_eq!(code, " let a: i32 = 0;");
+        assert_eq!(code_block, target);
+    }
+
+    #[test]
+    fn message_re_test2() {
+        let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(?<code>.+)```)").expect("invalid regex");
+        let target = "here's some not code. then some code: \n```rust let a: i32 = 0;```";
+        let caps = re.captures(target).expect("no matches");
+        let language = caps.name("language").map_or("text", |m| m.as_str());
+        let code = caps.name("code").map_or("", |m| m.as_str());
+        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+        let new_code_block = format!("<code class=\"language-{}\">{}</code>", language, code);
+        let new_target = target.replace(code_block, &new_code_block);
+
+        assert_eq!(new_target, "here's some not code. then some code: \n<code class=\"language-rust\"> let a: i32 = 0;</code>");
+    }
+}
