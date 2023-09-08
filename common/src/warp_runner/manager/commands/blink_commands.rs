@@ -43,14 +43,14 @@ pub enum BlinkCmd {
     },
     #[display(fmt = "GetAllMicrophones")]
     GetAllMicrophones { rsp: oneshot::Sender<DeviceResult> },
-    #[display(fmt = "GetAllMicrophones")]
+    #[display(fmt = "SetMicrophone")]
     SetMicrophone {
         device_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "GetAllMicrophones")]
+    #[display(fmt = "GetAllSpeakers")]
     GetAllSpeakers { rsp: oneshot::Sender<DeviceResult> },
-    #[display(fmt = "GetAllMicrophones")]
+    #[display(fmt = "SetSpeaker")]
     SetSpeaker {
         device_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,

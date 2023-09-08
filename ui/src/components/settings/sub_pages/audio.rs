@@ -47,7 +47,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         match rx.await {
                             Ok(res) => {
                                 state.write_silent().settings.input_device = res.1;
-                                *input_devices.write() = res.0.unwrap();
+                                *input_devices.write() = res.0.unwrap_or(vec!["Default".into()]);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to get input devices: {e}");
@@ -66,7 +66,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         match rx.await {
                             Ok(res) => {
                                 state.write_silent().settings.output_device = res.1;
-                                *output_devices.write() = res.0.unwrap();
+                                *output_devices.write() = res.0.unwrap_or(vec!["Default".into()]);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to get output devices: {e}");
@@ -89,7 +89,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                                 state.write_silent().settings.input_device = Some(device);
                             }
                             Err(e) => {
-                                log::error!("warp_runner failed to set output device: {e}");
+                                log::error!("warp_runner failed to set input device: {e}");
                             }
                         }
                     }
