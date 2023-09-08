@@ -344,7 +344,6 @@ pub struct ChatMessageProps {
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let id = use_state(cx, || uuid::Uuid::new_v4().to_string());
-    let eval = use_eval(cx);
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
