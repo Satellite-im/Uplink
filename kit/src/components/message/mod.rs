@@ -108,7 +108,6 @@ fn wrap_links_with_a_tags(text: &str) -> String {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //  log::trace!("render Message");
-    let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
@@ -162,9 +161,6 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             })
         })
     });
-
-    let formatted_text = wrap_links_with_a_tags(&text);
-    let formatted_text_clone = formatted_text.clone();
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
@@ -229,7 +225,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx! (
                             EditMsg {
                                 id: cx.props.id.clone(),
-                                text: formatted_text,
+                                text: cx.props.with_text.clone().unwrap_or_default(),
                                 on_enter: move |update| {
                                     cx.props.on_edit.call(update);
                                 }
@@ -240,7 +236,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: formatted_text_clone,
+                    text: cx.props.with_text.clone().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
@@ -343,6 +339,7 @@ pub struct ChatMessageProps {
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    let text_with_links = wrap_links_with_a_tags(&cx.props.text);
     let id = use_state(cx, || uuid::Uuid::new_v4().to_string());
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
@@ -352,7 +349,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         .collect();
 
     // this is broken. may be fixed later.
-    let _texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
+    let _texts = finder.spans(&text_with_links).map(|e| match e.kind() {
         Some(LinkKind::Url) => {
             rsx!(
                 a {
@@ -371,7 +368,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     };
 
     let markdown_script = if cx.props.markdown {
-        let target = replace_code_segments(&cx.props.text);
+        let target = replace_code_segments(&text_with_links);
         format!(
             "document.getElementById('{}').innerHTML = marked.parse('{}')",
             id, target
