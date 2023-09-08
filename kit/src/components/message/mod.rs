@@ -177,7 +177,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let msg_pending_class = cx
         .props
         .pending
-        .then(|| "message-pending")
+        .then_some("message-pending")
         .unwrap_or_default();
 
     cx.render(rsx! (
@@ -420,7 +420,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    let text_type_class = cx.props.pending.then(|| "pending-text").unwrap_or("text");
+    let text_type_class = cx.props.pending.then_some("pending-text").unwrap_or("text");
 
     use_effect(
         cx,
@@ -565,7 +565,7 @@ fn replace_code_segments(text: &str) -> String {
 fn multiline_code_regex(target: &str) -> Option<String> {
     let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s|\n)+(?<code>(.|\s)+)```)")
         .expect("invalid regex");
-    if let Some(caps) = re.captures(&target) {
+    if let Some(caps) = re.captures(target) {
         let language = caps.name("language").map_or("text", |m| m.as_str().trim());
         let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
@@ -585,7 +585,7 @@ fn multiline_code_regex(target: &str) -> Option<String> {
 
 fn triple_backtick_regex(target: &str) -> Option<String> {
     let re = Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)").expect("invalid regex");
-    if let Some(caps) = re.captures(&target) {
+    if let Some(caps) = re.captures(target) {
         let language = "text";
         let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
@@ -605,7 +605,7 @@ fn triple_backtick_regex(target: &str) -> Option<String> {
 
 fn single_backtick_regex(target: &str) -> Option<String> {
     let re = Regex::new(r"(?<code_block>`(?<code>.+)`)").expect("invalid regex");
-    if let Some(caps) = re.captures(&target) {
+    if let Some(caps) = re.captures(target) {
         let language = "text";
         let code = caps.name("code").map_or("", |m| m.as_str().trim());
         let code_block = caps.name("code_block").map_or("", |m| m.as_str());
