@@ -174,25 +174,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     .mutate(Action::ClearChatAttachments(conv_id));
                 let attachment_files: Vec<String> = attachments
                     .iter()
-                    .map(|p| match p {
-                        Location::Disk { path } => {
-                            if let Some(name) = path
-                                .file_name()
-                                .map(|ostr| ostr.to_str().unwrap_or_default())
-                            {
-                                return name.to_string();
-                            }
-                            String::new()
-                        }
-                        Location::Constellation { path } => {
-                            if let Some(name) = PathBuf::from(path)
-                                .file_name()
-                                .map(|ostr| ostr.to_str().unwrap_or_default())
-                            {
-                                return name.to_string();
-                            }
-                            String::new()
-                        }
+                    .map(|p| {
+                        let pathbuf = match p {
+                            Location::Disk { path } => path.clone(),
+                            Location::Constellation { path } => PathBuf::from(path),
+                        };
+                        pathbuf.file_name().map_or_else(
+                            || String::new(),
+                            |ostr| ostr.to_string_lossy().to_string(),
+                        )
                     })
                     .collect();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
@@ -708,18 +698,15 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .unwrap_or_default()
         .iter()
         .map(|location| {
-            let filename = match location {
-                Location::Constellation { path } => PathBuf::from(path)
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string(),
-                Location::Disk { path } => path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string(),
+            let file_path = match location {
+                Location::Constellation { path } => PathBuf::from(path),
+                Location::Disk { path } => path.clone(),
             };
+            let filename = file_path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
 
             rsx!(FileEmbed {
                 filename: filename.clone(),
@@ -737,19 +724,15 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         .unwrap_or_default();
 
                     attachments.retain(|x| {
-                        let s = match x {
-                            Location::Constellation { path } => PathBuf::from(path)
-                                .file_name()
-                                .unwrap_or_default()
-                                .to_string_lossy()
-                                .to_string(),
-                            Location::Disk { path } => path
-                                .file_name()
-                                .unwrap_or_default()
-                                .to_string_lossy()
-                                .to_string(),
+                        let path = match x {
+                            Location::Constellation { path } => PathBuf::from(path),
+                            Location::Disk { path } => path.clone(),
                         };
-                        s != filename
+                        path.file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string()
+                            != filename
                     });
                     state
                         .write()
