@@ -358,28 +358,28 @@ fn restore_tags(s: &str) -> String {
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
-    let mut input = cx.props.text.clone();
-    let length = input.len();
-    if input.ends_with('\n') {
-        input.truncate(length - 1);
-    }
-    if input.starts_with("<p>") {
-        if let Some(remainder) = input.strip_prefix("<p>") {
-            input = remainder.to_string();
-        }
-    }
-    input = restore_tags(&input);
+    //let mut input = cx.props.text.clone();
+    //let length = input.len();
+    //if input.ends_with('\n') {
+    //    input.truncate(length - 1);
+    //}
+    //if input.starts_with("<p>") {
+    //    if let Some(remainder) = input.strip_prefix("<p>") {
+    //        input = remainder.to_string();
+    //    }
+    //}
+    //input = restore_tags(&input);
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
         aria_label: "edit-message-input".into(),
         ignore_focus: false,
-        value: input,
+        value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
-                let new_replacement = replace_tags(&s);
-                cx.props.on_enter.call(new_replacement);
+                //let new_replacement = replace_tags(&s);
+                cx.props.on_enter.call(s);
             } else {
                 cx.props.on_enter.call(cx.props.text.clone());
             }
