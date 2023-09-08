@@ -155,9 +155,14 @@ pub fn Compose(cx: Scope) -> Element {
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
+                    let chat_uuid = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.id)
+                        .unwrap_or(Uuid::nil());
                     state
                         .write()
-                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        .mutate(Action::SetChatAttachments(chat_uuid, new_files_to_upload));
                 }
             }
         }
@@ -184,7 +189,7 @@ pub fn Compose(cx: Scope) -> Element {
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
     let upload_files = move |_| {
-        if drag_event.with(|i| i.clone()).is_none() {
+        if drag_event.with(|i| i.clone()).is_none() && !cfg!(target_os = "windows") {
             cx.spawn({
                 to_owned![drag_event, window, state];
                 async move {
