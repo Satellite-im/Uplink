@@ -149,7 +149,7 @@ impl CallInfo {
         if let Some(active_call) = self.active_call.as_mut() {
             return active_call.call.update_speaking_participants();
         };
-        return false;
+        false
     }
 
     pub fn participant_not_speaking(&mut self, id: &DID) -> anyhow::Result<()> {
