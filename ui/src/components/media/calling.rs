@@ -227,7 +227,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                         if cx.props.in_chat {
                             let call_participants: Vec<_> = other_participants
                                 .iter()
-                                .map(|x| (call.participants_speaking.contains(&x.did_key()), build_user_from_identity(x)))
+                                .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
                                 .collect();
                             rsx!(CallUserImageGroup {
                                 participants: call_participants,

@@ -323,7 +323,10 @@ impl State {
     }
 
     pub fn process_warp_event(&mut self, event: WarpEvent) {
-        log::debug!("process_warp_event: {event}");
+        // Blink events are very frequent
+        if !matches!(event, WarpEvent::Blink(_)) {
+            log::debug!("process_warp_event: {event}");
+        }
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),

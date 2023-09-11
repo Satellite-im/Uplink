@@ -1,4 +1,7 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 
 use anyhow::bail;
 use chrono::{DateTime, Local};
@@ -35,7 +38,7 @@ pub struct Call {
     pub conversation_id: Uuid,
     pub participants: Vec<DID>,
     pub participants_joined: Vec<DID>,
-    pub participants_speaking: HashSet<DID>,
+    pub participants_speaking: HashMap<DID, Instant>,
     pub self_muted: bool,
     pub call_silenced: bool,
 }
@@ -142,6 +145,13 @@ impl CallInfo {
         Ok(())
     }
 
+    pub fn update_active_call(&mut self) -> bool {
+        if let Some(active_call) = self.active_call.as_mut() {
+            return active_call.call.update_speaking_participants();
+        };
+        return false;
+    }
+
     pub fn participant_not_speaking(&mut self, id: &DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
@@ -208,7 +218,7 @@ impl Call {
             conversation_id,
             participants,
             participants_joined: vec![],
-            participants_speaking: HashSet::new(),
+            participants_speaking: HashMap::new(),
             self_muted: false,
             call_silenced: false,
         }
@@ -231,7 +241,20 @@ impl Call {
     }
 
     fn participant_speaking(&mut self, id: DID) {
-        self.participants_speaking.insert(id);
+        self.participants_speaking.insert(id, Instant::now());
+    }
+
+    fn update_speaking_participants(&mut self) -> bool {
+        let delay = Duration::from_secs(3);
+        let mut removed = false;
+        self.participants_speaking.retain(|_, time| {
+            let keep = time.elapsed() <= delay;
+            if !removed && !keep {
+                removed = true;
+            }
+            keep
+        });
+        removed
     }
 
     fn participant_not_speaking(&mut self, id: &DID) {

@@ -434,6 +434,20 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
         }
     });
 
+    //Update active call
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            loop {
+                sleep(Duration::from_secs(1)).await;
+                log::trace!("updating active call");
+                if state.write_silent().ui.call_info.update_active_call() {
+                    state.notify_consumers();
+                }
+            }
+        }
+    });
+
     // clear typing indicator
     use_future(cx, (), |_| {
         to_owned![state];
