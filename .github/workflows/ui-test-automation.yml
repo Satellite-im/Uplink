@@ -297,6 +297,10 @@ jobs:
           appium driver install --source=npm appium-windows-driver
           appium driver list
 
+      - name: Setup FFMPEG to record screen
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        id: setup-ffmpeg
+
       - name: Run Chat Tests on Windows 🧪
         working-directory: ./appium-tests
         run: npm run windows.multiremote
@@ -397,6 +401,10 @@ jobs:
         run: |
           appium driver install --source=npm appium-windows-driver
           appium driver list
+
+      - name: Setup FFMPEG to record screen
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        id: setup-ffmpeg
 
       - name: Delete Cache Folder if exists - Windows
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
