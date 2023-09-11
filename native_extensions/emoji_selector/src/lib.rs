@@ -55,6 +55,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::FaceSmile,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "People & Body",
@@ -62,6 +63,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::Users,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Animals & Nature",
@@ -69,6 +71,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::Leaf,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Travel & Places",
@@ -76,6 +79,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::BuildingStorefront,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Activities",
@@ -83,6 +87,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::Basketball,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Objects",
@@ -90,6 +95,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::Cake,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Symbols",
@@ -97,6 +103,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::CpuChip,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
         Route {
             to: "Flags",
@@ -104,6 +111,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
+            ..Route::default()
         },
     ];
 
