@@ -349,7 +349,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    let text_type_class = cx.props.pending.then_some("pending-text").unwrap_or("text");
+    let text_type_class = if cx.props.pending { "pending-text" } else { "text" };
 
     let markdown_script = if cx.props.markdown {
         let target = replace_code_segments(&text_with_links);
