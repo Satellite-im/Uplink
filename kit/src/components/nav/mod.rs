@@ -123,6 +123,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         position: "relative",
+                        display: "inline-grid",
                         key: "{key}",
                         Button {
                             aria_label: aria_label.to_lowercase() + "-button",
