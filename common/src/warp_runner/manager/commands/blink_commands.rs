@@ -5,10 +5,10 @@ use warp::{blink::AudioCodec, crypto::DID};
 
 use crate::warp_runner::Calling;
 
-type DeviceResult = (
-    Result<std::vec::Vec<std::string::String>, warp::error::Error>,
-    std::option::Option<std::string::String>,
-);
+pub struct Devices {
+    pub available_devices: Vec<String>,
+    pub selected: Option<String>,
+}
 
 #[derive(Display)]
 pub enum BlinkCmd {
@@ -42,14 +42,18 @@ pub enum BlinkCmd {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "GetAllMicrophones")]
-    GetAllMicrophones { rsp: oneshot::Sender<DeviceResult> },
+    GetAllMicrophones {
+        rsp: oneshot::Sender<Result<Devices, warp::error::Error>>,
+    },
     #[display(fmt = "SetMicrophone")]
     SetMicrophone {
         device_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "GetAllSpeakers")]
-    GetAllSpeakers { rsp: oneshot::Sender<DeviceResult> },
+    GetAllSpeakers {
+        rsp: oneshot::Sender<Result<Devices, warp::error::Error>>,
+    },
     #[display(fmt = "SetSpeaker")]
     SetSpeaker {
         device_name: String,
@@ -87,19 +91,29 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             let _ = rsp.send(blink.unmute_self().await);
         }
         BlinkCmd::GetAllMicrophones { rsp } => {
-            let _ = rsp.send((
-                blink.get_available_microphones().await,
-                blink.get_current_microphone().await,
-            ));
+            let selected = blink.get_current_microphone().await;
+            let result = blink
+                .get_available_microphones()
+                .await
+                .map(|available_devices| Devices {
+                    available_devices,
+                    selected,
+                });
+            let _ = rsp.send(result);
         }
         BlinkCmd::SetMicrophone { device_name, rsp } => {
             let _ = rsp.send(blink.select_microphone(&device_name).await);
         }
         BlinkCmd::GetAllSpeakers { rsp } => {
-            let _ = rsp.send((
-                blink.get_available_speakers().await,
-                blink.get_current_speaker().await,
-            ));
+            let selected = blink.get_current_speaker().await;
+            let result = blink
+                .get_available_speakers()
+                .await
+                .map(|available_devices| Devices {
+                    available_devices,
+                    selected,
+                });
+            let _ = rsp.send(result);
         }
         BlinkCmd::SetSpeaker { device_name, rsp } => {
             let _ = rsp.send(blink.select_speaker(&device_name).await);

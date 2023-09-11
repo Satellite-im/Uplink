@@ -44,13 +44,14 @@ pub fn AudioSettings(cx: Scope) -> Element {
                             continue;
                         }
 
-                        match rx.await {
+                        let res = rx.await.expect("warp runner failed to get input devices");
+                        match res {
                             Ok(res) => {
-                                state.write_silent().settings.input_device = res.1;
-                                *input_devices.write() = res.0.unwrap_or(vec!["Default".into()]);
+                                state.write_silent().settings.input_device = res.selected;
+                                *input_devices.write() = res.available_devices;
                             }
                             Err(e) => {
-                                log::error!("warp_runner failed to get input devices: {e}");
+                                log::error!("could not get input devices: {e}");
                             }
                         }
                     }
@@ -63,13 +64,14 @@ pub fn AudioSettings(cx: Scope) -> Element {
                             continue;
                         }
 
-                        match rx.await {
+                        let res = rx.await.expect("warp runner failed to get output devices");
+                        match res {
                             Ok(res) => {
-                                state.write_silent().settings.output_device = res.1;
-                                *output_devices.write() = res.0.unwrap_or(vec!["Default".into()]);
+                                state.write_silent().settings.output_device = res.selected;
+                                *output_devices.write() = res.available_devices;
                             }
                             Err(e) => {
-                                log::error!("warp_runner failed to get output devices: {e}");
+                                log::error!("could not get output devices: {e}");
                             }
                         }
                     }
@@ -135,7 +137,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-audio.input-device-description"),
                 no_border: true,
                 Select {
-                    initial_value: state.read().settings.input_device.as_ref().cloned().unwrap_or("Default".into()),
+                    initial_value: state.read().settings.input_device.as_ref().cloned().unwrap_or("default".into()),
                     options: input_devices.read().clone(),
                     onselect: move |device| {
                         ch.send(AudioCmd::SetInputDevice(device))
@@ -158,7 +160,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-audio.output-device-description"),
                 no_border: true,
                 Select {
-                    initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("Default".into()),
+                    initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("default".into()),
                     options: output_devices.read().clone(),
                     onselect: move |device| {
                         ch.send(AudioCmd::SetOutputDevice(device))
