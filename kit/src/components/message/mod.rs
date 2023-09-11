@@ -164,11 +164,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
-    let order_class = if cx.props.order.is_some() {
-        order.to_string()
-    } else {
-        "".into()
-    };
+    let order_class = order.to_string();
     let msg_pending_class = cx
         .props
         .pending
@@ -349,7 +345,11 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    let text_type_class = if cx.props.pending { "pending-text" } else { "text" };
+    let text_type_class = if cx.props.pending {
+        "pending-text"
+    } else {
+        "text"
+    };
 
     let markdown_script = if cx.props.markdown {
         let target = replace_code_segments(&text_with_links);
@@ -398,19 +398,16 @@ fn replace_code_segments(text: &str) -> String {
 fn multiline_code_regex(target: &str) -> Option<String> {
     let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s|\n)+(?<code>(.|\s)+)```)")
         .expect("invalid regex");
-    if let Some(caps) = re.captures(target) {
-        let language = caps.name("language").map_or("text", |m| m.as_str().trim());
-        let code = caps.name("code").map_or("", |m| m.as_str().trim());
-        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-        if !code.is_empty() {
-            let new_code_block = format!(
-                "<pre><code class=\"language-{}\">{}</code></pre>",
-                language, code
-            );
-            Some(target.replace(code_block, &new_code_block))
-        } else {
-            None
-        }
+    let caps = re.captures(target)?;
+    let language = caps.name("language").map_or("text", |m| m.as_str().trim());
+    let code = caps.name("code").map_or("", |m| m.as_str().trim());
+    let code_block = caps.name("code_block").map_or("", |m| m.as_str());
+    if !code.is_empty() {
+        let new_code_block = format!(
+            "<pre><code class=\"language-{}\">{}</code></pre>",
+            language, code
+        );
+        Some(target.replace(code_block, &new_code_block))
     } else {
         None
     }
