@@ -96,25 +96,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .replace("$MULTI_LINE", &format!("{}", true));
     let disabled = *loading || *is_disabled;
 
-    let update_char_counter_script = include_str!("./update_char_counter.js")
-        .replace("$UUID", &id)
-        .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+    let update_char_counter_script = include_str!("./update_char_counter.js").replace("$UUID", &id);
     let clear_counter_script =
-        r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
-            .replace("$UUID", &id)
-            .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
-    if *show_char_counter {
-        let _ = eval(&update_char_counter_script);
-    }
+        r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
     let cursor_eval = include_str!("./cursor_script.js").replace("$ID", &id2);
 
     let text_value = use_ref(cx, || value.clone());
     use_future(cx, value, |val| {
-        to_owned![cursor_position, text_value];
+        to_owned![cursor_position, text_value, eval, show_char_counter];
         async move {
             *cursor_position.write_silent() = Some(val.chars().count() as i64);
             *text_value.write_silent() = val;
+            if show_char_counter {
+                let _ = eval(&update_char_counter_script.replace("$TEXT", &text_value.read()));
+            }
         }
     });
 
