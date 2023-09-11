@@ -42,10 +42,6 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
     f.convert(duration)
 }
 
-pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    cx.props.aria_label.clone().unwrap_or_default()
-}
-
 /// Generates the optional badge for the user.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
@@ -63,7 +59,7 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
-    let aria_label = get_aria_label(&cx);
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let active = cx.props.active.unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
 

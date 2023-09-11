@@ -43,16 +43,12 @@ pub struct Props<'a> {
     aria_label: Option<String>,
 }
 
-pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    cx.props.aria_label.clone().unwrap_or_default()
-}
-
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();
-    let aria_label = get_aria_label(&cx);
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
     let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
         || cx.props.block_button_disabled.unwrap_or(false)
