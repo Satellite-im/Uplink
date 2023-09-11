@@ -201,6 +201,20 @@
             .user-group-scale{
                 display: flex;
                 transform: scale(2);
+                gap: 2px;
+            }
+            .call-user {
+                display: flex;
+                align-self: center;
+                transform: scale(0.8); 
+                margin: 0 calc(-0.1*var(--height-input)); //margin should be (scale - 1) * 0.5
+                &.speaking {
+                    transform: scale(1); 
+                    margin: 0; 
+                    .image {
+                        border-color: 1px solid var(--success-light);
+                    }
+                }
             }
         }
         .call-name {

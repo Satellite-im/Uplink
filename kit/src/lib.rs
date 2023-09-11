@@ -6,6 +6,7 @@ pub mod layout;
 
 pub const STYLE: &str = include_str!("./compiled_styles.css");
 
+#[derive(Eq, PartialEq, Clone)]
 pub struct User {
     pub username: String,
     pub photo: String,
