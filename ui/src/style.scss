@@ -195,3 +195,17 @@ body {
 .instruction-list .btn-wrap .btn {
   font-size: 20px;
 }
+
+.nav-unread-indicator {
+  color: var(--text-color); 
+  background-color: var(--unread-indicator); 
+  aspect-ratio: 1 / 1; 
+  min-width: 18px; 
+  font-size: var(--text-size-less); 
+  border-radius: var(--border-radius-more); 
+  position: absolute; 
+  top: -4px; 
+  right: -4px; 
+  padding: 2px;
+  text-align: center;
+}
