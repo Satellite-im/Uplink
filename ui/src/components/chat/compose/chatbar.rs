@@ -390,7 +390,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .values()
-        .filter(|(_, ext)| ext.details().location == extensions::Location::Chatbar)
+        .filter(|(is_enabled, ext)| {
+            ext.details().location == extensions::Location::Chatbar && *is_enabled
+        })
         .map(|(_, ext)| ext.render(cx.scope))
         .collect::<Vec<_>>();
 
