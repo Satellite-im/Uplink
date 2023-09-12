@@ -324,7 +324,11 @@ impl State {
 
     pub fn process_warp_event(&mut self, event: WarpEvent) {
         // Blink events are very frequent
-        if !matches!(event, WarpEvent::Blink(_)) {
+        if !matches!(
+            event,
+            WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { peer_id: _ })
+                | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
+        ) {
             log::debug!("process_warp_event: {event}");
         }
         match event {
