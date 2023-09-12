@@ -223,21 +223,20 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                             class: "lonely-call",
                             get_local_text("remote-controls.empty")
                         })
-                    } else {
-                        if cx.props.in_chat {
-                            let call_participants: Vec<_> = other_participants
-                                .iter()
-                                .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
-                                .collect();
-                            rsx!(CallUserImageGroup {
-                                participants: call_participants,
-                            })
-                        } else  {
-                            rsx!(UserImageGroup {
-                                participants: build_participants(&other_participants),
-                            })
-                        }
+                    } else if cx.props.in_chat {
+                        let call_participants: Vec<_> = other_participants
+                            .iter()
+                            .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                            .collect();
+                        rsx!(CallUserImageGroup {
+                            participants: call_participants,
+                        })
+                    } else  {
+                        rsx!(UserImageGroup {
+                            participants: build_participants(&other_participants),
+                        })
                     }
+                    
                 }
             }
             (!cx.props.in_chat).then(||rsx!(
