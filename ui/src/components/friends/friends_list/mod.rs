@@ -273,6 +273,7 @@ pub fn Friends(cx: Scope) -> Element {
                                     )),
                                     Friend {
                                         username: friend.username(),
+                                        aria_label: friend.username(),
                                         suffix: did_suffix,
                                         status_message: friend.status_message().unwrap_or_default(),
                                         relationship: relationship,
