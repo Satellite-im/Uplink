@@ -13,7 +13,7 @@ pub mod storage;
 pub mod ui;
 pub mod utils;
 
-use crate::language::{change_language, get_local_text_args_builder, get_local_text_with_args};
+use crate::language::{change_language, get_local_text_with_args};
 use crate::notifications::NotificationAction;
 use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
