@@ -62,7 +62,7 @@ pub fn get_local_text(text: &str) -> String {
 }
 
 // Looks and formats a local text using the given args
-pub fn get_local_text_with_args<'a>(text: &str, args: Vec<(&str, FluentValue<'a>)>) -> String {
+pub fn get_local_text_with_args(text: &str, args: Vec<(&str, FluentValue<'_>)>) -> String {
     get_local_text_args_builder(text, |m| {
         for (key, val) in args {
             m.insert(key, val);
