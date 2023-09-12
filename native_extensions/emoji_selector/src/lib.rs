@@ -126,10 +126,9 @@ fn render_selector<'a>(
 ) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     #[cfg(not(target_os = "macos"))]
-    {
-        let mouse_over_emoji_selector = use_ref(cx, || false);
-        let eval = use_eval(cx);
-    }
+    let mouse_over_emoji_selector = use_ref(cx, || false);
+    #[cfg(not(target_os = "macos"))]
+    let eval = use_eval(cx);
 
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
