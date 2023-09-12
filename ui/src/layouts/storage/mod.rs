@@ -287,19 +287,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-max-size",
-                                        format!("{}", get_local_text("files.storage-max-size")),
+                                        get_local_text("files.storage-max-size"),
                                         span {
                                             class: "count",
-                                           format!("{}", storage_controller.read().storage_size.0),
+                                            format!("{}", storage_controller.read().storage_size.0),
                                         }
                                     },
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-current-size",
-                                        format!("{}", get_local_text("files.storage-current-size")),
+                                        get_local_text("files.storage-current-size"),
                                         span {
                                             class: "count",
-                                           format!("{}", storage_controller.read().storage_size.1),
+                                            format!("{}", storage_controller.read().storage_size.1),
                                         }
                                     },
                                 )

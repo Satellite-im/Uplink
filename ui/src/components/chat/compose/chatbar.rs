@@ -560,13 +560,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                format!(
-                    "{} {} {} {}.",
-                    get_local_text("warning-messages.maximum-of"),
-                    MAX_CHARS_LIMIT,
-                    get_local_text("uplink.characters"),
-                    get_local_text("uplink.reached")
-                )
+                get_local_text_with_args("warning-messages.maximum-of", vec![("chars", MAX_CHARS_LIMIT.into())])
             }
         ))
     ));

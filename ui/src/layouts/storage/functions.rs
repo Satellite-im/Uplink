@@ -1,7 +1,7 @@
 #[cfg(not(target_os = "macos"))]
 use crate::utils::get_drag_event;
 use common::{
-    language::get_local_text,
+    language::{get_local_text, get_local_text_with_args},
     state::{storage::Storage, Action, State, ToastNotification},
     upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
     warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
@@ -399,10 +399,9 @@ pub fn start_upload_file_listener(
                             .mutate(common::state::Action::AddToastNotification(
                                 ToastNotification::init(
                                     "".into(),
-                                    format!(
-                                        "{} {}",
-                                        get_local_text("files.no-size-available"),
-                                        file_name
+                                    get_local_text_with_args(
+                                        "files.no-size-available",
+                                        vec![("file", file_name.into())],
                                     ),
                                     None,
                                     3,
