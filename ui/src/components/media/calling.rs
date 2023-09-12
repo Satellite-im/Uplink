@@ -236,7 +236,6 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                             participants: build_participants(&other_participants),
                         })
                     }
-                    
                 }
             }
             (!cx.props.in_chat).then(||rsx!(
