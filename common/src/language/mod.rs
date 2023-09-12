@@ -62,18 +62,19 @@ pub fn get_local_text(text: &str) -> String {
 }
 
 // Looks and formats a local text using the given args
-pub fn get_local_text_with_args<T: AsRef<str>>(
-    text: &str,
-    args: &HashMap<T, FluentValue>,
-) -> String {
-    LOCALES
-        .lookup_with_args(&APP_LANG.read().0, text, args)
-        .unwrap_or_default()
+pub fn get_local_text_with_args<'a>(text: &str, args: Vec<(&str, FluentValue<'a>)>) -> String {
+    get_local_text_args_builder(text, |m| {
+        for (key, val) in args {
+            m.insert(key, val);
+        }
+    })
 }
 
-pub fn get_local_text_args_builder<F, T: AsRef<str>>(text: &str, builder: F) -> String
+// Looks and formats a local text using the given args
+// Provides the undelying args map
+pub fn get_local_text_args_builder<'a, F, T: AsRef<str>>(text: &str, builder: F) -> String
 where
-    F: FnOnce(&mut HashMap<T, FluentValue>),
+    F: FnOnce(&mut HashMap<T, FluentValue<'a>>),
 {
     let args = {
         let mut map = HashMap::new();

@@ -1,4 +1,4 @@
-use common::language::{get_local_text, get_local_text_args_builder};
+use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 
 const MAX_LEN: usize = 17;
@@ -27,9 +27,7 @@ pub fn MessageTyping(cx: Scope<Props>) -> Element {
         } else {
             users
         };
-        get_local_text_args_builder(translation, |m| {
-            m.insert(key, users.into());
-        })
+        get_local_text_with_args(translation, vec![(key, users.into())])
     };
 
     cx.render(rsx! (
