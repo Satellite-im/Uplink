@@ -44,7 +44,7 @@ use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_components::{
-    add_remove_file_to_send, file_checkbox, send_files_from_chat_topbar,
+    file_checkbox, send_files_from_chat_topbar, toggle_selected_file,
 };
 
 use self::controller::{StorageController, UploadFileController};
@@ -79,14 +79,14 @@ pub enum ChanCmd {
 #[derive(Props)]
 pub struct Props<'a> {
     storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
-    on_files_selected_to_send: Option<EventHandler<'a, Vec<Location>>>,
+    on_files_attached: Option<EventHandler<'a, Vec<Location>>>,
 }
 
 #[allow(non_snake_case)]
 pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let on_files_selected_to_send = cx.props.on_files_selected_to_send.as_ref();
+    let on_files_attached = cx.props.on_files_attached.as_ref();
     let storage_files_to_chat_mode_is_active =
         match cx.props.storage_files_to_chat_mode_is_active.as_ref() {
             Some(d) => d,
@@ -301,9 +301,9 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
                 send_files_from_chat_topbar {
                     storage_controller: storage_controller.clone(),
-                    select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
-                    on_press_send_files_button: move |files_location_path| {
-                        if let Some(f) = on_files_selected_to_send {
+                    is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
+                    on_send: move |files_location_path| {
+                        if let Some(f) = on_files_attached {
                             f.call(files_location_path);
                         }
                     }
@@ -499,7 +499,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         file_checkbox {
                                             file_path: file_path.clone(),
                                             storage_controller: storage_controller.clone(),
-                                            select_files_to_send_mode: storage_files_to_chat_mode_is_active.clone(),
+                                            is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
                                         },
                                         File {
                                             key: "{key}-file",
@@ -509,7 +509,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                             onpress: move |_| {
                                                 if *storage_files_to_chat_mode_is_active.get() {
-                                                    add_remove_file_to_send(storage_controller.clone(), file_path2.clone());
+                                                    toggle_selected_file(storage_controller.clone(), file_path2.clone());
                                                     return;
                                                 }
                                                 let key = file_id;

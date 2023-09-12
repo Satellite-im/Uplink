@@ -11,9 +11,9 @@ pub fn file_checkbox(
     cx: Scope<'a>,
     file_path: String,
     storage_controller: UseRef<StorageController>,
-    select_files_to_send_mode: UseState<bool>,
+    is_selecting_files: UseState<bool>,
 ) -> Element<'a> {
-    if *select_files_to_send_mode.get() {
+    if *is_selecting_files.get() {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return cx.render(rsx!( div {
             class: "checkbox-position",
@@ -27,7 +27,7 @@ pub fn file_checkbox(
                     }
                 }),
                 on_click: move |_| {
-                    add_remove_file_to_send(storage_controller.clone(), file_path.clone());
+                    toggle_selected_file(storage_controller.clone(), file_path.clone());
                 }
             }
         },));
@@ -39,10 +39,10 @@ pub fn file_checkbox(
 pub fn send_files_from_chat_topbar<'a>(
     cx: Scope<'a>,
     storage_controller: UseRef<StorageController>,
-    select_files_to_send_mode: UseState<bool>,
-    on_press_send_files_button: EventHandler<'a, Vec<Location>>,
+    is_selecting_files: UseState<bool>,
+    on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
-    if *select_files_to_send_mode.get() {
+    if *is_selecting_files.get() {
         return cx.render(rsx! (
             div {
                 class: "send-files-button",
@@ -63,8 +63,8 @@ pub fn send_files_from_chat_topbar<'a>(
                     appearance: Appearance::Primary,
                     icon: Icon::ChevronRight,
                     onpress: move |_| {
-                        on_press_send_files_button.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
-                        select_files_to_send_mode.set(false);
+                        on_send.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
+                        is_selecting_files.set(false);
                     }
                 },
             }
@@ -73,7 +73,7 @@ pub fn send_files_from_chat_topbar<'a>(
     None
 }
 
-pub fn add_remove_file_to_send(storage_controller: UseRef<StorageController>, file_path: String) {
+pub fn toggle_selected_file(storage_controller: UseRef<StorageController>, file_path: String) {
     if let Some(index) = storage_controller.with(|f| {
         f.files_selected_to_send
             .iter()

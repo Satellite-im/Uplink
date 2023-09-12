@@ -528,31 +528,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 return;
                             }
                             if let Some(new_files) = FileDialog::new()
-                                .set_directory(dirs::home_dir().unwrap_or_default())
-                                .pick_files()
-                            {
-                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                    .unwrap_or_default()
-                                    .iter()
-                                    .filter(|file_location| {
-                                        match file_location {
-                                            Location::Disk { path } => {
-                                                !new_files.contains(path)
-                                            },
-                                            Location::Constellation { .. } => {
-                                                true
-                                            }
-                                        }
-                                    })
-                                    .cloned()
-                                    .collect();
-                                let local_disk_files: Vec<Location> = new_files
-                                    .iter()
-                                    .map(|path| Location::Disk { path: path.clone() })
-                                    .collect();
-                                new_files_to_upload.extend(local_disk_files);
-                                state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                                update_send();
+                            .set_directory(dirs::home_dir().unwrap_or_default())
+                            .pick_files()
+                        {
+                            let new_files: Vec<Location> = new_files.iter()
+                            .map(|path| Location::Disk { path: path.clone() })
+                            .collect();
+                        
+                            let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                            .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
+                            current_files.extend(new_files);
+                            state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
+                            update_send();
                             }
                         },
                     }
@@ -566,7 +553,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     class: "modal-div-files-layout",
                                     FilesLayout {
                                         storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
-                                        on_files_selected_to_send: move |files_location: Vec<Location>| {
+                                        on_files_attached: move |files_location: Vec<Location>| {
                                             let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                             .unwrap_or_default()
                                             .iter()
