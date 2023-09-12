@@ -35,7 +35,7 @@ pub const SELECT_CHAT_BAR: &str = r#"
 "#;
 
 pub const OVERLAY_SCRIPT: &str = r#"
-    var chatLayout = document.getElementById('compose')
+    var chatLayout = document.getElementById('chat-layout')
 
     var IS_DRAGGING = $IS_DRAGGING
 
@@ -43,7 +43,7 @@ pub const OVERLAY_SCRIPT: &str = r#"
 
     if (IS_DRAGGING) {
     chatLayout.classList.add('hover-effect')
-    overlayElement.style.display = 'block'
+    overlayElement.style.display = 'flex'
     } else {
     chatLayout.classList.remove('hover-effect')
     overlayElement.style.display = 'none'
