@@ -115,7 +115,7 @@ async fn drop_and_attach_files(
     drag_event: &UseRef<Option<FileDropEvent>>,
     state: UseSharedState<State>,
 ) {
-    let new_files = drag_and_drop_function(eval.clone(), &window, &drag_event).await;
+    let new_files = drag_and_drop_function(eval.clone(), window, drag_event).await;
     let mut new_files_to_upload: Vec<_> = state
         .read()
         .get_active_chat()
