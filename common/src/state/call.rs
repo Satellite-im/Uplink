@@ -246,15 +246,10 @@ impl Call {
 
     fn update_speaking_participants(&mut self) -> bool {
         let delay = Duration::from_secs(3);
-        let mut removed = false;
-        self.participants_speaking.retain(|_, time| {
-            let keep = time.elapsed() <= delay;
-            if !removed && !keep {
-                removed = true;
-            }
-            keep
-        });
-        removed
+        let len = self.participants_speaking.len();
+        self.participants_speaking
+            .retain(|_, time| time.elapsed() <= delay);
+        len != self.participants_speaking.len()
     }
 
     fn participant_not_speaking(&mut self, id: &DID) {
