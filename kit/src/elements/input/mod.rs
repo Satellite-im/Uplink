@@ -234,7 +234,7 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     if max > 0 && val.len() > max {
         return Some(get_local_text_with_args(
             "warning-messages.maximum-of",
-            vec![("chars", max.into())],
+            vec![("num", max.into())],
         ));
     }
 

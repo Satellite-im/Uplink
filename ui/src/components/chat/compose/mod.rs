@@ -748,7 +748,7 @@ async fn drag_and_drop_function(
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
                             &get_local_text_with_args(
-                                "files.one-file-to-upload",
+                                "files.one-file-to-upload-name",
                                 vec![(
                                         "file",
                                         paths[0]
