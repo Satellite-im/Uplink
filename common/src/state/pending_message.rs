@@ -29,15 +29,15 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| {
-                    let path: &PathBuf = match p {
-                        Location::Disk { path } => path,
-                        Location::Constellation { path: String } => PathBuf::from(path),
+                .filter_map(|p| {
+                    let path = match p {
+                        Location::Disk { path } => path.clone(),
+                        Location::Constellation { path } => PathBuf::from(path),
                     };
 
                     path.file_name().and_then(OsStr::to_str).map(str::to_string)
                 })
-                .collect(),
+                .collect::<Vec<_>>(),
             attachments_progress: HashMap::new(),
             message,
         }
