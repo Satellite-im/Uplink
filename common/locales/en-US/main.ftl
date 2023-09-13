@@ -59,7 +59,7 @@ updates = Updates
 
 warning-messages = Warning Messages
     .please-enter-at-least-one = Please enter at least 1 character.
-    .please-enter-at-least = Please enter at least { $num } characters
+    .please-enter-at-least = Please enter at least { $num } characters.
     .maximum-of = Maximum of { $num } characters exceeded
     .disallowed-characters = Not allowed character(s): { $chars }
     .spaces-not-allowed = Spaces are not allowed.
