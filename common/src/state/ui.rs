@@ -3,6 +3,7 @@ use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
+use std::rc::Rc;
 use std::{
     cmp::Ordering,
     collections::{hash_map, HashMap},
@@ -15,29 +16,37 @@ use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
 
+pub type EmojiFilter = HashMap<String, Rc<dyn Fn(&str, bool) -> Vec<(String, String)>>>;
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct EmojiCounter {
-    list: EmojiList,
+    emoji_tracker: EmojiList,
+    #[serde(skip)]
+    emoji_filters: EmojiFilter,
 }
 
 impl EmojiCounter {
     pub fn new() -> Self {
         Self {
-            list: EmojiList::new(),
+            emoji_tracker: EmojiList::new(),
+            emoji_filters: HashMap::new(),
         }
     }
 
     pub fn new_with(list: EmojiList) -> Self {
-        Self { list }
+        Self {
+            emoji_tracker: list,
+            emoji_filters: HashMap::new(),
+        }
     }
 
     pub fn increment_emoji(&mut self, emoji: String) {
-        let count = self.list.entry(emoji).or_insert(0);
+        let count = self.emoji_tracker.entry(emoji).or_insert(0);
         *count = count.saturating_add(1);
     }
 
     pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
-        let mut emojis: Vec<_> = self.list.iter().collect();
+        let mut emojis: Vec<_> = self.emoji_tracker.iter().collect();
 
         // sort the list by the emoji with the most usage
         emojis.sort_by(|a, b| match b.1.cmp(a.1) {
@@ -51,6 +60,51 @@ impl EmojiCounter {
             .take(to_take)
             .map(|(emoji, usage)| (emoji.clone(), *usage))
             .collect()
+    }
+
+    pub fn get_matching_emoji(&self, pattern: &str, exact: bool) -> Vec<(String, String)> {
+        if pattern.is_empty() {
+            return vec![];
+        }
+        let mut matches: HashMap<String, String> = default_emoji_list()
+            .iter()
+            .filter_map(|(emoji, alias)| {
+                if (exact && (*alias).eq(pattern)) || (!exact && alias.starts_with(pattern)) {
+                    Some((emoji.to_string(), alias.to_string()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        for (_, matcher) in self.emoji_filters.iter() {
+            matcher(pattern, exact).iter().for_each(|(emoji, alias)| {
+                matches.insert(emoji.clone(), alias.clone());
+            });
+        }
+        let mut matches: Vec<(String, String)> = matches
+            .iter()
+            .map(|(emoji, alias)| (emoji.clone(), alias.clone()))
+            .collect();
+        matches.sort_by(|(emoji, _), (emoji2, _)| {
+            let first = self.emoji_tracker.get(emoji).unwrap_or(&0_u64);
+            let second = self.emoji_tracker.get(emoji2).unwrap_or(&0_u64);
+            match second.cmp(first) {
+                Ordering::Equal => emoji.cmp(emoji2),
+                x => x,
+            }
+        });
+        matches
+    }
+
+    // Register an emoji filter that should return a tuple of strings where the first is the emoji and the second is its alias
+    pub fn register_emoji_filter(
+        &mut self,
+        id: String,
+        filter: impl Fn(&str, bool) -> Vec<(String, String)> + 'static,
+    ) {
+        self.emoji_filters
+            .entry(id)
+            .or_insert_with(|| Rc::new(filter));
     }
 }
 
@@ -88,13 +142,22 @@ fn bool_true() -> bool {
 }
 
 fn default_emojis() -> EmojiCounter {
-    EmojiCounter::new_with(HashMap::from([
-        ("👍".to_string(), 0),
-        ("👎".to_string(), 0),
-        ("❤️".to_string(), 0),
-        ("🖖".to_string(), 0),
-        ("😂".to_string(), 0),
-    ]))
+    EmojiCounter::new_with(
+        default_emoji_list()
+            .into_iter()
+            .map(|(emoji, _)| (emoji, 0))
+            .collect(),
+    )
+}
+
+fn default_emoji_list() -> Vec<(String, &'static str)> {
+    vec![
+        ("👍".to_string(), "thumbsup"),
+        ("👎".to_string(), "thumbsdown"),
+        ("❤️".to_string(), "heart"),
+        ("🖖".to_string(), "vulcan_salute"),
+        ("😂".to_string(), "joy"),
+    ]
 }
 
 /// Used to determine where the Emoji should be routed.
