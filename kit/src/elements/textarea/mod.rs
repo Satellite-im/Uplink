@@ -2,8 +2,6 @@
 //! this could be merged with kit/src/elements/input and make the input element use a textarea based on a property.
 //! that might helpful if a textarea needed to perform input validation.
 
-use std::{cell::RefCell, rc::Rc};
-
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 use uuid::Uuid;
@@ -42,17 +40,23 @@ pub struct Props<'a> {
     aria_label: String,
     onchange: EventHandler<'a, (String, bool)>,
     onreturn: EventHandler<'a, (String, bool, Code)>,
+    oncursor_update: Option<EventHandler<'a, (String, i64)>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
     #[props(default = false)]
     show_char_counter: bool,
+    #[props(default = false)]
+    prevent_up_down_arrows: bool,
+    onup_down_arrow: Option<EventHandler<'a, Code>>,
 }
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
     let eval = use_eval(cx);
+
+    let cursor_position = use_ref(cx, || None);
 
     let Props {
         id: _,
@@ -64,9 +68,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         aria_label,
         onchange,
         onreturn,
+        oncursor_update,
         value,
         is_disabled,
         show_char_counter,
+        prevent_up_down_arrows,
+        onup_down_arrow,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -74,6 +81,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         cx.props.id.clone()
     };
+    let id2 = id.clone();
     let id_char_counter = id.clone();
     let focus_script = if cx.props.ignore_focus {
         String::new()
@@ -86,26 +94,33 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
         .replace("$MULTI_LINE", &format!("{}", true));
-    let current_val = value.to_string();
     let disabled = *loading || *is_disabled;
 
-    let update_char_counter_script = include_str!("./update_char_counter.js")
-        .replace("$UUID", &id)
-        .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+    let update_char_counter_script = include_str!("./update_char_counter.js").replace("$UUID", &id);
     let clear_counter_script =
-        r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
-            .replace("$UUID", &id)
-            .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
-    if *show_char_counter {
-        let _ = eval(&update_char_counter_script);
+        r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
+
+    let cursor_eval = include_str!("./cursor_script.js").replace("$ID", &id2);
+
+    let text_value = use_ref(cx, || value.clone());
+    use_future(cx, value, |val| {
+        to_owned![cursor_position, text_value, eval, show_char_counter];
+        async move {
+            *cursor_position.write_silent() = Some(val.chars().count() as i64);
+            *text_value.write_silent() = val;
+            if show_char_counter {
+                let _ = eval(&update_char_counter_script.replace("$TEXT", &text_value.read()));
+            }
+        }
+    });
+
+    let do_cursor_update = oncursor_update.is_some();
+
+    if let Some(val) = cursor_position.write_silent().take() {
+        if let Some(e) = oncursor_update {
+            e.call((text_value.read().clone(), val));
+        }
     }
-
-    let cv2 = current_val.clone();
-    let cv3 = current_val.clone();
-
-    let text_value = Rc::new(RefCell::new(value.to_string()));
-    let text_value_onchange = Rc::clone(&text_value);
-    let text_value_onreturn = Rc::clone(&text_value);
 
     cx.render(rsx! (
         div {
@@ -117,21 +132,33 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
-                    class: "input_textarea",
+                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
                     id: "{id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: "{current_val}",
+                    value: "{text_value.read()}",
                     maxlength: "{max_length}",
                     placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
                     onblur: move |_| {
-                        onreturn.call((cv2.to_string(), false, Code::Enter));
+                        onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
-                    oninput: move |evt| {
-                        let current_val = evt.value.clone();
-                        text_value_onchange.borrow_mut().clear();
-                        text_value_onchange.borrow_mut().push_str(&current_val);
-                        onchange.call((current_val, true));
+                    oninput: {
+                        to_owned![eval, cursor_eval];
+                        move |evt| {
+                            let current_val = evt.value.clone();
+                            *text_value.write_silent() = current_val.clone();
+                            onchange.call((current_val, true));
+                            to_owned![eval, cursor_eval, cursor_position];
+                            async move {
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     onkeyup: move |evt| {
                         let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
@@ -141,9 +168,53 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if *show_char_counter {
                                 let _ = eval(&clear_counter_script);
                             }
-                            onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
+                            onreturn.call((text_value.read().clone(), true, evt.code()));
                         }
                     },
+                    onmousedown: {
+                        to_owned![eval, cursor_eval];
+                        move |_| {
+                            to_owned![eval, cursor_eval, cursor_position];
+                            async move {
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onkeydown: {
+                        to_owned![eval, cursor_eval];
+                        move |evt| {
+                            let arrow = match evt.code() {
+                                Code::ArrowDown|Code::ArrowUp => {
+                                    if let Some(e) = onup_down_arrow {
+                                        e.call(evt.code());
+                                    };
+                                    true
+                                }
+                                Code::ArrowLeft|Code::ArrowRight => {
+                                    true
+                                }
+                                _ => {
+                                    false
+                                }
+                            };
+                            to_owned![eval, cursor_eval, cursor_position];
+                            async move {
+                                if do_cursor_update && arrow {
+                                    if let Ok(r) = eval(&cursor_eval) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 if *show_char_counter {
                     rsx!(
@@ -154,7 +225,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "{id_char_counter}-char-counter",
                                 aria_label: "input-char-counter",
                                 class: "char-counter-p-element",
-                                format!("{}", cv3.len()),
+                                format!("{}", text_value.read().len()),
                             },
                             p {
                                 key: "{id_char_counter}-char-max-length",
