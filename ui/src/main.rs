@@ -974,11 +974,18 @@ fn AppNav<'a>(
     let state = use_shared_state::<State>(cx)?;
     let navigator = use_navigator(cx);
     let pending_friends = state.read().friends().incoming_requests.len();
+    let unreads: u32 = state.read().chats_sidebar().iter().map(|c| c.unreads).sum();
 
     let chat_route = UIRoute {
         to: "/chat",
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
+        child: (unreads > 0).then(|| {
+            cx.render(rsx!(div {
+                class: "nav-unread-indicator",
+                unreads.to_string(),
+            }))
+        }),
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
@@ -997,6 +1004,7 @@ fn AppNav<'a>(
             None
         },
         loading: None,
+        ..UIRoute::default()
     };
     let files_route = UIRoute {
         to: "/files",
