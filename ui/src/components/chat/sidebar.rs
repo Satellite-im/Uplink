@@ -204,6 +204,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     rsx!(
                                         UserImageGroup {
                                             loading: false,
+                                            aria_label: "user-image-group".into(),
                                             participants: build_participants(&participants),
                                         }
                                     )
@@ -624,6 +625,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                 )
                             )),
                             User {
+                                aria_label: participants_name.clone(),
                                 username: participants_name,
                                 subtext: subtext_val,
                                 timestamp: datetime,
@@ -639,6 +641,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                     )} else {rsx! (
                                         UserImageGroup {
                                             participants: build_participants(&participants),
+                                            aria_label: "user-image-group".into(),
                                             typing: users_typing,
                                         }
                                     )}
@@ -662,6 +665,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {
@@ -674,6 +678,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {
@@ -686,6 +691,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
+                            aria_label: "Loading".into(),
                             subtext: "loading".into(),
                             user_image: cx.render(rsx!(
                                 UserImage {

@@ -40,6 +40,7 @@ pub struct Props<'a> {
     accept_button_disabled: Option<bool>,
     block_button_disabled: Option<bool>,
     remove_button_disabled: Option<bool>,
+    aria_label: Option<String>,
 }
 
 #[allow(non_snake_case)]
@@ -47,6 +48,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
     let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
         || cx.props.block_button_disabled.unwrap_or(false)
@@ -55,7 +57,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "friend",
-            aria_label: "Friend",
+            aria_label: "{aria_label}",
             &cx.props.user_image,
             div {
                 class: "request-info",
