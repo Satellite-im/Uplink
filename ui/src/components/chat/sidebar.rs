@@ -8,6 +8,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::message::markdown;
 use kit::layout::modal::Modal;
 use kit::{
     components::{
@@ -562,8 +563,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     };
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                        // todo: does this really need markdown?
-                        Some(v) => v.to_string(),
+                        Some(v) => markdown(v),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),

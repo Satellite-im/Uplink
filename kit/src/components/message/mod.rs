@@ -6,7 +6,7 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use regex::Regex;
+use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -323,17 +323,22 @@ pub struct ChatMessageProps {
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
-    let text_with_links = wrap_links_with_a_tags(&cx.props.text);
-    let id = use_state(cx, || uuid::Uuid::new_v4().to_string());
+    let mut formatted_text = if cx.props.markdown {
+        markdown(&cx.props.text)
+    } else {
+        cx.props.text.clone()
+    };
+    formatted_text = wrap_links_with_a_tags(&formatted_text);
+
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
-        .spans(&cx.props.text)
+        .spans(&formatted_text)
         .filter(|e| matches!(e.kind(), Some(LinkKind::Url)))
         .map(|e| e.as_str().to_string())
         .collect();
 
     // this is broken. may be fixed later.
-    let _texts = finder.spans(&text_with_links).map(|e| match e.kind() {
+    let _texts = finder.spans(&formatted_text).map(|e| match e.kind() {
         Some(LinkKind::Url) => {
             rsx!(
                 a {
@@ -351,26 +356,14 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         "text"
     };
 
-    let markdown_script = if cx.props.markdown {
-        let target = replace_code_segments(&text_with_links);
-        format!(
-            "document.getElementById('{}').innerHTML = marked.parse('{}')",
-            id, target
-        )
-    } else {
-        String::new()
-    };
-
     cx.render(rsx!(
         div {
             class: text_type_class,
             p {
-                id: "{id}",
                 class: text_type_class,
                 aria_label: "message-text",
-                "{cx.props.text}"
+                dangerous_inner_html: "{formatted_text}",
             },
-            script { markdown_script },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
                     link: l.to_string(),
@@ -381,124 +374,89 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-// concerning markdown
-fn replace_code_segments(text: &str) -> String {
-    match multiline_code_regex(text) {
-        Some(x) => x,
-        None => match triple_backtick_regex(text) {
-            Some(x) => x,
-            None => match single_backtick_regex(text) {
-                Some(x) => x,
-                None => text.to_string(),
-            },
-        },
-    }
-}
+pub fn markdown(text: &str) -> String {
+    let txt = text.trim();
 
-fn multiline_code_regex(target: &str) -> Option<String> {
-    let re = Regex::new(r"(?<code_block>```(?<language>[a-z]+)(\s|\n)+(?<code>(.|\s)+)```)")
-        .expect("invalid regex");
-    let caps = re.captures(target)?;
-    let language = caps.name("language").map_or("text", |m| m.as_str().trim());
-    let code = caps.name("code").map_or("", |m| m.as_str().trim());
-    let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-    if !code.is_empty() {
-        let new_code_block = format!(
-            "<pre><code class=\"language-{}\">{}</code></pre>",
-            language, code
-        );
-        Some(target.replace(code_block, &new_code_block))
-    } else {
-        None
-    }
-}
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
 
-fn triple_backtick_regex(target: &str) -> Option<String> {
-    let re = Regex::new(r"(?<code_block>```(?<code>(.|\s)+)```)").expect("invalid regex");
-    if let Some(caps) = re.captures(target) {
-        let language = "text";
-        let code = caps.name("code").map_or("", |m| m.as_str().trim());
-        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-        if !code.is_empty() {
-            let new_code_block = format!(
-                "<pre><code class=\"language-{}\">{}</code></pre>",
-                language, code
-            );
-            Some(target.replace(code_block, &new_code_block))
-        } else {
-            None
+    let modified_lines: Vec<String> = txt
+        .split('\n')
+        .map(|line| {
+            if line.starts_with('>') {
+                format!("\\{}", line)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
+
+    let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
+
+    let mut html_output = String::new();
+    let mut in_paragraph = false;
+    let mut in_code_block = false;
+    let mut add_text_language = true;
+
+    for line in &mut modified_lines_refs {
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
+        let line_trim = line.trim();
+        if line_trim == "```" && add_text_language {
+            *line = "```text";
+            add_text_language = false;
         }
-    } else {
-        None
-    }
-}
+        for event in parser {
+            match event {
+                pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                    in_paragraph = true;
+                    html_output.push_str("<p>");
+                }
+                pulldown_cmark::Event::End(Tag::Paragraph) => {
+                    in_paragraph = false;
+                }
+                pulldown_cmark::Event::Text(t) => {
+                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                        t.replace("\n\n", "<br/>").into()
+                    } else {
+                        t
+                    };
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Text(txt)),
+                    );
+                }
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
+                    add_text_language = false;
+                    in_code_block = true;
+                    match code_block_kind {
+                        CodeBlockKind::Fenced(language) => {
+                            let language = if language.is_empty() {
+                                "text"
+                            } else {
+                                &language
+                            };
 
-fn single_backtick_regex(target: &str) -> Option<String> {
-    let re = Regex::new(r"(?<code_block>`(?<code>.+)`)").expect("invalid regex");
-    if let Some(caps) = re.captures(target) {
-        let language = "text";
-        let code = caps.name("code").map_or("", |m| m.as_str().trim());
-        let code_block = caps.name("code_block").map_or("", |m| m.as_str());
-        if !code.is_empty() {
-            let new_code_block = format!(
-                "<pre><code class=\"language-{}\">{}</code></pre>",
-                language, code
-            );
-            Some(target.replace(code_block, &new_code_block))
-        } else {
-            None
+                            html_output
+                                .push_str(&format!("<pre><code class=\"language-{}\">", language))
+                        }
+                        _ => html_output.push_str("<pre><code class=\"language-text\">"),
+                    }
+                }
+                pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    if in_code_block && line_trim == "```" {
+                        in_code_block = false;
+                        add_text_language = true;
+                        // HACK: To close block code is necessary to push tags 2 times
+                        html_output.push_str("</code></pre>");
+                        html_output.push_str("</code></pre>");
+                    }
+                }
+                _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
+            }
         }
-    } else {
-        None
-    }
-}
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn regex_test1() {
-        let r = replace_code_segments("```rust\nlet a: i32 = 0;```");
-        assert_eq!(
-            r,
-            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
-        )
+        html_output.push('\n');
     }
 
-    #[test]
-    fn regex_test2() {
-        let r = replace_code_segments("```rust \nlet a: i32 = 0;```");
-        assert_eq!(
-            r,
-            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
-        )
-    }
-
-    #[test]
-    fn regex_test3() {
-        let r = replace_code_segments("``` let a: i32 = 0;```");
-        assert_eq!(
-            r,
-            "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>"
-        )
-    }
-
-    #[test]
-    fn regex_test4() {
-        let r = replace_code_segments("`let a: i32 = 0;`");
-        assert_eq!(
-            r,
-            "<pre><code class=\"language-text\">let a: i32 = 0;</code></pre>"
-        )
-    }
-
-    #[test]
-    fn regex_test5() {
-        let r = replace_code_segments("```rust let a: i32 = 0;```");
-        assert_eq!(
-            r,
-            "<pre><code class=\"language-rust\">let a: i32 = 0;</code></pre>"
-        )
-    }
+    html_output
 }

@@ -1,15 +1,8 @@
 use super::*;
 
-pub const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
+const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
 pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
 pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
-
-const MARKED_SCRIPT: &str = include_str!("../extra/assets/scripts/marked.js");
-pub fn MarkedScripts(cx: Scope) -> Element {
-    render! {
-        script { "{MARKED_SCRIPT}" },
-    }
-}
 
 pub fn PrismScripts(cx: Scope) -> Element {
     let prism_path = use_prism_path(cx);

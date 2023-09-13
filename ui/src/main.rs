@@ -178,7 +178,6 @@ fn app_layout(cx: Scope) -> Element {
             Outlet::<UplinkRoute>{},
             AppLogger {},
             PrismScripts {},
-            MarkedScripts {},
         },
     }
 }
