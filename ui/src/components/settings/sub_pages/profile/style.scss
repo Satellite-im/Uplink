@@ -27,7 +27,7 @@
     padding: var(--gap);
     border-radius: var(--border-radius);
     flex-wrap: wrap;
-    max-width: calc(100% - (var(--gap) * 2));
+    width: calc(100% - (var(--gap) * 2));
     
     .welcome {
       max-width: calc(var(--width-sidebar) - (var(--gap) * 2));
