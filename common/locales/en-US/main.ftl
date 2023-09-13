@@ -58,7 +58,7 @@ updates = Updates
     .download-label = Download Update
 
 warning-messages = Warning Messages
-    .please-enter-at-least-one = Please enter at least one character
+    .please-enter-at-least-one = Please enter at least 1 character
     .please-enter-at-least = Please enter at least { $num } characters
     .maximum-of = Maximum of { $num } characters exceeded
     .disallowed-characters = Not allowed character(s): { $chars }
