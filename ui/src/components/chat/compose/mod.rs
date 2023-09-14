@@ -3,7 +3,7 @@ mod context_file_location;
 mod messages;
 mod quick_profile;
 
-use std::{path::PathBuf, rc::Rc};
+use std::rc::Rc;
 
 use dioxus::prelude::*;
 
@@ -38,7 +38,6 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_window, DesktopContext};
 
 use uuid::Uuid;
 use warp::{
@@ -48,46 +47,10 @@ use warp::{
     raygun::{ConversationType, Location},
 };
 
-use dioxus_desktop::wry::webview::FileDropEvent;
-
 use crate::{
     components::chat::{edit_group::EditGroup, group_users::GroupUsers},
-    utils::{
-        build_participants, get_drag_event,
-        verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
-    },
+    utils::build_participants,
 };
-
-pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
-    const feedback_element = document.getElementById('overlay-text');
-    feedback_element.textContent = '$TEXT';
-"#;
-
-pub const ANIMATION_DASH_SCRIPT: &str = r#"
-    var dashElement = document.getElementById('dash-element')
-    dashElement.style.animation = "border-dance 0.5s infinite linear"
-"#;
-
-pub const SELECT_CHAT_BAR: &str = r#"
-    var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
-    chatBar.focus()
-"#;
-
-pub const OVERLAY_SCRIPT: &str = r#"
-    var chatLayout = document.getElementById('compose')
-
-    var IS_DRAGGING = $IS_DRAGGING
-
-    var overlayElement = document.getElementById('overlay-element')
-
-    if (IS_DRAGGING) {
-    chatLayout.classList.add('hover-effect')
-    overlayElement.style.display = 'block'
-    } else {
-    chatLayout.classList.remove('hover-effect')
-    overlayElement.style.display = 'none'
-    }
-"#;
 
 pub struct ComposeData {
     active_chat: Chat,
@@ -128,40 +91,12 @@ pub fn Compose(cx: Scope) -> Element {
         .as_ref()
         .map(|data| data.active_chat.id)
         .unwrap_or(Uuid::nil());
-    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
-    let window = use_window(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
-    #[cfg(target_os = "windows")]
-    use_future(cx, (), |_| {
-        to_owned![state, window, drag_event];
-        async move {
-            // ondragover function from div does not work on windows
-            loop {
-                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
-                    let new_files = drag_and_drop_function(&window, &drag_event).await;
-                    let mut new_files_to_upload: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .iter()
-                        .filter(|file_name| !new_files.contains(file_name))
-                        .cloned()
-                        .collect();
-                    new_files_to_upload.extend(new_files);
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                }
-            }
-        }
-    });
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
@@ -183,51 +118,9 @@ pub fn Compose(cx: Scope) -> Element {
 
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
-    let upload_files = move |_| {
-        if drag_event.with(|i| i.clone()).is_none() {
-            cx.spawn({
-                to_owned![drag_event, window, state];
-                async move {
-                    let new_files = drag_and_drop_function(&window, &drag_event).await;
-                    let mut new_files_to_upload: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .iter()
-                        .filter(|file_location| {
-                            if let Location::Disk { path } = file_location {
-                                !new_files.contains(path)
-                            } else {
-                                false
-                            }
-                        })
-                        .cloned()
-                        .collect();
-                    let local_disk_files: Vec<Location> = new_files
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    new_files_to_upload.extend(local_disk_files);
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                }
-            });
-        }
-    };
-
     cx.render(rsx!(
         div {
             id: "compose",
-            ondragover: upload_files,
-            div {
-                id: "overlay-element",
-                class: "overlay-element",
-                div {id: "dash-element", class: "dash-background active-animation"},
-                p {id: "overlay-text0", class: "overlay-text"},
-                p {id: "overlay-text", class: "overlay-text"}
-            },
             Topbar {
                 with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                 onback: move |_| {
@@ -731,64 +624,4 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             )}
         }
     ))
-}
-
-// Like ui::src:layout::storage::drag_and_drop_function
-async fn drag_and_drop_function(
-    window: &DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
-) -> Vec<PathBuf> {
-    *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
-    let mut new_files_to_upload = Vec::new();
-    loop {
-        let file_drop_event = get_drag_event::get_drag_event();
-        match file_drop_event {
-            FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
-                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
-                    if paths.len() > 1 {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.files-to-upload")
-                            ),
-                        ));
-                    } else {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.one-file-to-upload")
-                            ),
-                        ));
-                    }
-                    _ = window.webview.evaluate_script(&script);
-                }
-            }
-            FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
-                    *drag_event.write_silent() = None;
-                    new_files_to_upload = decoded_pathbufs(paths);
-                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
-                    script.push_str(ANIMATION_DASH_SCRIPT);
-                    script.push_str(SELECT_CHAT_BAR);
-                    window.set_focus();
-                    _ = window.webview.evaluate_script(&script);
-                    break;
-                }
-            }
-            _ => {
-                *drag_event.write_silent() = None;
-                let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
-                _ = window.webview.evaluate_script(&script);
-                break;
-            }
-        };
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    }
-    *drag_event.write_silent() = None;
-    new_files_to_upload
 }
