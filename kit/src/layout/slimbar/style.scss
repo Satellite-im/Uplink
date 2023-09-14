@@ -10,6 +10,11 @@
     position: relative;
     padding: var(--gap);
     padding-bottom: 0;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+        display: none; 
+    }
 
     // TODO: This is really tricky to get to work cleanly.
     // .slimbar-scroll {
