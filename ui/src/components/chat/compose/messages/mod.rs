@@ -94,7 +94,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
+    let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
@@ -117,7 +117,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
-    effects::update_chat_messages(cx, state, newely_fetched_messages);
+    effects::update_chat_messages(cx, state, newly_fetched_messages);
 
     // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
     // to the bottom when the user selects the active chat
@@ -140,7 +140,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     );
 
     let _ch =
-        coroutines::handle_warp_commands(cx, state, newely_fetched_messages, pending_downloads);
+        coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
 
     let msg_container_end = if data.active_chat.has_more_messages {
         rsx!(div {
