@@ -43,7 +43,7 @@ pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").un
 use crate::{
     components::{
         chat::compose::context_file_location::FileLocationContext,
-        chat::compose::messages::SCROLL_BOTTOM, paste_files_with_shortcut,
+        chat::compose::messages::scripts::SCROLL_BOTTOM, paste_files_with_shortcut,
     },
     layouts::storage::FilesLayout,
     utils::{
