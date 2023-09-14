@@ -652,27 +652,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path: Vec<PathBuf>| {
                     if !files_local_path.is_empty() {
-                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default()
-                            .iter()
-                            .filter(|file_location| {
-                                match file_location {
-                                    Location::Disk { path } => {
-                                        !files_local_path.contains(path)
-                                    },
-                                    Location::Constellation { .. } => {
-                                        true
-                                    }
-                                }
-                            })
-                            .cloned()
-                            .collect();
-                        let local_disk_files: Vec<Location> = files_local_path
-                            .iter()
-                            .map(|path| Location::Disk { path: path.clone() })
-                            .collect();
-                    new_files_to_upload.extend(local_disk_files);
-                    state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);    
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, current_files));
                     }
                 }})}
         div {

@@ -44,7 +44,7 @@ use warp::{
     blink::{self},
     crypto::DID,
     logging::tracing::log,
-    raygun::{ConversationType, Location},
+    raygun::ConversationType,
 };
 
 use crate::{
