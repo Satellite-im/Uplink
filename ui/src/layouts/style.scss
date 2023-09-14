@@ -54,24 +54,23 @@
 }
 
 .overlay-element {
-  position: absolute;
+  position: fixed;
   display: none;
-  bottom: var(--gap);
-  left: var(--gap);
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 5;
   width: calc(var(--width-sidebar) - (var(--gap) * 2));
   height: 200px;
   border-radius: var(--border-radius);
   background-color: var(--secondary-dark);
-  justify-items: center;
-  align-items: center;
-  padding-top: 6%; // This could be done better, we should use flex to center the text
 
   .overlay-text {
     z-index: 3;
     pointer-events: none;
     text-align: center;
-    margin-top: 2%;
     font-size: var(--text-size);
     color: var(--text-color);
   }

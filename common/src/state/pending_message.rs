@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, ffi::OsStr, path::PathBuf};
 
 use uuid::Uuid;
 use warp::{constellation::Progression, crypto::DID, raygun::Location};
@@ -29,27 +29,15 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| match p {
-                    Location::Disk { path } => {
-                        if let Some(name) = path
-                            .file_name()
-                            .map(|ostr| ostr.to_str().unwrap_or_default())
-                        {
-                            return name.to_string();
-                        }
-                        String::new()
-                    }
-                    Location::Constellation { path } => {
-                        if let Some(name) = PathBuf::from(path)
-                            .file_name()
-                            .map(|ostr| ostr.to_str().unwrap_or_default())
-                        {
-                            return name.to_string();
-                        }
-                        String::new()
-                    }
+                .filter_map(|p| {
+                    let path = match p {
+                        Location::Disk { path } => path.clone(),
+                        Location::Constellation { path } => PathBuf::from(path),
+                    };
+
+                    path.file_name().and_then(OsStr::to_str).map(str::to_string)
                 })
-                .collect(),
+                .collect::<Vec<_>>(),
             attachments_progress: HashMap::new(),
             message,
         }
