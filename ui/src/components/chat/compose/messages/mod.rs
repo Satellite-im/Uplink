@@ -9,6 +9,7 @@ use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
 mod effects;
+pub mod scripts;
 
 use kit::components::{
     context_menu::{ContextItem, ContextMenu},
@@ -45,39 +46,6 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup, utils::format_timestamp::format_timestamp_timeago,
 };
-
-const SETUP_CONTEXT_PARENT: &str = r#"
-    const right_clickable = document.getElementsByClassName("has-context-handler")
-    console.log("E", right_clickable)
-    for (var i = 0; i < right_clickable.length; i++) {
-        //Disable default right click actions (opening the inspect element dropdown)
-        right_clickable.item(i).addEventListener("contextmenu",
-        function (ev) {
-        ev.preventDefault()
-        })
-    }
-"#;
-
-pub const SCROLL_TO: &str = r#"
-    const chat = document.getElementById("messages")
-    chat.scrollTo(0, $VALUE)
-"#;
-
-pub const SCROLL_UNREAD: &str = r#"
-    const chat = document.getElementById("messages")
-    const child = chat.children[chat.childElementCount - $UNREADS]
-    chat.scrollTop = chat.scrollHeight
-    child.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-pub const SCROLL_BOTTOM: &str = r#"
-    const chat = document.getElementById("messages")
-    const lastChild = chat.lastElementChild
-    chat.scrollTop = chat.scrollHeight
-    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
 
 #[allow(clippy::large_enum_variant)]
 pub enum MessagesCommand {
@@ -221,7 +189,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 let update = cx.schedule_update_any();
                 to_owned![eval, update, state, active_chat];
                 async move {
-                    if let Ok(val) = eval(READ_SCROLL) {
+                    if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             if let Some(uuid) = active_chat.read().as_ref() {
                                 state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());

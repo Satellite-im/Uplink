@@ -1,11 +1,10 @@
-
+use crate::utils;
 use common::state::State;
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, UseRef, UseSharedState};
 use uuid::Uuid;
-use crate::utils;
 
-use crate::components::chat::compose::messages::{
+use crate::components::chat::compose::messages::scripts::{
     SCROLL_BOTTOM, SCROLL_TO, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
 };
 
