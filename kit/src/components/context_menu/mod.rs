@@ -115,7 +115,6 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
                     })
                 }
             }
-            
         ))
     }
 }
