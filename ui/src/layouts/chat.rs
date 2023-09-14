@@ -5,7 +5,7 @@ use crate::{
     layouts::slimbar::SlimbarLayout,
     utils::{
         get_drag_event,
-        verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
+        verify_valid_paths::{decoded_pathbufs, verify_paths},
     },
 };
 
@@ -154,32 +154,26 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event::get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
-                    if paths.len() > 1 {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
+                    let feedback_script = &FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            paths.len(),
+                            if paths.len() > 1 {
                                 get_local_text("files.files-to-upload")
-                            ),
-                        ));
-                    } else {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
+                            } else {
                                 get_local_text("files.one-file-to-upload")
-                            ),
-                        ));
-                    }
+                            }
+                        ),
+                    );
+                    script.push_str(feedback_script);
                     let _ = eval(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
                     let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
