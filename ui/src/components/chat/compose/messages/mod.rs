@@ -100,26 +100,28 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    effects::update_chat_messages(cx, state, newely_fetched_messages);
-
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
     let max_to_take = use_ref(cx, || data.active_chat.messages.len());
+
+    let active_chat = use_ref(cx, || None);
+    let eval = use_eval(cx);
+
     if *max_to_take.read() != data.active_chat.messages.len() {
         *max_to_take.write_silent() = data.active_chat.messages.len();
     }
 
-    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
-    // to the bottom when the user selects the active chat
-    // also must reset num_to_take when the active_chat changes
-    let active_chat = use_ref(cx, || None);
-    let eval = use_eval(cx);
     let currently_active = Some(data.active_chat.id);
 
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
     }
 
+    effects::update_chat_messages(cx, state, newely_fetched_messages);
+
+    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
+    // to the bottom when the user selects the active chat
+    // also must reset num_to_take when the active_chat changes
     effects::check_message_scroll(
         cx,
         &data.active_chat.scroll_to,
