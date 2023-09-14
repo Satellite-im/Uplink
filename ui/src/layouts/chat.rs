@@ -182,7 +182,7 @@ async fn drag_and_drop_function(
                 if verify_if_are_valid_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
-                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
+                    let mut script = OVERLAY_SCRIPT.replace("$sIS_DRAGGING", "false");
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
                     let _ = eval(&script);
