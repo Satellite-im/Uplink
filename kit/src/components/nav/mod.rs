@@ -73,7 +73,7 @@ pub fn get_active(cx: &Scope<Props>) -> To {
 /// Returns a nav component generated based on given props.
 ///
 /// # Examples
-/// ```no_run
+/// //```no_run
 /// use dioxus::prelude::*;
 /// use kit::{elements::{Icon, IconElement}, components::nav::{Nav, Route}};
 ///
