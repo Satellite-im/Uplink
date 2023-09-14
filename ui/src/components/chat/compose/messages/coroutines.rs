@@ -15,11 +15,11 @@ use super::{get_messagesProps, DownloadTracker, MessagesCommand, NewelyFetchedMe
 pub fn handle_warp_commands<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
     state: &UseSharedState<State>,
-    newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
+    newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
-    let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, newely_fetched_messages, pending_downloads];
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
+        to_owned![state, newly_fetched_messages, pending_downloads];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -153,7 +153,7 @@ pub fn handle_warp_commands<'a>(
 
                         match rx.await.expect("command canceled") {
                             Ok((messages, has_more)) => {
-                                newely_fetched_messages.set(Some(NewelyFetchedMessages {
+                                newly_fetched_messages.set(Some(NewelyFetchedMessages {
                                     conversation_id: conv_id,
                                     messages,
                                     has_more,
@@ -190,5 +190,5 @@ pub fn handle_warp_commands<'a>(
             }
         }
     });
-    _ch.clone()
+    ch.clone()
 }
