@@ -349,7 +349,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     })
                 },
             if storage_controller.read().files_list.is_empty()
-                && storage_controller.read().directories_list.is_empty() 
+                && storage_controller.read().directories_list.is_empty()
                 && !storage_controller.read().add_new_folder {
                     rsx!(
                         div {
