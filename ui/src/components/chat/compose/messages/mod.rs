@@ -9,7 +9,6 @@ use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
 mod effects;
-use futures::StreamExt;
 
 use kit::components::{
     context_menu::{ContextItem, ContextMenu},
@@ -20,6 +19,7 @@ use kit::components::{
     user_image::UserImage,
 };
 
+use common::state::{Action, Identity, State};
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
@@ -30,11 +30,6 @@ use common::{
     },
     warp_runner::ui_adapter::{self},
 };
-use common::{
-    state::{Action, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
-};
 
 use common::language::get_local_text;
 use rfd::FileDialog;
@@ -44,7 +39,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, PinState, ReactionState},
+    raygun::{self},
 };
 
 use crate::{

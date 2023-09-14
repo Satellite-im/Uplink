@@ -1,10 +1,9 @@
-use std::rc::Rc;
 
 use common::state::State;
-use dioxus::prelude::{EvalError, UseEval};
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, UseRef, UseSharedState};
 use uuid::Uuid;
+use crate::utils;
 
 use crate::components::chat::compose::messages::{
     SCROLL_BOTTOM, SCROLL_TO, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
@@ -16,7 +15,7 @@ pub fn check_message_scroll<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
     scroll_to: &Option<Uuid>,
     state: &UseSharedState<State>,
-    eval: &Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>,
+    eval: &utils::EvalProvider,
     currently_active: &Option<Uuid>,
 ) {
     use_effect(cx, scroll_to, |_| {
@@ -38,7 +37,7 @@ pub fn check_message_scroll<'a>(
 pub fn scroll_to_bottom<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
     scroll: Option<i64>,
-    eval: &Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>,
+    eval: &utils::EvalProvider,
     unreads: u32,
     active_chat_id: Uuid,
     prev_chat_id: &UseRef<Uuid>,
