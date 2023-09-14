@@ -13,7 +13,7 @@ pub mod storage;
 pub mod ui;
 pub mod utils;
 
-use crate::language::change_language;
+use crate::language::{change_language, get_local_text_with_args};
 use crate::notifications::NotificationAction;
 use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
@@ -352,7 +352,10 @@ impl State {
                 if !self.ui.metadata.focused && notifications_enabled {
                     crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
-                        format!("{} sent a request.", identity.username()),
+                        get_local_text_with_args(
+                            "friends.new-request-name",
+                            vec![("name", identity.username().into())],
+                        ),
                         Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
                         NotificationAction::FriendListPending,
@@ -453,10 +456,9 @@ impl State {
                         None
                     };
                     let text = match id {
-                        Some(id) => format!(
-                            "{} {}",
-                            id.username(),
-                            get_local_text("messages.user-sent-message"),
+                        Some(id) => get_local_text_with_args(
+                            "messages.user-sent-message",
+                            vec![("user", id.username().into())],
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
