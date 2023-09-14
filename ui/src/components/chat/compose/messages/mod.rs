@@ -176,7 +176,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             };
             if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
                 let _ = eval(
-                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
+                    &include_str!("../../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
                 );
             }
         }
@@ -446,7 +446,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../show_context.js")
+                            let script = include_str!("../../show_context.js")
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -469,7 +469,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../show_context.js")
+                            let script = include_str!("../../show_context.js")
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
