@@ -18,7 +18,7 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::Location};
+use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UplinkRoute;
 
@@ -206,7 +206,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         let cmd = RayGunCmd::SendMessage {
                             conv_id: c,
                             msg,
-                            location: Location::Disk,
                             attachments: Vec::new(),
                             ui_msg_id: uuid,
                             rsp: tx,

@@ -30,7 +30,11 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun};
+use warp::{
+    crypto::DID,
+    logging::tracing::log,
+    raygun::{self, Location},
+};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 const SCROLL_BTN_THRESHOLD: i64 = -1000;
@@ -160,7 +164,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     None => RayGunCmd::SendMessage {
                         conv_id,
                         msg,
-                        location: raygun::Location::Disk,
                         attachments,
                         ui_msg_id,
                         rsp: tx,
@@ -177,10 +180,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 let attachment_files: Vec<String> = attachments
                     .iter()
                     .map(|p| {
-                        p.file_name()
-                            .map(|os| os.to_str().unwrap_or_default())
-                            .unwrap_or_default()
-                            .to_string()
+                        let pathbuf = match p {
+                            Location::Disk { path } => path.clone(),
+                            Location::Constellation { path } => PathBuf::from(path),
+                        };
+                        pathbuf
+                            .file_name()
+                            .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
                     })
                     .collect();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
@@ -581,18 +587,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 return;
                             }
                             if let Some(new_files) = FileDialog::new()
-                                .set_directory(dirs::home_dir().unwrap_or_default())
-                                .pick_files()
-                            {
-                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                    .unwrap_or_default()
-                                    .iter()
-                                    .filter(|file_name| !new_files.contains(file_name))
-                                    .cloned()
-                                    .collect();
-                                new_files_to_upload.extend(new_files);
-                                state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                                update_send();
+                            .set_directory(dirs::home_dir().unwrap_or_default())
+                            .pick_files()
+                        {
+                            let new_files: Vec<Location> = new_files.iter()
+                            .map(|path| Location::Disk { path: path.clone() })
+                            .collect();
+                            let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                            .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
+                            current_files.extend(new_files);
+                            state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
+                            update_send();
                             }
                         },
                     }
@@ -605,8 +610,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 div {
                                     class: "modal-div-files-layout",
                                     FilesLayout {
-                                        send_files_to_chat_mode: show_storage_modal.clone(),
-                                        chat_id: chat_id,
+                                        storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
+                                        on_files_attached: move |files_location: Vec<Location>| {
+                                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                            .unwrap_or_default()
+                                            .iter()
+                                            .filter(|file_location| {
+                                                !files_location.contains(file_location)
+                                            })
+                                            .cloned()
+                                            .collect();
+                                            new_files_to_upload.extend(files_location);
+                                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                                            update_send();
+                                        },
                                     }
                                 }
                             }
@@ -625,6 +642,28 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     ));
 
     cx.render(rsx!(
+        if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
+            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                on_paste: move |files_local_path: Vec<PathBuf>| {
+                    if !files_local_path.is_empty() {
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, current_files));
+                    }
+                }})}
         div {
             class: "chatbar-container",
             with_scroll_btn.then(|| {
@@ -643,10 +682,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                 .unwrap_or_default()
                                 .iter()
-                                .filter(|file_name| !files_local_path.contains(file_name))
+                                .filter(|file_location| {
+                                    match file_location {
+                                        Location::Disk { path } => {
+                                            !files_local_path.contains(path)
+                                        },
+                                        Location::Constellation { .. } => {
+                                            true
+                                        }
+                                    }
+                                })
                                 .cloned()
                                 .collect();
-                        new_files_to_upload.extend(files_local_path);
+                            let local_disk_files: Vec<Location> = files_local_path
+                                .iter()
+                                .map(|path| Location::Disk { path: path.clone() })
+                                .collect();
+                        new_files_to_upload.extend(local_disk_files);
                         state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                         }
                     },
@@ -660,7 +712,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             }
             chatbar
         }
-    ))
+))
 }
 
 #[derive(Props)]
@@ -680,11 +732,23 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default()
         .iter()
-        .map(|file_path| {
-            let filename = file_path.to_string_lossy().to_string();
+        .map(|location| {
+            let file_path = match location {
+                Location::Constellation { path } => PathBuf::from(path),
+                Location::Disk { path } => path.clone(),
+            };
+            let filename = file_path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+
             rsx!(FileEmbed {
-                filename: file_path.to_string_lossy().to_string(),
-                filepath: file_path.clone(),
+                filename: filename.clone(),
+                filepath: match location {
+                    Location::Constellation { path } => PathBuf::from(&path),
+                    Location::Disk { path } => path.clone(),
+                },
                 remote: false,
                 button_icon: icons::outline::Shape::Minus,
                 on_press: move |_| {
@@ -693,9 +757,13 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         .get_active_chat()
                         .map(|f| f.files_attached_to_send)
                         .unwrap_or_default();
+
                     attachments.retain(|x| {
-                        let s = x.to_string_lossy().to_string();
-                        s != filename
+                        let path = match x {
+                            Location::Constellation { path } => PathBuf::from(path),
+                            Location::Disk { path } => path.clone(),
+                        };
+                        path.file_name().unwrap_or_default().to_string_lossy() != filename
                     });
                     state
                         .write()

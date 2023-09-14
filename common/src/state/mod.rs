@@ -29,7 +29,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use warp::blink::BlinkEventKind;
 use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
-use warp::raygun::{ConversationType, Reaction};
+use warp::raygun::{ConversationType, Location, Reaction};
 
 use crate::STATIC_ARGS;
 
@@ -42,7 +42,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
-use std::path::PathBuf;
+
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
@@ -1150,7 +1150,7 @@ impl State {
     pub fn increment_outgoing_messages(
         &mut self,
         msg: Vec<String>,
-        attachments: &[PathBuf],
+        attachments: &[Location],
     ) -> Option<Uuid> {
         let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
@@ -1193,7 +1193,7 @@ impl State {
         }
     }
 
-    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<Location>) {
         if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.files_attached_to_send = value;
         }

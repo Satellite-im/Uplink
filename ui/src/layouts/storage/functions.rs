@@ -4,7 +4,7 @@ use common::{
     language::{get_local_text, get_local_text_with_args},
     state::{storage::Storage, Action, State, ToastNotification},
     upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
-    warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
+    warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
 };
 use dioxus_core::{ScopeState, Scoped};
@@ -17,7 +17,6 @@ use dioxus_hooks::{
 use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
-use warp::raygun::Location;
 
 use crate::components::files::upload_progress_bar;
 
@@ -303,38 +302,6 @@ pub fn init_coroutine<'a>(
                             }
                             Err(e) => {
                                 log::error!("failed to delete items {}, item {:?}", e, item.name());
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::SendFileToChat {
-                        files_path,
-                        conversation_id,
-                    } => {
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessage {
-                            conv_id: conversation_id,
-                            msg: vec![],
-                            location: Location::Constellation,
-                            attachments: files_path,
-                            ui_msg_id: None,
-                            rsp: tx,
-                        })) {
-                            log::error!(
-                                "failed to send file(s) from storage to chat. Error: {:?}",
-                                e
-                            );
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(_) => {
-                                // controller.with_mut(|i| i.storage_state = Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to send file(s) to chat. Error: {:?}", e);
                                 continue;
                             }
                         }
