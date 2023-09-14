@@ -81,6 +81,9 @@ pub struct NewelyFetchedMessages {
     has_more: bool,
 }
 
+// todo: make a scripts file for this stuff
+const SHOW_CONTEXT_SCRIPT: &str = include_str!("../../show_context.js");
+
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
 /// tell group_messages to flag the first X messages.
@@ -208,7 +211,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../../show_context.js")
+                            let script = SHOW_CONTEXT_SCRIPT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -218,20 +221,16 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                     },
                     render_pending_messages_listener {
                         data: data,
-                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                        on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
-                                let id = if own {
-                                    let mut id = id;
+                                if own {
                                     id.set_identity_status(IdentityStatus::Online);
-                                    id
-                                } else {
-                                    id
-                                };
+                                }
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../../show_context.js")
+                            let script = SHOW_CONTEXT_SCRIPT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -535,7 +534,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                                 3,
                             )));
                         } else {
-                            ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                            ch.send(MessagesCommand::Pin(message.inner.clone()));
                         }
                     }
                 },
