@@ -23,6 +23,8 @@ pub struct ItemProps<'a> {
     aria_label: Option<String>,
     #[props(optional)]
     children: Option<Element<'a>>,
+    #[props(optional)]
+    tooltip: Option<Element<'a>>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -50,29 +52,70 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
+    let tooltip_visible = use_state(cx, || false);
+
     if let Some(children) = &cx.props.children {
-        cx.render(rsx!(div {
-            class: "context-item simple-context-item",
-            children
-        }))
-    } else {
         cx.render(rsx!(
-            button {
-                class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
-                aria_label: "{aria_label}",
-                onclick: move |e| {
-                    if !disabled {
-                        emit(&cx, e);
+            div {
+                onmouseenter: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(true);
                     }
                 },
-                (cx.props.icon.is_some()).then(|| {
-                    let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
-                    rsx! {
-                        icons::Icon { icon: icon }
+                onmouseleave: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(false);
                     }
-                }),
-                div {"{cx.props.text}"}
+                },
+                class: "context-item simple-context-item",
+                if *tooltip_visible.current() {
+                    cx.props.tooltip.as_ref().map(|tooltip| {
+                        rsx!(
+                           tooltip
+                        )
+                    })
+                }
+                children
             }
+        ))
+    } else {
+        cx.render(rsx!(
+            div {
+                onmouseenter: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(true);
+                    }
+                },
+                onmouseleave: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(false);
+                    }
+                },
+                button {
+                    class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
+                    aria_label: "{aria_label}",
+                    onclick: move |e| {
+                        if !disabled {
+                            emit(&cx, e);
+                        }
+                    },
+                    (cx.props.icon.is_some()).then(|| {
+                        let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
+                        rsx! {
+                            icons::Icon { icon: icon }
+                        }
+                    }),
+                    div {"{cx.props.text}"},
+                }
+                if *tooltip_visible.current() {
+                    cx.props.tooltip.as_ref().map(|tooltip| {
+                        rsx!(
+                           tooltip
+                        )
+                    })
+                }
+            }
+            
         ))
     }
 }
