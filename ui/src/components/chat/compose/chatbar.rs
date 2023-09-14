@@ -656,7 +656,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         .iter()
                         .map(|path| Location::Disk { path: path.clone() })
                         .collect();
-                
                     let mut current_files: Vec<_> = state
                         .read()
                         .get_active_chat()
@@ -665,7 +664,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         .drain(..)
                         .filter(|x| !new_files.contains(x))
                         .collect();
-                        current_files.extend(new_files);    
+                        current_files.extend(new_files);
                     state
                         .write()
                         .mutate(Action::SetChatAttachments(chat_id, current_files));
