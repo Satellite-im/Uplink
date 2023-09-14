@@ -100,20 +100,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    if let Some(NewelyFetchedMessages {
-        conversation_id,
-        messages,
-        has_more,
-    }) = newely_fetched_messages.write_silent().take()
-    {
-        state
-            .write()
-            .update_chat_messages(conversation_id, messages);
-        if !has_more {
-            log::debug!("finished loading chat: {conversation_id}");
-            state.write().finished_loading_chat(conversation_id);
-        }
-    }
+    effects::update_chat_messages(cx, state, newely_fetched_messages);
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
@@ -179,8 +166,6 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             }
         )
     };
-
-    let eval = use_eval(cx);
 
     cx.render(rsx!(
         div {

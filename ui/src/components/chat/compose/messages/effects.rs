@@ -8,7 +8,33 @@ use crate::components::chat::compose::messages::scripts::{
     SCROLL_BOTTOM, SCROLL_TO, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
 };
 
-use super::get_messagesProps;
+use super::{get_messagesProps, NewelyFetchedMessages};
+
+pub fn update_chat_messages<'a>(
+    cx: &'a Scoped<'a, get_messagesProps>,
+    state: &UseSharedState<State>,
+    newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
+) {
+    use_effect(cx, (), |_| {
+        to_owned![state, newely_fetched_messages];
+        async move {
+            if let Some(NewelyFetchedMessages {
+                conversation_id,
+                messages,
+                has_more,
+            }) = newely_fetched_messages.write_silent().take()
+            {
+                state
+                    .write()
+                    .update_chat_messages(conversation_id, messages);
+                if !has_more {
+                    log::debug!("finished loading chat: {conversation_id}");
+                    state.write().finished_loading_chat(conversation_id);
+                }
+            }
+        }
+    });
+}
 
 pub fn check_message_scroll<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
