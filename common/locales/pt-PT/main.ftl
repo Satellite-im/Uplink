@@ -348,7 +348,7 @@ auth = Criar conta
     .enter-username = Introduzir nome de utilizador
 
 sidebar = Barra lateral 
-    .subtext =  { $user } enviou vários anexos
+    .subtext = { $user } enviou vários anexos
     .chat-new = Ainda não foram enviadas mensagens, envie uma!
 
 quickprofile = Perfil rápido
