@@ -5,7 +5,7 @@
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
@@ -666,15 +666,13 @@ fn get_update_icon(cx: Scope) -> Element {
         None => return cx.render(rsx!("")),
     };
 
-    let update_msg = format!(
-        "{}: {}",
-        get_local_text("uplink.update-available"),
-        new_version,
+    let update_msg = get_local_text_with_args(
+        "uplink.update-available",
+        vec![("version", new_version.into())],
     );
-    let downloading_msg = format!(
-        "{}: {}%",
-        get_local_text("uplink.update-downloading"),
-        download_state.read().progress as u32
+    let downloading_msg = get_local_text_with_args(
+        "uplink.update-downloading",
+        vec![("progress", (download_state.read().progress as u32).into())],
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
