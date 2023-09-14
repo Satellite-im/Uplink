@@ -116,7 +116,7 @@ async fn drop_and_attach_files(
     drag_event: &UseRef<Option<FileDropEvent>>,
     state: UseSharedState<State>,
 ) {
-    let new_files = drag_and_drop_function(eval, &window, &drag_event).await;
+    let new_files = drag_and_drop_function(eval, window, drag_event).await;
     let new_files: Vec<Location> = new_files
         .iter()
         .map(|path| Location::Disk { path: path.clone() })
