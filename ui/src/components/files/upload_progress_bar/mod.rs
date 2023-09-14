@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
@@ -227,13 +227,12 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
 fn count_files_to_show(files_to_upload_len: usize) -> String {
     if files_to_upload_len > 1 {
-        format!(
-            "{} {}!",
-            files_to_upload_len,
-            get_local_text("files.files-to-upload")
+        get_local_text_with_args(
+            "files.files-to-upload",
+            vec![("num", files_to_upload_len.into())],
         )
     } else {
-        format!("{} {}!", 1, get_local_text("files.one-file-to-upload"))
+        get_local_text_with_args("files.one-file-to-upload", vec![("num", 1.into())])
     }
 }
 
