@@ -108,7 +108,6 @@ fn wrap_links_with_a_tags(text: &str) -> String {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //  log::trace!("render Message");
-    let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
@@ -163,15 +162,14 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
-    // if markdown support is enabled, we will create it, otherwise we will just pass text.
-    let mut formatted_text = if cx.props.parse_markdown {
-        markdown(&text)
-    } else {
-        text
-    };
-
-    formatted_text = wrap_links_with_a_tags(&formatted_text);
-    let formatted_text_clone = formatted_text.clone();
+    let loading_class = loading.then_some("loading").unwrap_or_default();
+    let remote_class = is_remote.then_some("remote").unwrap_or_default();
+    let order_class = order.to_string();
+    let msg_pending_class = cx
+        .props
+        .pending
+        .then_some("message-pending")
+        .unwrap_or_default();
 
     cx.render(rsx! (
         cx.props.pinned.then(|| {
@@ -194,18 +192,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: {
                 format_args!(
                     "message {} {} {} {}",
-                    if loading {
-                        "loading"
-                    } else { "" },
-                    if is_remote {
-                        "remote"
-                    } else { "" },
-                    if cx.props.order.is_some() {
-                        order.to_string()
-                    } else { "".into() },
-                    if cx.props.pending {
-                        "message-pending"
-                    } else { "" }
+                   loading_class, remote_class, order_class, msg_pending_class
                 )
             },
             aria_label: {
@@ -234,7 +221,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx! (
                             EditMsg {
                                 id: cx.props.id.clone(),
-                                text: formatted_text,
+                                text: cx.props.with_text.clone().unwrap_or_default(),
                                 on_enter: move |update| {
                                     cx.props.on_edit.call(update);
                                 }
@@ -245,9 +232,10 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: formatted_text_clone,
+                    text: cx.props.with_text.clone().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
+                    markdown: cx.props.parse_markdown,
                 }
             )),
             has_attachments.then(|| {
@@ -305,85 +293,19 @@ struct EditProps<'a> {
     on_enter: EventHandler<'a, String>,
 }
 
-fn replace_tags(s: &str) -> String {
-    let mut result = String::new();
-    let mut inside_strong = false;
-    let mut inside_em = false;
-
-    let mut chars = s.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '_' {
-            if let Some(&next) = chars.peek() {
-                if next == '_' {
-                    if inside_strong {
-                        result.push_str("</strong>");
-                    } else {
-                        result.push_str("<strong>");
-                    }
-                    inside_strong = !inside_strong;
-                    chars.next(); // Consume the second underscore
-                } else {
-                    result.push(c);
-                }
-            } else {
-                result.push(c);
-            }
-        } else if c == '*' {
-            if let Some(&next) = chars.peek() {
-                if next == '*' {
-                    if inside_em {
-                        result.push_str("</em>");
-                    } else {
-                        result.push_str("<em>");
-                    }
-                    inside_em = !inside_em;
-                    chars.next(); // Consume the second asterisk
-                } else {
-                    result.push(c);
-                }
-            } else {
-                result.push(c);
-            }
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
-}
-
-fn restore_tags(s: &str) -> String {
-    s.replace("<strong>", "__")
-        .replace("</strong>", "__")
-        .replace("<em>", "*")
-        .replace("</em>", "*")
-}
-
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
-    let mut input = cx.props.text.clone();
-    let length = input.len();
-    if input.ends_with('\n') {
-        input.truncate(length - 1);
-    }
-    if input.starts_with("<p>") {
-        if let Some(remainder) = input.strip_prefix("<p>") {
-            input = remainder.to_string();
-        }
-    }
-    input = restore_tags(&input);
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
         aria_label: "edit-message-input".into(),
         ignore_focus: false,
-        value: input,
+        value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
-                let new_replacement = replace_tags(&s);
-                cx.props.on_enter.call(new_replacement);
+                cx.props.on_enter.call(s);
             } else {
                 cx.props.on_enter.call(cx.props.text.clone());
             }
@@ -396,19 +318,27 @@ pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
+    markdown: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    let mut formatted_text = if cx.props.markdown {
+        markdown(&cx.props.text)
+    } else {
+        cx.props.text.clone()
+    };
+    formatted_text = wrap_links_with_a_tags(&formatted_text);
+
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
-        .spans(&cx.props.text)
+        .spans(&formatted_text)
         .filter(|e| matches!(e.kind(), Some(LinkKind::Url)))
         .map(|e| e.as_str().to_string())
         .collect();
 
     // this is broken. may be fixed later.
-    let _texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
+    let _texts = finder.spans(&formatted_text).map(|e| match e.kind() {
         Some(LinkKind::Url) => {
             rsx!(
                 a {
@@ -420,26 +350,19 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    // not really
-    let dangerous_text = cx.props.text.clone();
+    let text_type_class = if cx.props.pending {
+        "pending-text"
+    } else {
+        "text"
+    };
 
     cx.render(rsx!(
         div {
-            class: format_args!(
-                "{}",
-                if cx.props.pending {
-                    "pending-text"
-                } else { "text" }
-            ),
+            class: text_type_class,
             p {
-                class: format_args!(
-                    "{}",
-                    if cx.props.pending {
-                        "pending-text"
-                    } else { "text" }
-                ),
+                class: text_type_class,
                 aria_label: "message-text",
-                dangerous_inner_html: "{dangerous_text}",
+                dangerous_inner_html: "{formatted_text}",
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
