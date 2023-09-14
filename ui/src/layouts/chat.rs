@@ -16,6 +16,7 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
 use uuid::Uuid;
+use warp::raygun::Location;
 
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
@@ -115,17 +116,27 @@ async fn drop_and_attach_files(
     drag_event: &UseRef<Option<FileDropEvent>>,
     state: UseSharedState<State>,
 ) {
-    let new_files = drag_and_drop_function(eval.clone(), window, drag_event).await;
+    let new_files = drag_and_drop_function(eval, &window, &drag_event).await;
     let mut new_files_to_upload: Vec<_> = state
         .read()
         .get_active_chat()
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default()
         .iter()
-        .filter(|file_name| !new_files.contains(file_name))
+        .filter(|file_location| {
+            if let Location::Disk { path } = file_location {
+                !new_files.contains(path)
+            } else {
+                false
+            }
+        })
         .cloned()
         .collect();
-    new_files_to_upload.extend(new_files);
+    let local_disk_files: Vec<Location> = new_files
+        .iter()
+        .map(|path| Location::Disk { path: path.clone() })
+        .collect();
+    new_files_to_upload.extend(local_disk_files);
     let chat_uuid = state
         .read()
         .get_active_chat()
