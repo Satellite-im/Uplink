@@ -177,6 +177,7 @@ files = Files
     .attach-files-from-local-disk = Add File
     .attach-files-from-storage = Browse Files
     .upload-in-progress-please-wait = Upload in progress. Please wait.
+    .no-files-available = No files available.
 
 settings = Settings
     .settings = Settings

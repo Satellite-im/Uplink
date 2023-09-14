@@ -17,6 +17,7 @@ use common::ROOT_DIR_NAME;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
+use kit::elements::label::Label;
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
     elements::{
@@ -347,7 +348,19 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     })
                 },
-                span {
+            if storage_controller.read().files_list.is_empty()
+                && storage_controller.read().directories_list.is_empty() 
+                && !storage_controller.read().add_new_folder {
+                    rsx!(
+                        div {
+                            padding: "48px",
+                            Label {
+                                text: get_local_text("files.no-files-available"),
+                            }
+                        }
+                        )
+               } else {
+                rsx!(span {
                     class: "file-parent",
                     div {
                         id: "files-list",
@@ -574,7 +587,8 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }),
                     },
-                },
+                })
+               }
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
                         active: crate::UplinkRoute::FilesLayout{},
