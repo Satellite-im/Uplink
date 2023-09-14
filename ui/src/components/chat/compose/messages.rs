@@ -21,7 +21,7 @@ use kit::components::{
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
-    language::get_local_text_args_builder,
+    language::get_local_text_with_args,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
         scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
@@ -606,9 +606,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 div {
                     class: "blocked-container",
                     p {
-                        get_local_text_args_builder("messages.blocked", |m| {
-                        m.insert("amount", messages.len().into());
-                        })
+                        get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
                     },
                     p {
                         style: "white-space: pre",
@@ -628,9 +626,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             div {
                 class: "blocked-container",
                 p {
-                    get_local_text_args_builder("messages.blocked", |m| {
-                    m.insert("amount", messages.len().into());
-                    })
+                    get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
                 },
                 p {
                     style: "white-space: pre",

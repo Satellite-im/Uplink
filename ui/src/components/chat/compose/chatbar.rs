@@ -5,7 +5,7 @@ use std::{
 
 use common::{
     icons::{self},
-    language::{get_local_text, get_local_text_args_builder},
+    language::{get_local_text, get_local_text_with_args},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
@@ -619,13 +619,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                format!(
-                    "{} {} {} {}.",
-                    get_local_text("warning-messages.maximum-of"),
-                    MAX_CHARS_LIMIT,
-                    get_local_text("uplink.characters"),
-                    get_local_text("uplink.reached")
-                )
+                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT.into())])
             }
         ))
     ));
@@ -734,9 +728,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         margin_top: "var(--gap)",
                         margin_bottom: "var(--gap)",
                         color: "var(--warning-light)",
-                        get_local_text_args_builder("messages.maximum-amount-files-per-message", |m| {
-                            m.insert("amount", MAX_FILES_PER_MESSAGE.into());
-                        })
+                        get_local_text_with_args("messages.maximum-amount-files-per-message", vec![("amount", MAX_FILES_PER_MESSAGE.into())])
                     })
                 }
             attachments

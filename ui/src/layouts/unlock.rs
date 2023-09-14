@@ -2,7 +2,7 @@ use std::fs;
 
 use common::{
     get_images_dir,
-    language::{get_local_text, get_local_text_args_builder},
+    language::{get_local_text, get_local_text_with_args},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
     STATIC_ARGS,
@@ -332,7 +332,5 @@ fn get_welcome_message(state: &State) -> String {
         None => String::from("UNKNOWN"),
     };
 
-    get_local_text_args_builder("unlock.welcome", |m| {
-        m.insert("name", name.into());
-    })
+    get_local_text_with_args("unlock.welcome", vec![("name", name.into())])
 }

@@ -29,6 +29,7 @@ use crate::components::{
 
 use common::{
     icons::outline::Shape as Icon,
+    language::get_local_text_with_args,
     state::call,
     warp_runner::{BlinkCmd, RayGunCmd, WarpCmd},
 };
@@ -626,10 +627,9 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let active_participant = data.my_id.clone();
     let mut all_participants = data.other_participants.clone();
     all_participants.push(active_participant);
-    let members_count = format!(
-        "{} ({})",
-        get_local_text("uplink.members"),
-        all_participants.len()
+    let members_count = get_local_text_with_args(
+        "uplink.members-count",
+        vec![("num", all_participants.len().into())],
     );
 
     let conv_id = data.active_chat.id;
@@ -739,19 +739,24 @@ async fn drag_and_drop_function(
                     if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.files-to-upload")
+                            &get_local_text_with_args(
+                                "files.files-to-upload",
+                                vec![("num", paths.len().into())],
                             ),
                         ));
                     } else {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.one-file-to-upload")
+                            &get_local_text_with_args(
+                                "files.one-file-to-upload-name",
+                                vec![(
+                                        "file",
+                                        paths[0]
+                                            .file_name()
+                                            .map(|p| p.to_string_lossy())
+                                            .unwrap()
+                                            .into(),
+                                    )],
                             ),
                         ));
                     }
