@@ -50,10 +50,11 @@ pub fn send_files_from_chat_topbar<'a>(
                 Button {
                     text: "Go to Files".into(),
                     icon: Icon::FolderPlus,
+                    disabled: true,
                     aria_label: "go_to_files_btn".into(),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        // TODO:
+                        // TODO: Add navigation to FilesLayout 
                     },
                 },
                 Button {
