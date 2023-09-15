@@ -110,7 +110,12 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let share_files_from_storage_mode = use_state(cx, || false);
     let select_chats_to_send_files_mode =  match cx.props.select_chats_to_send_files_mode.as_ref() {
-        Some(d) => d,
+        Some(d) => {
+            if *d.get() {
+                storage_controller.write_silent().files_selected_to_send = Vec::new();
+            }
+            d
+        },
         None => use_state(cx, || false),
     };
     let show_modal_to_select_chats_to_send_files = use_state(cx, || false);
