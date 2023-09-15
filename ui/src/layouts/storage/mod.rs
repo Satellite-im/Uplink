@@ -408,13 +408,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     height: "80px",
                                     padding: "16px",
                                     display: "inline-flex",
-                                    onclick: move |_| {
-                                        if is_checked {
-                                            storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                        } else {
-                                            storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                        }
-                                    },
                                     Checkbox {
                                         disabled: false,
                                         width: "1em".into(),
@@ -449,7 +442,12 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             )}
                                         )),
                                         with_badge: "".into(),
-                                        onpress: move |_| {                
+                                        onpress: move |_| {
+                                            if is_checked {
+                                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                            } else {
+                                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                            }           
                                         }
                                     }
                                 }
