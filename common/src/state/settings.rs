@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::language::get_id_of;
 use crate::language::US_ENGLISH;
 use serde::{Deserialize, Serialize};
+use warp::crypto::DID;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
@@ -14,6 +17,7 @@ pub struct Settings {
     pub update_dismissed: Option<String>,
     #[serde(default = "default_font_scale")]
     font_scale: f32,
+    pub user_volumes: HashMap<DID, f32>,
 }
 
 impl Default for Settings {
@@ -23,6 +27,7 @@ impl Default for Settings {
             update_dismissed: None,
             update_available: None,
             font_scale: 1.0,
+            user_volumes: HashMap::new(),
         }
     }
 }

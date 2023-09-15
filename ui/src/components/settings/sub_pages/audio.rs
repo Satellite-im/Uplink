@@ -34,15 +34,14 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
             SettingSectionSimple {
                 Range {
-                    initial_value: 100,
-                    min: 0,
-                    max: 200,
+                    initial_value: 100.0,
+                    min: 0.0,
+                    max: 200.0,
                     icon_left: Shape::Microphone,
                     icon_right: Shape::MicrophoneWave,
                     onchange: move |_| {}
                 }
             }
-
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
@@ -55,9 +54,9 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
             SettingSectionSimple {
                 Range {
-                    initial_value: 100,
-                    min: 0,
-                    max: 200,
+                    initial_value: 100.0,
+                    min: 0.0,
+                    max: 200.0,
                     icon_left: Shape::Speaker,
                     icon_right: Shape::SpeakerWave,
                     onchange: move |_| {}
