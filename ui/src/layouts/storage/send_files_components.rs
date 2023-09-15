@@ -44,12 +44,6 @@ pub fn send_files_from_chat_topbar<'a>(
     on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
     if *is_selecting_files.get() {
-        if storage_controller.read().files_list.is_empty()
-            && storage_controller.read().directories_list.is_empty()
-        {
-            return cx.render(rsx!(div {}));
-        };
-
         return cx.render(rsx! (
             div {
                 class: "send-files-button",

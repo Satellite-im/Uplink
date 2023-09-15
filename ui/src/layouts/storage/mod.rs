@@ -88,6 +88,7 @@ pub enum ChanCmd {
 #[derive(Props)]
 pub struct Props<'a> {
     storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
+    select_chats_to_send_files_mode: Option<UseState<bool>>,
     on_files_attached: Option<EventHandler<'a, (Vec<Location>, Vec<Uuid>)>>,
 }
 
@@ -95,7 +96,7 @@ pub struct Props<'a> {
 pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    // let on_files_attached = cx.props.on_files_attached.as_ref();
+    let on_files_attached = cx.props.on_files_attached.as_ref();
     let storage_files_to_chat_mode_is_active =
         match cx.props.storage_files_to_chat_mode_is_active.as_ref() {
             Some(d) => d,
@@ -108,6 +109,10 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
 
     let share_files_from_storage_mode = use_state(cx, || false);
+    let select_chats_to_send_files_mode =  match cx.props.select_chats_to_send_files_mode.as_ref() {
+        Some(d) => d,
+        None => use_state(cx, || false),
+    };
     let show_modal_to_select_chats_to_send_files = use_state(cx, || false);
 
     let _router = use_navigator(cx);
@@ -326,52 +331,55 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 if *show_modal_to_select_chats_to_send_files.get()  {
                     rsx!(
-                        Modal {
-                            open: *show_modal_to_select_chats_to_send_files.clone(),
-                            transparent: false,
-                            onclose: move |_| show_modal_to_select_chats_to_send_files.set(false),
-                            div {
-                                class: "modal-div-files-layout",
-                                FilesLayout {
-                                    storage_files_to_chat_mode_is_active: show_modal_to_select_chats_to_send_files.clone(),
-                                    on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
-                                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                                        let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-                                        let msg = vec!["".to_owned()];
-                                        let attachments = files_location.clone();
-                                        let ui_msg_id = None;
-                                        let convs_id =  convs_id.clone();
-                                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                                            convs_id,
-                                            msg,
-                                            attachments,
-                                            ui_msg_id,
-                                            rsp: tx,
-                                        })) {
-                                            log::error!("Failed to send warp command: {}", e);
-                                            return;
-                                        }
-                                        show_modal_to_select_chats_to_send_files.set(false);
-                                    },
+                        div {
+                            class: "send-files-to-several-chats-div",
+                            Modal {
+                                open: *show_modal_to_select_chats_to_send_files.clone(),
+                                transparent: false,
+                                onclose: move |_| show_modal_to_select_chats_to_send_files.set(false),
+                                div {
+                                    class: "modal-div-files-layout",
+                                    FilesLayout {
+                                        storage_files_to_chat_mode_is_active: show_modal_to_select_chats_to_send_files.clone(),
+                                        select_chats_to_send_files_mode: show_modal_to_select_chats_to_send_files.clone(),
+                                        on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
+                                            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                                            let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
+                                            let msg = vec!["".to_owned()];
+                                            let attachments = files_location.clone();
+                                            let ui_msg_id = None;
+                                            let convs_id =  convs_id.clone();
+                                            if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                                                convs_id,
+                                                msg,
+                                                attachments,
+                                                ui_msg_id,
+                                                rsp: tx,
+                                            })) {
+                                                log::error!("Failed to send warp command: {}", e);
+                                                return;
+                                            }
+                                            show_modal_to_select_chats_to_send_files.set(false);
+                                        },
+                                    }
                                 }
                             }
                         }
+                       
                     )
                 }
                 send_files_from_chat_topbar {
                     storage_controller: storage_controller.clone(),
                     is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
                     on_send: move |files_location_path| {
-                        // if let Some((f, _)) = on_files_attached {
-                        //     f.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
-                        // }
+                        if let Some(f) = on_files_attached {
+                            f.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
+                        }
                     }
                 }
-                if *storage_files_to_chat_mode_is_active.get() && *show_modal_to_select_chats_to_send_files.get()  {
+                if *storage_files_to_chat_mode_is_active.get() && *select_chats_to_send_files_mode.get()  {
                     rsx!(div {
                         id: "all_chats", 
-                        display: "inline-flex",
-                        flex_direction: "column",
                         div {
                             padding_left: "16px",
                             Label {
@@ -449,15 +457,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             )
                         }),
                     })
-                }
-                send_files_from_chat_topbar {
-                    storage_controller: storage_controller.clone(),
-                    is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
-                    on_send: move |files_location_path| {
-                        // if let Some(f) = on_files_attached {
-                        //     f.call(files_location_path);
-                        // }
-                    }
                 }
                 div {
                     id: "files-breadcrumbs",

@@ -710,7 +710,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             Attachments {
                 chat_id: chat_id,
                 files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
-                on_remove: move |_| {
+                on_remove: move |files_attached| {
+                    state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
                     update_send();
                 }
             }

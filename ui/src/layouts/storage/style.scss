@@ -63,3 +63,16 @@
       width: 60vw;
   }
 }
+
+.send-files-to-several-chats-div {
+  max-height: 90vh;
+}
+
+#all_chats {
+  display: inline-flex;
+  flex-direction: column;
+  margin-top: 16px;
+  overflow-y: scroll;
+  height: 40vh;
+  background: var(--secondary);
+}
