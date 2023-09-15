@@ -45,6 +45,7 @@ pub enum BlinkCmd {
     AdjustVolume {
         user: DID,
         volume: f32,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "GetAllMicrophones")]
     GetAllMicrophones {
