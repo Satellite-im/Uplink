@@ -44,7 +44,6 @@ uplink = Uplink
     .update-menu-install = Install
     .check-for-updates = Check for updates
     .download-update = Download Update
-    .members = Members
     .date-time-format = %d/%m/%Y %I:%M %p
 
 updates = Updates

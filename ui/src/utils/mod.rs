@@ -124,7 +124,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     user_info
 }
 
-pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
+pub fn build_user_from_identity(identity: &state::Identity) -> UserInfo {
     let platform = identity.platform().into();
     UserInfo {
         platform,

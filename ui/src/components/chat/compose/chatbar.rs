@@ -724,6 +724,6 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, 
         Some(identity) => identity,
         None => return (Platform::Desktop, Status::Offline, String::new()),
     };
-    let user_sender = build_user_from_identity(sender.clone());
+    let user_sender = build_user_from_identity(sender);
     (user_sender.platform, user_sender.status, user_sender.photo)
 }
