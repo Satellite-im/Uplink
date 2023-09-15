@@ -7,7 +7,7 @@ use std::{ffi::OsStr, path::PathBuf};
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::{ToastNotification, self};
+use common::state::{self, ToastNotification};
 use common::state::{ui, Action, State};
 use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
@@ -39,7 +39,7 @@ use rfd::FileDialog;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
-use warp::raygun::{Location, ConversationType, self};
+use warp::raygun::{self, ConversationType, Location};
 
 pub mod controller;
 pub mod file_modal;
@@ -109,13 +109,13 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
 
     let share_files_from_storage_mode = use_state(cx, || false);
-    let select_chats_to_send_files_mode =  match cx.props.select_chats_to_send_files_mode.as_ref() {
+    let select_chats_to_send_files_mode = match cx.props.select_chats_to_send_files_mode.as_ref() {
         Some(d) => {
             if *d.get() {
                 storage_controller.write_silent().files_selected_to_send = Vec::new();
             }
             d
-        },
+        }
         None => use_state(cx, || false),
     };
     let show_modal_to_select_chats_to_send_files = use_state(cx, || false);
@@ -165,7 +165,9 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
-    storage_controller.write_silent().update_current_dir_path(state.clone());
+    storage_controller
+        .write_silent()
+        .update_current_dir_path(state.clone());
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && !*storage_files_to_chat_mode_is_active.get() {
@@ -370,7 +372,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             }
                         }
-                       
                     )
                 }
                 send_files_from_chat_topbar {
@@ -406,9 +407,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             .any(|uuid| {
                                 uuid.eq(&chat.id)
                             });
-                            
-                            rsx!( 
-                                div {
+                            rsx!(div {
                                     id: "chat-selector-to-send-files",
                                     height: "80px",
                                     padding: "16px",
@@ -452,11 +451,10 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                                             } else {
                                                 storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                            }           
+                                            }
                                         }
                                     }
                                 }
-                                
                             )
                         }),
                     })
