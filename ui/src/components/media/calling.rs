@@ -5,17 +5,20 @@ use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::user_image_group::UserImageGroup,
+    components::{user_image::UserImage, user_image_group::UserImageGroup},
     elements::{
         button::Button,
         label::Label,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
+    User,
 };
 use warp::crypto::DID;
 
-use crate::utils::{build_participants, format_timestamp::format_timestamp_timeago};
+use crate::utils::{
+    build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
+};
 use common::{
     icons::outline::Shape as Icon,
     state::{
@@ -257,7 +260,15 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                             class: "lonely-call",
                             get_local_text("remote-controls.empty")
                         })
-                    } else {
+                    } else if cx.props.in_chat {
+                        let call_participants: Vec<_> = other_participants
+                            .iter()
+                            .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                            .collect();
+                        rsx!(CallUserImageGroup {
+                            participants: call_participants,
+                        })
+                    } else  {
                         rsx!(UserImageGroup {
                             participants: build_participants(&other_participants),
                         })
@@ -496,4 +507,24 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
             }
         }
     ))
+}
+
+#[derive(Props, PartialEq)]
+pub struct CallUserImageProps {
+    participants: Vec<(bool, User)>,
+}
+
+#[allow(non_snake_case)]
+pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
+    cx.render(rsx!(cx.props.participants.iter().map(
+        |(speaking, user)| {
+            rsx!(div {
+                class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
+                UserImage {
+                    platform: user.platform,
+                    image: user.photo.clone(),
+                }
+            })
+        }
+    )))
 }

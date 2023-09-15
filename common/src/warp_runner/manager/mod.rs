@@ -7,11 +7,8 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 
 use warp::{
-    blink::{BlinkEventKind, BlinkEventStream},
-    logging::tracing::log,
-    multipass::MultiPassEventStream,
-    raygun::RayGunEventStream,
-    tesseract::Tesseract,
+    blink::BlinkEventStream, logging::tracing::log, multipass::MultiPassEventStream,
+    raygun::RayGunEventStream, tesseract::Tesseract,
 };
 
 use super::{conv_stream, Account, Calling, Messaging, Storage};
@@ -59,10 +56,6 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
             },
             opt = blink_stream.next() => {
                 if let Some(evt) = opt {
-                    // filter noisy events which aren't being used right now anyway.
-                    if matches!(evt, BlinkEventKind::ParticipantSpeaking{..} | BlinkEventKind::SelfSpeaking ) {
-                        continue;
-                    }
                     if let Err(e) = events::handle_blink_event(evt, &mut warp).await {
                         log::error!("failed to handle blink event: {e}");
                         break;
