@@ -1,6 +1,5 @@
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    path::PathBuf,
     time::Instant,
 };
 
@@ -10,7 +9,7 @@ use uuid::Uuid;
 use warp::{
     constellation::Progression,
     crypto::DID,
-    raygun::{self, ConversationType},
+    raygun::{self, ConversationType, Location},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
@@ -69,7 +68,7 @@ pub struct Chat {
     #[serde(skip)]
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
-    pub files_attached_to_send: Vec<PathBuf>,
+    pub files_attached_to_send: Vec<Location>,
     #[serde(skip)]
     pub scroll_value: Option<i64>,
     #[serde(skip)]
@@ -84,7 +83,7 @@ impl Chat {
         chat_id: Uuid,
         did: DID,
         msg: Vec<String>,
-        attachments: &[PathBuf],
+        attachments: &[Location],
     ) -> Uuid {
         let new = PendingMessage::new(chat_id, did, msg, attachments);
         let uuid = new.message.inner.id();

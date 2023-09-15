@@ -1,7 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, ffi::OsStr, path::PathBuf};
 
 use uuid::Uuid;
-use warp::{constellation::Progression, crypto::DID};
+use warp::{constellation::Progression, crypto::DID, raygun::Location};
 
 use crate::warp_runner::ui_adapter::Message;
 // We can improve message equality detection if warp e.g. can send us their assigned uuid.
@@ -15,7 +15,7 @@ pub struct PendingMessage {
 
 impl PendingMessage {
     // Use this for comparison cases
-    pub fn for_compare(text: Vec<String>, attachments: &[PathBuf], id: Option<Uuid>) -> Self {
+    pub fn for_compare(text: Vec<String>, attachments: &[Location], id: Option<Uuid>) -> Self {
         let mut inner = warp::raygun::Message::default();
         if let Some(m_id) = id {
             inner.set_id(m_id);
@@ -29,20 +29,21 @@ impl PendingMessage {
         PendingMessage {
             attachments: attachments
                 .iter()
-                .map(|p| {
-                    if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
-                    {
-                        return name.to_string();
-                    }
-                    String::new()
+                .filter_map(|p| {
+                    let path = match p {
+                        Location::Disk { path } => path.clone(),
+                        Location::Constellation { path } => PathBuf::from(path),
+                    };
+
+                    path.file_name().and_then(OsStr::to_str).map(str::to_string)
                 })
-                .collect(),
+                .collect::<Vec<_>>(),
             attachments_progress: HashMap::new(),
             message,
         }
     }
 
-    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &[PathBuf]) -> Self {
+    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &[Location]) -> Self {
         // Create a dummy message
         let mut inner = warp::raygun::Message::default();
         inner.set_id(Uuid::new_v4());
@@ -51,7 +52,10 @@ impl PendingMessage {
         inner.set_value(text);
         let attachments = attachments
             .iter()
-            .filter(|path| path.is_file())
+            .filter(|location| match location {
+                Location::Disk { path } => path.is_file(),
+                Location::Constellation { .. } => true,
+            })
             .cloned()
             .collect::<Vec<_>>();
 
@@ -64,11 +68,13 @@ impl PendingMessage {
             attachments: attachments
                 .iter()
                 .map(|p| {
-                    if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
-                    {
-                        return name.to_string();
-                    }
-                    String::new()
+                    let pathbuf = match p {
+                        Location::Disk { path } => path.clone(),
+                        Location::Constellation { path } => PathBuf::from(path),
+                    };
+                    pathbuf
+                        .file_name()
+                        .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
                 })
                 .collect(),
             attachments_progress: HashMap::new(),

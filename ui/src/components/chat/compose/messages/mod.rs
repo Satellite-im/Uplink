@@ -7,7 +7,9 @@ use std::{
 
 use dioxus::prelude::{EventHandler, *};
 
-use futures::StreamExt;
+mod coroutines;
+mod effects;
+pub mod scripts;
 
 use kit::components::{
     context_menu::{ContextItem, ContextMenu},
@@ -18,20 +20,16 @@ use kit::components::{
     user_image::UserImage,
 };
 
+use common::state::{Action, Identity, State};
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
-    language::get_local_text_args_builder,
+    language::get_local_text_with_args,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
         scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
-};
-use common::{
-    state::{Action, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
@@ -42,48 +40,15 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, PinState, ReactionState},
+    raygun::{self},
 };
 
 use crate::{
     components::emoji_group::EmojiGroup, utils::format_timestamp::format_timestamp_timeago,
 };
 
-const SETUP_CONTEXT_PARENT: &str = r#"
-    const right_clickable = document.getElementsByClassName("has-context-handler")
-    console.log("E", right_clickable)
-    for (var i = 0; i < right_clickable.length; i++) {
-        //Disable default right click actions (opening the inspect element dropdown)
-        right_clickable.item(i).addEventListener("contextmenu",
-        function (ev) {
-        ev.preventDefault()
-        })
-    }
-"#;
-
-pub const SCROLL_TO: &str = r#"
-    const chat = document.getElementById("messages")
-    chat.scrollTo(0, $VALUE)
-"#;
-
-pub const SCROLL_UNREAD: &str = r#"
-    const chat = document.getElementById("messages")
-    const child = chat.children[chat.childElementCount - $UNREADS]
-    chat.scrollTop = chat.scrollHeight
-    child.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-pub const SCROLL_BOTTOM: &str = r#"
-    const chat = document.getElementById("messages")
-    const lastChild = chat.lastElementChild
-    chat.scrollTop = chat.scrollHeight
-    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
-
 #[allow(clippy::large_enum_variant)]
-enum MessagesCommand {
+pub enum MessagesCommand {
     React((DID, raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
@@ -108,13 +73,16 @@ enum MessagesCommand {
     Pin(raygun::Message),
 }
 
-type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
+pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
 
-struct NewelyFetchedMessages {
+pub struct NewelyFetchedMessages {
     conversation_id: Uuid,
     messages: Vec<ui_adapter::Message>,
     has_more: bool,
 }
+
+// todo: make a scripts file for this stuff
+const SHOW_CONTEXT_SCRIPT: &str = include_str!("../../show_context.js");
 
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
@@ -129,254 +97,53 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
+    let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    if let Some(NewelyFetchedMessages {
-        conversation_id,
-        messages,
-        has_more,
-    }) = newely_fetched_messages.write_silent().take()
-    {
-        state
-            .write()
-            .update_chat_messages(conversation_id, messages);
-        if !has_more {
-            log::debug!("finished loading chat: {conversation_id}");
-            state.write().finished_loading_chat(conversation_id);
-        }
-    }
-
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
     let max_to_take = use_ref(cx, || data.active_chat.messages.len());
+
+    let active_chat = use_ref(cx, || None);
+    let eval = use_eval(cx);
+
     if *max_to_take.read() != data.active_chat.messages.len() {
         *max_to_take.write_silent() = data.active_chat.messages.len();
     }
 
-    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
-    // to the bottom when the user selects the active chat
-    // also must reset num_to_take when the active_chat changes
-    let active_chat = use_ref(cx, || None);
     let currently_active = Some(data.active_chat.id);
-    let eval = use_eval(cx);
+
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
     }
 
-    use_effect(cx, &data.active_chat.scroll_to, |_| {
-        to_owned![state, eval, currently_active];
-        async move {
-            let currently_active = match currently_active {
-                Some(r) => r,
-                None => return,
-            };
-            if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
-                let _ = eval(
-                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
-                );
-            }
-        }
-    });
+    effects::update_chat_messages(cx, state, newly_fetched_messages);
 
-    let scroll = data.active_chat.scroll_value;
-    let unreads = data.active_chat.unreads;
-    use_effect(cx, &data.active_chat.id, |id| {
-        to_owned![eval, prev_chat_id];
-        async move {
-            // yes, this check seems like some nonsense. but it eliminates a jitter and if
-            // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
-            // switch to settings or whatnot, then come back to the chats view and not lose your place.
-            if *prev_chat_id.read() != id {
-                *prev_chat_id.write_silent() = id;
-                let script = if let Some(val) = scroll {
-                    SCROLL_TO.replace("$VALUE", &val.to_string())
-                } else if unreads > 0 {
-                    SCROLL_UNREAD.replace("$UNREADS", &unreads.to_string())
-                } else {
-                    SCROLL_BOTTOM.to_string()
-                };
-                _ = eval(&script);
-            }
-            _ = eval(SETUP_CONTEXT_PARENT);
-        }
-    });
+    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
+    // to the bottom when the user selects the active chat
+    // also must reset num_to_take when the active_chat changes
+    effects::check_message_scroll(
+        cx,
+        &data.active_chat.scroll_to,
+        state,
+        eval,
+        &currently_active,
+    );
 
-    let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, newely_fetched_messages, pending_downloads];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    MessagesCommand::React((user, message, emoji)) => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        let reaction_state =
-                            match message.reactions().iter().find(|x| x.emoji() == emoji) {
-                                Some(reaction) if reaction.users().contains(&user) => {
-                                    ReactionState::Remove
-                                }
-                                _ => ReactionState::Add,
-                            };
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
-                            conversation_id: message.conversation_id(),
-                            message_id: message.id(),
-                            reaction_state,
-                            emoji: emoji.clone(),
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
+    effects::scroll_to_bottom(
+        cx,
+        data.active_chat.scroll_value,
+        eval,
+        data.active_chat.unreads,
+        data.active_chat.id,
+        prev_chat_id,
+    );
 
-                        let res = rx.await.expect("command canceled");
-                        match res {
-                            Ok(_) => state.write().mutate(Action::AddReaction(
-                                message.conversation_id(),
-                                message.id(),
-                                emoji,
-                            )),
-                            Err(e) => {
-                                log::error!("failed to add/remove reaction: {}", e);
-                            }
-                        }
-                    }
-                    MessagesCommand::DeleteMessage { conv_id, msg_id } => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteMessage {
-                                conv_id,
-                                msg_id,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to delete message: {}", e);
-                        }
-                    }
-                    MessagesCommand::DownloadAttachment {
-                        conv_id,
-                        msg_id,
-                        file,
-                        file_path_to_download,
-                    } => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
-                                conv_id,
-                                msg_id,
-                                file_name: file.name(),
-                                file_path_to_download,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
-                                conv.remove(&file);
-                            }
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        match res {
-                            Ok(mut stream) => {
-                                while let Some(p) = stream.next().await {
-                                    log::debug!("{p:?}");
-                                }
-                            }
-                            Err(e) => {
-                                log::error!("failed to download attachment: {}", e);
-                            }
-                        }
-                        if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
-                            conv.remove(&file);
-                        }
-                    }
-                    MessagesCommand::EditMessage {
-                        conv_id,
-                        msg_id,
-                        msg,
-                    } => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::EditMessage {
-                            conv_id,
-                            msg_id,
-                            msg,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to edit message: {}", e);
-                        }
-                    }
-                    MessagesCommand::FetchMore {
-                        conv_id,
-                        to_fetch,
-                        current_len,
-                    } => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
-                                conv_id,
-                                to_fetch,
-                                current_len,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        match rx.await.expect("command canceled") {
-                            Ok((messages, has_more)) => {
-                                newely_fetched_messages.set(Some(NewelyFetchedMessages {
-                                    conversation_id: conv_id,
-                                    messages,
-                                    has_more,
-                                }));
-                            }
-                            Err(e) => {
-                                log::error!("failed to fetch more message: {}", e);
-                            }
-                        }
-                    }
-                    MessagesCommand::Pin(msg) => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        let pinstate = if msg.pinned() {
-                            PinState::Unpin
-                        } else {
-                            PinState::Pin
-                        };
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
-                            conversation_id: msg.conversation_id(),
-                            message_id: msg.id(),
-                            pinstate,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to pin message: {}", e);
-                        }
-                    }
-                }
-            }
-        }
-    });
+    let _ch =
+        coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
 
     let msg_container_end = if data.active_chat.has_more_messages {
         rsx!(div {
@@ -405,8 +172,6 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         )
     };
 
-    let eval = use_eval(cx);
-
     cx.render(rsx!(
         div {
             id: "messages",
@@ -414,7 +179,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 let update = cx.schedule_update_any();
                 to_owned![eval, update, state, active_chat];
                 async move {
-                    if let Ok(val) = eval(READ_SCROLL) {
+                    if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             if let Some(uuid) = active_chat.read().as_ref() {
                                 state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
@@ -446,7 +211,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../show_context.js")
+                            let script = SHOW_CONTEXT_SCRIPT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -456,20 +221,16 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                     },
                     render_pending_messages_listener {
                         data: data,
-                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                        on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
-                                let id = if own {
-                                    let mut id = id;
+                                if own {
                                     id.set_identity_status(IdentityStatus::Online);
-                                    id
-                                } else {
-                                    id
-                                };
+                                }
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("../show_context.js")
+                            let script = SHOW_CONTEXT_SCRIPT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -606,9 +367,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 div {
                     class: "blocked-container",
                     p {
-                        get_local_text_args_builder("messages.blocked", |m| {
-                        m.insert("amount", messages.len().into());
-                        })
+                        get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
                     },
                     p {
                         style: "white-space: pre",
@@ -628,9 +387,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             div {
                 class: "blocked-container",
                 p {
-                    get_local_text_args_builder("messages.blocked", |m| {
-                    m.insert("amount", messages.len().into());
-                    })
+                    get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
                 },
                 p {
                     style: "white-space: pre",
@@ -777,7 +534,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                                 3,
                             )));
                         } else {
-                            ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                            ch.send(MessagesCommand::Pin(message.inner.clone()));
                         }
                     }
                 },

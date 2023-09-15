@@ -1,5 +1,5 @@
 use common::icons::Icon as IconElement;
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
@@ -568,7 +568,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
                             _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
-                                Some(name) => format!("{name} {}", get_local_text("sidebar.subtext")),
+                                Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name.into())]),
                                 None => {
                                     log::error!("error calculating subtext for sidebar chat");
                                     // Still return default message
