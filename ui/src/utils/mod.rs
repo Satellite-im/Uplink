@@ -1,8 +1,9 @@
 use common::{state, STATIC_ARGS};
+use dioxus::prelude::{EvalError, UseEval};
 use filetime::FileTime;
 use warp::logging::tracing::log;
 
-use std::{fs, path::Path};
+use std::{fs, path::Path, rc::Rc};
 
 use kit::User as UserInfo;
 
@@ -14,6 +15,8 @@ pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod lifecycle;
 pub mod verify_valid_paths;
+
+pub type EvalProvider = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
 pub fn unzip_prism_langs() {
     if !STATIC_ARGS.production_mode || !cfg!(target_os = "windows") {

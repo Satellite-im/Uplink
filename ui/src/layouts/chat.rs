@@ -5,7 +5,7 @@ use crate::{
     layouts::slimbar::SlimbarLayout,
     utils::{
         get_drag_event,
-        verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
+        verify_valid_paths::{decoded_pathbufs, verify_paths},
     },
 };
 
@@ -16,6 +16,7 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
 use uuid::Uuid;
+use warp::raygun::Location;
 
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
@@ -115,17 +116,21 @@ async fn drop_and_attach_files(
     drag_event: &UseRef<Option<FileDropEvent>>,
     state: UseSharedState<State>,
 ) {
-    let new_files = drag_and_drop_function(eval.clone(), window, drag_event).await;
-    let mut new_files_to_upload: Vec<_> = state
+    let new_files = drag_and_drop_function(eval, window, drag_event).await;
+    let new_files: Vec<Location> = new_files
+        .iter()
+        .map(|path| Location::Disk { path: path.clone() })
+        .collect();
+
+    let mut current_files: Vec<_> = state
         .read()
         .get_active_chat()
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default()
-        .iter()
-        .filter(|file_name| !new_files.contains(file_name))
-        .cloned()
+        .drain(..)
+        .filter(|x| !new_files.contains(x))
         .collect();
-    new_files_to_upload.extend(new_files);
+    current_files.extend(new_files);
     let chat_uuid = state
         .read()
         .get_active_chat()
@@ -133,7 +138,7 @@ async fn drop_and_attach_files(
         .unwrap_or(Uuid::nil());
     state
         .write()
-        .mutate(Action::SetChatAttachments(chat_uuid, new_files_to_upload));
+        .mutate(Action::SetChatAttachments(chat_uuid, current_files));
 }
 
 // Like ui::src:layout::storage::drag_and_drop_function
@@ -144,40 +149,34 @@ async fn drag_and_drop_function(
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
     let mut new_files_to_upload = Vec::new();
+    let _ = eval(ANIMATION_DASH_SCRIPT);
     loop {
         let file_drop_event = get_drag_event::get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
-                    if paths.len() > 1 {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
+                    let feedback_script = &FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            paths.len(),
+                            if paths.len() > 1 {
                                 get_local_text("files.files-to-upload")
-                            ),
-                        ));
-                    } else {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
+                            } else {
                                 get_local_text("files.one-file-to-upload")
-                            ),
-                        ));
-                    }
+                            }
+                        ),
+                    );
+                    script.push_str(feedback_script);
                     let _ = eval(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
                     let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
-                    script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
                     let _ = eval(&script);

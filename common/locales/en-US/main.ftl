@@ -174,6 +174,10 @@ files = Files
     .send-to-chat = Send to chat
     .send-files-text-amount = Send { $amount } File(s)
     .files-selected-paths = File(s) Selected: { $files_path }
+    .attach-files-from-local-disk = Add File
+    .attach-files-from-storage = Browse Files
+    .upload-in-progress-please-wait = Upload in progress. Please wait.
+    .no-files-available = No files available.
 
 settings = Settings
     .settings = Settings

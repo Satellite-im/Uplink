@@ -48,7 +48,7 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
-use crate::prism_paths::PrismScripts;
+use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
@@ -75,8 +75,8 @@ mod components;
 mod extension_browser;
 mod layouts;
 mod logger;
+mod misc_scripts;
 mod overlay;
-mod prism_paths;
 mod utils;
 mod webview_config;
 mod window_builder;
@@ -235,7 +235,6 @@ fn AppStyle(cx: Scope) -> Element {
     } else {
         "".into()
     };
-    use prism_paths::{PRISM_STYLE, PRISM_THEME};
 
     render! {
         style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
@@ -348,7 +347,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 }
                 let size = webview.inner_size();
                 let metadata = state.read().ui.metadata.clone();
-                log::debug!("resize {:?}", size);
+                //log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),

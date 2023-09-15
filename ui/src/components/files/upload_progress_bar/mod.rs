@@ -8,7 +8,7 @@ use kit::elements::{button::Button, Appearance};
 
 use crate::utils::{
     get_drag_event,
-    verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
+    verify_valid_paths::{decoded_pathbufs, verify_paths},
 };
 
 static FILES_TO_UPLOAD_SCRIPT: &str = r#"
@@ -247,7 +247,7 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event::get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let files_to_upload_message = count_files_to_show(paths.len());
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
@@ -256,7 +256,7 @@ async fn drag_and_drop_function(
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
                     *files_ready_to_upload.write_silent() = new_files_to_upload;
                     break;
