@@ -229,6 +229,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         text: message.value().join("\n"),
                         remote: true,
                         pending: false,
+                        markdown: true,
                     }
                 },
                 has_attachments.then(|| {

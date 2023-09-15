@@ -2,7 +2,7 @@
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn verify_if_are_valid_paths(paths: &Vec<PathBuf>) -> bool {
+pub fn verify_paths(paths: &Vec<PathBuf>) -> bool {
     if paths.is_empty() {
         false
     } else {

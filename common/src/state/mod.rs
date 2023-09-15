@@ -13,7 +13,7 @@ pub mod storage;
 pub mod ui;
 pub mod utils;
 
-use crate::language::change_language;
+use crate::language::{change_language, get_local_text_with_args};
 use crate::notifications::NotificationAction;
 use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
@@ -29,7 +29,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use warp::blink::BlinkEventKind;
 use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
-use warp::raygun::{ConversationType, Reaction};
+use warp::raygun::{ConversationType, Location, Reaction};
 
 use crate::STATIC_ARGS;
 
@@ -42,7 +42,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
-use std::path::PathBuf;
+
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
@@ -352,7 +352,10 @@ impl State {
                 if !self.ui.metadata.focused && notifications_enabled {
                     crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
-                        format!("{} sent a request.", identity.username()),
+                        get_local_text_with_args(
+                            "friends.new-request-name",
+                            vec![("name", identity.username().into())],
+                        ),
                         Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
                         NotificationAction::FriendListPending,
@@ -453,10 +456,9 @@ impl State {
                         None
                     };
                     let text = match id {
-                        Some(id) => format!(
-                            "{} {}",
-                            id.username(),
-                            get_local_text("messages.user-sent-message"),
+                        Some(id) => get_local_text_with_args(
+                            "messages.user-sent-message",
+                            vec![("user", id.username().into())],
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
@@ -1148,7 +1150,7 @@ impl State {
     pub fn increment_outgoing_messages(
         &mut self,
         msg: Vec<String>,
-        attachments: &[PathBuf],
+        attachments: &[Location],
     ) -> Option<Uuid> {
         let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
@@ -1191,7 +1193,7 @@ impl State {
         }
     }
 
-    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<Location>) {
         if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.files_attached_to_send = value;
         }
