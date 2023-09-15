@@ -326,7 +326,7 @@ impl State {
         // Blink events are very frequent
         if !matches!(
             event,
-            WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { peer_id: _ })
+            WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
                 | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
         ) {
             log::debug!("process_warp_event: {event}");
