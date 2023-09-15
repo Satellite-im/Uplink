@@ -17,7 +17,7 @@ pub struct AttachmentProps<'a> {
 pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     let files_attached_to_send = cx.props.files_to_attach.clone();
     let files_attached_to_send2 = files_attached_to_send.clone();
-    let files_attached_to_send3 = files_attached_to_send.clone();
+    let files_attached_to_send3 = files_attached_to_send;
 
     // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(files_attached_to_send2.iter().map(|location| {
@@ -64,7 +64,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         })
     })));
 
-    let attachments_vec = files_attached_to_send3.clone();
+    let attachments_vec = files_attached_to_send3;
 
     if attachments_vec.is_empty() {
         return None;
