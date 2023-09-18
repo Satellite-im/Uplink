@@ -1750,7 +1750,7 @@ impl<'a> GroupedMessage<'a> {
     }
 }
 
-pub fn group_messages<'a>(
+pub fn create_message_groups<'a>(
     my_did: DID,
     when_to_fetch_more: usize,
     // true if the chat has more messages to fetch

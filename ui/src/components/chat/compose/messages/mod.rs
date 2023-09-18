@@ -26,7 +26,7 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_with_args,
     state::{
-        group_messages, pending_group_messages, pending_message::PendingMessage,
+        create_message_groups, pending_group_messages, pending_message::PendingMessage,
         scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
@@ -194,8 +194,8 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             span {
                 rsx!(
                     msg_container_end,
-                    render_message_groups {
-                        groups: group_messages(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
+                    loop_over_message_groups {
+                        groups: create_message_groups(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
@@ -259,7 +259,7 @@ struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
     log::trace!("render message groups");
     cx.render(rsx!(cx.props.groups.iter().map(|_group| {
         rsx!(render_message_group {
@@ -437,7 +437,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
             sender: sender_name.clone(),
             remote: group.remote,
-            children: cx.render(rsx!(render_messages {
+            children: cx.render(rsx!(wrap_messages_in_context_menu {
                 messages: &group.messages,
                 active_chat_id: cx.props.active_chat_id,
                 is_remote: group.remote,
@@ -456,7 +456,7 @@ struct MessagesProps<'a> {
     is_remote: bool,
     pending: bool,
 }
-fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
+fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
