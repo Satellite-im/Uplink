@@ -7,6 +7,7 @@ use common::{
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
 };
+use dioxus::prelude::{use_eval, EvalError, UseEval};
 use dioxus_core::{ScopeState, Scoped};
 #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
@@ -15,15 +16,30 @@ use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
+use rfd::FileDialog;
+use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
+use warp::constellation::{directory::Directory, item::Item};
 
 use crate::components::files::upload_progress_bar;
 
-use super::{
+use super::files_layout::{
     controller::{StorageController, UploadFileController},
-    ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME,
+    Props,
 };
+
+pub type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
+
+static ALLOW_FOLDER_NAVIGATION: &str = r#"
+    var folders_element = document.getElementById('files-list');
+    folders_element.style.pointerEvents = '$POINTER_EVENT';
+    folders_element.style.opacity = '$OPACITY';
+    var folders_breadcumbs_element = document.getElementById('files-breadcrumbs');
+    folders_breadcumbs_element.style.pointerEvents = '$POINTER_EVENT';
+    folders_breadcumbs_element.style.opacity = '$OPACITY';
+"#;
+
+const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub fn run_verifications_and_update_storage(
     state: &UseSharedState<State>,
@@ -48,7 +64,7 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanCmd>) {
+pub fn get_items_from_current_directory(cx: &ScopeState, ch: &Coroutine<ChanCmd>) {
     use_future(cx, (), |_| {
         to_owned![ch];
         async move {
@@ -122,6 +138,93 @@ pub fn format_item_size(item_size: usize) -> String {
         size_formatted_string = size_formatted_string.replace(".0", "");
     }
     size_formatted_string
+}
+
+pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
+    let file_extension = std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+    let file_stem = PathBuf::from(&file_name)
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+    let file_path_buf = match FileDialog::new()
+        .set_directory(".")
+        .set_file_name(&file_stem)
+        .add_filter("", &[&file_extension])
+        .save_file()
+    {
+        Some(path) => path,
+        None => return,
+    };
+    ch.send(ChanCmd::DownloadFile {
+        file_name: file_name.to_string(),
+        local_path_to_save_file: file_path_buf,
+    });
+}
+
+pub fn add_files_in_queue_to_upload(
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+    files_path: Vec<PathBuf>,
+    eval: &UseEvalFn,
+) {
+    let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
+    allow_folder_navigation(eval, false);
+    files_in_queue_to_upload
+        .write_silent()
+        .extend(files_path.clone());
+    let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
+}
+
+pub fn use_allow_block_folder_nav(
+    cx: &ScopeState,
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+) {
+    let eval: &UseEvalFn = use_eval(cx);
+
+    // Block directories navigation if there is a file been uploaded
+    // use_future here to verify before render elements on first render
+    use_future(cx, (), |_| {
+        to_owned![eval, files_in_queue_to_upload];
+        async move {
+            allow_folder_navigation(&eval, files_in_queue_to_upload.read().is_empty());
+        }
+    });
+    // This is to run on all re-renders
+    allow_folder_navigation(eval, files_in_queue_to_upload.read().is_empty());
+}
+
+pub fn allow_folder_navigation(eval: &UseEvalFn, allow_navigation: bool) {
+    let new_script = if allow_navigation {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "")
+            .replace("$OPACITY", "1")
+    } else {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "none")
+            .replace("$OPACITY", "0.5")
+    };
+
+    _ = eval(&new_script);
+}
+
+pub enum ChanCmd {
+    GetItemsFromCurrentDirectory,
+    CreateNewDirectory(String),
+    OpenDirectory(String),
+    BackToPreviousDirectory(Directory),
+    DownloadFile {
+        file_name: String,
+        local_path_to_save_file: PathBuf,
+    },
+    RenameItem {
+        old_name: String,
+        new_name: String,
+    },
+    DeleteItems(Item),
 }
 
 pub fn init_coroutine<'a>(
