@@ -352,7 +352,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
                                             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                                             let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-                                            let msg = vec!["".to_owned()];
+                                            let msg = Vec::new();
                                             let attachments = files_location;
                                             let ui_msg_id = None;
                                             let convs_id =  convs_id;

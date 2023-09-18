@@ -21,18 +21,16 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
 
     // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(files_attached_to_send2.iter().map(|location| {
-        let filename = match location {
-            Location::Constellation { path } => PathBuf::from(path)
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string(),
-            Location::Disk { path } => path
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string(),
+        let path = match location {
+            Location::Constellation { path } => PathBuf::from(path),
+            Location::Disk { path } => path.clone(),
         };
+
+        let filename = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
 
         rsx!(FileEmbed {
             filename: filename.clone(),
