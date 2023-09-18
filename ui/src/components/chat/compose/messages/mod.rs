@@ -137,7 +137,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         cx,
         data.active_chat.scroll_value,
         eval,
-        data.active_chat.unreads,
+        data.active_chat.unreads(),
         data.active_chat.id,
         prev_chat_id,
     );

@@ -3,7 +3,6 @@ use std::{
     time::Instant,
 };
 
-use chrono::{DateTime, Utc};
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::{
@@ -52,7 +51,8 @@ pub struct Chat {
     #[serde(default)]
     pub messages: VecDeque<ui_adapter::Message>,
     // Unread count for this chat, should be cleared when we view the chat.
-    pub unreads: u32,
+    #[serde(default)]
+    unreads: HashSet<Uuid>,
     // If a value exists, we will render the message we're replying to above the chatbar
     #[serde(skip)]
     pub replying_to: Option<raygun::Message>,
@@ -78,6 +78,34 @@ pub struct Chat {
 }
 
 impl Chat {
+    pub fn new(
+        id: Uuid,
+        participants: HashSet<DID>,
+        conversation_type: ConversationType,
+        conversation_name: Option<String>,
+        creator: Option<DID>,
+        messages: VecDeque<ui_adapter::Message>,
+        pinned_messages: Vec<raygun::Message>,
+    ) -> Self {
+        Self {
+            id,
+            participants,
+            conversation_type,
+            conversation_name,
+            creator,
+            messages,
+            unreads: HashSet::new(),
+            replying_to: None,
+            typing_indicator: HashMap::new(),
+            draft: None,
+            has_more_messages: false,
+            pending_outgoing_messages: vec![],
+            files_attached_to_send: Vec::new(),
+            scroll_value: None,
+            pinned_messages,
+            scroll_to: None,
+        }
+    }
     pub fn append_pending_msg(
         &mut self,
         chat_id: Uuid,
@@ -119,20 +147,20 @@ impl Chat {
         }
     }
 
-    // take the timestamp of a message and determine if it occurs at or after the time of the earliest unread message
-    // WARNING: a chat is loaded with 10 or 20 messages by default. if there are more unread messages in RayGun, then
-    // this function could return a false negative. This is unlikely.
-    pub fn is_msg_unread(&self, message_time: DateTime<Utc>) -> bool {
-        if self.unreads == 0 {
-            return false;
-        }
-        // if you have 1 unread message, skip 0 messages and take the next one.
-        // if you have 2 unread messages, skip 1 and take the next one.
-        let to_skip = self.unreads.saturating_sub(1);
-        match self.messages.iter().rev().nth(to_skip as usize) {
-            Some(msg) => msg.inner.date() <= message_time,
-            _ => false,
-        }
+    pub fn unreads(&self) -> u32 {
+        self.unreads.len() as _
+    }
+
+    pub fn clear_unreads(&mut self) {
+        self.unreads.clear();
+    }
+
+    pub fn remove_unread(&mut self, id: &Uuid) -> bool {
+        self.unreads.remove(id)
+    }
+
+    pub fn add_unread(&mut self, id: Uuid) {
+        self.unreads.insert(id);
     }
 }
 
@@ -161,7 +189,7 @@ impl Chats {
         };
 
         match self.all.get(&id) {
-            Some(c) => c.unreads > 0,
+            Some(c) => c.unreads() > 0,
             None => false,
         }
     }
