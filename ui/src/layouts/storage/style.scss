@@ -8,6 +8,11 @@
     text-overflow: ellipsis;
 }
 
+.modal-div-files-layout {
+  height: 85vh;
+  width: 85vw;
+}
+
 @media (max-width: 1740px) {
     .files-selected-text {
       max-width: 60vw;
