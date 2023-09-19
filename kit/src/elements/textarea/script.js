@@ -1,5 +1,6 @@
 var MULTI_LINE = $MULTI_LINE;
 
+var textareas = document.getElementsByClassName("controls")
 var textareas = document.getElementsByClassName("input_textarea")
 for (let i = 0; i < textareas.length; i++) {
     var txt = textareas[i];
@@ -20,6 +21,11 @@ for (let i = 0; i < textareas.length; i++) {
         }
     }
 }
+
+sendButton[1].addEventListener("click", (event) => {
+    textareas[0].style.height = "22px";
+    textareas[0].value = "";
+})
 
 function inputListener(e) {
     updateHeight(this);
