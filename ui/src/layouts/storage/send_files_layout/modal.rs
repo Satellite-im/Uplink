@@ -1,9 +1,4 @@
-use common::{
-    warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
-};
 use dioxus::prelude::*;
-use futures::channel::oneshot;
 use kit::layout::modal::Modal;
 use uuid::Uuid;
 use warp::raygun::Location;
@@ -45,28 +40,4 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
             }
         )
     )
-}
-
-fn send_files_starting_on_storage(
-    send_files_from_storage: UseState<bool>,
-    files_location: Vec<Location>,
-    convs_id: Vec<Uuid>,
-) {
-    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-    let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-    let msg = vec!["".to_owned()];
-    let attachments = files_location;
-    let ui_msg_id = None;
-    let convs_id = convs_id;
-    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-        convs_id,
-        msg,
-        attachments,
-        ui_msg_id,
-        rsp: tx,
-    })) {
-        log::error!("Failed to send warp command: {}", e);
-        return;
-    }
-    send_files_from_storage.set(false);
 }

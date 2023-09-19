@@ -8,7 +8,7 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::prelude::{use_eval, EvalError, UseEval};
-use dioxus_core::{ScopeState, Scoped};
+use dioxus_core::ScopeState;
 #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
