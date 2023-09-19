@@ -1,5 +1,5 @@
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
-use crate::layouts::storage::send_files_layout::send_files_components::{toggle_selected_file, file_checkbox};
+use crate::layouts::storage::send_files_layout::send_files_components::{toggle_selected_file, FileCheckbox};
 
 use super::files_layout::controller::StorageController;
 use common::icons::outline::Shape as Icon;
@@ -248,7 +248,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         )),
                         div {
                             class: "file-wrap",
-                            file_checkbox {
+                            FileCheckbox {
                                 file_path: file_path.clone(),
                                 storage_controller: storage_controller.clone(),
                                 is_selecting_files: send_files_mode,

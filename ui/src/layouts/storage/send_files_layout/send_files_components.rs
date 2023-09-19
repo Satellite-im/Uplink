@@ -8,7 +8,7 @@ use warp::raygun::Location;
 use crate::layouts::storage::files_layout::controller::StorageController;
 
 #[inline_props]
-pub fn file_checkbox(
+pub fn FileCheckbox(
     cx: Scope<'a>,
     file_path: String,
     storage_controller: UseRef<StorageController>,
