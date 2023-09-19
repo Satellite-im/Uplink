@@ -78,6 +78,7 @@
   flex-direction: column;
   margin-top: 16px;
   overflow-y: scroll;
-  height: 40vh;
+  min-height: 10vh;
+  max-height: 30vh;
   background: var(--secondary);
 }

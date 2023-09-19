@@ -111,12 +111,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let share_files_from_storage_mode = use_state(cx, || false);
     let select_chats_to_send_files_mode = match cx.props.select_chats_to_send_files_mode.as_ref() {
-        Some(d) => {
-            if *d.get() {
-                storage_controller.write_silent().files_selected_to_send = Vec::new();
-            }
-            d
-        }
+        Some(d) => d,
         None => use_state(cx, || false),
     };
     let show_modal_to_select_chats_to_send_files = use_state(cx, || false);
@@ -385,103 +380,115 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
                 if *storage_files_to_chat_mode_is_active.get() && *select_chats_to_send_files_mode.get()  {
-                    rsx!(div {
-                        id: "all_chats", 
-                        div {
-                            padding_left: "16px",
-                            Label {
-                                text: get_local_text("files.select-chats"),
+                    if state.read().chats_sidebar().is_empty() {
+                         rsx!(div {
+                            id: "all_chats", 
+                            div {
+                                padding_left: "16px",
+                                Label {
+                                    text: get_local_text("files.no-chats-available"),
+                                }
                             }
-                        }
-                        state.read().chats_sidebar().iter().cloned().map(|chat| {
-                            let participants = state.read().chat_participants(&chat);
-                            let other_participants =  state.read().remove_self(&participants);
-                            let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
-                            let platform = user.platform().into();
-
-                            // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
-                            let participants_name = match chat.conversation_name {
-                                Some(name) => name,
-                                None => State::join_usernames(&other_participants)
-                            };
-                            let is_checked = storage_controller.read().chats_selected_to_send.iter()
-                            .any(|uuid| {
-                                uuid.eq(&chat.id)
-                            });
-
-                            let unwrapped_message = match chat.messages.iter().last() {
-                                Some(m) => m.inner.clone(),
-                                // conversation with no messages yet
-                                None => raygun::Message::default(),
-                            };
-                            let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                                Some(v) => markdown(v),
-                                _ => match &unwrapped_message.attachments()[..] {
-                                    [] => get_local_text("sidebar.chat-new"),
-                                    [ file ] => file.name(),
-                                    _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
-                                        Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name.into())]),
-                                        None => {
-                                            log::error!("error calculating subtext for sidebar chat");
-                                            // Still return default message
-                                            get_local_text("sidebar.chat-new")
-                                        }
-                                    }
+                        })
+                    } else {
+                        rsx!(div {
+                            id: "all_chats", 
+                            div {
+                                padding_left: "16px",
+                                Label {
+                                    text: get_local_text("files.select-chats"),
                                 }
-                            };
-
-
-                            rsx!(div {
-                                    id: "chat-selector-to-send-files",
-                                    height: "80px",
-                                    padding: "16px",
-                                    display: "inline-flex",
-                                    Checkbox {
-                                        disabled: false,
-                                        width: "1em".into(),
-                                        height: "1em".into(),
-                                        is_checked: is_checked,
-                                        on_click: move |_| {
-                                            if is_checked {
-                                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                            } else {
-                                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                            }
+                            state.read().chats_sidebar().iter().cloned().map(|chat| {
+                                let participants = state.read().chat_participants(&chat);
+                                let other_participants =  state.read().remove_self(&participants);
+                                let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
+                                let platform = user.platform().into();
+    
+                                // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
+                                let participants_name = match chat.conversation_name {
+                                    Some(name) => name,
+                                    None => State::join_usernames(&other_participants)
+                                };
+                                let is_checked = storage_controller.read().chats_selected_to_send.iter()
+                                .any(|uuid| {
+                                    uuid.eq(&chat.id)
+                                });
+    
+                                let unwrapped_message = match chat.messages.iter().last() {
+                                    Some(m) => m.inner.clone(),
+                                    // conversation with no messages yet
+                                    None => raygun::Message::default(),
+                                };
+                                let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                                    Some(v) => markdown(v),
+                                    _ => match &unwrapped_message.attachments()[..] {
+                                        [] => get_local_text("sidebar.chat-new"),
+                                        [ file ] => file.name(),
+                                        _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
+                                            Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name.into())]),
+                                            None => {
+                                                log::error!("error calculating subtext for sidebar chat");
+                                                // Still return default message
+                                                get_local_text("sidebar.chat-new")
                                             }
                                         }
                                     }
-                                    User {
-                                        username: participants_name,
-                                        subtext: subtext_val,
-                                        timestamp: raygun::Message::default().date(),
-                                        active: false,
-                                        user_image: cx.render(rsx!(
-                                            if chat.conversation_type == ConversationType::Direct {rsx! (
-                                                UserImage {
-                                                    platform: platform,
-                                                    status:  user.identity_status().into(),
-                                                    image: user.profile_picture(),
-                                                    typing: false,
+                                };
+    
+    
+                                rsx!(div {
+                                        id: "chat-selector-to-send-files",
+                                        height: "80px",
+                                        padding: "16px",
+                                        display: "inline-flex",
+                                        Checkbox {
+                                            disabled: false,
+                                            width: "1em".into(),
+                                            height: "1em".into(),
+                                            is_checked: is_checked,
+                                            on_click: move |_| {
+                                                if is_checked {
+                                                    storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                                } else {
+                                                    storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                                                 }
-                                            )} else {rsx! (
-                                                UserImageGroup {
-                                                    participants: build_participants(&participants),
-                                                    typing: false,
+                                            }
+                                        }
+                                        User {
+                                            username: participants_name,
+                                            subtext: subtext_val,
+                                            timestamp: raygun::Message::default().date(),
+                                            active: false,
+                                            user_image: cx.render(rsx!(
+                                                if chat.conversation_type == ConversationType::Direct {rsx! (
+                                                    UserImage {
+                                                        platform: platform,
+                                                        status:  user.identity_status().into(),
+                                                        image: user.profile_picture(),
+                                                        typing: false,
+                                                    }
+                                                )} else {rsx! (
+                                                    UserImageGroup {
+                                                        participants: build_participants(&participants),
+                                                        typing: false,
+                                                    }
+                                                )}
+                                            )),
+                                            with_badge: "".into(),
+                                            onpress: move |_| {
+                                                if is_checked {
+                                                    storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                                } else {
+                                                    storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                                                 }
-                                            )}
-                                        )),
-                                        with_badge: "".into(),
-                                        onpress: move |_| {
-                                            if is_checked {
-                                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                            } else {
-                                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                                             }
                                         }
                                     }
-                                }
-                            )
-                        }),
-                    })
+                                )
+                            }),
+                        })
+                    }
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -777,7 +784,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 })
                }
-                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view && !*storage_files_to_chat_mode_is_active.get()).then(|| rsx!(
                     crate::AppNav {
                         active: crate::UplinkRoute::FilesLayout{},
                     }
