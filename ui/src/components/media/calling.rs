@@ -323,7 +323,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     // todo: send command
                 }
             },
-            outgoing.then(||{
+            (!outgoing).then(||{
                 if *recording.read() {
                     rsx!(Button {
                         icon: Icon::StopCircle,
