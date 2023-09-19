@@ -547,8 +547,8 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
 
                     let datetime = unwrapped_message.date();
 
-                    let badge = if chat.unreads > 0 {
-                        chat.unreads.to_string()
+                    let badge = if chat.unreads() > 0 {
+                        chat.unreads().to_string()
                     } else { "".into() };
                     let key = chat.id;
 
