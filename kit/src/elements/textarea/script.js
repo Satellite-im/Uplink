@@ -1,6 +1,6 @@
 var MULTI_LINE = $MULTI_LINE;
 
-var textareas = document.getElementsByClassName("controls")
+var sendButton = document.getElementsByClassName("controls")
 var textareas = document.getElementsByClassName("input_textarea")
 for (let i = 0; i < textareas.length; i++) {
     var txt = textareas[i];
