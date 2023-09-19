@@ -16,7 +16,7 @@ use crate::state::{self, chats, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashSet, VecDeque},
     ops::Range,
 };
 use warp::{
@@ -279,24 +279,17 @@ pub async fn conversation_to_chat(
         .and_then(Vec::<_>::try_from)?;
 
     let has_more_messages = total_messages > to_take;
-    Ok(chats::Chat {
-        id: conv.id(),
-        conversation_type: conv.conversation_type(),
-        conversation_name: conv.name(),
-        participants: HashSet::from_iter(conv.recipients()),
-        creator: conv.creator(),
+    let mut chat = chats::Chat::new(
+        conv.id(),
+        HashSet::from_iter(conv.recipients()),
+        conv.conversation_type(),
+        conv.name(),
+        conv.creator(),
         messages,
-        unreads: total_messages as u32,
-        replying_to: None,
-        typing_indicator: HashMap::new(),
-        draft: None,
-        has_more_messages,
-        pending_outgoing_messages: vec![],
-        files_attached_to_send: vec![],
-        scroll_value: None,
         pinned_messages,
-        scroll_to: None,
-    })
+    );
+    chat.has_more_messages = has_more_messages;
+    Ok(chat)
 }
 
 pub async fn init_conversation(

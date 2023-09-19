@@ -16,6 +16,11 @@
     text-overflow: ellipsis;
 }
 
+.modal-div-files-layout {
+  height: 85vh;
+  width: 85vw;
+}
+
 @media (max-width: 1740px) {
     .files-selected-text {
       max-width: 60vw;
@@ -81,6 +86,7 @@
   flex-direction: column;
   margin-top: 16px;
   overflow-y: scroll;
-  height: 40vh;
+  min-height: 10vh;
+  max-height: 30vh;
   background: var(--secondary);
 }

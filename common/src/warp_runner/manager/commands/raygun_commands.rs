@@ -351,7 +351,10 @@ pub async fn handle_raygun_cmd(
                                 }
                             }
                         },
-                        Err(e) => Err(e),
+                        Err(e) => {
+                            log::error!("Raygun: Send files to several chats: {}", e);
+                            Err(e)
+                        }
                     }
                 };
             }

@@ -27,9 +27,7 @@ pub fn file_checkbox(
                         Location::Disk { .. } => false,
                     }
                 }),
-                on_click: move |_| {
-                    toggle_selected_file(storage_controller.clone(), file_path.clone());
-                }
+                on_click: move |_| {}
             }
         },));
     }

@@ -529,20 +529,8 @@ impl State {
                 // can't have 2 mutable borrows
                 let mut should_decrement_notifications = false;
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    // can't fetch the deleted message from RayGun because it no longer exists there.
-                    // Not going to ask that the RayGun event be updated at this time because having this
-                    // information doesn't guarantee we can determine if the deleted message was unread.
-                    // Knowing this basically requires that RayGun  or warp_runner knows how many
-                    // unread messages there are. But that information is in State.
-                    if let Some(msg) = chat
-                        .messages
-                        .iter()
-                        .find(|msg| msg.inner.id() == message_id)
-                    {
-                        if chat.is_msg_unread(msg.inner.date()) {
-                            chat.unreads = chat.unreads.saturating_sub(1);
-                            should_decrement_notifications = true;
-                        }
+                    if chat.remove_unread(&message_id) {
+                        should_decrement_notifications = true;
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
@@ -849,6 +837,7 @@ impl State {
             .collect()
     }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
+        let msg_id = message.inner.id();
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message);
@@ -856,7 +845,7 @@ impl State {
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
             {
-                chat.unreads += 1;
+                chat.add_unread(msg_id);
             }
         }
     }
@@ -947,7 +936,7 @@ impl State {
     ///
     fn clear_unreads(&mut self, chat_id: Uuid) {
         if let Some(chat) = self.chats.all.get_mut(&chat_id) {
-            chat.unreads = 0;
+            chat.clear_unreads();
         }
     }
     /// Adds the given chat to the user's favorites.
@@ -1143,7 +1132,7 @@ impl State {
             self.chats.in_sidebar.push_front(*chat);
         }
         if let Some(chat) = self.chats.all.get_mut(chat) {
-            chat.unreads = 0;
+            chat.clear_unreads();
         }
     }
 
@@ -1750,7 +1739,7 @@ impl<'a> GroupedMessage<'a> {
     }
 }
 
-pub fn group_messages<'a>(
+pub fn create_message_groups<'a>(
     my_did: DID,
     when_to_fetch_more: usize,
     // true if the chat has more messages to fetch
