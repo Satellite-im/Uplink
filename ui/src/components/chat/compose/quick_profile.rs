@@ -337,7 +337,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                     Range {
                         initial_value: volume,
-                        min: 0.0,
+                        min: 0.25,
                         max: 5.0,
                         step: 0.1,
                         no_num: true,
