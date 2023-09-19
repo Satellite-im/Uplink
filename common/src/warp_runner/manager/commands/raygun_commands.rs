@@ -313,7 +313,7 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             for chat_id in convs_id {
-                _ = if attachments.is_empty() {
+                let _ = if attachments.is_empty() {
                     messaging.send(chat_id, msg.clone()).await
                 } else {
                     //TODO: Pass stream off to attachment events
@@ -326,7 +326,9 @@ pub async fn handle_raygun_cmd(
                             //let attachment_clone = attachments.clone();
                             if let Some(kind) = stream.next().await {
                                 match kind {
-                                    AttachmentKind::Pending(_) => (),
+                                    AttachmentKind::Pending(result) => {
+                                        break result;
+                                    }
                                     AttachmentKind::AttachedProgress(progress) => {
                                         if WARP_EVENT_CH
                                             .tx
