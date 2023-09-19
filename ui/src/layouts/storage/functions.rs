@@ -23,10 +23,7 @@ use warp::constellation::{directory::Directory, item::Item};
 
 use crate::components::files::upload_progress_bar;
 
-use super::files_layout::{
-    controller::{StorageController, UploadFileController},
-    Props,
-};
+use super::files_layout::controller::{StorageController, UploadFileController};
 
 pub type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 

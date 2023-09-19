@@ -12,7 +12,6 @@ use common::{
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::layout::modal::Modal;
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -47,7 +46,7 @@ use crate::{
         files::attachments::Attachments,
         paste_files_with_shortcut,
     },
-    layouts::storage::FilesLayout,
+    layouts::storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -603,34 +602,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             }
                         },
                     }
-                    if *show_storage_modal.get() {
-                        rsx!(
-                            Modal {
-                                open: *show_storage_modal.clone(),
-                                transparent: false,
-                                onclose: move |_| show_storage_modal.set(false),
-                                div {
-                                    class: "modal-div-files-layout",
-                                    FilesLayout {
-                                            storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
-                                            on_files_attached: move |(files_location, _): (Vec<Location>, _) | {
-                                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                                .unwrap_or_default()
-                                                .iter()
-                                                .filter(|file_location| {
-                                                    !files_location.contains(file_location)
-                                                })
-                                                .cloned()
-                                                .collect();
-                                                new_files_to_upload.extend(files_location);
-                                                state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                                                update_send();
-                                        },
-                                    }
-                                }
-                            }
-                        )
-                    }
+                    SendFilesLayoutModal {
+                        send_files_from_storage: show_storage_modal,
+                        send_files_start_location: SendFilesStartLocation::Chats,
+                        on_send: move |(files_location, _): (Vec<Location>, _)| {
+                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                            .unwrap_or_default()
+                            .iter()
+                            .filter(|file_location| {
+                                !files_location.contains(file_location)
+                            })
+                            .cloned()
+                            .collect();
+                            new_files_to_upload.extend(files_location);
+                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                            update_send();
+                        },
+                    },
                 ),
             )
         }

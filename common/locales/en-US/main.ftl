@@ -179,6 +179,7 @@ files = Files
     .upload-in-progress-please-wait = Upload in progress. Please wait.
     .no-files-available = No files available.
     .no-chats-available = No chats available
+    .share-files = Share Files
 
 settings = Settings
     .settings = Settings

@@ -14,7 +14,6 @@ use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use kit::elements::label::Label;
-use kit::layout::modal::Modal;
 use kit::{
     elements::{
         button::Button,
@@ -35,25 +34,18 @@ use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
-use crate::layouts::storage::send_files_layout::{SendFilesLayout, SendFilesStartLocation};
+use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
+use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesBreadcumbs, FilesAndFolders};
 
 use self::controller::{StorageController, UploadFileController};
 
 use super::functions::{self, ChanCmd, UseEvalFn};
 
-#[derive(Props)]
-pub struct Props<'a> {
-    storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
-    select_chats_to_send_files_mode: Option<UseState<bool>>,
-    on_files_attached: Option<EventHandler<'a, (Vec<Location>, Vec<Uuid>)>>,
-}
-
 #[allow(non_snake_case)]
-pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn FilesLayout<'a>(cx: Scope<'a>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let on_files_attached = cx.props.on_files_attached.as_ref();
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
@@ -102,10 +94,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         );
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
-
-    storage_controller
-        .write_silent()
-        .update_current_dir_path(state.clone());
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused  {
@@ -257,6 +245,26 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
             SendFilesLayoutModal {
                 send_files_from_storage: send_files_from_storage,
+                send_files_start_location: SendFilesStartLocation::Storage,
+                on_send: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
+                    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                    let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
+                    let msg = vec!["".to_owned()];
+                    let attachments = files_location;
+                    let ui_msg_id = None;
+                    let convs_id = convs_id;
+                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                        convs_id,
+                        msg,
+                        attachments,
+                        ui_msg_id,
+                        rsp: tx,
+                    })) {
+                        log::error!("Failed to send warp command: {}", e);
+                        return;
+                    }
+                    send_files_from_storage.set(false);
+                }
             },
             FilesBreadcumbs {
                 storage_controller: storage_controller, 
@@ -277,7 +285,9 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                } else {
                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller, 
-                    send_files_from_storage: send_files_from_storage,
+                    on_click_share_files: move |_| {
+                        send_files_from_storage.set(true);
+                    },
                     ch: ch,
                     send_files_mode: false,
                 })
@@ -292,53 +302,3 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }               
 
-
-#[derive(Props)]
-pub struct SendFilesLayoutModalProps<'a> {
-    send_files_from_storage: &'a UseState<bool>,
-}
-
-#[allow(non_snake_case)]
-pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) -> Element<'a> {
-    let send_files_from_storage = cx.props.send_files_from_storage;
-
-    if !*send_files_from_storage.get() {
-        return None;
-    }
-
-    cx.render(rsx!( div {
-                class: "send-files-to-several-chats-div",
-                Modal {
-                    open: *send_files_from_storage.clone(),
-                    transparent: false,
-                    onclose: move |_| send_files_from_storage.set(false),
-                    div {
-                        class: "modal-div-files-layout",
-                        SendFilesLayout {
-                            send_files_start_location: SendFilesStartLocation::Storage,
-                            on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
-                                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                                let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-                                let msg = vec!["".to_owned()];
-                                let attachments = files_location;
-                                let ui_msg_id = None;
-                                let convs_id =  convs_id;
-                                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                                    convs_id,
-                                    msg,
-                                    attachments,
-                                    ui_msg_id,
-                                    rsp: tx,
-                                })) {
-                                    log::error!("Failed to send warp command: {}", e);
-                                    return;
-                                }
-                                send_files_from_storage.set(false);
-                            },
-                        }
-                    }
-                }
-            }
-        )
-    )
-}

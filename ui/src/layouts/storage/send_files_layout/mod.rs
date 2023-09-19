@@ -5,8 +5,9 @@ use uuid::Uuid;
 use warp::raygun::{Location, ConversationType, self};
 
 pub mod send_files_components;
+pub mod modal;
 
-use crate::{layouts::storage::send_files_layout::send_files_components::SendFilesTopbar, utils::build_participants};
+use crate::{layouts::storage::{send_files_layout::send_files_components::SendFilesTopbar, shared_component::{FilesBreadcumbs, FilesAndFolders}}, utils::build_participants};
 
 use super::{
     files_layout::controller::StorageController,
@@ -31,7 +32,13 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let send_files_start_location = cx.props.send_files_start_location.clone();
     let storage_controller = StorageController::new(cx, state);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
+
     functions::get_items_from_current_directory(cx, ch);
+
+    storage_controller
+        .write_silent()
+        .update_current_dir_path(state.clone());
+
     cx.render(rsx!(div {
         id: "send-files-layout",
         aria_label: "send-files-layout",
@@ -49,12 +56,34 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
                     storage_controller: storage_controller,
                 })
             }
+            FilesBreadcumbs {
+                storage_controller: storage_controller, 
+                ch: ch,
+                send_files_mode: true,
+            },
+            if storage_controller.read().files_list.is_empty()
+                && storage_controller.read().directories_list.is_empty() {
+                    rsx!(
+                        div {
+                            padding: "48px",
+                            Label {
+                                text: get_local_text("files.no-files-available"),
+                            }
+                        }
+                        )
+               } else {
+                rsx!(FilesAndFolders {
+                    storage_controller: storage_controller, 
+                    ch: ch,
+                    send_files_mode: true,
+                })
+               }
         }
     }))
 }
 
 
-#[derive(Props)]
+#[derive(PartialEq, Props)]
 struct ChatsToSelectProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
 }
@@ -99,9 +128,9 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
                         is_checked: is_checked,
                         on_click: move |_| {
                             if is_checked {
-                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }
@@ -128,9 +157,9 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
                         with_badge: "".into(),
                         onpress: move |_| {
                             if is_checked {
-                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }

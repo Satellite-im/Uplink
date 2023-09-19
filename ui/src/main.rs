@@ -47,7 +47,7 @@ use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService};

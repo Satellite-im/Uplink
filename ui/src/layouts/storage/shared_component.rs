@@ -1,5 +1,5 @@
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
-use crate::layouts::storage::send_files_layout::send_files_components::toggle_selected_file;
+use crate::layouts::storage::send_files_layout::send_files_components::{toggle_selected_file, file_checkbox};
 
 use super::files_layout::controller::StorageController;
 use common::icons::outline::Shape as Icon;
@@ -74,14 +74,13 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
 pub struct FilesAndFoldersProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
-    send_files_from_storage: &'a UseState<bool>,
+    on_click_share_files: Option<EventHandler<'a, ()>>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let send_files_from_storage = cx.props.send_files_from_storage;
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
@@ -205,15 +204,18 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         if !send_files_mode {
                             rsx!(
                                 // TODO: Add translate to text
-                                ContextItem {
+                            ContextItem {
                                 icon: Icon::Share,
                                 aria_label: "files-download".into(),
-                                text: "Share Files".into(),
+                                text: get_local_text("files.share-files"),
                                 onpress: move |_| {
-                                    send_files_from_storage.set(true);
+                                    if let Some(f) = &cx.props.on_click_share_files {
+                                        f.call(());
+                                    }
                                 },
-                            })},
+                            }, 
                             hr {},
+                        )},
                             ContextItem {
                                 icon: Icon::Pencil,
                                 aria_label: "files-rename".into(),
@@ -246,11 +248,11 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         )),
                         div {
                             class: "file-wrap",
-                            // file_checkbox {
-                            //     file_path: file_path.clone(),
-                            //     storage_controller: storage_controller.clone(),
-                            //     is_selecting_files: *storage_files_to_chat_mode_is_active.get() || *share_files_from_storage_mode.get(),
-                            // },
+                            file_checkbox {
+                                file_path: file_path.clone(),
+                                storage_controller: storage_controller.clone(),
+                                is_selecting_files: send_files_mode,
+                            },
                             File {
                                 key: "{key}-file",
                                 thumbnail: thumbnail_to_base64(file),
