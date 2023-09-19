@@ -6,7 +6,7 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use common::state::{self, ToastNotification};
 use common::state::{ui, Action, State};
 use common::upload_file_channel::{
@@ -18,6 +18,7 @@ use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
+use kit::components::message::markdown;
 use kit::components::user::User;
 use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
@@ -407,6 +408,29 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             .any(|uuid| {
                                 uuid.eq(&chat.id)
                             });
+
+                            let unwrapped_message = match chat.messages.iter().last() {
+                                Some(m) => m.inner.clone(),
+                                // conversation with no messages yet
+                                None => raygun::Message::default(),
+                            };
+                            let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                                Some(v) => markdown(v),
+                                _ => match &unwrapped_message.attachments()[..] {
+                                    [] => get_local_text("sidebar.chat-new"),
+                                    [ file ] => file.name(),
+                                    _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
+                                        Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name.into())]),
+                                        None => {
+                                            log::error!("error calculating subtext for sidebar chat");
+                                            // Still return default message
+                                            get_local_text("sidebar.chat-new")
+                                        }
+                                    }
+                                }
+                            };
+
+
                             rsx!(div {
                                     id: "chat-selector-to-send-files",
                                     height: "80px",
@@ -427,7 +451,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     }
                                     User {
                                         username: participants_name,
-                                        subtext: get_local_text("sidebar.chat-new"),
+                                        subtext: subtext_val,
                                         timestamp: raygun::Message::default().date(),
                                         active: false,
                                         user_image: cx.render(rsx!(
