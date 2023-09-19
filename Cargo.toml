@@ -26,14 +26,14 @@ version = "0.1.6"
 rust-version = "1.70"
 
 [workspace.dependencies]
-dioxus = { version = "0.4" }
-dioxus-hooks = { version = "0.4" }
-dioxus-html = { version = "0.4" }
-dioxus-router = { version = "0.4" }
-dioxus-desktop = { version = "0.4", features = ["transparent"] }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", features = ["transparent"] }
 raw-window-handle = "0.5"
-dioxus-core = { version = "0.4" }
-fermi = { version = "0.4" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+fermi = { git = "https://github.com/DioxusLabs/dioxus" }
 tokio-util = { version = "0.7", features = ["full"] }
 arboard = "3.2"
 humansize = "2.1.3"

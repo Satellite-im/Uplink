@@ -338,7 +338,8 @@ impl Extension for EmojiSelector {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a> {
+        cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
         cx.render(rsx!(
             style { "{styles}" },
