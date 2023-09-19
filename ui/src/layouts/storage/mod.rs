@@ -404,7 +404,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 let other_participants =  state.read().remove_self(&participants);
                                 let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                                 let platform = user.platform().into();
-    
                                 // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                                 let participants_name = match chat.conversation_name {
                                     Some(name) => name,
@@ -414,7 +413,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 .any(|uuid| {
                                     uuid.eq(&chat.id)
                                 });
-    
                                 let unwrapped_message = match chat.messages.iter().last() {
                                     Some(m) => m.inner.clone(),
                                     // conversation with no messages yet
@@ -435,8 +433,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     }
                                 };
-    
-    
                                 rsx!(div {
                                         id: "chat-selector-to-send-files",
                                         height: "80px",
