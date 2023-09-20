@@ -1,56 +1,24 @@
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
-        user_image_group::UserImageGroup,
-    },
-    elements::{
-        button::Button,
-        input::{Input, Options},
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    layout::{modal::Modal, topbar::Topbar},
-};
-use std::rc::Rc;
-
-use crate::{
-    components::{
-        chat::create_group::get_input_options, chat::pinned_messages::PinnedMessages,
-        media::calling::CallControl,
-    },
-    layouts::chats::{
-        data::{ChatData, ChatProps},
-        presentation::chatbar::get_chatbar,
-    },
+    components::{user_image::UserImage, user_image_group::UserImageGroup},
+    elements::input::{Input, Options},
 };
 
+use crate::{components::chat::create_group::get_input_options, layouts::chats::data::ChatProps};
+
+use common::WARP_CMD_CH;
 use common::{
-    icons::outline::Shape as Icon,
     language::get_local_text_with_args,
-    state::call,
-    warp_runner::{BlinkCmd, RayGunCmd, WarpCmd},
-};
-use common::{
-    state::{ui, Action, Chat, Identity, State},
-    WARP_CMD_CH,
+    warp_runner::{RayGunCmd, WarpCmd},
 };
 
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{
-    blink::{self},
-    crypto::DID,
-    logging::tracing::log,
-    raygun::ConversationType,
-};
+use warp::{logging::tracing::log, raygun::ConversationType};
 
-use crate::{
-    components::chat::{edit_group::EditGroup, group_users::GroupUsers},
-    utils::build_participants,
-};
+use crate::utils::build_participants;
 
 enum EditGroupCmd {
     UpdateGroupName((Uuid, String)),

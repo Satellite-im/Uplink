@@ -1,39 +1,27 @@
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
-        user_image_group::UserImageGroup,
-    },
     elements::{
         button::Button,
-        input::{Input, Options},
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    layout::{modal::Modal, topbar::Topbar},
+    layout::modal::Modal,
 };
 use std::rc::Rc;
 
 use crate::{
-    components::{
-        chat::create_group::get_input_options, chat::pinned_messages::PinnedMessages,
-        media::calling::CallControl,
-    },
-    layouts::chats::{
-        data::{ChatData, ChatProps},
-        presentation::chatbar::get_chatbar,
-    },
+    components::chat::pinned_messages::PinnedMessages,
+    layouts::chats::data::{ChatData, ChatProps},
 };
 
 use common::{
     icons::outline::Shape as Icon,
-    language::get_local_text_with_args,
     state::call,
-    warp_runner::{BlinkCmd, RayGunCmd, WarpCmd},
+    warp_runner::{BlinkCmd, WarpCmd},
 };
 use common::{
-    state::{ui, Action, Chat, Identity, State},
+    state::{Action, State},
     WARP_CMD_CH,
 };
 
@@ -45,11 +33,6 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     raygun::ConversationType,
-};
-
-use crate::{
-    components::chat::{edit_group::EditGroup, group_users::GroupUsers},
-    utils::build_participants,
 };
 
 enum ControlsCmd {

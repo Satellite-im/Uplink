@@ -1,7 +1,7 @@
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::{get_local_text, get_local_text_with_args};
-use common::state::{self, identity_search_result, Action, Chat, Identity, State};
+use common::language::get_local_text;
+use common::state::{identity_search_result, Chat, Identity, State};
 use dioxus::prelude::*;
 use kit::components::{user_image::UserImage, user_image_group::UserImageGroup};
 
