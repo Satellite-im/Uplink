@@ -8,6 +8,8 @@ members = [
     "native_extensions/emoji_selector",
 ]
 
+resolver = "2"
+
 [profile.rapid]
 inherits = "dev"
 opt-level = 2
