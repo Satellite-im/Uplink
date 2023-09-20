@@ -1,3 +1,5 @@
+use dioxus::prelude::{EventHandler, *};
+use futures::StreamExt;
 use std::{
     collections::{HashMap, HashSet},
     ffi::OsStr,
@@ -5,11 +7,10 @@ use std::{
     rc::Rc,
 };
 
-use dioxus::prelude::{EventHandler, *};
-
 mod coroutines;
 mod effects;
 
+use futures::channel::oneshot;
 use kit::components::{
     context_menu::{ContextItem, ContextMenu},
     indicator::Status,
@@ -19,7 +20,6 @@ use kit::components::{
     user_image::UserImage,
 };
 
-use common::state::{Action, Identity, State};
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
@@ -28,7 +28,14 @@ use common::{
         create_message_groups, pending_group_messages, pending_message::PendingMessage,
         scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
-    warp_runner::ui_adapter::{self},
+    warp_runner::{
+        ui_adapter::{self},
+        RayGunCmd, WarpCmd,
+    },
+};
+use common::{
+    state::{Action, Identity, State},
+    WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
@@ -45,7 +52,7 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
-        data::ChatData,
+        data::{ActiveChat, ChatData},
         scripts::{READ_SCROLL, SHOW_CONTEXT},
     },
     utils::format_timestamp::format_timestamp_timeago,
@@ -85,168 +92,67 @@ pub struct NewelyFetchedMessages {
     has_more: bool,
 }
 
-/// Lazy loading scheme:
-/// load DEFAULT_NUM_TO_TAKE messages to start.
-/// tell group_messages to flag the first X messages.
-/// if onmouseout triggers over any of those messages, load Y more.
-const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     log::trace!("get_messages");
-    use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
+    use_shared_state_provider(cx, || -> Option<ActiveChat> { None });
     let state = use_shared_state::<State>(cx)?;
-    let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
+    let active_chat = use_shared_state::<Option<ActiveChat>>(cx)?;
 
-    let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
-
-    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
-    let identity_profile = use_state(cx, Identity::default);
-    let update_script = use_state(cx, String::new);
-
-    // this needs to be a hook so it can change inside of the use_future.
-    // it could be passed in as a dependency but then the wait would reset every time a message comes in.
-    let max_to_take = use_ref(cx, || data.active_chat.messages.len());
-
-    let active_chat = use_ref(cx, || None);
-    let eval = use_eval(cx);
-
-    if *max_to_take.read() != data.active_chat.messages.len() {
-        *max_to_take.write_silent() = data.active_chat.messages.len();
-    }
-
-    let currently_active = Some(data.active_chat.id);
-
-    if *active_chat.read() != currently_active {
-        *active_chat.write_silent() = currently_active;
-    }
-
-    effects::update_chat_messages(cx, state, newly_fetched_messages);
-
-    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
-    // to the bottom when the user selects the active chat
-    // also must reset num_to_take when the active_chat changes
-    effects::check_message_scroll(
-        cx,
-        &data.active_chat.scroll_to,
-        state,
-        eval,
-        &currently_active,
-    );
-
-    effects::scroll_to_bottom(
-        cx,
-        data.active_chat.scroll_value,
-        eval,
-        data.active_chat.unreads(),
-        data.active_chat.id,
-        prev_chat_id,
-    );
-
-    let _ch =
-        coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
-
-    let msg_container_end = if data.active_chat.has_more_messages {
-        rsx!(div {
-            class: "fetching",
-            p {
-                IconElement {
-                    icon: Icon::Loader,
-                    class: "spin",
-                },
-                get_local_text("messages.fetching")
+    let finished_init = use_future(cx, (&data.active_chat.id), |conv_id| {
+        to_owned![active_chat];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel();
+            if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
+                conv_id,
+                start_date: None,
+                to_fetch: 40,
+                rsp: tx,
+            })) {
+                log::error!("failed to init messages: {e}");
+                return false;
             }
-        })
-    } else {
-        rsx!(
-            div {
-                // key: "encrypted-notification-0001",
-                class: "msg-container-end",
-                aria_label: "messages-secured-alert",
-                p {
-                    IconElement {
-                        icon:  Icon::LockClosed,
-                    },
-                    get_local_text("messages.msg-banner")
+
+            let rsp = match rx.await {
+                Ok(r) => r,
+                Err(e) => {
+                    log::error!("failed to send warp command. channel closed. {e}");
+                    return false;
+                }
+            };
+
+            match rsp {
+                Ok(r) => {
+                    // todo: init active chat
+                }
+                Err(e) => {
+                    log::error!("FetchMessages command failed: {e}");
+                    return false;
                 }
             }
-        )
-    };
+
+            return true;
+        }
+    });
+
+    let finished_init = finished_init.value().cloned().unwrap_or(false);
 
     cx.render(rsx!(
         div {
             id: "messages",
-            onscroll: move |_| {
-                let update = cx.schedule_update_any();
-                to_owned![eval, update, state, active_chat];
-                async move {
-                    if let Ok(val) = eval(READ_SCROLL) {
-                        if let Ok(result) = val.join().await {
-                            if let Some(uuid) = active_chat.read().as_ref() {
-                                state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
-                                if let Some(id) = state.read().scope_ids.chatbar{
-                                    update(ScopeIds::scope_id_from_usize(id));
-                                };
-                            }
-                        }
+            if finished_init {
+                render!(
+                    span {
+                        "got messages"
                     }
-                }
-            },
-            span {
-                rsx!(
-                    msg_container_end,
-                    loop_over_message_groups {
-                        groups: create_message_groups(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
-                        active_chat_id: data.active_chat.id,
-                        num_messages_in_conversation: data.active_chat.messages.len(),
-                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
-                            let own = state.read().get_own_identity().did_key().eq(&id.did_key());
-                            if !identity_profile.get().eq(&id) {
-                                let id = if own {
-                                    let mut id = id;
-                                    id.set_identity_status(IdentityStatus::Online);
-                                    id
-                                } else {
-                                    id
-                                };
-                                identity_profile.set(id);
-                            }
-                            //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT
-                                .replace("UUID", quick_profile_uuid)
-                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
-                                .replace("$SELF", &own.to_string());
-                            update_script.set(script);
-                        }
-                    },
-                    render_pending_messages_listener {
-                        data: data,
-                        on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
-                            let own = state.read().get_own_identity().did_key().eq(&id.did_key());
-                            if !identity_profile.get().eq(&id) {
-                                if own {
-                                    id.set_identity_status(IdentityStatus::Online);
-                                }
-                                identity_profile.set(id);
-                            }
-                            //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT
-                                .replace("UUID", quick_profile_uuid)
-                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
-                                .replace("$SELF", &own.to_string());
-                            update_script.set(script);
-                        }
-                    }
+                )
+            } else {
+                render!(
+                    span { "fetching messages" }
                 )
             }
         },
-        super::quick_profile::QuickProfileContext{
-            id: quick_profile_uuid,
-            update_script: update_script,
-            did_key: identity_profile.did_key()
-        }
     ))
 }
 
