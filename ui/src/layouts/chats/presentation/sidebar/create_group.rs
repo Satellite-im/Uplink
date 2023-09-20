@@ -15,7 +15,7 @@ use kit::{
     elements::{
         button::Button,
         checkbox::Checkbox,
-        input::{Input, Options, SpecialCharsAction, Validation},
+        input::{Input, Options},
         label::Label,
         Appearance,
     },
