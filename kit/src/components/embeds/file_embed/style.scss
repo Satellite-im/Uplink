@@ -17,7 +17,9 @@
   color: var(--text-color);
   align-content: center;
   align-self: flex-end;
-
+  .btn {
+    display: none;
+  }
   .image-container {
     display: flex;
     position: relative;
@@ -60,6 +62,10 @@
 }
 .file-embed:hover {
   cursor: pointer;
+  .btn {
+    display: inline-flex;
+    border: 1px solid var(--text-color-dark);
+  }
 }
 
 .icon {
