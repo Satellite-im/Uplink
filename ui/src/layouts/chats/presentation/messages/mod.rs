@@ -9,7 +9,6 @@ use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
 mod effects;
-pub mod scripts;
 
 use kit::components::{
     context_menu::{ContextItem, ContextMenu},
@@ -44,7 +43,12 @@ use warp::{
 };
 
 use crate::{
-    components::emoji_group::EmojiGroup, utils::format_timestamp::format_timestamp_timeago,
+    components::emoji_group::EmojiGroup,
+    layouts::chats::{
+        data::ChatData,
+        scripts::{READ_SCROLL, SHOW_CONTEXT},
+    },
+    utils::format_timestamp::format_timestamp_timeago,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -81,16 +85,13 @@ pub struct NewelyFetchedMessages {
     has_more: bool,
 }
 
-// todo: make a scripts file for this stuff
-const SHOW_CONTEXT_SCRIPT: &str = include_str!("../../show_context.js");
-
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
 /// tell group_messages to flag the first X messages.
 /// if onmouseout triggers over any of those messages, load Y more.
 const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
-pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
+pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
@@ -179,7 +180,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 let update = cx.schedule_update_any();
                 to_owned![eval, update, state, active_chat];
                 async move {
-                    if let Ok(val) = eval(scripts::READ_SCROLL) {
+                    if let Ok(val) = eval(READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             if let Some(uuid) = active_chat.read().as_ref() {
                                 state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
@@ -211,7 +212,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT_SCRIPT
+                            let script = SHOW_CONTEXT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -230,7 +231,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT_SCRIPT
+                            let script = SHOW_CONTEXT
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
@@ -273,7 +274,7 @@ fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Ele
 
 #[derive(Props)]
 struct PendingMessagesListenerProps<'a> {
-    data: &'a Rc<super::ComposeData>,
+    data: &'a Rc<ChatData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -297,7 +298,7 @@ fn render_pending_messages_listener<'a>(
 #[derive(Props)]
 struct PendingWrapperProps<'a> {
     msg: Vec<PendingMessage>,
-    data: Rc<super::ComposeData>,
+    data: Rc<ChatData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
