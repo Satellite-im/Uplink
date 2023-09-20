@@ -17,7 +17,7 @@ use crate::{
         presentation::{
             chat::{edit_group::EditGroup, group_users::GroupUsers},
             chatbar::get_chatbar,
-            messages::get_messages,
+            messages2::get_messages,
         },
     },
 };

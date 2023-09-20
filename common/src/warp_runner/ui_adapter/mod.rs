@@ -282,6 +282,7 @@ pub async fn fetch_messages2(
             conv_id,
             MessageOptions::default()
                 .set_range(0..total_messages)
+                .set_messages_type(raygun::MessagesType::Stream)
                 .set_reverse(),
         )
         .await
