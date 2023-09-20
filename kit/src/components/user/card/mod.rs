@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::elements::{button::Button, Appearance};
-use common::icons::outline::Shape as Icon;
+use common::{icons::outline::Shape as Icon, language::get_local_text};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -38,7 +38,7 @@ pub fn UserCard<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "body",
                     Button {
-                        text: if cx.props.friends { "Added!".into() } else { format!("Add {}", cx.props.name) },
+                        text: if cx.props.friends { get_local_text("uplink.added") } else { format!("{} {}", get_local_text("uplink.add"), cx.props.name) },
                         appearance: if cx.props.friends { Appearance::Secondary } else { Appearance::Primary },
                         icon: if cx.props.friends { Icon::Check } else { Icon::Plus },
                         onpress: |_| {

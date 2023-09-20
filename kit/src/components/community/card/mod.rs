@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use crate::elements::{button::Button, Appearance};
 use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -32,14 +33,14 @@ pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: "subtitle",
                         p {
-                            "You're invited!"
+                            get_local_text("community.invited")
                         },
                     }
                 }
                 div {
                     class: "body",
                     Button {
-                        text: if cx.props.joined { "Joined!".into() } else { format!("Join {}", cx.props.name) },
+                        text: if cx.props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), cx.props.name) },
                         appearance: if cx.props.joined { Appearance::Secondary } else { Appearance::Primary },
                         icon: if cx.props.joined { Icon::Check } else { Icon::ArrowRight },
                         onpress: |_| {

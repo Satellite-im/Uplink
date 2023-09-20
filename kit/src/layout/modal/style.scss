@@ -12,9 +12,10 @@
     background: rgba(0,0,0, 0.9);
 
     .close-btn {
-      position: absolute;
-      top: var(--gap);
-      right: var(--gap);
+      top: var(--gap-less);
+      left: var(--gap-less);
+      visibility: visible;
+      display: inline-block;
     }
 
     img {
@@ -29,6 +30,14 @@
       z-index: 1001;
       position: relative;
       overflow: hidden;
+
+      &:hover {
+        .close-btn {
+          .btn {
+            display: inline-block;
+          }
+        }
+      }
     }
 
     &.no-padding {
