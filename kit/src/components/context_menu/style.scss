@@ -1,6 +1,6 @@
 .context-menu {
 	position: fixed;
-	border-radius: var(--border-radius);
+	border-radius: var(--border-radius-more);
 	background-color: var(--secondary-dark);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
@@ -18,7 +18,8 @@
 		border-radius: var(--border-radius-more);
 		height: var(--height-input);
 		padding: var(--padding-less);
-
+		width: 100%;
+	
 		&:hover {
 			background: var(--secondary);
 			cursor: pointer;
@@ -84,7 +85,7 @@
 	background-color: var(--secondary);
 	margin-bottom: var(--height-input);
 	padding: 0;
-	border-radius: var(--border-radius);
+	border-radius: var(--border-radius-inner) var(--border-radius-inner) var(--border-radius) var(--border-radius);
 
 
 	#banner-image {
@@ -97,7 +98,7 @@
 		background-size: cover;
 		background-position: center;
 		background-color: rgba(0,0,0,0);
-		border-radius: var(--border-radius);
+		border-radius: var(--border-radius-inner) var(--border-radius-inner) var(--border-radius) var(--border-radius);
 		border: 0px solid var(--background);
 		position: relative;
 	}

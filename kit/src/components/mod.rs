@@ -25,3 +25,4 @@ pub mod context_menu;
 pub mod topbar_controls;
 
 pub mod swatch;
+pub mod community;
