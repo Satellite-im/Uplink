@@ -6,8 +6,7 @@ use presentation::{sidebar::Sidebar as ChatSidebar, welcome::Welcome};
 use std::{path::PathBuf, rc::Rc};
 
 use crate::{
-    components::chat::compose::Compose,
-    layouts::slimbar::SlimbarLayout,
+    layouts::{chats::presentation::chat::Compose, slimbar::SlimbarLayout},
     utils::{
         get_drag_event,
         verify_valid_paths::{decoded_pathbufs, verify_paths},

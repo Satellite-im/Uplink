@@ -2,7 +2,6 @@ mod controls;
 mod topbar;
 
 use dioxus::prelude::*;
-use futures::StreamExt;
 use kit::{
     components::message_group::MessageGroupSkeletal,
     layout::{modal::Modal, topbar::Topbar},
