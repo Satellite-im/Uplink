@@ -596,7 +596,6 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }
                                 },
-                                hr{ }
                                 ContextItem {
                                     icon: Icon::EyeSlash,
                                     aria_label: "chats-hide-chat".into(),
@@ -607,7 +606,6 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                 },
                                 show_delete_conversation.read().then(||
                                     rsx!(
-                                        hr{ }
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,

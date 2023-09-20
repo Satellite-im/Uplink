@@ -591,7 +591,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        hr {},
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
@@ -685,7 +684,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     download_file(&file_name2, ch);
                                                 },
                                             },
-                                            hr {},
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
