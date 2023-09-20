@@ -200,7 +200,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                *recording.write() = true;
+                                recording.with_mut(|_| true);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to start recording: {e}");
@@ -218,7 +218,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                *recording.write() = false;
+                                recording.with_mut(|_| false);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to stop recording: {e}");
