@@ -10,10 +10,8 @@ use kit::{
 };
 use std::rc::Rc;
 
-use crate::{
-    components::chat::pinned_messages::PinnedMessages,
-    layouts::chats::data::{ChatData, ChatProps},
-};
+use super::pinned_messages::PinnedMessages;
+use crate::layouts::chats::data::{ChatData, ChatProps};
 
 use common::{
     icons::outline::Shape as Icon,

@@ -5,8 +5,6 @@ use kit::{
     elements::input::{Input, Options},
 };
 
-use crate::{components::chat::create_group::get_input_options, layouts::chats::data::ChatProps};
-
 use common::WARP_CMD_CH;
 use common::{
     language::get_local_text_with_args,
@@ -18,7 +16,10 @@ use common::language::get_local_text;
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::ConversationType};
 
-use crate::utils::build_participants;
+use crate::{
+    layouts::chats::data::{get_input_options, ChatProps},
+    utils::build_participants,
+};
 
 enum EditGroupCmd {
     UpdateGroupName((Uuid, String)),

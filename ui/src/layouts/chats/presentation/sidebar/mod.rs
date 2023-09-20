@@ -1,3 +1,4 @@
+mod create_group;
 mod search;
 
 use common::language::{get_local_text, get_local_text_with_args};
@@ -36,8 +37,9 @@ use warp::{
     raygun::{self},
 };
 
-use crate::components::chat::create_group::CreateGroup;
 use crate::components::media::calling::CallControl;
+
+use crate::layouts::chats::presentation::sidebar::create_group::CreateGroup;
 use crate::utils::build_participants;
 use crate::UplinkRoute;
 

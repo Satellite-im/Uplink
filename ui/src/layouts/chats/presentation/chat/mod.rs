@@ -1,4 +1,7 @@
 mod controls;
+mod edit_group;
+mod group_users;
+mod pinned_messages;
 mod topbar;
 
 use dioxus::prelude::*;
@@ -11,7 +14,11 @@ use crate::{
     components::media::calling::CallControl,
     layouts::chats::{
         data::ChatData,
-        presentation::{chatbar::get_chatbar, messages::get_messages},
+        presentation::{
+            chat::{edit_group::EditGroup, group_users::GroupUsers},
+            chatbar::get_chatbar,
+            messages::get_messages,
+        },
     },
 };
 
@@ -21,8 +28,6 @@ use common::language::get_local_text;
 
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
-
-use crate::components::chat::{edit_group::EditGroup, group_users::GroupUsers};
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
