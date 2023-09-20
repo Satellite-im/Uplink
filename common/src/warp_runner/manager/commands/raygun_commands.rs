@@ -100,6 +100,14 @@ pub enum RayGunCmd {
         ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "SendMessageForSeveralChats")]
+    SendMessageForSeveralChats {
+        convs_id: Vec<Uuid>,
+        msg: Vec<String>,
+        attachments: Vec<Location>,
+        ui_msg_id: Option<Uuid>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     #[display(fmt = "EditMessage")]
     EditMessage {
         conv_id: Uuid,
@@ -296,6 +304,62 @@ pub async fn handle_raygun_cmd(
             };
 
             let _ = rsp.send(r);
+        }
+        RayGunCmd::SendMessageForSeveralChats {
+            convs_id,
+            msg,
+            attachments,
+            ui_msg_id: ui_id,
+            rsp,
+        } => {
+            for chat_id in convs_id {
+                let _ = if attachments.is_empty() {
+                    messaging.send(chat_id, msg.clone()).await
+                } else {
+                    //TODO: Pass stream off to attachment events
+                    match messaging
+                        .attach(chat_id, None, attachments.clone(), msg.clone())
+                        .await
+                    {
+                        Ok(mut stream) => loop {
+                            let msg_clone = msg.clone();
+                            //let attachment_clone = attachments.clone();
+                            if let Some(kind) = stream.next().await {
+                                match kind {
+                                    AttachmentKind::Pending(result) => {
+                                        break result;
+                                    }
+                                    AttachmentKind::AttachedProgress(progress) => {
+                                        if WARP_EVENT_CH
+                                            .tx
+                                            .send(WarpEvent::Message(
+                                                MessageEvent::AttachmentProgress {
+                                                    progress,
+                                                    conversation_id: chat_id,
+                                                    msg: PendingMessage::for_compare(
+                                                        msg_clone,
+                                                        &attachments,
+                                                        ui_id,
+                                                    ),
+                                                },
+                                            ))
+                                            .is_err()
+                                        {
+                                            log::error!("failed to send warp_event");
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            log::error!("Raygun: Send files to several chats: {}", e);
+                            Err(e)
+                        }
+                    }
+                };
+            }
+
+            let _ = rsp.send(Ok(()));
         }
         RayGunCmd::EditMessage {
             conv_id,
