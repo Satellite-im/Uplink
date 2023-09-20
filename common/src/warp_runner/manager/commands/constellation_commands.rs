@@ -16,7 +16,7 @@ use crate::{
     language::get_local_text,
     state::storage::Storage as uplink_storage,
     upload_file_channel::{UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER},
-    VIDEO_FILE_EXTENSIONS,
+    ROOT_DIR_NAME, VIDEO_FILE_EXTENSIONS,
 };
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
 
@@ -299,7 +299,13 @@ fn get_items_from_current_directory(
 }
 
 fn get_directories_opened() -> Vec<Directory> {
-    DIRECTORIES_AVAILABLE_TO_BROWSE.read().to_owned()
+    let mut dirs_opened = DIRECTORIES_AVAILABLE_TO_BROWSE.read().clone();
+    if let Some(first_dir) = dirs_opened.first() {
+        if first_dir.name() != ROOT_DIR_NAME {
+            dirs_opened.remove(0);
+        }
+    }
+    dirs_opened
 }
 
 fn set_new_directory_opened(current_dir: &mut Vec<Directory>, new_dir: Directory) {

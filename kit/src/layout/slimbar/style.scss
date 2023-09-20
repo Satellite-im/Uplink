@@ -10,7 +10,12 @@
     padding: var(--gap);
     padding-bottom: 0;
     position: relative;
-    z-index: 1000;
+    z-index: 1;
+    // overflow-x: hidden; // TODO: This breaks tooltips.
+
+    &::-webkit-scrollbar {
+        display: none; 
+    }
 
     // TODO: This is really tricky to get to work cleanly.
     // .slimbar-scroll {

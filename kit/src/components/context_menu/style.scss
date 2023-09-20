@@ -18,7 +18,8 @@
 		border-radius: var(--border-radius-more);
 		height: var(--height-input);
 		padding: var(--padding-less);
-
+		width: 100%;
+	
 		&:hover {
 			background: var(--secondary);
 			cursor: pointer;

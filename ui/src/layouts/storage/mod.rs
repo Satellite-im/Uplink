@@ -13,9 +13,11 @@ use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
 };
 use common::warp_runner::thumbnail_to_base64;
+use common::ROOT_DIR_NAME;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
+use kit::elements::label::Label;
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
     elements::{
@@ -28,9 +30,9 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
+use warp::raygun::Location;
 
 pub mod controller;
 pub mod file_modal;
@@ -43,14 +45,12 @@ use crate::components::paste_files_with_shortcut;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_components::{
-    add_remove_file_to_send, file_checkbox, send_files_from_chat_topbar,
+    file_checkbox, send_files_from_chat_topbar, toggle_selected_file,
 };
 
 use self::controller::{StorageController, UploadFileController};
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
-
-pub const ROOT_DIR_NAME: &str = "root";
 
 static ALLOW_FOLDER_NAVIGATION: &str = r#"
     var folders_element = document.getElementById('files-list');
@@ -75,49 +75,29 @@ pub enum ChanCmd {
         new_name: String,
     },
     DeleteItems(Item),
-    SendFileToChat {
-        files_path: Vec<PathBuf>,
-        conversation_id: Uuid,
-    },
 }
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    send_files_to_chat_mode: Option<UseState<bool>>,
-    chat_id: Option<Uuid>,
+#[derive(Props)]
+pub struct Props<'a> {
+    storage_files_to_chat_mode_is_active: Option<UseState<bool>>,
+    on_files_attached: Option<EventHandler<'a, Vec<Location>>>,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope<Props>) -> Element {
+pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode.as_ref() {
-        Some(d) => d,
-        None => use_state(cx, || false),
-    };
-    let chat_id = match cx.props.chat_id {
-        Some(id) => id,
-        None => {
-            if *select_files_to_send_mode.get() {
-                select_files_to_send_mode.set(false);
-            }
-            Uuid::new_v4()
-        }
-    };
+    let on_files_attached = cx.props.on_files_attached.as_ref();
+    let storage_files_to_chat_mode_is_active =
+        match cx.props.storage_files_to_chat_mode_is_active.as_ref() {
+            Some(d) => d,
+            None => use_state(cx, || false),
+        };
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let files_selected_to_send: &UseRef<Vec<String>> = use_ref(cx, Vec::new);
-    let current_dir_path = storage_controller
-        .read()
-        .dirs_opened_ref
-        .iter()
-        .filter(|dir| dir.name() != ROOT_DIR_NAME)
-        .map(|dir| dir.name())
-        .collect::<Vec<_>>()
-        .join("/");
 
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
@@ -147,7 +127,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     functions::get_items_from_current_directory(cx, ch);
 
-    if !*select_files_to_send_mode.get() {
+    if !*storage_files_to_chat_mode_is_active.get() {
         #[cfg(not(target_os = "macos"))]
         functions::allow_drag_event_for_non_macos_systems(
             cx,
@@ -165,7 +145,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused && !*select_files_to_send_mode.get() {
+        if state.read().ui.metadata.focused && !*storage_files_to_chat_mode_is_active.get() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
                     add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
@@ -192,14 +172,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if !*select_files_to_send_mode.get() && upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
+                if !*storage_files_to_chat_mode_is_active.get() && upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                     upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                 }
                 },
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            if !*select_files_to_send_mode.get() {
+            if !*storage_files_to_chat_mode_is_active.get() {
                 rsx!(
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
@@ -212,7 +192,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
-                if !*select_files_to_send_mode.get() {
+                if !*storage_files_to_chat_mode_is_active.get() {
                     rsx!(Topbar {
                         with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                         onback: move |_| {
@@ -287,19 +267,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-max-size",
-                                        format!("{}", get_local_text("files.storage-max-size")),
+                                        get_local_text("files.storage-max-size"),
                                         span {
                                             class: "count",
-                                           format!("{}", storage_controller.read().storage_size.0),
+                                            format!("{}", storage_controller.read().storage_size.0),
                                         }
                                     },
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-current-size",
-                                        format!("{}", get_local_text("files.storage-current-size")),
+                                        get_local_text("files.storage-current-size"),
                                         span {
                                             class: "count",
-                                           format!("{}", storage_controller.read().storage_size.1),
+                                            format!("{}", storage_controller.read().storage_size.1),
                                         }
                                     },
                                 )
@@ -319,6 +299,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         },
                     }
                  )
+                }
+                send_files_from_chat_topbar {
+                    storage_controller: storage_controller.clone(),
+                    is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
+                    on_send: move |files_location_path| {
+                        if let Some(f) = on_files_attached {
+                            f.call(files_location_path);
+                        }
+                    }
                 }
                 div {
                     id: "files-breadcrumbs",
@@ -359,7 +348,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     })
                 },
-                span {
+            if storage_controller.read().files_list.is_empty()
+                && storage_controller.read().directories_list.is_empty()
+                && !storage_controller.read().add_new_folder {
+                    rsx!(
+                        div {
+                            padding: "48px",
+                            Label {
+                                text: get_local_text("files.no-files-available"),
+                            }
+                        }
+                        )
+               } else {
+                rsx!(span {
                     class: "file-parent",
                     div {
                         id: "files-list",
@@ -411,7 +412,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        hr {},
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
@@ -465,8 +465,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file_name3 = file.name();
-                            let file_path = format!("{}/{}", current_dir_path, file_name3);
-                            let file_path2 = format!("{}/{}", current_dir_path, file_name3);
+                            let file_path = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
+                            let file_path2 = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -484,7 +484,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        if !*select_files_to_send_mode.get() {
+                                        if !*storage_files_to_chat_mode_is_active.get() {
                                             rsx!( ContextItem {
                                                 icon: Icon::ArrowDownCircle,
                                                 aria_label: "files-download".into(),
@@ -493,7 +493,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     download_file(&file_name2, ch);
                                                 },
                                             },
-                                            hr {},
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
@@ -510,8 +509,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         class: "file-wrap",
                                         file_checkbox {
                                             file_path: file_path.clone(),
-                                            files_selected_to_send: files_selected_to_send.clone(),
-                                            select_files_to_send_mode:select_files_to_send_mode.clone(),
+                                            storage_controller: storage_controller.clone(),
+                                            is_selecting_files: storage_files_to_chat_mode_is_active.clone(),
                                         },
                                         File {
                                             key: "{key}-file",
@@ -520,8 +519,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                             onpress: move |_| {
-                                                if *select_files_to_send_mode.get() {
-                                                    add_remove_file_to_send(files_selected_to_send.clone(), file_path2.clone());
+                                                if *storage_files_to_chat_mode_is_active.get() {
+                                                    toggle_selected_file(storage_controller.clone(), file_path2.clone());
                                                     return;
                                                 }
                                                 let key = file_id;
@@ -586,18 +585,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         }),
                     },
-                },
+                })
+               }
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
                         active: crate::UplinkRoute::FilesLayout{},
                     }
                 ))
-            }
-            send_files_from_chat_topbar {
-                ch: ch.clone(),
-                files_selected_to_send: files_selected_to_send.clone(),
-                chat_id: chat_id,
-                select_files_to_send_mode: select_files_to_send_mode.clone(),
             }
         }
     ))

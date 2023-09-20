@@ -1,28 +1,34 @@
-use std::path::PathBuf;
-
 use common::icons::outline::Shape as Icon;
-use common::{language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
+use common::language::get_local_text_with_args;
+use common::MAX_FILES_PER_MESSAGE;
 use dioxus::prelude::*;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
-use uuid::Uuid;
+use warp::raygun::Location;
 
-use crate::layouts::storage::ChanCmd;
+use super::controller::StorageController;
 
 #[inline_props]
 pub fn file_checkbox(
     cx: Scope<'a>,
     file_path: String,
-    files_selected_to_send: UseRef<Vec<String>>,
-    select_files_to_send_mode: UseState<bool>,
+    storage_controller: UseRef<StorageController>,
+    is_selecting_files: UseState<bool>,
 ) -> Element<'a> {
-    if *select_files_to_send_mode.get() {
+    if *is_selecting_files.get() {
+        let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return cx.render(rsx!( div {
             class: "checkbox-position",
             Checkbox {
-                disabled: files_selected_to_send.read().len() >= MAX_FILES_PER_MESSAGE,
-                is_checked: files_selected_to_send.read().contains(&file_path.clone()),
+                disabled: files_selected_to_send.len() >= MAX_FILES_PER_MESSAGE,
+                is_checked:files_selected_to_send.iter()
+                .any(|location| {
+                    match location {
+                        Location::Constellation { path } => path == file_path,
+                        Location::Disk { .. } => false,
+                    }
+                }),
                 on_click: move |_| {
-                    add_remove_file_to_send(files_selected_to_send.clone(), file_path.clone());
+                    toggle_selected_file(storage_controller.clone(), file_path.clone());
                 }
             }
         },));
@@ -31,41 +37,40 @@ pub fn file_checkbox(
 }
 
 #[inline_props]
-pub fn send_files_from_chat_topbar(
+pub fn send_files_from_chat_topbar<'a>(
     cx: Scope<'a>,
-    ch: Coroutine<ChanCmd>,
-    files_selected_to_send: UseRef<Vec<String>>,
-    chat_id: Uuid,
-    select_files_to_send_mode: UseState<bool>,
+    storage_controller: UseRef<StorageController>,
+    is_selecting_files: UseState<bool>,
+    on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
-    if *select_files_to_send_mode.get() {
+    if *is_selecting_files.get() {
+        if storage_controller.read().files_list.is_empty()
+            && storage_controller.read().directories_list.is_empty()
+        {
+            return cx.render(rsx!(div {}));
+        };
+
         return cx.render(rsx! (
             div {
                 class: "send-files-button",
                 Button {
                     text: "Go to Files".into(),
                     icon: Icon::FolderPlus,
+                    disabled: true,
                     aria_label: "go_to_files_btn".into(),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        // TODO:
+                        // TODO: Add navigation to FilesLayout 
                     },
                 },
                 Button {
-                    text: get_local_text_args_builder("files.send-files-text-amount", |m| {
-                        m.insert("amount", format!("{}/{}", files_selected_to_send.read().len(), MAX_FILES_PER_MESSAGE).into());
-                    }),
+                    text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE).into())]),
                     aria_label: "send_files_modal_send_button".into(),
                     appearance: Appearance::Primary,
                     icon: Icon::ChevronRight,
                     onpress: move |_| {
-                        ch.send(ChanCmd::SendFileToChat {
-                            files_path: files_selected_to_send.read().clone()
-                            .into_iter()
-                            .map(PathBuf::from)
-                            .collect(),
-                            conversation_id: *chat_id });
-                            select_files_to_send_mode.set(false);
+                        on_send.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
+                        is_selecting_files.set(false);
                     }
                 },
             }
@@ -74,14 +79,21 @@ pub fn send_files_from_chat_topbar(
     None
 }
 
-pub fn add_remove_file_to_send(files_selected_to_send: UseRef<Vec<String>>, file_path: String) {
-    let mut files_selected = files_selected_to_send.write();
-    if let Some(index) = files_selected
-        .iter()
-        .position(|path| path.clone() == file_path.clone())
-    {
-        files_selected.remove(index);
-    } else if files_selected.len() < MAX_FILES_PER_MESSAGE {
-        files_selected.push(file_path.clone());
+pub fn toggle_selected_file(storage_controller: UseRef<StorageController>, file_path: String) {
+    if let Some(index) = storage_controller.with(|f| {
+        f.files_selected_to_send
+            .iter()
+            .position(|location| match location {
+                Location::Constellation { path } => path.eq(&file_path),
+                _ => false,
+            })
+    }) {
+        storage_controller.with_mut(|f| f.files_selected_to_send.remove(index));
+    } else if storage_controller.with(|f| f.files_selected_to_send.len() < MAX_FILES_PER_MESSAGE) {
+        storage_controller.with_mut(|f| {
+            f.files_selected_to_send.push(Location::Constellation {
+                path: file_path.clone(),
+            })
+        });
     }
 }
