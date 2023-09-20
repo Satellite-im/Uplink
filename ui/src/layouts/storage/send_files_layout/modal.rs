@@ -36,6 +36,7 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
                             send_files_start_location: send_files_start_location,
                             on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
                                 cx.props.on_send.call((files_location, convs_id));
+                                send_files_from_storage.set(false);
                             },
                         }
                     }

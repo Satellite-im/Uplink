@@ -602,23 +602,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             }
                         },
                     }
-                    SendFilesLayoutModal {
-                        send_files_from_storage: show_storage_modal,
-                        send_files_start_location: SendFilesStartLocation::Chats,
-                        on_send: move |(files_location, _): (Vec<Location>, _)| {
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default()
-                            .iter()
-                            .filter(|file_location| {
-                                !files_location.contains(file_location)
-                            })
-                            .cloned()
-                            .collect();
-                            new_files_to_upload.extend(files_location);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                            update_send();
-                        },
-                    },
                 ),
             )
         }
@@ -654,6 +637,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         .mutate(Action::SetChatAttachments(chat_id, current_files));
                     }
                 }})}
+                SendFilesLayoutModal {
+                    send_files_from_storage: show_storage_modal,
+                    send_files_start_location: SendFilesStartLocation::Chats,
+                    on_send: move |(files_location, _): (Vec<Location>, _)| {
+                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .iter()
+                        .filter(|file_location| {
+                            !files_location.contains(file_location)
+                        })
+                        .cloned()
+                        .collect();
+                        new_files_to_upload.extend(files_location);
+                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        update_send();
+                    },
+                },
         div {
             class: "chatbar-container",
             with_scroll_btn.then(|| {

@@ -27,6 +27,7 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
+    
     cx.render(rsx!(div {
         id: "files-breadcrumbs",
         class: "files-breadcrumbs",
