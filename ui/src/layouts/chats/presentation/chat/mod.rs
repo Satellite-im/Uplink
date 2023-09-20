@@ -23,7 +23,10 @@ use crate::{
         chat::create_group::get_input_options, chat::pinned_messages::PinnedMessages,
         media::calling::CallControl,
     },
-    layouts::chats::{data::ChatData, presentation::chatbar::get_chatbar},
+    layouts::chats::{
+        data::ChatData,
+        presentation::{chatbar::get_chatbar, messages::get_messages},
+    },
 };
 
 use common::{
@@ -164,7 +167,7 @@ pub fn Compose(cx: Scope) -> Element {
                     MessageGroupSkeletal {},
                 }
             ),
-            Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
+            Some(_data) =>  rsx!(get_messages { data: _data.clone() }),
         },
         get_chatbar {
             data: data.clone(),
