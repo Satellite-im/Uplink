@@ -8,6 +8,11 @@
     text-overflow: ellipsis;
 }
 
+.modal-div-files-layout {
+  height: 85vh;
+  width: 85vw;
+}
+
 @media (max-width: 1740px) {
     .files-selected-text {
       max-width: 60vw;
@@ -49,4 +54,31 @@
     padding: var(--padding-less);
     margin-top: var(--gap);
     border-radius: var(--border-radius);
+}
+
+.modal-div-attachments-layout {
+  border: 1px solid var(--primary);
+  background: var(--background);
+  max-height: 90vh;
+  width: 80vw;
+}
+
+@media (max-width: 400px) {
+  .modal-div-attachments-layout {
+      width: 60vw;
+  }
+}
+
+.send-files-to-several-chats-div {
+  max-height: 90vh;
+}
+
+#all_chats {
+  display: inline-flex;
+  flex-direction: column;
+  margin-top: 16px;
+  overflow-y: scroll;
+  min-height: 10vh;
+  max-height: 30vh;
+  background: var(--secondary);
 }
