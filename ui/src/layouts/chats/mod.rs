@@ -1,7 +1,8 @@
 mod data;
 mod presentation;
 mod scripts;
-use presentation::{sidebar::Sidebar as ChatSidebar, welcome::Welcome};
+pub use presentation::sidebar::Sidebar as ChatSidebar;
+use presentation::welcome::Welcome;
 
 use std::{path::PathBuf, rc::Rc};
 

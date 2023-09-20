@@ -1,5 +1,3 @@
-// chat is deprecated in favor of chats
-pub mod chat;
 pub mod chats;
 pub mod community;
 pub mod create_account;
