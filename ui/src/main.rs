@@ -768,7 +768,7 @@ fn get_update_icon(cx: Scope) -> Element {
     }
 }
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
     //on_submit: EventHandler<'a, PathBuf>,
@@ -973,7 +973,7 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     }
 }
 
-#[inline_props]
+#[component]
 fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,

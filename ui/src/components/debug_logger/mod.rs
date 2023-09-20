@@ -7,7 +7,7 @@ use crate::logger;
 const STYLE: &str = include_str!("./style.scss");
 const SCRIPT: &str = include_str!("./script.js");
 
-#[inline_props]
+#[component]
 #[allow(non_snake_case)]
 pub fn DebugLogger(cx: Scope) -> Element {
     let logs_to_show = use_state(cx, logger::load_debug_log);

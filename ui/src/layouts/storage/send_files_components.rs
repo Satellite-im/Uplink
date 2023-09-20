@@ -7,7 +7,7 @@ use warp::raygun::Location;
 
 use super::controller::StorageController;
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn file_checkbox(
     cx: Scope<'a>,
     file_path: String,
@@ -36,7 +36,7 @@ pub fn file_checkbox(
     None
 }
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn send_files_from_chat_topbar<'a>(
     cx: Scope<'a>,
     storage_controller: UseRef<StorageController>,

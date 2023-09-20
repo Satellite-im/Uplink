@@ -35,8 +35,8 @@ fn group_to_str(group: emojis::Group) -> String {
     }
 }
 
-#[inline_props]
-fn build_nav(cx: Scope) -> Element<'a> {
+#[component(no_case_check)]
+fn build_nav<'a>(cx: Scope<'a>) -> Element<'a> {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",
@@ -126,7 +126,7 @@ enum Command {
     React(Uuid, Uuid, String),
 }
 
-#[inline_props]
+#[component(no_case_check)]
 fn render_selector<'a>(
     cx: Scope,
     mouse_over_emoji_button: UseRef<bool>,
@@ -269,7 +269,7 @@ fn render_selector<'a>(
 }
 
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
-#[inline_props]
+#[component(no_case_check)]
 fn render_1(cx: Scope, _unused: bool) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
