@@ -25,6 +25,9 @@ use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UplinkRoute;
 
+pub const USER_VOL_MIN: f32 = 0.25;
+pub const USER_VOL_MAX: f32 = 5.0;
+
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,
@@ -337,8 +340,8 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                     Range {
                         initial_value: volume,
-                        min: 0.25,
-                        max: 5.0,
+                        min: USER_VOL_MIN,
+                        max: USER_VOL_MAX,
                         step: 0.1,
                         no_num: true,
                         icon_left: Icon::Speaker,

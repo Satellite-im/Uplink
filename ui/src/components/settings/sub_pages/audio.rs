@@ -15,6 +15,9 @@ use crate::components::settings::{SettingSection, SettingSectionSimple};
 use common::state::{action::ConfigAction, Action, State};
 use common::{sounds, WARP_CMD_CH};
 
+pub const VOL_MIN: f32 = 0.0;
+pub const VOL_MAX: f32 = 200.0;
+
 enum AudioCmd {
     FetchOutputDevices,
     SetOutputDevice(String),
@@ -150,8 +153,8 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSectionSimple {
                 Range {
                     initial_value: 100.0,
-                    min: 0.0,
-                    max: 200.0,
+                    min: VOL_MIN,
+                    max: VOL_MAX,
                     icon_left: Shape::Microphone,
                     icon_right: Shape::MicrophoneWave,
                     onchange: move |_| {}
@@ -171,9 +174,9 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
             SettingSectionSimple {
                 Range {
-                    initial_value: 100.0,
+                    initial_value: VOL_MIN,
                     min: 0.0,
-                    max: 200.0,
+                    max: VOL_MAX,
                     icon_left: Shape::Speaker,
                     icon_right: Shape::SpeakerWave,
                     onchange: move |_| {}
