@@ -57,7 +57,7 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
                 })
             }
             FilesBreadcumbs {
-                storage_controller: storage_controller, 
+                storage_controller: storage_controller,
                 ch: ch,
                 send_files_mode: true,
             },

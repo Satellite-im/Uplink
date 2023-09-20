@@ -1,5 +1,7 @@
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
-use crate::layouts::storage::send_files_layout::send_files_components::{toggle_selected_file, FileCheckbox};
+use crate::layouts::storage::send_files_layout::send_files_components::{
+    toggle_selected_file, FileCheckbox,
+};
 
 use super::files_layout::controller::StorageController;
 use common::icons::outline::Shape as Icon;
@@ -27,7 +29,7 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
-    
+
     cx.render(rsx!(div {
         id: "files-breadcrumbs",
         class: "files-breadcrumbs",
@@ -215,7 +217,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                         f.call(());
                                     }
                                 },
-                            }, 
+                            },
                             hr {},
                         )}
                             ContextItem {
