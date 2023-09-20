@@ -41,11 +41,8 @@ use super::super::scripts::SCROLL_BOTTOM;
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
+    layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
-    layouts::{
-        chats::{data::ChatProps, scripts::SHOW_CONTEXT},
-        storage::FilesLayout,
-    },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{

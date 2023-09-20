@@ -29,9 +29,9 @@ use warp::raygun::Location;
 pub mod controller;
 pub mod file_modal;
 
-use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
+use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
