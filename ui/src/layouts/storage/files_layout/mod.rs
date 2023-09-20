@@ -1,15 +1,15 @@
 #[allow(unused_imports)]
 use std::path::Path;
-use std::time::Duration;
 use std::path::PathBuf;
+use std::time::Duration;
 
-use common::WARP_CMD_CH;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
-use common::warp_runner::{WarpCmd, RayGunCmd};
-use dioxus:: prelude::*;
+use common::warp_runner::{RayGunCmd, WarpCmd};
+use common::WARP_CMD_CH;
+use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
@@ -36,7 +36,7 @@ use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
-use crate::layouts::storage::shared_component::{FilesBreadcumbs, FilesAndFolders};
+use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -80,18 +80,18 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
 
     functions::get_items_from_current_directory(cx, ch);
 
-        #[cfg(not(target_os = "macos"))]
-        functions::allow_drag_event_for_non_macos_systems(
-            cx,
-            upload_file_controller.are_files_hovering_app,
-        );
-        functions::start_upload_file_listener(
-            cx,
-            window,
-            state,
-            storage_controller,
-            upload_file_controller.clone(),
-        );
+    #[cfg(not(target_os = "macos"))]
+    functions::allow_drag_event_for_non_macos_systems(
+        cx,
+        upload_file_controller.are_files_hovering_app,
+    );
+    functions::start_upload_file_listener(
+        cx,
+        window,
+        state,
+        storage_controller,
+        upload_file_controller.clone(),
+    );
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
@@ -267,7 +267,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 }
             },
             FilesBreadcumbs {
-                storage_controller: storage_controller, 
+                storage_controller: storage_controller,
                 ch: ch,
                 send_files_mode: false,
             },
@@ -284,7 +284,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                         )
                } else {
                 rsx!(FilesAndFolders {
-                    storage_controller: storage_controller, 
+                    storage_controller: storage_controller,
                     on_click_share_files: move |_| {
                         send_files_from_storage.set(true);
                     },
@@ -300,5 +300,4 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             }
         }
     ))
-}               
-
+}

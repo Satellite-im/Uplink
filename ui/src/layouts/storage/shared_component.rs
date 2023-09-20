@@ -217,7 +217,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                 },
                             }, 
                             hr {},
-                        )},
+                        )}
                             ContextItem {
                                 icon: Icon::Pencil,
                                 aria_label: "files-rename".into(),
