@@ -19,7 +19,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_ipfs::{
-    config::{Config, UpdateEvents, Discovery},
+    config::{Config, Discovery, UpdateEvents},
     WarpIpfsBuilder,
 };
 
