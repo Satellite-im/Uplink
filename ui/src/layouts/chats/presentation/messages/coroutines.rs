@@ -140,7 +140,7 @@ pub fn handle_warp_commands<'a>(
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessagesDeprecated {
                                 conv_id,
                                 to_fetch,
                                 current_len,

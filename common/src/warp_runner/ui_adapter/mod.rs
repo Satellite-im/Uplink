@@ -25,7 +25,7 @@ use warp::{
     error::Error,
     logging::tracing::log,
     multipass::identity::{Identifier, Identity, Platform},
-    raygun::{self, Conversation, MessageOptions},
+    raygun::{self, Conversation, MessageOptions, MessageStream},
 };
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
@@ -239,6 +239,89 @@ pub async fn fetch_pinned_messages_from_chat(
     .collect()
     .await;
     Ok(messages)
+}
+
+pub async fn fetch_more_messages(
+    messaging: &mut super::Messaging,
+    mut message_stream: MessageStream,
+    to_take: usize,
+) -> Result<(Vec<Message>, MessageStream, bool), Error> {
+    let mut messages = Vec::new();
+    let mut num_yielded = 0;
+    let mut has_more = true;
+
+    loop {
+        let message = match message_stream.next().await {
+            Some(x) => x,
+            None => {
+                has_more = false;
+                break;
+            }
+        };
+
+        num_yielded += 1;
+        messages.push(convert_raygun_message(messaging, &message).await);
+
+        if num_yielded >= to_take {
+            break;
+        }
+    }
+
+    Ok((messages, message_stream, has_more))
+}
+
+pub async fn fetch_messages2(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+    start_date: Option<DateTime<Utc>>,
+    to_take: usize,
+) -> Result<(Vec<Message>, MessageStream, bool), Error> {
+    let total_messages = messaging.get_message_count(conv_id).await?;
+    let mut message_stream = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default()
+                .set_range(0..total_messages)
+                .set_reverse(),
+        )
+        .await
+        .and_then(MessageStream::try_from)?;
+
+    let mut messages = Vec::new();
+    let mut should_compare = start_date.is_some();
+    let mut num_yielded = 0;
+    let mut has_more = true;
+
+    loop {
+        let message = match message_stream.next().await {
+            Some(x) => x,
+            None => {
+                has_more = false;
+                break;
+            }
+        };
+
+        if should_compare {
+            if let Some(date) = start_date.as_ref() {
+                // when a message is found that occurs at or before the start date, start incrementing num_yielded.
+                if date >= &message.date() {
+                    should_compare = false;
+                    num_yielded += 1;
+                }
+            }
+            // yield all messaegs that were decrypted (prior to start_date) in case the user scrolls down.
+            messages.push(convert_raygun_message(messaging, &message).await);
+        } else {
+            num_yielded += 1;
+            messages.push(convert_raygun_message(messaging, &message).await);
+        }
+
+        if num_yielded >= to_take {
+            break;
+        }
+    }
+
+    Ok((messages, message_stream, has_more))
 }
 
 pub async fn conversation_to_chat(

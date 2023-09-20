@@ -12,7 +12,9 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, AttachmentKind, ConversationType, Location, PinState, ReactionState},
+    raygun::{
+        self, AttachmentKind, ConversationType, Location, MessageStream, PinState, ReactionState,
+    },
 };
 
 use crate::{
@@ -20,14 +22,20 @@ use crate::{
     warp_runner::{
         conv_stream,
         ui_adapter::{
-            self, conversation_to_chat, dids_to_identity, fetch_messages_between,
-            fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
-            MessageEvent,
+            self, conversation_to_chat, dids_to_identity, fetch_messages2, fetch_messages_between,
+            fetch_messages_from_chat, fetch_more_messages, fetch_pinned_messages_from_chat,
+            get_uninitialized_identity, MessageEvent,
         },
         Account, Messaging, WarpEvent,
     },
     WARP_EVENT_CH,
 };
+
+pub struct FetchMessagesResponse {
+    messages: Vec<ui_adapter::Message>,
+    message_stream: MessageStream,
+    has_more: bool,
+}
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
@@ -71,8 +79,22 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
-    #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
+    #[display(fmt = "FetchMessages")]
     FetchMessages {
+        conv_id: Uuid,
+        // if None, will start from the beginning of the conversation.
+        start_date: Option<DateTime<Utc>>,
+        to_fetch: usize,
+        rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
+    },
+    #[display(fmt = "FetchMoreMessages")]
+    FetchMoreMessages {
+        message_stream: MessageStream,
+        to_fetch: usize,
+        rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
+    },
+    #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
+    FetchMessagesDeprecated {
         conv_id: Uuid,
         // the total number of messages that should be in the conversation
         to_fetch: usize,
@@ -234,6 +256,37 @@ pub async fn handle_raygun_cmd(
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessages {
+            conv_id,
+            start_date,
+            to_fetch,
+            rsp,
+        } => {
+            let r = fetch_messages2(conv_id, messaging, start_date, to_fetch)
+                .await
+                .map(|r| FetchMessagesResponse {
+                    messages: r.0,
+                    message_stream: r.1,
+                    has_more: r.2,
+                });
+
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::FetchMoreMessages {
+            message_stream,
+            to_fetch,
+            rsp,
+        } => {
+            let r = fetch_more_messages(messaging, message_stream, to_fetch)
+                .await
+                .map(|r| FetchMessagesResponse {
+                    messages: r.0,
+                    message_stream: r.1,
+                    has_more: r.2,
+                });
+
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::FetchMessagesDeprecated {
             conv_id,
             to_fetch,
             current_len,
