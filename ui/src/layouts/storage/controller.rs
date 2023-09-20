@@ -24,6 +24,7 @@ pub struct StorageController {
     pub show_file_modal: Option<warp::constellation::file::File>,
     pub files_selected_to_send: Vec<Location>,
     pub current_dir_path_as_string: String,
+    pub chats_selected_to_send: Vec<Uuid>,
 }
 
 impl StorageController {
@@ -57,8 +58,21 @@ impl StorageController {
                 .map(|dir| dir.name())
                 .collect::<Vec<_>>()
                 .join("/"),
+            chats_selected_to_send: Vec::new(),
         };
         use_ref(cx, || controller)
+    }
+
+    pub fn update_current_dir_path(&mut self, state: UseSharedState<State>) {
+        self.current_dir_path_as_string = state
+            .read()
+            .storage
+            .directories_opened
+            .iter()
+            .filter(|dir| dir.name() != ROOT_DIR_NAME)
+            .map(|dir| dir.name())
+            .collect::<Vec<_>>()
+            .join("/");
     }
 
     pub fn update_state(&mut self) -> Option<Storage> {
