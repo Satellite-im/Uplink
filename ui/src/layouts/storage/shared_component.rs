@@ -86,6 +86,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
     let ch = cx.props.ch;
     cx.render(rsx!(span {
         class: "file-parent",
+        background: format_args!("{}", if send_files_mode {"var(--secondary)"} else {""}),
         div {
             id: "files-list",
             class: "files-list",

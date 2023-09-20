@@ -29,6 +29,9 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
                     onclose: move |_| send_files_from_storage.set(false),
                     div {
                         class: "modal-div-files-layout",
+                        onclick: move |_| {
+                            // Just to avoid close modal if user click inside it
+                        },
                         SendFilesLayout {
                             send_files_start_location: send_files_start_location,
                             on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
