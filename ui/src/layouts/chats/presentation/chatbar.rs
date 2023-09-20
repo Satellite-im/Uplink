@@ -37,16 +37,15 @@ use warp::{
 const MAX_CHARS_LIMIT: usize = 1024;
 const SCROLL_BTN_THRESHOLD: i64 = -1000;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
-
+use super::super::scripts::SCROLL_BOTTOM;
+use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
-    components::{
-        chat::compose::{
-            context_file_location::FileLocationContext, messages::scripts::SCROLL_BOTTOM,
-        },
-        files::attachments::Attachments,
-        paste_files_with_shortcut,
-    },
+    components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
+    layouts::{
+        chats::{data::ChatProps, scripts::SHOW_CONTEXT},
+        storage::FilesLayout,
+    },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -75,7 +74,7 @@ struct TypingInfo {
 }
 
 // todo: display loading indicator if sending a message that takes a long time to upload attachments
-pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
+pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
@@ -564,7 +563,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         appearance: Appearance::Primary,
                         onpress: move |e: Event<MouseData>| {
                             let mouse_data = e;
-                            let script = include_str!("../show_context.js")
+                            let script = SHOW_CONTEXT
                                 .replace("UUID", upload_button_menu_uuid)
                                 .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string());
@@ -688,23 +687,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 .iter()
                                 .map(|path| Location::Disk { path: path.clone() })
                                 .collect();
-                        new_files_to_upload.extend(local_disk_files);
-                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                            new_files_to_upload.extend(local_disk_files);
+                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                         }
                     },
                 })
             }
+        },
+        Attachments {
+            chat_id: chat_id,
+            files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
+            on_remove: move |files_attached| {
+                state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
+                update_send();
             }
-            Attachments {
-                chat_id: chat_id,
-                files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
-                on_remove: move |files_attached| {
-                    state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
-                    update_send();
-                }
-            }
-            chatbar
-        ))
+        },
+        chatbar
+    ))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {

@@ -2,6 +2,7 @@ uplink = Uplink
     .unknown = Unknown
     .home = Home
     .add = Add
+    .added = Added!
     .add-members = Add Members
     .current-members = Current Members
     .call = Call
@@ -45,6 +46,11 @@ uplink = Uplink
     .check-for-updates = Check for updates
     .download-update = Download Update
     .date-time-format = %d/%m/%Y %I:%M %p
+
+community = Community
+    .invited = You're Invited!
+    .join = Join
+    .joined = Joined!
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.

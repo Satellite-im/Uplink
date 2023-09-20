@@ -69,7 +69,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let btn_icon = if !download_pending {
         cx.props.button_icon.unwrap_or(Icon::ArrowDown)
     } else {
-        Icon::DocumentArrowDown
+        Icon::DocumentArrowDown // TODO: Should this be an animated download icon? What is the purpose of this?
     };
 
     let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {

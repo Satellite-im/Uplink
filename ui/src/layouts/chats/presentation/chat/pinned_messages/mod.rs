@@ -14,6 +14,8 @@ use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_ima
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
+use crate::layouts::chats::scripts::SCROLL_TO_MESSAGE;
+
 pub enum ChannelCommand {
     RemovePinnedMessage(Uuid, Uuid),
     ScrollToUnloaded(Uuid, Uuid, DateTime<Utc>),
@@ -201,7 +203,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                         onclick: move |_| {
                                             cx.props.onclose.call(());
                                             if cx.props.is_loaded {
-                                                let _ = eval(&include_str!("../scroll_to_message.js").replace("$UUID", &id.to_string()));
+                                                let _ = eval(&SCROLL_TO_MESSAGE.replace("$UUID", &id.to_string()));
                                             } else {
                                                 cx.props.ch.send(ChannelCommand::ScrollToUnloaded(chat_id, id, date));
                                             }
