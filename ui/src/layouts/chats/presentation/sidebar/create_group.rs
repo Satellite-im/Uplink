@@ -15,7 +15,7 @@ use kit::{
     elements::{
         button::Button,
         checkbox::Checkbox,
-        input::{Input, Options, SpecialCharsAction, Validation},
+        input::{Input, Options},
         label::Label,
         Appearance,
     },
@@ -23,7 +23,7 @@ use kit::{
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::UplinkRoute;
+use crate::{layouts::chats::data::get_input_options, UplinkRoute};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -293,36 +293,4 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             }
         }
     ))
-}
-
-pub fn get_input_options() -> Options {
-    // Set up validation options for the input field
-    let group_name_validation_options = Validation {
-        // The input should have a maximum length of 64
-        max_length: Some(64),
-        // The input should have a minimum length of 0
-        min_length: Some(0),
-        // The input should only contain alphanumeric characters
-        alpha_numeric_only: true,
-        // The input can contain any whitespace
-        no_whitespace: false,
-        // The input component validation is shared - if you need to allow just colons in, set this to true
-        ignore_colons: false,
-        // The input should allow any special characters
-        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars: Some((
-            SpecialCharsAction::Allow,
-            " .,!?_&+~(){}[]+-/*".chars().collect(),
-        )),
-    };
-
-    // Set up options for the input field
-    Options {
-        // Enable validation for the input field with the specified options
-        with_validation: Some(group_name_validation_options),
-        clear_on_submit: false,
-        clear_validation_on_submit: true,
-        // Use the default options for the remaining fields
-        ..Options::default()
-    }
 }

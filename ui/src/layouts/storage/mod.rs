@@ -47,9 +47,9 @@ pub mod file_modal;
 pub mod functions;
 pub mod send_files_components;
 
-use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
+use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_components::{
@@ -591,7 +591,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
-                                        hr {},
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
@@ -685,7 +684,6 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     download_file(&file_name2, ch);
                                                 },
                                             },
-                                            hr {},
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,

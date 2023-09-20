@@ -1,5 +1,15 @@
 use std::time::Duration;
 
+use crate::layouts::chats::ChatSidebar;
+use crate::{
+    components::friends::{
+        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+    },
+    layouts::slimbar::SlimbarLayout,
+};
+use common::icons::outline::Shape as Icon;
+use common::state::{ui, Action, State};
 use common::{
     language::get_local_text,
     notifications::{NotificationAction, NOTIFICATION_LISTENER},
@@ -11,19 +21,6 @@ use kit::{
 };
 use tokio::sync::broadcast::error::RecvError;
 use warp::logging::tracing::log;
-
-use crate::{
-    components::{
-        chat::sidebar::Sidebar as ChatSidebar,
-        friends::{
-            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
-        },
-    },
-    layouts::slimbar::SlimbarLayout,
-};
-use common::icons::outline::Shape as Icon;
-use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Clone)]
 pub enum FriendRoute {

@@ -59,7 +59,7 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
-use crate::layouts::chat::ChatLayout;
+use crate::layouts::chats::ChatLayout;
 use crate::window_manager::WindowManagerCmdChannels;
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
