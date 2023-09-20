@@ -19,7 +19,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_ipfs::{
-    config::{Config, UpdateEvents},
+    config::{Config, UpdateEvents, Discovery},
     WarpIpfsBuilder,
 };
 
@@ -345,6 +345,10 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
 
     let path = &STATIC_ARGS.warp_path;
     let mut config = Config::production(path);
+    if STATIC_ARGS.no_discovery {
+        config.store_setting.discovery = Discovery::None;
+        config.ipfs_setting.bootstrap = false;
+    }
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
