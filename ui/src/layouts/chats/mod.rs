@@ -1,10 +1,12 @@
 mod data;
 mod presentation;
+mod scripts;
+use presentation::{sidebar::Sidebar as ChatSidebar, welcome::Welcome};
 
 use std::{path::PathBuf, rc::Rc};
 
 use crate::{
-    components::chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome},
+    components::chat::compose::Compose,
     layouts::slimbar::SlimbarLayout,
     utils::{
         get_drag_event,
