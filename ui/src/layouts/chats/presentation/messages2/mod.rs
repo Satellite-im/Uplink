@@ -404,7 +404,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                 if should_fetch_more {
                     ch.send(MessagesCommand::FetchMore {
                         conv_id: cx.props.active_chat_id,
-                        to_fetch: DEFAULT_NUM_TO_TAKE * 2,
+                        to_fetch: todo!(),
                         current_len: cx.props.num_messages_in_conversation,
                     });
                 }
