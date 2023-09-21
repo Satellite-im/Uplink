@@ -582,6 +582,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 ContextMenu {
                                     key: "{key}-menu",
                                     id: dir.id().to_string(),
+                                    devmode: state.read().configuration.developer.developer_mode,
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Pencil,
@@ -654,6 +655,7 @@ pub fn FilesLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 ContextMenu {
                                     key: "{key}-menu",
                                     id: file.id().to_string(),
+                                    devmode: state.read().configuration.developer.developer_mode,
                                     items: cx.render(rsx!(
                                         if !*storage_files_to_chat_mode_is_active.get() {
                                         rsx!(

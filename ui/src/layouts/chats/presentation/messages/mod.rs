@@ -494,6 +494,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
+            devmode: state.read().configuration.developer.developer_mode,
             on_mouseenter: move |_| {
                 if should_fetch_more {
                     ch.send(MessagesCommand::FetchMore {

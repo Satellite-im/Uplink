@@ -110,6 +110,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
                         key: "{did}-friend-listing",
+                        devmode: state.read().configuration.developer.developer_mode,
                         items: cx.render(rsx!(
                             ContextItem {
                                 danger: true,
