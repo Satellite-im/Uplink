@@ -99,6 +99,7 @@ pub struct NewelyFetchedMessages {
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     println!("get messages2 for chat_id: {}", data.active_chat.id);
     log::trace!("get_messages");
+    use_shared_state_provider(cx, || ActiveChat::default());
     let state = use_shared_state::<State>(cx)?;
     let active_chat = use_shared_state::<ActiveChat>(cx)?;
 
@@ -129,7 +130,6 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
             match rsp {
                 Ok(r) => {
-                    println!("got fetchmessagesresponse: {:?}", r);
                     let mut chat_behavior = ChatBehavior::default();
                     if r.has_more {
                         chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
