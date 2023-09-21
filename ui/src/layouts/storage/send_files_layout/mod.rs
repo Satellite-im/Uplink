@@ -1,13 +1,19 @@
-use common::{state::{State, self}, language::{get_local_text, get_local_text_with_args}};
+use common::{state::{State, self}, language::{get_local_text, 
+    get_local_text_with_args}};
 use dioxus::prelude::*;
-use kit::{elements::{label::Label, checkbox::Checkbox}, components::{user::User, user_image::UserImage, user_image_group::UserImageGroup, message::markdown}};
+use kit::{elements::{label::Label, checkbox::Checkbox}, components::{user::User, 
+    user_image::UserImage, user_image_group::UserImageGroup, 
+    message::markdown}};
 use uuid::Uuid;
 use warp::raygun::{Location, ConversationType, self};
 
 pub mod send_files_components;
 pub mod modal;
 
-use crate::{layouts::storage::{send_files_layout::send_files_components::SendFilesTopbar, shared_component::{FilesBreadcumbs, FilesAndFolders}}, utils::build_participants};
+use crate::{layouts::storage::{
+    send_files_layout::send_files_components::SendFilesTopbar, 
+    shared_component::{FilesBreadcumbs, FilesAndFolders}}, 
+    utils::build_participants};
 
 use super::{
     files_layout::controller::StorageController,

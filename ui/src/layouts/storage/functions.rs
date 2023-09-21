@@ -73,7 +73,7 @@ pub fn get_items_from_current_directory(cx: &ScopeState, ch: &Coroutine<ChanCmd>
 
 #[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(
-    cx: &Scoped<Props>,
+    cx: &ScopeState,
     are_files_hovering_app: &UseRef<bool>,
 ) {
     use_future(cx, (), |_| {
