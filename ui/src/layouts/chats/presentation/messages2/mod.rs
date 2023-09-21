@@ -25,16 +25,17 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_with_args,
     state::{
-        create_message_groups, pending_group_messages, pending_message::PendingMessage,
-        scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
+        chats2::{ChatBehavior, ScrollBehavior},
+        create_message_groups, create_message_groups2, pending_group_messages,
+        pending_message::PendingMessage,
+        scope_ids::ScopeIds,
+        ui::EmojiDestination,
+        Action, GroupedMessage, Identity, MessageGroup, State, ToastNotification,
     },
     warp_runner::{
         ui_adapter::{self},
         RayGunCmd, WarpCmd,
     },
-};
-use common::{
-    state::{Action, Identity, State},
     WARP_CMD_CH,
 };
 
@@ -52,7 +53,7 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
-        data::{ActiveChat, ChatData},
+        data::{ActiveChat, ActiveChatArgs, ChatData},
         scripts::{READ_SCROLL, SHOW_CONTEXT},
     },
     utils::format_timestamp::format_timestamp_timeago,
@@ -94,16 +95,19 @@ pub struct NewelyFetchedMessages {
 
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
+    println!("get messages2 for chat_id: {}", data.active_chat.id);
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> Option<ActiveChat> { None });
     let state = use_shared_state::<State>(cx)?;
-    let active_chat = use_shared_state::<Option<ActiveChat>>(cx)?;
+    let active_chat = use_shared_state::<ActiveChat>(cx)?;
 
     let finished_init = use_future(cx, (&data.active_chat.id), |conv_id| {
         to_owned![active_chat];
         async move {
+            println!("fetching messages for chat_id: {}", conv_id);
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel();
+            // todo: use the ChatBehavior to init the FetchMessages command.
             if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
                 conv_id,
                 start_date: None,
@@ -124,7 +128,18 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
             match rsp {
                 Ok(r) => {
-                    // todo: init active chat
+                    println!("got fetchmessagesresponse: {:?}", r);
+                    let mut chat_behavior = ChatBehavior::default();
+                    if r.has_more {
+                        chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
+                    }
+
+                    *active_chat.write() = ActiveChat::new(ActiveChatArgs {
+                        conversation_id: conv_id,
+                        messages: r.messages,
+                        chat_behavior,
+                        message_stream: Some(r.message_stream),
+                    });
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");
@@ -136,23 +151,65 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
         }
     });
 
-    let finished_init = finished_init.value().cloned().unwrap_or(false);
+    let msg_container_end = if finished_init.value().cloned().unwrap_or(false) {
+        rsx!(div {
+            class: "fetching",
+            p {
+                IconElement {
+                    icon: Icon::Loader,
+                    class: "spin",
+                },
+                get_local_text("messages.fetching")
+            }
+        })
+    } else {
+        rsx!(
+            div {
+                // key: "encrypted-notification-0001",
+                class: "msg-container-end",
+                aria_label: "messages-secured-alert",
+                p {
+                    IconElement {
+                        icon:  Icon::LockClosed,
+                    },
+                    get_local_text("messages.msg-banner")
+                }
+            }
+        )
+    };
 
     cx.render(rsx!(
         div {
             id: "messages",
-            if finished_init {
-                render!(
-                    span {
-                        "got messages"
+            onscroll: move |_| {
+
+            },
+            span {
+                rsx!(
+                    msg_container_end,
+                    loop_over_message_groups {
+                        // todo: the messages must be passed in from the props
+                        groups: create_message_groups2(data.my_id.did_key(), &active_chat.read().messages),
+                        active_chat_id: data.active_chat.id,
+                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+
+                        }
+                    },
+                    render_pending_messages_listener {
+                        data: data,
+                        on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
+
+                        }
                     }
-                )
-            } else {
-                render!(
-                    span { "fetching messages" }
                 )
             }
         },
+        // super::quick_profile::QuickProfileContext{
+        //     id: quick_profile_uuid,
+        //     update_script: update_script,
+        //     did_key: identity_profile.did_key()
+        // }
     ))
 }
 

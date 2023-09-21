@@ -276,6 +276,7 @@ pub async fn fetch_messages2(
     start_date: Option<DateTime<Utc>>,
     to_take: usize,
 ) -> Result<(Vec<Message>, MessageStream, bool), Error> {
+    println!("CALLING fetch messages2");
     let total_messages = messaging.get_message_count(conv_id).await?;
     let mut message_stream = messaging
         .get_messages(

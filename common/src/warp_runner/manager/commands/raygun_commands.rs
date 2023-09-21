@@ -31,10 +31,11 @@ use crate::{
     WARP_EVENT_CH,
 };
 
+#[derive(Debug)]
 pub struct FetchMessagesResponse {
-    messages: Vec<ui_adapter::Message>,
-    message_stream: MessageStream,
-    has_more: bool,
+    pub messages: Vec<ui_adapter::Message>,
+    pub message_stream: MessageStream,
+    pub has_more: bool,
 }
 
 #[allow(clippy::large_enum_variant)]

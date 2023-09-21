@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use common::state::{Chat, Identity, State};
+use common::state::{chats2::ChatBehavior, Chat, Identity, State};
 use dioxus::prelude::*;
 use kit::components::indicator::Platform;
 use uuid::Uuid;

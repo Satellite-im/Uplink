@@ -12,7 +12,7 @@ use super::SortedList;
 
 #[derive(Debug, Default)]
 pub struct ActiveChat {
-    pub conversation_id: Option<Uuid>,
+    pub conversation_id: Uuid,
     pub messages: VecDeque<ui_adapter::Message>,
     pub chat_behavior: ChatBehavior,
 
@@ -24,7 +24,29 @@ pub struct ActiveChat {
     pub message_times: HashMap<Uuid, DateTime<Utc>>,
 }
 
+// uses to initialize active chat
+pub struct ActiveChatArgs {
+    pub conversation_id: Uuid,
+    pub messages: Vec<ui_adapter::Message>,
+    pub chat_behavior: ChatBehavior,
+    pub message_stream: Option<raygun::MessageStream>,
+}
+
 impl ActiveChat {
+    pub fn new(args: ActiveChatArgs) -> Self {
+        let mut message_times = HashMap::new();
+        for msg in args.messages.iter() {
+            message_times.insert(msg.inner.id(), msg.inner.date());
+        }
+        Self {
+            conversation_id: args.conversation_id,
+            messages: VecDeque::from(args.messages),
+            chat_behavior: args.chat_behavior,
+            displayed_messages: SortedList::default(),
+            message_stream: args.message_stream,
+            message_times,
+        }
+    }
     pub fn has_more_messages(&self) -> bool {
         matches!(self.chat_behavior.on_scroll_top, ScrollBehavior::FetchMore)
     }
