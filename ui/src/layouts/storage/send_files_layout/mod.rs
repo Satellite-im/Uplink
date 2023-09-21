@@ -100,7 +100,7 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
     let storage_controller = cx.props.storage_controller.clone();
 
     cx.render(rsx!(div {
-        id: "all_chats", 
+        id: "all_chats",
         div {
             padding_left: "16px",
             Label {
