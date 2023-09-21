@@ -36,7 +36,7 @@ fn group_to_str(group: emojis::Group) -> String {
 }
 
 #[component(no_case_check)]
-fn build_nav<'a>(cx: Scope<'a>) -> Element<'a> {
+fn build_nav(cx: Scope<'_>) -> Element<'_> {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",

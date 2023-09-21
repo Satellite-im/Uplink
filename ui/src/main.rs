@@ -1,3 +1,7 @@
+//TODO: Look into complex types from clippy in regards to props attr macro. 
+//      Low priority and can be ignored
+#![allow(clippy::type_complexity)]
+
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
