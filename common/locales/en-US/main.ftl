@@ -46,6 +46,7 @@ uplink = Uplink
     .check-for-updates = Check for updates
     .download-update = Download Update
     .date-time-format = %d/%m/%Y %I:%M %p
+    .open-devtools = Open Console
 
 community = Community
     .invited = You're Invited!
