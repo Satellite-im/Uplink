@@ -1,19 +1,27 @@
-use common::{state::{State, self}, language::{get_local_text, 
-    get_local_text_with_args}};
+use common::{
+    language::{get_local_text, get_local_text_with_args},
+    state::{self, State},
+};
 use dioxus::prelude::*;
-use kit::{elements::{label::Label, checkbox::Checkbox}, components::{user::User, 
-    user_image::UserImage, user_image_group::UserImageGroup, 
-    message::markdown}};
+use kit::{
+    components::{
+        message::markdown, user::User, user_image::UserImage, user_image_group::UserImageGroup,
+    },
+    elements::{checkbox::Checkbox, label::Label},
+};
 use uuid::Uuid;
-use warp::raygun::{Location, ConversationType, self};
+use warp::raygun::{self, ConversationType, Location};
 
-pub mod send_files_components;
 pub mod modal;
+pub mod send_files_components;
 
-use crate::{layouts::storage::{
-    send_files_layout::send_files_components::SendFilesTopbar, 
-    shared_component::{FilesBreadcumbs, FilesAndFolders}}, 
-    utils::build_participants};
+use crate::{
+    layouts::storage::{
+        send_files_layout::send_files_components::SendFilesTopbar,
+        shared_component::{FilesAndFolders, FilesBreadcumbs},
+    },
+    utils::build_participants,
+};
 
 use super::{
     files_layout::controller::StorageController,
@@ -88,7 +96,6 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     }))
 }
 
-
 #[derive(PartialEq, Props)]
 struct ChatsToSelectProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
@@ -112,22 +119,13 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
             let other_participants =  state.read().remove_self(&participants);
             let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
             let platform = user.platform().into();
-    
             // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
             let participants_name = match chat.conversation_name {
                 Some(name) => name,
                 None => State::join_usernames(&other_participants)
             };
-            let is_checked = storage_controller.read().chats_selected_to_send.iter()
-            .any(|uuid| {
-                uuid.eq(&chat.id)
-            });
-            
-            let unwrapped_message = match chat.messages.iter().last() {
-                Some(m) => m.inner.clone(),
-                // conversation with no messages yet
-                None => raygun::Message::default(),
-            };
+            let is_checked = storage_controller.read().chats_selected_to_send.iter().any(|uuid| {uuid.eq(&chat.id)});
+            let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
             let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                 Some(v) => markdown(v),
                 _ => match &unwrapped_message.attachments()[..] {
