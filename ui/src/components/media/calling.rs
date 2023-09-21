@@ -200,7 +200,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                recording.with_mut(|_| true);
+                                recording.with_mut(|v| *v = true);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to start recording: {e}");
@@ -218,7 +218,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                recording.with_mut(|_| false);
+                                recording.with_mut(|v| *v = false);
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to stop recording: {e}");
@@ -252,6 +252,23 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     cx.render(rsx!(div {
         id: "remote-controls",
         class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
+        (*recording.read()).then(||{
+            rsx!(
+                div {
+                    class: "recording-active",
+                    common::icons::Icon {
+                        ..common::icons::IconProps {
+                            class: None,
+                            size: 20,
+                            fill:"currentColor",
+                            icon: Icon::RadioSelected,
+                            disabled:  false,
+                            disabled_fill: "#000000"
+                        },
+                    }
+                }
+            )
+        }),
         div {
             class: format_args!("call-label {}", if cx.props.in_chat {"in-chat"} else {""}),
             outgoing.then(|| rsx!(Label {
