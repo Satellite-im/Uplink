@@ -1,4 +1,3 @@
-pub mod chat;
 pub mod community;
 pub mod debug_logger;
 pub mod emoji_group;

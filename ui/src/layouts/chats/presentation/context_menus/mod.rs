@@ -14,7 +14,7 @@ pub struct FileLocationProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FileLocationContext<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element<'a> {
+pub fn FileLocation<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let id = cx.props.id.clone();
     let eval = use_eval(cx);

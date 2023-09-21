@@ -1,12 +1,13 @@
-use crate::utils;
+use crate::{
+    layouts::chats::scripts::{
+        SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
+    },
+    utils,
+};
 use common::state::State;
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, UseRef, UseSharedState};
 use uuid::Uuid;
-
-use crate::components::chat::compose::messages::scripts::{
-    SCROLL_BOTTOM, SCROLL_TO, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
-};
 
 use super::{get_messagesProps, NewelyFetchedMessages};
 
@@ -51,9 +52,7 @@ pub fn check_message_scroll<'a>(
                 None => return,
             };
             if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
-                let _ = eval(
-                    &include_str!("../../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
-                );
+                let _ = eval(&SCROLL_TO_MESSAGE.replace("$UUID", &uuid.to_string()));
             }
         }
     });
