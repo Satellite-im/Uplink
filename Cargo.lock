@@ -691,6 +691,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bimap"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "230c5f1ca6a325a32553f8640d31ac9b49f2411e901e427570154868b46da4f7"
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4684,6 +4690,7 @@ dependencies = [
  "libp2p-ping",
  "libp2p-quic",
  "libp2p-relay",
+ "libp2p-rendezvous",
  "libp2p-request-response",
  "libp2p-swarm",
  "libp2p-tcp",
@@ -5073,6 +5080,46 @@ dependencies = [
  "quick-protobuf-codec",
  "rand 0.8.5",
  "static_assertions",
+ "thiserror",
+ "void",
+]
+
+[[package]]
+name = "libp2p-relay-manager"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73c112cb62f6f8ae0f9bd2a7b64c351bf5ed99db23173e134e42faa90e93ca6f"
+dependencies = [
+ "anyhow",
+ "futures",
+ "futures-timer",
+ "libp2p",
+ "log",
+ "rand 0.8.5",
+ "thiserror",
+ "void",
+]
+
+[[package]]
+name = "libp2p-rendezvous"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20f92973a954f8b9dfb809a41dc1a8c05bba52c067361763649f6f5ce04dc47c"
+dependencies = [
+ "async-trait",
+ "asynchronous-codec",
+ "bimap",
+ "futures",
+ "futures-timer",
+ "instant",
+ "libp2p-core",
+ "libp2p-identity",
+ "libp2p-request-response",
+ "libp2p-swarm",
+ "log",
+ "quick-protobuf",
+ "quick-protobuf-codec",
+ "rand 0.8.5",
  "thiserror",
  "void",
 ]
@@ -7328,9 +7375,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "954f1bc6c204d8245029fa5c21768c4ded6700dd7176da1496081ca7b023d19c"
+checksum = "db9ba499012d62e0279c50cc0a5968122ca42b059799ece0f2abd98de672d15e"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -7350,6 +7397,7 @@ dependencies = [
  "libp2p-allow-block-list",
  "libp2p-mplex",
  "libp2p-nat",
+ "libp2p-relay-manager",
  "parking_lot 0.12.1",
  "rand 0.8.5",
  "rlimit",
@@ -9230,7 +9278,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=b5fec308b06e99ce34be40112a645236f0bafe4c#b5fec308b06e99ce34be40112a645236f0bafe4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7883d36cf248b623aa00510cc7ed94f21c5f192d#7883d36cf248b623aa00510cc7ed94f21c5f192d"
 dependencies = [
  "aes-gcm 0.10.2",
  "anyhow",
@@ -9286,7 +9334,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=b5fec308b06e99ce34be40112a645236f0bafe4c#b5fec308b06e99ce34be40112a645236f0bafe4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7883d36cf248b623aa00510cc7ed94f21c5f192d#7883d36cf248b623aa00510cc7ed94f21c5f192d"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9317,7 +9365,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=b5fec308b06e99ce34be40112a645236f0bafe4c#b5fec308b06e99ce34be40112a645236f0bafe4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7883d36cf248b623aa00510cc7ed94f21c5f192d#7883d36cf248b623aa00510cc7ed94f21c5f192d"
 dependencies = [
  "paste",
  "quote",
@@ -9327,7 +9375,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=b5fec308b06e99ce34be40112a645236f0bafe4c#b5fec308b06e99ce34be40112a645236f0bafe4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7883d36cf248b623aa00510cc7ed94f21c5f192d#7883d36cf248b623aa00510cc7ed94f21c5f192d"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9340,6 +9388,7 @@ dependencies = [
  "derive_more",
  "either",
  "futures",
+ "futures-timer",
  "image",
  "libipld",
  "mediatype",
