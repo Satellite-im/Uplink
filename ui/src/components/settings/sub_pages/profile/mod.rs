@@ -223,6 +223,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 // ideally this ContextItem would appear when right clicking the profile-banner div.
                 ContextMenu {
                     id: String::from("profile-banner-context-menu"),
+                    
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
