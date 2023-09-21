@@ -99,9 +99,6 @@ pub struct NewelyFetchedMessages {
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     println!("get messages2 for chat_id: {}", data.active_chat.id);
     log::trace!("get_messages");
-    use_shared_state_provider(cx, || -> Option<crate::layouts::chats::data::ActiveChat> {
-        None
-    });
     let state = use_shared_state::<State>(cx)?;
     let active_chat = use_shared_state::<ActiveChat>(cx)?;
 

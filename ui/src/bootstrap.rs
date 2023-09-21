@@ -26,6 +26,7 @@ pub(crate) fn use_boostrap<'a>(
     identity: &multipass::identity::Identity,
 ) -> Option<&'a UseSharedState<State>> {
     let desktop = use_window(cx);
+    use_shared_state_provider(cx, || -> Option<crate::layouts::chats::ActiveChat> { None });
     use_shared_state_provider(cx, DownloadState::default);
     use_shared_state_provider(cx, || {
         let mut state = State::load();
