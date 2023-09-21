@@ -26,11 +26,10 @@ use common::{
     language::get_local_text_with_args,
     state::{
         chats2::{ChatBehavior, ScrollBehavior},
-        create_message_groups, create_message_groups2, pending_group_messages,
         pending_message::PendingMessage,
         scope_ids::ScopeIds,
         ui::EmojiDestination,
-        Action, GroupedMessage, Identity, MessageGroup, State, ToastNotification,
+        Action, Identity, State, ToastNotification,
     },
     warp_runner::{
         ui_adapter::{self},
@@ -53,7 +52,10 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
-        data::{ActiveChat, ActiveChatArgs, ChatData},
+        data::{
+            create_message_groups, pending_group_messages, ActiveChat, ActiveChatArgs, ChatData,
+            GroupedMessage, MessageGroup,
+        },
         scripts::{READ_SCROLL, SHOW_CONTEXT},
     },
     utils::format_timestamp::format_timestamp_timeago,
@@ -188,8 +190,8 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        // todo: the messages must be passed in from the props
-                        groups: create_message_groups2(data.my_id.did_key(), &active_chat.read().messages),
+                        // todo: the messages must be passed in from the props to avoid cloning
+                        groups: create_message_groups(data.my_id.did_key(), active_chat.read().messages.clone()),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
@@ -215,7 +217,7 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
 #[derive(Props)]
 struct AllMessageGroupsProps<'a> {
-    groups: Vec<MessageGroup<'a>>,
+    groups: Vec<MessageGroup>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
@@ -223,7 +225,7 @@ struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps>) -> Element<'a> {
     log::trace!("render message groups");
     cx.render(rsx!(cx.props.groups.iter().map(|_group| {
         rsx!(render_message_group {
@@ -269,7 +271,7 @@ struct PendingWrapperProps<'a> {
 fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
     cx.render(rsx!(render_pending_messages {
         pending_outgoing_message: pending_group_messages(
-            &cx.props.msg,
+            cx.props.msg.clone(),
             cx.props.data.my_id.did_key(),
         ),
         active: cx.props.data.active_chat.id,
@@ -280,7 +282,7 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
 #[derive(Props)]
 struct PendingMessagesProps<'a> {
     #[props(!optional)]
-    pending_outgoing_message: Option<MessageGroup<'a>>,
+    pending_outgoing_message: Option<MessageGroup>,
     active: Uuid,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
@@ -301,7 +303,7 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
 
 #[derive(Props)]
 struct MessageGroupProps<'a> {
-    group: &'a MessageGroup<'a>,
+    group: &'a MessageGroup,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
@@ -320,7 +322,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } = cx.props;
 
     let messages = &group.messages;
-    let last_message = messages.last().unwrap().message;
+    let last_message = &messages.last().unwrap().message;
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let blocked = group.remote && state.read().is_blocked(&sender.did_key());
     let show_blocked = use_state(cx, || false);
@@ -414,7 +416,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
 #[derive(Props)]
 struct MessagesProps<'a> {
-    messages: &'a Vec<GroupedMessage<'a>>,
+    messages: &'a Vec<GroupedMessage>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     is_remote: bool,
@@ -570,7 +572,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
 
 #[derive(Props)]
 struct MessageProps<'a> {
-    message: &'a GroupedMessage<'a>,
+    message: &'a GroupedMessage,
     is_remote: bool,
     message_key: String,
     edit_msg: UseState<Option<Uuid>>,
@@ -596,7 +598,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         pending: _,
     } = cx.props;
     let grouped_message = message;
-    let message = grouped_message.message;
+    let message = &grouped_message.message;
     let is_editing = edit_msg
         .current()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
@@ -622,8 +624,9 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .collect();
 
     let user_did_2 = user_did.clone();
-    let pending_uploads = grouped_message
+    let pending_uploads = &grouped_message
         .attachment_progress
+        .as_ref()
         .map(|m| m.values().cloned().collect())
         .unwrap_or(vec![]);
 
@@ -692,7 +695,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 },
                 pending: cx.props.pending,
                 pinned: message.inner.pinned(),
-                attachments_pending_uploads: pending_uploads,
+                attachments_pending_uploads: pending_uploads.clone(),
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();

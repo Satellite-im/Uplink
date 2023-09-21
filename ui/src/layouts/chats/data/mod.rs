@@ -12,3 +12,6 @@ pub use partial_message::*;
 
 mod sorted_list;
 pub use sorted_list::*;
+
+mod msg_group;
+pub use msg_group::*;
