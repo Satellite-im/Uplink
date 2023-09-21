@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 //! Dioxus components for [heroicons](https://heroicons.com/)
 //
 // MIT License
