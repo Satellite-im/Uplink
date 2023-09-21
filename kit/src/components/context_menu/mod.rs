@@ -1,4 +1,4 @@
-use common::{icons, state::State};
+use common::{icons, language::get_local_text, state::State};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -204,7 +204,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     br {},
                     ContextItem {
                         icon: icons::outline::Shape::CommandLine,
-                        text: String::from("Open Console"),
+                        text: get_local_text("uplink.open-devtools"),
                         onpress: move |_| window.devtool(),
                     }
                 ))
