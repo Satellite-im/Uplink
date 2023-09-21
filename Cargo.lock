@@ -2104,7 +2104,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -2117,7 +2117,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -2133,7 +2133,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "constcat",
  "dioxus-core",
@@ -2152,7 +2152,7 @@ checksum = "2ea539174bb236e0e7dc9c12b19b88eae3cb574dedbd0252a2d43ea7e6de13e2"
 [[package]]
 name = "dioxus-desktop"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "async-trait",
  "core-foundation",
@@ -2181,7 +2181,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "dioxus-core",
  "dioxus-debug-cell",
@@ -2194,7 +2194,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "dioxus-core",
  "dioxus-html",
@@ -2207,7 +2207,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -2226,12 +2226,12 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 
 [[package]]
 name = "dioxus-router"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "anyhow",
  "dioxus",
@@ -2251,7 +2251,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router-macro"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2262,7 +2262,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.4.2"
-source = "git+https://github.com/DioxusLabs/dioxus#60ee82942c4decf67b6ad263f639553d9b7e28a9"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=60ee829#60ee82942c4decf67b6ad263f639553d9b7e28a9"
 dependencies = [
  "dioxus-core",
  "proc-macro2",
@@ -4511,6 +4511,30 @@ dependencies = [
  "byteorder",
  "ogg",
  "tinyvec",
+]
+
+[[package]]
+name = "libappindicator"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89e1edfdc9b0853358306c6dfb4b77c79c779174256fe93d80c0b5ebca451a2f"
+dependencies = [
+ "glib",
+ "gtk",
+ "gtk-sys",
+ "libappindicator-sys",
+ "log",
+]
+
+[[package]]
+name = "libappindicator-sys"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08fcb2bea89cee9613982501ec83eaa2d09256b24540ae463c52a28906163918"
+dependencies = [
+ "gtk-sys",
+ "libloading",
+ "once_cell",
 ]
 
 [[package]]
@@ -8369,6 +8393,7 @@ dependencies = [
  "core-foundation",
  "core-graphics",
  "crossbeam-channel",
+ "dirs-next",
  "dispatch",
  "gdk",
  "gdk-pixbuf",
@@ -8383,6 +8408,7 @@ dependencies = [
  "instant",
  "jni 0.20.0",
  "lazy_static",
+ "libappindicator",
  "libc",
  "log",
  "ndk 0.6.0",
