@@ -16,6 +16,7 @@ use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::elements::file::File;
 use kit::elements::folder::Folder;
 use warp::constellation::item::Item;
+use warp::raygun::Location;
 
 #[derive(Props)]
 pub struct FilesBreadcumbsProps<'a> {
@@ -77,7 +78,7 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
 pub struct FilesAndFoldersProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
-    on_click_share_files: Option<EventHandler<'a, ()>>,
+    on_click_share_files: Option<EventHandler<'a, Vec<Location>>>,
     send_files_mode: bool,
 }
 
@@ -196,6 +197,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                 let file_name3 = file.name();
                 let file_path = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
                 let file_path2 = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
+                let file_path3 = format!("{}/{}", storage_controller.read().current_dir_path_as_string, file_name3);
                 let file2 = file.clone();
                 let file3 = file.clone();
                 let key = file.id();
@@ -207,14 +209,13 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         items: cx.render(rsx!(
                         if !send_files_mode {
                             rsx!(
-                                // TODO: Add translate to text
                             ContextItem {
                                 icon: Icon::Share,
                                 aria_label: "files-download".into(),
                                 text: get_local_text("files.share-files"),
                                 onpress: move |_| {
                                     if let Some(f) = &cx.props.on_click_share_files {
-                                        f.call(());
+                                        f.call(vec![Location::Constellation { path: file_path3.clone() }]);
                                     }
                                 },
                             },
