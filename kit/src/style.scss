@@ -226,6 +226,7 @@ pre code {
   --border-radius: 4px;
   --border-radius-less: 2px;
   --border-radius-more: 20px;
+  --border-radius-inner: 10px;
   --border-radius-app-window: 10px;
   --border-color: #fff;
   --border-subtle-color: #141414;
@@ -242,7 +243,7 @@ pre code {
   --primary-light: color-mix(in srgb, var(--primary) 50%, white);
   --primary-light-less: color-mix(in srgb, var(--primary) 50%, #d3d2cb);
   --secondary: #343a40;
-  --secondary-light: #adb5bd;
+  --secondary-light: #4c555d;
   --secondary-dark: #212529;
   --background: #000000;
   --background-light: var(--secondary-light);

@@ -11,6 +11,8 @@ use crate::components::{
     user_image::UserImage,
 };
 
+pub mod card;
+
 #[derive(Props)]
 pub struct Props<'a> {
     username: String,
