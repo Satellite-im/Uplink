@@ -225,8 +225,7 @@ pub async fn handle_raygun_cmd(
             group_name,
             rsp,
         } => {
-            let r =
-                raygun_create_group_conversation(account, messaging, recipients, group_name).await;
+            let r = raygun_create_group_conversation(messaging, recipients, group_name).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::AddGroupParticipants {
@@ -653,18 +652,11 @@ async fn raygun_remove_direct_convs(
     }
 }
 
-// here's some crazy code to stop creating duplicate group conversations
 async fn raygun_create_group_conversation(
-    account: &Account,
     messaging: &mut Messaging,
     recipients: Vec<DID>,
     group_name: Option<String>,
 ) -> Result<Uuid, Error> {
-    let mut recipients_set: HashSet<DID> = HashSet::from_iter(recipients.iter().cloned());
-    let own_identity = account.get_own_identity().await?;
-
-    recipients_set.insert(own_identity.did_key());
-
     match messaging
         .create_group_conversation(group_name, recipients)
         .await

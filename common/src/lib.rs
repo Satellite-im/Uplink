@@ -51,7 +51,9 @@ pub struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
-    experimental_node: bool,
+    no_discovery: bool,
+    #[clap(long)]
+    discovery_point: Option<String>,
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
@@ -99,8 +101,8 @@ pub struct StaticArgs {
     pub typing_indicator_timeout: u64,
     /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
-    /// Uses experimental configuration
-    pub experimental: bool,
+    /// Disable discovery
+    pub no_discovery: bool,
     // some features aren't ready for release. This field is used to disable such features.
     pub production_mode: bool,
 }
@@ -137,7 +139,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
-        experimental: args.experimental_node,
+        no_discovery: args.no_discovery,
         production_mode: cfg!(feature = "production_mode"),
     }
 });

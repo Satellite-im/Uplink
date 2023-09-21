@@ -26,12 +26,7 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{
-    blink::{self},
-    crypto::DID,
-    logging::tracing::log,
-    raygun::ConversationType,
-};
+use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
 
 enum ControlsCmd {
     VoiceCall {
@@ -87,12 +82,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                             conversation_id,
                             participants: participants.clone(),
                             rsp: tx,
-                            // todo: make this configurable
-                            webrtc_codec: blink::AudioCodec {
-                                mime: blink::MimeType::OPUS,
-                                sample_rate: blink::AudioSampleRate::High,
-                                channels: 1,
-                            },
                         })) {
                             log::error!("failed to send command to warp_runner: {e}");
                             call_pending.set(false);
