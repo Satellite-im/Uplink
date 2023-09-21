@@ -59,7 +59,7 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
-use crate::layouts::chat::ChatLayout;
+use crate::layouts::chats::ChatLayout;
 use crate::window_manager::WindowManagerCmdChannels;
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
@@ -439,7 +439,6 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
-                log::trace!("updating active call");
                 if state.write_silent().ui.call_info.update_active_call() {
                     state.notify_consumers();
                 }
