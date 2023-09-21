@@ -15,7 +15,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::layout::modal::Modal;
 use kit::{
     components::{
-        embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
         user_image::UserImage,
     },
@@ -42,8 +41,11 @@ pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").un
 
 use crate::{
     components::{
-        chat::compose::context_file_location::FileLocationContext,
-        chat::compose::messages::scripts::SCROLL_BOTTOM, paste_files_with_shortcut,
+        chat::compose::{
+            context_file_location::FileLocationContext, messages::scripts::SCROLL_BOTTOM,
+        },
+        files::attachments::Attachments,
+        paste_files_with_shortcut,
     },
     layouts::storage::FilesLayout,
     utils::{
@@ -610,19 +612,19 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 div {
                                     class: "modal-div-files-layout",
                                     FilesLayout {
-                                        storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
-                                        on_files_attached: move |files_location: Vec<Location>| {
-                                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                            .unwrap_or_default()
-                                            .iter()
-                                            .filter(|file_location| {
-                                                !files_location.contains(file_location)
-                                            })
-                                            .cloned()
-                                            .collect();
-                                            new_files_to_upload.extend(files_location);
-                                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                                            update_send();
+                                            storage_files_to_chat_mode_is_active: show_storage_modal.clone(),
+                                            on_files_attached: move |(files_location, _): (Vec<Location>, _) | {
+                                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                                .unwrap_or_default()
+                                                .iter()
+                                                .filter(|file_location| {
+                                                    !files_location.contains(file_location)
+                                                })
+                                                .cloned()
+                                                .collect();
+                                                new_files_to_upload.extend(files_location);
+                                                state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                                                update_send();
                                         },
                                     }
                                 }
@@ -704,104 +706,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     },
                 })
             }
+            }
             Attachments {
                 chat_id: chat_id,
-                on_remove: move |_| {
+                files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
+                on_remove: move |files_attached| {
+                    state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
                     update_send();
                 }
             }
             chatbar
-        }
-))
-}
-
-#[derive(Props)]
-pub struct AttachmentProps<'a> {
-    chat_id: Uuid,
-    on_remove: EventHandler<'a, ()>,
-}
-
-#[allow(non_snake_case)]
-fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-
-    // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default()
-        .iter()
-        .map(|location| {
-            let file_path = match location {
-                Location::Constellation { path } => PathBuf::from(path),
-                Location::Disk { path } => path.clone(),
-            };
-            let filename = file_path
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string();
-
-            rsx!(FileEmbed {
-                filename: filename.clone(),
-                filepath: match location {
-                    Location::Constellation { path } => PathBuf::from(&path),
-                    Location::Disk { path } => path.clone(),
-                },
-                remote: false,
-                button_icon: icons::outline::Shape::Minus,
-                on_press: move |_| {
-                    let mut attachments = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default();
-
-                    attachments.retain(|x| {
-                        let path = match x {
-                            Location::Constellation { path } => PathBuf::from(path),
-                            Location::Disk { path } => path.clone(),
-                        };
-                        path.file_name().unwrap_or_default().to_string_lossy() != filename
-                    });
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(cx.props.chat_id, attachments));
-                    cx.props.on_remove.call(());
-                },
-            })
-        })));
-
-    let attachments_vec = state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default();
-
-    if attachments_vec.is_empty() {
-        return None;
-    }
-
-    cx.render(rsx!(div {
-        id: "compose-attachments",
-        aria_label: "compose-attachments",
-            div {
-                id: "attachments-error",
-                if attachments_vec.len() >= MAX_FILES_PER_MESSAGE {
-                    rsx!(p {
-                        class: "error",
-                        aria_label: "input-error",
-                        margin_left: "var(--gap)",
-                        margin_top: "var(--gap)",
-                        margin_bottom: "var(--gap)",
-                        color: "var(--warning-light)",
-                        get_local_text_with_args("messages.maximum-amount-files-per-message", vec![("amount", MAX_FILES_PER_MESSAGE.into())])
-                    })
-                }
-            attachments
-            }
-    }))
+        ))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {

@@ -12,9 +12,9 @@ pub fn file_checkbox(
     cx: Scope<'a>,
     file_path: String,
     storage_controller: UseRef<StorageController>,
-    is_selecting_files: UseState<bool>,
+    is_selecting_files: bool,
 ) -> Element<'a> {
-    if *is_selecting_files.get() {
+    if *is_selecting_files {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return cx.render(rsx!( div {
             class: "checkbox-position",
@@ -27,9 +27,7 @@ pub fn file_checkbox(
                         Location::Disk { .. } => false,
                     }
                 }),
-                on_click: move |_| {
-                    toggle_selected_file(storage_controller.clone(), file_path.clone());
-                }
+                on_click: move |_| {}
             }
         },));
     }
@@ -44,12 +42,6 @@ pub fn send_files_from_chat_topbar<'a>(
     on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
     if *is_selecting_files.get() {
-        if storage_controller.read().files_list.is_empty()
-            && storage_controller.read().directories_list.is_empty()
-        {
-            return cx.render(rsx!(div {}));
-        };
-
         return cx.render(rsx! (
             div {
                 class: "send-files-button",
