@@ -683,6 +683,7 @@ fn get_update_icon(cx: Scope) -> Element {
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
+                devmode: state.read().configuration.developer.developer_mode,
                 items: cx.render(rsx!(
                     ContextItem {
                         aria_label: "update-menu-dismiss".into(),
