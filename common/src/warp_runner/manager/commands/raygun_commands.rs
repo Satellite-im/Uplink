@@ -598,7 +598,6 @@ async fn raygun_remove_direct_convs(
     }
 }
 
-// here's some crazy code to stop creating duplicate group conversations
 async fn raygun_create_group_conversation(
     messaging: &mut Messaging,
     recipients: Vec<DID>,
