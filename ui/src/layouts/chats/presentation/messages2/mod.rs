@@ -99,11 +99,13 @@ pub struct NewelyFetchedMessages {
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     println!("get messages2 for chat_id: {}", data.active_chat.id);
     log::trace!("get_messages");
-    use_shared_state_provider(cx, || -> Option<ActiveChat> { None });
+    use_shared_state_provider(cx, || -> Option<crate::layouts::chats::data::ActiveChat> {
+        None
+    });
     let state = use_shared_state::<State>(cx)?;
     let active_chat = use_shared_state::<ActiveChat>(cx)?;
 
-    let finished_init = use_future(cx, (&data.active_chat.id), |conv_id| {
+    use_future(cx, (&data.active_chat.id), |conv_id| {
         to_owned![active_chat];
         async move {
             println!("fetching messages for chat_id: {}", conv_id);
@@ -136,12 +138,12 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
                         chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
                     }
 
-                    *active_chat.write() = ActiveChat::new(ActiveChatArgs {
+                    active_chat.write().set(ActiveChat::new(ActiveChatArgs {
                         conversation_id: conv_id,
                         messages: r.messages,
                         chat_behavior,
                         message_stream: Some(r.message_stream),
-                    });
+                    }));
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");
@@ -153,7 +155,8 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
         }
     });
 
-    let msg_container_end = if finished_init.value().cloned().unwrap_or(false) {
+    let msg_container_end = if false {
+        //finished_init.value().cloned().unwrap_or(false) {
         rsx!(div {
             class: "fetching",
             p {

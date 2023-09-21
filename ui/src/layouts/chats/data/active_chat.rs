@@ -57,4 +57,8 @@ impl ActiveChat {
             self.message_times.insert(m.inner.id(), m.inner.date());
         }
     }
+
+    pub fn set(&mut self, other: Self) {
+        let _ = std::mem::replace(self, other);
+    }
 }
