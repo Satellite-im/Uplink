@@ -11,6 +11,7 @@ use warp::{constellation::directory::Directory, raygun::Location};
 
 use super::functions::{self, format_item_size};
 
+#[derive(Clone)]
 pub struct StorageController {
     pub storage_state: Option<Storage>,
     pub directories_list: Vec<Directory>,
