@@ -13,7 +13,7 @@ use crate::{
     warp_runner::ui_adapter::{convert_raygun_message, did_to_identity},
 };
 
-#[derive(Display)]
+#[derive(Display, Clone)]
 pub enum MessageEvent {
     #[display(fmt = "Received")]
     Received {

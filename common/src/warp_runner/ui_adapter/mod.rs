@@ -44,6 +44,7 @@ pub struct Message {
     pub key: String,
 }
 
+#[derive(Clone)]
 pub struct ChatAdapter {
     pub inner: chats::Chat,
     pub identities: HashSet<state::identity::Identity>,
