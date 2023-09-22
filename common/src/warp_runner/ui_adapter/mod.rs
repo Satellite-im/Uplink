@@ -273,7 +273,7 @@ pub async fn fetch_more_messages(
 pub async fn fetch_messages2(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    start_date: Option<DateTime<Utc>>,
+    _start_date: Option<DateTime<Utc>>,
     to_take: usize,
 ) -> Result<(VecDeque<Message>, bool), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
@@ -298,7 +298,7 @@ pub async fn fetch_messages2(
     .collect()
     .await;
 
-    return Ok((messages, false));
+    Ok((messages, false))
 
     /*let mut message_stream = messaging
         .get_messages(

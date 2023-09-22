@@ -1,22 +1,22 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{VecDeque};
 
 use common::{
-    state::{pending_message::PendingMessage, GroupedMessage, MessageGroup},
+    state::{GroupedMessage, MessageGroup},
     warp_runner::ui_adapter,
 };
-use warp::{constellation::Progression, crypto::DID};
+use warp::{crypto::DID};
 
-pub fn create_message_groups<'a>(
+pub fn create_message_groups(
     my_did: DID,
-    input: &'a VecDeque<ui_adapter::Message>,
-) -> Vec<MessageGroup<'a>> {
+    input: &VecDeque<ui_adapter::Message>,
+) -> Vec<MessageGroup<'_>> {
     let mut messages: Vec<MessageGroup> = vec![];
 
     for msg in input.iter() {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {
-                    message: &msg,
+                    message: msg,
                     attachment_progress: None,
                     is_pending: false,
                     is_first: false,
@@ -36,7 +36,7 @@ pub fn create_message_groups<'a>(
         // new group
         let mut grp = MessageGroup::new(msg.inner.sender(), &my_did);
         let g = GroupedMessage {
-            message: &msg,
+            message: msg,
             attachment_progress: None,
             is_pending: false,
             is_first: true,

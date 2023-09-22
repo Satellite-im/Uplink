@@ -1,12 +1,11 @@
 use std::{collections::VecDeque, rc::Rc};
 
 use common::{
-    state::{chats2::ChatBehavior, Chat, Identity, State},
-    warp_runner::{ui_adapter, RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
+    state::{Chat, Identity, State},
+    warp_runner::{ui_adapter},
 };
 use dioxus::prelude::*;
-use futures::channel::oneshot;
+
 use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;

@@ -41,7 +41,7 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    let data = use_future(cx, (&active_chat_id), |conv_id| {
+    let data = use_future(cx, &active_chat_id, |conv_id| {
         to_owned![state];
         async move {
             println!("fetching messages for chat_id: {:?}", conv_id);
