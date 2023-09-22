@@ -54,6 +54,7 @@ pub struct Logger {
     write_to_stdout: bool,
     display_trace: bool,
     display_warp: bool,
+    display_dioxus: bool,
 }
 
 // connects the `log` crate to the `Logger` singleton
@@ -85,6 +86,13 @@ impl crate::log::Log for LogGlue {
                 let msg = format!("{}", record.args());
                 LOGGER.write().log_warp(record.level(), &msg);
             }
+
+            if LOGGER.read().display_dioxus
+                && record.file().map(|x| x.contains("dioxus")).unwrap_or(false)
+            {
+                let msg = format!("{}", record.args());
+                LOGGER.write().log_warp(record.level(), &msg);
+            }
             return;
         }
 
@@ -108,6 +116,7 @@ impl Logger {
             display_warp: false,
             write_to_stdout: false,
             display_trace: false,
+            display_dioxus: false,
             log_file: logger_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
@@ -234,6 +243,10 @@ pub fn set_save_to_file(b: bool) {
 
 pub fn set_display_warp(b: bool) {
     LOGGER.write().display_warp = b;
+}
+
+pub fn set_display_dioxus(b: bool) {
+    LOGGER.write().display_dioxus = b;
 }
 
 pub fn get_save_to_file() -> bool {
