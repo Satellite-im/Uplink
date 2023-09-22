@@ -38,6 +38,8 @@ pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     use_shared_state_provider(cx, || -> Option<ChatData> { None });
     let state = use_shared_state::<State>(cx)?;
+
+    // todo: implement default for ChatData and add a flag for initialized. avoids having to use the Option struct
     let chat_data = use_shared_state::<Option<ChatData>>(cx)?;
 
     // this is a hack to allow prototyping without changing all the display code.
