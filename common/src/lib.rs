@@ -95,6 +95,8 @@ pub struct StaticArgs {
     pub extensions_path: PathBuf,
     /// crash logs
     pub crash_logs: PathBuf,
+    /// recordings
+    pub recordings: PathBuf,
     /// seconds
     pub typing_indicator_refresh: u64,
     /// seconds
@@ -131,6 +133,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         crash_logs: uplink_container.join("crash-logs"),
+        recordings: uplink_container.join("recordings"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
