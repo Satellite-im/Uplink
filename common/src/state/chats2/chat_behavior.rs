@@ -40,6 +40,12 @@ impl ChatBehavior {
     pub fn set_scroll_end_behavior(&mut self, behavior: ScrollBehavior) {
         self.on_scroll_end = behavior;
     }
+
+    pub fn increment_end_idx(&mut self) {
+        if let Some(idxs) = self.messages_indices.as_mut() {
+            idxs.end += 1;
+        }
+    }
 }
 
 impl Default for ChatBehavior {

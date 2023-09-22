@@ -2,7 +2,7 @@ use std::{collections::VecDeque, rc::Rc};
 
 use common::{
     state::{Chat, Identity, State},
-    warp_runner::{ui_adapter},
+    warp_runner::ui_adapter,
 };
 use dioxus::prelude::*;
 
@@ -10,6 +10,7 @@ use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;
 
+#[derive(Clone)]
 pub struct ChatData {
     pub active_chat: Chat,
     pub my_id: Identity,
@@ -32,7 +33,7 @@ impl ChatData {
     pub fn get(
         state: &UseSharedState<State>,
         messages: VecDeque<ui_adapter::Message>,
-    ) -> Option<Rc<Self>> {
+    ) -> Option<Self> {
         let s = state.read();
         // the Compose page shouldn't be called before chats is initialized. but check here anyway.
         if !s.initialized {
@@ -69,7 +70,7 @@ impl ChatData {
 
         let platform = active_participant.platform().into();
 
-        let data = Rc::new(Self {
+        let data = Self {
             active_chat,
             other_participants,
             my_id: s.get_own_identity(),
@@ -79,7 +80,7 @@ impl ChatData {
             first_image,
             other_participants_names,
             platform,
-        });
+        };
 
         Some(data)
     }

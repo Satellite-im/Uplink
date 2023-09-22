@@ -13,10 +13,14 @@ use std::rc::Rc;
 
 use crate::layouts::chats::data::ChatData;
 
-pub fn handle_warp_events(cx: Scope, state: &UseSharedState<State>) {
+pub fn handle_warp_events(
+    cx: Scope,
+    state: &UseSharedState<State>,
+    chat_data: &UseSharedState<Option<ChatData>>,
+) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |chat_id| {
-        to_owned![state];
+        to_owned![state, chat_data];
         async move {
             let mut ch = WARP_EVENT_CH.tx.subscribe();
             while let Ok(evt) = ch.recv().await {
@@ -25,25 +29,29 @@ pub fn handle_warp_events(cx: Scope, state: &UseSharedState<State>) {
                     _ => continue,
                 };
                 let chat_id = match chat_id.as_ref() {
-                    Some(x) => x,
+                    Some(x) => *x,
                     None => continue,
                 };
+
                 match message_evt {
                     MessageEvent::Received {
                         conversation_id,
                         message,
-                    } => {
-                        if conversation_id != chat_id {
-                            continue;
-                        }
                     }
-                    MessageEvent::Sent {
+                    | MessageEvent::Sent {
                         conversation_id,
                         message,
                     } => {
                         if conversation_id != chat_id {
                             continue;
                         }
+                        let mut w = chat_data.write();
+                        let data = match w.as_mut() {
+                            Some(x) => x,
+                            None => continue,
+                        };
+                        data.active_chat.messages.push_back(message);
+                        data.active_chat.chat_behavior.increment_end_idx();
                     }
                     MessageEvent::Edited {
                         conversation_id,
@@ -66,7 +74,7 @@ pub fn handle_warp_events(cx: Scope, state: &UseSharedState<State>) {
 pub fn init_chat_data(
     cx: Scope,
     state: &UseSharedState<State>,
-    chat_data: &UseState<Option<Rc<ChatData>>>,
+    chat_data: &UseSharedState<Option<ChatData>>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |(conv_id)| {
@@ -110,7 +118,7 @@ pub fn init_chat_data(
             match rsp {
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
-                    chat_data.with_mut(|x| *x = ChatData::get(&state, r.messages));
+                    *chat_data.write() = ChatData::get(&state, r.messages);
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");

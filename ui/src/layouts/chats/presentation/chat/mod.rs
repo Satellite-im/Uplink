@@ -36,13 +36,17 @@ use warp::{crypto::DID, logging::tracing::log};
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
+    use_shared_state_provider(cx, || -> Option<ChatData> { None });
     let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_state(cx, || -> Option<Rc<ChatData>> { None });
+    let chat_data = use_shared_state::<Option<ChatData>>(cx)?;
+
+    // this is a hack to allow prototyping without changing all the display code.
+    let data = chat_data.read().as_ref().map(|x| Rc::new(x.clone()));
+    let data2 = data.clone();
 
     coroutines::init_chat_data(cx, state, chat_data);
+    coroutines::handle_warp_events(cx, state, chat_data);
 
-    let data = chat_data.get().clone();
-    let data2 = data.clone();
     let chat_id = data2
         .as_ref()
         .map(|data| data.active_chat.id)
