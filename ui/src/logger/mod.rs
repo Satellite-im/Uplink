@@ -84,10 +84,14 @@ impl crate::log::Log for LogGlue {
 
         // special path for other libraries
         if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
-            if let Some(min_level) = LOGGER.read().min_log_level {
-                if record.level() < min_level {
-                    return;
-                }
+            if LOGGER
+                .read()
+                .min_log_level
+                .as_ref()
+                .map(|min_log_level| &record.level() < min_log_level)
+                .unwrap_or(true)
+            {
+                return;
             }
 
             if let Some(whitelist) = LOGGER.read().whitelist.as_ref() {
