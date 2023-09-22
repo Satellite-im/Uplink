@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-use futures::channel::oneshot;
+
 use kit::{
     components::message_group::MessageGroupSkeletal,
     layout::{modal::Modal, topbar::Topbar},
@@ -29,8 +29,6 @@ use crate::{
 
 use common::{
     state::{ui, Action, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
