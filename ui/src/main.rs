@@ -439,7 +439,6 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
-                log::trace!("updating active call");
                 if state.write_silent().ui.call_info.update_active_call() {
                     state.notify_consumers();
                 }
@@ -681,6 +680,7 @@ fn get_update_icon(cx: Scope) -> Element {
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
+                devmode: state.read().configuration.developer.developer_mode,
                 items: cx.render(rsx!(
                     ContextItem {
                         aria_label: "update-menu-dismiss".into(),
