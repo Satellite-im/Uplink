@@ -1,4 +1,4 @@
-use common::{icons, state::State};
+use common::{icons, language::get_local_text, state::State};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -170,6 +170,8 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let id = &cx.props.id;
     let window = use_window(cx);
 
+    let devmode = cx.props.devmode.unwrap_or(false);
+
     // Handles the hiding and showing of the context menu
     let eval = use_eval(cx);
     use_effect(cx, (id,), |(id,)| {
@@ -196,11 +198,13 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "context-menu hidden",
                 aria_label: "Context Menu",
                 &cx.props.items,
-                cx.props.devmode.is_some().then(|| rsx!(
+                devmode.then(|| rsx!(
+                    br {},
                     hr {},
+                    br {},
                     ContextItem {
                         icon: icons::outline::Shape::CommandLine,
-                        text: String::from("Open Console"),
+                        text: get_local_text("uplink.open-devtools"),
                         onpress: move |_| window.devtool(),
                     }
                 ))
