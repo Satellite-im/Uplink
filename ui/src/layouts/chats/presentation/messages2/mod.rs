@@ -227,7 +227,7 @@ pub fn get_messages2(cx: Scope, data: Rc<ChatData>, messages_wrapper: MessagesWr
                         // todo: the messages must be passed in from the props to avoid cloning
                         groups: create_message_groups(data.my_id.did_key(), &messages_wrapper.messages),
                         active_chat_id: data.active_chat.id,
-                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        num_messages_in_conversation: messages_wrapper.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
 
                         }
