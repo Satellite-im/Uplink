@@ -7,7 +7,7 @@ use warp::raygun::Location;
 
 use crate::layouts::storage::files_layout::controller::StorageController;
 
-#[inline_props]
+#[component]
 pub fn FileCheckbox(
     cx: Scope<'a>,
     file_path: String,
@@ -34,7 +34,7 @@ pub fn FileCheckbox(
     None
 }
 
-#[inline_props]
+#[component]
 pub fn SendFilesTopbar<'a>(
     cx: Scope<'a>,
     storage_controller: UseRef<StorageController>,
