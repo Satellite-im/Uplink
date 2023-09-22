@@ -1,8 +1,11 @@
 mod controls;
 mod edit_group;
+mod futures;
 mod group_users;
 mod pinned_messages;
 mod topbar;
+
+use std::rc::Rc;
 
 use dioxus::prelude::*;
 
@@ -39,15 +42,20 @@ use warp::{crypto::DID, logging::tracing::log};
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_state(cx, || -> Option<Rc<ChatData>> { None });
 
+    // todo: add a field to cause this use_future to rerun when a message is sent/deleted/etc
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    let data = use_future(cx, &active_chat_id, |conv_id| {
-        to_owned![state];
+    use_future(cx, &active_chat_id, |conv_id| {
+        to_owned![state, chat_data];
         async move {
+            while !state.read().initialized {
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
             println!("fetching messages for chat_id: {:?}", conv_id);
 
             let conv_id = match conv_id {
-                None => return None,
+                None => return,
                 Some(x) => x,
             };
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -60,33 +68,29 @@ pub fn Compose(cx: Scope) -> Element {
                 rsp: tx,
             })) {
                 log::error!("failed to init messages: {e}");
-                return None;
+                return;
             }
 
             let rsp = match rx.await {
                 Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to send warp command. channel closed. {e}");
-                    return None;
+                    return;
                 }
             };
 
             match rsp {
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
-                    ChatData::get(&state, r.messages)
+                    chat_data.with_mut(|x| *x = ChatData::get(&state, r.messages));
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");
-                    None
                 }
-            }
+            };
         }
     });
-    let data = match data.value() {
-        None => None,
-        Some(data) => data.clone(),
-    };
+    let data = chat_data.get().clone();
     let data2 = data.clone();
     let chat_id = data2
         .as_ref()
