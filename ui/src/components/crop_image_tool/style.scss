@@ -1,0 +1,8 @@
+.crop-cursor {
+    width: 100px;
+    height: 100px;
+    border: 2px solid red;
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none; 
+}
