@@ -3,6 +3,7 @@ use std::backtrace::Backtrace;
 use super::*;
 
 use crate::utils::auto_updater::DownloadState;
+use ::log::Level;
 use chrono::Local;
 use common::state::ui::WindowMeta;
 use common::state::State;
@@ -90,23 +91,30 @@ pub fn configure_logger(profile: Option<LogProfile>) {
                 LevelFilter::Debug
             }
             LogProfile::DebugAll => {
-                logger::set_log_all(true);
+                logger::allow_other_crates(Level::Debug, None);
                 logger::set_save_to_file(true);
                 LevelFilter::Debug
             }
             LogProfile::Trace => {
-                logger::set_display_trace(true);
+                logger::allow_uplink_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
-            LogProfile::Trace2 => {
-                logger::set_display_warp(true);
-                logger::set_display_trace(true);
+            LogProfile::TraceWarp => {
+                logger::allow_uplink_trace(true);
+                logger::allow_other_crates(Level::Trace, Some(&["warp"]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
-            },
+            }
+            LogProfile::TraceDioxus => {
+                logger::allow_uplink_trace(true);
+                logger::allow_other_crates(Level::Trace, Some(&["dioxus"]));
+                logger::set_write_to_stdout(true);
+                LevelFilter::Trace
+            }
             LogProfile::TraceAll => {
-                logger::set_log_all(true);
+                logger::allow_uplink_trace(true);
+                logger::allow_other_crates(Level::Trace, None);
                 logger::set_save_to_file(true);
                 LevelFilter::Trace
             }

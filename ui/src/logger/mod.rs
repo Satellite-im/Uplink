@@ -15,6 +15,7 @@
 use colored::Colorize;
 use log::{self, Level, LevelFilter, SetLoggerError};
 use once_cell::sync::Lazy;
+use std::collections::HashSet;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::{collections::VecDeque, path::PathBuf};
@@ -52,9 +53,12 @@ pub struct Logger {
     max_logs: usize,
     save_to_file: bool,
     write_to_stdout: bool,
-    log_all: bool,
-    display_trace: bool,
-    display_warp: bool,
+
+    // display trace logs from uplink
+    uplink_trace: bool,
+    // minimum log level for 3rd party crates (warp, dioxus, etc)
+    min_log_level: Option<Level>,
+    whitelist: Option<HashSet<String>>,
 }
 
 // connects the `log` crate to the `Logger` singleton
@@ -78,14 +82,25 @@ impl crate::log::Log for LogGlue {
             return;
         }
 
-        // don't care about other libraries
-        if !LOGGER.read().log_all && record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
-            if LOGGER.read().display_warp
-                && record.file().map(|x| x.contains("warp")).unwrap_or(false)
-            {
-                let msg = format!("{}", record.args());
-                LOGGER.write().log_warp(record.level(), &msg);
+        // special path for other libraries
+        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+            if let Some(min_level) = LOGGER.read().min_log_level {
+                if record.level() < min_level {
+                    return;
+                }
             }
+
+            if let Some(whitelist) = LOGGER.read().whitelist.as_ref() {
+                let file_name = record.file();
+                let any_allowed = whitelist
+                    .iter()
+                    .any(|x| file_name.as_ref().map(|y| y.contains(x)).unwrap_or(false));
+                if !any_allowed {
+                    return;
+                }
+            }
+            let msg = format!("{}", record.args());
+            LOGGER.write().log_other(record.level(), &msg);
             return;
         }
 
@@ -106,14 +121,14 @@ impl Logger {
 
         Self {
             save_to_file: false,
-            display_warp: false,
             write_to_stdout: false,
-            display_trace: false,
-            log_all: false,
             log_file: logger_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
             max_logs: 128,
+            uplink_trace: false,
+            min_log_level: None,
+            whitelist: None,
         }
     }
 
@@ -135,7 +150,7 @@ impl Logger {
 
         // special path for Trace logs
         // don't persist tracing information. at most, print it to the terminal
-        if level == Level::Trace && self.display_trace {
+        if level == Level::Trace && self.uplink_trace {
             println!("{}", new_log.colorize());
             return;
         }
@@ -173,7 +188,7 @@ impl Logger {
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
     }
 
-    fn log_warp(&mut self, level: Level, message: &str) {
+    fn log_other(&mut self, level: Level, message: &str) {
         let new_log = Log {
             level,
             message: message.to_string(),
@@ -233,20 +248,18 @@ pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {
     LOGGER.write().subscribe()
 }
 
-pub fn set_display_trace(b: bool) {
-    LOGGER.write().display_trace = b;
+pub fn allow_uplink_trace(b: bool) {
+    LOGGER.write().uplink_trace = b;
+}
+
+pub fn allow_other_crates(min_level: Level, whitelist: Option<&[&str]>) {
+    LOGGER.write().min_log_level.replace(min_level);
+    LOGGER.write().whitelist =
+        whitelist.map(|x| HashSet::from_iter(x.iter().map(|y| y.to_string())));
 }
 
 pub fn set_save_to_file(b: bool) {
     LOGGER.write().set_save_to_file(b);
-}
-
-pub fn set_display_warp(b: bool) {
-    LOGGER.write().display_warp = b;
-}
-
-pub fn set_log_all(b: bool) {
-    LOGGER.write().log_all = b;
 }
 
 pub fn get_save_to_file() -> bool {
