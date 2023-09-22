@@ -496,13 +496,13 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
             id: context_key,
             devmode: state.read().configuration.developer.developer_mode,
             on_mouseenter: move |_| {
-                if should_fetch_more {
-                    ch.send(MessagesCommand::FetchMore {
-                        conv_id: cx.props.active_chat_id,
-                        to_fetch: DEFAULT_NUM_TO_TAKE * 2,
-                        current_len: cx.props.num_messages_in_conversation,
-                    });
-                }
+                // if should_fetch_more {
+                //     ch.send(MessagesCommand::FetchMore {
+                //         conv_id: cx.props.active_chat_id,
+                //         to_fetch: DEFAULT_NUM_TO_TAKE * 2,
+                //         current_len: cx.props.num_messages_in_conversation,
+                //     });
+                // }
             },
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
@@ -666,40 +666,6 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .unwrap_or(vec![]);
 
     cx.render(rsx!(
-        // (*reacting_to.current() == Some(*msg_uuid)).then(|| {
-        //     rsx!(
-        //         div {
-        //             id: "add-message-reaction",
-        //             aria_label: "add-message-reaction",
-        //             class: "{reactions_class} pointer",
-        //             tabindex: "0",
-        //             onmouseleave: |_| {
-        //                 #[cfg(not(target_os = "macos"))]
-        //                 {
-        //                     eval(focus_script.to_string());
-        //                 }
-        //             },
-        //             onblur: move |_| {
-        //                 state.write().ui.ignore_focus = false;
-        //                 reacting_to.set(None);
-        //             },
-        //             reactions.iter().cloned().map(|reaction| {
-        //                 rsx!(
-        //                     div {
-        //                         aria_label: "{reaction}",
-        //                         onclick: move |_|  {
-        //                             reacting_to.set(None);
-        //                             state.write().ui.ignore_focus = false;
-        //                             ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
-        //                         },
-        //                         "{reaction}"
-        //                     }
-        //                 )
-        //             })
-        //         },
-        //         script { focus_script },
-        //     )
-        // }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
