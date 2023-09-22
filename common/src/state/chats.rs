@@ -13,7 +13,10 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::pending_message::{progress_file, PendingMessage};
+use super::{
+    chats2::ChatBehavior,
+    pending_message::{progress_file, PendingMessage},
+};
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -30,6 +33,8 @@ use super::pending_message::{progress_file, PendingMessage};
 // warning: Chat implements Serialize
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct Chat {
+    #[serde(default)]
+    pub chat_behavior: ChatBehavior,
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
     pub id: Uuid,
@@ -104,6 +109,7 @@ impl Chat {
             scroll_value: None,
             pinned_messages,
             scroll_to: None,
+            chat_behavior: Default::default(),
         }
     }
     pub fn append_pending_msg(

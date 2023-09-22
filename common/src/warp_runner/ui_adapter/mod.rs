@@ -12,7 +12,11 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats, MAX_PINNED_MESSAGES};
+use crate::state::{
+    self, chats,
+    chats2::{ChatBehavior, MessageIndices, ScrollBehavior},
+    MAX_PINNED_MESSAGES,
+};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -25,7 +29,7 @@ use warp::{
     error::Error,
     logging::tracing::log,
     multipass::identity::{Identifier, Identity, Platform},
-    raygun::{self, Conversation, MessageOptions, MessageStream},
+    raygun::{self, Conversation, MessageOptions},
 };
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
@@ -240,53 +244,31 @@ pub async fn fetch_pinned_messages_from_chat(
     .await;
     Ok(messages)
 }
-// todo: delete this function
-pub async fn fetch_more_messages(
-    messaging: &mut super::Messaging,
-    mut message_stream: MessageStream,
-    to_take: usize,
-) -> Result<(VecDeque<Message>, MessageStream, bool), Error> {
-    let mut messages = VecDeque::new();
-    let mut num_yielded = 0;
-    let mut has_more = true;
-
-    loop {
-        let message = match message_stream.next().await {
-            Some(x) => x,
-            None => {
-                has_more = false;
-                break;
-            }
-        };
-
-        num_yielded += 1;
-        messages.push_back(convert_raygun_message(messaging, &message).await);
-
-        if num_yielded >= to_take {
-            break;
-        }
-    }
-
-    Ok((messages, message_stream, has_more))
-}
 
 pub async fn fetch_messages2(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    _start_date: Option<DateTime<Utc>>,
+    mut chat_behavior: ChatBehavior,
+    start_date: Option<DateTime<Utc>>,
     to_take: usize,
-) -> Result<(VecDeque<Message>, bool), Error> {
+) -> Result<(VecDeque<Message>, ChatBehavior), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
     println!(
         "CALLING fetch messages2. to_take: {}; total: {}",
         to_take, total_messages
     );
 
+    let message_options = match start_date.as_ref() {
+        None => MessageOptions::default()
+            .set_range(total_messages.saturating_sub(to_take)..total_messages),
+        Some(start_date) => MessageOptions::default()
+            .set_date_range(start_date.clone()..DateTime::<Utc>::default())
+            .set_reverse()
+            .set_limit(to_take as _),
+    };
+
     let messages = messaging
-        .get_messages(
-            conv_id,
-            MessageOptions::default().set_range(0..std::cmp::min(to_take, total_messages)),
-        )
+        .get_messages(conv_id, message_options)
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -298,54 +280,22 @@ pub async fn fetch_messages2(
     .collect()
     .await;
 
-    Ok((messages, false))
-
-    /*let mut message_stream = messaging
-        .get_messages(
-            conv_id,
-            MessageOptions::default()
-                .set_range(0..total_messages)
-                .set_messages_type(raygun::MessagesType::Stream)
-                .set_reverse(),
-        )
-        .await
-        .and_then(MessageStream::try_from)?;
-
-    let mut messages = Vec::new();
-    let mut should_compare = start_date.is_some();
-    let mut num_yielded = 0;
-    let mut has_more = true;
-
-    loop {
-        let message = match message_stream.next().await {
-            Some(x) => x,
-            None => {
-                has_more = false;
-                break;
-            }
-        };
-
-        if should_compare {
-            if let Some(date) = start_date.as_ref() {
-                // when a message is found that occurs at or before the start date, start incrementing num_yielded.
-                if date >= &message.date() {
-                    should_compare = false;
-                    num_yielded += 1;
-                }
-            }
-            // yield all messaegs that were decrypted (prior to start_date) in case the user scrolls down.
-            messages.push(convert_raygun_message(messaging, &message).await);
-        } else {
-            num_yielded += 1;
-            messages.push(convert_raygun_message(messaging, &message).await);
-        }
-
-        if num_yielded >= to_take {
-            break;
-        }
+    if messages.len() < to_take {
+        chat_behavior.on_scroll_top = ScrollBehavior::DoNothing;
+    } else {
+        chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
     }
 
-    Ok((messages, message_stream, has_more))*/
+    if chat_behavior.messages_indices.is_none() {
+        chat_behavior.messages_indices.replace(MessageIndices {
+            start: 0,
+            end: messages.len(),
+        });
+    } else if let Some(indices) = chat_behavior.messages_indices.as_mut() {
+        indices.end += messages.len();
+    }
+
+    Ok((messages, chat_behavior))
 }
 
 pub async fn conversation_to_chat(

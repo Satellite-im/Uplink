@@ -12,19 +12,17 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{
-        self, AttachmentKind, ConversationType, Location, MessageStream, PinState, ReactionState,
-    },
+    raygun::{self, AttachmentKind, ConversationType, Location, PinState, ReactionState},
 };
 
 use crate::{
-    state::{chats, identity, pending_message::PendingMessage, Friends},
+    state::{chats, chats2::ChatBehavior, identity, pending_message::PendingMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages2, fetch_messages_between,
-            fetch_messages_from_chat, fetch_more_messages, fetch_pinned_messages_from_chat,
-            get_uninitialized_identity, MessageEvent,
+            fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
+            MessageEvent,
         },
         Account, Messaging, WarpEvent,
     },
@@ -34,8 +32,7 @@ use crate::{
 #[derive(Debug)]
 pub struct FetchMessagesResponse {
     pub messages: VecDeque<ui_adapter::Message>,
-    //  pub message_stream: MessageStream,
-    pub has_more: bool,
+    pub new_chat_behavior: ChatBehavior,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -86,12 +83,7 @@ pub enum RayGunCmd {
         // if None, will start from the beginning of the conversation.
         start_date: Option<DateTime<Utc>>,
         to_fetch: usize,
-        rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
-    },
-    #[display(fmt = "FetchMoreMessages")]
-    FetchMoreMessages {
-        message_stream: MessageStream,
-        to_fetch: usize,
+        chat_behavior: ChatBehavior,
         rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
     },
     #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
@@ -259,29 +251,14 @@ pub async fn handle_raygun_cmd(
             conv_id,
             start_date,
             to_fetch,
+            chat_behavior,
             rsp,
         } => {
-            let r = fetch_messages2(conv_id, messaging, start_date, to_fetch)
+            let r = fetch_messages2(conv_id, messaging, chat_behavior, start_date, to_fetch)
                 .await
                 .map(|r| FetchMessagesResponse {
                     messages: r.0,
-                    //message_stream: r.1,
-                    has_more: r.1,
-                });
-
-            let _ = rsp.send(r);
-        }
-        RayGunCmd::FetchMoreMessages {
-            message_stream,
-            to_fetch,
-            rsp,
-        } => {
-            let r = fetch_more_messages(messaging, message_stream, to_fetch)
-                .await
-                .map(|r| FetchMessagesResponse {
-                    messages: r.0,
-                    //  message_stream: r.1,
-                    has_more: r.2,
+                    new_chat_behavior: r.1,
                 });
 
             let _ = rsp.send(r);
