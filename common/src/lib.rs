@@ -41,7 +41,9 @@ pub enum LogProfile {
     /// print everything including tracing logs to the terminal
     Trace,
     /// like trace but include warp logs
-    Trace2,
+    TraceWarp,
+    /// like trace but include dioxus logs
+    TraceDioxus,
 }
 
 #[derive(Debug, Parser)]

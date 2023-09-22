@@ -94,8 +94,14 @@ pub fn configure_logger(profile: Option<LogProfile>) {
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
-            LogProfile::Trace2 => {
+            LogProfile::TraceWarp => {
                 logger::set_display_warp(true);
+                logger::set_display_trace(true);
+                logger::set_write_to_stdout(true);
+                LevelFilter::Trace
+            }
+            LogProfile::TraceDioxus => {
+                logger::set_display_dioxus(true);
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
