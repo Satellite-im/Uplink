@@ -1,9 +1,11 @@
 mod chat_behavior;
+mod message_indices;
 mod msg_range;
 mod scroll_behavior;
 mod view_behavior;
 
 pub use chat_behavior::*;
+pub use message_indices::*;
 pub use msg_range::*;
 pub use scroll_behavior::*;
 pub use view_behavior::*;

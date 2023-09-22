@@ -9,7 +9,6 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-
 use kit::{
     components::message_group::MessageGroupSkeletal,
     layout::{modal::Modal, topbar::Topbar},
@@ -27,9 +26,7 @@ use crate::{
     },
 };
 
-use common::{
-    state::{ui, Action, State},
-};
+use common::state::{ui, Action, State};
 
 use common::language::get_local_text;
 

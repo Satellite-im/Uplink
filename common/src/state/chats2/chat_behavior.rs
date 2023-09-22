@@ -1,17 +1,18 @@
 use serde::{Deserialize, Serialize};
 
-use super::{ScrollBehavior, ViewBehavior};
+use super::{MessageIndices, ScrollBehavior, ViewBehavior};
 
 // for a given Chat, the UI will load X messages, Y of which are displayed at any given time. Scrolling changes the set of messages displayed.
 // naming this is tough. to start, the X messages loaded will be called a "view". the messages displayed will be called "page". See ViewBehavior::Historical
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ChatBehavior {
     // the view behaves differently if the user scrolled up to look at old messages.
-    view_behavior: ViewBehavior,
+    pub view_behavior: ViewBehavior,
     // describes how to behave when the user scrolls to the top of the view
     pub on_scroll_top: ScrollBehavior,
     // describes how to behave when the user scrolls to the end of the view
     pub on_scroll_end: ScrollBehavior,
+    pub messages_indices: Option<MessageIndices>,
 }
 
 impl ChatBehavior {
@@ -24,6 +25,7 @@ impl ChatBehavior {
             view_behavior,
             on_scroll_end,
             on_scroll_top,
+            messages_indices: None,
         }
     }
 
@@ -46,6 +48,7 @@ impl Default for ChatBehavior {
             view_behavior: ViewBehavior::default(),
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
+            messages_indices: None,
         }
     }
 }
