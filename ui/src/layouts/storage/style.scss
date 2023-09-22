@@ -1,3 +1,11 @@
+#send-files-layout {
+  display: inline-flex;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
 .files-selected-text {
     color: var(--text-color);
     padding-left: 8px;

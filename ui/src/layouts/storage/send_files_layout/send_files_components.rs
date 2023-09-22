@@ -5,10 +5,10 @@ use dioxus::prelude::*;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
 use warp::raygun::Location;
 
-use super::controller::StorageController;
+use crate::layouts::storage::files_layout::controller::StorageController;
 
-#[component(no_case_check)]
-pub fn file_checkbox(
+#[component]
+pub fn FileCheckbox(
     cx: Scope<'a>,
     file_path: String,
     storage_controller: UseRef<StorageController>,
@@ -34,15 +34,13 @@ pub fn file_checkbox(
     None
 }
 
-#[component(no_case_check)]
-pub fn send_files_from_chat_topbar<'a>(
+#[component]
+pub fn SendFilesTopbar<'a>(
     cx: Scope<'a>,
     storage_controller: UseRef<StorageController>,
-    is_selecting_files: UseState<bool>,
     on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
-    if *is_selecting_files.get() {
-        return cx.render(rsx! (
+    return cx.render(rsx! (
             div {
                 class: "send-files-button",
                 Button {
@@ -62,13 +60,10 @@ pub fn send_files_from_chat_topbar<'a>(
                     icon: Icon::ChevronRight,
                     onpress: move |_| {
                         on_send.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
-                        is_selecting_files.set(false);
                     }
                 },
             }
         ));
-    }
-    None
 }
 
 pub fn toggle_selected_file(storage_controller: UseRef<StorageController>, file_path: String) {
