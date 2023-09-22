@@ -205,16 +205,16 @@ pub fn get_messages2(
             span {
                 rsx!(
                     msg_container_end,
-                    loop_over_message_groups {
+                    super::messages::loop_over_message_groups {
                         // todo: the messages must be passed in from the props to avoid cloning
-                        groups: create_message_groups(data.my_id.did_key(), &cx.props.messages),
+                        groups: create_message_groups(data.my_id.did_key(), &messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
 
                         }
                     },
-                    render_pending_messages_listener {
+                    super::messages::render_pending_messages_listener {
                         data: data,
                         on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
 
@@ -230,7 +230,7 @@ pub fn get_messages2(
         // }
     ))
 }
-
+/*
 #[derive(Props)]
 struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
@@ -727,3 +727,4 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }
     ))
 }
+*/

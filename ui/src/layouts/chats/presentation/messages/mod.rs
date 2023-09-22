@@ -251,7 +251,7 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 }
 
 #[derive(Props)]
-struct AllMessageGroupsProps<'a> {
+pub struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
@@ -260,7 +260,7 @@ struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
     log::trace!("render message groups");
     cx.render(rsx!(cx.props.groups.iter().map(|_group| {
         rsx!(render_message_group {
@@ -273,13 +273,13 @@ fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Ele
 }
 
 #[derive(Props)]
-struct PendingMessagesListenerProps<'a> {
+pub struct PendingMessagesListenerProps<'a> {
     data: &'a Rc<ChatData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 //The component that listens for upload events
-fn render_pending_messages_listener<'a>(
+pub fn render_pending_messages_listener<'a>(
     cx: Scope<'a, PendingMessagesListenerProps>,
 ) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
