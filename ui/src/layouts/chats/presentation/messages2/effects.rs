@@ -9,10 +9,10 @@ use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, UseRef, UseSharedState};
 use uuid::Uuid;
 
-use super::{get_messagesProps, NewelyFetchedMessages};
+use super::NewelyFetchedMessages;
 
 pub fn update_chat_messages<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     state: &UseSharedState<State>,
     newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
 ) {
@@ -38,7 +38,7 @@ pub fn update_chat_messages<'a>(
 }
 
 pub fn check_message_scroll<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     scroll_to: &Option<Uuid>,
     state: &UseSharedState<State>,
     eval: &utils::EvalProvider,
@@ -59,7 +59,7 @@ pub fn check_message_scroll<'a>(
 }
 
 pub fn scroll_to_bottom<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     scroll: Option<i64>,
     eval: &utils::EvalProvider,
     unreads: u32,

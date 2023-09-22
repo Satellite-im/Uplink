@@ -141,7 +141,7 @@ pub fn Compose(cx: Scope) -> Element {
                     MessageGroupSkeletal {},
                 }
             ),
-            Some(_data) =>  rsx!(get_messages { data: _data.clone() }),
+            Some(_data) =>  rsx!(get_messages(cx, _data.clone())),
         },
         get_chatbar {
             data: data.clone(),

@@ -10,10 +10,10 @@ use futures::StreamExt;
 
 use warp::raygun::{PinState, ReactionState};
 
-use super::{get_messagesProps, DownloadTracker, MessagesCommand, NewelyFetchedMessages};
+use super::{DownloadTracker, MessagesCommand, NewelyFetchedMessages};
 
 pub fn handle_warp_commands<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     state: &UseSharedState<State>,
     newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
     pending_downloads: &UseSharedState<DownloadTracker>,
