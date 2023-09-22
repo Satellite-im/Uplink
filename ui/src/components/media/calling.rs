@@ -25,7 +25,7 @@ use common::{
         ui::Layout,
     },
     warp_runner::{BlinkCmd, WarpCmd},
-    WARP_CMD_CH,
+    STATIC_ARGS, WARP_CMD_CH,
 };
 use common::{
     language::get_local_text,
@@ -37,6 +37,8 @@ enum CallDialogCmd {
     Hangup(Uuid),
     MuteSelf,
     UnmuteSelf,
+    RecordCall,
+    StopRecording,
 }
 
 enum PendingCallDialogCmd {
@@ -92,6 +94,8 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     let outgoing = active_call.call.participants_joined.is_empty();
     let update_fn = cx.schedule_update_any();
 
+    let recording = use_ref(cx, || false);
+
     use_future(
         cx,
         (&scope_id, &active_call_id, &active_call_answer_time),
@@ -118,7 +122,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     );
 
     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
-        to_owned![state];
+        to_owned![state, recording];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -178,6 +182,48 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                                 log::error!("warp_runner failed to unmute self: {e}");
                             }
                         }
+                    }
+                    CallDialogCmd::RecordCall => {
+                        let (tx, rx) = oneshot::channel();
+                        let time = Local::now().format("%d-%m-%Y_%H-%M-%S").to_string();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StartRecording {
+                            output_dir: STATIC_ARGS
+                                .recordings
+                                .join(time)
+                                .to_string_lossy()
+                                .to_string(),
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                recording.with_mut(|v| *v = true);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to start recording: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::StopRecording => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StopRecording { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                recording.with_mut(|v| *v = false);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to stop recording: {e}");
+                            }
+                        }
                     } // TODO: Method to end call before a connection is made
                 }
             }
@@ -206,6 +252,23 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     cx.render(rsx!(div {
         id: "remote-controls",
         class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
+        (*recording.read()).then(||{
+            rsx!(
+                div {
+                    class: "recording-active",
+                    common::icons::Icon {
+                        ..common::icons::IconProps {
+                            class: None,
+                            size: 20,
+                            fill:"currentColor",
+                            icon: Icon::RadioSelected,
+                            disabled:  false,
+                            disabled_fill: "#000000"
+                        },
+                    }
+                }
+            )
+        }),
         div {
             class: format_args!("call-label {}", if cx.props.in_chat {"in-chat"} else {""}),
             outgoing.then(|| rsx!(Label {
@@ -277,6 +340,25 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     // todo: send command
                 }
             },
+            (!outgoing).then(||{
+                if *recording.read() {
+                    rsx!(Button {
+                        icon: Icon::StopCircle,
+                        appearance: Appearance::Danger,
+                        onpress: move |_| {
+                            ch.send(CallDialogCmd::StopRecording);
+                        },
+                    })
+                } else {
+                    rsx!(Button {
+                        icon: Icon::RadioSelected,
+                        appearance: Appearance::Secondary,
+                        onpress: move |_| {
+                            ch.send(CallDialogCmd::RecordCall);
+                        },
+                    })
+                }
+            }),
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
