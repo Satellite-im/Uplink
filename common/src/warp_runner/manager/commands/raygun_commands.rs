@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use derive_more::Display;
 use futures::{channel::oneshot, StreamExt};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     ops::Range,
     path::PathBuf,
 };
@@ -33,8 +33,8 @@ use crate::{
 
 #[derive(Debug)]
 pub struct FetchMessagesResponse {
-    pub messages: Vec<ui_adapter::Message>,
-    pub message_stream: MessageStream,
+    pub messages: VecDeque<ui_adapter::Message>,
+    //  pub message_stream: MessageStream,
     pub has_more: bool,
 }
 
@@ -265,8 +265,8 @@ pub async fn handle_raygun_cmd(
                 .await
                 .map(|r| FetchMessagesResponse {
                     messages: r.0,
-                    message_stream: r.1,
-                    has_more: r.2,
+                    //message_stream: r.1,
+                    has_more: r.1,
                 });
 
             let _ = rsp.send(r);
@@ -280,7 +280,7 @@ pub async fn handle_raygun_cmd(
                 .await
                 .map(|r| FetchMessagesResponse {
                     messages: r.0,
-                    message_stream: r.1,
+                    //  message_stream: r.1,
                     has_more: r.2,
                 });
 

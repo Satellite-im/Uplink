@@ -240,13 +240,13 @@ pub async fn fetch_pinned_messages_from_chat(
     .await;
     Ok(messages)
 }
-
+// todo: delete this function
 pub async fn fetch_more_messages(
     messaging: &mut super::Messaging,
     mut message_stream: MessageStream,
     to_take: usize,
-) -> Result<(Vec<Message>, MessageStream, bool), Error> {
-    let mut messages = Vec::new();
+) -> Result<(VecDeque<Message>, MessageStream, bool), Error> {
+    let mut messages = VecDeque::new();
     let mut num_yielded = 0;
     let mut has_more = true;
 
@@ -260,7 +260,7 @@ pub async fn fetch_more_messages(
         };
 
         num_yielded += 1;
-        messages.push(convert_raygun_message(messaging, &message).await);
+        messages.push_back(convert_raygun_message(messaging, &message).await);
 
         if num_yielded >= to_take {
             break;
@@ -275,10 +275,32 @@ pub async fn fetch_messages2(
     messaging: &mut super::Messaging,
     start_date: Option<DateTime<Utc>>,
     to_take: usize,
-) -> Result<(Vec<Message>, MessageStream, bool), Error> {
-    println!("CALLING fetch messages2");
+) -> Result<(VecDeque<Message>, bool), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
-    let mut message_stream = messaging
+    println!(
+        "CALLING fetch messages2. to_take: {}; total: {}",
+        to_take, total_messages
+    );
+
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(0..std::cmp::min(to_take, total_messages)),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: VecDeque<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+
+    return Ok((messages, false));
+
+    /*let mut message_stream = messaging
         .get_messages(
             conv_id,
             MessageOptions::default()
@@ -323,7 +345,7 @@ pub async fn fetch_messages2(
         }
     }
 
-    Ok((messages, message_stream, has_more))
+    Ok((messages, message_stream, has_more))*/
 }
 
 pub async fn conversation_to_chat(

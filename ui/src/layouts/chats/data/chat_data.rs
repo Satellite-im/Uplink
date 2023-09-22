@@ -1,7 +1,12 @@
-use std::rc::Rc;
+use std::{collections::VecDeque, rc::Rc};
 
-use common::state::{chats2::ChatBehavior, Chat, Identity, State};
+use common::{
+    state::{chats2::ChatBehavior, Chat, Identity, State},
+    warp_runner::{ui_adapter, RayGunCmd, WarpCmd},
+    WARP_CMD_CH,
+};
 use dioxus::prelude::*;
+use futures::channel::oneshot;
 use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;
@@ -25,17 +30,21 @@ impl PartialEq for ChatData {
 }
 
 impl ChatData {
-    pub fn get(state: &UseSharedState<State>) -> Option<Rc<Self>> {
+    pub fn get(
+        state: &UseSharedState<State>,
+        messages: VecDeque<ui_adapter::Message>,
+    ) -> Option<Rc<Self>> {
         let s = state.read();
         // the Compose page shouldn't be called before chats is initialized. but check here anyway.
         if !s.initialized {
             return None;
         }
 
-        let active_chat = match s.get_active_chat() {
+        let mut active_chat = match s.get_active_chat() {
             Some(c) => c,
             None => return None,
         };
+        active_chat.messages = messages;
         let participants = s.chat_participants(&active_chat);
         // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
         // this would be "fixed" the next time uplink starts up
