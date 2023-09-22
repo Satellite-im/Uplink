@@ -334,3 +334,27 @@
     text-align: center; 
     white-space: nowrap;
 }
+
+.recording-active {
+    position: absolute; 
+    right: var(--padding-less); 
+    top: var(--padding-less);
+    svg {
+        animation: recording-pulse 1s 0s infinite;
+    }
+}
+
+@keyframes recording-pulse {
+    0% {
+        fill: transparent;
+    }
+
+    50% {
+        fill: rgb(255, 0, 0);
+    }
+
+    100% {
+        fill: transparent;
+    }
+}
+  
