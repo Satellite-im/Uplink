@@ -95,15 +95,36 @@ pub struct NewelyFetchedMessages {
     has_more: bool,
 }
 
+#[derive(Clone)]
+pub struct MessagesWrapper {
+    messages: Rc<VecDeque<ui_adapter::Message>>,
+}
+
+impl MessagesWrapper {
+    fn new() -> Self {
+        Self {
+            messages: Rc::new(VecDeque::new()),
+        }
+    }
+
+    fn set_messages(&mut self, x: VecDeque<ui_adapter::Message>) {
+        self.messages = Rc::new(x);
+    }
+}
+
+impl PartialEq for MessagesWrapper {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     // use_shared_state_provider(cx, || ActiveChat::default());
     // let active_chat = use_shared_state::<ActiveChat>(cx)?;
-    let messages = use_state(cx, || -> Rc<VecDeque<ui_adapter::Message>> {
-        Rc::new(VecDeque::new())
-    });
+    let messages_wrapper = use_state(cx, || MessagesWrapper::new());
 
     use_future(cx, (&data.active_chat.id), |conv_id| {
-        to_owned![messages];
+        to_owned![messages_wrapper];
         async move {
             println!("fetching messages for chat_id: {}", conv_id);
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -129,11 +150,12 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
             match rsp {
                 Ok(r) => {
+                    println!("got FetchMessagesResponse");
                     let mut chat_behavior = ChatBehavior::default();
                     if r.has_more {
                         chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
                     }
-                    messages.with_mut(|x| *x = Rc::new(VecDeque::from(r.messages)));
+                    messages_wrapper.with_mut(|x| x.set_messages(VecDeque::from(r.messages)));
                     // active_chat.write().set(ActiveChat::new(ActiveChatArgs {
                     //     conversation_id: conv_id,
                     //     messages: r.messages,
@@ -153,16 +175,12 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
     render!(get_messages2 {
         data: data,
-        messages: messages.get().clone()
+        messages_wrapper: messages_wrapper.get().clone()
     })
 }
 
 #[inline_props]
-pub fn get_messages2(
-    cx: Scope,
-    data: Rc<ChatData>,
-    messages: Rc<VecDeque<ui_adapter::Message>>,
-) -> Element {
+pub fn get_messages2(cx: Scope, data: Rc<ChatData>, messages_wrapper: MessagesWrapper) -> Element {
     println!("get messages2 for chat_id: {}", data.active_chat.id);
     log::trace!("get_messages");
 
@@ -207,7 +225,7 @@ pub fn get_messages2(
                     msg_container_end,
                     super::messages::loop_over_message_groups {
                         // todo: the messages must be passed in from the props to avoid cloning
-                        groups: create_message_groups(data.my_id.did_key(), &messages),
+                        groups: create_message_groups(data.my_id.did_key(), &messages_wrapper.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
