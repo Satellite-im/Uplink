@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use kit::layout::modal::Modal;
 use warp::constellation::file::File;
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_file_modal<'a>(
     cx: Scope<'a>,
     on_dismiss: EventHandler<'a, ()>,
