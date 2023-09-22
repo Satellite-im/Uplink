@@ -16,7 +16,7 @@ pub static FILE_EXT: &str = "dll";
 pub trait Extension {
     fn details(&self) -> Details;
     fn stylesheet(&self) -> String;
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a>;
     fn rustc_version(&self) -> &'static str {
         RUSTC_VERSION
     }
@@ -44,8 +44,8 @@ macro_rules! export_extension {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn render(cx: &ScopeState) -> Element {
-            $a.render(cx)
+        pub extern "C" fn render(cx: &ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
+            $a.render(cx, runtime)
         }
 
         #[doc(hidden)]
@@ -104,9 +104,9 @@ impl UplinkExtension {
         unsafe {
             let res = self
                 .lib
-                .get::<unsafe extern "C" fn(cx: &ScopeState) -> Element>(b"render\0");
+                .get::<unsafe extern "C" fn(cx: &ScopeState, runtime: std::rc::Rc<Runtime>) -> Element>(b"render\0");
             match res {
-                Ok(f) => f(cx),
+                Ok(f) => f(cx, Runtime::current().unwrap()),
                 Err(_) => None,
             }
         }

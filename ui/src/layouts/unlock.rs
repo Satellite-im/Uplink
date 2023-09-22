@@ -48,8 +48,7 @@ impl UnlockError {
 }
 
 // todo: go to the auth page if no account has been created
-#[inline_props]
-#[allow(non_snake_case)]
+#[component]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering unlock layout");
     let validation_failure: &UseState<Option<UnlockError>> =
@@ -283,6 +282,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     ContextMenu {
                         key: "{key}-menu",
                         id: "unlock-context-menu".into(),
+                        devmode: state.read().configuration.developer.developer_mode,
                         items: cx.render(rsx!(
                             ContextItem {
                                 icon: Icon::Trash,
