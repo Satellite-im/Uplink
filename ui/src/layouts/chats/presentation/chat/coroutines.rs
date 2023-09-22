@@ -100,7 +100,8 @@ pub fn init_chat_data(
                     .get_chat_by_id(conv_id)
                     .map(|x| x.chat_behavior)
                     .unwrap_or_default(),
-                to_fetch: 40,
+                // todo: increase this
+                to_fetch: 10,
                 rsp: tx,
             })) {
                 log::error!("failed to init messages: {e}");
