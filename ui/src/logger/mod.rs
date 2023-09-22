@@ -15,9 +15,9 @@
 use colored::Colorize;
 use log::{self, Level, LevelFilter, SetLoggerError};
 use once_cell::sync::Lazy;
-use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+use std::{collections::VecDeque, path::PathBuf};
 use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
@@ -52,6 +52,7 @@ pub struct Logger {
     max_logs: usize,
     save_to_file: bool,
     write_to_stdout: bool,
+    log_all: bool,
     display_trace: bool,
     display_warp: bool,
 }
@@ -78,7 +79,7 @@ impl crate::log::Log for LogGlue {
         }
 
         // don't care about other libraries
-        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+        if !LOGGER.read().log_all && record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
             if LOGGER.read().display_warp
                 && record.file().map(|x| x.contains("warp")).unwrap_or(false)
             {
@@ -108,6 +109,7 @@ impl Logger {
             display_warp: false,
             write_to_stdout: false,
             display_trace: false,
+            log_all: false,
             log_file: logger_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
@@ -139,10 +141,17 @@ impl Logger {
         }
 
         if self.save_to_file {
+            let path = PathBuf::from(self.log_file.clone());
+            if let Some(path) = path.parent() {
+                if !path.is_dir() {
+                    std::fs::create_dir_all(path).expect("Directory to be created");
+                }
+            }
+
             let mut file = OpenOptions::new()
                 .append(true)
                 .create(true)
-                .open(&self.log_file)
+                .open(path)
                 .unwrap();
 
             if let Err(error) = writeln!(file, "{new_log}") {
@@ -234,6 +243,10 @@ pub fn set_save_to_file(b: bool) {
 
 pub fn set_display_warp(b: bool) {
     LOGGER.write().display_warp = b;
+}
+
+pub fn set_log_all(b: bool) {
+    LOGGER.write().log_all = b;
 }
 
 pub fn get_save_to_file() -> bool {
