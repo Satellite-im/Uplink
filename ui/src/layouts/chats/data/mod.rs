@@ -1,17 +1,15 @@
-mod chat_data;
-pub use chat_data::*;
-
-mod misc;
-pub use misc::*;
-
 mod active_chat;
-pub use active_chat::*;
-
-mod partial_message;
-pub use partial_message::*;
-
-mod sorted_list;
-pub use sorted_list::*;
-
+mod chat_data;
+mod js_msg;
+mod message_view;
+mod misc;
 mod msg_group;
+mod partial_message;
+
+pub use active_chat::*;
+pub use chat_data::*;
+pub use js_msg::*;
+pub use message_view::*;
+pub use misc::*;
 pub use msg_group::*;
+pub use partial_message::*;

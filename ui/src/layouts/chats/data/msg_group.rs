@@ -1,10 +1,12 @@
-use std::collections::{VecDeque};
+// todo: move the MessageGroup from State to this file.
+
+use std::collections::VecDeque;
 
 use common::{
     state::{GroupedMessage, MessageGroup},
     warp_runner::ui_adapter,
 };
-use warp::{crypto::DID};
+use warp::crypto::DID;
 
 pub fn create_message_groups(
     my_did: DID,

@@ -75,3 +75,53 @@ setTimeout(function() {
     parent.classList.remove("background-highlight")
 }, 2 * 1000);
 "#;
+
+// returns for eval
+pub const SCROLL_TO_ID: &str = r#"
+var message = document.getElementById("$MESSAGE_ID");
+message.scrollIntoView({ behavior: 'instant', block: 'start' });
+return "done";
+"#;
+
+// returns for eval
+pub const SCROLL_TO_END: &str = r#"
+window.scrollTo(0, document.body.scrollHeight); 
+return "done";
+"#;
+
+pub const OBSERVER_SCRIPT: &str = r###"
+function observe_list() {
+    var send_top_event = $SEND_TOP_EVENT;
+    var send_bottom_event = $SEND_BOTTOM_EVENT;
+    console.log("send_top_event is " + send_top_event);
+    console.log("send_bottom_event is " + send_bottom_event);
+    
+    var observer3 = new IntersectionObserver( (entries, observer) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                dioxus.send("{\"Add\":" + entry.target.id + "}");
+                if (!entry.target.nextElementSibling && send_bottom_event) {
+                    dioxus.send("{\"Bottom\":null}");
+                    observer.disconnect();
+                } else if (!entry.target.previousElementSibling && send_top_event) {
+                    dioxus.send("{\"Top\":null}");
+                    observer.disconnect();
+                }
+            } else {
+                dioxus.send("{\"Remove\":" + entry.target.id + "}");
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.75,
+    });
+    const elements = document.querySelectorAll("#compose-list > li");
+    elements.forEach( (element) => {
+        let id = "#" + element.id;
+        observer3.observe(element);
+    });
+}
+
+observe_list();
+"###;

@@ -6,9 +6,8 @@ use common::{
     warp_runner::ui_adapter,
 };
 use uuid::Uuid;
-use warp::raygun;
 
-use super::SortedList;
+use super::MsgView;
 
 #[derive(Debug, Default)]
 pub struct ActiveChat {
@@ -16,10 +15,7 @@ pub struct ActiveChat {
     pub messages: VecDeque<ui_adapter::Message>,
     pub chat_behavior: ChatBehavior,
 
-    pub displayed_messages: SortedList,
-    pub message_stream: Option<raygun::MessageStream>,
-    // may want a message stream to simplify fetching more messages when the user scrolls up...maybe another stream for scrolling down...
-
+    pub displayed_messages: MsgView,
     // used for displayed_messages
     pub message_times: HashMap<Uuid, DateTime<Utc>>,
 }
@@ -29,7 +25,6 @@ pub struct ActiveChatArgs {
     pub conversation_id: Uuid,
     pub messages: Vec<ui_adapter::Message>,
     pub chat_behavior: ChatBehavior,
-    pub message_stream: Option<raygun::MessageStream>,
 }
 
 impl ActiveChat {
@@ -42,8 +37,7 @@ impl ActiveChat {
             conversation_id: args.conversation_id,
             messages: VecDeque::from(args.messages),
             chat_behavior: args.chat_behavior,
-            displayed_messages: SortedList::default(),
-            message_stream: args.message_stream,
+            displayed_messages: MsgView::default(),
             message_times,
         }
     }
@@ -51,7 +45,7 @@ impl ActiveChat {
         matches!(self.chat_behavior.on_scroll_top, ScrollBehavior::FetchMore)
     }
 
-    pub fn find_message_times(&mut self) {
+    pub fn init_message_times(&mut self) {
         self.message_times.clear();
         for m in self.messages.iter() {
             self.message_times.insert(m.inner.id(), m.inner.date());

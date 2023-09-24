@@ -5,11 +5,11 @@ use super::PartialMessage;
 // used to track which messages are visible and determine
 // which message needs to be scrolled to.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct SortedList {
+pub struct MsgView {
     items: VecDeque<PartialMessage>,
 }
 
-impl SortedList {
+impl MsgView {
     pub fn new() -> Self {
         Self {
             items: VecDeque::new(),
