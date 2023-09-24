@@ -1,5 +1,8 @@
 use common::{
-    state::{chats2::MsgRange, Action, State},
+    state::{
+        chats2::{ChatBehavior, MsgRange},
+        Action, State,
+    },
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -8,130 +11,114 @@ use dioxus_core::Scoped;
 use dioxus_hooks::{
     to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState, UseState,
 };
-use futures::StreamExt;
+use futures::{pin_mut, StreamExt};
 
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
-use crate::layouts::chats::data::MsgView;
+use crate::layouts::chats::{
+    data::{JsMsg, MsgView},
+    scripts::OBSERVER_SCRIPT,
+};
 
 use super::{get_messagesProps, DownloadTracker, MessagesCommand, NewelyFetchedMessages};
 
-/*pub fn hangle_msg_scroll<'a>(
+pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
     eval_provider: &crate::utils::EvalProvider,
-    msg_list: UseRef<SortedList>,
+    msg_view: UseRef<MsgView>,
     msg_range: UseState<MsgRange>,
     scroll_to: UseRef<Option<Uuid>>,
-) {
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+) -> Coroutine<Uuid> {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
         to_owned![
             eval_provider,
             msg_range,
-            msg_list,
+            msg_view,
             scroll_to,
             //conversation_len
         ];
         async move {
-            println!("starting use_coroutine");
-            while rx.next().await.is_some() {
-                println!("use_coroutine loop");
-                let cur_range = msg_range.current().clone();
-                // if to_take() is empty then there are no messages displayed
-                let should_send_bottom_evt = cur_range.start() > 0;
-                // if only a few messages are in the conversation, don't spam it with top events
-                // also don't send the top event when the user scrolls all the way to the top
-                let should_send_top_evt = ((cur_range.start() + cur_range.to_take())
-                    < conversation_len)
-                    && conversation_len > cur_range.to_take();
-                let mut observer_script = OBSERVER_SCRIPT.replace(
-                    "$SEND_TOP_EVENT",
-                    should_send_top_evt.then_some("1").unwrap_or("0"),
-                );
-                observer_script = observer_script.replace(
-                    "$SEND_BOTTOM_EVENT",
-                    should_send_bottom_evt.then_some("1").unwrap_or("0"),
-                );
+            let mut current_conv_id: Option<Uuid> = None;
 
-                let eval = match eval_provider(&observer_script) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        eprintln!("use eval failed: {:?}", e);
-                        return;
-                    }
-                };
+            // don't begin the coroutine until use_eval sends a command over the channel.
+            'WAIT_FOR_INIT: while let Some(conv_id) = rx.next().await {
+                current_conv_id.replace(conv_id);
 
-                'HANDLE_EVAL: loop {
-                    match eval.recv().await {
-                        Ok(msg) => {
-                            println!("got this from js: {msg}");
-                            if let Some(s) = msg.as_str() {
-                                match serde_json::from_str::<JsMsg>(s) {
-                                    Ok(msg) => match msg {
-                                        JsMsg::Add(x) => {
-                                            msg_list.write_silent().insert(x);
-                                            println!(
-                                                "new max: {:?}; new min: {:?}",
-                                                msg_list.read().get_max(),
-                                                msg_list.read().get_min()
-                                            );
-                                        }
-                                        JsMsg::Remove(x) => {
-                                            msg_list.write_silent().remove(x);
-                                            println!(
-                                                "new max: {:?}; new min: {:?}",
-                                                msg_list.read().get_max(),
-                                                msg_list.read().get_min()
-                                            );
-                                        }
-                                        JsMsg::Top => {
-                                            println!("top reached");
-                                            if !should_send_top_evt {
-                                                continue;
-                                            }
+                'CONFIGURE_EVAL: loop {
+                    // todo: set these correctly. they may change each time top or bottom is scrolled to.
+                    let should_send_top_evt = true;
+                    let should_send_bottom_evt = false;
+                    let mut observer_script = OBSERVER_SCRIPT.replace(
+                        "$SEND_TOP_EVENT",
+                        should_send_top_evt.then_some("1").unwrap_or("0"),
+                    );
+                    observer_script = observer_script.replace(
+                        "$SEND_BOTTOM_EVENT",
+                        should_send_bottom_evt.then_some("1").unwrap_or("0"),
+                    );
 
-                                            *scroll_to.write() = msg_list.read().get_min();
-                                            msg_range.with_mut(|x| {
-                                                x.step_forward(
-                                                    cur_range.to_take() / 2,
-                                                    conversation_len,
-                                                )
-                                            });
-                                            msg_list.write().clear();
-                                            break 'HANDLE_EVAL;
-                                        }
-                                        JsMsg::Bottom => {
-                                            println!("bottom reached");
-                                            if !should_send_bottom_evt {
-                                                continue;
-                                            }
-
-                                            *scroll_to.write() = msg_list.read().get_min();
-                                            msg_range.with_mut(|x| {
-                                                x.step_backward(cur_range.to_take() / 2)
-                                            });
-                                            msg_list.write().clear();
-                                            break 'HANDLE_EVAL;
-                                        }
-                                    },
-                                    Err(e) => {
-                                        eprintln!("failed to deserialize message: {}: {}", s, e);
-                                    }
-                                }
-                            }
-                        }
+                    let eval = match eval_provider(&observer_script) {
+                        Ok(r) => r,
                         Err(e) => {
-                            println!("eval failed: {e:?}");
-                            break;
+                            eprintln!("use eval failed: {:?}", e);
+                            return;
                         }
                     };
+
+                    // not sure if it's save to call eval.recv() in a select! statement. turning it into something
+                    // which should definitely work for that.
+                    let eval_stream = async_stream::stream! {
+                        while let Ok(msg) = eval.recv().await {
+                            yield msg;
+                        }
+                    };
+                    pin_mut!(eval_stream);
+
+                    loop {
+                        tokio::select! {
+                            opt = rx.next() => {
+                                match opt {
+                                    Some(conv_id) => {
+                                        // todo: check if conv id changed
+                                        continue 'CONFIGURE_EVAL;
+                                    }
+                                    None => {
+                                        // failed to read from stream. use_coroutine is probably done for.
+                                        return;
+                                    }
+                                }
+                            },
+                            res = eval_stream.next() => match res {
+                                Some(msg) => {
+                                    if let Some(s) = msg.as_str() {
+                                        match serde_json::from_str::<JsMsg>(s) {
+                                            Ok(msg) => match msg {
+                                                JsMsg::Add { msg_id, conv_id } => todo!(),
+                                                JsMsg::Remove { msg_id, conv_id } => todo!(),
+                                                JsMsg::Top { conv_id } => todo!(),
+                                                JsMsg::Bottom { conv_id } => todo!(),
+                                            }
+                                            Err(e) => {
+                                                eprintln!("failed to deserialize message: {}: {}", s, e);
+                                            }
+                                        }
+                                    }
+                                }
+                                None => {
+                                    // the evaluator broke
+                                    continue 'WAIT_FOR_INIT;
+                                }
+                            },
+                        }
+                    }
                 }
             }
         }
     });
 
     ch.clone()
-}*/
+}
 
 pub fn handle_warp_commands<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,

@@ -9090,6 +9090,7 @@ version = "0.1.6"
 dependencies = [
  "anyhow",
  "arboard",
+ "async-stream",
  "base64 0.20.0",
  "chrono",
  "clap 4.4.4",
