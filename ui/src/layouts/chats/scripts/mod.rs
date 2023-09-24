@@ -93,22 +93,23 @@ pub const OBSERVER_SCRIPT: &str = r###"
 function observe_list() {
     var send_top_event = $SEND_TOP_EVENT;
     var send_bottom_event = $SEND_BOTTOM_EVENT;
+    var conversation_id = $CONVERSATION_ID;
     console.log("send_top_event is " + send_top_event);
     console.log("send_bottom_event is " + send_bottom_event);
     
     var observer3 = new IntersectionObserver( (entries, observer) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                dioxus.send("{\"Add\":" + entry.target.id + "}");
+                dioxus.send("{\"Add\":{\"msg_id\":" + entry.target.id + ",\"conv_id\":" + conversation_id + "}}");
                 if (!entry.target.nextElementSibling && send_bottom_event) {
-                    dioxus.send("{\"Bottom\":null}");
+                    dioxus.send("{\"Bottom\":{\"conv_id\":" + conversation_id + "}}");
                     observer.disconnect();
                 } else if (!entry.target.previousElementSibling && send_top_event) {
-                    dioxus.send("{\"Top\":null}");
+                    dioxus.send("{\"Top\":{\"conv_id\":" + conversation_id + "}}");
                     observer.disconnect();
                 }
             } else {
-                dioxus.send("{\"Remove\":" + entry.target.id + "}");
+                dioxus.send("{\"Remove\":" + entry.target.id + ",\"conv_id\":" + conversation_id + "}}");
             }
         });
     }, {

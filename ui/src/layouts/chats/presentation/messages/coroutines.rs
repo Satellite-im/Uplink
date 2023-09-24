@@ -66,7 +66,7 @@ pub fn hangle_msg_scroll<'a>(
                         }
                     };
 
-                    // not sure if it's save to call eval.recv() in a select! statement. turning it into something
+                    // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
                     let eval_stream = async_stream::stream! {
                         while let Ok(msg) = eval.recv().await {
