@@ -57,6 +57,8 @@ pub fn hangle_msg_scroll<'a>(
                         "$SEND_BOTTOM_EVENT",
                         should_send_bottom_evt.then_some("1").unwrap_or("0"),
                     );
+                    observer_script =
+                        observer_script.replace("$CONVERSATION_ID", &conv_id.to_string());
 
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
@@ -80,7 +82,10 @@ pub fn hangle_msg_scroll<'a>(
                             opt = rx.next() => {
                                 match opt {
                                     Some(conv_id) => {
-                                        // todo: check if conv id changed
+                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                        if !conv_id_changed {
+                                            log::warn!("extra command sent to hangle_msg_scroll");
+                                        }
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {
@@ -93,11 +98,24 @@ pub fn hangle_msg_scroll<'a>(
                                 Some(msg) => {
                                     if let Some(s) = msg.as_str() {
                                         match serde_json::from_str::<JsMsg>(s) {
+                                            // ignore events with a different conversation id
                                             Ok(msg) => match msg {
-                                                JsMsg::Add { msg_id, conv_id } => todo!(),
-                                                JsMsg::Remove { msg_id, conv_id } => todo!(),
-                                                JsMsg::Top { conv_id } => todo!(),
-                                                JsMsg::Bottom { conv_id } => todo!(),
+                                                JsMsg::Add { msg_id, conv_id } => {
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    if conv_id_changed { continue; }
+                                                },
+                                                JsMsg::Remove { msg_id, conv_id } => {
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    if conv_id_changed { continue; }
+                                                }
+                                                JsMsg::Top { conv_id } => {
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    if conv_id_changed { continue; }
+                                                }
+                                                JsMsg::Bottom { conv_id } => {
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    if conv_id_changed { continue; }
+                                                }
                                             }
                                             Err(e) => {
                                                 eprintln!("failed to deserialize message: {}: {}", s, e);
