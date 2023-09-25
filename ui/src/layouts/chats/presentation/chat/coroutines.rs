@@ -1,5 +1,5 @@
 use common::{
-    state::State,
+    state::{chats2::ChatBehavior, State},
     warp_runner::{
         ui_adapter::{MessageEvent, RayGunEvent},
         RayGunCmd, WarpCmd, WarpEvent,
@@ -11,7 +11,10 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use std::rc::Rc;
 
-use crate::layouts::chats::data::ChatData;
+use crate::layouts::chats::{
+    data::{ActiveChatArgs, ChatData},
+    ActiveChat,
+};
 
 pub fn handle_warp_events(
     cx: Scope,
@@ -74,10 +77,11 @@ pub fn init_chat_data(
     cx: Scope,
     state: &UseSharedState<State>,
     chat_data: &UseSharedState<ChatData>,
+    active_chat: &UseSharedState<ActiveChat>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |(conv_id)| {
-        to_owned![state, chat_data];
+        to_owned![state, chat_data, active_chat];
         async move {
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -119,7 +123,19 @@ pub fn init_chat_data(
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
                     // todo: verify that unwrap_or_default() doesn't cause strange behavior
-                    *chat_data.write() = ChatData::get(&state, r.messages).unwrap_or_default();
+                    *chat_data.write() =
+                        ChatData::get(&state, r.messages.clone()).unwrap_or_default();
+
+                    // todo: copy over the ChatBehavior too
+                    *active_chat.write() = ActiveChat::new(ActiveChatArgs {
+                        conversation_id: state
+                            .read()
+                            .get_active_chat()
+                            .map(|x| x.id)
+                            .unwrap_or_default(),
+                        messages: r.messages,
+                        chat_behavior: ChatBehavior::default(),
+                    });
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");

@@ -28,14 +28,16 @@ pub struct ActiveChatArgs {
 }
 
 impl ActiveChat {
-    pub fn new(args: ActiveChatArgs) -> Self {
+    pub fn new(mut args: ActiveChatArgs) -> Self {
         let mut message_times = HashMap::new();
-        for msg in args.messages.iter() {
+        let mut messages = VecDeque::new();
+        for msg in args.messages.drain(..) {
             message_times.insert(msg.inner.id(), msg.inner.date());
+            messages.push_back(msg);
         }
         Self {
             conversation_id: args.conversation_id,
-            messages: VecDeque::from(args.messages),
+            messages,
             chat_behavior: args.chat_behavior,
             displayed_messages: MsgView::default(),
             message_times,

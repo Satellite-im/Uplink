@@ -5,6 +5,7 @@ use std::{
     rc::Rc,
 };
 
+use data::ActiveChat;
 use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
@@ -93,6 +94,7 @@ pub fn get_messages(cx: Scope) -> Element {
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+    let active_chat2 = use_shared_state::<ActiveChat>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id);
@@ -119,8 +121,8 @@ pub fn get_messages(cx: Scope) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
-    // let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data);
-    // effects::init_msg_scroll(cx, chat_data, eval, ch);
+    let ch = coroutines::hangle_msg_scroll(cx, eval, active_chat2);
+    effects::init_msg_scroll(cx, active_chat2, eval, ch);
 
     /*effects::update_chat_messages(cx, state, newly_fetched_messages);
 
@@ -197,7 +199,7 @@ pub fn get_messages(cx: Scope) -> Element {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: data::create_message_groups(chat_data.read().my_id.did_key(), &chat_data.read().active_chat.messages),
+                        groups: data::create_message_groups(chat_data.read().my_id.did_key(), &active_chat2.read().messages),
                         active_chat_id: chat_data.read().active_chat.id,
                         num_messages_in_conversation: chat_data.read().active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {

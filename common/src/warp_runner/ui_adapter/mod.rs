@@ -252,7 +252,7 @@ pub async fn fetch_messages2(
     mut chat_behavior: ChatBehavior,
     start_date: Option<DateTime<Utc>>,
     to_take: usize,
-) -> Result<(VecDeque<Message>, ChatBehavior), Error> {
+) -> Result<(Vec<Message>, ChatBehavior), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
     println!(
         "CALLING fetch messages2. to_take: {}; total: {}",
@@ -273,7 +273,7 @@ pub async fn fetch_messages2(
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let messages: VecDeque<_> = FuturesOrdered::from_iter(
+    let messages: Vec<_> = FuturesOrdered::from_iter(
         messages
             .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),

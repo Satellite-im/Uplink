@@ -31,7 +31,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct FetchMessagesResponse {
-    pub messages: VecDeque<ui_adapter::Message>,
+    pub messages: Vec<ui_adapter::Message>,
     pub new_chat_behavior: ChatBehavior,
 }
 

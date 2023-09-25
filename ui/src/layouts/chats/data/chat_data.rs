@@ -33,7 +33,7 @@ impl PartialEq for ChatData {
 impl ChatData {
     pub fn get(
         state: &UseSharedState<State>,
-        messages: VecDeque<ui_adapter::Message>,
+        mut messages: Vec<ui_adapter::Message>,
     ) -> Option<Self> {
         let s = state.read();
         // the Compose page shouldn't be called before chats is initialized. but check here anyway.
@@ -45,7 +45,7 @@ impl ChatData {
             Some(c) => c,
             None => return None,
         };
-        active_chat.messages = messages;
+        active_chat.messages = VecDeque::from_iter(messages.drain(..));
         let participants = s.chat_participants(&active_chat);
         // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
         // this would be "fixed" the next time uplink starts up
