@@ -19,15 +19,12 @@ use kit::components::{
     user_image::UserImage,
 };
 
-use common::state::{Action, Identity, State};
+use common::state::{pending_message::PendingMessage, Action, Identity, State};
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     language::get_local_text_with_args,
-    state::{
-        create_message_groups, pending_group_messages, pending_message::PendingMessage,
-        scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
-    },
+    state::{scope_ids::ScopeIds, ui::EmojiDestination, ToastNotification},
     warp_runner::ui_adapter::{self},
 };
 
@@ -45,7 +42,7 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
-        data::ChatData,
+        data::{self, ChatData},
         scripts::{READ_SCROLL, SHOW_CONTEXT},
     },
     utils::format_timestamp::format_timestamp_timeago,
@@ -197,7 +194,7 @@ pub fn get_messages(cx: Scope) -> Element {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: create_message_groups(chat_data.read().my_id.did_key(), DEFAULT_NUM_TO_TAKE, chat_data.read().active_chat.has_more_messages, &chat_data.read().active_chat.messages),
+                        groups: data::create_message_groups(chat_data.read().my_id.did_key(), &chat_data.read().active_chat.messages),
                         active_chat_id: chat_data.read().active_chat.id,
                         num_messages_in_conversation: chat_data.read().active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
@@ -252,7 +249,7 @@ pub fn get_messages(cx: Scope) -> Element {
 
 #[derive(Props)]
 pub struct AllMessageGroupsProps<'a> {
-    groups: Vec<MessageGroup<'a>>,
+    groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
@@ -304,7 +301,7 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let data = chat_data.read();
     cx.render(rsx!(render_pending_messages {
-        pending_outgoing_message: pending_group_messages(&cx.props.msg, data.my_id.did_key(),),
+        pending_outgoing_message: data::pending_group_messages(&cx.props.msg, data.my_id.did_key(),),
         active: data.active_chat.id,
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
@@ -313,7 +310,7 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
 #[derive(Props)]
 struct PendingMessagesProps<'a> {
     #[props(!optional)]
-    pending_outgoing_message: Option<MessageGroup<'a>>,
+    pending_outgoing_message: Option<data::MessageGroup>,
     active: Uuid,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
@@ -334,7 +331,7 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
 
 #[derive(Props)]
 struct MessageGroupProps<'a> {
-    group: &'a MessageGroup<'a>,
+    group: &'a data::MessageGroup,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
@@ -353,7 +350,11 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } = cx.props;
 
     let messages = &group.messages;
-    let last_message = messages.last().unwrap().message;
+    let last_message_date = messages
+        .last()
+        .as_ref()
+        .map(|x| x.message.inner.date())
+        .unwrap_or_default();
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let blocked = group.remote && state.read().is_blocked(&sender.did_key());
     let show_blocked = use_state(cx, || false);
@@ -431,7 +432,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                         .call((e, sender_clone.to_owned()));
                 }
             }),
-            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
+            timestamp: format_timestamp_timeago(last_message_date, active_language),
             sender: sender_name.clone(),
             remote: group.remote,
             children: cx.render(rsx!(wrap_messages_in_context_menu {
@@ -447,7 +448,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
 #[derive(Props)]
 struct MessagesProps<'a> {
-    messages: &'a Vec<GroupedMessage<'a>>,
+    messages: &'a Vec<data::MessageGroupMsg>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     is_remote: bool,
@@ -461,7 +462,8 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
-        let should_fetch_more = grouped_message.should_fetch_more;
+        // todo: get rid of this should_fetch_more stuff
+        let should_fetch_more = false;
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -604,7 +606,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
 
 #[derive(Props)]
 struct MessageProps<'a> {
-    message: &'a GroupedMessage<'a>,
+    message: &'a data::MessageGroupMsg,
     is_remote: bool,
     message_key: String,
     edit_msg: UseState<Option<Uuid>>,
@@ -623,14 +625,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
     let MessageProps {
-        message,
+        message: grouped_message,
         is_remote: _,
         message_key,
         edit_msg,
         pending: _,
     } = cx.props;
-    let grouped_message = message;
-    let message = grouped_message.message;
+    let message = &grouped_message.message;
     let is_editing = edit_msg
         .current()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
@@ -656,10 +657,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .collect();
 
     let user_did_2 = user_did.clone();
-    let pending_uploads = grouped_message
-        .attachment_progress
-        .map(|m| m.values().cloned().collect())
-        .unwrap_or(vec![]);
+    // todo: get attachment progress from a hook like state.
+    let pending_uploads = vec![];
 
     cx.render(rsx!(
         div {
