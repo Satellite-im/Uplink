@@ -83,8 +83,8 @@ pub fn PendingFriends(cx: Scope) -> Element {
         }
     });
 
-    cx.render(rsx! (
-        div {
+    cx.render(rsx!(if friends_list.len() > 0 {
+        rsx!(div {
             class: "friends-list",
             aria_label: "Incoming Requests List",
             Label {
@@ -167,7 +167,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                     state.write().mutate(Action::AcceptRequest(&friend4));
                                 } else {
                                     accept_in_progress.make_mut().insert(friend4.did_key());
-                                     ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
+                                    ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
                                 }
 
                             },
@@ -183,6 +183,6 @@ pub fn PendingFriends(cx: Scope) -> Element {
                     }
                 )
             })
-        }
-    ))
+        })
+    }))
 }
