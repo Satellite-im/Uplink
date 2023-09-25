@@ -42,7 +42,10 @@ use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
-    layouts::storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
+    layouts::{
+        chats::data::ChatData,
+        storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
+    },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -74,8 +77,10 @@ struct TypingInfo {
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let data = chat_data.read();
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
-    let data = &cx.props.data;
+
     let is_loading = data.is_initialized;
     let active_chat_id = data.active_chat.id;
     let chat_id = data.active_chat.id;

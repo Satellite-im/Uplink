@@ -5,8 +5,6 @@ mod group_users;
 mod pinned_messages;
 mod topbar;
 
-use std::rc::Rc;
-
 use dioxus::prelude::*;
 
 use kit::{
@@ -40,14 +38,11 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
-    // this is a hack to allow prototyping without changing all the display code.
-    let data = Rc::new(chat_data.read().clone());
-    let data2 = data.clone();
-
     coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
-    let chat_id = data2.active_chat.id;
+    let data = chat_data.read();
+    let chat_id = data.active_chat.id;
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -79,7 +74,6 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 controls: cx.render(rsx!(controls::get_controls{
-                    data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
@@ -87,7 +81,6 @@ pub fn Compose(cx: Scope) -> Element {
                     is_edit_group: is_edit_group,
                 })),
                 topbar::get_topbar_children {
-                    data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
@@ -145,11 +138,9 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             )
         } else {
-            let _data = data.clone();
-            rsx!(get_messages{data: _data})
+            rsx!(get_messages{})
         },
         get_chatbar {
-            data: data.clone(),
             show_edit_group: show_edit_group.clone(),
             show_group_users: show_group_users.clone(),
             ignore_focus: should_ignore_focus,

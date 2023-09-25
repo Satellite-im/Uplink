@@ -18,10 +18,10 @@ use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{data::JsMsg, scripts::OBSERVER_SCRIPT, ActiveChat};
 
-use super::{get_messagesProps, DownloadTracker, MessagesCommand, NewelyFetchedMessages};
+use super::{DownloadTracker, MessagesCommand, NewelyFetchedMessages};
 
 pub fn hangle_msg_scroll<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     eval_provider: &crate::utils::EvalProvider,
     active_chat: &UseSharedState<ActiveChat>,
     scroll_to: UseRef<Option<Uuid>>,
@@ -133,7 +133,7 @@ pub fn hangle_msg_scroll<'a>(
 }
 
 pub fn handle_warp_commands<'a>(
-    cx: &'a Scoped<'a, get_messagesProps>,
+    cx: &'a Scoped,
     state: &UseSharedState<State>,
     newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
     pending_downloads: &UseSharedState<DownloadTracker>,

@@ -10,7 +10,7 @@ use kit::{
 };
 
 use super::pinned_messages::PinnedMessages;
-use crate::layouts::chats::data::ChatProps;
+use crate::layouts::chats::data::{ChatData, ChatProps};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -36,7 +36,8 @@ enum ControlsCmd {
 
 pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let data = &cx.props.data;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let data = chat_data.read();
     let active_chat = &data.active_chat;
     let favorite = data.is_favorite;
     let conversation_type = active_chat.conversation_type;

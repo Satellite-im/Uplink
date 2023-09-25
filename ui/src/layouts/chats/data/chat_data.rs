@@ -90,8 +90,6 @@ impl ChatData {
 
 #[derive(PartialEq, Props)]
 pub struct ChatProps {
-    #[props(!optional)]
-    pub data: Rc<ChatData>,
     pub show_edit_group: UseState<Option<Uuid>>,
     pub show_group_users: UseState<Option<Uuid>>,
     pub ignore_focus: bool,

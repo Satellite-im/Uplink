@@ -91,13 +91,14 @@ pub struct NewelyFetchedMessages {
 /// if onmouseout triggers over any of those messages, load Y more.
 const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[component(no_case_check)]
-pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
+pub fn get_messages(cx: Scope) -> Element {
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
-    let prev_chat_id = use_ref(cx, || data.active_chat.id);
+    let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id);
     let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -106,16 +107,16 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
-    let max_to_take = use_ref(cx, || data.active_chat.messages.len());
+    let max_to_take = use_ref(cx, || chat_data.read().active_chat.messages.len());
 
     let active_chat = use_ref(cx, || None);
     let eval = use_eval(cx);
 
-    if *max_to_take.read() != data.active_chat.messages.len() {
-        *max_to_take.write_silent() = data.active_chat.messages.len();
+    if *max_to_take.read() != chat_data.read().active_chat.messages.len() {
+        *max_to_take.write_silent() = chat_data.read().active_chat.messages.len();
     }
 
-    let currently_active = Some(data.active_chat.id);
+    let currently_active = Some(chat_data.read().active_chat.id);
 
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
@@ -128,7 +129,7 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     // also must reset num_to_take when the active_chat changes
     effects::check_message_scroll(
         cx,
-        &data.active_chat.scroll_to,
+        &chat_data.read().active_chat.scroll_to,
         state,
         eval,
         &currently_active,
@@ -136,17 +137,17 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
 
     effects::scroll_to_bottom(
         cx,
-        data.active_chat.scroll_value,
+        chat_data.read().active_chat.scroll_value,
         eval,
-        data.active_chat.unreads(),
-        data.active_chat.id,
+        chat_data.read().active_chat.unreads(),
+        chat_data.read().active_chat.id,
         prev_chat_id,
     );
 
     let _ch =
         coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
 
-    let msg_container_end = if data.active_chat.has_more_messages {
+    let msg_container_end = if chat_data.read().active_chat.has_more_messages {
         rsx!(div {
             class: "fetching",
             p {
@@ -196,9 +197,9 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: create_message_groups(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
-                        active_chat_id: data.active_chat.id,
-                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        groups: create_message_groups(chat_data.read().my_id.did_key(), DEFAULT_NUM_TO_TAKE, chat_data.read().active_chat.has_more_messages, &chat_data.read().active_chat.messages),
+                        active_chat_id: chat_data.read().active_chat.id,
+                        num_messages_in_conversation: chat_data.read().active_chat.messages.len(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -221,7 +222,6 @@ pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
                         }
                     },
                     render_pending_messages_listener {
-                        data: data,
                         on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -274,7 +274,6 @@ pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) ->
 
 #[derive(Props)]
 pub struct PendingMessagesListenerProps<'a> {
-    data: &'a Rc<ChatData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -290,7 +289,6 @@ pub fn render_pending_messages_listener<'a>(
     };
     cx.render(rsx!(pending_wrapper {
         msg: chat.pending_outgoing_messages,
-        data: cx.props.data.clone(),
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
 }
@@ -298,18 +296,16 @@ pub fn render_pending_messages_listener<'a>(
 #[derive(Props)]
 struct PendingWrapperProps<'a> {
     msg: Vec<PendingMessage>,
-    data: Rc<ChatData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 //We need to do it this way due to reference ownership
 fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let data = chat_data.read();
     cx.render(rsx!(render_pending_messages {
-        pending_outgoing_message: pending_group_messages(
-            &cx.props.msg,
-            cx.props.data.my_id.did_key(),
-        ),
-        active: cx.props.data.active_chat.id,
+        pending_outgoing_message: pending_group_messages(&cx.props.msg, data.my_id.did_key(),),
+        active: data.active_chat.id,
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
 }

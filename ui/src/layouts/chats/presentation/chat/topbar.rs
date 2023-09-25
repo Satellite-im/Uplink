@@ -17,7 +17,7 @@ use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::ConversationType};
 
 use crate::{
-    layouts::chats::data::{get_input_options, ChatProps},
+    layouts::chats::data::{get_input_options, ChatData, ChatProps},
     utils::build_participants,
 };
 
@@ -26,7 +26,8 @@ enum EditGroupCmd {
 }
 
 pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
-    let data = cx.props.data.clone();
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let data = chat_data.read();
     if !data.is_initialized {
         return cx.render(rsx!(
             UserImageGroup {
