@@ -36,23 +36,18 @@ use warp::{crypto::DID, logging::tracing::log};
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
-    use_shared_state_provider(cx, || -> Option<ChatData> { None });
+    use_shared_state_provider(cx, ChatData::default);
     let state = use_shared_state::<State>(cx)?;
-
-    // todo: implement default for ChatData and add a flag for initialized. avoids having to use the Option struct
-    let chat_data = use_shared_state::<Option<ChatData>>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
 
     // this is a hack to allow prototyping without changing all the display code.
-    let data = chat_data.read().as_ref().map(|x| Rc::new(x.clone()));
+    let data = Rc::new(chat_data.read().clone());
     let data2 = data.clone();
 
     coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
-    let chat_id = data2
-        .as_ref()
-        .map(|data| data.active_chat.id)
-        .unwrap_or(Uuid::nil());
+    let chat_id = data2.active_chat.id;
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -63,13 +58,7 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-
-    let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let creator = if let Some(chat) = active_chat.as_ref() {
-        chat.creator.clone()
-    } else {
-        None
-    };
+    let creator = data.active_chat.creator.clone();
 
     let user_did: DID = state.read().did_key();
     let is_owner = if let Some(creator_did) = creator {
@@ -146,16 +135,18 @@ pub fn Compose(cx: Scope) -> Element {
         CallControl {
             in_chat: true
         },
-        match data.as_ref() {
-            None => rsx!(
+        if !data.is_initialized {
+           rsx!(
                 div {
                     id: "messages",
                     MessageGroupSkeletal {},
                     MessageGroupSkeletal { alt: true },
                     MessageGroupSkeletal {},
                 }
-            ),
-            Some(_data) =>  rsx!(get_messages{data: _data.clone()}),
+            )
+        } else {
+            let _data = data.clone();
+            rsx!(get_messages{data: _data})
         },
         get_chatbar {
             data: data.clone(),

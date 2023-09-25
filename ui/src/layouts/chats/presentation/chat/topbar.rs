@@ -27,31 +27,28 @@ enum EditGroupCmd {
 
 pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     let data = cx.props.data.clone();
-    let data = match data {
-        Some(d) => d,
-        None => {
-            return cx.render(rsx!(
-                UserImageGroup {
-                    loading: true,
-                    aria_label: "user-image-group".into(),
-                    participants: vec![]
-                },
+    if !data.is_initialized {
+        return cx.render(rsx!(
+            UserImageGroup {
+                loading: true,
+                aria_label: "user-image-group".into(),
+                participants: vec![]
+            },
+            div {
+                class: "user-info",
+                aria_label: "user-info",
                 div {
-                    class: "user-info",
-                    aria_label: "user-info",
+                    class: "skeletal-bars",
                     div {
-                        class: "skeletal-bars",
-                        div {
-                            class: "skeletal skeletal-bar",
-                        },
-                        div {
-                            class: "skeletal skeletal-bar",
-                        },
-                    }
+                        class: "skeletal skeletal-bar",
+                    },
+                    div {
+                        class: "skeletal skeletal-bar",
+                    },
                 }
-            ))
-        }
-    };
+            }
+        ));
+    }
 
     let conversation_title = match data.active_chat.conversation_name.as_ref() {
         Some(n) => n.clone(),

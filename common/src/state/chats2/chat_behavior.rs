@@ -51,7 +51,7 @@ impl ChatBehavior {
 impl Default for ChatBehavior {
     fn default() -> Self {
         Self {
-            view_behavior: ViewBehavior::default(),
+            view_behavior: ViewBehavior::MostRecent,
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
             messages_indices: None,

@@ -76,12 +76,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
     let data = &cx.props.data;
-    let is_loading = data.is_none();
-    let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-    let chat_id = data
-        .as_ref()
-        .map(|data| data.active_chat.id)
-        .unwrap_or(Uuid::nil());
+    let is_loading = data.is_initialized;
+    let active_chat_id = data.active_chat.id;
+    let chat_id = data.active_chat.id;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -126,16 +123,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
     let users_typing: Vec<DID> = data
-        .as_ref()
-        .map(|data| {
-            data.active_chat
-                .typing_indicator
-                .iter()
-                .filter(|(did, _)| *did != &my_id)
-                .map(|(did, _)| did.clone())
-                .collect()
-        })
-        .unwrap_or_default();
+        .active_chat
+        .typing_indicator
+        .iter()
+        .filter(|(did, _)| *did != &my_id)
+        .map(|(did, _)| did.clone())
+        .collect();
     let users_typing = state.read().get_identities(&users_typing);
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
@@ -320,8 +313,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
-            if let Some(c) = current_chat {
-                local_typing_ch1.send(TypingIndicator::Refresh(c));
+            if !current_chat.is_nil() {
+                local_typing_ch1.send(TypingIndicator::Refresh(current_chat));
             }
         }
     });
@@ -356,38 +349,31 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .map(|x| x.trim_end().to_string())
             .collect::<Vec<String>>();
 
-        if let Some(id) = active_chat_id {
+        if !active_chat_id.is_nil() {
             state
                 .write()
-                .mutate(Action::SetChatDraft(id, String::new()));
+                .mutate(Action::SetChatDraft(active_chat_id, String::new()));
         }
 
         emoji_suggestions.set(vec![]);
 
-        if !msg_valid(&msg) {
+        if !msg_valid(&msg) || active_chat_id.is_nil() {
             return;
         }
-        let id = match active_chat_id {
-            Some(i) => i,
-            None => return,
-        };
+
         can_send.set(false);
         if STATIC_ARGS.use_mock {
-            state.write().mutate(Action::MockSend(id, msg));
+            state.write().mutate(Action::MockSend(active_chat_id, msg));
         } else {
             let replying_to = state.read().chats().get_replying_to();
             if replying_to.is_some() {
-                state.write().mutate(Action::CancelReply(id));
+                state.write().mutate(Action::CancelReply(active_chat_id));
             }
             let ui_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, id, ui_id, replying_to));
+            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
         }
-    };
-    let id = match active_chat_id {
-        Some(i) => i,
-        None => uuid::Uuid::new_v4(),
     };
 
     let extensions = &state.read().ui.extensions;
@@ -400,7 +386,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();
-    let error = use_state(cx, || (false, id));
+    // todo: don't define a hook so far down
+    let error = use_state(cx, || (false, active_chat_id));
     let value_chatbar = state
         .read()
         .get_active_chat()
@@ -409,9 +396,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .unwrap_or_default();
 
     if value_chatbar.len() >= MAX_CHARS_LIMIT && !error.0 {
-        error.set((true, id));
+        error.set((true, active_chat_id));
     } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
-        error.set((false, id));
+        error.set((false, active_chat_id));
     }
 
     let validate_max = move || {
@@ -422,9 +409,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default();
         if value_chatbar.len() >= MAX_CHARS_LIMIT {
-            error.set((true, id));
+            error.set((true, active_chat_id));
         } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
-            error.set((false, id));
+            error.set((false, active_chat_id));
         }
     };
 
@@ -432,19 +419,19 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let chatbar = cx.render(rsx!(
         Chatbar {
-            key: "{id}",
-            id: format!("{}-chatbar", id.to_string()),
+            key: "{active_chat_id}",
+            id: format!("{}-chatbar", active_chat_id.to_string()),
             loading: is_loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onchange: move |v: String| {
-                if let Some(id) = &active_chat_id {
-                    state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                if !active_chat_id.is_nil() {
+                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
                     validate_max();
                     update_send();
-                    local_typing_ch.send(TypingIndicator::Typing(*id));
+                    local_typing_ch.send(TypingIndicator::Typing(active_chat_id));
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
@@ -452,7 +439,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             emoji_suggestions: emoji_suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
-                if let Some(id) = &active_chat_id {
+                if !active_chat_id.is_nil() {
                     let sub: String = v.chars().take(p as usize).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     match capture {
@@ -469,7 +456,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                 let replacement = s.first();
                                 if let Some((emoji, _)) = replacement {
                                     v = v.replace(&sub, &sub.replace(&format!(":{alias}:"), emoji));
-                                    state.write().mutate(Action::SetChatDraft(*id, v));
+                                    state.write().mutate(Action::SetChatDraft(active_chat_id, v));
                                 }
                                 emoji_suggestions.set(vec![])
                             } else {
@@ -484,7 +471,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 }
             },
             on_emoji_click: move |(emoji, _, p): (String, String, i64)| {
-                if let Some(id) = &active_chat_id {
+                if !active_chat_id.is_nil() {
                     let mut draft = state
                         .read()
                         .get_active_chat()
@@ -497,7 +484,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         draft = draft.replace(&sub, &sub.replace(&e[0].to_string(), &emoji));
                         state
                             .write()
-                            .mutate(Action::SetChatDraft(*id, draft));
+                            .mutate(Action::SetChatDraft(active_chat_id, draft));
                     }
                     emoji_suggestions.set(vec![])
                 }
@@ -517,7 +504,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     }
                 ),
             ),
-            with_replying_to: data.as_ref().filter(|_| !disabled).map(|data| {
+            with_replying_to: (!disabled).then(|| {
                 let active_chat = &data.active_chat;
                 cx.render(
                     rsx!(

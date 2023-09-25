@@ -16,7 +16,7 @@ use crate::layouts::chats::data::ChatData;
 pub fn handle_warp_events(
     cx: Scope,
     state: &UseSharedState<State>,
-    chat_data: &UseSharedState<Option<ChatData>>,
+    chat_data: &UseSharedState<ChatData>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |chat_id| {
@@ -45,11 +45,10 @@ pub fn handle_warp_events(
                         if conversation_id != chat_id {
                             continue;
                         }
-                        let mut w = chat_data.write();
-                        let data = match w.as_mut() {
-                            Some(x) => x,
-                            None => continue,
-                        };
+                        if !chat_data.read().is_initialized {
+                            continue;
+                        }
+                        let mut data = chat_data.write();
                         data.active_chat.messages.push_back(message);
                         data.active_chat.chat_behavior.increment_end_idx();
                     }
@@ -74,7 +73,7 @@ pub fn handle_warp_events(
 pub fn init_chat_data(
     cx: Scope,
     state: &UseSharedState<State>,
-    chat_data: &UseSharedState<Option<ChatData>>,
+    chat_data: &UseSharedState<ChatData>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |(conv_id)| {
@@ -119,7 +118,8 @@ pub fn init_chat_data(
             match rsp {
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
-                    *chat_data.write() = ChatData::get(&state, r.messages);
+                    // todo: verify that unwrap_or_default() doesn't cause strange behavior
+                    *chat_data.write() = ChatData::get(&state, r.messages).unwrap_or_default();
                 }
                 Err(e) => {
                     log::error!("FetchMessages command failed: {e}");

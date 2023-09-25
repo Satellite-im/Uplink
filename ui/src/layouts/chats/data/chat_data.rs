@@ -10,7 +10,7 @@ use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ChatData {
     pub active_chat: Chat,
     pub my_id: Identity,
@@ -21,6 +21,7 @@ pub struct ChatData {
     pub first_image: String,
     pub other_participants_names: String,
     pub platform: Platform,
+    pub is_initialized: bool,
 }
 
 impl PartialEq for ChatData {
@@ -80,6 +81,7 @@ impl ChatData {
             first_image,
             other_participants_names,
             platform,
+            is_initialized: true,
         };
 
         Some(data)
@@ -89,7 +91,7 @@ impl ChatData {
 #[derive(PartialEq, Props)]
 pub struct ChatProps {
     #[props(!optional)]
-    pub data: Option<Rc<ChatData>>,
+    pub data: Rc<ChatData>,
     pub show_edit_group: UseState<Option<Uuid>>,
     pub show_group_users: UseState<Option<Uuid>>,
     pub ignore_focus: bool,

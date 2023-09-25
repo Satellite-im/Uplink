@@ -82,6 +82,31 @@ pub struct Chat {
     pub scroll_to: Option<Uuid>,
 }
 
+// can't derive default because there is no default conversation_type
+impl Default for Chat {
+    fn default() -> Self {
+        Self {
+            chat_behavior: Default::default(),
+            id: Default::default(),
+            participants: Default::default(),
+            conversation_type: ConversationType::Direct,
+            conversation_name: Default::default(),
+            creator: Default::default(),
+            messages: Default::default(),
+            unreads: Default::default(),
+            replying_to: Default::default(),
+            typing_indicator: Default::default(),
+            draft: Default::default(),
+            has_more_messages: Default::default(),
+            pending_outgoing_messages: Default::default(),
+            files_attached_to_send: Default::default(),
+            scroll_value: Default::default(),
+            pinned_messages: Default::default(),
+            scroll_to: Default::default(),
+        }
+    }
+}
+
 impl Chat {
     pub fn new(
         id: Uuid,

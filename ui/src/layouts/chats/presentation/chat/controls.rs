@@ -8,10 +8,9 @@ use kit::{
     },
     layout::modal::Modal,
 };
-use std::rc::Rc;
 
 use super::pinned_messages::PinnedMessages;
-use crate::layouts::chats::data::{ChatData, ChatProps};
+use crate::layouts::chats::data::ChatProps;
 
 use common::{
     icons::outline::Shape as Icon,
@@ -38,27 +37,20 @@ enum ControlsCmd {
 pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
-    let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let favorite = data
-        .as_ref()
-        .map(|d: &Rc<ChatData>| d.is_favorite)
-        .unwrap_or_default();
-    let conversation_type = if let Some(chat) = active_chat.as_ref() {
-        chat.conversation_type
-    } else {
-        ConversationType::Direct
-    };
+    let active_chat = &data.active_chat;
+    let favorite = data.is_favorite;
+    let conversation_type = active_chat.conversation_type;
     let edit_group_activated = cx
         .props
         .show_edit_group
         .get()
-        .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+        .map(|group_chat_id| group_chat_id == active_chat.id)
         .unwrap_or(false);
     let show_group_list = cx
         .props
         .show_group_users
         .get()
-        .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+        .map(|group_chat_id| group_chat_id == active_chat.id)
         .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
@@ -125,8 +117,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 onpress: move |_| {
                     if edit_group_activated {
                         cx.props.show_edit_group.set(None);
-                    } else if let Some(chat) = active_chat.as_ref() {
-                        cx.props.show_edit_group.set(Some(chat.id));
+                    } else if !active_chat.id.is_nil() {
+                        cx.props.show_edit_group.set(Some(active_chat.id));
                         cx.props.show_group_users.set(None);
                     }
                 }
@@ -149,8 +141,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     onpress: move |_| {
                             if show_group_list {
                                 cx.props.show_group_users.set(None);
-                            } else if let Some(chat) = active_chat.as_ref() {
-                                cx.props.show_group_users.set(Some(chat.id));
+                            } else if !active_chat.id.is_nil() {
+                                cx.props.show_group_users.set(Some(active_chat.id));
                                 cx.props.show_edit_group.set(None);
 
                             }
@@ -165,7 +157,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             } else {
                 Icon::Heart
             },
-            disabled: data.is_none(),
+            disabled: !data.is_initialized,
             aria_label: get_local_text(if favorite {
                 "favorites.remove"
             } else {
@@ -185,8 +177,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 }
             })),
             onpress: move |_| {
-                if let Some(chat) = active_chat.as_ref() {
-                    state.write().mutate(Action::ToggleFavorite(&chat.id));
+                if data.is_initialized {
+                    state.write().mutate(Action::ToggleFavorite(&active_chat.id));
                 }
             }
         },
@@ -198,8 +190,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 onclose: move |_| {
                     show_pinned.set(false);
                 },
-                if let Some(chat) = active_chat {
-                    rsx!(PinnedMessages{ active_chat: chat.clone(), onclose: move |_| {
+                if data.is_initialized {
+                    rsx!(PinnedMessages{ active_chat: active_chat.clone(), onclose: move |_| {
                         show_pinned.set(false);
                     } })
                 }
@@ -227,10 +219,10 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: if !state.read().configuration.developer.experimental_features { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
-                if let Some(chat) = active_chat.as_ref() {
+                if data.is_initialized {
                     ch.send(ControlsCmd::VoiceCall{
-                        participants: chat.participants.iter().cloned().collect(),
-                        conversation_id: chat.id
+                        participants: active_chat.participants.iter().cloned().collect(),
+                        conversation_id: active_chat.id
                     });
                     call_pending.set(true);
                 }
