@@ -26,12 +26,12 @@ pub fn init_msg_scroll<'a>(
         async move {
             let scroll_script = match active_chat.read().chat_behavior.view_behavior {
                 ViewBehavior::MostRecent => scripts::SCROLL_TO_END.to_string(),
-                ViewBehavior::ScrollUp { page_top } => {
-                    scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{page_top}"))
+                ViewBehavior::ScrollUp { view_top } => {
+                    scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
                 }
-                ViewBehavior::ScrollDown { page_bottom } => {
-                    scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{page_bottom}"))
-                }
+                ViewBehavior::ScrollDown {
+                    view_bottom,
+                } => scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}")),
             };
             match eval_provider(&scroll_script) {
                 Ok(eval) => {

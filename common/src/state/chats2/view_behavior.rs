@@ -8,11 +8,11 @@ pub enum ViewBehavior {
     // the user scrolled up. don't automatically update the view when messages are received
     ScrollUp {
         // the message id that should be at the top of the chats page
-        page_top: Uuid,
+        view_top: Uuid,
     },
     ScrollDown {
         // the message id that should be at the bottom of the chats page
-        page_bottom: Uuid,
+        view_bottom: Uuid,
     },
 }
 
