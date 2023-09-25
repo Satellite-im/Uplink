@@ -53,7 +53,7 @@ pub fn hangle_msg_scroll<'a>(
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
                         Err(e) => {
-                            eprintln!("use eval failed: {:?}", e);
+                            log::error!("use eval failed: {:?}", e);
                             return;
                         }
                     };
@@ -64,11 +64,11 @@ pub fn hangle_msg_scroll<'a>(
                         loop {
                             match eval.recv().await {
                                 Ok(msg) => {
-                                    println!("got this from js: {msg}");
+                                    //println!("got this from js: {msg}");
                                     yield msg;
                                 },
                                 Err(e) => {
-                                    eprintln!("error receiving from js: {e:?}");
+                                    log::error!("error receiving from js: {e:?}");
                                     break;
                                 }
                             }
