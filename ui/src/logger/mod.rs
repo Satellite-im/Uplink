@@ -152,7 +152,7 @@ impl Logger {
 
         // special path for Trace logs
         // don't persist tracing information. at most, print it to the terminal
-        if level == Level::Trace && self.uplink_trace {
+        if level == Level::Trace && self.uplink_trace && !self.save_to_file {
             println!("{}", new_log.colorize());
             return;
         }
