@@ -1,10 +1,13 @@
 use crate::{
-    layouts::chats::scripts::{
-        SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
+    layouts::chats::{
+        scripts::{
+            self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
+        },
+        ActiveChat,
     },
     utils,
 };
-use common::state::State;
+use common::state::{chats2::ViewBehavior, State};
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, Coroutine, UseRef, UseSharedState};
 use uuid::Uuid;
@@ -13,14 +16,23 @@ use super::{get_messagesProps, NewelyFetchedMessages};
 
 pub fn init_msg_scroll<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
+    active_chat: &UseSharedState<ActiveChat>,
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<Uuid>,
-    active_chat_id: Uuid,
-    scroll_script: String,
 ) {
+    let active_chat_id = active_chat.read().conversation_id;
     use_effect(cx, (&active_chat_id), |(chat_id)| {
-        to_owned![eval_provider, ch, scroll_script];
+        to_owned![eval_provider, ch, active_chat];
         async move {
+            let scroll_script = match active_chat.read().chat_behavior.view_behavior {
+                ViewBehavior::MostRecent => scripts::SCROLL_TO_END.to_string(),
+                ViewBehavior::ScrollUp { page_top } => {
+                    scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{page_top}"))
+                }
+                ViewBehavior::ScrollDown { page_bottom } => {
+                    scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{page_bottom}"))
+                }
+            };
             match eval_provider(&scroll_script) {
                 Ok(eval) => {
                     if let Err(e) = eval.join().await {

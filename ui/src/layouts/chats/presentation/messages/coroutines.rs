@@ -27,12 +27,7 @@ pub fn hangle_msg_scroll<'a>(
     scroll_to: UseRef<Option<Uuid>>,
 ) -> Coroutine<Uuid> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
-        to_owned![
-            eval_provider,
-            active_chat,
-            scroll_to,
-            //conversation_len
-        ];
+        to_owned![eval_provider, active_chat, scroll_to];
         async move {
             let mut current_conv_id: Option<Uuid> = None;
 
