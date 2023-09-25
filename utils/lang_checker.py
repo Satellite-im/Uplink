@@ -19,22 +19,23 @@ lang = open(args.lang, 'r')
 lines = []
 # Read all keys from lang file
 keys = []
-previous = ""
+root_key = ""
 for line in lang.readlines():
     stripped = line.strip()
     if not stripped:
         lines.append(("", line))
         continue
-    lang_key = previous
+    lang_key = ""
     if stripped.startswith('.'):
         split = stripped.split(' = ')
-        lang_key = previous + split[0]
+        lang_key = root_key + split[0]
         keys.append(lang_key)
     else:
-        previous = stripped.split(' = ')[0]
-        keys.append(previous)
+        root_key = stripped.split(' = ')[0]
+        lang_key = root_key
+        keys.append(root_key)
     lines.append((lang_key, line))
-
+print(lines)
 # Collect all rust files
 files = glob.glob('./**/*.rs', 
                    recursive = True)
@@ -56,7 +57,7 @@ for file in files:
 print("\n".join(keys))
 
 if args.remove:
-    previous = ""
+    root_key = ""
     with open(args.lang, 'w') as file:
         for (lang_key, line) in lines:
             if lang_key in keys:
