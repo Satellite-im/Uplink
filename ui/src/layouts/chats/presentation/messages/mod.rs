@@ -119,7 +119,10 @@ pub fn get_messages(cx: Scope) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
-    effects::update_chat_messages(cx, state, newly_fetched_messages);
+    // let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data);
+    // effects::init_msg_scroll(cx, chat_data, eval, ch);
+
+    /*effects::update_chat_messages(cx, state, newly_fetched_messages);
 
     // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
     // to the bottom when the user selects the active chat
@@ -139,7 +142,7 @@ pub fn get_messages(cx: Scope) -> Element {
         chat_data.read().active_chat.unreads(),
         chat_data.read().active_chat.id,
         prev_chat_id,
-    );
+    );*/
 
     let _ch =
         coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);

@@ -24,10 +24,9 @@ pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped,
     eval_provider: &crate::utils::EvalProvider,
     active_chat: &UseSharedState<ActiveChat>,
-    scroll_to: UseRef<Option<Uuid>>,
 ) -> Coroutine<Uuid> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
-        to_owned![eval_provider, active_chat, scroll_to];
+        to_owned![eval_provider, active_chat];
         async move {
             let mut current_conv_id: Option<Uuid> = None;
 
