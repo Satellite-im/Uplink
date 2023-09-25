@@ -5,27 +5,47 @@ use kit::{
     elements::{button::Button, range::Range, select::Select, Appearance},
     layout::modal::Modal,
 };
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
+
+#[derive(Debug, Clone)]
+struct ImageDimensions {
+    height: i64,
+    width: i64,
+}
 
 #[inline_props]
 pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
-    // let image_path = cx.props.image_path.clone();
-    // let img = image::open(image_path).unwrap();
     let large_thumbnail = cx.props.large_thumbnail.clone();
 
-    // // Initial crop parameters
-    // let mut center_x = img.width() as i32 / 2;
-    // let mut center_y = img.height() as i32 / 2;
-    // let mut radius = (img.width() as f32 / 2.0) as i32;
-    // let mut zoom = 1.0;
-
-    // // Create a circular cropped image
-    // let cropped_img = crop_circle(&img, center_x, center_y, radius);
+    let crop_circle_size = use_ref(cx, || 0);
 
     let crop_image = use_state(cx, || true);
-    // let circular_crop_cursor_script = include_str!("./crop_cursor.js");
+    let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
+    let image_dimensions = use_ref(cx, || ImageDimensions {
+        height: 0,
+        width: 0,
+    });
+    let eval = use_eval(cx);
 
-    // let _ = use_eval(cx)(circular_crop_cursor_script);
+    use_future(cx, (), |_| {
+        to_owned![get_image_dimensions_script, eval, image_dimensions, crop_circle_size];
+        async move {
+            // loop {
+            //     tokio::time::sleep(Duration::from_secs(1)).await;
+            if let Ok(r) = eval(&get_image_dimensions_script) {
+                if let Ok(val) = r.join().await {
+                    *image_dimensions.write_silent() = ImageDimensions {
+                        height: val["height"].as_i64().unwrap_or_default(),
+                        width: val["width"].as_i64().unwrap_or_default(),
+                    }; 
+                    let min_dimension = std::cmp::min(image_dimensions.read().width, image_dimensions.read().height);
+                    *crop_circle_size.write_silent() = min_dimension;
+                    println!("image_dimensions: {:?}", image_dimensions.read());
+                }
+            };
+            // }
+        }
+    });
 
     return cx.render(rsx!(div {
         Modal {
@@ -38,6 +58,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                 max_height: "80vh",
                 max_width: "80vw",
                 padding: "16px",
+                onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
                     background: "var(--secondary)",
@@ -78,6 +99,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     text_align: "center",
                     padding: "16px",
                     div {
+                        width: "auto",
                         img {
                             id: "image-preview-modal-file-embed",
                             aria_label: "image-preview-modal-file-embed",
@@ -91,12 +113,10 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                         },
                         div {
                             class: "crop-box",
-                        }
-                        div {
-                            class: "overlay",
+                            width: format_args!("{}px", crop_circle_size.read()),
+                            height: format_args!("{}px", crop_circle_size.read()),
                         }
                     }
-                    
                 }
                 Range {
                     initial_value: 100,
