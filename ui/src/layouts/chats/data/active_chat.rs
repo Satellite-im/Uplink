@@ -7,7 +7,7 @@ use common::{
 };
 use uuid::Uuid;
 
-use super::MsgView;
+use super::{MsgView, PartialMessage};
 
 #[derive(Debug, Default)]
 pub struct ActiveChat {
@@ -54,5 +54,27 @@ impl ActiveChat {
 
     pub fn set(&mut self, other: Self) {
         let _ = std::mem::replace(self, other);
+    }
+
+    pub fn get_message_time(&self, msg_id: &Uuid) -> Option<DateTime<Utc>> {
+        self.message_times.get(msg_id).cloned()
+    }
+
+    pub fn add_message_to_view(&mut self, msg_id: Uuid) {
+        match self.get_message_time(&msg_id) {
+            Some(date) => {
+                self.displayed_messages.insert(PartialMessage {
+                    message_id: msg_id,
+                    date,
+                });
+            }
+            None => {
+                log::warn!("tried to add message to view but datetime lookup failed");
+            }
+        }
+    }
+
+    pub fn remove_message_from_view(&mut self, msg_id: Uuid) {
+        self.displayed_messages.remove(msg_id);
     }
 }

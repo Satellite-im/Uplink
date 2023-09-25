@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use uuid::Uuid;
+
 use super::PartialMessage;
 
 // used to track which messages are visible and determine
@@ -32,10 +34,20 @@ impl MsgView {
         }
     }
 
-    pub fn remove(&mut self, val: PartialMessage) {
-        if self.items.front().map(|x| x == &val).unwrap_or(false) {
+    pub fn remove(&mut self, id: Uuid) {
+        if self
+            .items
+            .front()
+            .map(|x| x.message_id == id)
+            .unwrap_or(false)
+        {
             self.items.pop_front();
-        } else if self.items.back().map(|x| x == &val).unwrap_or(false) {
+        } else if self
+            .items
+            .back()
+            .map(|x| x.message_id == id)
+            .unwrap_or(false)
+        {
             self.items.pop_back();
         } else {
             // println!("invalid remove: {:?}", val);

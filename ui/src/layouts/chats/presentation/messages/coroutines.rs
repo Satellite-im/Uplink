@@ -16,25 +16,20 @@ use futures::{pin_mut, StreamExt};
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
-use crate::layouts::chats::{
-    data::{JsMsg, MsgView},
-    scripts::OBSERVER_SCRIPT,
-};
+use crate::layouts::chats::{data::JsMsg, scripts::OBSERVER_SCRIPT, ActiveChat};
 
 use super::{get_messagesProps, DownloadTracker, MessagesCommand, NewelyFetchedMessages};
 
 pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
     eval_provider: &crate::utils::EvalProvider,
-    msg_view: UseRef<MsgView>,
-    msg_range: UseState<MsgRange>,
+    active_chat: &UseSharedState<ActiveChat>,
     scroll_to: UseRef<Option<Uuid>>,
 ) -> Coroutine<Uuid> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
         to_owned![
             eval_provider,
-            msg_range,
-            msg_view,
+            active_chat,
             scroll_to,
             //conversation_len
         ];
@@ -72,6 +67,8 @@ pub fn hangle_msg_scroll<'a>(
                     // which should definitely work for that.
                     let eval_stream = async_stream::stream! {
                         while let Ok(msg) = eval.recv().await {
+                            // todo: remove the println
+                            println!("got this from js: {msg}");
                             yield msg;
                         }
                     };
@@ -103,10 +100,12 @@ pub fn hangle_msg_scroll<'a>(
                                                 JsMsg::Add { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
+                                                    active_chat.write_silent().add_message_to_view(msg_id);
                                                 },
                                                 JsMsg::Remove { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
+                                                    active_chat.write_silent().remove_message_from_view(msg_id);
                                                 }
                                                 JsMsg::Top { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);

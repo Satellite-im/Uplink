@@ -6,10 +6,36 @@ use crate::{
 };
 use common::state::State;
 use dioxus_core::Scoped;
-use dioxus_hooks::{to_owned, use_effect, UseRef, UseSharedState};
+use dioxus_hooks::{to_owned, use_effect, Coroutine, UseRef, UseSharedState};
 use uuid::Uuid;
 
 use super::{get_messagesProps, NewelyFetchedMessages};
+
+pub fn init_msg_scroll<'a>(
+    cx: &'a Scoped<'a, get_messagesProps>,
+    eval_provider: &utils::EvalProvider,
+    ch: Coroutine<Uuid>,
+    active_chat_id: Uuid,
+    scroll_script: String,
+) {
+    use_effect(cx, (&active_chat_id), |(chat_id)| {
+        to_owned![eval_provider, ch, scroll_script];
+        async move {
+            match eval_provider(&scroll_script) {
+                Ok(eval) => {
+                    if let Err(e) = eval.join().await {
+                        log::error!("failed to join eval: {:?}", e);
+                    } else {
+                        ch.send(chat_id);
+                    }
+                }
+                Err(e) => {
+                    log::error!("eval failed: {:?}", e);
+                }
+            }
+        }
+    });
+}
 
 pub fn update_chat_messages<'a>(
     cx: &'a Scoped<'a, get_messagesProps>,
