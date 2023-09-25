@@ -103,9 +103,7 @@ impl crate::log::Log for LogGlue {
                     return;
                 }
             }
-            let msg = format!("{}", record.args());
-            LOGGER.write().log_other(record.level(), &msg);
-            return;
+
         }
 
         let msg = format!("{}", record.args());
@@ -190,17 +188,6 @@ impl Logger {
 
         // if a subscriber closes a channel, send() will fail. remove from subscribers
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
-    }
-
-    fn log_other(&mut self, level: Level, message: &str) {
-        let new_log = Log {
-            level,
-            message: message.to_string(),
-            datetime: Local::now(),
-            colorized: false,
-        };
-
-        println!("{new_log}");
     }
 
     fn set_save_to_file(&mut self, enabled: bool) {
