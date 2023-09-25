@@ -79,4 +79,22 @@ impl ActiveChat {
     pub fn remove_message_from_view(&mut self, msg_id: Uuid) {
         self.displayed_messages.remove(msg_id);
     }
+
+    pub fn clear_message_view(&mut self) {
+        self.displayed_messages.clear();
+    }
+
+    pub fn top_reached(&mut self, new_messages: Vec<ui_adapter::Message>, has_more: bool) {
+        // get earliest message in displayed_messages and set to ChatBehavior.view_behavior -> ScrollUp
+        // set on_scroll_up depending on if there are more messages
+        // perhaps set on_scroll_down
+        // append to self.messages
+    }
+
+    pub fn bottom_reached(&mut self, new_messages: Vec<ui_adapter::Message>, has_more: bool) {
+        // get most recent message in displayed_messages and set to ChatBehavior.view_behavior -> ScrollDown
+        // set on_scroll_down depending on if there are more messages
+        // perhaps set on_scroll_up
+        // prepend to self.messages
+    }
 }

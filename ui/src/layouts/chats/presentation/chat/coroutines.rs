@@ -104,7 +104,7 @@ pub fn init_chat_data(
                     .map(|x| x.chat_behavior)
                     .unwrap_or_default(),
                 // todo: increase this
-                to_fetch: 10,
+                limit: 10,
                 rsp: tx,
             })) {
                 log::error!("failed to init messages: {e}");

@@ -24,16 +24,10 @@ use crate::{
             fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
             MessageEvent,
         },
-        Account, Messaging, WarpEvent,
+        Account, FetchMessagesConfig, FetchMessagesResponse, Messaging, WarpEvent,
     },
     WARP_EVENT_CH,
 };
-
-#[derive(Debug)]
-pub struct FetchMessagesResponse {
-    pub messages: Vec<ui_adapter::Message>,
-    pub new_chat_behavior: ChatBehavior,
-}
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
@@ -81,9 +75,7 @@ pub enum RayGunCmd {
     FetchMessages {
         conv_id: Uuid,
         // if None, will start from the beginning of the conversation.
-        start_date: Option<DateTime<Utc>>,
-        to_fetch: usize,
-        chat_behavior: ChatBehavior,
+        config: FetchMessagesConfig,
         rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
     },
     #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
@@ -249,18 +241,10 @@ pub async fn handle_raygun_cmd(
         }
         RayGunCmd::FetchMessages {
             conv_id,
-            start_date,
-            to_fetch,
-            chat_behavior,
+            config,
             rsp,
         } => {
-            let r = fetch_messages2(conv_id, messaging, chat_behavior, start_date, to_fetch)
-                .await
-                .map(|r| FetchMessagesResponse {
-                    messages: r.0,
-                    new_chat_behavior: r.1,
-                });
-
+            let r = fetch_messages2(conv_id, messaging, config).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessagesDeprecated {

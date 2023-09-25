@@ -114,10 +114,14 @@ pub fn hangle_msg_scroll<'a>(
                                                 JsMsg::Top { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
+                                                    // send uuid/timestamp of oldest message to WarpRunner to proces top event
+                                                    // receive the new messages and if there are more in that direction
                                                 }
                                                 JsMsg::Bottom { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
+                                                    // send uuid/timestamp of most recent message to WarpRunner to proces top event
+                                                    // receive the new messages and if there are more in that direction
                                                 }
                                             }
                                             Err(e) => {

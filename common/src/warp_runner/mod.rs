@@ -29,9 +29,11 @@ use crate::{STATIC_ARGS, WARP_CMD_CH};
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
 mod conv_stream;
+mod data;
 mod manager;
 pub mod ui_adapter;
 
+pub use data::*;
 pub use manager::commands::thumbnail_to_base64;
 pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 

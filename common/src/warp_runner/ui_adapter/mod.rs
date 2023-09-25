@@ -12,16 +12,13 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{
-    self, chats,
-    chats2::{ChatBehavior, MessageIndices, ScrollBehavior},
-    MAX_PINNED_MESSAGES,
-};
+use crate::state::{self, chats, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
     ops::Range,
+    time::Instant,
 };
 use warp::{
     constellation::file::File,
@@ -31,6 +28,8 @@ use warp::{
     multipass::identity::{Identifier, Identity, Platform},
     raygun::{self, Conversation, MessageOptions},
 };
+
+use super::{FetchMessagesConfig, FetchMessagesResponse};
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
@@ -249,23 +248,20 @@ pub async fn fetch_pinned_messages_from_chat(
 pub async fn fetch_messages2(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    mut chat_behavior: ChatBehavior,
-    start_date: Option<DateTime<Utc>>,
-    to_take: usize,
-) -> Result<(Vec<Message>, ChatBehavior), Error> {
+    config: FetchMessagesConfig,
+) -> Result<FetchMessagesResponse, Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
-    println!(
-        "CALLING fetch messages2. to_take: {}; total: {}",
-        to_take, total_messages
-    );
 
-    let message_options = match start_date.as_ref() {
-        None => MessageOptions::default()
-            .set_range(total_messages.saturating_sub(to_take)..total_messages),
-        Some(start_date) => MessageOptions::default()
+    let message_options = match config {
+        FetchMessagesConfig::MostRecent { limit } => MessageOptions::default()
+            .set_range(total_messages.saturating_sub(limit)..total_messages),
+        FetchMessagesConfig::Earlier { start_date, limit } => MessageOptions::default()
             .set_date_range(start_date.clone()..DateTime::<Utc>::default())
             .set_reverse()
-            .set_limit(to_take as _),
+            .set_limit(limit as _),
+        FetchMessagesConfig::Later { start_date, limit } => MessageOptions::default()
+            .set_date_range(start_date.clone()..chrono::offset::Utc::now())
+            .set_limit(limit as _),
     };
 
     let messages = messaging
@@ -281,22 +277,9 @@ pub async fn fetch_messages2(
     .collect()
     .await;
 
-    if messages.len() < to_take {
-        chat_behavior.on_scroll_top = ScrollBehavior::DoNothing;
-    } else {
-        chat_behavior.on_scroll_top = ScrollBehavior::FetchMore;
-    }
+    let has_more = messages.len() >= config.get_limit();
 
-    if chat_behavior.messages_indices.is_none() {
-        chat_behavior.messages_indices.replace(MessageIndices {
-            start: 0,
-            end: messages.len(),
-        });
-    } else if let Some(indices) = chat_behavior.messages_indices.as_mut() {
-        indices.end += messages.len();
-    }
-
-    Ok((messages, chat_behavior))
+    Ok(FetchMessagesResponse { messages, has_more })
 }
 
 pub async fn conversation_to_chat(
