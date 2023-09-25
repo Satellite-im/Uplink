@@ -103,7 +103,8 @@ impl crate::log::Log for LogGlue {
                     return;
                 }
             }
-
+        } else if record.level() == Level::Trace && !LOGGER.read().uplink_trace {
+            return;
         }
 
         let msg = format!("{}", record.args());
@@ -150,13 +151,6 @@ impl Logger {
             colorized: false,
         };
 
-        // special path for Trace logs
-        // don't persist tracing information. at most, print it to the terminal
-        if level == Level::Trace && self.uplink_trace && !self.save_to_file {
-            println!("{}", new_log.colorize());
-            return;
-        }
-
         if self.save_to_file {
             let path = PathBuf::from(self.log_file.clone());
             if let Some(path) = path.parent() {
@@ -174,7 +168,8 @@ impl Logger {
             if let Err(error) = writeln!(file, "{new_log}") {
                 eprintln!("Couldn't write to debug.log file. {error}");
             }
-        } else {
+        } else if level != Level::Trace {
+            // keeping a running log of entries probably won't help identify a crash if the log is filled with trace logs.
             self.log_entries.push_back(new_log.clone());
 
             if self.log_entries.len() >= self.max_logs {
