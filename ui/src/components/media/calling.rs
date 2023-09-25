@@ -247,7 +247,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                                     .insert(*user, volume);
                             }
                             Err(e) => {
-                                log::error!("warp_runner failed to unmute self: {e}");
+                                log::error!("warp_runner failed to adjust voluem: {e}");
                             }
                         }
                     } // TODO: Method to end call before a connection is made
