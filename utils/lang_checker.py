@@ -10,7 +10,8 @@ parser = argparse.ArgumentParser("lang_checker")
 parser.add_argument("--lang", help="The lang file to check", 
                     type=str, default='./common/locales/en-US/main.ftl', required=False)
 parser.add_argument("--remove", help="If true removes those lines from the file", 
-                    type=bool, default=False, required=False)
+                    action=argparse.BooleanOptionalAction)
+                    
 args = parser.parse_args()
 
 # The en lang file
