@@ -32,6 +32,7 @@ pub fn hangle_msg_scroll<'a>(
 
             // don't begin the coroutine until use_eval sends a command over the channel.
             'WAIT_FOR_INIT: while let Some(conv_id) = rx.next().await {
+                println!("init handle_msg_scroll for conv id {}", conv_id);
                 current_conv_id.replace(conv_id);
 
                 'CONFIGURE_EVAL: loop {
@@ -73,10 +74,12 @@ pub fn hangle_msg_scroll<'a>(
                             opt = rx.next() => {
                                 match opt {
                                     Some(conv_id) => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
+                                        println!("conv id changed from: {:?} to {}", current_conv_id, conv_id);
                                         if !conv_id_changed {
                                             log::warn!("extra command sent to hangle_msg_scroll");
                                         }
+                                        current_conv_id.replace(conv_id);
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {
