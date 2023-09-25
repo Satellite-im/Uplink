@@ -21,8 +21,7 @@ use crate::AuthPages;
 pub const MIN_USERNAME_LEN: i32 = 4;
 pub const MAX_USERNAME_LEN: i32 = 32;
 
-#[inline_props]
-#[allow(non_snake_case)]
+#[component]
 pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering create account layout");
     let username = use_state(cx, String::new);

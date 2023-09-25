@@ -90,7 +90,7 @@ pub struct NewelyFetchedMessages {
 /// tell group_messages to flag the first X messages.
 /// if onmouseout triggers over any of those messages, load Y more.
 const DEFAULT_NUM_TO_TAKE: usize = 20;
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_messages(cx: Scope, data: Rc<ChatData>) -> Element {
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
@@ -494,6 +494,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
+            devmode: state.read().configuration.developer.developer_mode,
             on_mouseenter: move |_| {
                 if should_fetch_more {
                     ch.send(MessagesCommand::FetchMore {

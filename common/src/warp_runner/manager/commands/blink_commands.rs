@@ -64,6 +64,15 @@ pub enum BlinkCmd {
         device_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "StartRecording")]
+    StartRecording {
+        output_dir: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "StopRecording")]
+    StopRecording {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
@@ -126,6 +135,12 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             let mut audio_config = blink.get_audio_device_config().await;
             audio_config.set_speaker(&device_name);
             let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+        }
+        BlinkCmd::StartRecording { output_dir, rsp } => {
+            let _ = rsp.send(blink.record_call(&output_dir).await);
+        }
+        BlinkCmd::StopRecording { rsp } => {
+            let _ = rsp.send(blink.stop_recording().await);
         }
     }
 }

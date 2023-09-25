@@ -1,3 +1,6 @@
+//TODO: Look into complex types from clippy in regards to props attr macro.
+//      Low priority and can be ignored
+#![allow(clippy::type_complexity)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
@@ -47,7 +50,7 @@ use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService};
@@ -680,6 +683,7 @@ fn get_update_icon(cx: Scope) -> Element {
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
+                devmode: state.read().configuration.developer.developer_mode,
                 items: cx.render(rsx!(
                     ContextItem {
                         aria_label: "update-menu-dismiss".into(),
@@ -767,7 +771,7 @@ fn get_update_icon(cx: Scope) -> Element {
     }
 }
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
     //on_submit: EventHandler<'a, PathBuf>,
@@ -972,7 +976,7 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     }
 }
 
-#[inline_props]
+#[component]
 fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,
