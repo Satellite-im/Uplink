@@ -7,7 +7,7 @@ use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
-use common::warp_runner::{RayGunCmd, WarpCmd};
+use common::warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
@@ -29,6 +29,7 @@ use warp::raygun::Location;
 pub mod controller;
 pub mod file_modal;
 
+use crate::components::crop_image_tool::CropImageModal;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::chats::ChatSidebar;
@@ -107,16 +108,19 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(
-                get_file_modal {
-                    on_dismiss: |_| {
-                        storage_controller.with_mut(|i| i.show_file_modal = None);
-                    },
-                    on_download: move |_| {
-                        let file_name = file2.clone().name();
-                        functions::download_file(&file_name, ch);
-                    },
-                    file: file.clone()
+                CropImageModal {
+                    large_thumbnail: thumbnail_to_base64(file),
                 }
+                // get_file_modal {
+                //     on_dismiss: |_| {
+                //         storage_controller.with_mut(|i| i.show_file_modal = None);
+                //     },
+                //     on_download: move |_| {
+                //         let file_name = file2.clone().name();
+                //         functions::download_file(&file_name, ch);
+                //     },
+                //     file: file.clone()
+                // }
             )
         }
         div {

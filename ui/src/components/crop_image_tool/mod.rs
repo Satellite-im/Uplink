@@ -73,16 +73,30 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     },
                 }
                 div {
+                    class: "container",
                     margin_bottom: "16px",
-                    img {
-                        id: "image-preview-modal-file-embed",
-                        aria_label: "image-preview-modal-file-embed",
-                        padding: "16px",
-                        src: "{large_thumbnail}",
-                        max_height: "60vh",
-                        max_width: "60vw",
-                        onclick: move |e| e.stop_propagation(),
-                    },
+                    text_align: "center",
+                    padding: "16px",
+                    div {
+                        img {
+                            id: "image-preview-modal-file-embed",
+                            aria_label: "image-preview-modal-file-embed",
+                            src: "{large_thumbnail}",
+                            max_height: "60vh",
+                            max_width: "60vw",
+                            display: "inline-block",
+                            vertical_align: "middle",
+                            onclick: move |e| e.stop_propagation(),
+                            
+                        },
+                        div {
+                            class: "crop-box",
+                        }
+                        div {
+                            class: "overlay",
+                        }
+                    }
+                    
                 }
                 Range {
                     initial_value: 100,
