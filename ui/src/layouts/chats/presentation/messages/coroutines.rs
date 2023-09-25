@@ -61,10 +61,17 @@ pub fn hangle_msg_scroll<'a>(
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
                     let eval_stream = async_stream::stream! {
-                        while let Ok(msg) = eval.recv().await {
-                            // todo: remove the println
-                            println!("got this from js: {msg}");
-                            yield msg;
+                        loop {
+                            match eval.recv().await {
+                                Ok(msg) => {
+                                    println!("got this from js: {msg}");
+                                    yield msg;
+                                },
+                                Err(e) => {
+                                    eprintln!("error receiving from js: {e:?}");
+                                    break;
+                                }
+                            }
                         }
                     };
                     pin_mut!(eval_stream);

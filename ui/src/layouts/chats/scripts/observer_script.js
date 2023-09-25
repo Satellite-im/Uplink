@@ -25,7 +25,7 @@ function observe_list() {
         rootMargin: "0px",
         threshold: 0.75,
     });
-    const elements = document.querySelectorAll("#compose-list > li");
+    const elements = document.querySelectorAll("#messages div.message-group > div.context-wrap > div.context-inner");
     elements.forEach( (element) => {
         let id = "#" + element.id;
         observer3.observe(element);

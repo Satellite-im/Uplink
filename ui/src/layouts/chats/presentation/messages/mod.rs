@@ -496,7 +496,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
         // todo: add onblur event
         rsx!(ContextMenu {
             key: "{context_key}",
-            id: context_key,
+            id: msg_uuid.to_string(),
             devmode: state.read().configuration.developer.developer_mode,
             on_mouseenter: move |_| {
                 // if should_fetch_more {
