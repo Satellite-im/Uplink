@@ -216,7 +216,12 @@ impl Logger {
     fn set_save_to_file(&mut self, enabled: bool) {
         self.save_to_file = enabled;
 
-        if enabled {
+        if !enabled {
+            self.file_tx.take();
+            let r = self.file_thread.take().map(|x| x.join());
+            if let Some(Err(e)) = r {
+                eprintln!("error joining file thread: {e:?}");
+            }
             return;
         }
 
