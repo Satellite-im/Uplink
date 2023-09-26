@@ -145,18 +145,14 @@ impl Logger {
 }
 
 fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
-    loop {
-        let log = match rx.recv() {
-            Ok(log) => log,
-            Err(_) => {
-                break;
-            }
-        };
+    while let Ok(log) = rx.recv() {
         if let Err(error) = writeln!(file, "{log}") {
             eprintln!("Couldn't write to debug.log file. {error}");
         }
     }
+
     let _ = file.sync_all();
+    eprintln!("Logging thread terminated")
 }
 
 impl Logger {
