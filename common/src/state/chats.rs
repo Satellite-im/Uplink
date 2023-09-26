@@ -183,7 +183,7 @@ impl From<SendableChat> for Chat {
             messages: value
                 .messages
                 .drain(0..)
-                .map(|msg| Signal::new(msg))
+                .map(Signal::new)
                 .collect::<VecDeque<_>>(),
             unreads: value.unreads,
             replying_to: value.replying_to,
