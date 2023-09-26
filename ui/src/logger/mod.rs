@@ -149,7 +149,6 @@ fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
         let log = match rx.recv() {
             Ok(log) => log,
             Err(_) => {
-                eprintln!("Couldn't write to debug.log file.");
                 break;
             }
         };
