@@ -260,7 +260,7 @@ settings-notifications = Notifications
     .friends-description = Enable notifications for friend requests.
     .messages-description = Enable notifications for new messages.
     .settings-description = Enable notifications for updates and important alerts.
-    
+
 settings-developer = Developer Settings 
     .developer-mode = Developer Mode
     .developer-mode-description = Enabling developer mode adds logging and displays helpful debug information on the UI.
