@@ -157,6 +157,7 @@ fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
             eprintln!("Couldn't write to debug.log file. {error}");
         }
     }
+    let _ = file.sync_all();
 }
 
 impl Logger {
@@ -193,7 +194,9 @@ impl Logger {
 
     fn set_save_to_file(&mut self, enabled: bool) {
         if !enabled {
-            self.file_tx.take();
+            let sender = self.file_tx.take();
+            //ensure that the receiver in the thread errors to allow the thread to close
+            drop(sender);
             let r = self.file_thread.take().map(|x| x.join());
             if let Some(Err(e)) = r {
                 eprintln!("error joining file thread: {e:?}");
