@@ -44,8 +44,9 @@ impl std::fmt::Display for Log {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Logger {
+    file_handle: Option<std::fs::File>,
     log_file: String,
     // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
     log_entries: VecDeque<Log>,
@@ -123,6 +124,7 @@ impl Logger {
             .open(&logger_path);
 
         Self {
+            file_handle: None,
             save_to_file: false,
             write_to_stdout: false,
             log_file: logger_path,
@@ -152,18 +154,24 @@ impl Logger {
         };
 
         if self.save_to_file {
-            let path = PathBuf::from(self.log_file.clone());
-            if let Some(path) = path.parent() {
-                if !path.is_dir() {
-                    std::fs::create_dir_all(path).expect("Directory to be created");
+            let file = match self.file_handle.as_mut() {
+                Some(file) => file,
+                None => {
+                    let path = PathBuf::from(self.log_file.clone());
+                    if let Some(path) = path.parent() {
+                        if !path.is_dir() {
+                            std::fs::create_dir_all(path).expect("Directory to be created");
+                        }
+                    }
+                    let file = OpenOptions::new()
+                        .append(true)
+                        .create(true)
+                        .open(path)
+                        .unwrap();
+                    self.file_handle = Some(file);
+                    self.file_handle.as_mut().expect("handle exist")
                 }
-            }
-
-            let mut file = OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(path)
-                .unwrap();
+            };
 
             if let Err(error) = writeln!(file, "{new_log}") {
                 eprintln!("Couldn't write to debug.log file. {error}");
