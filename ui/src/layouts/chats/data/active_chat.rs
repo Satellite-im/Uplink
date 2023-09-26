@@ -1,13 +1,12 @@
 use std::collections::{HashMap, VecDeque};
 
 use chrono::{DateTime, Utc};
-use common::{
-    state::chats2::{ChatBehavior, ScrollBehavior},
-    warp_runner::ui_adapter,
-};
+use common::warp_runner::ui_adapter;
 use uuid::Uuid;
 
-use super::{MsgView, PartialMessage};
+use crate::layouts::chats::data::ScrollBehavior;
+
+use super::{ChatBehavior, MsgView, PartialMessage};
 
 #[derive(Debug, Default)]
 pub struct ActiveChat {

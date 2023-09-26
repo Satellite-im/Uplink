@@ -1,8 +1,6 @@
 pub mod action;
 pub mod call;
 pub mod chats;
-// chats2 will replace chats
-pub mod chats2;
 pub mod configuration;
 pub mod friends;
 pub mod identity;

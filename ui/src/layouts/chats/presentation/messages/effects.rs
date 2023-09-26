@@ -1,5 +1,6 @@
 use crate::{
     layouts::chats::{
+        data::ViewBehavior,
         scripts::{
             self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
         },
@@ -7,7 +8,7 @@ use crate::{
     },
     utils,
 };
-use common::state::{chats2::ViewBehavior, State};
+use common::state::State;
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, Coroutine, UseRef, UseSharedState};
 use uuid::Uuid;

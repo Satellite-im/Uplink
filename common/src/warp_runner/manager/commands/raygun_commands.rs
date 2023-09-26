@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use derive_more::Display;
 use futures::{channel::oneshot, StreamExt};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet},
     ops::Range,
     path::PathBuf,
 };
@@ -16,7 +16,7 @@ use warp::{
 };
 
 use crate::{
-    state::{chats, chats2::ChatBehavior, identity, pending_message::PendingMessage, Friends},
+    state::{chats, identity, pending_message::PendingMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{

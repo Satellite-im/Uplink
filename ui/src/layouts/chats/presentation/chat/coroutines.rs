@@ -1,8 +1,8 @@
 use common::{
-    state::{chats2::ChatBehavior, State},
+    state::State,
     warp_runner::{
         ui_adapter::{MessageEvent, RayGunEvent},
-        RayGunCmd, WarpCmd, WarpEvent,
+        FetchMessagesConfig, RayGunCmd, WarpCmd, WarpEvent,
     },
     WARP_CMD_CH, WARP_EVENT_CH,
 };
@@ -12,7 +12,7 @@ use futures::StreamExt;
 use std::rc::Rc;
 
 use crate::layouts::chats::{
-    data::{ActiveChatArgs, ChatData},
+    data::{ActiveChatArgs, ChatBehavior, ChatData},
     ActiveChat,
 };
 
@@ -53,7 +53,7 @@ pub fn handle_warp_events(
                         }
                         let mut data = chat_data.write();
                         data.active_chat.messages.push_back(message);
-                        data.active_chat.chat_behavior.increment_end_idx();
+                        //data.active_chat.chat_behavior.increment_end_idx();
                     }
                     MessageEvent::Edited {
                         conversation_id,
@@ -94,17 +94,11 @@ pub fn init_chat_data(
             };
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel();
-            // todo: use the ChatBehavior to init the FetchMessages command.
+            // todo: save the config during runtime
             if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
                 conv_id,
-                start_date: None,
-                chat_behavior: state
-                    .read()
-                    .get_chat_by_id(conv_id)
-                    .map(|x| x.chat_behavior)
-                    .unwrap_or_default(),
-                // todo: increase this
-                limit: 10,
+                // todo: raise this to 40
+                config: FetchMessagesConfig::MostRecent { limit: 10 },
                 rsp: tx,
             })) {
                 log::error!("failed to init messages: {e}");
