@@ -173,20 +173,18 @@ impl<T> ChatBase<T> {
 }
 
 impl From<SendableChat> for Chat {
-    fn from(value: SendableChat) -> Chat {
+    fn from(mut value: SendableChat) -> Chat {
         Chat {
             id: value.id,
             participants: value.participants,
             conversation_type: value.conversation_type,
             conversation_name: value.conversation_name,
             creator: value.creator,
-            messages: {
-                let mut vec = VecDeque::new();
-                for msg in value.messages.iter() {
-                    vec.push_front(Signal::new(msg.clone()));
-                }
-                vec
-            },
+            messages: value
+                .messages
+                .drain(0..)
+                .map(|msg| Signal::new(msg))
+                .collect::<VecDeque<_>>(),
             unreads: value.unreads,
             replying_to: value.replying_to,
             typing_indicator: value.typing_indicator,
