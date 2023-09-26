@@ -1,6 +1,6 @@
 use crate::{
     layouts::chats::{
-        data::ViewBehavior,
+        data::ViewInit,
         scripts::{
             self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
         },
@@ -27,11 +27,11 @@ pub fn init_msg_scroll<'a>(
         async move {
             println!("use_effect for init_msg_scroll {}", chat_id);
             let scroll_script = match active_chat.read().chat_behavior.view_behavior {
-                ViewBehavior::MostRecent => scripts::SCROLL_TO_END.to_string(),
-                ViewBehavior::ScrollUp { view_top } => {
+                ViewInit::MostRecent => scripts::SCROLL_TO_END.to_string(),
+                ViewInit::ScrollUp { view_top } => {
                     scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
                 }
-                ViewBehavior::ScrollDown { view_bottom } => {
+                ViewInit::ScrollDown { view_bottom } => {
                     scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}"))
                 }
             };

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct MsgRange {
     start: usize,
     to_take: usize,
@@ -17,6 +17,14 @@ impl MsgRange {
 
     pub fn to_take(&self) -> usize {
         self.to_take
+    }
+
+    pub fn take_more(&mut self, num: usize) {
+        self.to_take += num;
+    }
+
+    pub fn take_less(&mut self, num: usize) {
+        self.to_take = self.to_take.saturating_sub(num);
     }
 
     pub fn step_forward(&mut self, increment: usize, range_end: usize) {
