@@ -152,7 +152,6 @@ fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
     }
 
     let _ = file.sync_all();
-    eprintln!("Logging thread terminated")
 }
 
 impl Logger {
