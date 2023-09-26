@@ -16,9 +16,9 @@ use colored::Colorize;
 use log::{self, Level, LevelFilter, SetLoggerError};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::{collections::VecDeque, path::PathBuf};
 use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
@@ -53,7 +53,6 @@ pub struct Logger {
     log_entries: VecDeque<Log>,
     subscribers: Vec<mpsc::UnboundedSender<Log>>,
     max_logs: usize,
-    save_to_file: bool,
     write_to_stdout: bool,
 
     // display trace logs from uplink
@@ -127,7 +126,6 @@ impl Logger {
         Self {
             file_tx: None,
             file_thread: None,
-            save_to_file: false,
             write_to_stdout: false,
             log_file: logger_path,
             subscribers: vec![],
@@ -170,31 +168,7 @@ impl Logger {
             colorized: false,
         };
 
-        if self.save_to_file {
-            let sender = match self.file_tx.as_mut() {
-                Some(tx) => tx,
-                None => {
-                    let path = PathBuf::from(self.log_file.clone());
-                    if let Some(path) = path.parent() {
-                        if !path.is_dir() {
-                            std::fs::create_dir_all(path).expect("Directory to be created");
-                        }
-                    }
-                    let file = OpenOptions::new()
-                        .append(true)
-                        .create(true)
-                        .open(path)
-                        .unwrap();
-                    let (tx, rx) = std::sync::mpsc::sync_channel(10);
-                    let thread = std::thread::spawn(move || log_thread(file, rx));
-
-                    self.file_thread = Some(thread);
-                    self.file_tx = Some(tx);
-
-                    self.file_tx.as_mut().expect("Sender exist")
-                }
-            };
-
+        if let Some(sender) = self.file_tx.as_mut() {
             let _ = sender.send(new_log.clone());
         } else if level != Level::Trace {
             // keeping a running log of entries probably won't help identify a crash if the log is filled with trace logs.
@@ -213,15 +187,22 @@ impl Logger {
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
     }
 
-    fn set_save_to_file(&mut self, enabled: bool) {
-        self.save_to_file = enabled;
+    fn get_save_to_file(&self) -> bool {
+        self.file_tx.is_some()
+    }
 
+    fn set_save_to_file(&mut self, enabled: bool) {
         if !enabled {
             self.file_tx.take();
             let r = self.file_thread.take().map(|x| x.join());
             if let Some(Err(e)) = r {
                 eprintln!("error joining file thread: {e:?}");
             }
+            return;
+        }
+
+        // already saving to file. no need to make a new thread.
+        if self.file_tx.is_some() {
             return;
         }
 
@@ -290,7 +271,7 @@ pub fn set_save_to_file(b: bool) {
 }
 
 pub fn get_save_to_file() -> bool {
-    LOGGER.write().save_to_file
+    LOGGER.read().get_save_to_file()
 }
 
 pub fn set_write_to_stdout(b: bool) {
