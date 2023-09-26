@@ -1,5 +1,6 @@
 use common::icons::outline::Shape;
 use dioxus::{html::a, prelude::*};
+use dioxus_desktop::{use_wry_event_handler, tao::event::{Event, WindowEvent}};
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use kit::{
     elements::{button::Button, range::Range, select::Select, Appearance},
@@ -21,11 +22,15 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
     let image_scale: &UseRef<f64> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
     let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
+    let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
+
     let image_dimensions = use_ref(cx, || ImageDimensions {
         height: 0,
         width: 0,
     });
     let eval = use_eval(cx);
+
+    eval(&adjust_crop_circle_size);
 
     use_future(cx, (), |_| {
         to_owned![get_image_dimensions_script, eval, image_dimensions, crop_circle_size];
@@ -114,9 +119,10 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                             
                         },
                         div {
+                            id: "crop-box",
                             class: "crop-box",
-                            width: format_args!("{}px", crop_circle_size.read()),
-                            height: format_args!("{}px", crop_circle_size.read()),
+                            // width: format_args!("{}px", crop_circle_size.read()),
+                            // height: format_args!("{}px", crop_circle_size.read()),
                         }
                     }
                 }
