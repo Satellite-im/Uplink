@@ -15,20 +15,8 @@ pub fn NothingHere(cx: Scope<Props>) -> Element {
     let blocked_friends = state.read().blocked_fr_identities().len();
     let message_text = get_local_text("friends.nothing-to-see-here");
     let show_warning = match cx.props.friends_tab.as_str() {
-        "Pending" => {
-            if pending_friends == 0 {
-                true
-            } else {
-                false
-            }
-        }
-        "Blocked" => {
-            if blocked_friends == 0 {
-                true
-            } else {
-                false
-            }
-        }
+        "Pending" => pending_friends == 0,
+        "Blocked" => blocked_friends == 0,
         _ => false,
     };
 

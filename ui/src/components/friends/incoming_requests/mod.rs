@@ -83,7 +83,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
         }
     });
 
-    cx.render(rsx!(if friends_list.len() > 0 {
+    cx.render(rsx!(if !friends_list.is_empty() {
         rsx!(div {
             class: "friends-list",
             aria_label: "Incoming Requests List",

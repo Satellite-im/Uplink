@@ -51,7 +51,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
     });
 
     cx.render(rsx! (
-        if friends_list.len() > 0 {
+        if !friends_list.is_empty() {
             rsx!(div {
                 class: "friends-list",
                 aria_label: "Outgoing Requests List",
@@ -118,6 +118,5 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 })
             })
         }
-        
     ))
 }

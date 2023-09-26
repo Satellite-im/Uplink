@@ -55,7 +55,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
     });
 
     cx.render(rsx! (
-        if block_list.len() > 0 {
+        if !block_list.is_empty() {
             rsx!(div {
                 class: "friends-list",
                 aria_label: "Blocked List",
