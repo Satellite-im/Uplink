@@ -76,7 +76,10 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     functions::run_verifications_and_update_storage(
         state,
         storage_controller,
-        upload_file_controller.files_in_queue_to_upload,
+        upload_file_controller
+            .files_in_queue_to_upload
+            .read()
+            .clone(),
     );
 
     functions::get_items_from_current_directory(cx, ch);

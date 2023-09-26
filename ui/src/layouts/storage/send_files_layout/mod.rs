@@ -51,6 +51,8 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
 
     functions::get_items_from_current_directory(cx, ch);
 
+    functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
+
     if *first_render.read() {
         *first_render.write_silent() = false;
         storage_controller.write_silent().files_selected_to_send =

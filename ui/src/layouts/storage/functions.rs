@@ -13,7 +13,8 @@ use dioxus_core::ScopeState;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
-    to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
+    to_owned, use_coroutine, use_future, use_ref, Coroutine, UnboundedReceiver, UseRef,
+    UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
@@ -41,21 +42,22 @@ const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 pub fn run_verifications_and_update_storage(
     state: &UseSharedState<State>,
     controller: &UseRef<StorageController>,
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+    files_in_queue_to_upload: Vec<PathBuf>,
 ) {
+    let files_in_queue_to_upload_list = files_in_queue_to_upload.clone();
+
     if controller.read().first_render && state.read().ui.is_minimal_view() {
         state.write_silent().mutate(Action::SidebarHidden(true));
         controller.with_mut(|i| i.first_render = false);
     }
 
-    if state.read().storage.files_in_queue_to_upload.len() != files_in_queue_to_upload.read().len()
-    {
+    if state.read().storage.files_in_queue_to_upload.len() != files_in_queue_to_upload_list.len() {
         state.write_silent().storage.files_in_queue_to_upload =
-            files_in_queue_to_upload.read().clone();
+            files_in_queue_to_upload_list.clone();
     }
     if let Some(storage) = controller.write_silent().update_state() {
         state.write().storage = Storage {
-            files_in_queue_to_upload: files_in_queue_to_upload.read().clone(),
+            files_in_queue_to_upload: files_in_queue_to_upload_list.clone(),
             ..storage
         };
     }
