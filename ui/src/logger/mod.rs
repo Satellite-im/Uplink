@@ -46,7 +46,8 @@ impl std::fmt::Display for Log {
 
 #[derive(Debug)]
 pub struct Logger {
-    file_handle: Option<std::fs::File>,
+    file_tx: Option<std::sync::mpsc::SyncSender<Log>>,
+    file_thread: Option<std::thread::JoinHandle<()>>,
     log_file: String,
     // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
     log_entries: VecDeque<Log>,
@@ -124,7 +125,8 @@ impl Logger {
             .open(&logger_path);
 
         Self {
-            file_handle: None,
+            file_tx: None,
+            file_thread: None,
             save_to_file: false,
             write_to_stdout: false,
             log_file: logger_path,
@@ -144,6 +146,21 @@ impl Logger {
     }
 }
 
+fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
+    loop {
+        let log = match rx.recv() {
+            Ok(log) => log,
+            Err(_) => {
+                eprintln!("Couldn't write to debug.log file.");
+                break;
+            }
+        };
+        if let Err(error) = writeln!(file, "{log}") {
+            eprintln!("Couldn't write to debug.log file. {error}");
+        }
+    }
+}
+
 impl Logger {
     fn log(&mut self, level: Level, message: &str) {
         let new_log = Log {
@@ -154,8 +171,8 @@ impl Logger {
         };
 
         if self.save_to_file {
-            let file = match self.file_handle.as_mut() {
-                Some(file) => file,
+            let sender = match self.file_tx.as_mut() {
+                Some(tx) => tx,
                 None => {
                     let path = PathBuf::from(self.log_file.clone());
                     if let Some(path) = path.parent() {
@@ -168,14 +185,17 @@ impl Logger {
                         .create(true)
                         .open(path)
                         .unwrap();
-                    self.file_handle = Some(file);
-                    self.file_handle.as_mut().expect("handle exist")
+                    let (tx, rx) = std::sync::mpsc::sync_channel(10);
+                    let thread = std::thread::spawn(move || log_thread(file, rx));
+
+                    self.file_thread = Some(thread);
+                    self.file_tx = Some(tx);
+
+                    self.file_tx.as_mut().expect("Sender exist")
                 }
             };
 
-            if let Err(error) = writeln!(file, "{new_log}") {
-                eprintln!("Couldn't write to debug.log file. {error}");
-            }
+            let _ = sender.send(new_log.clone());
         } else if level != Level::Trace {
             // keeping a running log of entries probably won't help identify a crash if the log is filled with trace logs.
             self.log_entries.push_back(new_log.clone());
@@ -206,11 +226,16 @@ impl Logger {
             .open(&self.log_file)
             .unwrap();
 
-        self.file_handle = Some(file);
-        let file = self.file_handle.as_mut().expect("Handle exist");
+        let (tx, rx) = std::sync::mpsc::sync_channel(10);
+        let thread = std::thread::spawn(move || log_thread(file, rx));
+
+        self.file_thread = Some(thread);
+        self.file_tx = Some(tx);
+
+        let sender = self.file_tx.as_mut().expect("Sender exist");
 
         for entry in self.log_entries.drain(..) {
-            if let Err(error) = writeln!(file, "{entry}") {
+            if let Err(error) = sender.send(entry) {
                 eprintln!("Couldn't write to debug.log file. {error}");
             }
         }
