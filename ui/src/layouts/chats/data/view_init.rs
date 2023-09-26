@@ -1,23 +1,23 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::{ScrollTo, DEFAULT_MESSAGES_TO_TAKE};
+
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
-pub enum ViewInit {
-    // start at the most recent message and automatically update the view when messages are received
-    MostRecent,
-    // the user scrolled up. don't automatically update the view when messages are received
-    ScrollUp {
-        // the message id that should be at the top of the chats page
-        view_top: Uuid,
-    },
-    ScrollDown {
-        // the message id that should be at the bottom of the chats page
-        view_bottom: Uuid,
-    },
+pub struct ViewInit {
+    pub scroll_to: ScrollTo,
+    pub earliest_time: Option<DateTime<Utc>>,
+    // fetch at most `limit` messages starting at `earliest_time` or now() (if it's none)
+    pub limit: usize,
 }
 
 impl Default for ViewInit {
     fn default() -> Self {
-        Self::MostRecent
+        Self {
+            scroll_to: ScrollTo::MostRecent,
+            earliest_time: None,
+            limit: DEFAULT_MESSAGES_TO_TAKE,
+        }
     }
 }

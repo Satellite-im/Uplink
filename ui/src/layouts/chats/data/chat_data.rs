@@ -1,18 +1,16 @@
-use std::{collections::VecDeque, rc::Rc};
-
-use common::{
-    state::{Chat, Identity, State},
-    warp_runner::ui_adapter,
-};
+use common::state::{Identity, State};
 use dioxus::prelude::*;
 
 use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;
 
+use super::ActiveChat;
+
 #[derive(Clone, Default)]
 pub struct ChatData {
-    pub active_chat: Chat,
+    pub active_chat: ActiveChat,
+    pub chat_id: Uuid,
     pub my_id: Identity,
     pub other_participants: Vec<Identity>,
     pub active_participant: Identity,
@@ -31,22 +29,19 @@ impl PartialEq for ChatData {
 }
 
 impl ChatData {
-    pub fn get(
-        state: &UseSharedState<State>,
-        mut messages: Vec<ui_adapter::Message>,
-    ) -> Option<Self> {
+    pub fn get(state: &UseSharedState<State>, active_chat: ActiveChat) -> Option<Self> {
         let s = state.read();
         // the Compose page shouldn't be called before chats is initialized. but check here anyway.
         if !s.initialized {
             return None;
         }
 
-        let mut active_chat = match s.get_active_chat() {
+        let mut chat_metadata = match s.get_active_chat() {
             Some(c) => c,
             None => return None,
         };
-        active_chat.messages = VecDeque::from_iter(messages.drain(..));
-        let participants = s.chat_participants(&active_chat);
+
+        let participants = s.chat_participants(&chat_metadata);
         // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
         // this would be "fixed" the next time uplink starts up
         let other_participants: Vec<Identity> = s.remove_self(&participants);
@@ -55,11 +50,11 @@ impl ChatData {
             .cloned()
             .unwrap_or(s.get_own_identity());
 
-        let subtext = match active_chat.conversation_type {
+        let subtext = match chat_metadata.conversation_type {
             ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
             _ => String::new(),
         };
-        let is_favorite = s.is_favorite(&active_chat);
+        let is_favorite = s.is_favorite(&chat_metadata);
 
         let first_image = active_participant.profile_picture();
         let other_participants_names = State::join_usernames(&other_participants);
@@ -73,6 +68,7 @@ impl ChatData {
 
         let data = Self {
             active_chat,
+            chat_id: chat_metadata.id,
             other_participants,
             my_id: s.get_own_identity(),
             active_participant,

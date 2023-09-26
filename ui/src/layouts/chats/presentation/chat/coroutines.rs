@@ -9,10 +9,11 @@ use common::{
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
+use uuid::Uuid;
 
 use crate::layouts::chats::{
-    data::{ActiveChatArgs, ChatBehavior, ChatData},
+    data::{ActiveChatArgs, ChatBehavior, ChatData, MsgRange, ViewInit, DEFAULT_MESSAGES_TO_TAKE},
     ActiveChat,
 };
 
@@ -77,11 +78,11 @@ pub fn init_chat_data(
     cx: Scope,
     state: &UseSharedState<State>,
     chat_data: &UseSharedState<ChatData>,
-    active_chat: &UseSharedState<ActiveChat>,
+    chat_behaviors: &UseSharedState<HashMap<Uuid, ChatBehavior>>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |(conv_id)| {
-        to_owned![state, chat_data, active_chat];
+        to_owned![state, chat_data, chat_behaviors];
         async move {
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -94,11 +95,16 @@ pub fn init_chat_data(
             };
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel();
+            let chat_behavior = chat_behaviors
+                .read()
+                .get(&conv_id)
+                .cloned()
+                .unwrap_or_default();
+            let fetch_mesages_config = chat_behavior.messages_config();
             // todo: save the config during runtime
             if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
                 conv_id,
-                // todo: raise this to 40
-                config: FetchMessagesConfig::MostRecent { limit: 10 },
+                config: fetch_mesages_config,
                 rsp: tx,
             })) {
                 log::error!("failed to init messages: {e}");
@@ -116,9 +122,18 @@ pub fn init_chat_data(
             match rsp {
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
+                    let msg_len = r.messages.len();
+                    // todo: make the ViewInit and MsgRange dynamic.
+                    let ac = ActiveChat::new(ActiveChatArgs {
+                        conversation_id: conv_id,
+                        messages: r.messages,
+                        chat_behavior: ChatBehavior::new(
+                            ViewInit::MostRecent,
+                            MsgRange::new(0, msg_len),
+                        ),
+                    });
                     // todo: verify that unwrap_or_default() doesn't cause strange behavior
-                    *chat_data.write() =
-                        ChatData::get(&state, r.messages.clone()).unwrap_or_default();
+                    *chat_data.write() = ChatData::get(&state, ac).unwrap_or_default();
 
                     // todo: copy over the ChatBehavior too
                     *active_chat.write() = ActiveChat::new(ActiveChatArgs {

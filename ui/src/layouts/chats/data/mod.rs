@@ -21,3 +21,5 @@ pub use msg_range::*;
 pub use partial_message::*;
 pub use scroll_behavior::*;
 pub use view_init::*;
+
+pub const DEFAULT_MESSAGES_TO_TAKE: usize = 10;

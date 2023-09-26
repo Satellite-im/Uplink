@@ -8,7 +8,7 @@ use crate::layouts::chats::data::ScrollBehavior;
 
 use super::{ChatBehavior, MsgView, PartialMessage};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ActiveChat {
     pub conversation_id: Uuid,
     pub messages: VecDeque<ui_adapter::Message>,

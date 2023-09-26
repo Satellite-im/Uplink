@@ -26,7 +26,7 @@ pub fn init_msg_scroll<'a>(
         to_owned![eval_provider, ch, active_chat];
         async move {
             println!("use_effect for init_msg_scroll {}", chat_id);
-            let scroll_script = match active_chat.read().chat_behavior.view_behavior {
+            let scroll_script = match active_chat.read().chat_behavior.view_init {
                 ViewInit::MostRecent => scripts::SCROLL_TO_END.to_string(),
                 ViewInit::ScrollUp { view_top } => {
                     scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
