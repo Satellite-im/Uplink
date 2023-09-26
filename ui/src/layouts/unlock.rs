@@ -2,7 +2,7 @@ use std::fs;
 
 use common::{
     get_images_dir,
-    language::{get_local_text, get_local_text_args_builder},
+    language::{get_local_text, get_local_text_with_args},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
     STATIC_ARGS,
@@ -48,8 +48,7 @@ impl UnlockError {
 }
 
 // todo: go to the auth page if no account has been created
-#[inline_props]
-#[allow(non_snake_case)]
+#[component]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering unlock layout");
     let validation_failure: &UseState<Option<UnlockError>> =
@@ -283,6 +282,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     ContextMenu {
                         key: "{key}-menu",
                         id: "unlock-context-menu".into(),
+                        devmode: state.read().configuration.developer.developer_mode,
                         items: cx.render(rsx!(
                             ContextItem {
                                 icon: Icon::Trash,
@@ -332,7 +332,5 @@ fn get_welcome_message(state: &State) -> String {
         None => String::from("UNKNOWN"),
     };
 
-    get_local_text_args_builder("unlock.welcome", |m| {
-        m.insert("name", name.into());
-    })
+    get_local_text_with_args("unlock.welcome", vec![("name", name.into())])
 }

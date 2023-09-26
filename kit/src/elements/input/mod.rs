@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
@@ -18,7 +18,7 @@ use super::label::LabelWithEllipsis;
 /// If not, is best to use SpecialCharsAction to pass small vecs.
 ///
 /// ## Example:
-/// ```rust
+/// ```no_run
 /// let chars_to_remove = vec!['\\', '/', ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_'];
 /// let mut special_chars = SPECIAL_CHARS.to_vec();
 /// special_chars = special_chars
@@ -38,7 +38,7 @@ use super::label::LabelWithEllipsis;
 ///    ..Options::default()
 /// }
 /// ...
-/// )
+/// }
 /// ```
 pub static SPECIAL_CHARS: &[char] = &[
     '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\',
@@ -63,7 +63,7 @@ pub struct Validation {
     ///
     /// ### Example
     ///
-    /// ```rust
+    /// ```no_run
     ///  options: Options {
     ///        react_to_esc_key: true,
     ///     with_validation: Some(Validation {
@@ -216,9 +216,9 @@ fn validate_alphanumeric(
                 t.push(x);
             }
         }
-        return Some(format!(
-            "{}: {t}",
-            get_local_text("warning-messages.disallowed-characters")
+        return Some(get_local_text_with_args(
+            "warning-messages.disallowed-characters",
+            vec![("chars", t.into())],
         ));
     }
 
@@ -232,28 +232,23 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     // Ensure the maximum value isn't the default
     // then make sure the value's length is less than or equal to the max
     if max > 0 && val.len() > max {
-        return Some(format!(
-            "{} {} {} {}.",
-            get_local_text("warning-messages.maximum-of"),
-            max,
-            get_local_text("uplink.characters"),
-            get_local_text("uplink.exceeded")
+        return Some(get_local_text_with_args(
+            "warning-messages.maximum-of",
+            vec![("num", max.into())],
         ));
     }
 
     // Ensure the minimum is not the default value
     // then make sure the value's length is greater than or equal to the minimum
     if min > 0 && val.len() < min {
-        return Some(format!(
-            "{} {} {}.",
-            get_local_text("warning-messages.please-enter-at-least"),
-            min,
-            get_local_text(if min > 1 {
-                "uplink.characters"
-            } else {
-                "uplink.character"
-            })
-        ));
+        return Some(if min > 1 {
+            get_local_text_with_args(
+                "warning-messages.please-enter-at-least",
+                vec![("num", min.into())],
+            )
+        } else {
+            get_local_text("warning-messages.please-enter-at-least-one")
+        });
     }
 
     None

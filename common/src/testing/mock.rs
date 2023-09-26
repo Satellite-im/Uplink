@@ -126,27 +126,18 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         .rev()
         .collect();
 
-    Chat {
-        id: conversation,
-        participants: HashSet::from_iter(participants.iter().map(|x| x.did_key())),
-        conversation_type: match participants.len() {
+    Chat::new(
+        conversation,
+        HashSet::from_iter(participants.iter().map(|x| x.did_key())),
+        match participants.len() {
             0..=2 => ConversationType::Direct,
             _ => ConversationType::Group,
         },
-        conversation_name: None,
-        creator: None,
+        None,
+        None,
         messages,
-        unreads: rng.gen_range(0..2),
-        replying_to: None,
-        typing_indicator: HashMap::new(),
-        draft: None,
-        has_more_messages: false,
-        pending_outgoing_messages: vec![],
-        files_attached_to_send: Vec::new(),
-        scroll_value: None,
         pinned_messages,
-        scroll_to: None,
-    }
+    )
 }
 
 // Generate a random chat with the specified DID key as one of the participants

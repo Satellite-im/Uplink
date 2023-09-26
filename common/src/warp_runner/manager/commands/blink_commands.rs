@@ -1,9 +1,14 @@
 use derive_more::Display;
 use futures::channel::oneshot;
 use uuid::Uuid;
-use warp::{blink::AudioCodec, crypto::DID};
+use warp::crypto::DID;
 
 use crate::warp_runner::Calling;
+
+pub struct Devices {
+    pub available_devices: Vec<String>,
+    pub selected: Option<String>,
+}
 
 #[derive(Display)]
 pub enum BlinkCmd {
@@ -11,7 +16,6 @@ pub enum BlinkCmd {
     OfferCall {
         conversation_id: Uuid,
         participants: Vec<DID>,
-        webrtc_codec: AudioCodec,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "AnswerCall")]
@@ -36,6 +40,33 @@ pub enum BlinkCmd {
     UnmuteSelf {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "GetAllMicrophones")]
+    GetAllMicrophones {
+        rsp: oneshot::Sender<Result<Devices, warp::error::Error>>,
+    },
+    #[display(fmt = "SetMicrophone")]
+    SetMicrophone {
+        device_name: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "GetAllSpeakers")]
+    GetAllSpeakers {
+        rsp: oneshot::Sender<Result<Devices, warp::error::Error>>,
+    },
+    #[display(fmt = "SetSpeaker")]
+    SetSpeaker {
+        device_name: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "StartRecording")]
+    StartRecording {
+        output_dir: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "StopRecording")]
+    StopRecording {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
@@ -43,14 +74,9 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::OfferCall {
             conversation_id,
             participants,
-            webrtc_codec,
             rsp,
         } => {
-            let _ = rsp.send(
-                blink
-                    .offer_call(Some(conversation_id), participants, webrtc_codec)
-                    .await,
-            );
+            let _ = rsp.send(blink.offer_call(Some(conversation_id), participants).await);
         }
         BlinkCmd::AnswerCall { call_id, rsp } => {
             let _ = rsp.send(blink.answer_call(call_id).await);
@@ -66,6 +92,46 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         }
         BlinkCmd::UnmuteSelf { rsp } => {
             let _ = rsp.send(blink.unmute_self().await);
+        }
+        BlinkCmd::GetAllMicrophones { rsp } => {
+            let audio_config = blink.get_audio_device_config().await;
+            let selected = audio_config.microphone_device_name();
+            let result = audio_config
+                .get_available_microphones()
+                .map(|available_devices| Devices {
+                    available_devices,
+                    selected,
+                })
+                .map_err(warp::error::Error::from);
+            let _ = rsp.send(result);
+        }
+        BlinkCmd::SetMicrophone { device_name, rsp } => {
+            let mut audio_config = blink.get_audio_device_config().await;
+            audio_config.set_microphone(&device_name);
+            let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+        }
+        BlinkCmd::GetAllSpeakers { rsp } => {
+            let audio_config = blink.get_audio_device_config().await;
+            let selected = audio_config.speaker_device_name();
+            let result = audio_config
+                .get_available_speakers()
+                .map(|available_devices| Devices {
+                    available_devices,
+                    selected,
+                })
+                .map_err(warp::error::Error::from);
+            let _ = rsp.send(result);
+        }
+        BlinkCmd::SetSpeaker { device_name, rsp } => {
+            let mut audio_config = blink.get_audio_device_config().await;
+            audio_config.set_speaker(&device_name);
+            let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+        }
+        BlinkCmd::StartRecording { output_dir, rsp } => {
+            let _ = rsp.send(blink.record_call(&output_dir).await);
+        }
+        BlinkCmd::StopRecording { rsp } => {
+            let _ = rsp.send(blink.stop_recording().await);
         }
     }
 }

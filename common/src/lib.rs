@@ -51,7 +51,9 @@ pub struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
-    experimental_node: bool,
+    no_discovery: bool,
+    #[clap(long)]
+    discovery_point: Option<String>,
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
@@ -93,14 +95,16 @@ pub struct StaticArgs {
     pub extensions_path: PathBuf,
     /// crash logs
     pub crash_logs: PathBuf,
+    /// recordings
+    pub recordings: PathBuf,
     /// seconds
     pub typing_indicator_refresh: u64,
     /// seconds
     pub typing_indicator_timeout: u64,
     /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
-    /// Uses experimental configuration
-    pub experimental: bool,
+    /// Disable discovery
+    pub no_discovery: bool,
     // some features aren't ready for release. This field is used to disable such features.
     pub production_mode: bool,
 }
@@ -129,6 +133,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         crash_logs: uplink_container.join("crash-logs"),
+        recordings: uplink_container.join("recordings"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
@@ -137,7 +142,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
-        experimental: args.experimental_node,
+        no_discovery: args.no_discovery,
         production_mode: cfg!(feature = "production_mode"),
     }
 });
@@ -162,6 +167,8 @@ pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
 });
 
 pub const MAX_FILES_PER_MESSAGE: usize = 8;
+
+pub const ROOT_DIR_NAME: &str = "root";
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",

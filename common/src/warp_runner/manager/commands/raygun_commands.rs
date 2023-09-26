@@ -96,8 +96,15 @@ pub enum RayGunCmd {
     SendMessage {
         conv_id: Uuid,
         msg: Vec<String>,
-        attachments: Vec<PathBuf>,
-        location: Location,
+        attachments: Vec<Location>,
+        ui_msg_id: Option<Uuid>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "SendMessageForSeveralChats")]
+    SendMessageForSeveralChats {
+        convs_id: Vec<Uuid>,
+        msg: Vec<String>,
+        attachments: Vec<Location>,
         ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
@@ -127,7 +134,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         reply_to: Uuid,
         msg: Vec<String>,
-        attachments: Vec<PathBuf>,
+        attachments: Vec<Location>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
@@ -195,8 +202,7 @@ pub async fn handle_raygun_cmd(
             group_name,
             rsp,
         } => {
-            let r =
-                raygun_create_group_conversation(account, messaging, recipients, group_name).await;
+            let r = raygun_create_group_conversation(messaging, recipients, group_name).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::AddGroupParticipants {
@@ -251,7 +257,6 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
-            location,
             ui_msg_id: ui_id,
             rsp,
         } => {
@@ -260,7 +265,7 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, None, location, attachments.clone(), msg.clone())
+                    .attach(conv_id, None, attachments.clone(), msg.clone())
                     .await
                 {
                     Ok(mut stream) => loop {
@@ -298,6 +303,62 @@ pub async fn handle_raygun_cmd(
             };
 
             let _ = rsp.send(r);
+        }
+        RayGunCmd::SendMessageForSeveralChats {
+            convs_id,
+            msg,
+            attachments,
+            ui_msg_id: ui_id,
+            rsp,
+        } => {
+            for chat_id in convs_id {
+                let _ = if attachments.is_empty() {
+                    messaging.send(chat_id, msg.clone()).await
+                } else {
+                    //TODO: Pass stream off to attachment events
+                    match messaging
+                        .attach(chat_id, None, attachments.clone(), msg.clone())
+                        .await
+                    {
+                        Ok(mut stream) => loop {
+                            let msg_clone = msg.clone();
+                            //let attachment_clone = attachments.clone();
+                            if let Some(kind) = stream.next().await {
+                                match kind {
+                                    AttachmentKind::Pending(result) => {
+                                        break result;
+                                    }
+                                    AttachmentKind::AttachedProgress(progress) => {
+                                        if WARP_EVENT_CH
+                                            .tx
+                                            .send(WarpEvent::Message(
+                                                MessageEvent::AttachmentProgress {
+                                                    progress,
+                                                    conversation_id: chat_id,
+                                                    msg: PendingMessage::for_compare(
+                                                        msg_clone,
+                                                        &attachments,
+                                                        ui_id,
+                                                    ),
+                                                },
+                                            ))
+                                            .is_err()
+                                        {
+                                            log::error!("failed to send warp_event");
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            log::error!("Raygun: Send files to several chats: {}", e);
+                            Err(e)
+                        }
+                    }
+                };
+            }
+
+            let _ = rsp.send(Ok(()));
         }
         RayGunCmd::EditMessage {
             conv_id,
@@ -340,7 +401,7 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, Some(reply_to), Location::Disk, attachments, msg)
+                    .attach(conv_id, Some(reply_to), attachments, msg)
                     .await
                 {
                     Ok(mut stream) => loop {
@@ -537,18 +598,11 @@ async fn raygun_remove_direct_convs(
     }
 }
 
-// here's some crazy code to stop creating duplicate group conversations
 async fn raygun_create_group_conversation(
-    account: &Account,
     messaging: &mut Messaging,
     recipients: Vec<DID>,
     group_name: Option<String>,
 ) -> Result<Uuid, Error> {
-    let mut recipients_set: HashSet<DID> = HashSet::from_iter(recipients.iter().cloned());
-    let own_identity = account.get_own_identity().await?;
-
-    recipients_set.insert(own_identity.did_key());
-
     match messaging
         .create_group_conversation(group_name, recipients)
         .await

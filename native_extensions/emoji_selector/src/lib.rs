@@ -19,17 +19,6 @@ use warp::{logging::tracing::log, raygun::ReactionState};
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 export_extension!(EXTENSION);
 
-const UPDATE_CHAR_COUNTER_WITH_EMOJI: &str = r#"
-var charCounter = document.getElementById('$UUID-char-counter');
-var draft_value = '$DRAFT_VALUE'
-var line_breaks_count = '$LINE_BREAK_COUNT'
-var intValue = parseInt(line_breaks_count);
-
-const charCount = Array.from(draft_value).length
-
-charCounter.innerText = charCount + intValue
-"#;
-
 pub struct EmojiSelector;
 
 fn group_to_str(group: emojis::Group) -> String {
@@ -46,8 +35,8 @@ fn group_to_str(group: emojis::Group) -> String {
     }
 }
 
-#[inline_props]
-fn build_nav(cx: Scope) -> Element<'a> {
+#[component(no_case_check)]
+fn build_nav(cx: Scope<'_>) -> Element<'_> {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",
@@ -137,7 +126,7 @@ enum Command {
     React(Uuid, Uuid, String),
 }
 
-#[inline_props]
+#[component(no_case_check)]
 fn render_selector<'a>(
     cx: Scope,
     mouse_over_emoji_button: UseRef<bool>,
@@ -146,7 +135,7 @@ fn render_selector<'a>(
     let state = use_shared_state::<State>(cx)?;
     #[cfg(not(target_os = "macos"))]
     let mouse_over_emoji_selector = use_ref(cx, || false);
-
+    #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
     let focus_script = r#"
@@ -251,15 +240,6 @@ fn render_selector<'a>(
                                                         };
                                                         let draft: String = c.draft.unwrap_or_default();
                                                         let new_draft = format!("{draft}{emoji}");
-                                                        let new_draft2 = new_draft.replace('\n', "");
-                                                        let line_break_count = new_draft.matches('\n').count();
-
-                                                        let update_char_counter_script = UPDATE_CHAR_COUNTER_WITH_EMOJI
-                                                            .replace("$UUID", &c.id.to_string())
-                                                            .replace("$DRAFT_VALUE", &new_draft2)
-                                                            .replace("$LINE_BREAK_COUNT", &line_break_count.to_string());
-
-                                                        let _ = eval(&update_char_counter_script);
                                                         state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
                                                         if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
                                                             cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
@@ -289,11 +269,34 @@ fn render_selector<'a>(
 }
 
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
-#[inline_props]
+#[component(no_case_check)]
 fn render_1(cx: Scope, _unused: bool) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
+
+    use_effect(cx, (), |_| {
+        to_owned![state];
+        async move {
+            state.write_silent().ui.emojis.register_emoji_filter(
+                String::from("emoji_picker"),
+                |pattern, exact| {
+                    emojis::Group::iter()
+                        .flat_map(|group| group.emojis())
+                        .filter_map(|emoji| {
+                            emoji
+                                .shortcodes()
+                                .find(|short| {
+                                    (exact && (*short).eq(pattern))
+                                        || (!exact && (*short).starts_with(pattern))
+                                })
+                                .map(|short| (emoji.to_string(), short.to_string()))
+                        })
+                        .collect()
+                },
+            )
+        }
+    });
 
     cx.render(rsx! (
         // If enabled, render the selector popup.
@@ -335,7 +338,8 @@ impl Extension for EmojiSelector {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a> {
+        cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
         cx.render(rsx!(
             style { "{styles}" },

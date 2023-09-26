@@ -1,3 +1,6 @@
+//TODO: Look into complex types from clippy in regards to props attr macro.
+//      Low priority and can be ignored
+#![allow(clippy::type_complexity)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
@@ -5,7 +8,7 @@
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
@@ -47,8 +50,8 @@ use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
-use crate::prism_paths::PrismScripts;
+use crate::layouts::storage::files_layout::FilesLayout;
+use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
@@ -59,7 +62,7 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
-use crate::layouts::chat::ChatLayout;
+use crate::layouts::chats::ChatLayout;
 use crate::window_manager::WindowManagerCmdChannels;
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
@@ -75,8 +78,8 @@ mod components;
 mod extension_browser;
 mod layouts;
 mod logger;
+mod misc_scripts;
 mod overlay;
-mod prism_paths;
 mod utils;
 mod webview_config;
 mod window_builder;
@@ -235,7 +238,6 @@ fn AppStyle(cx: Scope) -> Element {
     } else {
         "".into()
     };
-    use prism_paths::{PRISM_STYLE, PRISM_THEME};
 
     render! {
         style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
@@ -348,7 +350,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 }
                 let size = webview.inner_size();
                 let metadata = state.read().ui.metadata.clone();
-                log::debug!("resize {:?}", size);
+                //log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
@@ -430,6 +432,19 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 }
                 log::trace!("decrement toasts");
                 state.write().decrement_toasts();
+            }
+        }
+    });
+
+    //Update active call
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            loop {
+                sleep(Duration::from_secs(1)).await;
+                if state.write_silent().ui.call_info.update_active_call() {
+                    state.notify_consumers();
+                }
             }
         }
     });
@@ -653,15 +668,13 @@ fn get_update_icon(cx: Scope) -> Element {
         None => return cx.render(rsx!("")),
     };
 
-    let update_msg = format!(
-        "{}: {}",
-        get_local_text("uplink.update-available"),
-        new_version,
+    let update_msg = get_local_text_with_args(
+        "uplink.update-available",
+        vec![("version", new_version.into())],
     );
-    let downloading_msg = format!(
-        "{}: {}%",
-        get_local_text("uplink.update-downloading"),
-        download_state.read().progress as u32
+    let downloading_msg = get_local_text_with_args(
+        "uplink.update-downloading",
+        vec![("progress", (download_state.read().progress as u32).into())],
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
@@ -671,6 +684,7 @@ fn get_update_icon(cx: Scope) -> Element {
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
+                devmode: state.read().configuration.developer.developer_mode,
                 items: cx.render(rsx!(
                     ContextItem {
                         aria_label: "update-menu-dismiss".into(),
@@ -758,7 +772,7 @@ fn get_update_icon(cx: Scope) -> Element {
     }
 }
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
     //on_submit: EventHandler<'a, PathBuf>,
@@ -963,7 +977,7 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     }
 }
 
-#[inline_props]
+#[component]
 fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,
@@ -975,7 +989,12 @@ fn AppNav<'a>(
     let state = use_shared_state::<State>(cx)?;
     let navigator = use_navigator(cx);
     let pending_friends = state.read().friends().incoming_requests.len();
-    let unreads: u32 = state.read().chats_sidebar().iter().map(|c| c.unreads).sum();
+    let unreads: u32 = state
+        .read()
+        .chats_sidebar()
+        .iter()
+        .map(|c| c.unreads())
+        .sum();
 
     let chat_route = UIRoute {
         to: "/chat",

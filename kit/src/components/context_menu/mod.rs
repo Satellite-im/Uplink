@@ -1,4 +1,4 @@
-use common::{icons, state::State};
+use common::{icons, language::get_local_text, state::State};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -23,6 +23,8 @@ pub struct ItemProps<'a> {
     aria_label: Option<String>,
     #[props(optional)]
     children: Option<Element<'a>>,
+    #[props(optional)]
+    tooltip: Option<Element<'a>>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -50,28 +52,68 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
+    let tooltip_visible = use_state(cx, || false);
+
     if let Some(children) = &cx.props.children {
-        cx.render(rsx!(div {
-            class: "context-item simple-context-item",
-            children
-        }))
-    } else {
         cx.render(rsx!(
-            button {
-                class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
-                aria_label: "{aria_label}",
-                onclick: move |e| {
-                    if !disabled {
-                        emit(&cx, e);
+            div {
+                onmouseenter: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(true);
                     }
                 },
-                (cx.props.icon.is_some()).then(|| {
-                    let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
-                    rsx! {
-                        icons::Icon { icon: icon }
+                onmouseleave: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(false);
                     }
-                }),
-                div {"{cx.props.text}"}
+                },
+                class: "context-item simple-context-item",
+                if *tooltip_visible.current() {
+                    cx.props.tooltip.as_ref().map(|tooltip| {
+                        rsx!(
+                           tooltip
+                        )
+                    })
+                }
+                children
+            }
+        ))
+    } else {
+        cx.render(rsx!(
+            div {
+                onmouseenter: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(true);
+                    }
+                },
+                onmouseleave: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(false);
+                    }
+                },
+                button {
+                    class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
+                    aria_label: "{aria_label}",
+                    onclick: move |e| {
+                        if !disabled {
+                            emit(&cx, e);
+                        }
+                    },
+                    (cx.props.icon.is_some()).then(|| {
+                        let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
+                        rsx! {
+                            icons::Icon { icon: icon }
+                        }
+                    }),
+                    div {"{cx.props.text}"},
+                }
+                if *tooltip_visible.current() {
+                    cx.props.tooltip.as_ref().map(|tooltip| {
+                        rsx!(
+                           tooltip
+                        )
+                    })
+                }
             }
         ))
     }
@@ -128,6 +170,8 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let id = &cx.props.id;
     let window = use_window(cx);
 
+    let devmode = cx.props.devmode.unwrap_or(false);
+
     // Handles the hiding and showing of the context menu
     let eval = use_eval(cx);
     use_effect(cx, (id,), |(id,)| {
@@ -154,11 +198,13 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "context-menu hidden",
                 aria_label: "Context Menu",
                 &cx.props.items,
-                cx.props.devmode.is_some().then(|| rsx!(
+                devmode.then(|| rsx!(
+                    br {},
                     hr {},
+                    br {},
                     ContextItem {
                         icon: icons::outline::Shape::CommandLine,
-                        text: String::from("Open Console"),
+                        text: get_local_text("uplink.open-devtools"),
                         onpress: move |_| window.devtool(),
                     }
                 ))

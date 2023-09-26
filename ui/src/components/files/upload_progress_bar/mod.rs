@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
@@ -8,7 +8,7 @@ use kit::elements::{button::Button, Appearance};
 
 use crate::utils::{
     get_drag_event,
-    verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
+    verify_valid_paths::{decoded_pathbufs, verify_paths},
 };
 
 static FILES_TO_UPLOAD_SCRIPT: &str = r#"
@@ -227,13 +227,12 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
 fn count_files_to_show(files_to_upload_len: usize) -> String {
     if files_to_upload_len > 1 {
-        format!(
-            "{} {}!",
-            files_to_upload_len,
-            get_local_text("files.files-to-upload")
+        get_local_text_with_args(
+            "files.files-to-upload",
+            vec![("num", files_to_upload_len.into())],
         )
     } else {
-        format!("{} {}!", 1, get_local_text("files.one-file-to-upload"))
+        get_local_text_with_args("files.one-file-to-upload", vec![("num", 1.into())])
     }
 }
 
@@ -248,7 +247,7 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event::get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let files_to_upload_message = count_files_to_show(paths.len());
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
@@ -257,7 +256,7 @@ async fn drag_and_drop_function(
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_are_valid_paths(&paths) {
+                if verify_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
                     *files_ready_to_upload.write_silent() = new_files_to_upload;
                     break;

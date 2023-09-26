@@ -23,11 +23,6 @@
     position: relative;
     width: fit-content;
     height: fit-content;
-    .btn-wrap{
-      position: absolute;
-      left: var(--gap);
-      top: var(--gap);
-    }
   }
 
   .image {
@@ -49,9 +44,18 @@
   .meta {
     font-size: var(--text-size-less);
   }
+
   .btn {
+    display: none;
     background-color: var(--primary-light-less);
   }
+
+  .btn-wrap {
+    position: absolute;
+    top: var(--gap);
+    left: var(--gap);
+  }
+
   .icon {
     svg {
       transition: stroke var(--animation-time);
@@ -65,14 +69,20 @@
 }
 .file-embed:hover {
   cursor: pointer;
+  .btn {
+    display: inline-flex;
+    border: 1px solid var(--text-color-dark);
+  }
 }
 
 .icon {
   display: inline-flex;
 }
+
 .meta {
   display: inline-flex;
 }
+
 .file-embed.remote {
   .meta {
     color: var(--placeholder);

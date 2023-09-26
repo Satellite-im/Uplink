@@ -7,9 +7,15 @@
     border-right: 1px solid var(--border-subtle-color);
     justify-content: space-between;
     background-color: var(--background-color-dark);
-    position: relative;
     padding: var(--gap);
     padding-bottom: 0;
+    position: relative;
+    z-index: 1;
+    // overflow-x: hidden; // TODO: This breaks tooltips.
+
+    &::-webkit-scrollbar {
+        display: none; 
+    }
 
     // TODO: This is really tricky to get to work cleanly.
     // .slimbar-scroll {

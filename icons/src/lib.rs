@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 //! Dioxus components for [heroicons](https://heroicons.com/)
 //
 // MIT License
@@ -32,7 +33,7 @@
 //! use dioxus::prelude::*;
 //! use dioxus_heroicons::{Icon, IconButton, solid::Shape};
 //!
-//! #[inline_props]
+//! #[component]
 //! fn DeleteButton(cx: Scope, foo: u8) -> Element {
 //!     let onclick = move |evt| {
 //!         // Delete a thing

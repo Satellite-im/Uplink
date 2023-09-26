@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf, rc::Weak};
+use std::{collections::HashMap, rc::Weak};
 
 use derive_more::Display;
 
@@ -7,6 +7,7 @@ use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
+use warp::raygun::Location;
 
 use crate::warp_runner::ui_adapter;
 
@@ -167,7 +168,7 @@ pub enum Action<'a> {
     SetChatDraft(Uuid, String),
     /// Sets a files attached to send
     #[display(fmt = "SetChatAttachments")]
-    SetChatAttachments(Uuid, Vec<PathBuf>),
+    SetChatAttachments(Uuid, Vec<Location>),
     /// Clear attachments on chat
     #[display(fmt = "ClearChatAttachments")]
     ClearChatAttachments(Uuid),
