@@ -14,6 +14,7 @@ use kit::{
     },
     User,
 };
+use warp::crypto::DID;
 
 use crate::utils::{
     build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -37,6 +38,7 @@ enum CallDialogCmd {
     Hangup(Uuid),
     MuteSelf,
     UnmuteSelf,
+    AdjustVolume(Box<DID>, f32),
     RecordCall,
     StopRecording,
 }
@@ -224,6 +226,30 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                                 log::error!("warp_runner failed to stop recording: {e}");
                             }
                         }
+                    }
+                    CallDialogCmd::AdjustVolume(user, volume) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
+                            user: *user.clone(),
+                            volume,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state
+                                    .write_silent()
+                                    .settings
+                                    .user_volumes
+                                    .insert(*user, volume);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to adjust voluem: {e}");
+                            }
+                        }
                     } // TODO: Method to end call before a connection is made
                 }
             }
@@ -248,6 +274,17 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     let participants = state.read().get_identities(&call.participants);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
+
+    use_effect(cx, &other_participants, |in_call| {
+        to_owned![ch, state];
+        async move {
+            for id in in_call {
+                if let Some(vol) = state.read().settings.user_volumes.get(&id.did_key()) {
+                    ch.send(CallDialogCmd::AdjustVolume(Box::new(id.did_key()), *vol))
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(div {
         id: "remote-controls",
