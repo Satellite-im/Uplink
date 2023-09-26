@@ -18,7 +18,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
     let large_thumbnail = cx.props.large_thumbnail.clone();
 
     let crop_circle_size = use_ref(cx, || 0);
-
+    let image_scale: &UseRef<f64> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
     let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
     let image_dimensions = use_ref(cx, || ImageDimensions {
@@ -30,8 +30,6 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
     use_future(cx, (), |_| {
         to_owned![get_image_dimensions_script, eval, image_dimensions, crop_circle_size];
         async move {
-            // loop {
-            //     tokio::time::sleep(Duration::from_secs(1)).await;
             if let Ok(r) = eval(&get_image_dimensions_script) {
                 if let Ok(val) = r.join().await {
                     *image_dimensions.write_silent() = ImageDimensions {
@@ -43,7 +41,6 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     println!("image_dimensions: {:?}", image_dimensions.read());
                 }
             };
-            // }
         }
     });
 
@@ -55,7 +52,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
             show_close_button: false,
             dont_pad: false,
             div {
-                max_height: "80vh",
+                max_height: "85vh",
                 max_width: "80vw",
                 padding: "16px",
                 onclick: move |_| {},
@@ -100,10 +97,15 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     padding: "16px",
                     div {
                         width: "auto",
+                        overflow: "hidden",
+                        border: "3px solid var(--secondary)",
                         img {
                             id: "image-preview-modal-file-embed",
                             aria_label: "image-preview-modal-file-embed",
                             src: "{large_thumbnail}",
+                            transform: format_args!("scale({})", image_scale.read()),
+                            overflow: "hidden",
+                            transition: "transform 0.2s ease",
                             max_height: "60vh",
                             max_width: "60vw",
                             display: "inline-block",
@@ -119,12 +121,16 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     }
                 }
                 Range {
-                    initial_value: 100,
-                    min: 0,
-                    max: 200,
+                    initial_value: 1.0,
+                    min: 0.5,
+                    max: 5.0,
+                    step: 0.01,
                     icon_left: Shape::Minus,
                     icon_right: Shape::Plus,
-                    onchange: move |_| {}
+                    onchange: move |size_f64| {
+                        println!("size: {}", size_f64);
+                        *image_scale.write() = size_f64;
+                    }
                 }
             }
             
