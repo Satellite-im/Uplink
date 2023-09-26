@@ -200,11 +200,14 @@ impl Logger {
             return;
         }
 
-        let mut file = OpenOptions::new()
+        let file = OpenOptions::new()
             .append(true)
             .create(true)
             .open(&self.log_file)
             .unwrap();
+
+        self.file_handle = Some(file);
+        let file = self.file_handle.as_mut().expect("Handle exist");
 
         for entry in self.log_entries.drain(..) {
             if let Err(error) = writeln!(file, "{entry}") {
