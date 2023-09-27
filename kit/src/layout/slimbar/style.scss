@@ -1,5 +1,6 @@
 .slimbar {
     height: 100%;
+    min-width: calc(var(--height-input) + var(--gap) * 2);
     width: calc(var(--height-input) + var(--gap) * 2);
     gap: var(--gap);
     display: inline-flex;
