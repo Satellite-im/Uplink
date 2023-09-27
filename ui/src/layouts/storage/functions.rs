@@ -13,7 +13,7 @@ use dioxus_core::ScopeState;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
-    to_owned, use_coroutine, use_future, use_ref, Coroutine, UnboundedReceiver, UseRef,
+    to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef,
     UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
