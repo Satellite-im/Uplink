@@ -38,6 +38,7 @@ pub enum SendFilesStartLocation {
 pub struct SendFilesProps<'a> {
     send_files_start_location: SendFilesStartLocation,
     on_files_attached: EventHandler<'a, (Vec<Location>, Vec<Uuid>)>,
+    files_pre_selected_to_send: Vec<Location>,
 }
 
 #[allow(non_snake_case)]
@@ -45,9 +46,18 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let send_files_start_location = cx.props.send_files_start_location.clone();
     let storage_controller = StorageController::new(cx, state);
+    let first_render = use_ref(cx, || true);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
 
     functions::get_items_from_current_directory(cx, ch);
+
+    functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
+
+    if *first_render.read() {
+        *first_render.write_silent() = false;
+        storage_controller.write_silent().files_selected_to_send =
+            cx.props.files_pre_selected_to_send.clone();
+    }
 
     storage_controller
         .write_silent()
