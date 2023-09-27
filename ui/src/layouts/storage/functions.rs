@@ -43,7 +43,7 @@ pub fn run_verifications_and_update_storage(
     controller: &UseRef<StorageController>,
     files_in_queue_to_upload: Vec<PathBuf>,
 ) {
-    let files_in_queue_to_upload_list = files_in_queue_to_upload.clone();
+    let files_in_queue_to_upload_list = files_in_queue_to_upload;
 
     if controller.read().first_render && state.read().ui.is_minimal_view() {
         state.write_silent().mutate(Action::SidebarHidden(true));
@@ -56,7 +56,7 @@ pub fn run_verifications_and_update_storage(
     }
     if let Some(storage) = controller.write_silent().update_state() {
         state.write().storage = Storage {
-            files_in_queue_to_upload: files_in_queue_to_upload_list.clone(),
+            files_in_queue_to_upload: files_in_queue_to_upload_list,
             ..storage
         };
     }
