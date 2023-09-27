@@ -7,7 +7,7 @@ use warp::raygun::Location;
 
 use crate::layouts::storage::files_layout::controller::StorageController;
 
-#[inline_props]
+#[component]
 pub fn FileCheckbox(
     cx: Scope<'a>,
     file_path: String,
@@ -20,7 +20,7 @@ pub fn FileCheckbox(
             class: "checkbox-position",
             Checkbox {
                 disabled: files_selected_to_send.len() >= MAX_FILES_PER_MESSAGE,
-                is_checked:files_selected_to_send.iter()
+                is_checked: files_selected_to_send.iter()
                 .any(|location| {
                     match location {
                         Location::Constellation { path } => path == file_path,
@@ -34,7 +34,7 @@ pub fn FileCheckbox(
     None
 }
 
-#[inline_props]
+#[component]
 pub fn SendFilesTopbar<'a>(
     cx: Scope<'a>,
     storage_controller: UseRef<StorageController>,

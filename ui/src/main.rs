@@ -1,3 +1,6 @@
+//TODO: Look into complex types from clippy in regards to props attr macro.
+//      Low priority and can be ignored
+#![allow(clippy::type_complexity)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
@@ -768,7 +771,7 @@ fn get_update_icon(cx: Scope) -> Element {
     }
 }
 
-#[inline_props]
+#[component(no_case_check)]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
     //on_submit: EventHandler<'a, PathBuf>,
@@ -973,7 +976,7 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     }
 }
 
-#[inline_props]
+#[component]
 fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,

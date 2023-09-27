@@ -17,7 +17,7 @@ pub enum AuthPages {
 }
 
 /// Guard the app's router with the login flow
-#[inline_props]
+#[component]
 pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
     log::trace!("rendering auth guard");
 

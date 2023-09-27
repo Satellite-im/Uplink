@@ -5,10 +5,13 @@ use futures::{channel::oneshot, StreamExt};
 
 use kit::{
     components::context_menu::{ContextItem, ContextMenu, IdentityHeader},
-    elements::input::Input,
+    elements::{input::Input, range::Range},
 };
 
-use common::{icons::outline::Shape as Icon, warp_runner::MultiPassCmd};
+use common::{
+    icons::outline::Shape as Icon,
+    warp_runner::{BlinkCmd, MultiPassCmd},
+};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{RayGunCmd, WarpCmd},
@@ -21,6 +24,9 @@ use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UplinkRoute;
+
+pub const USER_VOL_MIN: f32 = 0.25;
+pub const USER_VOL_MAX: f32 = 5.0;
 
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
@@ -38,6 +44,7 @@ enum QuickProfileCmd {
     UnBlockFriend(DID),
     RemoveDirectConvs(DID),
     Chat(Option<Chat>, Vec<String>, Option<Uuid>),
+    AdjustVolume(DID, f32),
 }
 
 // Create a quick profile context menu
@@ -54,6 +61,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let block_identity = identity.clone();
 
     let did = &identity.did_key();
+    let did_cloned = did.clone();
     let chat_of = state.read().get_chat_with_friend(identity.did_key());
     let chat_send = chat_of.clone();
 
@@ -79,6 +87,13 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
     let blocked = state.read().is_blocked(did);
+    let volume = state
+        .read()
+        .settings
+        .user_volumes
+        .get(did)
+        .cloned()
+        .unwrap_or(1.0);
 
     let router = use_navigator(cx);
 
@@ -227,6 +242,30 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         }
                         chat_with.set(Some(c));
                     }
+                    QuickProfileCmd::AdjustVolume(user, volume) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
+                            user: user.clone(),
+                            volume,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state
+                                    .write_silent()
+                                    .settings
+                                    .user_volumes
+                                    .insert(user, volume);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to unmute self: {e}");
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -298,6 +337,18 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 // TODO: Impl missing
                             }*/
                         )
+                    }
+                    Range {
+                        initial_value: volume,
+                        min: USER_VOL_MIN,
+                        max: USER_VOL_MAX,
+                        step: 0.1,
+                        no_num: true,
+                        icon_left: Icon::Speaker,
+                        icon_right: Icon::SpeakerWave,
+                        onchange: move |val| {
+                            ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
+                        }
                     }
                     hr{},
                     if is_friend {

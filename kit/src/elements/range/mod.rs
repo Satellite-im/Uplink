@@ -5,19 +5,26 @@ use dioxus::prelude::*;
 
 #[derive(Props)]
 pub struct Props<'a> {
-    initial_value: f64,
-    min: f64,
-    max: f64,
-    onchange: EventHandler<'a, f64>,
-    step: Option<f64>,
+    initial_value: f32,
+    min: f32,
+    max: f32,
+    step: Option<f32>,
+    onchange: EventHandler<'a, f32>,
+    no_num: Option<bool>,
     icon_left: Option<Icon>,
     icon_right: Option<Icon>,
 }
 
 #[allow(non_snake_case)]
 pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let internal_state: &UseState<f64> = use_state(cx, || cx.props.initial_value);
-    let step = cx.props.step.unwrap_or(1.0);
+    let internal_state = use_state(cx, || cx.props.initial_value);
+    use_effect(cx, &cx.props.initial_value, |val| {
+        to_owned![internal_state];
+        async move {
+            internal_state.set(val);
+        }
+    });
+    let step = cx.props.step.unwrap_or(1_f32);
 
     cx.render(rsx!(
         div {
@@ -32,11 +39,12 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 "type": "range",
                 min: "{cx.props.min}",
                 max: "{cx.props.max}",
-                step: format_args!("{}", step),
-                onchange: move |event| {
+                step: "{step}",
+                value: "{internal_state}",
+                oninput: move |event| {
                     internal_state.set(event.value.parse().unwrap_or_default());
                     cx.props.onchange.call(event.value.parse().unwrap_or_default());
-                }
+                },
             },
             cx.props.icon_right.is_some().then(|| rsx! {
                 IconElement {
@@ -44,10 +52,12 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     size: 16,
                 }
             }),
-            p {
-                class: "range-value",
-                "{internal_state.get()}"
-            }
+            (!cx.props.no_num.unwrap_or_default()).then(||rsx!(
+                p {
+                    class: "range-value",
+                    "{internal_state.get()}"
+                }
+            ))
         }
     ))
 }

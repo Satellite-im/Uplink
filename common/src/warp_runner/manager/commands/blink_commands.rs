@@ -40,6 +40,12 @@ pub enum BlinkCmd {
     UnmuteSelf {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "AdjustVolume")]
+    AdjustVolume {
+        user: DID,
+        volume: f32,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     #[display(fmt = "GetAllMicrophones")]
     GetAllMicrophones {
         rsp: oneshot::Sender<Result<Devices, warp::error::Error>>,
@@ -56,6 +62,15 @@ pub enum BlinkCmd {
     #[display(fmt = "SetSpeaker")]
     SetSpeaker {
         device_name: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "StartRecording")]
+    StartRecording {
+        output_dir: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "StopRecording")]
+    StopRecording {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
 }
@@ -83,6 +98,9 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         }
         BlinkCmd::UnmuteSelf { rsp } => {
             let _ = rsp.send(blink.unmute_self().await);
+        }
+        BlinkCmd::AdjustVolume { user, volume, rsp } => {
+            let _ = rsp.send(blink.set_peer_audio_gain(user, volume).await);
         }
         BlinkCmd::GetAllMicrophones { rsp } => {
             let audio_config = blink.get_audio_device_config().await;
@@ -117,6 +135,12 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             let mut audio_config = blink.get_audio_device_config().await;
             audio_config.set_speaker(&device_name);
             let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+        }
+        BlinkCmd::StartRecording { output_dir, rsp } => {
+            let _ = rsp.send(blink.record_call(&output_dir).await);
+        }
+        BlinkCmd::StopRecording { rsp } => {
+            let _ = rsp.send(blink.stop_recording().await);
         }
     }
 }
