@@ -9,10 +9,6 @@
         flex-direction: column;
         gap: var(--gap);
 
-        .files-breadcrumbs {
-            margin: var(--gap) 0;
-        }
-
         .files-list {
             display: flex;
             flex-wrap: wrap;
