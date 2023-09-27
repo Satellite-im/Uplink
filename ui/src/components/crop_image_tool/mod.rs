@@ -6,7 +6,7 @@ use kit::{
     elements::{button::Button, range::Range, select::Select, Appearance},
     layout::modal::Modal,
 };
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, time::Duration, fs::{self, File}, io::Write};
 
 #[derive(Debug, Clone)]
 struct ImageDimensions {
@@ -16,10 +16,10 @@ struct ImageDimensions {
 
 #[inline_props]
 pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
-    let large_thumbnail = cx.props.large_thumbnail.clone();
+    let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
     let crop_circle_size = use_ref(cx, || 0);
-    let image_scale: &UseRef<f64> = use_ref(cx, || 1.0);
+    let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
     let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
     let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
@@ -30,7 +30,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
     });
     let eval = use_eval(cx);
 
-    eval(&adjust_crop_circle_size);
+    _ = eval(&adjust_crop_circle_size);
 
     use_future(cx, (), |_| {
         to_owned![get_image_dimensions_script, eval, image_dimensions, crop_circle_size];
@@ -90,7 +90,29 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
-
+                                cx.spawn({
+                                    to_owned![eval, large_thumbnail, image_scale];
+                                    async move {
+                                        let save_image_cropped_js = include_str!("./save_cropped_image.js");
+                                        // .replace("$IMAGE_SCALCE", image_scale.read().to_string().as_str());
+                                        if let Ok(r) = eval(&save_image_cropped_js) {
+                                            if let Ok(val) = r.join().await {
+                                                let thumbnail = val.as_str().unwrap_or_default();
+                                                let base64_string = thumbnail.trim_matches('\"');
+                                                let decoded_bytes = match base64::decode(base64_string) {
+                                                    Ok(bytes) => bytes,
+                                                    Err(e) => panic!("Erro ao decodificar base64: {}", e),
+                                                };
+                                                let mut file = File::create("/Users/lucasmarchi/downloads/saida.png").unwrap();
+                                                file.write_all(&decoded_bytes).unwrap();
+                                                // let prefix = "data:image/jpeg;base64,";
+                                                // let final_thumb = prefix.to_owned() + &thumbnail;
+                                                // println!("final_thumb:  {:?}", thumbnail);
+                                                // *large_thumbnail.write() = thumbnail;
+                                            }
+                                    }
+                                }
+                                });
                             }
                         }
                     },
@@ -101,13 +123,14 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     text_align: "center",
                     padding: "16px",
                     div {
+                        id: "image-crop-box-container",
                         width: "auto",
                         overflow: "hidden",
                         border: "3px solid var(--secondary)",
                         img {
                             id: "image-preview-modal-file-embed",
                             aria_label: "image-preview-modal-file-embed",
-                            src: "{large_thumbnail}",
+                            src: format_args!("{}", large_thumbnail.read()),
                             transform: format_args!("scale({})", image_scale.read()),
                             overflow: "hidden",
                             transition: "transform 0.2s ease",
@@ -121,8 +144,6 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                         div {
                             id: "crop-box",
                             class: "crop-box",
-                            // width: format_args!("{}px", crop_circle_size.read()),
-                            // height: format_args!("{}px", crop_circle_size.read()),
                         }
                     }
                 }
@@ -133,9 +154,9 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     step: 0.01,
                     icon_left: Shape::Minus,
                     icon_right: Shape::Plus,
-                    onchange: move |size_f64| {
-                        println!("size: {}", size_f64);
-                        *image_scale.write() = size_f64;
+                    onchange: move |size_f32| {
+                        println!("size: {}", size_f32);
+                        *image_scale.write() = size_f32;
                     }
                 }
             }
@@ -171,7 +192,7 @@ fn crop_circle(
                     cropped_img.put_pixel(x as u32, y as u32, pixel);
                 }
             }
-        }
+        } 
     }
 
     cropped_img
