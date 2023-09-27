@@ -50,73 +50,74 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
         }
     });
 
+    if friends_list.is_empty() {
+        return render!({});
+    }
     cx.render(rsx! (
-        if !friends_list.is_empty() {
-            rsx!(div {
-                class: "friends-list",
-                aria_label: "Outgoing Requests List",
-                Label {
-                    text: get_local_text("friends.outgoing_requests"),
-                    aria_label: "outgoing-list-label".into(),
-                },
-                friends_list.into_iter().map(|friend| {
-                    let did = friend.did_key();
-                    let did2 = did.clone();
-                    let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                    let platform = friend.platform().into();
-                    let any_button_disabled = remove_in_progress.current().contains(&did);
-                    rsx!(
-                        ContextMenu {
-                            id: format!("{did}-friend-listing"),
-                            key: "{did}-friend-listing",
-                            devmode: state.read().configuration.developer.developer_mode,
-                            items: cx.render(rsx!(
-                                ContextItem {
-                                    danger: true,
-                                    icon: Icon::XMark,
-                                    aria_label: "friends-cancel".into(),
-                                    text: get_local_text("friends.cancel"),
-                                    should_render: !any_button_disabled,
-                                    onpress: move |_| {
-                                        if STATIC_ARGS.use_mock {
-                                            state.write().mutate(Action::CancelRequest(&did));
-                                        } else {
-                                            ch.send(did.clone());
-                                        }
-                                    }
-                                },
-                            )),
-                            Friend {
-                                username: friend.username(),
-                                aria_label: friend.username(),
-                                suffix: did_suffix,
-                                status_message: friend.status_message().unwrap_or_default(),
-                                relationship: {
-                                    let mut relationship = Relationship::default();
-                                    relationship.set_sent_friend_request(true);
-                                    relationship
-                                },
-                                remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
-                                user_image: cx.render(rsx! (
-                                    UserImage {
-                                        platform: platform,
-                                        status: friend.identity_status().into(),
-                                        image: friend.profile_picture()
-                                    }
-                                )),
-                                onremove: move |_| {
+        rsx!(div {
+            class: "friends-list",
+            aria_label: "Outgoing Requests List",
+            Label {
+                text: get_local_text("friends.outgoing_requests"),
+                aria_label: "outgoing-list-label".into(),
+            },
+            friends_list.into_iter().map(|friend| {
+                let did = friend.did_key();
+                let did2 = did.clone();
+                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let platform = friend.platform().into();
+                let any_button_disabled = remove_in_progress.current().contains(&did);
+                rsx!(
+                    ContextMenu {
+                        id: format!("{did}-friend-listing"),
+                        key: "{did}-friend-listing",
+                        devmode: state.read().configuration.developer.developer_mode,
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                danger: true,
+                                icon: Icon::XMark,
+                                aria_label: "friends-cancel".into(),
+                                text: get_local_text("friends.cancel"),
+                                should_render: !any_button_disabled,
+                                onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::CancelRequest(&did2));
+                                        state.write().mutate(Action::CancelRequest(&did));
                                     } else {
-                                        remove_in_progress.make_mut().insert(did2.clone());
-                                        ch.send(did2.clone());
+                                        ch.send(did.clone());
                                     }
+                                }
+                            },
+                        )),
+                        Friend {
+                            username: friend.username(),
+                            aria_label: friend.username(),
+                            suffix: did_suffix,
+                            status_message: friend.status_message().unwrap_or_default(),
+                            relationship: {
+                                let mut relationship = Relationship::default();
+                                relationship.set_sent_friend_request(true);
+                                relationship
+                            },
+                            remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
+                            user_image: cx.render(rsx! (
+                                UserImage {
+                                    platform: platform,
+                                    status: friend.identity_status().into(),
+                                    image: friend.profile_picture()
+                                }
+                            )),
+                            onremove: move |_| {
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::CancelRequest(&did2));
+                                } else {
+                                    remove_in_progress.make_mut().insert(did2.clone());
+                                    ch.send(did2.clone());
                                 }
                             }
                         }
-                    )
-                })
+                    }
+                )
             })
-        }
+        })
     ))
 }

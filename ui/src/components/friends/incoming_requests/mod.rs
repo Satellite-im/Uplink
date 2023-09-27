@@ -83,106 +83,107 @@ pub fn PendingFriends(cx: Scope) -> Element {
         }
     });
 
-    cx.render(rsx!(if !friends_list.is_empty() {
-        rsx!(div {
-            class: "friends-list",
-            aria_label: "Incoming Requests List",
-            Label {
-                text: get_local_text("friends.incoming_requests"),
-                aria_label: "incoming-list-label".into(),
-            },
-            friends_list.into_iter().map(|friend| {
-                let friend = Rc::new(friend);
-                let _username = friend.username();
-                let _status_message = friend.status_message().unwrap_or_default();
-                let did = friend.did_key();
-                let did2 = did.clone();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                let platform = friend.platform().into();
-                let friend2 = friend.clone();
-                let friend3 = friend.clone();
-                let friend4 = friend.clone();
+    if friends_list.is_empty() {
+        return render!({});
+    }
+    cx.render(rsx!(rsx!(div {
+        class: "friends-list",
+        aria_label: "Incoming Requests List",
+        Label {
+            text: get_local_text("friends.incoming_requests"),
+            aria_label: "incoming-list-label".into(),
+        },
+        friends_list.into_iter().map(|friend| {
+            let friend = Rc::new(friend);
+            let _username = friend.username();
+            let _status_message = friend.status_message().unwrap_or_default();
+            let did = friend.did_key();
+            let did2 = did.clone();
+            let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+            let platform = friend.platform().into();
+            let friend2 = friend.clone();
+            let friend3 = friend.clone();
+            let friend4 = friend.clone();
 
-                let any_button_disabled = accept_in_progress.current().contains(&did)
-                    ||  deny_in_progress.current().contains(&did);
+            let any_button_disabled = accept_in_progress.current().contains(&did)
+                ||  deny_in_progress.current().contains(&did);
 
-                rsx!(
-                    ContextMenu {
-                        id: format!("{did}-friend-listing"),
-                        key: "{did}-friend-listing",
-                        devmode: state.read().configuration.developer.developer_mode,
-                        items: cx.render(rsx!(
-                            ContextItem {
-                                danger: true,
-                                icon: Icon::Check,
-                                text: get_local_text("friends.accept"),
-                                aria_label: "friends-accept".into(),
-                                should_render: !any_button_disabled,
-                                onpress: move |_| {
-                                    if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::AcceptRequest(&friend));
-                                    } else {
-                                        accept_in_progress.make_mut().insert(friend.did_key());
-                                        ch.send(ChanCmd::AcceptRequest(friend.did_key()));
-                                    }
-                                }
-                            },
-                            ContextItem {
-                                danger: true,
-                                icon: Icon::XMark,
-                                aria_label: "friends-deny".into(),
-                                text: get_local_text("friends.deny"),
-                                should_render: !any_button_disabled,
-                                onpress: move |_| {
-                                    if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::DenyRequest(&did));
-                                    } else {
-                                        deny_in_progress.make_mut().insert(did.clone());
-                                        ch.send(ChanCmd::DenyRequest(did.clone()));
-                                    }
+            rsx!(
+                ContextMenu {
+                    id: format!("{did}-friend-listing"),
+                    key: "{did}-friend-listing",
+                    devmode: state.read().configuration.developer.developer_mode,
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            danger: true,
+                            icon: Icon::Check,
+                            text: get_local_text("friends.accept"),
+                            aria_label: "friends-accept".into(),
+                            should_render: !any_button_disabled,
+                            onpress: move |_| {
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::AcceptRequest(&friend));
+                                } else {
+                                    accept_in_progress.make_mut().insert(friend.did_key());
+                                    ch.send(ChanCmd::AcceptRequest(friend.did_key()));
                                 }
                             }
-                        )),
-                        Friend {
-                            aria_label: _username.clone(),
-                            username: _username,
-                            suffix: did_suffix,
-                            status_message: _status_message,
-                            relationship: {
-                                let mut relationship = Relationship::default();
-                                relationship.set_received_friend_request(true);
-                                relationship
-                            },
-                            user_image: cx.render(rsx! (
-                                UserImage {
-                                    platform: platform,
-                                    status: friend2.identity_status().into(),
-                                    image: friend2.profile_picture()
-                                }
-                            )),
-                            accept_button_disabled: accept_in_progress.current().contains(&did2),
-                            remove_button_disabled: deny_in_progress.current().contains(&did2),
-                            onaccept: move |_| {
+                        },
+                        ContextItem {
+                            danger: true,
+                            icon: Icon::XMark,
+                            aria_label: "friends-deny".into(),
+                            text: get_local_text("friends.deny"),
+                            should_render: !any_button_disabled,
+                            onpress: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::AcceptRequest(&friend4));
+                                    state.write().mutate(Action::DenyRequest(&did));
                                 } else {
-                                    accept_in_progress.make_mut().insert(friend4.did_key());
-                                    ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
-                                }
-
-                            },
-                            onremove: move |_| {
-                                if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::AcceptRequest(&friend3));
-                                } else {
-                                    deny_in_progress.make_mut().insert(friend3.did_key());
-                                    ch.send(ChanCmd::DenyRequest(friend3.did_key()));
+                                    deny_in_progress.make_mut().insert(did.clone());
+                                    ch.send(ChanCmd::DenyRequest(did.clone()));
                                 }
                             }
                         }
+                    )),
+                    Friend {
+                        aria_label: _username.clone(),
+                        username: _username,
+                        suffix: did_suffix,
+                        status_message: _status_message,
+                        relationship: {
+                            let mut relationship = Relationship::default();
+                            relationship.set_received_friend_request(true);
+                            relationship
+                        },
+                        user_image: cx.render(rsx! (
+                            UserImage {
+                                platform: platform,
+                                status: friend2.identity_status().into(),
+                                image: friend2.profile_picture()
+                            }
+                        )),
+                        accept_button_disabled: accept_in_progress.current().contains(&did2),
+                        remove_button_disabled: deny_in_progress.current().contains(&did2),
+                        onaccept: move |_| {
+                            if STATIC_ARGS.use_mock {
+                                state.write().mutate(Action::AcceptRequest(&friend4));
+                            } else {
+                                accept_in_progress.make_mut().insert(friend4.did_key());
+                                ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
+                            }
+
+                        },
+                        onremove: move |_| {
+                            if STATIC_ARGS.use_mock {
+                                state.write().mutate(Action::AcceptRequest(&friend3));
+                            } else {
+                                deny_in_progress.make_mut().insert(friend3.did_key());
+                                ch.send(ChanCmd::DenyRequest(friend3.did_key()));
+                            }
+                        }
                     }
-                )
-            })
+                }
+            )
         })
-    }))
+    })))
 }
