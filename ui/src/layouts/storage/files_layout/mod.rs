@@ -52,6 +52,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let send_files_from_storage = use_state(cx, || false);
+    let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
@@ -75,7 +76,10 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     functions::run_verifications_and_update_storage(
         state,
         storage_controller,
-        upload_file_controller.files_in_queue_to_upload,
+        upload_file_controller
+            .files_in_queue_to_upload
+            .read()
+            .clone(),
     );
 
     functions::get_items_from_current_directory(cx, ch);
@@ -246,6 +250,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             SendFilesLayoutModal {
                 send_files_from_storage: send_files_from_storage,
                 send_files_start_location: SendFilesStartLocation::Storage,
+                files_pre_selected_to_send: files_pre_selected_to_send.read().clone(),
                 on_send: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
                     let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                     let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -285,7 +290,8 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                } else {
                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller,
-                    on_click_share_files: move |_| {
+                    on_click_share_files: move |files_pre_selected: Vec<Location>| {
+                        *files_pre_selected_to_send.write_silent() = files_pre_selected;
                         send_files_from_storage.set(true);
                     },
                     ch: ch,
