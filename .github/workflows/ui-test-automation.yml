@@ -187,13 +187,9 @@ jobs:
           cp -r ./appium-tests/tests/fixtures/users/FriendsTestUser/ ./appium-tests/tests/fixtures/users/mac2/FriendsTestUser
 
       - name: Run Tests on MacOS 🧪
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 30
-          max_attempts: 2
-          command: |
-            cd ./appium-tests
-            npm run mac.ci
+        run: |
+          cd ./appium-tests
+          npm run mac.ci
 
       - name: Upload Test Report - MacOS CI
         if: always()
