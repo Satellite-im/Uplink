@@ -80,7 +80,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = chat_data.read().active_chat.is_initialized;
+    let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
     let chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
