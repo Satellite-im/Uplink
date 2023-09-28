@@ -21,7 +21,8 @@ pub(crate) fn webview_config() -> Config {
             log::info!("Drag Event: {:?}", drag_event);
             *DRAG_EVENT.write() = drag_event;
             true
-        });
+        })
+        .with_disable_context_menu(false);
 
     if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
         let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
