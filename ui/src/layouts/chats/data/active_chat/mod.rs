@@ -1,45 +1,40 @@
 use std::collections::{HashMap, VecDeque};
 
 use chrono::{DateTime, Utc};
-use common::warp_runner::ui_adapter;
+use common::{
+    state::{self, Identity, State},
+    warp_runner::ui_adapter,
+};
+use kit::components::indicator::Platform;
 use uuid::Uuid;
+use warp::raygun::ConversationType;
 
 use crate::layouts::chats::data::ScrollBehavior;
 
-use super::{ChatBehavior, MsgView, PartialMessage};
+use super::{MsgView, PartialMessage};
+
+mod messages;
+mod metadata;
+pub use messages::*;
+pub use metadata::*;
 
 #[derive(Debug, Default, Clone)]
 pub struct ActiveChat {
-    pub conversation_id: Uuid,
-    pub messages: VecDeque<ui_adapter::Message>,
-    pub chat_behavior: ChatBehavior,
-
-    pub displayed_messages: MsgView,
-    // used for displayed_messages
-    pub message_times: HashMap<Uuid, DateTime<Utc>>,
-}
-
-// uses to initialize active chat
-pub struct ActiveChatArgs {
-    pub conversation_id: Uuid,
-    pub messages: Vec<ui_adapter::Message>,
-    pub chat_behavior: ChatBehavior,
+    pub metadata: Metadata,
+    pub messages: Messages,
+    pub is_initialized: bool,
 }
 
 impl ActiveChat {
-    pub fn new(mut args: ActiveChatArgs) -> Self {
-        let mut message_times = HashMap::new();
-        let mut messages = VecDeque::new();
-        for msg in args.messages.drain(..) {
-            message_times.insert(msg.inner.id(), msg.inner.date());
-            messages.push_back(msg);
-        }
+    pub fn new(
+        s: &State,
+        chat: &state::chats::Chat,
+        messages: VecDeque<ui_adapter::Message>,
+    ) -> Self {
         Self {
-            conversation_id: args.conversation_id,
-            messages,
-            chat_behavior: args.chat_behavior,
-            displayed_messages: MsgView::default(),
-            message_times,
+            metadata: Metadata::new(s, chat),
+            messages: Messages::new(messages),
+            is_initialized: true,
         }
     }
     pub fn has_more_messages(&self) -> bool {
