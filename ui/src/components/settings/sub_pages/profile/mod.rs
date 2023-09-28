@@ -373,7 +373,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     })
                 }
-               
             }
         }
     ))
