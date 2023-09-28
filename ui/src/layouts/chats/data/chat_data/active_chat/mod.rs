@@ -25,6 +25,7 @@ pub struct ActiveChat {
     pub messages: Messages,
     pub is_initialized: bool,
     pub typing_indicator: HashMap<DID, Instant>,
+    pub pinned_messages: Vec<raygun::Message>,
 }
 
 impl ActiveChat {
@@ -38,11 +39,12 @@ impl ActiveChat {
             messages: Messages::new(messages),
             is_initialized: true,
             typing_indicator: HashMap::new(),
+            pinned_messages: chat.pinned_messages.clone(),
         }
     }
 
     pub fn messages(&self) -> VecDeque<ui_adapter::Message> {
-        self.messages.messages
+        self.messages.messages.clone()
     }
 }
 
@@ -52,31 +54,31 @@ impl ActiveChat {
         self.metadata.chat_id
     }
     pub fn my_id(&self) -> Identity {
-        self.metadata.my_id
+        self.metadata.my_id.clone()
     }
     pub fn other_participants(&self) -> Vec<Identity> {
-        self.metadata.other_participants
+        self.metadata.other_participants.clone()
     }
     pub fn active_participant(&self) -> Identity {
-        self.metadata.active_participant
+        self.metadata.active_participant.clone()
     }
     pub fn subtext(&self) -> String {
-        self.metadata.subtext
+        self.metadata.subtext.clone()
     }
     pub fn is_favorite(&self) -> bool {
         self.metadata.is_favorite
     }
     pub fn first_image(&self) -> String {
-        self.metadata.first_image
+        self.metadata.first_image.clone()
     }
     pub fn other_participants_names(&self) -> String {
-        self.metadata.other_participants_names
+        self.metadata.other_participants_names.clone()
     }
     pub fn platform(&self) -> Platform {
         self.metadata.platform
     }
     pub fn conversation_name(&self) -> Option<String> {
-        self.metadata.conversation_name
+        self.metadata.conversation_name.clone()
     }
     pub fn conversation_type(&self) -> ConversationType {
         self.metadata
@@ -84,10 +86,10 @@ impl ActiveChat {
             .unwrap_or(ConversationType::Direct)
     }
     pub fn creator(&self) -> Option<DID> {
-        self.metadata.creator
+        self.metadata.creator.clone()
     }
 
     pub fn replying_to(&self) -> Option<raygun::Message> {
-        self.metadata.replying_to
+        self.metadata.replying_to.clone()
     }
 }

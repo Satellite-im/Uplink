@@ -32,8 +32,6 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
-    // todo: get pinned messages
-
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
         to_owned![state];
         async move {
@@ -99,7 +97,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "pinned-messages",
             aria_label: "pinned-messages-container",
-            if chat.pinned_messages.is_empty() {
+            if chat_data.read().active_chat.pinned_messages.is_empty() {
                 rsx!(div {
                     class: "pinned-empty",
                     aria_label: "pinned-empty",
@@ -108,7 +106,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 })
             } else {
-                rsx!(chat.pinned_messages.iter().map(|message|{
+                rsx!(chat_data.read().active_chat.pinned_messages.iter().map(|message|{
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     rsx!(PinnedMessage {

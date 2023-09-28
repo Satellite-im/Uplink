@@ -55,10 +55,10 @@ impl Metadata {
             first_image,
             other_participants_names,
             platform,
-            conversation_name: chat.conversation_name,
+            conversation_name: chat.conversation_name.clone(),
             conversation_type: Some(chat.conversation_type),
-            creator: chat.creator,
-            replying_to: chat.replying_to,
+            creator: chat.creator.clone(),
+            replying_to: chat.replying_to.clone(),
         }
     }
 }
