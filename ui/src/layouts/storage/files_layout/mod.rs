@@ -111,20 +111,16 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
-            rsx!(
-                CropImageModal {
-                    large_thumbnail: thumbnail_to_base64(file),
+            rsx!(get_file_modal {
+                    on_dismiss: |_| {
+                        storage_controller.with_mut(|i| i.show_file_modal = None);
+                    },
+                    on_download: move |_| {
+                        let file_name = file2.clone().name();
+                        functions::download_file(&file_name, ch);
+                    },
+                    file: file.clone()
                 }
-                // get_file_modal {
-                //     on_dismiss: |_| {
-                //         storage_controller.with_mut(|i| i.show_file_modal = None);
-                //     },
-                //     on_download: move |_| {
-                //         let file_name = file2.clone().name();
-                //         functions::download_file(&file_name, ch);
-                //     },
-                //     file: file.clone()
-                // }
             )
         }
         div {
