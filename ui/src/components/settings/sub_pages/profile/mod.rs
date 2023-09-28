@@ -365,7 +365,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             open_crop_image_modal.set((false, String::new()));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
-                            match transform_file_into_base64_image(image_pathbuf.clone()) {
+                            match transform_file_into_base64_image(image_pathbuf) {
                                 Ok(img_cropped) => ch.send(ChanCmd::Profile(img_cropped)),
                                 Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.clone())),
                             }
