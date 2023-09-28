@@ -1,4 +1,5 @@
 mod chat_data;
+mod chat_props;
 mod js_msg;
 mod message_view;
 mod misc;
@@ -7,6 +8,7 @@ mod msg_range;
 mod partial_message;
 
 pub use chat_data::*;
+pub use chat_props::*;
 pub use js_msg::*;
 pub use message_view::*;
 pub use misc::*;
