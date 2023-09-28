@@ -7,7 +7,7 @@ use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
-use common::warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd};
+use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
@@ -29,7 +29,6 @@ use warp::raygun::Location;
 pub mod controller;
 pub mod file_modal;
 
-use crate::components::crop_image_tool::CropImageModal;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::chats::ChatSidebar;

@@ -6,12 +6,6 @@ use kit::{
 };
 use std::{fs::File, io::Write, path::PathBuf};
 
-#[derive(Debug, Clone)]
-struct ImageDimensions {
-    height: i64,
-    width: i64,
-}
-
 #[derive(Props)]
 pub struct Props<'a> {
     pub large_thumbnail: String,
@@ -25,7 +19,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
-    let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
     let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
     let cropped_image_pathbuf = use_ref(cx, || PathBuf::new());
     let clicked_button_to_crop = use_state(cx, || false);
@@ -36,35 +29,14 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         crop_image.set(false);
     }
 
-    let image_dimensions = use_ref(cx, || ImageDimensions {
-        height: 0,
-        width: 0,
-    });
-
     let eval = use_eval(cx);
-
-    use_future(cx, (), |_| {
-        to_owned![get_image_dimensions_script, eval, image_dimensions];
-        async move {
-            if let Ok(r) = eval(&get_image_dimensions_script) {
-                if let Ok(val) = r.join().await {
-                    *image_dimensions.write_silent() = ImageDimensions {
-                        height: val["height"].as_i64().unwrap_or_default(),
-                        width: val["width"].as_i64().unwrap_or_default(),
-                    };
-                }
-            };
-        }
-    });
-
     _ = eval(&adjust_crop_circle_size);
 
     return cx.render(rsx!(div {
         Modal {
             open: *crop_image.clone(),
             onclose: move |_| {
-                cx.props.on_cancel.call(());
-                crop_image.set(false)
+                // Not close if user clicks outside modal
             },
             transparent: false, 
             show_close_button: false,
@@ -141,22 +113,24 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         id: "image-crop-box-container",
                         width: "auto",
-                        overflow: "hidden",
-                        border: "3px solid var(--secondary)",
-                        img {
-                            id: "image-preview-modal-file-embed",
-                            aria_label: "image-preview-modal-file-embed",
-                            src: format_args!("{}", large_thumbnail.read()),
-                            transform: format_args!("scale({})", image_scale.read()),
+                        div {
                             overflow: "hidden",
-                            transition: "transform 0.2s ease",
-                            max_height: "50vh",
-                            max_width: "50vw",
-                            display: "inline-block",
-                            vertical_align: "middle",
-                            onclick: move |e| e.stop_propagation(),
-                            
-                        },
+                            border: "3px solid var(--secondary)",
+                            img {
+                                id: "image-preview-modal-file-embed",
+                                aria_label: "image-preview-modal-file-embed",
+                                src: format_args!("{}", large_thumbnail.read()),
+                                transform: format_args!("scale({})", image_scale.read()),
+                                overflow: "hidden",
+                                transition: "transform 0.2s ease",
+                                max_height: "50vh",
+                                max_width: "50vw",
+                                display: "inline-block",
+                                vertical_align: "middle",
+                                onclick: move |e| e.stop_propagation(),
+                                
+                            },
+                        }
                         div {
                             id: "crop-box",
                             class: "crop-box",
