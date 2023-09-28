@@ -27,47 +27,6 @@ enum EditGroupCmd {
 
 pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     let chat_data = use_shared_state::<ChatData>(cx)?;
-    let data = chat_data.read();
-    if !data.is_initialized {
-        return cx.render(rsx!(
-            UserImageGroup {
-                loading: true,
-                aria_label: "user-image-group".into(),
-                participants: vec![]
-            },
-            div {
-                class: "user-info",
-                aria_label: "user-info",
-                div {
-                    class: "skeletal-bars",
-                    div {
-                        class: "skeletal skeletal-bar",
-                    },
-                    div {
-                        class: "skeletal skeletal-bar",
-                    },
-                }
-            }
-        ));
-    }
-
-    let conversation_title = match data.active_chat.conversation_name.as_ref() {
-        Some(n) => n.clone(),
-        None => data.other_participants_names.clone(),
-    };
-    let subtext = data.subtext.clone();
-
-    let direct_message = data.active_chat.conversation_type == ConversationType::Direct;
-
-    let active_participant = data.my_id.clone();
-    let mut all_participants = data.other_participants.clone();
-    all_participants.push(active_participant);
-    let members_count = get_local_text_with_args(
-        "uplink.members-count",
-        vec![("num", all_participants.len().into())],
-    );
-
-    let conv_id = data.active_chat.id;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -94,13 +53,56 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         }
     });
 
+    // todo: get rid of this data variable
+    let data = chat_data.read();
+    if !data.active_chat.is_initialized {
+        return cx.render(rsx!(
+            UserImageGroup {
+                loading: true,
+                aria_label: "user-image-group".into(),
+                participants: vec![]
+            },
+            div {
+                class: "user-info",
+                aria_label: "user-info",
+                div {
+                    class: "skeletal-bars",
+                    div {
+                        class: "skeletal skeletal-bar",
+                    },
+                    div {
+                        class: "skeletal skeletal-bar",
+                    },
+                }
+            }
+        ));
+    }
+
+    let conversation_title = data
+        .active_chat
+        .conversation_name()
+        .unwrap_or(data.active_chat.other_participants_names());
+
+    let direct_message = data.active_chat.conversation_type() == ConversationType::Direct;
+
+    let active_participant = data.active_chat.my_id();
+    let mut all_participants = data.active_chat.other_participants();
+    all_participants.push(active_participant);
+    let members_count = get_local_text_with_args(
+        "uplink.members-count",
+        vec![("num", all_participants.len().into())],
+    );
+
+    let conv_id = data.active_chat.id();
+    let subtext = data.active_chat.subtext();
+
     cx.render(rsx!(
         if direct_message {rsx! (
             UserImage {
                 loading: false,
-                platform: data.platform,
-                status: data.active_participant.identity_status().into(),
-                image: data.first_image.clone(),
+                platform: data.active_chat.platform(),
+                status: data.active_chat.active_participant().identity_status().into(),
+                image: data.active_chat.first_image().clone(),
             }
         )} else {rsx! (
             UserImageGroup {
