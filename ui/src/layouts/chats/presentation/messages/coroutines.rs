@@ -13,17 +13,20 @@ use futures::{pin_mut, StreamExt};
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
-use crate::layouts::chats::{data::JsMsg, scripts::OBSERVER_SCRIPT, ActiveChat};
+use crate::layouts::chats::{
+    data::{ChatData, JsMsg},
+    scripts::OBSERVER_SCRIPT,
+};
 
 use super::{DownloadTracker, MessagesCommand, NewelyFetchedMessages};
 
 pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped,
     eval_provider: &crate::utils::EvalProvider,
-    active_chat: &UseSharedState<ActiveChat>,
+    chat_data: &UseSharedState<ChatData>,
 ) -> Coroutine<Uuid> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
-        to_owned![eval_provider, active_chat];
+        to_owned![eval_provider, chat_data];
         async move {
             let mut current_conv_id: Option<Uuid> = None;
 

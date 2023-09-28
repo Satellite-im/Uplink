@@ -94,35 +94,21 @@ pub fn get_messages(cx: Scope) -> Element {
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
-    let active_chat2 = use_shared_state::<ActiveChat>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
-    let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id);
+    let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id());
     let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    // this needs to be a hook so it can change inside of the use_future.
-    // it could be passed in as a dependency but then the wait would reset every time a message comes in.
-    let max_to_take = use_ref(cx, || chat_data.read().active_chat.messages.len());
-
-    let active_chat = use_ref(cx, || None);
     let eval = use_eval(cx);
 
-    if *max_to_take.read() != chat_data.read().active_chat.messages.len() {
-        *max_to_take.write_silent() = chat_data.read().active_chat.messages.len();
-    }
+    let currently_active = Some(chat_data.read().active_chat.id());
 
-    let currently_active = Some(chat_data.read().active_chat.id);
-
-    if *active_chat.read() != currently_active {
-        *active_chat.write_silent() = currently_active;
-    }
-
-    let ch = coroutines::hangle_msg_scroll(cx, eval, active_chat2);
-    effects::init_msg_scroll(cx, active_chat2, eval, ch);
+    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data);
+    effects::init_msg_scroll(cx, chat_data, eval, ch);
 
     /*effects::update_chat_messages(cx, state, newly_fetched_messages);
 

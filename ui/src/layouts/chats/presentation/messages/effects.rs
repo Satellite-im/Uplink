@@ -1,10 +1,9 @@
 use crate::{
     layouts::chats::{
-        data::ViewInit,
+        data::{ChatData, ScrollTo},
         scripts::{
             self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
         },
-        ActiveChat,
     },
     utils,
 };
@@ -17,21 +16,22 @@ use super::NewelyFetchedMessages;
 
 pub fn init_msg_scroll<'a>(
     cx: &'a Scoped,
-    active_chat: &UseSharedState<ActiveChat>,
+    chat_data: &UseSharedState<ChatData>,
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<Uuid>,
 ) {
-    let active_chat_id = active_chat.read().conversation_id;
+    let active_chat_id = chat_data.read().active_chat.id();
     use_effect(cx, (&active_chat_id), |(chat_id)| {
-        to_owned![eval_provider, ch, active_chat];
+        to_owned![eval_provider, ch, chat_data];
         async move {
             println!("use_effect for init_msg_scroll {}", chat_id);
-            let scroll_script = match active_chat.read().chat_behavior.view_init {
-                ViewInit::MostRecent => scripts::SCROLL_TO_END.to_string(),
-                ViewInit::ScrollUp { view_top } => {
+            let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
+            let scroll_script = match chat_behavior.view_init.scroll_to {
+                ScrollTo::MostRecent => scripts::SCROLL_TO_END.to_string(),
+                ScrollTo::ScrollUp { view_top } => {
                     scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
                 }
-                ViewInit::ScrollDown { view_bottom } => {
+                ScrollTo::ScrollDown { view_bottom } => {
                     scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}"))
                 }
             };
