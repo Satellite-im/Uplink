@@ -13,9 +13,10 @@
 
     .close-btn {
       top: var(--gap-less);
-      left: var(--gap-less);
+      right: var(--gap-less);
       visibility: hidden;
       display: inline-block;
+      position: absolute;
     }
 
     img {
