@@ -125,6 +125,8 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     div {
                         id: "image-crop-box-container",
                         width: "auto",
+                        // width: format_args!("{}px", image_dimensions.read().width),
+                        // height: format_args!("{}px", image_dimensions.read().height),
                         overflow: "hidden",
                         border: "3px solid var(--secondary)",
                         img {
@@ -151,11 +153,10 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     initial_value: 1.0,
                     min: 0.5,
                     max: 5.0,
-                    step: 0.01,
+                    step: 0.1,
                     icon_left: Shape::Minus,
                     icon_right: Shape::Plus,
                     onchange: move |size_f32| {
-                        println!("size: {}", size_f32);
                         *image_scale.write() = size_f32;
                     }
                 }
