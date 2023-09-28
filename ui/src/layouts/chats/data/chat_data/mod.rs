@@ -38,20 +38,13 @@ impl ChatData {
     pub fn set_active_chat(
         &mut self,
         s: &State,
-        chat: &common::state::Chat,
+        chat_id: &Uuid,
         behavior: ChatBehavior,
-        messages: VecDeque<ui_adapter::Message>,
+        mut messages: Vec<ui_adapter::Message>,
     ) {
-        self.chat_behaviors.insert(chat.id, behavior);
-        self.active_chat = ActiveChat::new(s, chat, messages);
+        if let Some(chat) = s.get_chat_by_id(*chat_id) {
+            self.chat_behaviors.insert(chat.id, behavior);
+            self.active_chat = ActiveChat::new(s, &chat, VecDeque::from_iter(messages.drain(..)));
+        }
     }
-}
-
-#[derive(PartialEq, Props)]
-pub struct ChatProps {
-    pub show_edit_group: UseState<Option<Uuid>>,
-    pub show_group_users: UseState<Option<Uuid>>,
-    pub ignore_focus: bool,
-    pub is_owner: bool,
-    pub is_edit_group: bool,
 }

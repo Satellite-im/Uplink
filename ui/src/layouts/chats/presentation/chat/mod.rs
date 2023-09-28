@@ -36,12 +36,10 @@ use warp::{crypto::DID, logging::tracing::log};
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     use_shared_state_provider(cx, ChatData::default);
-    use_shared_state_provider(cx, ActiveChat::default);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
-    let active_chat = use_shared_state::<ActiveChat>(cx)?;
 
-    coroutines::init_chat_data(cx, state, chat_data, active_chat);
+    coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
     let data = chat_data.read();
