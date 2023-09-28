@@ -14,7 +14,7 @@ use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_ima
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
-use crate::layouts::chats::scripts::SCROLL_TO_MESSAGE;
+use crate::layouts::chats::{data::ChatData, scripts::SCROLL_TO_MESSAGE};
 
 pub enum ChannelCommand {
     RemovePinnedMessage(Uuid, Uuid),
@@ -23,15 +23,16 @@ pub enum ChannelCommand {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    active_chat: Chat,
     onclose: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
 pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering pinned_messages");
-    let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+
+    // todo: get pinned messages
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
         to_owned![state];

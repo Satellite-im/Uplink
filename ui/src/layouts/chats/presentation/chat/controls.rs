@@ -37,19 +37,19 @@ enum ControlsCmd {
 pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
-    let favorite = chat_data.read().is_favorite;
-    let conversation_type = chat_data.read().active_chat.conversation_type;
+    let favorite = chat_data.read().active_chat.is_favorite();
+    let conversation_type = chat_data.read().active_chat.conversation_type();
     let edit_group_activated = cx
         .props
         .show_edit_group
         .get()
-        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id)
+        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
         .unwrap_or(false);
     let show_group_list = cx
         .props
         .show_group_users
         .get()
-        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id)
+        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
         .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
@@ -116,8 +116,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 onpress: move |_| {
                     if edit_group_activated {
                         cx.props.show_edit_group.set(None);
-                    } else if !chat_data.read().active_chat.id.is_nil() {
-                        cx.props.show_edit_group.set(Some(chat_data.read().active_chat.id));
+                    } else if chat_data.read().active_chat.is_initialized {
+                        cx.props.show_edit_group.set(Some(chat_data.read().active_chat.id()));
                         cx.props.show_group_users.set(None);
                     }
                 }
@@ -140,8 +140,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     onpress: move |_| {
                             if show_group_list {
                                 cx.props.show_group_users.set(None);
-                            } else if !chat_data.read().active_chat.id.is_nil() {
-                                cx.props.show_group_users.set(Some(chat_data.read().active_chat.id));
+                            } else if chat_data.read().active_chat.is_initialized {
+                                cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
                                 cx.props.show_edit_group.set(None);
 
                             }
@@ -156,7 +156,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             } else {
                 Icon::Heart
             },
-            disabled: !chat_data.read().is_initialized,
+            disabled: !chat_data.read().active_chat.is_initialized,
             aria_label: get_local_text(if favorite {
                 "favorites.remove"
             } else {
@@ -176,8 +176,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 }
             })),
             onpress: move |_| {
-                if chat_data.read().is_initialized {
-                    state.write().mutate(Action::ToggleFavorite(&chat_data.read().active_chat.id));
+                if chat_data.read().active_chat.is_initialized {
+                    state.write().mutate(Action::ToggleFavorite(&chat_data.read().active_chat.id()));
                 }
             }
         },
@@ -189,8 +189,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 onclose: move |_| {
                     show_pinned.set(false);
                 },
-                if chat_data.read().is_initialized {
-                    rsx!(PinnedMessages{ active_chat: chat_data.read().active_chat.clone(), onclose: move |_| {
+                if chat_data.read().active_chat.is_initialized {
+                    rsx!(PinnedMessages{ onclose: move |_| {
                         show_pinned.set(false);
                     } })
                 }
@@ -218,10 +218,10 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: if !state.read().configuration.developer.experimental_features { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
-                if chat_data.read().is_initialized {
+                if chat_data.read().active_chat.is_initialized {
                     ch.send(ControlsCmd::VoiceCall{
-                        participants: chat_data.read().active_chat.participants.iter().cloned().collect(),
-                        conversation_id: chat_data.read().active_chat.id
+                        participants: chat_data.read().active_chat.other_participants().iter().map(|x| x.did_key()).collect(),
+                        conversation_id: chat_data.read().active_chat.id()
                     });
                     call_pending.set(true);
                 }

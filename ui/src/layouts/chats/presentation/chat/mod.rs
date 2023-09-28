@@ -21,7 +21,6 @@ use crate::{
             chatbar::get_chatbar,
             messages::get_messages,
         },
-        ActiveChat,
     },
 };
 
@@ -42,8 +41,9 @@ pub fn Compose(cx: Scope) -> Element {
     coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
+    // todo: get rid fo this data variable
     let data = chat_data.read();
-    let chat_id = data.active_chat.id;
+    let chat_id = data.active_chat.id();
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -54,14 +54,10 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-    let creator = data.active_chat.creator.clone();
+    let creator = data.active_chat.creator().clone();
 
     let user_did: DID = state.read().did_key();
-    let is_owner = if let Some(creator_did) = creator {
-        creator_did == user_did
-    } else {
-        false
-    };
+    let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
 
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
@@ -129,7 +125,7 @@ pub fn Compose(cx: Scope) -> Element {
         CallControl {
             in_chat: true
         },
-        if !data.is_initialized {
+        if !data.active_chat.is_initialized {
            rsx!(
                 div {
                     id: "messages",

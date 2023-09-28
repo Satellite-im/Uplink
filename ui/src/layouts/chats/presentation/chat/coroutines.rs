@@ -43,12 +43,12 @@ pub fn handle_warp_events(
                         if conversation_id != chat_id {
                             continue;
                         }
-                        if !chat_data.read().is_initialized {
-                            continue;
+                        if chat_data
+                            .write_silent()
+                            .new_message(conversation_id, message)
+                        {
+                            chat_data.write();
                         }
-                        let mut data = chat_data.write();
-                        data.active_chat.messages.push_back(message);
-                        //data.active_chat.chat_behavior.increment_end_idx();
                     }
                     MessageEvent::Edited {
                         conversation_id,
