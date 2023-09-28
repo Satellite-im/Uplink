@@ -1,5 +1,4 @@
 use common::language::get_local_text;
-use common::state::State;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
@@ -14,12 +13,10 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = thumbnail_to_base64(cx.props.file);
-    let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
-            devmode: state.read().configuration.developer.developer_mode,
             items: cx.render(rsx!(
                 ContextItem {
                     icon: Icon::ArrowDownCircle,

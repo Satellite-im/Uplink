@@ -282,7 +282,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     ContextMenu {
                         key: "{key}-menu",
                         id: "unlock-context-menu".into(),
-                        devmode: state.read().configuration.developer.developer_mode,
                         items: cx.render(rsx!(
                             ContextItem {
                                 icon: Icon::Trash,

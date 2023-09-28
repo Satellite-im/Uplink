@@ -32,7 +32,6 @@ pub fn FileLocation<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element<'a> {
 
     cx.render(rsx!(ContextMenu {
         id: format!("{id}"),
-        devmode: state.read().configuration.developer.developer_mode,
         items: cx.render(rsx!(
             ContextItem {
                 icon: Icon::Plus,

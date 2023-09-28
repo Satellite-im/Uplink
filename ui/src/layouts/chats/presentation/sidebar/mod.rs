@@ -308,7 +308,6 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         ContextMenu {
                             key: "{key}-chat",
                             id: format!("{key}-chat"),
-                            devmode: state.read().configuration.developer.developer_mode,
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,

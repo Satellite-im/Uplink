@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
+use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::{icons::outline::Shape as Icon, state::State};
 
 use crate::components::context_menu::{ContextItem, ContextMenu};
 
@@ -38,13 +38,10 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-
     cx.render(rsx!(
         ContextMenu {
             id: format!("{}-channel", cx.props.channel.id),
             key: "{cx.props.channel.id}-channel",
-            devmode: state.read().configuration.developer.developer_mode,
             items: cx.render(rsx!(
                 ContextItem {
                     icon: Icon::PencilSquare,
