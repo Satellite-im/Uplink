@@ -135,7 +135,9 @@ pub fn get_messages(cx: Scope) -> Element {
     let _ch =
         coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
 
-    let msg_container_end = if chat_data.read().active_chat.has_more_messages {
+    let active_chat_id = chat_data.read().active_chat.id();
+    let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
+    let msg_container_end = if chat_behavior.on_scroll_top == data::ScrollBehavior::FetchMore {
         rsx!(div {
             class: "fetching",
             p {
@@ -166,28 +168,15 @@ pub fn get_messages(cx: Scope) -> Element {
         div {
             id: "messages",
             onscroll: move |_| {
-                let update = cx.schedule_update_any();
-                to_owned![eval, update, state, active_chat];
-                async move {
-                    if let Ok(val) = eval(READ_SCROLL) {
-                        if let Ok(result) = val.join().await {
-                            if let Some(uuid) = active_chat.read().as_ref() {
-                                state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
-                                if let Some(id) = state.read().scope_ids.chatbar{
-                                    update(ScopeIds::scope_id_from_usize(id));
-                                };
-                            }
-                        }
-                    }
-                }
+                // do nothing
             },
             span {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: data::create_message_groups(chat_data.read().my_id.did_key(), &active_chat2.read().messages),
-                        active_chat_id: chat_data.read().active_chat.id,
-                        num_messages_in_conversation: chat_data.read().active_chat.messages.len(),
+                        groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), &chat_data.read().active_chat.messages()),
+                        active_chat_id: chat_data.read().active_chat.id(),
+                        num_messages_in_conversation: 0, // todo: remove this variable
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -292,8 +281,11 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let data = chat_data.read();
     cx.render(rsx!(render_pending_messages {
-        pending_outgoing_message: data::pending_group_messages(&cx.props.msg, data.my_id.did_key(),),
-        active: data.active_chat.id,
+        pending_outgoing_message: data::pending_group_messages(
+            &cx.props.msg,
+            data.active_chat.my_id().did_key(),
+        ),
+        active: data.active_chat.id(),
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
 }
