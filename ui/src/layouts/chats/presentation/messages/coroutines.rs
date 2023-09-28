@@ -1,6 +1,6 @@
 use common::{
     state::{Action, State},
-    warp_runner::{RayGunCmd, WarpCmd},
+    warp_runner::{FetchMessagesConfig, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
@@ -8,13 +8,13 @@ use dioxus_core::Scoped;
 use dioxus_hooks::{
     to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState, UseState,
 };
-use futures::{pin_mut, StreamExt};
+use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{ChatData, JsMsg},
+    data::{self, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 
@@ -28,6 +28,7 @@ pub fn hangle_msg_scroll<'a>(
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
         to_owned![eval_provider, chat_data];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let mut current_conv_id: Option<Uuid> = None;
 
             // don't begin the coroutine until use_eval sends a command over the channel.
@@ -36,9 +37,14 @@ pub fn hangle_msg_scroll<'a>(
                 current_conv_id.replace(conv_id);
 
                 'CONFIGURE_EVAL: loop {
-                    // todo: set these correctly. they may change each time top or bottom is scrolled to.
-                    let should_send_top_evt = true;
-                    let should_send_bottom_evt = false;
+                    let mut behavior = chat_data
+                        .read()
+                        .get_chat_behavior(current_conv_id.unwrap_or_default());
+
+                    let should_send_top_evt =
+                        behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
+                    let should_send_bottom_evt =
+                        behavior.on_scroll_end != data::ScrollBehavior::DoNothing;
                     let mut observer_script = OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
                         should_send_top_evt.then_some("1").unwrap_or("0"),
@@ -116,12 +122,67 @@ pub fn hangle_msg_scroll<'a>(
                                                     if conv_id_changed { continue; }
                                                     // send uuid/timestamp of oldest message to WarpRunner to proces top event
                                                     // receive the new messages and if there are more in that direction
+
+                                                    if !should_send_top_evt {
+                                                        log::error!("top event received when it shouldn't have fired");
+                                                        continue;
+                                                    }
+
+                                                    let start_date = match chat_data.read().get_top_of_view(conv_id) {
+                                                        Some(x) => x,
+                                                        None => {
+                                                            log::error!("no messages at top of view");
+                                                            behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
+                                                            chat_data.write_silent().set_chat_behavior(conv_id, behavior);
+                                                            continue 'CONFIGURE_EVAL;
+                                                        }
+                                                    };
+
+                                                    let (tx, rx) = oneshot::channel();
+                                                    let cmd = RayGunCmd::FetchMessages{
+                                                        conv_id,
+                                                        config: FetchMessagesConfig::Earlier { start_date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                                        rsp: tx
+                                                    };
+
+                                                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                                                        log::error!("failed to send warp cmd: {e}");
+                                                        continue;
+                                                    }
+
+                                                    let rsp = match rx.await {
+                                                        Ok(r) => r,
+                                                        Err(e) => {
+                                                            log::error!("failed to send warp command. channel closed. {e}");
+                                                            return;
+                                                        }
+                                                    };
+
+                                                    match rsp {
+                                                        Ok(rsp) => {
+                                                            // todo: prepend messages to chat
+                                                            // todo: set scroll behavior based on has_more
+                                                            chat_data.write().prepend_messages(conv_id, rsp.messages);
+                                                            behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                            chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                            continue 'CONFIGURE_EVAL;
+                                                        },
+                                                        Err(e) => {
+                                                            log::error!("FetchMessages command failed: {e}");
+                                                            continue;
+                                                        }
+                                                    }
                                                 }
                                                 JsMsg::Bottom { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     // send uuid/timestamp of most recent message to WarpRunner to proces top event
                                                     // receive the new messages and if there are more in that direction
+
+                                                    if !should_send_bottom_evt {
+                                                        log::error!("bottom event received when it shouldn't have fired");
+                                                        continue;
+                                                    }
                                                 }
                                             }
                                             Err(e) => {

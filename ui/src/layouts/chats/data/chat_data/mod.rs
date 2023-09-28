@@ -1,5 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
+use chrono::{DateTime, Utc};
 use common::{state::State, warp_runner::ui_adapter};
 
 use uuid::Uuid;
@@ -26,6 +27,10 @@ impl ChatData {
     // call this first to fetch the messages
     pub fn get_chat_behavior(&self, id: Uuid) -> ChatBehavior {
         self.chat_behaviors.get(&id).cloned().unwrap_or_default()
+    }
+
+    pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
+        self.chat_behaviors.insert(id, behavior);
     }
 
     // after the messages have been fetched, init the active chat
@@ -76,19 +81,43 @@ impl ChatData {
             .remove_message_from_view(message_id);
     }
 
-    pub fn top_reached(&mut self, new_messages: Vec<ui_adapter::Message>, has_more: bool) {
-        // get earliest message in displayed_messages and set to ChatBehavior.view_behavior -> ScrollUp
-        // set on_scroll_up depending on if there are more messages
-        // perhaps set on_scroll_down
-        // append to self.messages
-        todo!()
+    pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<DateTime<Utc>> {
+        if self.active_chat.id() != conv_id {
+            return None;
+        }
+
+        self.active_chat
+            .messages
+            .displayed_messages
+            .get_back()
+            .map(|x| x.date)
     }
 
-    pub fn bottom_reached(&mut self, new_messages: Vec<ui_adapter::Message>, has_more: bool) {
-        // get most recent message in displayed_messages and set to ChatBehavior.view_behavior -> ScrollDown
-        // set on_scroll_down depending on if there are more messages
-        // perhaps set on_scroll_up
-        // prepend to self.messages
-        todo!()
+    pub fn get_bottom_of_view(&self, conv_id: Uuid) -> Option<DateTime<Utc>> {
+        if self.active_chat.id() != conv_id {
+            return None;
+        }
+
+        self.active_chat
+            .messages
+            .displayed_messages
+            .get_front()
+            .map(|x| x.date)
+    }
+
+    pub fn append_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
+        if self.active_chat.id() != conv_id {
+            return;
+        }
+
+        self.active_chat.messages.append_messages(messages);
+    }
+
+    pub fn prepend_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
+        if self.active_chat.id() != conv_id {
+            return;
+        }
+
+        self.active_chat.messages.prepend_messages(messages);
     }
 }

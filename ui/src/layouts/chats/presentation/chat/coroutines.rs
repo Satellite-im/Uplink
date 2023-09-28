@@ -9,7 +9,7 @@ use common::{
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 
-use crate::layouts::chats::data::ChatData;
+use crate::layouts::chats::data::{self, ChatData};
 
 pub fn handle_warp_events(
     cx: Scope,
@@ -110,10 +110,27 @@ pub fn init_chat_data(
             match rsp {
                 Ok(r) => {
                     println!("got FetchMessagesResponse");
-                    let msg_len = r.messages.len();
-                    // todo: make the ViewInit and MsgRange dynamic.
+                    match chat_behavior.view_init.scroll_to.clone() {
+                        data::ScrollTo::MostRecent => {
+                            if !r.has_more {
+                                chat_behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
+                            }
+                            chat_behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
+                        }
+                        data::ScrollTo::ScrollUp { .. } => {
+                            if !r.has_more {
+                                chat_behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
+                            }
+                            chat_behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
+                        }
+                        data::ScrollTo::ScrollDown { .. } => {
+                            if !r.has_more {
+                                chat_behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
+                            }
+                            chat_behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
+                        }
+                    }
 
-                    // todo: use r.has_more to mutate chat_behavior
                     chat_data.write().set_active_chat(
                         &state.read(),
                         &conv_id,

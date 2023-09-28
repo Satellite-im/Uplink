@@ -90,6 +90,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let emoji_suggestions = use_state(cx, Vec::new);
 
+    // todo: use chat behavior for scroll_btn
     let with_scroll_btn = state
         .read()
         .get_active_chat()
