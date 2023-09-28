@@ -1,7 +1,10 @@
 use common::state::{self, Identity, State};
 use kit::components::indicator::Platform;
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::ConversationType};
+use warp::{
+    crypto::DID,
+    raygun::{self, ConversationType},
+};
 
 #[derive(Debug, Default, Clone)]
 pub struct Metadata {
@@ -17,6 +20,7 @@ pub struct Metadata {
     pub conversation_name: Option<String>,
     pub conversation_type: Option<ConversationType>,
     pub creator: Option<DID>,
+    pub replying_to: Option<raygun::Message>,
 }
 
 impl Metadata {
@@ -54,6 +58,7 @@ impl Metadata {
             conversation_name: chat.conversation_name,
             conversation_type: Some(chat.conversation_type),
             creator: chat.creator,
+            replying_to: chat.replying_to,
         }
     }
 }

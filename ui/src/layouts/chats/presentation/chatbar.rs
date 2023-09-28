@@ -80,9 +80,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = chat_data.read().is_initialized;
-    let active_chat_id = chat_data.read().active_chat.id;
-    let chat_id = chat_data.read().active_chat.id;
+    let is_loading = chat_data.read().active_chat.is_initialized;
+    let active_chat_id = chat_data.read().active_chat.id();
+    let chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -123,8 +123,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .mutate(Action::SetChatAttachments(chat_id, files_attached));
     }
 
-    // used to render the typing indicator
-    // for now it doesn't quite work for group messages
+    // todo: update the typing indicator in a coroutine
     let my_id = state.read().did_key();
     let users_typing: Vec<DID> = chat_data
         .read()
@@ -512,12 +511,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        chat_data.read().active_chat.replying_to.as_ref().map(|msg| {
+                        chat_data.read().active_chat.replying_to().map(|msg| {
                             let our_did = state.read().did_key();
-                            let msg_owner = if chat_data.read().my_id.did_key() == msg.sender() {
-                                Some(chat_data.read().my_id.clone())
+                            let msg_owner = if chat_data.read().active_chat.my_id().did_key() == msg.sender() {
+                                Some(chat_data.read().active_chat.my_id())
                             } else {
-                                chat_data.read().other_participants.iter().find(|x| x.did_key() == msg.sender()).cloned()
+                                chat_data.read().active_chat.other_participants().iter().find(|x| x.did_key() == msg.sender()).cloned()
                             };
 
                             let (platform, status, profile_picture) = get_platform_and_status(msg_owner.as_ref());
@@ -527,7 +526,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id))
+                                        state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id()))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.value().join("\n"),

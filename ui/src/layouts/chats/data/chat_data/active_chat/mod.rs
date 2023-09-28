@@ -1,4 +1,7 @@
-use std::collections::VecDeque;
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
 use common::{
     state::{self, Identity, State},
@@ -6,7 +9,10 @@ use common::{
 };
 use kit::components::indicator::Platform;
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::ConversationType};
+use warp::{
+    crypto::DID,
+    raygun::{self, ConversationType},
+};
 
 mod messages;
 mod metadata;
@@ -18,6 +24,7 @@ pub struct ActiveChat {
     metadata: Metadata,
     pub messages: Messages,
     pub is_initialized: bool,
+    pub typing_indicator: HashMap<DID, Instant>,
 }
 
 impl ActiveChat {
@@ -30,6 +37,7 @@ impl ActiveChat {
             metadata: Metadata::new(s, chat),
             messages: Messages::new(messages),
             is_initialized: true,
+            typing_indicator: HashMap::new(),
         }
     }
 
@@ -70,5 +78,9 @@ impl ActiveChat {
     }
     pub fn creator(&self) -> Option<DID> {
         self.metadata.creator
+    }
+
+    pub fn replying_to(&self) -> Option<raygun::Message> {
+        self.metadata.replying_to
     }
 }
