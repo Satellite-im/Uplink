@@ -168,6 +168,9 @@ fn app(cx: Scope) -> Element {
 fn app_layout(cx: Scope) -> Element {
     log::trace!("rendering app");
 
+    // terminate the logger thread when the app exits.
+    cx.use_hook(|| LogDropper {});
+
     use_auto_updater(cx)?;
     use_app_coroutines(cx)?;
     use_router_notification_listener(cx)?;
@@ -1060,4 +1063,13 @@ fn AppNav<'a>(
         },
         tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
     })
+}
+
+struct LogDropper {}
+
+impl Drop for LogDropper {
+    fn drop(&mut self) {
+        // this terminates the logger thread
+        logger::set_save_to_file(false);
+    }
 }
