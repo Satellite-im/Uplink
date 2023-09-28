@@ -20,7 +20,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
     let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
-    let cropped_image_pathbuf = use_ref(cx, || PathBuf::new());
+    let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
 
     if *clicked_button_to_crop.get() {
@@ -30,7 +30,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let eval = use_eval(cx);
-    _ = eval(&adjust_crop_circle_size);
+    _ = eval(adjust_crop_circle_size);
 
     return cx.render(rsx!(div {
         Modal {
