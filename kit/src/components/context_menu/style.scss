@@ -102,7 +102,7 @@
 		border: 0px solid var(--background);
 		position: relative;
 	}
-	#profile-image {
+	.profile-image {
 		margin: var(--gap-less);
 		width: calc(var(--height-input) * 2);
 		height: calc(var(--height-input) * 2);

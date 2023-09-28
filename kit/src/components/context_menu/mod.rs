@@ -142,7 +142,7 @@ pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
                 aria_label: "banner-image",
                 style: "background-image: url('{banner}');",
                 div {
-                    id: "profile-image",
+                    class: "profile-image",
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     Indicator {
