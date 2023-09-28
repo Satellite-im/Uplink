@@ -3,7 +3,7 @@ use common::warp_runner::ui_adapter;
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
-use super::MsgView;
+use crate::layouts::chats::data::MsgView;
 
 #[derive(Debug, Default, Clone)]
 pub struct Messages {

@@ -1,7 +1,12 @@
 use common::warp_runner::FetchMessagesConfig;
 use serde::{Deserialize, Serialize};
 
-use super::{ScrollBehavior, ScrollTo, ViewInit};
+mod scroll_behavior;
+mod scroll_to;
+mod view_init;
+pub use scroll_behavior::*;
+pub use scroll_to::*;
+pub use view_init::*;
 
 // for a given Chat, the UI will load X messages, Y of which are displayed at any given time. Scrolling changes the set of messages displayed.
 // naming this is tough. to start, the X messages loaded will be called a "view". the messages displayed will be called "page". See ViewBehavior::Historical

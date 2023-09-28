@@ -11,8 +11,6 @@ use warp::raygun::ConversationType;
 
 use crate::layouts::chats::data::ScrollBehavior;
 
-use super::{MsgView, PartialMessage};
-
 mod messages;
 mod metadata;
 pub use messages::*;

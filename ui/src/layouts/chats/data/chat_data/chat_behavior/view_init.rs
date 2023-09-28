@@ -2,7 +2,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{ScrollTo, DEFAULT_MESSAGES_TO_TAKE};
+use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
+
+use super::ScrollTo;
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct ViewInit {

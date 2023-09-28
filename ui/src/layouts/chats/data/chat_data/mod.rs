@@ -10,7 +10,11 @@ use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::raygun::ConversationType;
 
-use super::{ActiveChat, ChatBehavior};
+mod active_chat;
+mod chat_behavior;
+
+pub use active_chat::*;
+pub use chat_behavior::*;
 
 #[derive(Clone, Default)]
 pub struct ChatData {
