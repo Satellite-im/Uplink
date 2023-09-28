@@ -60,6 +60,22 @@ impl ChatData {
         return should_append_msg;
     }
 
+    pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+        if conv_id != self.active_chat.id() {
+            return;
+        }
+        self.active_chat.messages.add_message_to_view(message_id);
+    }
+
+    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+        if conv_id != self.active_chat.id() {
+            return;
+        }
+        self.active_chat
+            .messages
+            .remove_message_from_view(message_id);
+    }
+
     pub fn top_reached(&mut self, new_messages: Vec<ui_adapter::Message>, has_more: bool) {
         // get earliest message in displayed_messages and set to ChatBehavior.view_behavior -> ScrollUp
         // set on_scroll_up depending on if there are more messages

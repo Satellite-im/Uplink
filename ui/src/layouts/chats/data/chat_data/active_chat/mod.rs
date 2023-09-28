@@ -44,7 +44,10 @@ impl ActiveChat {
     pub fn messages(&self) -> VecDeque<ui_adapter::Message> {
         self.messages.messages
     }
+}
 
+// simplify access to metadata fields
+impl ActiveChat {
     pub fn id(&self) -> Uuid {
         self.metadata.chat_id
     }

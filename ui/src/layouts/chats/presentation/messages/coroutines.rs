@@ -104,12 +104,12 @@ pub fn hangle_msg_scroll<'a>(
                                                 JsMsg::Add { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
-                                                    active_chat.write_silent().add_message_to_view(msg_id);
+                                                    chat_data.write_silent().add_message_to_view(conv_id, msg_id);
                                                 },
                                                 JsMsg::Remove { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
-                                                    active_chat.write_silent().remove_message_from_view(msg_id);
+                                                    chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                                 }
                                                 JsMsg::Top { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
