@@ -8,7 +8,7 @@ canvas.width = width;
 canvas.height = height;
 const ctx = canvas.getContext('2d');
 
-const scale = 0.5; 
+const scale = $IMAGE_SCALE;
 
 const scaleX = naturalWidth / (image.width / scale);
 const scaleY = naturalHeight / (image.height / scale);

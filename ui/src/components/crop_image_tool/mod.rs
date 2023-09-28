@@ -93,8 +93,8 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                                 cx.spawn({
                                     to_owned![eval, large_thumbnail, image_scale];
                                     async move {
-                                        let save_image_cropped_js = include_str!("./save_cropped_image.js");
-                                        // .replace("$IMAGE_SCALCE", image_scale.read().to_string().as_str());
+                                        let save_image_cropped_js = include_str!("./save_cropped_image.js")
+                                        .replace("$IMAGE_SCALE", (1.0 / *image_scale.read()).to_string().as_str());
                                         if let Ok(r) = eval(&save_image_cropped_js) {
                                             if let Ok(val) = r.join().await {
                                                 let thumbnail = val.as_str().unwrap_or_default();
@@ -125,8 +125,6 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                     div {
                         id: "image-crop-box-container",
                         width: "auto",
-                        // width: format_args!("{}px", image_dimensions.read().width),
-                        // height: format_args!("{}px", image_dimensions.read().height),
                         overflow: "hidden",
                         border: "3px solid var(--secondary)",
                         img {
@@ -151,7 +149,7 @@ pub fn CropImageModal(cx: Scope<'a>, large_thumbnail: String) -> Element<'a> {
                 }
                 Range {
                     initial_value: 1.0,
-                    min: 0.5,
+                    min: 1.0,
                     max: 5.0,
                     step: 0.1,
                     icon_left: Shape::Minus,
