@@ -139,6 +139,12 @@ impl ChatData {
         }
     }
 
+    pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
+        self.chat_behaviors.insert(id, behavior);
+    }
+}
+
+impl ChatData {
     fn scroll_up(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             let scroll_top = self.active_chat.messages.displayed_messages.get_back();
@@ -161,9 +167,5 @@ impl ChatData {
                 behavior.view_init.msg_time.replace(pm.date);
             }
         }
-    }
-
-    pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
-        self.chat_behaviors.insert(id, behavior);
     }
 }
