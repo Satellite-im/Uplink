@@ -26,6 +26,7 @@ pub struct ActiveChat {
     pub is_initialized: bool,
     pub typing_indicator: HashMap<DID, Instant>,
     pub pinned_messages: Vec<raygun::Message>,
+    pub scrolled_once: bool,
 }
 
 impl ActiveChat {
@@ -40,6 +41,7 @@ impl ActiveChat {
             is_initialized: true,
             typing_indicator: HashMap::new(),
             pinned_messages: chat.pinned_messages.clone(),
+            scrolled_once: false,
         }
     }
 

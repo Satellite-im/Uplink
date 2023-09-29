@@ -27,7 +27,6 @@ impl MsgView {
         if self.items.is_empty() {
             self.items.push_back(val);
         } else if self.items.front().map(|x| &val >= x).unwrap_or(false) {
-            // messages occuring later in time have a greater value
             self.items.push_front(val);
         } else if self.items.back().map(|x| &val <= x).unwrap_or(false) {
             self.items.push_back(val);

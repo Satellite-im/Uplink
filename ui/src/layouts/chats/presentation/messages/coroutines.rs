@@ -113,11 +113,13 @@ pub fn hangle_msg_scroll<'a>(
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                                    chat_data.write_silent().scroll_top(conv_id);
                                                 },
                                                 JsMsg::Remove { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                                    chat_data.write_silent().scroll_bottom(conv_id);
                                                 }
                                                 JsMsg::Top { conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
@@ -129,6 +131,10 @@ pub fn hangle_msg_scroll<'a>(
                                                     if !should_send_top_evt {
                                                         log::error!("top event received when it shouldn't have fired");
                                                         continue;
+                                                    }
+
+                                                    if !chat_data.read().active_chat.scrolled_once {
+                                                        continue 'CONFIGURE_EVAL;
                                                     }
 
                                                     let start_date = match chat_data.read().get_top_of_view(conv_id) {
@@ -163,10 +169,10 @@ pub fn hangle_msg_scroll<'a>(
 
                                                     match rsp {
                                                         Ok(rsp) => {
-                                                            println!("{:?}", rsp);
-                                                            chat_data.write().append_messages(conv_id, rsp.messages);
+                                                            let new_messages = rsp.messages.len();
+                                                            chat_data.write().prepend_messages(conv_id, rsp.messages);
                                                             behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
-                                                            println!("new behavior: {:?}", behavior);
+                                                            println!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                             chat_data.write().set_chat_behavior(conv_id, behavior);
                                                             continue 'CONFIGURE_EVAL;
                                                         },

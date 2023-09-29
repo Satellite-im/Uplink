@@ -22,6 +22,11 @@ pub enum FetchMessagesConfig {
         start_date: DateTime<Utc>,
         limit: usize,
     },
+    // fetch half_size messages before and after center.
+    Window {
+        center: DateTime<Utc>,
+        half_size: usize,
+    },
 }
 
 impl FetchMessagesConfig {
@@ -30,6 +35,7 @@ impl FetchMessagesConfig {
             Self::Earlier { limit, .. }
             | Self::Later { limit, .. }
             | Self::MostRecent { limit } => *limit,
+            Self::Window { half_size, .. } => *half_size,
         }
     }
 }

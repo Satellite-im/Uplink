@@ -26,12 +26,12 @@ impl ChatBehavior {
             ScrollTo::MostRecent => FetchMessagesConfig::MostRecent {
                 limit: self.view_init.limit,
             },
-            _ => FetchMessagesConfig::Earlier {
-                start_date: self
+            _ => FetchMessagesConfig::Window {
+                center: self
                     .view_init
-                    .earliest_time
+                    .msg_time
                     .unwrap_or(chrono::offset::Utc::now()),
-                limit: self.view_init.limit,
+                half_size: self.view_init.limit / 2,
             },
         }
     }

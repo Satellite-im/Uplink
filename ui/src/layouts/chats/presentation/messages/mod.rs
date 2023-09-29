@@ -168,7 +168,7 @@ pub fn get_messages(cx: Scope) -> Element {
         div {
             id: "messages",
             onscroll: move |_| {
-                // do nothing
+                chat_data.write_silent().scrolled(active_chat_id);
             },
             span {
                 rsx!(

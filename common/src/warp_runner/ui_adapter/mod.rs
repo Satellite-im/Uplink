@@ -262,6 +262,7 @@ pub async fn fetch_messages2(
         FetchMessagesConfig::Later { start_date, limit } => MessageOptions::default()
             .set_date_range(start_date.clone()..chrono::offset::Utc::now())
             .set_limit(limit as _),
+        _ => unreachable!(),
     };
 
     let messages = messaging

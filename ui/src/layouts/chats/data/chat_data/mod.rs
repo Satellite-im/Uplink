@@ -120,6 +120,36 @@ impl ChatData {
         }
     }
 
+    pub fn scrolled(&mut self, conv_id: Uuid) {
+        if self.active_chat.id() == conv_id {
+            self.active_chat.scrolled_once = true;
+        }
+    }
+
+    pub fn scroll_top(&mut self, conv_id: Uuid) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            let scroll_top = self.active_chat.messages.displayed_messages.get_back();
+            if let Some(pm) = scroll_top {
+                behavior.view_init.scroll_to = ScrollTo::ScrollUp {
+                    view_top: pm.message_id,
+                };
+                behavior.view_init.msg_time.replace(pm.date);
+            }
+        }
+    }
+
+    pub fn scroll_bottom(&mut self, conv_id: Uuid) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            let scroll_top = self.active_chat.messages.displayed_messages.get_front();
+            if let Some(pm) = scroll_top {
+                behavior.view_init.scroll_to = ScrollTo::ScrollDown {
+                    view_bottom: pm.message_id,
+                };
+                behavior.view_init.msg_time.replace(pm.date);
+            }
+        }
+    }
+
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
     }
