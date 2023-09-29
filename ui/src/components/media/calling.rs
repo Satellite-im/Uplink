@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    sync::{atomic::AtomicBool, Arc},
+    time::Duration,
+};
 
 use chrono::Local;
 use dioxus::prelude::*;
@@ -21,6 +24,7 @@ use crate::utils::{
 };
 use common::{
     icons::outline::Shape as Icon,
+    sounds::{ContinousSound, PlayUntil},
     state::{
         call::{ActiveCall, Call},
         ui::Layout,
@@ -55,6 +59,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn CallControl(cx: Scope<Props>) -> Element {
+    log::debug!("call control");
     let state = use_shared_state::<State>(cx)?;
     match state.read().ui.call_info.active_call() {
         Some(call) => cx.render(rsx!(ActiveCallControl {
@@ -490,6 +495,11 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
             }
         };
     }
+    let alive = use_ref(cx, || Arc::new(AtomicBool::new(false)));
+    use_effect(cx, (), |_| {
+        to_owned![alive];
+        async move { PlayUntil(ContinousSound::RingTone, alive.read().clone()) }
+    });
     let mut participants = state.read().get_identities(&call.participants);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
