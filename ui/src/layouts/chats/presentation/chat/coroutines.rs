@@ -90,23 +90,18 @@ pub fn init_chat_data<'a>(
                 Some(x) => x,
             };
 
-            let r = match chat_data
+            let behavior = chat_data.read().get_chat_behavior(conv_id);
+            let config = chat_data
                 .read()
                 .get_chat_behavior(conv_id)
-                .messages_config()
-            {
+                .messages_config();
+
+            let r = match config {
                 FetchMessagesConfig::MostRecent { limit } => {
-                    fetch_most_recent(chat_data.read().get_chat_behavior(conv_id), conv_id, limit)
-                        .await
+                    fetch_most_recent(behavior, conv_id, limit).await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
-                    fetch_window(
-                        conv_id,
-                        chat_data.read().get_chat_behavior(conv_id),
-                        center,
-                        half_size,
-                    )
-                    .await
+                    fetch_window(conv_id, behavior, center, half_size).await
                 }
                 _ => unreachable!(),
             };
