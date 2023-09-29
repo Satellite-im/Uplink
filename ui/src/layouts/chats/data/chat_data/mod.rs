@@ -24,47 +24,6 @@ impl PartialEq for ChatData {
 }
 
 impl ChatData {
-    // call this first to fetch the messages
-    pub fn get_chat_behavior(&self, id: Uuid) -> ChatBehavior {
-        self.chat_behaviors.get(&id).cloned().unwrap_or_default()
-    }
-
-    pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
-        self.chat_behaviors.insert(id, behavior);
-    }
-
-    // after the messages have been fetched, init the active chat
-    pub fn set_active_chat(
-        &mut self,
-        s: &State,
-        chat_id: &Uuid,
-        behavior: ChatBehavior,
-        mut messages: Vec<ui_adapter::Message>,
-    ) {
-        if let Some(chat) = s.get_chat_by_id(*chat_id) {
-            self.chat_behaviors.insert(chat.id, behavior);
-            self.active_chat = ActiveChat::new(s, &chat, VecDeque::from_iter(messages.drain(..)));
-        }
-    }
-
-    // returns true if the struct was mutated
-    pub fn new_message(&mut self, conv_id: Uuid, msg: ui_adapter::Message) -> bool {
-        if conv_id != self.active_chat.id() {
-            return false;
-        }
-
-        let should_append_msg = self
-            .chat_behaviors
-            .get(&conv_id)
-            .map(|behavior| behavior.view_init.scroll_to == ScrollTo::MostRecent)
-            .unwrap_or_default();
-
-        if should_append_msg {
-            self.active_chat.messages.append_messages(vec![msg]);
-        }
-        return should_append_msg;
-    }
-
     pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) {
         if conv_id != self.active_chat.id() {
             return;
@@ -72,13 +31,12 @@ impl ChatData {
         self.active_chat.messages.add_message_to_view(message_id);
     }
 
-    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
-        if conv_id != self.active_chat.id() {
+    pub fn append_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
+        if self.active_chat.id() != conv_id {
             return;
         }
-        self.active_chat
-            .messages
-            .remove_message_from_view(message_id);
+
+        self.active_chat.messages.append_messages(messages);
     }
 
     pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<DateTime<Utc>> {
@@ -105,12 +63,27 @@ impl ChatData {
             .map(|x| x.date)
     }
 
-    pub fn append_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
-        if self.active_chat.id() != conv_id {
-            return;
+    // call this first to fetch the messages
+    pub fn get_chat_behavior(&self, id: Uuid) -> ChatBehavior {
+        self.chat_behaviors.get(&id).cloned().unwrap_or_default()
+    }
+
+    // returns true if the struct was mutated
+    pub fn new_message(&mut self, conv_id: Uuid, msg: ui_adapter::Message) -> bool {
+        if conv_id != self.active_chat.id() {
+            return false;
         }
 
-        self.active_chat.messages.append_messages(messages);
+        let should_append_msg = self
+            .chat_behaviors
+            .get(&conv_id)
+            .map(|behavior| behavior.view_init.scroll_to == ScrollTo::MostRecent)
+            .unwrap_or_default();
+
+        if should_append_msg {
+            self.active_chat.messages.append_messages(vec![msg]);
+        }
+        return should_append_msg;
     }
 
     pub fn prepend_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
@@ -119,5 +92,32 @@ impl ChatData {
         }
 
         self.active_chat.messages.prepend_messages(messages);
+    }
+
+    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+        if conv_id != self.active_chat.id() {
+            return;
+        }
+        self.active_chat
+            .messages
+            .remove_message_from_view(message_id);
+    }
+
+    // after the messages have been fetched, init the active chat
+    pub fn set_active_chat(
+        &mut self,
+        s: &State,
+        chat_id: &Uuid,
+        behavior: ChatBehavior,
+        mut messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = s.get_chat_by_id(*chat_id) {
+            self.chat_behaviors.insert(chat.id, behavior);
+            self.active_chat = ActiveChat::new(s, &chat, VecDeque::from_iter(messages.drain(..)));
+        }
+    }
+
+    pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
+        self.chat_behaviors.insert(id, behavior);
     }
 }
