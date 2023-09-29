@@ -68,11 +68,11 @@ pub fn handle_warp_events(
 }
 
 // any use_future should be in the coroutines file to prevent a naming conflict with the futures crate.
-pub fn init_chat_data(
-    cx: Scope,
-    state: &UseSharedState<State>,
-    chat_data: &UseSharedState<ChatData>,
-) {
+pub fn init_chat_data<'a>(
+    cx: &Scoped<'a>,
+    state: &'a UseSharedState<State>,
+    chat_data: &'a UseSharedState<ChatData>,
+) -> &'a UseFuture<()> {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, (&active_chat_id), |(conv_id)| {
         to_owned![state, chat_data];
@@ -109,7 +109,7 @@ pub fn init_chat_data(
 
             match rsp {
                 Ok(r) => {
-                    println!("got FetchMessagesResponse");
+                    println!("got FetchMessagesResponse to init chat {conv_id}");
                     match chat_behavior.view_init.scroll_to.clone() {
                         data::ScrollTo::MostRecent => {
                             if !r.has_more {
@@ -143,5 +143,5 @@ pub fn init_chat_data(
                 }
             };
         }
-    });
+    })
 }

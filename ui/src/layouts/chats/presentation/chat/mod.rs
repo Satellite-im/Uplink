@@ -38,7 +38,7 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
-    coroutines::init_chat_data(cx, state, chat_data);
+    let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
     // todo: get rid fo this data variable
@@ -125,7 +125,7 @@ pub fn Compose(cx: Scope) -> Element {
         CallControl {
             in_chat: true
         },
-        if !data.active_chat.is_initialized {
+        if init.value().is_none() {
            rsx!(
                 div {
                     id: "messages",
