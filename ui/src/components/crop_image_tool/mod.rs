@@ -136,16 +136,19 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             class: "crop-box",
                         }
                     }
-                }
-                Range {
-                    initial_value: 1.0,
-                    min: 1.0,
-                    max: 5.0,
-                    step: 0.1,
-                    icon_left: Shape::Minus,
-                    icon_right: Shape::Plus,
-                    onchange: move |size_f32| {
-                        *image_scale.write() = size_f32;
+                },
+                div {
+                    class: "range-background",
+                    Range {
+                        initial_value: 1.0,
+                        min: 1.0,
+                        max: 5.0,
+                        step: 0.1,
+                        icon_left: Shape::Minus,
+                        icon_right: Shape::Plus,
+                        onchange: move |size_f32| {
+                            *image_scale.write() = size_f32;
+                        }
                     }
                 }
             }

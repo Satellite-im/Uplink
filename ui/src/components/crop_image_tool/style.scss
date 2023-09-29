@@ -33,3 +33,12 @@
     background: radial-gradient(circle at center, transparent 70.5%, black 50%);
     mix-blend-mode: multiply;
   }
+
+  .range-background {
+    height: 38px;
+    border-radius: 20px;
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-left: 16px;
+    background: var(--secondary);
+  }
