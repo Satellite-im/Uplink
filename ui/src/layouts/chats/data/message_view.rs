@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use super::PartialMessage;
 
+// the back of the VecDeque is the top of the view.
 // used to track which messages are visible and determine
 // which message needs to be scrolled to.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -25,9 +26,10 @@ impl MsgView {
     pub fn insert(&mut self, val: PartialMessage) {
         if self.items.is_empty() {
             self.items.push_back(val);
-        } else if self.items.front().map(|x| x <= &val).unwrap_or(false) {
+        } else if self.items.front().map(|x| &val >= x).unwrap_or(false) {
+            // messages occuring later in time have a greater value
             self.items.push_front(val);
-        } else if self.items.back().map(|x| x >= &val).unwrap_or(false) {
+        } else if self.items.back().map(|x| &val <= x).unwrap_or(false) {
             self.items.push_back(val);
         } else {
             println!("invalid insert: {:?}", val);

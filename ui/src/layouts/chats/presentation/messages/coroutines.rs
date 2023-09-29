@@ -165,7 +165,7 @@ pub fn hangle_msg_scroll<'a>(
                                                         Ok(rsp) => {
                                                             // todo: prepend messages to chat
                                                             // todo: set scroll behavior based on has_more
-                                                            chat_data.write().prepend_messages(conv_id, rsp.messages);
+                                                            chat_data.write().append_messages(conv_id, rsp.messages);
                                                             behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                             chat_data.write().set_chat_behavior(conv_id, behavior);
                                                             continue 'CONFIGURE_EVAL;

@@ -31,15 +31,21 @@ impl Messages {
 
     pub fn append_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
         for msg in m.drain(..) {
-            self.message_times.insert(msg.inner.id(), msg.inner.date());
-            self.messages.push_back(msg);
+            // check for duplicates. really only needed for the first element the Vec
+            if !self.message_times.contains_key(&msg.inner.id()) {
+                self.message_times.insert(msg.inner.id(), msg.inner.date());
+                self.messages.push_back(msg);
+            }
         }
     }
 
     pub fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
         for msg in m.drain(..).rev() {
-            self.message_times.insert(msg.inner.id(), msg.inner.date());
-            self.messages.push_front(msg);
+            // check for duplicates. really only needed for the first element the Vec
+            if !self.message_times.contains_key(&msg.inner.id()) {
+                self.message_times.insert(msg.inner.id(), msg.inner.date());
+                self.messages.push_front(msg);
+            }
         }
     }
 
