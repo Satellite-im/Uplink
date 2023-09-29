@@ -1,8 +1,9 @@
+use anyhow::bail;
 use chrono::{DateTime, Utc};
 use common::{
     state::State,
     warp_runner::{
-        ui_adapter::{MessageEvent, RayGunEvent},
+        ui_adapter::{self, MessageEvent, RayGunEvent},
         FetchMessagesConfig, RayGunCmd, WarpCmd, WarpEvent,
     },
     WARP_CMD_CH, WARP_EVENT_CH,
@@ -11,7 +12,7 @@ use dioxus::prelude::*;
 use futures::channel::oneshot;
 use uuid::Uuid;
 
-use crate::layouts::chats::data::{self, ChatData};
+use crate::layouts::chats::data::{self, ChatBehavior, ChatData};
 
 pub fn handle_warp_events(
     cx: Scope,
@@ -89,30 +90,45 @@ pub fn init_chat_data<'a>(
                 Some(x) => x,
             };
 
-            match chat_data
+            let r = match chat_data
                 .read()
                 .get_chat_behavior(conv_id)
                 .messages_config()
             {
                 FetchMessagesConfig::MostRecent { limit } => {
-                    fetch_most_recent(chat_data.write(), state.read(), conv_id, limit).await;
+                    fetch_most_recent(chat_data.read().get_chat_behavior(conv_id), conv_id, limit)
+                        .await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
-                    fetch_window(chat_data.write(), state.read(), conv_id, center, half_size).await;
+                    fetch_window(
+                        conv_id,
+                        chat_data.read().get_chat_behavior(conv_id),
+                        center,
+                        half_size,
+                    )
+                    .await
                 }
                 _ => unreachable!(),
+            };
+
+            match r {
+                Ok((messages, behavior)) => {
+                    chat_data
+                        .write()
+                        .set_active_chat(&state.read(), &conv_id, behavior, messages);
+                }
+                Err(e) => log::error!("{e}"),
             }
         }
     })
 }
 
 async fn fetch_window<'a>(
-    mut chat_data: RefMut<'a, ChatData>,
-    state: Ref<'a, State>,
     conv_id: Uuid,
+    mut chat_behavior: ChatBehavior,
     date: DateTime<Utc>,
     half_size: usize,
-) {
+) -> anyhow::Result<(Vec<ui_adapter::Message>, ChatBehavior)> {
     let mut messages = vec![];
     let has_more_before: bool;
     let has_more_after: bool;
@@ -128,15 +144,13 @@ async fn fetch_window<'a>(
         },
         rsp: tx,
     })) {
-        log::error!("failed to init messages: {e}");
-        return;
+        bail!("failed to init messages: {e}");
     }
 
     let rsp = match rx.await {
         Ok(r) => r,
         Err(e) => {
-            log::error!("failed to send warp command. channel closed. {e}");
-            return;
+            bail!("failed to send warp command. channel closed. {e}");
         }
     };
 
@@ -146,8 +160,7 @@ async fn fetch_window<'a>(
             messages = r.messages;
         }
         Err(e) => {
-            log::error!("FetchMessages command failed: {e}");
-            return;
+            bail!("FetchMessages command failed: {e}");
         }
     };
 
@@ -161,15 +174,13 @@ async fn fetch_window<'a>(
         },
         rsp: tx,
     })) {
-        log::error!("failed to init messages: {e}");
-        return;
+        bail!("failed to init messages: {e}");
     }
 
     let rsp = match rx.await {
         Ok(r) => r,
         Err(e) => {
-            log::error!("failed to send warp command. channel closed. {e}");
-            return;
+            bail!("failed to send warp command. channel closed. {e}");
         }
     };
 
@@ -184,12 +195,10 @@ async fn fetch_window<'a>(
             }
         }
         Err(e) => {
-            log::error!("FetchMessages command failed: {e}");
-            return;
+            bail!("FetchMessages command failed: {e}");
         }
     };
 
-    let mut chat_behavior = chat_data.get_chat_behavior(conv_id);
     chat_behavior.on_scroll_end = if has_more_after {
         data::ScrollBehavior::FetchMore
     } else {
@@ -202,18 +211,16 @@ async fn fetch_window<'a>(
         data::ScrollBehavior::DoNothing
     };
 
-    chat_data.set_active_chat(&state, &conv_id, chat_behavior, messages);
+    Ok((messages, chat_behavior))
 }
 
 async fn fetch_most_recent<'a>(
-    mut chat_data: RefMut<'a, ChatData>,
-    state: Ref<'a, State>,
+    mut chat_behavior: ChatBehavior,
     conv_id: Uuid,
     limit: usize,
-) {
+) -> anyhow::Result<(Vec<ui_adapter::Message>, ChatBehavior)> {
     let warp_cmd_tx = WARP_CMD_CH.tx.clone();
     let (tx, rx) = oneshot::channel();
-    let mut chat_behavior = chat_data.get_chat_behavior(conv_id);
 
     // todo: save the config during runtime
     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
@@ -221,15 +228,13 @@ async fn fetch_most_recent<'a>(
         config: FetchMessagesConfig::MostRecent { limit },
         rsp: tx,
     })) {
-        log::error!("failed to init messages: {e}");
-        return;
+        bail!("failed to init messages: {e}");
     }
 
     let rsp = match rx.await {
         Ok(r) => r,
         Err(e) => {
-            log::error!("failed to send warp command. channel closed. {e}");
-            return;
+            bail!("failed to send warp command. channel closed. {e}");
         }
     };
 
@@ -242,10 +247,10 @@ async fn fetch_most_recent<'a>(
             } else {
                 data::ScrollBehavior::DoNothing
             };
-            chat_data.set_active_chat(&state, &conv_id, chat_behavior, r.messages);
+            Ok((r.messages, chat_behavior))
         }
         Err(e) => {
-            log::error!("FetchMessages command failed: {e}");
+            bail!("FetchMessages command failed: {e}");
         }
-    };
+    }
 }
