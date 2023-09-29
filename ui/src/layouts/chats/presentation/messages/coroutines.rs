@@ -53,8 +53,10 @@ pub fn hangle_msg_scroll<'a>(
                         "$SEND_BOTTOM_EVENT",
                         should_send_bottom_evt.then_some("1").unwrap_or("0"),
                     );
-                    observer_script =
-                        observer_script.replace("$CONVERSATION_ID", &conv_id.to_string());
+                    observer_script = observer_script.replace(
+                        "$CONVERSATION_ID",
+                        &current_conv_id.unwrap_or_default().to_string(),
+                    );
 
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
@@ -108,17 +110,17 @@ pub fn hangle_msg_scroll<'a>(
                                             // ignore events with a different conversation id
                                             Ok(msg) => match msg {
                                                 JsMsg::Add { msg_id, conv_id } => {
-                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     chat_data.write_silent().add_message_to_view(conv_id, msg_id);
                                                 },
                                                 JsMsg::Remove { msg_id, conv_id } => {
-                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                                 }
                                                 JsMsg::Top { conv_id } => {
-                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     // send uuid/timestamp of oldest message to WarpRunner to proces top event
                                                     // receive the new messages and if there are more in that direction
@@ -174,7 +176,7 @@ pub fn hangle_msg_scroll<'a>(
                                                     }
                                                 }
                                                 JsMsg::Bottom { conv_id } => {
-                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x == &conv_id).unwrap_or(true);
+                                                    let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     // send uuid/timestamp of most recent message to WarpRunner to proces top event
                                                     // receive the new messages and if there are more in that direction
