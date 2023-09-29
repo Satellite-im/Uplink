@@ -14,6 +14,7 @@ pub enum Sounds {
     Off,
 }
 
+#[derive(Debug)]
 pub enum ContinousSound {
     RingTone,
 }
@@ -65,8 +66,8 @@ pub fn PlayUntil(sound: ContinousSound, condition: Arc<AtomicBool>) {
         loop {
             match sound_inst.as_ref() {
                 None => {
-                    if let Ok(sound) = audio_handle.play_once(std::io::Cursor::new(buffer)) {
-                        sound_inst = Some(sound);
+                    if let Ok(sink) = audio_handle.play_once(std::io::Cursor::new(buffer)) {
+                        sound_inst = Some(sink);
                     }
                 }
                 Some(sound) => {
@@ -76,9 +77,9 @@ pub fn PlayUntil(sound: ContinousSound, condition: Arc<AtomicBool>) {
                 }
             }
             if Arc::strong_count(&condition) <= 1 || condition.load(Ordering::Relaxed) {
-                if let Some(sound) = sound_inst {
-                    log::trace!("Stopping ringtone");
-                    sound.stop();
+                if let Some(sink) = sound_inst {
+                    log::trace!("Stopping sound {:?}", sound);
+                    sink.stop();
                 }
                 return;
             }

@@ -59,7 +59,6 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn CallControl(cx: Scope<Props>) -> Element {
-    log::debug!("call control");
     let state = use_shared_state::<State>(cx)?;
     match state.read().ui.call_info.active_call() {
         Some(call) => cx.render(rsx!(ActiveCallControl {
