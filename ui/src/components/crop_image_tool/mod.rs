@@ -114,6 +114,10 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         id: "image-crop-box-container",
                         width: "auto",
                         div {
+                            class: "image-parent-div",
+                            overflow: "hidden", 
+                        }
+                        div {
                             overflow: "hidden",
                             border: "3px solid var(--secondary)",
                             img {
