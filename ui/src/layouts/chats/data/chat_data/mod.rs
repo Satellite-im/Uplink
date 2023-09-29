@@ -29,6 +29,19 @@ impl ChatData {
             return;
         }
         self.active_chat.messages.add_message_to_view(message_id);
+
+        if self
+            .active_chat
+            .messages
+            .messages
+            .front()
+            .map(|x| x.inner.id() == message_id)
+            .unwrap_or_default()
+        {
+            self.scroll_down(conv_id);
+        } else {
+            self.scroll_up(conv_id);
+        }
     }
 
     pub fn append_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
@@ -126,7 +139,7 @@ impl ChatData {
         }
     }
 
-    pub fn scroll_top(&mut self, conv_id: Uuid) {
+    fn scroll_up(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             let scroll_top = self.active_chat.messages.displayed_messages.get_back();
             if let Some(pm) = scroll_top {
@@ -138,7 +151,7 @@ impl ChatData {
         }
     }
 
-    pub fn scroll_bottom(&mut self, conv_id: Uuid) {
+    fn scroll_down(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             let scroll_top = self.active_chat.messages.displayed_messages.get_front();
             if let Some(pm) = scroll_top {
