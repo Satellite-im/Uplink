@@ -37,7 +37,7 @@ pub fn hangle_msg_scroll<'a>(
                 current_conv_id.replace(conv_id);
 
                 'CONFIGURE_EVAL: loop {
-                    let mut behavior = chat_data
+                    let behavior = chat_data
                         .read()
                         .get_chat_behavior(current_conv_id.unwrap_or_default());
 
@@ -45,6 +45,23 @@ pub fn hangle_msg_scroll<'a>(
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
                     let should_send_bottom_evt =
                         behavior.on_scroll_end != data::ScrollBehavior::DoNothing;
+                    drop(behavior);
+                    let bottom_msg_id: Uuid = chat_data
+                        .read()
+                        .active_chat
+                        .messages
+                        .messages
+                        .back()
+                        .map(|x| x.inner.id())
+                        .unwrap_or_default();
+                    let top_msg_id: Uuid = chat_data
+                        .read()
+                        .active_chat
+                        .messages
+                        .messages
+                        .front()
+                        .map(|x| x.inner.id())
+                        .unwrap_or_default();
                     let mut observer_script = OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
                         should_send_top_evt.then_some("1").unwrap_or("0"),
@@ -57,6 +74,10 @@ pub fn hangle_msg_scroll<'a>(
                         "$CONVERSATION_ID",
                         &current_conv_id.unwrap_or_default().to_string(),
                     );
+                    observer_script =
+                        observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
+                    observer_script =
+                        observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
 
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
@@ -113,7 +134,6 @@ pub fn hangle_msg_scroll<'a>(
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                                     if conv_id_changed { continue; }
                                                     chat_data.write_silent().add_message_to_view(conv_id, msg_id);
-
                                                 },
                                                 JsMsg::Remove { msg_id, conv_id } => {
                                                     let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
@@ -140,6 +160,7 @@ pub fn hangle_msg_scroll<'a>(
                                                         Some(x) => x,
                                                         None => {
                                                             log::error!("no messages at top of view");
+                                                            let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                             behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
                                                             chat_data.write_silent().set_chat_behavior(conv_id, behavior);
                                                             continue 'CONFIGURE_EVAL;
@@ -170,6 +191,7 @@ pub fn hangle_msg_scroll<'a>(
                                                         Ok(rsp) => {
                                                             let new_messages = rsp.messages.len();
                                                             chat_data.write().prepend_messages(conv_id, rsp.messages);
+                                                            let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                             behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                             println!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                             chat_data.write().set_chat_behavior(conv_id, behavior);
