@@ -256,7 +256,7 @@ pub async fn fetch_messages2(
         FetchMessagesConfig::MostRecent { limit } => MessageOptions::default()
             .set_range(total_messages.saturating_sub(limit)..total_messages),
         FetchMessagesConfig::Earlier { start_date, limit } => MessageOptions::default()
-            .set_date_range(start_date.clone()..DateTime::<Utc>::default())
+            .set_date_range(DateTime::<Utc>::default()..start_date.clone())
             .set_reverse()
             .set_limit(limit as _),
         FetchMessagesConfig::Later { start_date, limit } => MessageOptions::default()
@@ -269,13 +269,17 @@ pub async fn fetch_messages2(
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let messages: Vec<_> = FuturesOrdered::from_iter(
+    let mut messages: Vec<_> = FuturesOrdered::from_iter(
         messages
             .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),
     )
     .collect()
     .await;
+
+    if matches!(config, FetchMessagesConfig::Earlier { .. }) {
+        messages = messages.drain(..).rev().collect();
+    }
 
     let has_more = messages.len() >= config.get_limit();
 

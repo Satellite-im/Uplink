@@ -24,7 +24,7 @@ impl Messages {
 
         Self {
             messages,
-            displayed_messages: MsgView::default(),
+            displayed_messages: MsgView::new(),
             message_times,
         }
     }

@@ -114,6 +114,9 @@ impl ChatData {
         if let Some(chat) = s.get_chat_by_id(*chat_id) {
             self.chat_behaviors.insert(chat.id, behavior);
             self.active_chat = ActiveChat::new(s, &chat, VecDeque::from_iter(messages.drain(..)));
+        } else {
+            self.active_chat = ActiveChat::default();
+            log::error!("failed to set active chat to id: {chat_id}");
         }
     }
 
