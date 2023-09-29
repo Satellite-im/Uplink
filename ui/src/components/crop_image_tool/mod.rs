@@ -112,11 +112,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     padding: "16px",
                     div {
                         id: "image-crop-box-container",
-                        width: "auto",
-                        div {
-                            class: "image-parent-div",
-                            overflow: "hidden", 
-                        }
+                        display: "inline-flex",
                         div {
                             overflow: "hidden",
                             border: "3px solid var(--secondary)",
@@ -153,7 +149,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             }
-            
         }
-    },));
+    },
+));
 }

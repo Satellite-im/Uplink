@@ -12,31 +12,16 @@
     text-align: center;
 }
 
-
-
 .crop-box {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     position: absolute;
     border-radius: 50%;
-    border: 2px dashed orange;
+    border: 2px dashed transparent;
 }
 
 .crop-box::before {
-    content: "";
-    display: block;
-    position: absolute;
-    opacity: 0.8;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at center, transparent 70.5%, black 50%);
-    mix-blend-mode: multiply;
-  }
-
-  .image-parent-div::before {
     content: "";
     display: block;
     position: absolute;
