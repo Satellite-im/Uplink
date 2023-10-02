@@ -18,7 +18,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
     ops::Range,
-    time::Instant,
 };
 use warp::{
     constellation::file::File,
@@ -291,26 +290,25 @@ pub async fn conversation_to_chat(
     conv: &Conversation,
     messaging: &super::Messaging,
 ) -> Result<chats::Chat, Error> {
-    // todo: warp doesn't support paging yet. it also doesn't check the range bounds
-    let total_messages = messaging.get_message_count(conv.id()).await?;
-    let to_take = std::cmp::min(total_messages, 20);
-    let to_skip = total_messages.saturating_sub(to_take + 1);
+    // let total_messages = messaging.get_message_count(conv.id()).await?;
+    // let to_take = std::cmp::min(total_messages, 20);
+    // let to_skip = total_messages.saturating_sub(to_take + 1);
 
-    let messages = messaging
-        .get_messages(
-            conv.id(),
-            MessageOptions::default().set_range(to_skip..total_messages),
-        )
-        .await
-        .and_then(Vec::<_>::try_from)?;
-
-    let messages: VecDeque<_> = FuturesOrdered::from_iter(
-        messages
-            .iter()
-            .map(|message| convert_raygun_message(messaging, message).boxed()),
-    )
-    .collect()
-    .await;
+    // let messages = messaging
+    //     .get_messages(
+    //         conv.id(),
+    //         MessageOptions::default().set_range(to_skip..total_messages),
+    //     )
+    //     .await
+    //     .and_then(Vec::<_>::try_from)?;
+    //
+    // let messages: VecDeque<_> = FuturesOrdered::from_iter(
+    //     messages
+    //         .iter()
+    //         .map(|message| convert_raygun_message(messaging, message).boxed()),
+    // )
+    // .collect()
+    // .await;
 
     // todo: perhaps add pagination, but do this separately from the pagination for the chats page
     let pinned_messages = messaging
@@ -324,17 +322,17 @@ pub async fn conversation_to_chat(
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let has_more_messages = total_messages > to_take;
-    let mut chat = chats::Chat::new(
+    // let has_more_messages = total_messages > to_take;
+    let chat = chats::Chat::new(
         conv.id(),
         HashSet::from_iter(conv.recipients()),
         conv.conversation_type(),
         conv.name(),
         conv.creator(),
-        messages,
+        VecDeque::default(),
         pinned_messages,
     );
-    chat.has_more_messages = has_more_messages;
+    // chat.has_more_messages = has_more_messages;
     Ok(chat)
 }
 
