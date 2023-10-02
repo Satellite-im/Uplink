@@ -410,7 +410,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     oninput: move |evt| {
-                        let current_val = evt.value.clone();
+                        let current_val = evt.value();
 
                         *val.write_silent() = current_val.clone();
 

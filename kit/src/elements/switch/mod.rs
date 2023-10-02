@@ -45,7 +45,7 @@ pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                 disabled: "{disabled}",
                 "type": "checkbox",
                 checked: "{checked_state}",
-                oninput: move |e| emit(&cx, e.data.value == "true")
+                oninput: move |e| emit(&cx, e.data.value() == "true")
             },
             span { class: "slider" }
         }

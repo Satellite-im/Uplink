@@ -67,7 +67,8 @@ log = { version = "0.4.17", features = ["std"] }
 default = ["dioxus-desktop/devtools"]
 fullscreen = ["dioxus-desktop/fullscreen"]
 transparent = ["dioxus-desktop/transparent"]
-tray = ["dioxus-desktop/tray"]
+# todo: uncomment this when the tray feature is added back to the dioxus branch
+# tray = ["dioxus-desktop/tray"]
 production_mode = ["common/production_mode"]
 
 [build-dependencies]

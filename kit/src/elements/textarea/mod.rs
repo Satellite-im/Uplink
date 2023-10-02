@@ -145,7 +145,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     oninput: {
                         to_owned![eval, cursor_eval];
                         move |evt| {
-                            let current_val = evt.value.clone();
+                            let current_val = evt.value();
                             *text_value.write_silent() = current_val.clone();
                             onchange.call((current_val, true));
                             to_owned![eval, cursor_eval, cursor_position];

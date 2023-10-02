@@ -45,7 +45,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             aria_label: "Selector",
             select {
                 value: "{initial_value}",
-                onchange: move |e| emit(&cx, e.value.clone()),
+                onchange: move |e| emit(&cx, e.value()),
                 iter.map(|val|
                     rsx!(option {key: "{val}", label: "{val}", value: "{val}", aria_label: "Selector Option"})
                 )

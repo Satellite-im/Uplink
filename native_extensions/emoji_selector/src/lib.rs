@@ -339,7 +339,10 @@ impl Extension for EmojiSelector {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a> {
-        cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
+        // todo: uncomment this when dioxus is updated
+        // cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
+        // todo: delete this line
+        cx.use_hook(|| override_runtime(runtime));
         let styles = self.stylesheet();
         cx.render(rsx!(
             style { "{styles}" },

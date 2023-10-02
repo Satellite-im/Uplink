@@ -42,8 +42,8 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 step: "{step}",
                 value: "{internal_state}",
                 oninput: move |event| {
-                    internal_state.set(event.value.parse().unwrap_or_default());
-                    cx.props.onchange.call(event.value.parse().unwrap_or_default());
+                    internal_state.set(event.value().parse().unwrap_or_default());
+                    cx.props.onchange.call(event.value().parse().unwrap_or_default());
                 },
             },
             cx.props.icon_right.is_some().then(|| rsx! {
