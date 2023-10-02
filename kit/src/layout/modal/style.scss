@@ -23,6 +23,7 @@
     }
 
     .modal {
+      display: flex;
       background-color: var(--secondary-dark);
       padding: var(--gap);
       border-radius: var(--border-radius);
