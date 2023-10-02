@@ -38,9 +38,9 @@ impl ChatData {
             .map(|x| x.inner.id() == message_id)
             .unwrap_or_default()
         {
-            self.scroll_down(conv_id);
-        } else {
             self.scroll_up(conv_id);
+        } else {
+            self.scroll_down(conv_id);
         }
     }
 
