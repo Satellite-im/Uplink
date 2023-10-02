@@ -842,7 +842,9 @@ impl State {
             chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message);
             // only care about the most recent message, for the sidebar
-            chat.messages.pop_front();
+            if chat.messages.len() > 1 {
+                chat.messages.pop_front();
+            }
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
