@@ -602,6 +602,15 @@
   }
 }
 
+.profile-container {
+  display: flex;
+  flex-direction: column; 
+  left: calc(var(--height-input) * 2); 
+  top: calc(var(--height-input) * 3); 
+  width: var(--width-sidebar); 
+  margin-left: calc(var(--height-input) * 2);
+}
+
 #profile-name {
   max-width: 100%;
   margin-left: var(--padding);
@@ -631,6 +640,9 @@
   word-break: break-word;
   max-width: 100%;
   margin-left: var(--padding);
+  .text {
+    font-size: var(--text-size-less);
+  }
 }
 
 .bold {
