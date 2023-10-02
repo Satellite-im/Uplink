@@ -14,10 +14,14 @@ use warp::{
     raygun::{self, ConversationType},
 };
 
+mod message_view;
 mod messages;
 mod metadata;
+mod partial_message;
+pub use message_view::*;
 pub use messages::*;
 pub use metadata::*;
+pub use partial_message::*;
 
 #[derive(Debug, Default, Clone)]
 pub struct ActiveChat {
