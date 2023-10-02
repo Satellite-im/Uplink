@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use common::{
     state::State,
     warp_runner::{
-        ui_adapter::{self, MessageEvent, RayGunEvent},
+        ui_adapter::{self, MessageEvent},
         FetchMessagesConfig, RayGunCmd, WarpCmd, WarpEvent,
     },
     WARP_CMD_CH, WARP_EVENT_CH,

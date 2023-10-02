@@ -14,7 +14,7 @@ use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{self, ChatBehavior, ChatData, JsMsg, ViewInit, DEFAULT_MESSAGES_TO_TAKE},
+    data::{self, ChatBehavior, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 

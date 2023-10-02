@@ -3,7 +3,7 @@ use std::ops::Range;
 use chrono::{DateTime, Utc};
 use common::{
     language::get_local_text,
-    state::{Chat, Identity, State},
+    state::{Identity, State},
     warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
