@@ -4,7 +4,8 @@ use kit::{
     elements::{button::Button, range::Range, Appearance},
     layout::modal::Modal,
 };
-use std::{fs::File, io::Write, path::PathBuf};
+use std::path::PathBuf;
+use tokio::io::AsyncWriteExt;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -93,8 +94,18 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     },
                                                 };
                                                 let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
-                                                let mut file = File::create(cropped_image_path.clone()).unwrap();
-                                                file.write_all(&decoded_bytes).unwrap();
+                                                let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
+                                                    Ok(file) => file, 
+                                                    Err(e) => {
+                                                        log::error!("Error creating cropped image file: {}", e);
+                                                        return;
+                                                    },
+                                                };
+
+                                                if let Err(e) = file.write_all(&decoded_bytes).await {
+                                                    log::error!("Error writing cropped image file. {}", e);
+                                                    return;
+                                                }
                                                 cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
                                                 clicked_button_to_crop.set(true);
                                             }
