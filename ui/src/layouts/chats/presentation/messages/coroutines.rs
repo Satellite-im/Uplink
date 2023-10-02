@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use common::{
     state::{Action, State},
     warp_runner::{FetchMessagesConfig, RayGunCmd, WarpCmd},
@@ -138,6 +140,7 @@ pub fn hangle_msg_scroll<'a>(
                                     }
                                     None => {
                                         // failed to read from stream. use_coroutine is probably done for.
+                                        log::warn!("failed to read from coroutine ch for handle_msg_scroll");
                                         return;
                                     }
                                 }
@@ -157,10 +160,11 @@ pub fn hangle_msg_scroll<'a>(
 
                                         if !should_send_top_evt {
                                             log::error!("top event received when it shouldn't have fired");
-                                            continue;
+                                            continue 'CONFIGURE_EVAL;
                                         }
 
                                         if !chat_data.read().active_chat.scrolled_once {
+                                            log::info!("top evt reached early");
                                             continue 'CONFIGURE_EVAL;
                                         }
 
@@ -171,6 +175,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
                                                 chat_data.write_silent().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write_silent().active_chat.messages.displayed.clear();
                                                 continue 'CONFIGURE_EVAL;
                                             }
                                         };
@@ -184,14 +189,16 @@ pub fn hangle_msg_scroll<'a>(
 
                                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                                             log::error!("failed to send warp cmd: {e}");
-                                            continue;
+                                            tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'CONFIGURE_EVAL;
                                         }
 
                                         let rsp = match rx.await {
                                             Ok(r) => r,
                                             Err(e) => {
                                                 log::error!("failed to send warp command. channel closed. {e}");
-                                                return;
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'CONFIGURE_EVAL;
                                             }
                                         };
 
@@ -208,7 +215,8 @@ pub fn hangle_msg_scroll<'a>(
                                             },
                                             Err(e) => {
                                                 log::error!("FetchMessages command failed: {e}");
-                                                continue;
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'CONFIGURE_EVAL;
                                             }
                                         }
                                     }
@@ -219,12 +227,12 @@ pub fn hangle_msg_scroll<'a>(
 
                                         if !should_send_bottom_evt {
                                             log::error!("bottom event received when it shouldn't have fired");
-                                            continue;
+                                            continue 'CONFIGURE_EVAL;
                                         }
                                     }
                                 }
                                 None => {
-                                    // the evaluator broke
+                                    log::info!("the evaluator broke in handle_msg_scroll");
                                     continue 'WAIT_FOR_INIT;
                                 }
                             },
