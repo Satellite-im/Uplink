@@ -83,7 +83,7 @@ pub fn init_chat_data<'a>(
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
-            println!("fetching messages for chat_id: {:?}", conv_id);
+            log::info!("fetching messages for chat_id: {:?}", conv_id);
 
             let conv_id = match conv_id {
                 None => return,
@@ -235,7 +235,7 @@ async fn fetch_most_recent<'a>(
 
     match rsp {
         Ok(r) => {
-            println!("got FetchMessagesResponse to init chat {conv_id}");
+            log::info!("got FetchMessagesResponse to init chat {conv_id}");
             chat_behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
             chat_behavior.on_scroll_top = if r.has_more {
                 data::ScrollBehavior::FetchMore

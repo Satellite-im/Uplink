@@ -25,7 +25,7 @@ function observe_list() {
     }, {
         root: null,
         rootMargin: "0px",
-        threshold: 0.75,
+        threshold: 0.95,
     });
     const elements = document.querySelectorAll("#messages div.message-group > div.context-wrap > div.context-inner");
     elements.forEach( (element) => {

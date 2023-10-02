@@ -121,10 +121,10 @@ impl Messages {
             self.displayed.push_back(message_id);
         } else {
             // this isn't always an error
-            log::warn!(
-                "invalid insert in to active_chat.dispalyed: {:?}",
-                message_id
-            );
+            // log::warn!(
+            //     "invalid insert in to active_chat.dispalyed: {:?}",
+            //     message_id
+            // );
         }
     }
 
@@ -144,8 +144,9 @@ impl Messages {
         {
             self.displayed.pop_back();
         } else {
-            log::warn!("failed to remove message from view. fixing with retain()");
-            self.displayed.retain(|x| x != &message_id);
+            // during initialization this triggers when removing a nonexistent item.
+            // log::warn!("failed to remove message from view. fixing with retain()");
+            // self.displayed.retain(|x| x != &message_id);
         }
     }
 
