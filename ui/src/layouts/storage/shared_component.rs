@@ -36,7 +36,7 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
         class: "files-breadcrumbs",
         aria_label: "files-breadcrumbs",
         margin_top: format_args!("{}", if send_files_mode {"32px"} else {""}),
-        margin_left: format_args!("{}", if !send_files_mode {""} else {"12px"}),
+        margin: format_args!("{}", if send_files_mode {"var(--gap) 0"} else {"var(--gap)"}),
         storage_controller.read().dirs_opened_ref.iter().enumerate().map(|(index, dir)| {
             let directory = dir.clone();
             let dir_name = dir.name();
