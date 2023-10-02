@@ -18,6 +18,7 @@ impl Messages {
     pub fn new(mut m: VecDeque<ui_adapter::Message>) -> Self {
         let mut message_times = HashMap::new();
         let mut messages = VecDeque::new();
+        let mut displayed = VecDeque::new();
         for msg in m.drain(..) {
             message_times.insert(msg.inner.id(), msg.inner.date());
             messages.push_back(msg);
@@ -25,7 +26,7 @@ impl Messages {
 
         Self {
             all: messages,
-            displayed: VecDeque::new(),
+            displayed,
             times: message_times,
         }
     }
@@ -100,24 +101,22 @@ impl Messages {
                 return;
             }
         };
+
+        if self.displayed.contains(&message_id) {
+            log::warn!("attempted to insert duplicate message");
+            return;
+        }
+
+        // these variables allow for debugging
+        let front = self.displayed.front().and_then(|x| self.times.get(x));
+        let back = self.displayed.back().and_then(|x| self.times.get(x));
+
         if self.displayed.is_empty() {
             self.displayed.push_back(message_id);
-        } else if self
-            .displayed
-            .front()
-            .and_then(|x| self.times.get(x))
-            .map(|front| front >= &date)
-            .unwrap_or(false)
-        {
+        } else if front.map(|front| front >= &date).unwrap_or(false) {
             // earliest in front
             self.displayed.push_front(message_id);
-        } else if self
-            .displayed
-            .back()
-            .and_then(|x| self.times.get(x))
-            .map(|back| back <= &date)
-            .unwrap_or(false)
-        {
+        } else if back.map(|back| back <= &date).unwrap_or(false) {
             // latest in back
             self.displayed.push_back(message_id);
         } else {
@@ -125,19 +124,6 @@ impl Messages {
                 "invalid insert in to active_chat.dispalyed: {:?}",
                 message_id
             );
-            let mut new_displayed = VecDeque::new();
-            let mut to_insert = Some(message_id);
-            for id in self.displayed.drain(..) {
-                let id_time = self.times.get(&id).expect("time should exist");
-                if to_insert.is_some() && &date >= id_time {
-                    let new_id = to_insert.take().unwrap();
-                    new_displayed.push_back(new_id);
-                    log::info!("fixed insert insert for id: {:?}", message_id);
-                }
-
-                new_displayed.push_back(id);
-            }
-            self.displayed = new_displayed;
         }
     }
 
@@ -157,7 +143,7 @@ impl Messages {
         {
             self.displayed.pop_back();
         } else {
-            log::error!("failed to remove message from view. fixing with retain()");
+            log::warn!("failed to remove message from view. fixing with retain()");
             self.displayed.retain(|x| x != &message_id);
         }
     }
