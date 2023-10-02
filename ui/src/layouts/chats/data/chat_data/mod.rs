@@ -44,14 +44,6 @@ impl ChatData {
         }
     }
 
-    pub fn append_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
-        if self.active_chat.id() != conv_id {
-            return;
-        }
-
-        self.active_chat.messages.append_messages(messages);
-    }
-
     pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             return None;
@@ -73,6 +65,14 @@ impl ChatData {
         self.chat_behaviors.get(&id).cloned().unwrap_or_default()
     }
 
+    pub fn insert_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
+        if self.active_chat.id() != conv_id {
+            return;
+        }
+
+        self.active_chat.messages.insert_messages(messages);
+    }
+
     // returns true if the struct was mutated
     pub fn new_message(&mut self, conv_id: Uuid, msg: ui_adapter::Message) -> bool {
         if conv_id != self.active_chat.id() {
@@ -86,17 +86,9 @@ impl ChatData {
             .unwrap_or_default();
 
         if should_append_msg {
-            self.active_chat.messages.append_messages(vec![msg]);
+            self.active_chat.messages.insert_messages(vec![msg]);
         }
         return should_append_msg;
-    }
-
-    pub fn prepend_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
-        if self.active_chat.id() != conv_id {
-            return;
-        }
-
-        self.active_chat.messages.prepend_messages(messages);
     }
 
     pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {

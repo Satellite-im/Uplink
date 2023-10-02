@@ -188,7 +188,7 @@ pub fn hangle_msg_scroll<'a>(
                                                     match rsp {
                                                         Ok(rsp) => {
                                                             let new_messages = rsp.messages.len();
-                                                            chat_data.write().prepend_messages(conv_id, rsp.messages);
+                                                            chat_data.write().insert_messages(conv_id, rsp.messages);
                                                             let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                             behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                             println!("fetched {new_messages} messages. new behavior: {:?}", behavior);

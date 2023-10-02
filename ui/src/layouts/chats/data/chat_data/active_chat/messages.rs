@@ -29,24 +29,24 @@ impl Messages {
         }
     }
 
-    pub fn append_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
-        for msg in m.drain(..) {
-            // check for duplicates. really only needed for the first element the Vec
-            if !self.times.contains_key(&msg.inner.id()) {
-                self.times.insert(msg.inner.id(), msg.inner.date());
-                self.all.push_back(msg);
-            }
+    pub fn insert_messages(&mut self, m: Vec<ui_adapter::Message>) {
+        if m.is_empty() {
+            return;
         }
-    }
 
-    pub fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
-        for msg in m.drain(..).rev() {
-            // check for duplicates. really only needed for the first element the Vec
-            if !self.times.contains_key(&msg.inner.id()) {
-                self.times.insert(msg.inner.id(), msg.inner.date());
-                self.all.push_front(msg);
-            }
+        if self.all.is_empty() {
+            return self.append_messages(m);
         }
+
+        if m.last().unwrap().inner.date() > self.all.front().unwrap().inner.date() {
+            return self.prepend_messages(m);
+        }
+
+        if m.first().unwrap().inner.date() < self.all.back().unwrap().inner.date() {
+            return self.append_messages(m);
+        }
+
+        log::error!("invalid insert");
     }
 
     pub fn get_earliest_displayed(&self) -> Option<PartialMessage> {
@@ -105,6 +105,7 @@ impl Messages {
     }
 
     pub fn remove_message_from_view(&mut self, message_id: Uuid) {
+        // todo: consider using .retain()
         if self
             .displayed
             .front()
@@ -121,6 +122,28 @@ impl Messages {
             self.displayed.pop_back();
         } else {
             // println!("invalid remove: {:?}", val);
+        }
+    }
+}
+
+impl Messages {
+    fn append_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
+        for msg in m.drain(..) {
+            // check for duplicates. really only needed for the first element the Vec
+            if !self.times.contains_key(&msg.inner.id()) {
+                self.times.insert(msg.inner.id(), msg.inner.date());
+                self.all.push_back(msg);
+            }
+        }
+    }
+
+    fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
+        for msg in m.drain(..).rev() {
+            // check for duplicates. really only needed for the first element the Vec
+            if !self.times.contains_key(&msg.inner.id()) {
+                self.times.insert(msg.inner.id(), msg.inner.date());
+                self.all.push_front(msg);
+            }
         }
     }
 }
