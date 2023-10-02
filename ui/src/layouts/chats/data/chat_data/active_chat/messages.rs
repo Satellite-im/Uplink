@@ -35,6 +35,22 @@ impl Messages {
             return;
         }
 
+        let (is_valid, _) =
+            m.iter().fold(
+                (true, None),
+                |(is_valid, prev_value), msg| match prev_value {
+                    Some(prev_date) => (
+                        is_valid && msg.inner.date() >= prev_date,
+                        Some(msg.inner.date()),
+                    ),
+                    None => (is_valid, Some(msg.inner.date())),
+                },
+            );
+        if !is_valid {
+            log::error!("invalid data passed to insert_messages");
+            return;
+        }
+
         if self.all.is_empty() {
             return self.append_messages(m);
         }
@@ -79,7 +95,10 @@ impl Messages {
     pub fn add_message_to_view(&mut self, message_id: Uuid) {
         let date = match self.times.get(&message_id).cloned() {
             Some(time) => time,
-            None => return,
+            None => {
+                log::error!("tried to add message to view but time lookup failed");
+                return;
+            }
         };
         if self.displayed.is_empty() {
             self.displayed.push_back(message_id);
@@ -110,13 +129,7 @@ impl Messages {
             let mut to_insert = Some(message_id);
             for id in self.displayed.drain(..) {
                 let id_time = self.times.get(&id).expect("time should exist");
-                let should_insert = to_insert
-                    .as_ref()
-                    .and_then(|id| self.times.get(id))
-                    .map(|new_time| new_time >= id_time)
-                    .unwrap_or(false);
-
-                if should_insert {
+                if to_insert.is_some() && &date >= id_time {
                     let new_id = to_insert.take().unwrap();
                     new_displayed.push_back(new_id);
                     log::info!("fixed insert insert for id: {:?}", message_id);
