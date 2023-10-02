@@ -7,6 +7,7 @@ use super::PartialMessage;
 
 #[derive(Debug, Default, Clone)]
 pub struct Messages {
+    // messages should be sorted by time in increasing order. earliest first, latest last.
     pub all: VecDeque<ui_adapter::Message>,
     pub displayed: VecDeque<Uuid>,
     // used for displayed_messages
@@ -38,11 +39,13 @@ impl Messages {
             return self.append_messages(m);
         }
 
-        if m.last().unwrap().inner.date() > self.all.front().unwrap().inner.date() {
+        // latest last
+        if m.last().unwrap().inner.date() <= self.all.front().unwrap().inner.date() {
             return self.prepend_messages(m);
         }
 
-        if m.first().unwrap().inner.date() < self.all.back().unwrap().inner.date() {
+        // earliest first
+        if m.first().unwrap().inner.date() >= self.all.back().unwrap().inner.date() {
             return self.append_messages(m);
         }
 
@@ -51,7 +54,7 @@ impl Messages {
 
     pub fn get_earliest_displayed(&self) -> Option<PartialMessage> {
         self.displayed
-            .back()
+            .front()
             .and_then(|id| match self.times.get(id) {
                 Some(date) => Some(PartialMessage {
                     message_id: *id,
@@ -63,7 +66,7 @@ impl Messages {
 
     pub fn get_latest_displayed(&self) -> Option<PartialMessage> {
         self.displayed
-            .front()
+            .back()
             .and_then(|id| match self.times.get(id) {
                 Some(date) => Some(PartialMessage {
                     message_id: *id,
@@ -78,34 +81,54 @@ impl Messages {
             Some(time) => time,
             None => return,
         };
-        if self.all.is_empty() {
+        if self.displayed.is_empty() {
             self.displayed.push_back(message_id);
         } else if self
             .displayed
             .front()
             .and_then(|x| self.times.get(x))
-            .map(|front| front <= &date)
+            .map(|front| front >= &date)
             .unwrap_or(false)
         {
+            // earliest in front
             self.displayed.push_front(message_id);
         } else if self
             .displayed
             .back()
             .and_then(|x| self.times.get(x))
-            .map(|back| back >= &date)
+            .map(|back| back <= &date)
             .unwrap_or(false)
         {
+            // latest in back
             self.displayed.push_back(message_id);
         } else {
             log::error!(
                 "invalid insert in to active_chat.dispalyed: {:?}",
                 message_id
             );
+            let mut new_displayed = VecDeque::new();
+            let mut to_insert = Some(message_id);
+            for id in self.displayed.drain(..) {
+                let id_time = self.times.get(&id).expect("time should exist");
+                let should_insert = to_insert
+                    .as_ref()
+                    .and_then(|id| self.times.get(id))
+                    .map(|new_time| new_time >= id_time)
+                    .unwrap_or(false);
+
+                if should_insert {
+                    let new_id = to_insert.take().unwrap();
+                    new_displayed.push_back(new_id);
+                    log::info!("fixed insert insert for id: {:?}", message_id);
+                }
+
+                new_displayed.push_back(id);
+            }
+            self.displayed = new_displayed;
         }
     }
 
     pub fn remove_message_from_view(&mut self, message_id: Uuid) {
-        // todo: consider using .retain()
         if self
             .displayed
             .front()
@@ -121,7 +144,8 @@ impl Messages {
         {
             self.displayed.pop_back();
         } else {
-            // println!("invalid remove: {:?}", val);
+            log::error!("failed to remove message from view. fixing with retain()");
+            self.displayed.retain(|x| x != &message_id);
         }
     }
 }
@@ -138,12 +162,16 @@ impl Messages {
     }
 
     fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
-        for msg in m.drain(..).rev() {
+        let mut new_all = VecDeque::new();
+        for msg in m.drain(..) {
             // check for duplicates. really only needed for the first element the Vec
             if !self.times.contains_key(&msg.inner.id()) {
                 self.times.insert(msg.inner.id(), msg.inner.date());
-                self.all.push_front(msg);
+                new_all.push_back(msg);
             }
         }
+
+        new_all.append(&mut self.all);
+        self.all = new_all;
     }
 }
