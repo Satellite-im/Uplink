@@ -165,25 +165,20 @@ impl Messages {
 
 impl Messages {
     fn append_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
-        for msg in m.drain(..) {
-            // check for duplicates. really only needed for the first element the Vec
-            if !self.times.contains_key(&msg.inner.id()) {
-                self.times.insert(msg.inner.id(), msg.inner.date());
-                self.all.push_back(msg);
-            }
+        m.retain(|x| !self.times.contains_key(&x.inner.id()));
+        for msg in m.iter() {
+            self.times.insert(msg.inner.id(), msg.inner.date());
         }
+        let mut new_msgs = VecDeque::from_iter(m.drain(..));
+        self.all.append(&mut new_msgs);
     }
 
     fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
-        let mut new_all = VecDeque::new();
-        for msg in m.drain(..) {
-            // check for duplicates. really only needed for the first element the Vec
-            if !self.times.contains_key(&msg.inner.id()) {
-                self.times.insert(msg.inner.id(), msg.inner.date());
-                new_all.push_back(msg);
-            }
+        m.retain(|x| !self.times.contains_key(&x.inner.id()));
+        for msg in m.iter() {
+            self.times.insert(msg.inner.id(), msg.inner.date());
         }
-
+        let mut new_all = VecDeque::from_iter(m.drain(..));
         new_all.append(&mut self.all);
         self.all = new_all;
     }
