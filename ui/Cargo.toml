@@ -65,6 +65,7 @@ reqwest = { workspace = true, default-features = false, features = [
 log = { version = "0.4.17", features = ["std"] }
 
 [features]
+default = ["dioxus-desktop/devtools"]
 fullscreen = ["dioxus-desktop/fullscreen"]
 transparent = ["dioxus-desktop/transparent"]
 tray = ["dioxus-desktop/tray"]

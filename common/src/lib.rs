@@ -42,8 +42,12 @@ pub enum LogProfile {
     Trace,
     /// like trace but include warp logs
     TraceWarp,
-    /// like trace but include dioxus logs
+    /// trace dioxus
     TraceDioxus,
+    /// Logs debug level from all crates to a file
+    DebugAll,
+    /// Logs trace level from all crates to a file
+    TraceAll,
 }
 
 #[derive(Debug, Parser)]
