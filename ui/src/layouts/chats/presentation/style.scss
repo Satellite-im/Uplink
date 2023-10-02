@@ -8,33 +8,7 @@
         display: inline-flex;
         flex-direction: column;
         gap: var(--gap);
-
-        .files-breadcrumbs {
-            margin: var(--gap) 0;
-        }
-
-        .files-list {
-            display: flex;
-            flex-wrap: wrap;
-            width: 100%;
-            gap: var(--gap);
-            justify-content: flex-start;
-            background-color: var(--secondary);
-            padding: var(--gap);
-            border-radius: var(--border-radius);
-            border: 1px solid var(--border-subtle-color);
-            min-height: 50vh;
-            min-width: 70vw;
-        }      
-
-        .file-parent {
-            max-height: 50vh;
-            ::-webkit-scrollbar-track {
-                background: var(--secondary);
-                border-radius: var(--border-radius);
-                border: 1px solid var(--border-subtle-color);
-            }
-        }
+   
     }
 
     .file-wrap {
