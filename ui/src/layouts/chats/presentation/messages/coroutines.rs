@@ -84,14 +84,29 @@ pub fn hangle_msg_scroll<'a>(
 
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
+                    let _conv_id = current_conv_id.unwrap_or_default();
                     let eval_stream = async_stream::stream! {
                         let mut should_break = false;
                         while !should_break {
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
-                                        should_break = matches!(msg, JsMsg::Top{..} | JsMsg::Bottom{..});
                                         //log::info!("got this from js: {msg}");
+
+                                        // perhaps this is a silly check
+                                        let is_evt_valid = match msg {
+                                            JsMsg::Top { conv_id }
+                                            | JsMsg::Bottom { conv_id }
+                                            | JsMsg::Add { conv_id, .. }
+                                            | JsMsg::Remove { conv_id, .. } if conv_id == _conv_id => true,
+                                            _ => false
+                                        };
+
+                                        if !is_evt_valid {
+                                            log::warn!("received js event from wrong conversation");
+                                            continue;
+                                        }
+                                        should_break = matches!(msg, JsMsg::Top{ .. } | JsMsg::Bottom { .. });
                                         yield msg;
                                     },
                                     Err(e) => {
@@ -130,19 +145,13 @@ pub fn hangle_msg_scroll<'a>(
                             res = eval_stream.next() => match res {
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, conv_id } => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
-                                        if conv_id_changed { continue; }
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
                                     },
                                     JsMsg::Remove { msg_id, conv_id } => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
-                                        if conv_id_changed { continue; }
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                     }
                                     JsMsg::Top { conv_id } => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
-                                        if conv_id_changed { continue; }
-                                        println!("top reached for conv id: {conv_id}");
+                                        log::info!("top reached for conv id: {conv_id}");
                                         // send uuid/timestamp of oldest message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
 
@@ -190,6 +199,7 @@ pub fn hangle_msg_scroll<'a>(
                                             Ok(rsp) => {
                                                 let new_messages = rsp.messages.len();
                                                 chat_data.write().insert_messages(conv_id, rsp.messages);
+                                                chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
@@ -203,9 +213,7 @@ pub fn hangle_msg_scroll<'a>(
                                         }
                                     }
                                     JsMsg::Bottom { conv_id } => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
-                                        if conv_id_changed { continue; }
-                                        println!("bottom reached for conv id: {conv_id}");
+                                        log::info!("bottom reached for conv id: {conv_id}");
                                         // send uuid/timestamp of most recent message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
 
