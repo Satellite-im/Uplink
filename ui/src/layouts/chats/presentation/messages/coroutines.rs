@@ -14,7 +14,7 @@ use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{self, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
+    data::{self, ChatBehavior, ChatData, JsMsg, ViewInit, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 
@@ -276,7 +276,14 @@ pub fn hangle_msg_scroll<'a>(
                                                 chat_data.write().insert_messages(conv_id, rsp.messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                                                behavior.on_scroll_end = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+
+                                                if !rsp.has_more {
+                                                    // return to ScrollInit::MostRecent
+                                                    behavior = ChatBehavior::default();
+                                                } else {
+                                                    // behavior.on_scroll_end already equals data::ScrollBehavior::FetchMore;
+                                                }
+
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 // wait for UI to reload in response to chat_data.write()
