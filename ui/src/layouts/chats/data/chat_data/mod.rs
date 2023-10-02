@@ -33,7 +33,7 @@ impl ChatData {
         if self
             .active_chat
             .messages
-            .messages
+            .all
             .front()
             .map(|x| x.inner.id() == message_id)
             .unwrap_or_default()
@@ -52,28 +52,20 @@ impl ChatData {
         self.active_chat.messages.append_messages(messages);
     }
 
-    pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<DateTime<Utc>> {
+    pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             return None;
         }
 
-        self.active_chat
-            .messages
-            .displayed_messages
-            .get_back()
-            .map(|x| x.date)
+        self.active_chat.messages.get_earliest_displayed()
     }
 
-    pub fn get_bottom_of_view(&self, conv_id: Uuid) -> Option<DateTime<Utc>> {
+    pub fn get_bottom_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             return None;
         }
 
-        self.active_chat
-            .messages
-            .displayed_messages
-            .get_front()
-            .map(|x| x.date)
+        self.active_chat.messages.get_latest_displayed()
     }
 
     // call this first to fetch the messages
@@ -147,24 +139,22 @@ impl ChatData {
 impl ChatData {
     fn scroll_up(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            let scroll_top = self.active_chat.messages.displayed_messages.get_back();
-            if let Some(pm) = scroll_top {
+            if let Some(scroll_top) = self.active_chat.messages.get_earliest_displayed() {
                 behavior.view_init.scroll_to = ScrollTo::ScrollUp {
-                    view_top: pm.message_id,
+                    view_top: scroll_top.message_id,
                 };
-                behavior.view_init.msg_time.replace(pm.date);
+                behavior.view_init.msg_time.replace(scroll_top.date);
             }
         }
     }
 
     fn scroll_down(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            let scroll_top = self.active_chat.messages.displayed_messages.get_front();
-            if let Some(pm) = scroll_top {
+            if let Some(scroll_bottom) = self.active_chat.messages.get_latest_displayed() {
                 behavior.view_init.scroll_to = ScrollTo::ScrollDown {
-                    view_bottom: pm.message_id,
+                    view_bottom: scroll_bottom.message_id,
                 };
-                behavior.view_init.msg_time.replace(pm.date);
+                behavior.view_init.msg_time.replace(scroll_bottom.date);
             }
         }
     }

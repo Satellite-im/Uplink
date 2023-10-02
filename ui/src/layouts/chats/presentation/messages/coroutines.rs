@@ -5,9 +5,7 @@ use common::{
 };
 
 use dioxus_core::Scoped;
-use dioxus_hooks::{
-    to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState, UseState,
-};
+use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
@@ -50,7 +48,7 @@ pub fn hangle_msg_scroll<'a>(
                         .read()
                         .active_chat
                         .messages
-                        .messages
+                        .all
                         .back()
                         .map(|x| x.inner.id())
                         .unwrap_or_default();
@@ -58,7 +56,7 @@ pub fn hangle_msg_scroll<'a>(
                         .read()
                         .active_chat
                         .messages
-                        .messages
+                        .all
                         .front()
                         .map(|x| x.inner.id())
                         .unwrap_or_default();
@@ -156,7 +154,7 @@ pub fn hangle_msg_scroll<'a>(
                                                         continue 'CONFIGURE_EVAL;
                                                     }
 
-                                                    let start_date = match chat_data.read().get_top_of_view(conv_id) {
+                                                    let msg = match chat_data.read().get_top_of_view(conv_id) {
                                                         Some(x) => x,
                                                         None => {
                                                             log::error!("no messages at top of view");
@@ -170,7 +168,7 @@ pub fn hangle_msg_scroll<'a>(
                                                     let (tx, rx) = oneshot::channel();
                                                     let cmd = RayGunCmd::FetchMessages{
                                                         conv_id,
-                                                        config: FetchMessagesConfig::Earlier { start_date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                                        config: FetchMessagesConfig::Earlier { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
                                                         rsp: tx
                                                     };
 

@@ -14,11 +14,9 @@ use warp::{
     raygun::{self, ConversationType},
 };
 
-mod message_view;
 mod messages;
 mod metadata;
 mod partial_message;
-pub use message_view::*;
 pub use messages::*;
 pub use metadata::*;
 pub use partial_message::*;
@@ -50,7 +48,7 @@ impl ActiveChat {
     }
 
     pub fn messages(&self) -> VecDeque<ui_adapter::Message> {
-        self.messages.messages.clone()
+        self.messages.all.clone()
     }
 }
 
