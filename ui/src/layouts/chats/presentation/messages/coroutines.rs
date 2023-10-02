@@ -230,6 +230,64 @@ pub fn hangle_msg_scroll<'a>(
                                             log::error!("bottom event received when it shouldn't have fired");
                                             break 'HANDLE_EVAL;
                                         }
+
+                                        if !chat_data.read().active_chat.scrolled_once {
+                                            log::info!("bottom evt reached early");
+                                            break 'HANDLE_EVAL;
+                                        }
+
+                                        let msg = match chat_data.read().get_bottom_of_view(conv_id) {
+                                            Some(x) => x,
+                                            None => {
+                                                log::error!("no messages at bottom of view");
+                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
+                                                chat_data.write_silent().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write_silent().active_chat.messages.displayed.clear();
+                                                break 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        let (tx, rx) = oneshot::channel();
+                                        let cmd = RayGunCmd::FetchMessages{
+                                            conv_id,
+                                            config: FetchMessagesConfig::Later { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                            rsp: tx
+                                        };
+
+                                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                                            log::error!("failed to send warp cmd: {e}");
+                                            tokio::time::sleep(Duration::from_secs(1)).await;
+                                            break 'HANDLE_EVAL;
+                                        }
+
+                                        let rsp = match rx.await {
+                                            Ok(r) => r,
+                                            Err(e) => {
+                                                log::error!("failed to send warp command. channel closed. {e}");
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                break 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        match rsp {
+                                            Ok(rsp) => {
+                                                let new_messages = rsp.messages.len();
+                                                chat_data.write().insert_messages(conv_id, rsp.messages);
+                                                chat_data.write().active_chat.messages.displayed.clear();
+                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.on_scroll_end = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                // wait for UI to reload in response to chat_data.write()
+                                                break 'CONFIGURE_EVAL;
+                                            },
+                                            Err(e) => {
+                                                log::error!("FetchMessages command failed: {e}");
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                break 'HANDLE_EVAL;
+                                            }
+                                        }
                                     }
                                 }
                                 None => {
