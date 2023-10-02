@@ -18,7 +18,7 @@ impl Messages {
     pub fn new(mut m: VecDeque<ui_adapter::Message>) -> Self {
         let mut message_times = HashMap::new();
         let mut messages = VecDeque::new();
-        let mut displayed = VecDeque::new();
+        let displayed = VecDeque::new();
         for msg in m.drain(..) {
             message_times.insert(msg.inner.id(), msg.inner.date());
             messages.push_back(msg);
@@ -102,10 +102,10 @@ impl Messages {
             }
         };
 
-        if self.displayed.contains(&message_id) {
-            log::warn!("attempted to insert duplicate message");
-            return;
-        }
+        // if self.displayed.contains(&message_id) {
+        //     log::warn!("attempted to insert duplicate message");
+        //     return;
+        // }
 
         // these variables allow for debugging
         let front = self.displayed.front().and_then(|x| self.times.get(x));
@@ -113,14 +113,15 @@ impl Messages {
 
         if self.displayed.is_empty() {
             self.displayed.push_back(message_id);
-        } else if front.map(|front| front >= &date).unwrap_or(false) {
+        } else if front.map(|front| front > &date).unwrap_or(false) {
             // earliest in front
             self.displayed.push_front(message_id);
-        } else if back.map(|back| back <= &date).unwrap_or(false) {
+        } else if back.map(|back| back < &date).unwrap_or(false) {
             // latest in back
             self.displayed.push_back(message_id);
         } else {
-            log::error!(
+            // this isn't always an error
+            log::warn!(
                 "invalid insert in to active_chat.dispalyed: {:?}",
                 message_id
             );
@@ -146,6 +147,14 @@ impl Messages {
             log::warn!("failed to remove message from view. fixing with retain()");
             self.displayed.retain(|x| x != &message_id);
         }
+    }
+
+    pub fn top(&self) -> Option<Uuid> {
+        self.all.front().map(|x| x.inner.id())
+    }
+
+    pub fn bottom(&self) -> Option<Uuid> {
+        self.all.back().map(|x| x.inner.id())
     }
 }
 
