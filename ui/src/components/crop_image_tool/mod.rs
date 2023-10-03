@@ -1,4 +1,4 @@
-use common::{icons::outline::Shape, STATIC_ARGS};
+use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
 use dioxus::prelude::*;
 use kit::{
     elements::{button::Button, range::Range, Appearance},
@@ -20,9 +20,9 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
-    let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
     let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
+    let first_render = use_ref(cx, || true);
 
     if *clicked_button_to_crop.get() {
         cx.props.on_crop.call(cropped_image_pathbuf.read().clone());
@@ -31,7 +31,11 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let eval = use_eval(cx);
-    _ = eval(adjust_crop_circle_size);
+
+    if *first_render.read() {
+        *first_render.write_silent() = false;
+        let _ = eval(include_str!("./adjust_crop_circle_size.js"));
+    }
 
     return cx.render(rsx!(div {
         Modal {
@@ -60,7 +64,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             id: "crop-image-topbar-left-title",
                             color: "var(--text-color)",
                             margin_right: "32px",
-                            "Please select the area\n you want to crop"
+                            get_local_text("settings.please-select-area-you-want-to-crop")
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,

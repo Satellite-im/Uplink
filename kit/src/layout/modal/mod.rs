@@ -12,7 +12,6 @@ pub struct Props<'a> {
     transparent: bool,
     #[props(optional)]
     dont_pad: Option<bool>,
-    #[props(optional)]
     show_close_button: Option<bool>,
     children: Element<'a>,
     onclose: EventHandler<'a, ()>,
