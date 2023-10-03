@@ -29,6 +29,7 @@ pub struct ActiveChat {
     pub typing_indicator: HashMap<DID, Instant>,
     pub pinned_messages: Vec<raygun::Message>,
     pub scrolled_once: bool,
+    pub key: Uuid,
 }
 
 impl ActiveChat {
@@ -44,11 +45,20 @@ impl ActiveChat {
             typing_indicator: HashMap::new(),
             pinned_messages: chat.pinned_messages.clone(),
             scrolled_once: false,
+            key: Uuid::new_v4(),
         }
     }
 
     pub fn messages(&self) -> VecDeque<ui_adapter::Message> {
         self.messages.all.clone()
+    }
+
+    pub fn key(&self) -> Uuid {
+        self.key.clone()
+    }
+
+    pub fn new_key(&mut self) {
+        self.key = Uuid::new_v4();
     }
 }
 

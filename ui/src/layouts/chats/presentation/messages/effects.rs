@@ -21,44 +21,39 @@ pub fn init_msg_scroll<'a>(
     ch: Coroutine<Uuid>,
 ) {
     let active_chat_id = chat_data.read().active_chat.id();
-    // if more messages get fetched for the chat and need to wait until they render before registering JS
-    // events, need something that will trigger the use_effect to run again.
-    let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
-    use_effect(
-        cx,
-        (&active_chat_id, &chat_behavior),
-        |(chat_id, chat_behavior)| {
-            to_owned![eval_provider, ch];
-            async move {
-                log::debug!(
-                    "use_effect for init_msg_scroll {}. scrolling to: {:?}",
-                    chat_id,
-                    chat_behavior.view_init.scroll_to
-                );
-                let scroll_script = match chat_behavior.view_init.scroll_to {
-                    ScrollTo::MostRecent => scripts::SCROLL_TO_END.to_string(),
-                    ScrollTo::ScrollUp { view_top } => {
-                        scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
-                    }
-                    ScrollTo::ScrollDown { view_bottom } => {
-                        scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}"))
-                    }
-                };
-                match eval_provider(&scroll_script) {
-                    Ok(eval) => {
-                        if let Err(e) = eval.join().await {
-                            log::error!("failed to join eval: {:?}", e);
-                        } else {
-                            ch.send(chat_id);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("eval failed: {:?}", e);
+    let chat_key = chat_data.read().active_chat.key();
+    use_effect(cx, (&active_chat_id, &chat_key), |(chat_id, _)| {
+        to_owned![eval_provider, ch, chat_data];
+        async move {
+            let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
+            log::debug!(
+                "use_effect for init_msg_scroll {}. scrolling to: {:?}",
+                chat_id,
+                chat_behavior.view_init.scroll_to
+            );
+            let scroll_script = match chat_behavior.view_init.scroll_to {
+                ScrollTo::MostRecent => scripts::SCROLL_TO_END.to_string(),
+                ScrollTo::ScrollUp { view_top } => {
+                    scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
+                }
+                ScrollTo::ScrollDown { view_bottom } => {
+                    scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}"))
+                }
+            };
+            match eval_provider(&scroll_script) {
+                Ok(eval) => {
+                    if let Err(e) = eval.join().await {
+                        log::error!("failed to join eval: {:?}", e);
+                    } else {
+                        ch.send(chat_id);
                     }
                 }
+                Err(e) => {
+                    log::error!("eval failed: {:?}", e);
+                }
             }
-        },
-    );
+        }
+    });
 }
 
 pub fn update_chat_messages<'a>(

@@ -67,7 +67,7 @@ pub fn hangle_msg_scroll<'a>(
                     );
                     observer_script = observer_script.replace(
                         "$CONVERSATION_ID",
-                        &current_conv_id.unwrap_or_default().to_string(),
+                        &chat_data.read().active_chat.key().to_string(),
                     );
                     observer_script =
                         observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
@@ -86,14 +86,14 @@ pub fn hangle_msg_scroll<'a>(
 
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
-                    let _conv_id = current_conv_id.unwrap_or_default();
+                    let _conv_id = chat_data.read().active_chat.key();
                     let eval_stream = async_stream::stream! {
                         let mut should_break = false;
                         while !should_break {
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
-                                        //log::info!("got this from js: {msg}");
+                                        log::info!("got this from js: {msg:?}");
 
                                         // perhaps this is a silly check
                                         let is_evt_valid = match msg {
@@ -206,6 +206,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write().active_chat.new_key();
                                                 // wait for UI to reload in response to chat_data.write()
                                                 break 'CONFIGURE_EVAL;
                                             },
@@ -279,6 +280,7 @@ pub fn hangle_msg_scroll<'a>(
 
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write().active_chat.new_key();
                                                 // wait for UI to reload in response to chat_data.write()
                                                 break 'CONFIGURE_EVAL;
                                             },
