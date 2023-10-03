@@ -338,17 +338,21 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }*/
                         )
                     }
-                    Range {
-                        initial_value: volume,
-                        min: USER_VOL_MIN,
-                        max: USER_VOL_MAX,
-                        step: 0.1,
-                        no_num: true,
-                        icon_left: Icon::Speaker,
-                        icon_right: Icon::SpeakerWave,
-                        onchange: move |val| {
-                            ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
-                        }
+                    if state.read().configuration.developer.experimental_features {
+                        rsx!(
+                            Range {
+                                initial_value: volume,
+                                min: USER_VOL_MIN,
+                                max: USER_VOL_MAX,
+                                step: 0.1,
+                                no_num: true,
+                                icon_left: Icon::Speaker,
+                                icon_right: Icon::SpeakerWave,
+                                onchange: move |val| {
+                                    ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
+                                }
+                            }
+                        )
                     }
                     hr{},
                     if is_friend {

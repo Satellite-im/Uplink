@@ -1,6 +1,7 @@
 
 .modal-wrap {
     display: inline-flex;
+    line-height: 0;
     justify-content: center;
     align-items: center;
     position: fixed;
@@ -12,6 +13,7 @@
     background: rgba(0,0,0, 0.9);
 
     .close-btn {
+      position: absolute;
       top: var(--gap-less);
       left: var(--gap-less);
       visibility: hidden;

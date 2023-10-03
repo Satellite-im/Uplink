@@ -178,6 +178,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         replace_spaces_underscore: false,
                         // Show a clear button inside the input field
                         with_clear_btn: true,
+                        clear_validation_on_no_chars: true,
                         // Use the default options for the remaining fields
                         ..Options::default()
                     },

@@ -89,6 +89,7 @@ pub struct Options {
     pub ellipsis_on_label: Option<LabelWithEllipsis>,
     pub react_to_esc_key: bool,
     pub clear_validation_on_submit: bool,
+    pub clear_validation_on_no_chars: bool,
 }
 
 impl Default for Options {
@@ -104,6 +105,7 @@ impl Default for Options {
             ellipsis_on_label: None,
             react_to_esc_key: false,
             clear_validation_on_submit: false,
+            clear_validation_on_no_chars: false,
         }
     }
 }
@@ -427,6 +429,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     // after a valid submission, don't keep the input box green.
                     onkeyup: move |evt| {
+                        if val.read().to_string().is_empty() && options.clear_validation_on_no_chars {
+                            reset_fn();
+                        }
+
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
@@ -463,6 +469,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 let validation_result = validate(&cx, "").unwrap_or_default();
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
+                            }
+
+                            if options.clear_validation_on_no_chars {
+                                reset_fn();
                             }
                             // re-focus the input after clearing it
                             let _ = eval(&focus_script);
