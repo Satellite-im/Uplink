@@ -58,6 +58,8 @@ impl ChatData {
             .messages
             .all
             .retain(|x| x.inner.id() != message_id);
+
+        self.active_chat.key = Uuid::new_v4().to_string();
     }
 
     pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
@@ -94,6 +96,7 @@ impl ChatData {
         if conv_id != self.active_chat.id() {
             return false;
         }
+        self.active_chat.key = Uuid::new_v4().to_string();
 
         let should_append_msg = self
             .chat_behaviors

@@ -42,15 +42,15 @@ impl MessageGroupMsg {
 
 pub fn create_message_groups(
     my_did: DID,
-    input: &VecDeque<ui_adapter::Message>,
+    mut input: VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup> {
     let mut messages: Vec<MessageGroup> = vec![];
 
-    for msg in input.iter() {
+    for msg in input.drain(..) {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = MessageGroupMsg {
-                    message: msg.clone(),
+                    message: msg,
                     is_pending: false,
                     is_first: false,
                     is_last: true,

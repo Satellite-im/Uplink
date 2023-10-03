@@ -21,13 +21,14 @@ pub fn init_msg_scroll<'a>(
     ch: Coroutine<Uuid>,
 ) {
     let active_chat_id = chat_data.read().active_chat.id();
+    let active_chat_key = chat_data.read().active_chat.key();
     // if more messages get fetched for the chat and need to wait until they render before registering JS
     // events, need something that will trigger the use_effect to run again.
     let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
     use_effect(
         cx,
-        (&active_chat_id, &chat_behavior),
-        |(chat_id, chat_behavior)| {
+        (&active_chat_id, &chat_behavior, &active_chat_key),
+        |(chat_id, chat_behavior, _)| {
             to_owned![eval_provider, ch];
             async move {
                 log::debug!(

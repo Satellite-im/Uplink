@@ -174,9 +174,8 @@ pub fn get_messages(cx: Scope) -> Element {
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), &chat_data.read().active_chat.messages()),
+                        groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), chat_data.read().active_chat.messages()),
                         active_chat_id: chat_data.read().active_chat.id(),
-                        num_messages_in_conversation: 0, // todo: remove this variable
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -231,7 +230,6 @@ pub fn get_messages(cx: Scope) -> Element {
 pub struct AllMessageGroupsProps<'a> {
     groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
-    num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -243,7 +241,6 @@ pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) ->
         rsx!(render_message_group {
             group: _group,
             active_chat_id: cx.props.active_chat_id,
-            num_messages_in_conversation: cx.props.num_messages_in_conversation,
             on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
         },)
     })))
@@ -304,7 +301,6 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
             rsx!(render_message_group {
                 group: group,
                 active_chat_id: cx.props.active,
-                num_messages_in_conversation: group.messages.len(),
                 on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
                 pending: true
             },)
@@ -316,7 +312,6 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
 struct MessageGroupProps<'a> {
     group: &'a data::MessageGroup,
     active_chat_id: Uuid,
-    num_messages_in_conversation: usize,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
     pending: Option<bool>,
 }
@@ -327,7 +322,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let MessageGroupProps {
         group,
         active_chat_id: _,
-        num_messages_in_conversation: _,
         on_context_menu_action: _,
         pending: _,
     } = cx.props;
@@ -422,7 +416,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 messages: &group.messages,
                 active_chat_id: cx.props.active_chat_id,
                 is_remote: group.remote,
-                num_messages_in_conversation: cx.props.num_messages_in_conversation,
                 pending: cx.props.pending.unwrap_or_default()
             }))
         },
@@ -433,7 +426,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 struct MessagesProps<'a> {
     messages: &'a Vec<data::MessageGroupMsg>,
     active_chat_id: Uuid,
-    num_messages_in_conversation: usize,
     is_remote: bool,
     pending: bool,
 }
