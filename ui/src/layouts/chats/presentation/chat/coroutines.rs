@@ -12,7 +12,7 @@ use dioxus::prelude::*;
 use futures::channel::oneshot;
 use uuid::Uuid;
 
-use crate::layouts::chats::data::{self, ChatBehavior, ChatData};
+use crate::layouts::chats::data::{self, ChatBehavior, ChatData, ViewInit};
 
 pub fn handle_warp_events(
     cx: Scope,
@@ -20,7 +20,7 @@ pub fn handle_warp_events(
     chat_data: &UseSharedState<ChatData>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, (&active_chat_id, &()), |(chat_id, _)| {
+    use_future(cx, &active_chat_id, |chat_id| {
         to_owned![chat_data];
         async move {
             let mut ch = WARP_EVENT_CH.tx.subscribe();
@@ -46,11 +46,16 @@ pub fn handle_warp_events(
                         if conversation_id != chat_id {
                             continue;
                         }
-                        if chat_data
-                            .write_silent()
-                            .new_message(conversation_id, message)
-                        {
-                            chat_data.write();
+                        if matches!(
+                            chat_data
+                                .read()
+                                .get_chat_behavior(conversation_id)
+                                .view_init
+                                .scroll_to,
+                            data::ScrollTo::MostRecent
+                        ) {
+                            log::info!("adding message to conversation");
+                            chat_data.write().new_message(conversation_id, message);
                         }
                     }
                     MessageEvent::Edited {
@@ -94,7 +99,7 @@ pub fn init_chat_data<'a>(
     chat_data: &'a UseSharedState<ChatData>,
 ) -> &'a UseFuture<()> {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, (&active_chat_id, &()), |(conv_id, _)| {
+    use_future(cx, &active_chat_id, |conv_id| {
         to_owned![state, chat_data];
         async move {
             while !state.read().initialized {

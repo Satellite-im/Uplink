@@ -97,7 +97,7 @@ impl ChatData {
         let should_append_msg = self
             .chat_behaviors
             .get(&conv_id)
-            .map(|behavior| behavior.view_init.scroll_to == ScrollTo::MostRecent)
+            .map(|behavior| matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent))
             .unwrap_or_default();
 
         if should_append_msg {
