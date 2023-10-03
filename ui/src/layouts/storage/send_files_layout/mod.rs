@@ -36,6 +36,7 @@ pub enum SendFilesStartLocation {
 
 #[derive(Props)]
 pub struct SendFilesProps<'a> {
+    send_files_from_storage_state: UseState<bool>,
     send_files_start_location: SendFilesStartLocation,
     on_files_attached: EventHandler<'a, (Vec<Location>, Vec<Uuid>)>,
     files_pre_selected_to_send: Vec<Location>,
@@ -45,6 +46,7 @@ pub struct SendFilesProps<'a> {
 pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let send_files_start_location = cx.props.send_files_start_location.clone();
+    let send_files_from_storage_state = cx.props.send_files_from_storage_state.clone();
     let storage_controller = StorageController::new(cx, state);
     let first_render = use_ref(cx, || true);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
@@ -70,6 +72,8 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
             class: "files-body disable-select",
             aria_label: "send-files-body",
             SendFilesTopbar {
+                send_files_start_location: send_files_start_location.clone(),
+                send_files_from_storage_state: send_files_from_storage_state.clone(),
                 storage_controller: storage_controller.clone(),
                 on_send: move |files_location_path| {
                     cx.props.on_files_attached.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
