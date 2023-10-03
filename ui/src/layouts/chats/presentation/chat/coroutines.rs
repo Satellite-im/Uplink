@@ -20,8 +20,8 @@ pub fn handle_warp_events(
     chat_data: &UseSharedState<ChatData>,
 ) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, (&active_chat_id), |chat_id| {
-        to_owned![state, chat_data];
+    use_future(cx, (&active_chat_id, &()), |(chat_id, _)| {
+        to_owned![chat_data];
         async move {
             let mut ch = WARP_EVENT_CH.tx.subscribe();
             while let Ok(evt) = ch.recv().await {
@@ -56,13 +56,30 @@ pub fn handle_warp_events(
                     MessageEvent::Edited {
                         conversation_id,
                         message,
-                    } => {}
+                    } => {
+                        if chat_data.read().active_chat.id() != conversation_id {
+                            continue;
+                        }
+                        chat_data.write().update_message(message.inner);
+                    }
                     MessageEvent::Deleted {
                         conversation_id,
                         message_id,
-                    } => {}
-                    MessageEvent::MessageReactionAdded { message } => {}
-                    MessageEvent::MessageReactionRemoved { message } => {}
+                    } => {
+                        if chat_data.read().active_chat.id() != conversation_id {
+                            continue;
+                        }
+                        chat_data
+                            .write()
+                            .delete_message(conversation_id, message_id);
+                    }
+                    MessageEvent::MessageReactionAdded { message }
+                    | MessageEvent::MessageReactionRemoved { message } => {
+                        if chat_data.read().active_chat.id() != message.conversation_id() {
+                            continue;
+                        }
+                        chat_data.write().update_message(message);
+                    }
                     _ => continue,
                 }
             }
@@ -77,7 +94,7 @@ pub fn init_chat_data<'a>(
     chat_data: &'a UseSharedState<ChatData>,
 ) -> &'a UseFuture<()> {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, (&active_chat_id), |(conv_id)| {
+    use_future(cx, (&active_chat_id, &()), |(conv_id, _)| {
         to_owned![state, chat_data];
         async move {
             while !state.read().initialized {

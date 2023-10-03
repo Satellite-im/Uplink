@@ -10,6 +10,7 @@ mod chat_behavior;
 
 pub use active_chat::*;
 pub use chat_behavior::*;
+use warp::raygun;
 
 #[derive(Clone, Default)]
 pub struct ChatData {
@@ -42,6 +43,21 @@ impl ChatData {
         } else {
             self.scroll_down(conv_id);
         }
+    }
+
+    pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
+        if conversation_id != self.active_chat.id() {
+            return;
+        }
+
+        self.active_chat
+            .messages
+            .displayed
+            .retain(|x| x != &message_id);
+        self.active_chat
+            .messages
+            .all
+            .retain(|x| x.inner.id() != message_id);
     }
 
     pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
@@ -114,6 +130,23 @@ impl ChatData {
         } else {
             self.active_chat = ActiveChat::default();
             log::error!("failed to set active chat to id: {chat_id}");
+        }
+    }
+
+    pub fn update_message(&mut self, message: raygun::Message) {
+        if self.active_chat.id() != message.conversation_id() {
+            return;
+        }
+
+        if let Some(msg) = self
+            .active_chat
+            .messages
+            .all
+            .iter_mut()
+            .find(|m| m.inner.id() == message.id())
+        {
+            msg.inner = message;
+            msg.key = Uuid::new_v4().to_string();
         }
     }
 
