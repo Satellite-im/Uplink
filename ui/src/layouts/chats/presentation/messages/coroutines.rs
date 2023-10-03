@@ -130,12 +130,7 @@ pub fn hangle_msg_scroll<'a>(
                             opt = rx.next() => {
                                 match opt {
                                     Some(conv_id) => {
-                                        let conv_id_changed = current_conv_id.as_ref().map(|x| x != &conv_id).unwrap_or(true);
                                         log::info!("conv id changed from: {:?} to {}", current_conv_id, conv_id);
-                                        if !conv_id_changed {
-                                            log::warn!("extra command sent to hangle_msg_scroll");
-                                            continue;
-                                        }
                                         current_conv_id.replace(conv_id);
                                         break 'HANDLE_EVAL;
                                     }
