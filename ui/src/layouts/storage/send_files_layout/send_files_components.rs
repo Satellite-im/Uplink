@@ -56,7 +56,7 @@ pub fn SendFilesTopbar<'a>(
                 Button {
                     text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE).into())]),
                     aria_label: "send_files_modal_send_button".into(),
-                    disabled: if storage_controller.with(|f| f.files_selected_to_send.clone()).is_empty() { true } else { false },
+                    disabled: storage_controller.with(|f| f.files_selected_to_send.clone()).is_empty(),
                     appearance: Appearance::Primary,
                     icon: Icon::ChevronRight,
                     onpress: move |_| {
