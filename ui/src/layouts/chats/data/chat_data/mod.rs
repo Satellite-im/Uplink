@@ -175,10 +175,26 @@ impl ChatData {
     fn scroll_down(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             if let Some(scroll_bottom) = self.active_chat.messages.get_latest_displayed() {
-                behavior.view_init.scroll_to = ScrollTo::ScrollDown {
-                    view_bottom: scroll_bottom.message_id,
-                };
-                behavior.view_init.msg_time.replace(scroll_bottom.date);
+                let end_msg = self
+                    .active_chat
+                    .messages
+                    .all
+                    .back()
+                    .map(|x| x.inner.id())
+                    .unwrap_or_default();
+                if scroll_bottom.message_id == end_msg {
+                    behavior.view_init.scroll_to = ScrollTo::MostRecent;
+                    behavior.view_init.msg_time.take();
+                } else {
+                    behavior.view_init.scroll_to = ScrollTo::ScrollDown {
+                        view_bottom: scroll_bottom.message_id,
+                    };
+                    behavior.view_init.msg_time.replace(scroll_bottom.date);
+                }
+            } else {
+                // no messages are displayed. set to MostRecent
+                behavior.view_init.scroll_to = ScrollTo::MostRecent;
+                behavior.view_init.msg_time.take();
             }
         }
     }
