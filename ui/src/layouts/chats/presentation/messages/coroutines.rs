@@ -14,7 +14,7 @@ use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{self, ChatBehavior, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
+    data::{self, ChatBehavior, ChatData, JsMsg, ViewInit, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 
@@ -240,9 +240,7 @@ pub fn hangle_msg_scroll<'a>(
                                             Some(x) => x,
                                             None => {
                                                 log::error!("no messages at bottom of view");
-                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                                                behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
-                                                chat_data.write_silent().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write_silent().set_chat_behavior(conv_id, ChatBehavior::default());
                                                 chat_data.write_silent().active_chat.messages.displayed.clear();
                                                 break 'HANDLE_EVAL;
                                             }
