@@ -43,7 +43,6 @@ uplink = Uplink
     .check-for-updates = Buscar actualizaciones
     .download-update = Descargar actualización
     .members = Miembros
-
 updates = Updates
     .title = Uplink tiene una actualización disponible. Sigue los siguientes pasos para descargar e instalar la actualización más reciente.
     .instruction1 = 1. Descarga la actualización de nuestra página de lanzamientos.
@@ -53,14 +52,12 @@ updates = Updates
     .instruction5 = *Vamos a simplificar este proceso en una futura actualización.
     .button-label = Selecciona la carpeta de descarga
     .download-label = Descargar Actualización
-
 warning-messages = Warning Messages
     .please-enter-at-least = Por favor, ingrese al menos
     .maximum-of = Máximo de
     .disallowed-characters = Caracteres no permitidos
     .spaces-not-allowed = Los espacios no están permitidos.
     .error = Error
-
 messages = Messages
     .edit = Editar
     .cancel-edit = Cancelar Edición
@@ -88,12 +85,10 @@ messages = Messages
     .users-typing = { $users } están escribiendo
     .users-multiple-typing = Múltiples usuarios están escribiendo
     .maximum-amount-files-per-message = Haz alcanzado el límite de { $amount } archivos por mensaje
-
 favorites = Favorites
     .favorites = Favoritos
     .add = Añadir a Favoritos
     .remove = Eliminar de Favoritos
-
 friends = Friends
     .friends = Amigos
     .cta-text = Aún no tienes amigos. ¡Agrega algunos!
@@ -125,7 +120,6 @@ friends = Friends
     .copied-did = ¡ID copiado al portapales!
     .unblock = Desbloquear
     .request-exist = ¡La solicitud ya fue enviada antes!
-
 files = Files
     .file = Archivo
     .files = Archivos
@@ -156,7 +150,6 @@ files = Files
     .checking-thumbnail = Comprobando vista previa...
     .files-in-queue = Archivos en cola
     .error-to-upload = Error al subir
-
 settings = Settings
     .settings = Configuración
     .profile = Perfil
@@ -171,7 +164,6 @@ settings = Settings
     .about = Acerca de
     .licenses = Licencias
     .search-placeholder = Buscar configuraciones...
-
 settings-profile = Profile Settings
     .failed = Error al actualizar el perfil
     .change-banner = Cambiar banner
@@ -186,7 +178,6 @@ settings-profile = Profile Settings
     .welcome-desc = Cuéntale al mundo acerca de tí, bueno al menos lo que se pueda de mientras, ya que aún estamos en construcción.
     .welcome-cta = Primer paso, selecciona una foto de perfil. ¡Y hasta un banner si lo deseas!
     .copy-id = Copiar ID
-
 settings-general = General Settings
     .overlay = Superposición Uplink
     .overlay-description = Habilitar la superposición de pantalla Uplink. Esto mostrará la información de llamadas activas y también te permitirá agregar widgets personalizados a tu pantalla.
@@ -199,13 +190,11 @@ settings-general = General Settings
     .font = Fuente
     .font-description = Cambiar la fuente de la aplicación.
     .clear-accent = Limpiar color acentuado
-
-settings-privacy = Settings Privacy 
+settings-privacy = Settings Privacy
     .backup-recovery-phrase = Frase de recuperación de copia de seguridad
     .backup-phrase = Frase de copia de seguridad
     .backup-phrase-description = ¡Haz una copia de esta frase! Junto con tu contraseña, esto representa tu cuenta. Si la pierdes, no podemos ayudarte a recuperarla.
-
-settings-audio = Audio Settings 
+settings-audio = Audio Settings
     .input-device = Dispositivo de Entrada
     .input-device-description = Selecciona tu dispositivo de entrada (micrófono normalmente).
     .output-device = Dispositivo de Salida
@@ -224,13 +213,11 @@ settings-audio = Audio Settings
     .media-sounds-description = Cuando está habilitado, los eventos relacionados a multimedia como alternar el micrófono o los auriculares, y otros eventos en tiempo real, reproducirán sonidos.
     .message-sounds = Sonidos de Mensaje
     .message-sounds-description = Cuando está hablitado, escucharás una notificación al recibir un mensaje.
-
 settings-files = Files Settings
     .local-sync = Sincronización Local
     .local-sync-description = Cuando está habilitado, los archivos se sincronizarán con tu máquina local.
     .open-sync-folder = Abrir Carpeta de Sincronización
     .open-sync-folder-description = Abrir la carpeta donde se sincronizan los archivos.
-
 settings-extensions = Extension Settings
     .placeholder = Marcador de posición
     .open-extensions-folder = Abrir carpeta de extensiones
@@ -241,22 +228,19 @@ settings-extensions = Extension Settings
     .installed = Instaladas
     .explore = Explorar
     .settings = Configuración
-
 settings-accessibility = Accessibility Settings
     .dyslexia = Open Dyslexic
     .dyslexia-description = Open Dyslexic puede ayudar a algunos usuarios que sufren de dislexia, es una fuente personalizada que puedes activar.
-
 settings-notifications = Notificaciones
     .notifications-description = Activar notificaciones para llamadas entrantes, mensajes y más.
     .enabled = Activar Notificaciones
     .enabled-description = Activar notificationes para llamadas entrantes, mensajes y más.
-    .grant-permissions= Conceder Permisos
+    .grant-permissions = Conceder Permisos
     .grant-permissions-description = Conceder permisos para recibir notificaciones.
     .friends-description = Activar notificaciones para solicitudes de amistad.
     .messages-description = Activar notificaciones para nuevos mensajes.
     .settings-description = Activar notificaciones para actualizaciones y alertas importantes.
-
-settings-developer = Developer Settings 
+settings-developer = Developer Settings
     .developer-mode = Modo de desarrollador
     .developer-mode-description = Al habilitar el modo de desarrollador, se agrega registro y se muestra información útil de depuración en la interfaz de usuario.
     .experimental-features = Funcionalidades Experimentales
@@ -278,9 +262,8 @@ settings-developer = Developer Settings
     .open-debug-logger = Abrir registro de depuración
     .save-logs-to-file = Guardar registro de depuración en un archivo.
     .save-logs-to-file-description = Al habilitar esta opción, los registros se guardarán en un archivo y serán persistentes.
-    .print-state = Mostrar Estado 
+    .print-state = Mostrar Estado
     .print-state-description = Despliega el estado en el registro depuración.
-
 settings-about = About Settings
     .info = Acerca de
     .application = Aplicación
@@ -293,14 +276,12 @@ settings-about = About Settings
     .update-check-error = Error al obtener actualizaciones. Por favor, revisa tu conexión a internet.
     .update-check-error-timeout = ¡Error al obtener actualizaciones! Tiempo de espera agotado.
     .update-check-error-request = ¡Error al obtener actualizaciones! No se pudo enviar la solicitud de actualización. Por favor, revisa tu conexión a Internet.
-
-media-player = Media Player 
+media-player = Media Player
     .enable-camera = Habilitar Cámara
     .fullscreen = Pantalla Completa
     .popout-player = Reproductor Emergente
     .screenshare = Compartir Pantalla
-    
-remote-controls = Remote Controls 
+remote-controls = Remote Controls
     .in-call = En Llamada
     .mute = Silenciar
     .unmute = Desactivar Silencio
@@ -308,7 +289,6 @@ remote-controls = Remote Controls
     .silence = Desactivar Audio
     .end = Fin
     .incoming-call = Transmisión Entrante
-
 unlock = Unlock
     .description = Ingresa tu pin o password para desbloquear tu cuenta.
     .notice = (este es usado para encriptar toda la información que Uplink guarda en tu dispositivo, para que nadie pueda leerla cuando no estés utilizandolo.)
@@ -321,14 +301,11 @@ unlock = Unlock
     .invalid-pin = Hmm, ese pin no ha funcionado.
     .error-unknown-pin = Un error desconocido ha ocurrido.
     .help = Ayuda (click derecho)
-
-auth = Create Account 
+auth = Create Account
     .enter-username = Ingresar Nombre de Usuario
-
-sidebar = Sidebar 
+sidebar = Sidebar
     .subtext = envió varios adjuntos
     .chat-new = Aún no hay mensajes, ¡envía uno!
-
 quickprofile = Quick Profile
     .profile = Perfil
     .message = Mensaje
@@ -338,8 +315,11 @@ quickprofile = Quick Profile
     .unblock = Desbloquear Usuario
     .chat-placeholder = Mensaje
     .self-edit = Editar Perfil
-
 toast_actions = Toast Actions
     .DisplayChat = Abrir Chat
     .FriendListPending = Lista de Amigos
     .Dummy = Acción Ficticia
+community = Community
+    .invited = You're Invited!
+    .join = Join
+    .joined = Joined!

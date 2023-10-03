@@ -45,7 +45,6 @@ uplink = Uplink
     .date-time-format = %d/%m/%A %I:%M %p
     .members = Membros
     .members-count = Membros ({ $num })
-
 updates = Actualizações
     .title = O Uplink tem uma actualização disponível. Siga estes passos para descarregar e instalar a última actualização.
     .instruction1 = 1. Descarregue a actualização a partir da nossa página de lançamento.
@@ -62,7 +61,6 @@ warning-messages = Mensagens de aviso
     .disallowed-characters = Carácter(es) não permitido(s): { $chars }
     .spaces-not-allowed = Não são permitidos espaços.
     .error = Erro
-
 messages = Mensagens
     .edit = Editar
     .cancel-edit = Cancelar edição
@@ -99,12 +97,10 @@ messages = Mensagens
     .scroll-bottom = Deslizar para baixo
     .group-creator-label = Criador do Grupo
     .missing-emoji-picker = A extensão Emoji está desactivada
-
 favorites = Favoritos
     .favorites = Favoritos
     .add = Adicionar aos favoritos
     .remove = Remover dos favoritos
-
 friends = Amigos
     .friends = Amigos
     .cta-text = As coisas são melhores com os amigos.
@@ -137,7 +133,6 @@ friends = Amigos
     .copied-did = ID copiado para a área de transferência!
     .unblock = Desbloquear
     .request-exist = O pedido de amizade já está pendente!
-
 files = Ficheiros
     .file = Ficheiro
     .files = Ficheiros
@@ -177,11 +172,10 @@ files = Ficheiros
     .upload-in-progress-please-wait = Carregamento em curso. Aguarde.
     .no-files-available = Não há ficheiros disponíveis.
     .no-data-available = Sem informação disponível
-    
 settings = Definições
     .settings = Definições
     .profile = Perfil
-    .general = Geral 
+    .general = Geral
     .privacy = Privacidade
     .audio = Sons e áudio
     .ficheiros = Ficheiros
@@ -192,7 +186,6 @@ settings = Definições
     .about = Sobre
     .licenses = Licenças
     .search-placeholder = Definições de pesquisa...
-
 settings-profile = Definições de perfil
     .failed = Falha na actualização do perfil
     .change-banner = Alterar o banner
@@ -207,7 +200,6 @@ settings-profile = Definições de perfil
     .welcome-desc = Conta ao mundo tudo sobre ti, bem... conta-lhes o máximo que puderes enquanto ainda estamos em construção, pelo menos.
     .welcome-cta = Primeiro passo, escolhe uma imagem de perfil e talvez até um banner também!
     .copy-id = ID de cópia
-    
 settings-general = Definições gerais
     .overlay = Sobreposição de Uplink
     .overlay-description = Activar a sobreposição de Uplink no ecrã. Isto mostrará informações sobre chamadas activas, bem como permitirá adicionar widgets personalizados ao seu ecrã.
@@ -220,13 +212,11 @@ settings-general = Definições gerais
     .font = Tipo de letra
     .font-description = Alterar o tipo de letra da aplicação.
     .clear-accent = Cor de acentuação clara
-
-settings-privacy = Definições de privacidade 
+settings-privacy = Definições de privacidade
     .backup-recovery-phrase = Frase de recuperação da cópia de segurança
     .backup-phrase = Frase de recuperação da cópia de segurança
     .backup-phrase-description = Faz uma cópia de segurança desta frase! Juntamente com a sua palavra-passe, esta frase representa a sua conta. Se a perder, não o podemos ajudar a recuperá-la.
-
-settings-audio = Definições de áudio e som 
+settings-audio = Definições de áudio e som
     .input-device = Dispositivo de entrada
     .input-device-description = Seleccione o seu dispositivo de entrada (normalmente um microfone).
     .output-device = Dispositivo de saída
@@ -245,13 +235,11 @@ settings-audio = Definições de áudio e som
     .media-sounds-description = Quando activado, os eventos relacionados com os meios de comunicação, como a activação do microfone ou dos auscultadores e outros eventos em tempo real, reproduzem sons.
     .message-sounds = Sons de mensagens
     .message-sounds-description = Quando activado, ouvirá uma notificação quando for recebida uma nova mensagem.
-
 settings-files = Definições dos ficheiros
     .local-sync = Sincronização local
     .local-sync-description = Quando activado, os ficheiros serão sincronizados com a sua máquina local.
     .open-sync-folder = Abrir pasta de sincronização
     .open-sync-folder-description = Abre a pasta onde os seus ficheiros são sincronizados.
-
 settings-extensions = Definições de extensão
     .placeholder = Espaço reservado
     .open-extensions-folder = Abrir a pasta de extensões
@@ -262,11 +250,9 @@ settings-extensions = Definições de extensão
     .installed = Instalado
     .explore = Explorar
     .settings = Configurações
-
 settings-accessibility = Configurações de acessibilidade
     .dyslexia = Abrir o Dyslexic
     .dyslexia-description = O Open Dyslexic pode ajudar alguns utilizadores que sofrem de dislexia, é um tipo de letra personalizado que pode activar.
-
 settings-notifications = Notificações
     .notifications-description = Activar as notificações de chamadas recebidas, mensagens e muito mais.
     .enabled = Activado
@@ -276,8 +262,7 @@ settings-notifications = Notificações
     .friends-description = Activar notificações para pedidos de amizade.
     .messages-description = Activar as notificações de novas mensagens.
     .settings-description = Activar notificações para actualizações e alertas importantes.
-
-settings-developer = Definições do programador 
+settings-developer = Definições do programador
     .developer-mode = Modo de programador
     .developer-mode-description = A activação do modo de programador adiciona o registo e apresenta informações de depuração úteis na UI.
     .experimental-features = Funcionalidades Experimentais
@@ -299,9 +284,8 @@ settings-developer = Definições do programador
     .open-debug-logger = Abrir o registo de depuração
     .save-logs-to-file = Guardar os registos num ficheiro
     .save-logs-to-file-description = Se activar esta opção, os registos serão guardados num ficheiro e serão persistentes.
-    .print-state = Estado de impressão 
+    .print-state = Estado de impressão
     .print-state-description = Mostrar o estado no registador de depuração.
-
 settings-about = Sobre as definições
     .info = Sobre
     .application = Aplicação
@@ -314,13 +298,11 @@ settings-about = Sobre as definições
     .update-check-error = Falha ao obter a actualização. Verifique a sua ligação à Internet.
     .update-check-error-timeout = Falha ao obter a atualização! O tempo limite do pedido foi ultrapassado.
     .update-check-error-request = Falha ao obter a atualização! Não foi possível enviar o pedido de atualização. Verifique a sua ligação à Internet.
-
-media-player = Leitor de multimédia 
-    .enable-camera = Activar a câmara 
+media-player = Leitor de multimédia
+    .enable-camera = Activar a câmara
     .fullscreen = Ecrã completo
-    .popout-player = Leitor de popout 
+    .popout-player = Leitor de popout
     .screenshare = Partilha de ecrã
-    
 remote-controls = Controlos remotos
     .in-call = Em chamada
     .mute = Silenciar
@@ -331,7 +313,6 @@ remote-controls = Controlos remotos
     .incoming-call = A receber chamada
     .outgoing-call = A chamar ...
     .empty = Não está cá ninguém
-
 unlock = Desbloquear
     .description = Introduza o seu pin ou palavra-passe para desbloquear a sua conta.
     .notice = (isto é utilizado para encriptar todos os dados que o Uplink armazena no seu computador quando não o está a utilizar, para que ninguém possa ler os seus dados).
@@ -343,14 +324,11 @@ unlock = Desbloquear
     .error-pin = Algo está errado com o pin que forneceu.
     .invalid-pin = Hmm, esse pin não funcionou.
     .error-unknown-pin = Ocorreu um erro desconhecido.
-
-auth = Criar conta 
+auth = Criar conta
     .enter-username = Introduzir nome de utilizador
-
-sidebar = Barra lateral 
+sidebar = Barra lateral
     .subtext = { $user } enviou vários anexos
     .chat-new = Ainda não foram enviadas mensagens, envie uma!
-
 quickprofile = Perfil rápido
     .profile = Perfil
     .message = Mensagem
@@ -363,8 +341,11 @@ quickprofile = Perfil rápido
     .unblock = Desbloquear utilizador
     .chat-placeholder = Mensagem
     .self-edit = Editar perfil
-
 toast_actions = Acções de notificações
     .DisplayChat = Abrir Chat
     .FriendListPending = Lista de amigos
     .Dummy = Ação fictícia
+community = Community
+    .invited = You're Invited!
+    .join = Join
+    .joined = Joined!

@@ -20,13 +20,11 @@ uplink = Uplink
     .exceeded = excedido
     .delete = Deletar
     .dismiss = Dismiss
-
 warning-messages = Warning Messages
     .please-enter-at-least = Por favor, insira pelo menos
     .maximum-of = Máximo de
     .disallowed-characters = todo
     .spaces-not-allowed = Espaços não são permitidos.
-
 messages = Messages
     .new = Nova Mensagem
     .replying = Respondendo a:
@@ -35,12 +33,10 @@ messages = Messages
     .you = Você
     .say-something-placeholder = Diga algo...
     .msg-banner = As mensagens são protegidas por criptografia de ponta-a-ponta e enviadas através de uma rede ponto-a-ponto.
-
 favorites = Favorites
     .favorites = Favoritos
     .add = Adicione aos favoritos
     .remove = Remova dos favoritos
-
 friends = Friends
     .friends = Amigos
     .cta-text = Sem amigos ainda. Adicione alguém!
@@ -52,7 +48,7 @@ friends = Friends
     .incoming_requests = Solicitações recebidas
     .outgoing_requests = Solicitações enviadas
     .cancel = Cancelar solicitação
-    .requested = Recebida 
+    .requested = Recebida
     .sent = Enviada
     .requests = Solicitações
     .pending = Pendente
@@ -64,7 +60,6 @@ friends = Friends
     .request-sent = ¡Solicitud de amistad enviada!
     .copied-did = ¡Copiado al portapapeles!
     .unblock = Desbloquear
-
 files = Files
     .files = Arquivos
     .new-folder = Nova Pasta
@@ -83,7 +78,6 @@ files = Files
     .image-thumb = Thumbnail de imagem
     .doc-thumb = Thumbnail da primeira página
     .no-thumbnail-preview = Não há thumbnail para visualizar
-
 settings = Settings
     .settings = Configurações
     .profile = Perfil
@@ -94,7 +88,6 @@ settings = Settings
     .extensions = Extensões
     .developer = Desenvolvedor
     .search-placeholder = Procurar configuração...
-
 settings-profile = Profile Settings
     .change-banner = Mudar banner
     .change-avatar = Mudar avatar
@@ -103,8 +96,6 @@ settings-profile = Profile Settings
     .welcome = Your new profile!
     .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
-
-
 settings-general = General Settings
     .overlay = Sobreposição de Uplink
     .overlay-description = Ative a sobreposição de tela Uplink. Isso mostrará informações de chamadas ativas, bem como permitirá adicionar widgets personalizados à sua tela.
@@ -112,31 +103,25 @@ settings-general = General Settings
     .change-language = Mude o idioma
     .theme = Tema
     .theme-description = Mude o tema do aplicativo.
-   
-settings-extensions = Settings Extensions 
+settings-extensions = Settings Extensions
     .placeholder = Espaço reservado
-    .open-extensions-folder = Abrir pasta de extensões 
-
-settings-privacy = Settings Privacy 
+    .open-extensions-folder = Abrir pasta de extensões
+settings-privacy = Settings Privacy
     .backup-recovery-phrase = Frase de recuperação de backup
     .backup-phrase = Frase de backup
     .backup-phrase-description = Guarde esta frase! Junto com sua senha, ela representa a sua conta. Se você perdê-la, não podemos te ajudar a recuperá-la.
-
 settings-about = UNKNOWN
     .open-codebase = Abrir código fonte
     .open-codebase-description = Abre o código fonte em seu navegador da Web padrão.
-
-settings-audio = Settings Audio 
+settings-audio = Settings Audio
     .call-timer = Tempo de chamada
     .call-timer-description = Quando ativado, um cronômetro será exibido mostrando a duração da chamada.
-
 settings-files = Files Settings
     .local-sync = Sincronizar localmente
     .local-sync-description = Quando ativado, os arquivos serão sincronizados com sua máquina local.
     .open-sync-folder = Abrir pasta sincronizada
     .open-sync-folder-description = Abrir a pasta onde seus arquivos estão sincronizados
-
-settings-developer = Settings Developer 
+settings-developer = Settings Developer
     .developer-mode = Modo de Desenvolvedor
     .developer-mode-description = Habilitar o modo de desenvolvedor adiciona logs e exibe informações úteis de depuração na interface do usuário.
     .open-cache = Abrir Cache
@@ -153,26 +138,61 @@ settings-developer = Settings Developer
     .open-debug-logger = Abrir o registrador
     .save-logs-to-file = Salvar logs em um arquivo
     .save-logs-to-file-description = Ao habilitar essa opção, os logs serão salvos em um arquivo e serão persistentes.
-
-media-player = Media Player 
+media-player = Media Player
     .enable-camera = Habilitar Câmera
     .fullscreen = Tela cheia
-    .popout-player = Popout Player 
+    .popout-player = Popout Player
     .screenshare = Compartilhar tela
-    
-remote-controls = Remote Controls 
+remote-controls = Remote Controls
     .in-call = Em chamada
     .mute = Silenciar
-    .unmute = Dessilenciar 
+    .unmute = Dessilenciar
     .listen = Ativar áudio
     .silence = Desativar áudio
     .end = Fim
-
 unlock = Unlock
     .warning1 = Sua senha é usada para criptografar seus dados. Ela nunca é enviada para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
     .warning2 = Se você esquecer essa senha, não podemos ajudá-lo a recuperá-la.
     .enter-pin = Digite a senha
     .create-account = Criar Conta
-
-auth = Create Account 
+auth = Create Account
     .enter-username = Digite o nome de usuário
+community = Community
+    .invited = You're Invited!
+    .join = Join
+    .joined = Joined!
+updates = Updates
+    .title = Uplink has an update available. Follow these steps to download and install the latest update.
+    .instruction1 = 1. Download the update from our release page.
+    .instruction2 = 2. Close Uplink.
+    .instruction3 = 3. Run the installer. The older version of uplink will be overwritten, leaving your account intact.
+    .instruction4 = 4. Open Uplink and start chatting again!
+    .instruction5 = *We are going to streamline this process in a future update.
+    .download-label = Download Update
+settings-accessibility = Accessibility Settings
+    .dyslexia = Open Dyslexic
+    .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
+settings-notifications = Notifications
+    .enabled = Enabled
+    .enabled-description = Enable notifications for incoming calls, messages, and more.
+    .grant-permissions = Grant Permissions
+    .grant-permissions-description = Grant permissions to receive notifications.
+    .friends-description = Enable notifications for friend requests.
+    .messages-description = Enable notifications for new messages.
+    .settings-description = Enable notifications for updates and important alerts.
+sidebar = Sidebar
+    .subtext = { $user } sent multiple attachments
+    .chat-new = No messages sent yet, send one!
+quickprofile = Quick Profile
+    .profile = Profile
+    .message = Message
+    .call = Call
+    .friend-remove = Remove Friend
+    .block = Block User
+    .unblock = Unblock User
+    .chat-placeholder = Message
+    .self-edit = Edit Profile
+toast_actions = Toast Actions
+    .DisplayChat = Open Chat
+    .FriendListPending = Friend List
+    .Dummy = Dummy Action
