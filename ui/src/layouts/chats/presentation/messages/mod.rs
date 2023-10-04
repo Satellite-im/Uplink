@@ -139,32 +139,33 @@ pub fn get_messages(cx: Scope) -> Element {
     // used by the intersection observer to terminate itself.
     let chat_key = chat_data.read().active_chat.key().to_string();
     let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
-    let msg_container_end = if chat_behavior.on_scroll_top == data::ScrollBehavior::FetchMore {
-        rsx!(div {
-            class: "fetching",
-            p {
-                IconElement {
-                    icon: Icon::Loader,
-                    class: "spin",
-                },
-                get_local_text("messages.fetching")
-            }
-        })
-    } else {
-        rsx!(
-            div {
-                // key: "encrypted-notification-0001",
-                class: "msg-container-end",
-                aria_label: "messages-secured-alert",
+    let msg_container_end =
+        if matches!(chat_behavior.on_scroll_top, data::ScrollBehavior::FetchMore) {
+            rsx!(div {
+                class: "fetching",
                 p {
                     IconElement {
-                        icon:  Icon::LockClosed,
+                        icon: Icon::Loader,
+                        class: "spin",
                     },
-                    get_local_text("messages.msg-banner")
+                    get_local_text("messages.fetching")
                 }
-            }
-        )
-    };
+            })
+        } else {
+            rsx!(
+                div {
+                    // key: "encrypted-notification-0001",
+                    class: "msg-container-end",
+                    aria_label: "messages-secured-alert",
+                    p {
+                        IconElement {
+                            icon:  Icon::LockClosed,
+                        },
+                        get_local_text("messages.msg-banner")
+                    }
+                }
+            )
+        };
 
     cx.render(rsx!(
         div {
@@ -172,6 +173,7 @@ pub fn get_messages(cx: Scope) -> Element {
             onscroll: move |_| {
                 // do nothing
             },
+            // used by the intersection observer to terminate itself
             div {
                 id: "{chat_key}",
                 hidden: true,

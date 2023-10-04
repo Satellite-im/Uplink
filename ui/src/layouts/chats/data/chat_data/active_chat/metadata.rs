@@ -21,6 +21,7 @@ pub struct Metadata {
     pub conversation_type: Option<ConversationType>,
     pub creator: Option<DID>,
     pub replying_to: Option<raygun::Message>,
+    pub unreads: usize,
 }
 
 impl Metadata {
@@ -59,6 +60,7 @@ impl Metadata {
             conversation_type: Some(chat.conversation_type),
             creator: chat.creator.clone(),
             replying_to: chat.replying_to.clone(),
+            unreads: chat.unreads() as _,
         }
     }
 }

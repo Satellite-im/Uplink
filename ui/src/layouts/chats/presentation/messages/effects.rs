@@ -24,6 +24,9 @@ pub fn init_msg_scroll<'a>(
     use_effect(cx, &chat_key, |_chat_key| {
         to_owned![eval_provider, ch, chat_data];
         async move {
+            // replicate behavior from before refactor
+            _ = eval_provider(SETUP_CONTEXT_PARENT);
+
             let chat_id = chat_data.read().active_chat.id();
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
             log::debug!(
@@ -32,7 +35,36 @@ pub fn init_msg_scroll<'a>(
                 chat_behavior.view_init.scroll_to
             );
             let scroll_script = match chat_behavior.view_init.scroll_to {
-                ScrollTo::MostRecent => scripts::SCROLL_TO_END.to_string(),
+                // if there are unreads, scroll up so first unread is at top of screen
+                // todo: if there are more than 40 unread messages, need to fetch more from warp.
+                ScrollTo::MostRecent => match chat_data.read().active_chat.unreads() {
+                    0 => scripts::SCROLL_TO_END.to_string(),
+                    x => {
+                        let msg_idx = chat_data
+                            .read()
+                            .active_chat
+                            .messages
+                            .all
+                            .len()
+                            .saturating_sub(x);
+                        let msg_id = chat_data
+                            .read()
+                            .active_chat
+                            .messages
+                            .all
+                            .get(msg_idx)
+                            .map(|x| x.inner.id());
+                        match msg_id {
+                            Some(id) => {
+                                scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{id}"))
+                            }
+                            None => {
+                                log::error!("failed to scroll up to top of unread messages");
+                                scripts::SCROLL_TO_END.to_string()
+                            }
+                        }
+                    }
+                },
                 ScrollTo::ScrollUp { view_top } => {
                     scripts::SCROLL_TO_TOP.replace("$MESSAGE_ID", &format!("{view_top}"))
                 }
@@ -40,6 +72,9 @@ pub fn init_msg_scroll<'a>(
                     scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{view_bottom}"))
                 }
             };
+
+            chat_data.write_silent().active_chat.clear_unreads();
+
             match eval_provider(&scroll_script) {
                 Ok(eval) => {
                     if let Err(e) = eval.join().await {

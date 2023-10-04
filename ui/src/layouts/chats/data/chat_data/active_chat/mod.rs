@@ -106,4 +106,12 @@ impl ActiveChat {
     pub fn replying_to(&self) -> Option<raygun::Message> {
         self.metadata.replying_to.clone()
     }
+
+    pub fn unreads(&self) -> usize {
+        self.metadata.unreads
+    }
+
+    pub fn clear_unreads(&mut self) {
+        self.metadata.unreads = 0;
+    }
 }
