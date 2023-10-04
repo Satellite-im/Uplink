@@ -280,8 +280,8 @@ pub fn hangle_msg_scroll<'a>(
                     } // HANDLE_EVAL
                     break;
                 } // CONFIGURE_EVAL
-            }
-        }
+            } // while rx.next().await.is_some()
+        } // async move
     });
 
     ch.clone()
