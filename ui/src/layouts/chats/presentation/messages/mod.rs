@@ -136,6 +136,8 @@ pub fn get_messages(cx: Scope) -> Element {
         coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
 
     let active_chat_id = chat_data.read().active_chat.id();
+    // used by the intersection observer to terminate itself.
+    let chat_key = chat_data.read().active_chat.key().to_string();
     let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
     let msg_container_end = if chat_behavior.on_scroll_top == data::ScrollBehavior::FetchMore {
         rsx!(div {
@@ -169,6 +171,10 @@ pub fn get_messages(cx: Scope) -> Element {
             id: "messages",
             onscroll: move |_| {
                 chat_data.write_silent().scrolled(active_chat_id);
+            },
+            div {
+                id: "{chat_key}",
+                hidden: true,
             },
             span {
                 rsx!(

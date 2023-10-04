@@ -8,15 +8,25 @@ function observe_list() {
     console.log("send_bottom_event is " + send_bottom_event);
     
     var observer3 = new IntersectionObserver( (entries, observer) => {
+        const el = document.getElementById(conversation_key);
+        if  (!el) {
+            observer.disconnect();
+            observer = null;
+            return;
+        }
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 dioxus.send("{\"Add\":{\"msg_id\":\"" + entry.target.id + "\",\"key\":\"" + conversation_key + "\"}}");
                 if (entry.target.id == bottom_msg_id && send_bottom_event) {
                     dioxus.send("{\"Bottom\":{\"key\":\"" + conversation_key + "\"}}");
                     observer.disconnect();
+                    observer = null;
+                    return;
                 } else if (entry.target.id == top_msg_id && send_top_event) {
                     dioxus.send("{\"Top\":{\"key\":\"" + conversation_key + "\"}}");
                     observer.disconnect();
+                    observer = null;
+                    return;
                 }
             } else {
                 dioxus.send("{\"Remove\":{\"msg_id\":\"" + entry.target.id + "\",\"key\":\"" + conversation_key + "\"}}");
