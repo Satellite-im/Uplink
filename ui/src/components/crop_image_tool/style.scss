@@ -18,7 +18,7 @@
     transform: translate(-50%, -50%);
     position: absolute;
     border-radius: 50%;
-    border: 2px dashed transparent;
+    border: 2px dashed var(--text-color-link);
 }
 
 .crop-box::before {
@@ -30,7 +30,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at center, transparent 70.5%, black 50%);
+    background: radial-gradient(circle at center, transparent 72%, black 50%);
     mix-blend-mode: multiply;
   }
 
@@ -42,3 +42,14 @@
     padding-left: 16px;
     background: var(--secondary);
   }
+
+.crop-image-topbar-left-title {
+    color: var(--text-color);
+    margin-right: 32px;
+    line-height: 1.0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -1,6 +1,7 @@
 var imgElement = document.getElementById('image-preview-modal-file-embed');
 var cropCircle = document.getElementById('crop-box');
 var image_crop_box_container = document.getElementById('image-crop-box-container');
+var firstRender = '$FIRST_RENDER';
 
 function adjustCropCircleSize() {
     var imageWidth = imgElement.clientWidth;
@@ -13,6 +14,9 @@ function adjustCropCircleSize() {
     image_crop_box_container.style.height = minDimension + 2 + 'px';
 }
 
-window.addEventListener('resize', adjustCropCircleSize);
+
+if (firstRender) {
+    window.addEventListener('resize', adjustCropCircleSize);
+}
 
 adjustCropCircleSize();

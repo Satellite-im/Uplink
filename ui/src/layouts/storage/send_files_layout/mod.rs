@@ -119,6 +119,7 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
     cx.render(rsx!(div {
         id: "all_chats",
         div {
+            padding_top: "16px",
             padding_left: "16px",
             Label {
                 text: get_local_text("files.select-chats"),

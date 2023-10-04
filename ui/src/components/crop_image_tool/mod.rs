@@ -1,10 +1,17 @@
-use common::{icons::outline::Shape, STATIC_ARGS};
+use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
 use dioxus::prelude::*;
 use kit::{
-    elements::{button::Button, range::Range, Appearance},
+    elements::{button::Button, label::Label, range::Range, Appearance},
     layout::modal::Modal,
 };
-use std::{fs::File, io::Write, path::PathBuf};
+use std::path::PathBuf;
+use tokio::io::AsyncWriteExt;
+
+#[derive(Debug, Clone)]
+struct ImageDimensions {
+    height: i64,
+    width: i64,
+}
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -17,11 +24,18 @@ pub struct Props<'a> {
 pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
+    let adjust_crop_circle_size_script = include_str!("./adjust_crop_circle_size.js");
+
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
-    let adjust_crop_circle_size = include_str!("./adjust_crop_circle_size.js");
+    let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
     let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
+    let first_render = use_ref(cx, || true);
+    let image_dimensions = use_ref(cx, || ImageDimensions {
+        height: 0,
+        width: 0,
+    });
 
     if *clicked_button_to_crop.get() {
         cx.props.on_crop.call(cropped_image_pathbuf.read().clone());
@@ -30,7 +44,29 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let eval = use_eval(cx);
-    _ = eval(adjust_crop_circle_size);
+    let script = &adjust_crop_circle_size_script
+        .replace("$FIRST_RENDER", &format!("{}", *first_render.read()));
+    let _ = eval(script);
+
+    use_future(cx, (), |_| {
+        to_owned![get_image_dimensions_script, eval, image_dimensions];
+        async move {
+            while image_dimensions.read().width == 0 && image_dimensions.read().height == 0 {
+                if let Ok(r) = eval(&get_image_dimensions_script) {
+                    if let Ok(val) = r.join().await {
+                        *image_dimensions.write_silent() = ImageDimensions {
+                            height: val["height"].as_i64().unwrap_or_default(),
+                            width: val["width"].as_i64().unwrap_or_default(),
+                        };
+                    }
+                };
+            }
+        }
+    });
+
+    if *first_render.read() {
+        *first_render.write_silent() = false;
+    }
 
     return cx.render(rsx!(div {
         Modal {
@@ -40,6 +76,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             transparent: false, 
             show_close_button: false,
+            close_on_click_inside_modal: false,
             dont_pad: false,
             div {
                 max_height: "85vh",
@@ -55,16 +92,18 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         id: "crop-image-topbar-left",
                         padding: "16px",
                         display: "inline-flex",
+                        align_items: "center",
                         div {
-                            id: "crop-image-topbar-left-title",
-                            color: "var(--text-color)",
-                            margin_right: "32px",
-                            "Please select the area\n you want to crop"
+                            class: "crop-image-topbar-left-title",
+                            Label {
+                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                            }
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
+                                *first_render.write_silent() = true;
                                 cx.props.on_cancel.call(());
                                 crop_image.set(false);
                             }
@@ -76,6 +115,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
+                                *first_render.write_silent() = false;
                                 cx.spawn({
                                     to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                     async move {
@@ -93,8 +133,18 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     },
                                                 };
                                                 let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
-                                                let mut file = File::create(cropped_image_path.clone()).unwrap();
-                                                file.write_all(&decoded_bytes).unwrap();
+                                                let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
+                                                    Ok(file) => file, 
+                                                    Err(e) => {
+                                                        log::error!("Error creating cropped image file: {}", e);
+                                                        return;
+                                                    },
+                                                };
+
+                                                if let Err(e) = file.write_all(&decoded_bytes).await {
+                                                    log::error!("Error writing cropped image file. {}", e);
+                                                    return;
+                                                }
                                                 cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
                                                 clicked_button_to_crop.set(true);
                                             }

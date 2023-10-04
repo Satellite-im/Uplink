@@ -4,7 +4,8 @@ use crate::layouts::chats::ChatSidebar;
 use crate::{
     components::friends::{
         add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+        incoming_requests::PendingFriends, nothing_here::NothingHere,
+        outgoing_requests::OutgoingRequests,
     },
     layouts::slimbar::SlimbarLayout,
 };
@@ -138,8 +139,19 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
 fn render_route<T>(cx: Scope<T>, route: FriendRoute) -> Element {
     cx.render(rsx!(match route {
         FriendRoute::All => rsx!(Friends {}),
-        FriendRoute::Pending => rsx!(PendingFriends {}, OutgoingRequests {}),
-        FriendRoute::Blocked => rsx!(BlockedUsers {}),
+        FriendRoute::Pending => rsx!(
+            PendingFriends {},
+            OutgoingRequests {},
+            NothingHere {
+                friends_tab: "Pending".into()
+            }
+        ),
+        FriendRoute::Blocked => rsx!(
+            BlockedUsers {},
+            NothingHere {
+                friends_tab: "Blocked".into()
+            }
+        ),
     }))
 }
 
