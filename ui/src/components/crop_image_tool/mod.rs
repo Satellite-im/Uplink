@@ -7,6 +7,12 @@ use kit::{
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
+#[derive(Debug, Clone)]
+struct ImageDimensions {
+    height: i64,
+    width: i64,
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     pub large_thumbnail: String,
@@ -18,11 +24,18 @@ pub struct Props<'a> {
 pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
+    let adjust_crop_circle_size_script = include_str!("./adjust_crop_circle_size.js");
+
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
+    let get_image_dimensions_script = include_str!("./get_image_dimensions.js");
     let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
     let first_render = use_ref(cx, || true);
+    let image_dimensions = use_ref(cx, || ImageDimensions {
+        height: 0,
+        width: 0,
+    });
 
     if *clicked_button_to_crop.get() {
         cx.props.on_crop.call(cropped_image_pathbuf.read().clone());
@@ -31,10 +44,29 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let eval = use_eval(cx);
+    let _ = eval(
+        &adjust_crop_circle_size_script
+            .replace("$FIRST_RENDER", &format!("{}", *first_render.read())),
+    );
+
+    use_future(cx, (), |_| {
+        to_owned![get_image_dimensions_script, eval, image_dimensions];
+        async move {
+            while image_dimensions.read().width == 0 && image_dimensions.read().height == 0 {
+                if let Ok(r) = eval(&get_image_dimensions_script) {
+                    if let Ok(val) = r.join().await {
+                        *image_dimensions.write_silent() = ImageDimensions {
+                            height: val["height"].as_i64().unwrap_or_default(),
+                            width: val["width"].as_i64().unwrap_or_default(),
+                        };
+                    }
+                };
+            }
+        }
+    });
 
     if *first_render.read() {
         *first_render.write_silent() = false;
-        let _ = eval(include_str!("./adjust_crop_circle_size.js"));
     }
 
     return cx.render(rsx!(div {
@@ -45,6 +77,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             transparent: false, 
             show_close_button: false,
+            close_on_click_inside_modal: false,
             dont_pad: false,
             div {
                 max_height: "85vh",
@@ -70,6 +103,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
+                                *first_render.write_silent() = true;
                                 cx.props.on_cancel.call(());
                                 crop_image.set(false);
                             }
