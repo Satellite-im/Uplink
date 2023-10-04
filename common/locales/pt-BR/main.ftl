@@ -2,13 +2,10 @@ uplink = Uplink
     .home = Home
     .add = Adicionar
     .call = Ligação
-    .video-call = Ligação de video
     .chat = Conversa
     .chats = Conversas
     .send = Enviar
     .remove = Remover
-    .more = Mais
-    .welcome = Bem-vindo
     .clear-unreads = Limpar não lidos
     .hide-chat = Esconder Chat
     .search-placeholder = Procurar...
@@ -16,8 +13,6 @@ uplink = Uplink
     .pre-release = Pré-lançamento
     .username = Nome de usuário
     .status = Mensagem de Status
-    .characters = caracteres
-    .exceeded = excedido
     .delete = Deletar
     .dismiss = Dismiss
 
@@ -32,7 +27,6 @@ messages = Messages
     .replying = Respondendo a:
     .react = Reagir
     .reply = Responder
-    .you = Você
     .say-something-placeholder = Diga algo...
     .msg-banner = As mensagens são protegidas por criptografia de ponta-a-ponta e enviadas através de uma rede ponto-a-ponto.
 
@@ -54,7 +48,6 @@ friends = Friends
     .cancel = Cancelar solicitação
     .requested = Recebida 
     .sent = Enviada
-    .requests = Solicitações
     .pending = Pendente
     .blocked = Bloqueado
     .accept = Aceitar
@@ -69,19 +62,12 @@ files = Files
     .files = Arquivos
     .new-folder = Nova Pasta
     .upload = Carregar
-    .free-space = Espaço Livre:
-    .total-space = Espaço Total:
     .rename = Renomear
     .download = Download
-    .uploaded = Carregado
     .thumbnail-uploaded = Thumbnail Carregada
     .no-thumbnail = Sem Thumbnail
-    .renaming-duplicated = Renomeando se Duplicado
     .one-file-to-upload = Arquivo para Envio
     .files-to-upload = Arquivos para Envio
-    .video-thumb = Thumbnail de vídeo
-    .image-thumb = Thumbnail de imagem
-    .doc-thumb = Thumbnail da primeira página
     .no-thumbnail-preview = Não há thumbnail para visualizar
 
 settings = Settings
@@ -97,9 +83,6 @@ settings = Settings
 
 settings-profile = Profile Settings
     .change-banner = Mudar banner
-    .change-avatar = Mudar avatar
-    .edit-button = Editar
-    .save-button = Salvar
     .welcome = Your new profile!
     .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
@@ -114,7 +97,6 @@ settings-general = General Settings
     .theme-description = Mude o tema do aplicativo.
    
 settings-extensions = Settings Extensions 
-    .placeholder = Espaço reservado
     .open-extensions-folder = Abrir pasta de extensões 
 
 settings-privacy = Settings Privacy 
@@ -148,9 +130,6 @@ settings-developer = Settings Developer
     .clear-cache = Limpar Cache
     .clear-cache-description = Restaura sua conta, basicamente.
     .clear = Limpar
-    .debug-logger = Registrador de depuração
-    .debug-logger-description = Abra uma nova janela para ver os logs ao usar o aplicativo.
-    .open-debug-logger = Abrir o registrador
     .save-logs-to-file = Salvar logs em um arquivo
     .save-logs-to-file-description = Ao habilitar essa opção, os logs serão salvos em um arquivo e serão persistentes.
 
@@ -161,16 +140,12 @@ media-player = Media Player
     .screenshare = Compartilhar tela
     
 remote-controls = Remote Controls 
-    .in-call = Em chamada
     .mute = Silenciar
     .unmute = Dessilenciar 
     .listen = Ativar áudio
     .silence = Desativar áudio
-    .end = Fim
 
 unlock = Unlock
-    .warning1 = Sua senha é usada para criptografar seus dados. Ela nunca é enviada para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
-    .warning2 = Se você esquecer essa senha, não podemos ajudá-lo a recuperá-la.
     .enter-pin = Digite a senha
     .create-account = Criar Conta
 
