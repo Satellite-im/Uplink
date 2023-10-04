@@ -70,7 +70,7 @@ pub fn hangle_msg_scroll<'a>(
                     observer_script =
                         observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
 
-                    log::info!("init handle_msg_scroll for conv id {}. top_id is {top_msg_id}, bottom_id is {bottom_msg_id}, send top is: {should_send_top_evt}, send bottom is {should_send_bottom_evt}", conv_id);
+                    log::info!("init handle_msg_scroll for conv id {}. top_id is {top_msg_id}, bottom_id is {bottom_msg_id}, send top is: {should_send_top_evt}, send bottom is {should_send_bottom_evt}, unreads is {}", conv_id, chat_data.read().active_chat.unreads());
 
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
@@ -91,7 +91,7 @@ pub fn hangle_msg_scroll<'a>(
                                     Ok(msg) => {
                                         log::info!("got this from js: {msg:?}");
 
-                                        // perhaps this is a silly check
+                                        // perhaps this is redundant now that the IntersectionObserver self terminates. 
                                         let is_evt_valid = match msg {
                                             JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
