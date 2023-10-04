@@ -1,19 +1,26 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, str::FromStr};
 
-use common::state::pending_message::progress_file;
-use common::warp_runner::thumbnail_to_base64;
+use common::language::{get_local_text, get_local_text_with_args};
+use common::state::{Action, Identity, State, ToastNotification};
+use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
+use common::{state::pending_message::progress_file, WARP_CMD_CH};
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
+use futures::StreamExt;
 use linkify::{LinkFinder, LinkKind};
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
+use warp::error::Error;
 use warp::{
     constellation::{file::File, Progression},
+    crypto::DID,
     logging::tracing::log,
 };
 
 use common::icons::outline::Shape as Icon;
 
+use crate::components::context_menu::IdentityHeader;
+use crate::elements::button::Button;
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
@@ -323,6 +330,9 @@ pub struct ChatMessageProps {
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    if let Ok(id) = DID::from_str(&cx.props.text) {
+        return cx.render(rsx!(IdentityMessage { id: id }));
+    }
     let mut formatted_text = if cx.props.markdown {
         markdown(&cx.props.text)
     } else {
@@ -459,4 +469,148 @@ pub fn markdown(text: &str) -> String {
     }
 
     html_output
+}
+
+#[derive(Display)]
+pub enum IdentityCmd {
+    #[display(fmt = "GetIdentity")]
+    GetIdentity(DID),
+    #[display(fmt = "SentFriendRequest")]
+    SentFriendRequest(String, Vec<Identity>),
+}
+
+#[derive(Props, PartialEq)]
+pub struct IdentityMessageProps {
+    id: DID,
+}
+
+#[allow(non_snake_case)]
+pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let identity = use_state(cx, || None);
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<IdentityCmd>| {
+        to_owned![identity, state];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    IdentityCmd::GetIdentity(id) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetIdentity {
+                            did: id,
+                            rsp: tx,
+                        }));
+                        let r = rx.await.expect("no identity found");
+                        if let Ok(id) = r {
+                            identity.set(Some(id));
+                        }
+                    }
+                    IdentityCmd::SentFriendRequest(id, outgoing_requests) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                            id,
+                            outgoing_requests,
+                            rsp: tx,
+                        }));
+                        let res = rx.await.expect("failed to get response from warp_runner");
+                        match res {
+                            Ok(_) => {}
+                            Err(e) => match e {
+                                Error::PublicKeyIsBlocked => {
+                                    log::warn!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.key-blocked"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                                _ => {
+                                    //The other errors are covered by button already
+                                    log::error!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.add-failed"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    });
+    use_effect(cx, &cx.props.id, |id| {
+        to_owned![ch];
+        async move {
+            ch.send(IdentityCmd::GetIdentity(id));
+        }
+    });
+    match identity.as_ref() {
+        Some(identity) => {
+            let disabled = state
+                .read()
+                .outgoing_fr_identities()
+                .iter()
+                .any(|req| req.did_key().eq(&identity.did_key()))
+                || state
+                    .read()
+                    .get_own_identity()
+                    .did_key()
+                    .eq(&identity.did_key())
+                || state
+                    .read()
+                    .friend_identities()
+                    .iter()
+                    .any(|req| req.did_key().eq(&identity.did_key()));
+            return cx.render(rsx!(div {
+                class: "embed-identity",
+                IdentityHeader {
+                    sender_did: identity.did_key()
+                },
+                div {
+                    class: "profile-container",
+                    div {
+                        id: "profile-name",
+                        aria_label: "profile-name",
+                        p {
+                            class: "text",
+                            aria_label: "profile-name-value",
+                            format!("{}", identity.username())
+                        }
+                    }
+                    identity.status_message().and_then(|s|{
+                        cx.render(rsx!(
+                            div {
+                                id: "profile-status",
+                                aria_label: "profile-status",
+                                p {
+                                    class: "text",
+                                    aria_label: "profile-status-value",
+                                    s
+                                }
+                            }
+                        ))
+                    }),
+                },
+                Button {
+                    aria_label: String::from("embed-identity-button"),
+                    disabled: disabled,
+                    with_title: false,
+                    onpress: move |_| {
+                        ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
+                    },
+                    text: get_local_text_with_args("friends.add-name", vec![("name", identity.username().into())]),
+                    appearance: crate::elements::Appearance::Primary
+                }
+            }));
+        }
+        None => return cx.render(rsx!(div {})),
+    }
 }

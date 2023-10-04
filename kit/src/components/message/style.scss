@@ -112,3 +112,24 @@
 		stroke: var(--text-color-link);
 	}
 }
+
+.embed-identity {
+	display: flex;
+	flex-direction: column;
+	.profile-container {
+		max-width: 300px;
+	}
+	.btn-wrap {
+		padding-top: var(--padding-less);
+		.btn {
+			max-width: calc(var(--height-input) * 2 + 300px);
+			width: 100%;
+			p {
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				overflow: hidden;
+				color: var(--text-color-dark);
+			}
+		}
+	}
+}

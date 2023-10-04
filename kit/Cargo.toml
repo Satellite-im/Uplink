@@ -25,6 +25,7 @@ linkify = { workspace = true }
 reqwest = { workspace = true }
 base64 = { workspace = true }
 mime = { workspace = true }
+futures = { workspace = true }
 
 [dependencies.uuid]
 workspace = true

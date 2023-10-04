@@ -117,6 +117,11 @@ pub enum MultiPassCmd {
         username: String,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
+    #[display(fmt = "GetIdentity")]
+    GetIdentity {
+        did: DID,
+        rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
+    },
     //#[display(fmt = "GetIdentities")]
     //GetIdentities {
     //    dids: Vec<DID>,
@@ -395,6 +400,23 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     rsp.send(Err(e))
                 }
             };
+        }
+        MultiPassCmd::GetIdentity { did, rsp } => {
+            let pic = warp.multipass.identity_picture(&did).await;
+            let r = warp.multipass.get_identity(Identifier::DID(did)).await; //(dids, &mut warp.multipass).await;
+            let r = match r {
+                Ok(ids) => {
+                    if ids.len() == 0 {
+                        Err(Error::IdentityExist)
+                    } else {
+                        let mut id = Identity::from(ids[0].clone());
+                        id.set_profile_picture(&pic.unwrap_or_default());
+                        Ok(id)
+                    }
+                }
+                Err(err) => Err(err),
+            };
+            let _ = rsp.send(r);
         } //MultiPassCmd::GetIdentities { dids, rsp } => {
           //    let r = _multipass_get_identities(dids, &mut warp.multipass).await;
           //    let _ = rsp.send(r);

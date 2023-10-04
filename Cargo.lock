@@ -4442,6 +4442,7 @@ dependencies = [
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-html",
+ "futures",
  "glob",
  "humansize",
  "linkify",
