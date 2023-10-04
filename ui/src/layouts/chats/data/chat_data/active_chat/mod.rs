@@ -21,6 +21,8 @@ pub use messages::*;
 pub use metadata::*;
 pub use partial_message::*;
 
+pub const DEFAULT_MESSAGES_TO_TAKE: usize = 40;
+
 #[derive(Debug, Default, Clone)]
 pub struct ActiveChat {
     metadata: Metadata,

@@ -9,5 +9,3 @@ pub use chat_props::*;
 pub use js_msg::*;
 pub use misc::*;
 pub use msg_group::*;
-
-pub const DEFAULT_MESSAGES_TO_TAKE: usize = 10;
