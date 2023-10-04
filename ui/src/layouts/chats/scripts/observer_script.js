@@ -7,7 +7,20 @@ function observe_list() {
     console.log("send_top_event is " + send_top_event);
     console.log("send_bottom_event is " + send_bottom_event);
     
-    var observer3 = new IntersectionObserver( (entries, observer) => {
+    // crazy hack to unregister the intersection observer
+    var ran_once = false;
+    let x = function() {
+        if (!ran_once) {
+            ran_once = true;
+            return ran_once;
+        } else {
+            observer3.disconnect();
+            return ran_once;
+        }
+    }();
+
+    // made a global variable by not using let/var
+    observer3 = new IntersectionObserver( (entries, observer) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 dioxus.send("{\"Add\":{\"msg_id\":\"" + entry.target.id + "\",\"key\":\"" + conversation_key + "\"}}");

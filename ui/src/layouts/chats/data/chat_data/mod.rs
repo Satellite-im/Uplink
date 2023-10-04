@@ -29,6 +29,7 @@ impl ChatData {
             return;
         }
         self.active_chat.messages.add_message_to_view(message_id);
+        let behavior = self.get_chat_behavior(conv_id);
 
         if self
             .active_chat
@@ -39,7 +40,8 @@ impl ChatData {
             .unwrap_or_default()
         {
             self.scroll_up(conv_id);
-        } else {
+        } else if !matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent) {
+            // the matches! check is an extra precaution
             self.scroll_down(conv_id);
         }
     }
@@ -102,6 +104,15 @@ impl ChatData {
 
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
+
+            // new message is added to the end - have to remove a message from the front
+            if let Some(last_msg) = self.active_chat.messages.all.pop_front() {
+                // todo: perhaps only check the most recent message in messages.displayed
+                self.active_chat
+                    .messages
+                    .displayed
+                    .retain(|x| x != &last_msg.inner.id());
+            }
         }
         return should_append_msg;
     }

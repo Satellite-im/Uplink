@@ -269,6 +269,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 if !rsp.has_more {
                                                     // return to ScrollInit::MostRecent
                                                     behavior = ChatBehavior::default();
+                                                    // todo: only retain the most recent X messages
                                                 } else {
                                                     // behavior.on_scroll_end already equals data::ScrollBehavior::FetchMore;
                                                 }
