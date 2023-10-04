@@ -20,11 +20,11 @@ pub fn init_msg_scroll<'a>(
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<()>,
 ) {
-    let active_chat_id = chat_data.read().active_chat.id();
     let chat_key = chat_data.read().active_chat.key();
-    use_effect(cx, (&active_chat_id, &chat_key), |(chat_id, _chat_key)| {
+    use_effect(cx, &chat_key, |_chat_key| {
         to_owned![eval_provider, ch, chat_data];
         async move {
+            let chat_id = chat_data.read().active_chat.id();
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
             log::debug!(
                 "use_effect for init_msg_scroll {}. scrolling to: {:?}",
