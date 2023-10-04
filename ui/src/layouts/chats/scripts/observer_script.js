@@ -1,4 +1,4 @@
-async function observe_list() {
+function observe_list() {
     var send_top_event = $SEND_TOP_EVENT;
     var send_bottom_event = $SEND_BOTTOM_EVENT;
     var conversation_key = "$CONVERSATION_KEY";
