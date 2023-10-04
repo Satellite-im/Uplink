@@ -3,6 +3,8 @@ use common::warp_runner::ui_adapter;
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
+use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
+
 use super::PartialMessage;
 
 #[derive(Debug, Default, Clone)]
@@ -29,6 +31,17 @@ impl Messages {
             displayed,
             times: message_times,
         }
+    }
+
+    pub fn reset(&mut self) {
+        let len = self.all.len();
+        for msg in self
+            .all
+            .drain(0..len.saturating_sub(DEFAULT_MESSAGES_TO_TAKE))
+        {
+            self.times.remove(&msg.inner.id());
+        }
+        self.displayed.clear();
     }
 
     pub fn insert_messages(&mut self, m: Vec<ui_adapter::Message>) {

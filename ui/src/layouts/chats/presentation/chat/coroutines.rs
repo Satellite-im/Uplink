@@ -54,9 +54,14 @@ pub fn handle_warp_events(
                                 .scroll_to,
                             data::ScrollTo::MostRecent
                         ) {
-                            log::info!("adding message to conversation");
-                            chat_data.write().new_message(conversation_id, message);
-                            chat_data.write().active_chat.new_key();
+                            if chat_data
+                                .write_silent()
+                                .new_message(conversation_id, message)
+                            {
+                                log::info!("adding message to conversation");
+                                chat_data.write().active_chat.messages.reset();
+                                chat_data.write().active_chat.new_key();
+                            }
                         }
                     }
                     MessageEvent::Edited {

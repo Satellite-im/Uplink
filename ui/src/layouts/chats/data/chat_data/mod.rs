@@ -2,6 +2,7 @@ use std::collections::{HashMap, VecDeque};
 
 use common::{state::State, warp_runner::ui_adapter};
 
+use dioxus::html::p;
 use uuid::Uuid;
 
 mod active_chat;
@@ -104,17 +105,15 @@ impl ChatData {
 
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
-
-            // new message is added to the end - have to remove a message from the front
-            if let Some(last_msg) = self.active_chat.messages.all.pop_front() {
-                // todo: perhaps only check the most recent message in messages.displayed
-                self.active_chat
-                    .messages
-                    .displayed
-                    .retain(|x| x != &last_msg.inner.id());
-            }
         }
         return should_append_msg;
+    }
+
+    pub fn reset_messages(&mut self, conv_id: Uuid) {
+        if self.active_chat.id() == conv_id {
+            self.active_chat.messages.reset();
+            self.set_chat_behavior(conv_id, ChatBehavior::default());
+        }
     }
 
     pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
@@ -157,12 +156,6 @@ impl ChatData {
         {
             msg.inner = message;
             msg.key = Uuid::new_v4().to_string();
-        }
-    }
-
-    pub fn scrolled(&mut self, conv_id: Uuid) {
-        if self.active_chat.id() == conv_id {
-            self.active_chat.scrolled_once = true;
         }
     }
 

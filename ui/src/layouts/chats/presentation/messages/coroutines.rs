@@ -154,11 +154,6 @@ pub fn hangle_msg_scroll<'a>(
                                             continue 'HANDLE_EVAL;
                                         }
 
-                                        if !chat_data.read().active_chat.scrolled_once {
-                                            log::info!("top evt reached early");
-                                            continue 'HANDLE_EVAL;
-                                        }
-
                                         let msg = match chat_data.read().get_top_of_view(conv_id) {
                                             Some(x) => x,
                                             None => {
@@ -203,7 +198,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
-                                                continue 'HANDLE_EVAL;
+                                                break 'CONFIGURE_EVAL;
                                             },
                                             Err(e) => {
                                                 log::error!("FetchMessages command failed: {e}");
@@ -219,11 +214,6 @@ pub fn hangle_msg_scroll<'a>(
 
                                         if !should_send_bottom_evt {
                                             log::error!("bottom event received when it shouldn't have fired");
-                                            continue 'HANDLE_EVAL;
-                                        }
-
-                                        if !chat_data.read().active_chat.scrolled_once {
-                                            log::info!("bottom evt reached early");
                                             continue 'HANDLE_EVAL;
                                         }
 
@@ -262,22 +252,16 @@ pub fn hangle_msg_scroll<'a>(
                                         match rsp {
                                             Ok(rsp) => {
                                                 let new_messages = rsp.messages.len();
-                                                chat_data.write().insert_messages(conv_id, rsp.messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
-                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                chat_data.write().insert_messages(conv_id, rsp.messages);
 
                                                 if !rsp.has_more {
-                                                    // return to ScrollInit::MostRecent
-                                                    behavior = ChatBehavior::default();
-                                                    // todo: only retain the most recent X messages
-                                                } else {
-                                                    // behavior.on_scroll_end already equals data::ScrollBehavior::FetchMore;
+                                                    // remove extra messages from the list and return to ScrollInit::MostRecent
+                                                    chat_data.write().reset_messages(conv_id);
                                                 }
-
-                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
-                                                chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", chat_data.read().get_chat_behavior(conv_id));
                                                 chat_data.write().active_chat.new_key();
-                                                continue 'HANDLE_EVAL;
+                                                break 'CONFIGURE_EVAL;
                                             },
                                             Err(e) => {
                                                 log::error!("FetchMessages command failed: {e}");
