@@ -18,11 +18,11 @@ pub fn init_msg_scroll<'a>(
     cx: &'a Scoped,
     chat_data: &UseSharedState<ChatData>,
     eval_provider: &utils::EvalProvider,
-    ch: Coroutine<Uuid>,
+    ch: Coroutine<()>,
 ) {
     let active_chat_id = chat_data.read().active_chat.id();
     let chat_key = chat_data.read().active_chat.key();
-    use_effect(cx, (&active_chat_id, &chat_key), |(chat_id, _)| {
+    use_effect(cx, (&active_chat_id, &chat_key), |(chat_id, _chat_key)| {
         to_owned![eval_provider, ch, chat_data];
         async move {
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
@@ -45,7 +45,7 @@ pub fn init_msg_scroll<'a>(
                     if let Err(e) = eval.join().await {
                         log::error!("failed to join eval: {:?}", e);
                     } else {
-                        ch.send(chat_id);
+                        ch.send(());
                     }
                 }
                 Err(e) => {

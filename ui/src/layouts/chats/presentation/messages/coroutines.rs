@@ -14,7 +14,7 @@ use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{self, ChatBehavior, ChatData, JsMsg, ViewInit, DEFAULT_MESSAGES_TO_TAKE},
+    data::{self, ChatBehavior, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 
@@ -24,21 +24,20 @@ pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
-) -> Coroutine<Uuid> {
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+) -> Coroutine<()> {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
         to_owned![eval_provider, chat_data];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let mut current_conv_id: Option<Uuid> = None;
+            let mut current_conv_key: Option<Uuid> = None;
 
             // don't begin the coroutine until use_eval sends a command over the channel.
-            while let Some(conv_id) = rx.next().await {
-                current_conv_id.replace(conv_id);
-
+            while rx.next().await.is_some() {
                 'CONFIGURE_EVAL: loop {
-                    let behavior = chat_data
-                        .read()
-                        .get_chat_behavior(current_conv_id.unwrap_or_default());
+                    let conv_id = chat_data.read().active_chat.id();
+                    let conv_key = chat_data.read().active_chat.key();
+                    current_conv_key.replace(conv_key);
+                    let behavior = chat_data.read().get_chat_behavior(conv_id);
 
                     let should_send_top_evt =
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
@@ -65,10 +64,8 @@ pub fn hangle_msg_scroll<'a>(
                         "$SEND_BOTTOM_EVENT",
                         should_send_bottom_evt.then_some("1").unwrap_or("0"),
                     );
-                    observer_script = observer_script.replace(
-                        "$CONVERSATION_ID",
-                        &chat_data.read().active_chat.key().to_string(),
-                    );
+                    observer_script =
+                        observer_script.replace("$CONVERSATION_KEY", &conv_key.to_string());
                     observer_script =
                         observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
                     observer_script =
@@ -86,7 +83,7 @@ pub fn hangle_msg_scroll<'a>(
 
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
-                    let _conv_id = chat_data.read().active_chat.key();
+                    let _key = chat_data.read().active_chat.key();
                     let eval_stream = async_stream::stream! {
                         let mut should_break = false;
                         while !should_break {
@@ -97,10 +94,10 @@ pub fn hangle_msg_scroll<'a>(
 
                                         // perhaps this is a silly check
                                         let is_evt_valid = match msg {
-                                            JsMsg::Top { conv_id }
-                                            | JsMsg::Bottom { conv_id }
-                                            | JsMsg::Add { conv_id, .. }
-                                            | JsMsg::Remove { conv_id, .. } if conv_id == _conv_id => true,
+                                            JsMsg::Top { key }
+                                            | JsMsg::Bottom { key }
+                                            | JsMsg::Add { key, .. }
+                                            | JsMsg::Remove { key, .. } if key ==  _key => true,
                                             _ => false
                                         };
 
@@ -129,9 +126,8 @@ pub fn hangle_msg_scroll<'a>(
                         tokio::select! {
                             opt = rx.next() => {
                                 match opt {
-                                    Some(conv_id) => {
-                                        log::info!("conv id changed from: {:?} to {}", current_conv_id, conv_id);
-                                        current_conv_id.replace(conv_id);
+                                    Some(_) => {
+                                        log::info!("coroutine restart triggered");
                                         break 'HANDLE_EVAL;
                                     }
                                     None => {
@@ -143,24 +139,24 @@ pub fn hangle_msg_scroll<'a>(
                             },
                             res = eval_stream.next() => match res {
                                 Some(msg) => match msg {
-                                    JsMsg::Add { msg_id, conv_id } => {
+                                    JsMsg::Add { msg_id, .. } => {
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
                                     },
-                                    JsMsg::Remove { msg_id, conv_id } => {
+                                    JsMsg::Remove { msg_id, .. } => {
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                     }
-                                    JsMsg::Top { conv_id } => {
+                                    JsMsg::Top { .. } => {
                                         log::info!("top reached for conv id: {conv_id}");
                                         // send uuid/timestamp of oldest message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_top_evt {
                                             log::error!("top event received when it shouldn't have fired");
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         if !chat_data.read().active_chat.scrolled_once {
                                             log::info!("top evt reached early");
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         let msg = match chat_data.read().get_top_of_view(conv_id) {
@@ -171,7 +167,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
                                                 chat_data.write_silent().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write_silent().active_chat.messages.displayed.clear();
-                                                break 'HANDLE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         };
 
@@ -185,7 +181,7 @@ pub fn hangle_msg_scroll<'a>(
                                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                                             log::error!("failed to send warp cmd: {e}");
                                             tokio::time::sleep(Duration::from_secs(1)).await;
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         let rsp = match rx.await {
@@ -193,7 +189,7 @@ pub fn hangle_msg_scroll<'a>(
                                             Err(e) => {
                                                 log::error!("failed to send warp command. channel closed. {e}");
                                                 tokio::time::sleep(Duration::from_secs(1)).await;
-                                                break 'HANDLE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         };
 
@@ -207,29 +203,28 @@ pub fn hangle_msg_scroll<'a>(
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
-                                                // wait for UI to reload in response to chat_data.write()
-                                                break 'CONFIGURE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             },
                                             Err(e) => {
                                                 log::error!("FetchMessages command failed: {e}");
-                                                tokio::time::sleep(Duration::from_secs(1)).await;
-                                                break 'HANDLE_EVAL;
+                                                //tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         }
                                     }
-                                    JsMsg::Bottom { conv_id } => {
+                                    JsMsg::Bottom { .. } => {
                                         log::info!("bottom reached for conv id: {conv_id}");
                                         // send uuid/timestamp of most recent message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
 
                                         if !should_send_bottom_evt {
                                             log::error!("bottom event received when it shouldn't have fired");
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         if !chat_data.read().active_chat.scrolled_once {
                                             log::info!("bottom evt reached early");
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         let msg = match chat_data.read().get_bottom_of_view(conv_id) {
@@ -238,7 +233,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 log::error!("no messages at bottom of view");
                                                 chat_data.write_silent().set_chat_behavior(conv_id, ChatBehavior::default());
                                                 chat_data.write_silent().active_chat.messages.displayed.clear();
-                                                break 'HANDLE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         };
 
@@ -252,7 +247,7 @@ pub fn hangle_msg_scroll<'a>(
                                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                                             log::error!("failed to send warp cmd: {e}");
                                             tokio::time::sleep(Duration::from_secs(1)).await;
-                                            break 'HANDLE_EVAL;
+                                            continue 'HANDLE_EVAL;
                                         }
 
                                         let rsp = match rx.await {
@@ -260,7 +255,7 @@ pub fn hangle_msg_scroll<'a>(
                                             Err(e) => {
                                                 log::error!("failed to send warp command. channel closed. {e}");
                                                 tokio::time::sleep(Duration::from_secs(1)).await;
-                                                break 'HANDLE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         };
 
@@ -281,13 +276,12 @@ pub fn hangle_msg_scroll<'a>(
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
-                                                // wait for UI to reload in response to chat_data.write()
-                                                break 'CONFIGURE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             },
                                             Err(e) => {
                                                 log::error!("FetchMessages command failed: {e}");
                                                 tokio::time::sleep(Duration::from_secs(1)).await;
-                                                break 'HANDLE_EVAL;
+                                                continue 'HANDLE_EVAL;
                                             }
                                         }
                                     }
