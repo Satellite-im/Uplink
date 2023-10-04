@@ -158,6 +158,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     label {
                         class: "file-name item-alignment",
                         padding_top: "8px",
+                        height: "24px",
                         title: "{&file_name}",
                         "{file_name}"
                     }

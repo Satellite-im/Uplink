@@ -419,6 +419,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             error.set((false, active_chat_id));
         }
     };
+    let placeholder_text = if !state.read().ui.is_minimal_view() {
+        get_local_text("messages.say-something-placeholder")
+    } else {
+        "...".to_string()
+    };
 
     let typing_users: Vec<String> = users_typing.iter().map(|id| (*id).username()).collect();
 
@@ -427,7 +432,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             key: "{active_chat_id}",
             id: format!("{}-chatbar", active_chat_id.to_string()),
             loading: is_loading,
-            placeholder: get_local_text("messages.say-something-placeholder"),
+            placeholder: placeholder_text,
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
