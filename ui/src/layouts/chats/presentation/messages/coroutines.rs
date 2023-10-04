@@ -32,248 +32,254 @@ pub fn hangle_msg_scroll<'a>(
 
             // don't begin the coroutine until use_eval sends a command over the channel.
             while rx.next().await.is_some() {
-                let conv_id = chat_data.read().active_chat.id();
-                let conv_key = chat_data.read().active_chat.key();
-                let behavior = chat_data.read().get_chat_behavior(conv_id);
+                // this is basically a goto
+                'CONFIGURE_EVAL: loop {
+                    let conv_id = chat_data.read().active_chat.id();
+                    let conv_key = chat_data.read().active_chat.key();
+                    let behavior = chat_data.read().get_chat_behavior(conv_id);
 
-                let should_send_top_evt = behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
-                let should_send_bottom_evt =
-                    behavior.on_scroll_end != data::ScrollBehavior::DoNothing;
-                drop(behavior);
-                let bottom_msg_id: Uuid = chat_data
-                    .read()
-                    .active_chat
-                    .messages
-                    .bottom()
-                    .unwrap_or(Uuid::nil());
-                let top_msg_id: Uuid = chat_data
-                    .read()
-                    .active_chat
-                    .messages
-                    .top()
-                    .unwrap_or(Uuid::nil());
-                let mut observer_script = OBSERVER_SCRIPT.replace(
-                    "$SEND_TOP_EVENT",
-                    should_send_top_evt.then_some("1").unwrap_or("0"),
-                );
-                observer_script = observer_script.replace(
-                    "$SEND_BOTTOM_EVENT",
-                    should_send_bottom_evt.then_some("1").unwrap_or("0"),
-                );
-                observer_script =
-                    observer_script.replace("$CONVERSATION_KEY", &conv_key.to_string());
-                observer_script = observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
-                observer_script =
-                    observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
+                    let should_send_top_evt =
+                        behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
+                    let should_send_bottom_evt =
+                        behavior.on_scroll_end != data::ScrollBehavior::DoNothing;
+                    drop(behavior);
+                    let bottom_msg_id: Uuid = chat_data
+                        .read()
+                        .active_chat
+                        .messages
+                        .bottom()
+                        .unwrap_or(Uuid::nil());
+                    let top_msg_id: Uuid = chat_data
+                        .read()
+                        .active_chat
+                        .messages
+                        .top()
+                        .unwrap_or(Uuid::nil());
+                    let mut observer_script = OBSERVER_SCRIPT.replace(
+                        "$SEND_TOP_EVENT",
+                        should_send_top_evt.then_some("1").unwrap_or("0"),
+                    );
+                    observer_script = observer_script.replace(
+                        "$SEND_BOTTOM_EVENT",
+                        should_send_bottom_evt.then_some("1").unwrap_or("0"),
+                    );
+                    observer_script =
+                        observer_script.replace("$CONVERSATION_KEY", &conv_key.to_string());
+                    observer_script =
+                        observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
+                    observer_script =
+                        observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
 
-                log::info!("init handle_msg_scroll for conv id {}. top_id is {top_msg_id}, bottom_id is {bottom_msg_id}, send top is: {should_send_top_evt}, send bottom is {should_send_bottom_evt}", conv_id);
+                    log::info!("init handle_msg_scroll for conv id {}. top_id is {top_msg_id}, bottom_id is {bottom_msg_id}, send top is: {should_send_top_evt}, send bottom is {should_send_bottom_evt}", conv_id);
 
-                let eval = match eval_provider(&observer_script) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        log::error!("use eval failed: {:?}", e);
-                        return;
-                    }
-                };
+                    let eval = match eval_provider(&observer_script) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            log::error!("use eval failed: {:?}", e);
+                            return;
+                        }
+                    };
 
-                // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
-                // which should definitely work for that.
-                let _key = chat_data.read().active_chat.key();
-                let eval_stream = async_stream::stream! {
-                    let mut should_break = false;
-                    while !should_break {
-                        match eval.recv().await {
-                            Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
-                                Ok(msg) => {
-                                    log::info!("got this from js: {msg:?}");
+                    // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
+                    // which should definitely work for that.
+                    let _key = chat_data.read().active_chat.key();
+                    let eval_stream = async_stream::stream! {
+                        let mut should_break = false;
+                        while !should_break {
+                            match eval.recv().await {
+                                Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
+                                    Ok(msg) => {
+                                        log::info!("got this from js: {msg:?}");
 
-                                    // perhaps this is a silly check
-                                    let is_evt_valid = match msg {
-                                        JsMsg::Top { key }
-                                        | JsMsg::Bottom { key }
-                                        | JsMsg::Add { key, .. }
-                                        | JsMsg::Remove { key, .. } if key ==  _key => true,
-                                        _ => false
-                                    };
+                                        // perhaps this is a silly check
+                                        let is_evt_valid = match msg {
+                                            JsMsg::Top { key }
+                                            | JsMsg::Bottom { key }
+                                            | JsMsg::Add { key, .. }
+                                            | JsMsg::Remove { key, .. } if key ==  _key => true,
+                                            _ => false
+                                        };
 
-                                    if !is_evt_valid {
-                                        log::warn!("received js event from wrong conversation");
-                                        continue;
+                                        if !is_evt_valid {
+                                            log::warn!("received js event from wrong conversation");
+                                            continue;
+                                        }
+                                        should_break = matches!(msg, JsMsg::Top{ .. } | JsMsg::Bottom { .. });
+                                        yield msg;
+                                    },
+                                    Err(e) => {
+                                        log::error!("failed to deserialize message: {}: {}", s, e);
+                                        break;
                                     }
-                                    should_break = matches!(msg, JsMsg::Top{ .. } | JsMsg::Bottom { .. });
-                                    yield msg;
-                                },
+                                }
                                 Err(e) => {
-                                    log::error!("failed to deserialize message: {}: {}", s, e);
+                                    log::error!("error receiving from js: {e:?}");
                                     break;
                                 }
                             }
-                            Err(e) => {
-                                log::error!("error receiving from js: {e:?}");
-                                break;
-                            }
                         }
-                    }
-                };
-                pin_mut!(eval_stream);
+                    };
+                    pin_mut!(eval_stream);
 
-                'HANDLE_EVAL: loop {
-                    tokio::select! {
-                        opt = rx.next() => {
-                            match opt {
-                                Some(_) => {
-                                    log::info!("coroutine restart triggered");
-                                    break 'HANDLE_EVAL;
+                    'HANDLE_EVAL: loop {
+                        tokio::select! {
+                            opt = rx.next() => {
+                                match opt {
+                                    Some(_) => {
+                                        log::info!("coroutine restart triggered");
+                                        continue 'CONFIGURE_EVAL;
+                                    }
+                                    None => {
+                                        // failed to read from stream. use_coroutine is probably done for.
+                                        log::warn!("failed to read from coroutine ch for handle_msg_scroll");
+                                        return;
+                                    }
+                                }
+                            },
+                            res = eval_stream.next() => match res {
+                                Some(msg) => match msg {
+                                    JsMsg::Add { msg_id, .. } => {
+                                        chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                    },
+                                    JsMsg::Remove { msg_id, .. } => {
+                                        chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                    }
+                                    JsMsg::Top { .. } => {
+                                        log::info!("top reached for conv id: {conv_id}");
+                                        // send uuid/timestamp of oldest message to WarpRunner to proces top event
+                                        // receive the new messages and if there are more in that direction
+                                        if !should_send_top_evt {
+                                            log::error!("top event received when it shouldn't have fired");
+                                            continue 'HANDLE_EVAL;
+                                        }
+
+                                        let msg = match chat_data.read().get_top_of_view(conv_id) {
+                                            Some(x) => x,
+                                            None => {
+                                                log::error!("no messages at top of view");
+                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
+                                                chat_data.write_silent().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write_silent().active_chat.messages.displayed.clear();
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        let (tx, rx) = oneshot::channel();
+                                        let cmd = RayGunCmd::FetchMessages{
+                                            conv_id,
+                                            config: FetchMessagesConfig::Earlier { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                            rsp: tx
+                                        };
+
+                                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                                            log::error!("failed to send warp cmd: {e}");
+                                            tokio::time::sleep(Duration::from_secs(1)).await;
+                                            continue 'HANDLE_EVAL;
+                                        }
+
+                                        let rsp = match rx.await {
+                                            Ok(r) => r,
+                                            Err(e) => {
+                                                log::error!("failed to send warp command. channel closed. {e}");
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        match rsp {
+                                            Ok(rsp) => {
+                                                let new_messages = rsp.messages.len();
+                                                chat_data.write().insert_messages(conv_id, rsp.messages);
+                                                chat_data.write().active_chat.messages.displayed.clear();
+                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                chat_data.write().active_chat.new_key();
+                                                break 'HANDLE_EVAL;
+                                            },
+                                            Err(e) => {
+                                                log::error!("FetchMessages command failed: {e}");
+                                                //tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        }
+                                    }
+                                    JsMsg::Bottom { .. } => {
+                                        log::info!("bottom reached for conv id: {conv_id}");
+                                        // send uuid/timestamp of most recent message to WarpRunner to proces top event
+                                        // receive the new messages and if there are more in that direction
+
+                                        if !should_send_bottom_evt {
+                                            log::error!("bottom event received when it shouldn't have fired");
+                                            continue 'HANDLE_EVAL;
+                                        }
+
+                                        let msg = match chat_data.read().get_bottom_of_view(conv_id) {
+                                            Some(x) => x,
+                                            None => {
+                                                log::error!("no messages at bottom of view");
+                                                chat_data.write_silent().set_chat_behavior(conv_id, ChatBehavior::default());
+                                                chat_data.write_silent().active_chat.messages.displayed.clear();
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        let (tx, rx) = oneshot::channel();
+                                        let cmd = RayGunCmd::FetchMessages{
+                                            conv_id,
+                                            config: FetchMessagesConfig::Later { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                            rsp: tx
+                                        };
+
+                                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                                            log::error!("failed to send warp cmd: {e}");
+                                            tokio::time::sleep(Duration::from_secs(1)).await;
+                                            continue 'HANDLE_EVAL;
+                                        }
+
+                                        let rsp = match rx.await {
+                                            Ok(r) => r,
+                                            Err(e) => {
+                                                log::error!("failed to send warp command. channel closed. {e}");
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        };
+
+                                        match rsp {
+                                            Ok(rsp) => {
+                                                let new_messages = rsp.messages.len();
+                                                chat_data.write().active_chat.messages.displayed.clear();
+                                                chat_data.write().insert_messages(conv_id, rsp.messages);
+
+                                                if !rsp.has_more {
+                                                    // remove extra messages from the list and return to ScrollInit::MostRecent
+                                                    chat_data.write().reset_messages(conv_id);
+                                                }
+                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", chat_data.read().get_chat_behavior(conv_id));
+                                                chat_data.write().active_chat.new_key();
+                                                break 'HANDLE_EVAL;
+                                            },
+                                            Err(e) => {
+                                                log::error!("FetchMessages command failed: {e}");
+                                                tokio::time::sleep(Duration::from_secs(1)).await;
+                                                continue 'HANDLE_EVAL;
+                                            }
+                                        }
+                                    }
                                 }
                                 None => {
-                                    // failed to read from stream. use_coroutine is probably done for.
-                                    log::warn!("failed to read from coroutine ch for handle_msg_scroll");
-                                    return;
+                                    log::info!("the evaluator broke in handle_msg_scroll");
+                                    // if desired, call active_chat.new_key() to restart the observer
+                                    break 'HANDLE_EVAL;
                                 }
-                            }
-                        },
-                        res = eval_stream.next() => match res {
-                            Some(msg) => match msg {
-                                JsMsg::Add { msg_id, .. } => {
-                                    chat_data.write_silent().add_message_to_view(conv_id, msg_id);
-                                },
-                                JsMsg::Remove { msg_id, .. } => {
-                                    chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
-                                }
-                                JsMsg::Top { .. } => {
-                                    log::info!("top reached for conv id: {conv_id}");
-                                    // send uuid/timestamp of oldest message to WarpRunner to proces top event
-                                    // receive the new messages and if there are more in that direction
-                                    if !should_send_top_evt {
-                                        log::error!("top event received when it shouldn't have fired");
-                                        continue 'HANDLE_EVAL;
-                                    }
-
-                                    let msg = match chat_data.read().get_top_of_view(conv_id) {
-                                        Some(x) => x,
-                                        None => {
-                                            log::error!("no messages at top of view");
-                                            let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                                            behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
-                                            chat_data.write_silent().set_chat_behavior(conv_id, behavior);
-                                            chat_data.write_silent().active_chat.messages.displayed.clear();
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    };
-
-                                    let (tx, rx) = oneshot::channel();
-                                    let cmd = RayGunCmd::FetchMessages{
-                                        conv_id,
-                                        config: FetchMessagesConfig::Earlier { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
-                                        rsp: tx
-                                    };
-
-                                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                                        log::error!("failed to send warp cmd: {e}");
-                                        tokio::time::sleep(Duration::from_secs(1)).await;
-                                        continue 'HANDLE_EVAL;
-                                    }
-
-                                    let rsp = match rx.await {
-                                        Ok(r) => r,
-                                        Err(e) => {
-                                            log::error!("failed to send warp command. channel closed. {e}");
-                                            tokio::time::sleep(Duration::from_secs(1)).await;
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    };
-
-                                    match rsp {
-                                        Ok(rsp) => {
-                                            let new_messages = rsp.messages.len();
-                                            chat_data.write().insert_messages(conv_id, rsp.messages);
-                                            chat_data.write().active_chat.messages.displayed.clear();
-                                            let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                                            behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
-                                            log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
-                                            chat_data.write().set_chat_behavior(conv_id, behavior);
-                                            chat_data.write().active_chat.new_key();
-                                            break 'HANDLE_EVAL;
-                                        },
-                                        Err(e) => {
-                                            log::error!("FetchMessages command failed: {e}");
-                                            //tokio::time::sleep(Duration::from_secs(1)).await;
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    }
-                                }
-                                JsMsg::Bottom { .. } => {
-                                    log::info!("bottom reached for conv id: {conv_id}");
-                                    // send uuid/timestamp of most recent message to WarpRunner to proces top event
-                                    // receive the new messages and if there are more in that direction
-
-                                    if !should_send_bottom_evt {
-                                        log::error!("bottom event received when it shouldn't have fired");
-                                        continue 'HANDLE_EVAL;
-                                    }
-
-                                    let msg = match chat_data.read().get_bottom_of_view(conv_id) {
-                                        Some(x) => x,
-                                        None => {
-                                            log::error!("no messages at bottom of view");
-                                            chat_data.write_silent().set_chat_behavior(conv_id, ChatBehavior::default());
-                                            chat_data.write_silent().active_chat.messages.displayed.clear();
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    };
-
-                                    let (tx, rx) = oneshot::channel();
-                                    let cmd = RayGunCmd::FetchMessages{
-                                        conv_id,
-                                        config: FetchMessagesConfig::Later { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
-                                        rsp: tx
-                                    };
-
-                                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                                        log::error!("failed to send warp cmd: {e}");
-                                        tokio::time::sleep(Duration::from_secs(1)).await;
-                                        continue 'HANDLE_EVAL;
-                                    }
-
-                                    let rsp = match rx.await {
-                                        Ok(r) => r,
-                                        Err(e) => {
-                                            log::error!("failed to send warp command. channel closed. {e}");
-                                            tokio::time::sleep(Duration::from_secs(1)).await;
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    };
-
-                                    match rsp {
-                                        Ok(rsp) => {
-                                            let new_messages = rsp.messages.len();
-                                            chat_data.write().active_chat.messages.displayed.clear();
-                                            chat_data.write().insert_messages(conv_id, rsp.messages);
-
-                                            if !rsp.has_more {
-                                                // remove extra messages from the list and return to ScrollInit::MostRecent
-                                                chat_data.write().reset_messages(conv_id);
-                                            }
-                                            log::info!("fetched {new_messages} messages. new behavior: {:?}", chat_data.read().get_chat_behavior(conv_id));
-                                            chat_data.write().active_chat.new_key();
-                                            break 'HANDLE_EVAL;
-                                        },
-                                        Err(e) => {
-                                            log::error!("FetchMessages command failed: {e}");
-                                            tokio::time::sleep(Duration::from_secs(1)).await;
-                                            continue 'HANDLE_EVAL;
-                                        }
-                                    }
-                                }
-                            }
-                            None => {
-                                log::info!("the evaluator broke in handle_msg_scroll");
-                                // if desired, call active_chat.new_key() to restart the observer
-                                break 'HANDLE_EVAL;
-                            }
-                        },
-                    }
-                } // HANDLE_EVAL
+                            },
+                        }
+                    } // HANDLE_EVAL
+                    break;
+                } // CONFIGURE_EVAL
             }
         }
     });
