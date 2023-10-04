@@ -31,13 +31,11 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
                 class: "send-files-to-several-chats-div",
                 Modal {
                     open: *send_files_from_storage.clone(),
+                    close_on_click_inside_modal: false,
                     transparent: false,
                     onclose: move |_| send_files_from_storage.set(false),
                     div {
                         class: "modal-div-files-layout",
-                        onclick: move |_| {
-                            // Just to avoid close modal if user click inside it
-                        },
                         SendFilesLayout {
                             send_files_start_location: send_files_start_location,
                             send_files_from_storage_state: send_files_from_storage.clone(),
