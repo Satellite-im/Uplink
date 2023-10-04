@@ -1,6 +1,6 @@
 var imgElement = document.getElementById('image-preview-modal-file-embed');
 var cropCircle = document.getElementById('crop-box');
-var firstRender = $FIRST_RENDER;
+var firstRender = '$FIRST_RENDER';
 
 function adjustCropCircleSize() {
     var imageWidth = imgElement.clientWidth;

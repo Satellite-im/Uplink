@@ -20,3 +20,14 @@
     border-radius: 50%;
     border: 2px dashed red; /* Dotted border style */
 }
+
+.crop-image-topbar-left-title {
+    color: var(--text-color);
+    margin-right: 32px;
+    line-height: 1.0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

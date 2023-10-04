@@ -182,7 +182,7 @@ settings = Settings
     .about = About
     .licenses = Licenses
     .search-placeholder = Search Settings...
-    .please-select-area-you-want-to-crop = Please select the area\n you want to crop
+    .please-select-area-you-want-to-crop = Please select the area you want to crop
 
 settings-profile = Profile Settings
     .failed = Failed to update profile

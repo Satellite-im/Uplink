@@ -1,7 +1,7 @@
 use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
 use dioxus::prelude::*;
 use kit::{
-    elements::{button::Button, range::Range, Appearance},
+    elements::{button::Button, label::Label, range::Range, Appearance},
     layout::modal::Modal,
 };
 use std::path::PathBuf;
@@ -44,10 +44,9 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let eval = use_eval(cx);
-    let _ = eval(
-        &adjust_crop_circle_size_script
-            .replace("$FIRST_RENDER", &format!("{}", *first_render.read())),
-    );
+    let script = &adjust_crop_circle_size_script
+        .replace("$FIRST_RENDER", &format!("{}", *first_render.read()));
+    let _ = eval(script);
 
     use_future(cx, (), |_| {
         to_owned![get_image_dimensions_script, eval, image_dimensions];
@@ -93,11 +92,12 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         id: "crop-image-topbar-left",
                         padding: "16px",
                         display: "inline-flex",
+                        align_items: "center",
                         div {
-                            id: "crop-image-topbar-left-title",
-                            color: "var(--text-color)",
-                            margin_right: "32px",
-                            get_local_text("settings.please-select-area-you-want-to-crop")
+                            class: "crop-image-topbar-left-title",
+                            Label {
+                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                            }
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,
@@ -115,6 +115,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
+                                *first_render.write_silent() = false;
                                 cx.spawn({
                                     to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                     async move {
