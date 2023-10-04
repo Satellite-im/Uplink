@@ -165,6 +165,8 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         display: "inline-flex",
                         div {
                             overflow: "hidden",
+                           width: "auto", 
+                           height: "auto",
                             border: "3px solid var(--secondary)",
                             img {
                                 id: "image-preview-modal-file-embed",
@@ -184,6 +186,10 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             id: "crop-box",
                             class: "crop-box",
+                        },
+                        div {
+                            id: "crop-box2",
+                            class: "crop-box2",
                         }
                     }
                 },

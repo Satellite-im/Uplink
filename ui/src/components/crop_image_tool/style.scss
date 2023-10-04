@@ -21,16 +21,26 @@
     border: 2px dashed var(--text-color-link);
 }
 
-.crop-box::before {
+.crop-box2 {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed transparent;
+}
+
+.crop-box2::before {
     content: "";
     display: block;
     position: absolute;
     opacity: 0.8;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at center, transparent 72%, black 50%);
+    top: var(--crop-box-before-top);
+    left: var(--crop-box-before-left);
+    right: var(--crop-box-before-right);
+    bottom: var(--crop-box-before-bottom);
+    background: var(--crop-box-before-background);
+    // background: radial-gradient(circle at center, transparent 62%, black 50%);
     mix-blend-mode: multiply;
   }
 
