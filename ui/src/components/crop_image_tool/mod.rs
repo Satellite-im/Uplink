@@ -187,8 +187,8 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             class: "crop-box",
                         },
                         div {
-                            id: "crop-box2",
-                            class: "crop-box2",
+                            id: "shadow-img-mask",
+                            class: "shadow-img-mask",
                         }
                     }
                 },

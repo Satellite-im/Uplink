@@ -1,6 +1,6 @@
 var imgElement = document.getElementById('image-preview-modal-file-embed');
 var cropCircle = document.getElementById('crop-box');
-var cropCircle2 = document.getElementById('crop-box2');
+var shadowImgMask = document.getElementById('shadow-img-mask');
 var image_crop_box_container = document.getElementById('image-crop-box-container');
 var firstRender = '$FIRST_RENDER';
 
@@ -15,18 +15,18 @@ function adjustCropCircleSize() {
     cropCircle.style.width = cropCircleDiameter + 'px';
     cropCircle.style.height = cropCircleDiameter + 'px';
 
-    cropCircle2.style.width = imageWidth + 'px';
-    cropCircle2.style.height = imageHeight + 'px';
+    shadowImgMask.style.width = imageWidth + 'px';
+    shadowImgMask.style.height = imageHeight + 'px';
 
     var hypotenuse = Math.sqrt(imageWidth ** 2 + imageHeight ** 2);
     var correctPercentage = (cropCircleDiameter / hypotenuse) * 100;
 
     // Setting values for ::before
-    cropCircle2.style.setProperty('--crop-box-before-top', '-1%');
-    cropCircle2.style.setProperty('--crop-box-before-left', '-1%');
-    cropCircle2.style.setProperty('--crop-box-before-right', '-1%');
-    cropCircle2.style.setProperty('--crop-box-before-bottom', '-1%');
-    cropCircle2.style.setProperty('--crop-box-before-background', 'radial-gradient(circle at center, transparent ' + `${correctPercentage}` + '%, black 50%)');
+    shadowImgMask.style.setProperty('--shadow-img-mask-before-top', '-1%');
+    shadowImgMask.style.setProperty('--shadow-img-mask-before-left', '-1%');
+    shadowImgMask.style.setProperty('--shadow-img-mask-before-right', '-1%');
+    shadowImgMask.style.setProperty('--shadow-img-mask-before-bottom', '-1%');
+    shadowImgMask.style.setProperty('--shadow-img-mask-before-background', 'radial-gradient(circle at center, transparent ' + `${correctPercentage}` + '%, black 50%)');
 }
 
 

@@ -21,7 +21,7 @@
     border: 2px dashed var(--text-color-link);
 }
 
-.crop-box2 {
+.shadow-img-mask {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -30,17 +30,16 @@
     border: 2px dashed transparent;
 }
 
-.crop-box2::before {
+.shadow-img-mask::before {
     content: "";
     display: block;
     position: absolute;
     opacity: 0.8;
-    top: var(--crop-box-before-top);
-    left: var(--crop-box-before-left);
-    right: var(--crop-box-before-right);
-    bottom: var(--crop-box-before-bottom);
-    background: var(--crop-box-before-background);
-    // background: radial-gradient(circle at center, transparent 62%, black 50%);
+    top: var(--shadow-img-mask-before-top);
+    left: var(--shadow-img-mask-before-left);
+    right: var(--shadow-img-mask-before-right);
+    bottom: var(--shadow-img-mask-before-bottom);
+    background: var(--shadow-img-mask-before-background);
     mix-blend-mode: multiply;
   }
 
