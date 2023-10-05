@@ -2,7 +2,6 @@ use std::collections::{HashMap, VecDeque};
 
 use common::{state::State, warp_runner::ui_adapter};
 
-use dioxus::html::p;
 use uuid::Uuid;
 
 mod active_chat;

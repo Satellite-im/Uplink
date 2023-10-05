@@ -1011,17 +1011,6 @@ impl State {
         conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
     }
 
-    pub fn message_exist(&self, message: &warp::raygun::Message) -> bool {
-        let conv = match self.chats.all.get(&message.conversation_id()) {
-            Some(c) => c,
-            None => {
-                log::warn!("attempted to get nonexistent conversation");
-                return false;
-            }
-        };
-        conv.messages.iter().any(|m| m.inner.id() == message.id())
-    }
-
     fn pin_message(&mut self, message: warp::raygun::Message) {
         let message_id = message.id();
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
