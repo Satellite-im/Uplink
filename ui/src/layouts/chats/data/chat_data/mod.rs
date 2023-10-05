@@ -109,7 +109,7 @@ impl ChatData {
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
         }
-        return should_append_msg;
+        should_append_msg
     }
 
     pub fn reset_messages(&mut self, conv_id: Uuid) {

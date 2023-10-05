@@ -255,11 +255,11 @@ pub async fn fetch_messages2(
         FetchMessagesConfig::MostRecent { limit } => MessageOptions::default()
             .set_range(total_messages.saturating_sub(limit)..total_messages),
         FetchMessagesConfig::Earlier { start_date, limit } => MessageOptions::default()
-            .set_date_range(DateTime::<Utc>::default()..start_date.clone())
+            .set_date_range(DateTime::<Utc>::default()..start_date)
             .set_reverse()
             .set_limit(limit as _),
         FetchMessagesConfig::Later { start_date, limit } => MessageOptions::default()
-            .set_date_range(start_date.clone()..chrono::offset::Utc::now())
+            .set_date_range(start_date..chrono::offset::Utc::now())
             .set_limit(limit as _),
         _ => unreachable!(),
     };

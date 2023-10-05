@@ -8,8 +8,8 @@ use crate::{
 use dioxus_core::Scoped;
 use dioxus_hooks::{to_owned, use_effect, Coroutine, UseSharedState};
 
-pub fn init_msg_scroll<'a>(
-    cx: &'a Scoped,
+pub fn init_msg_scroll(
+    cx: &Scoped,
     chat_data: &UseSharedState<ChatData>,
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<()>,

@@ -7,7 +7,7 @@ use common::{
 };
 
 use dioxus_core::Scoped;
-use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState};
+use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
@@ -20,8 +20,8 @@ use crate::layouts::chats::{
 
 use super::{DownloadTracker, MessagesCommand};
 
-pub fn hangle_msg_scroll<'a>(
-    cx: &'a Scoped,
+pub fn hangle_msg_scroll(
+    cx: &Scoped,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
     scroll_btn: &UseSharedState<ScrollBtn>,
@@ -58,11 +58,11 @@ pub fn hangle_msg_scroll<'a>(
                         .unwrap_or(Uuid::nil());
                     let mut observer_script = OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
-                        should_send_top_evt.then_some("1").unwrap_or("0"),
+                        if should_send_top_evt { "1" } else { "0" },
                     );
                     observer_script = observer_script.replace(
                         "$SEND_BOTTOM_EVENT",
-                        should_send_bottom_evt.then_some("1").unwrap_or("0"),
+                        if should_send_bottom_evt { "1" } else { "0" },
                     );
                     observer_script =
                         observer_script.replace("$CONVERSATION_KEY", &conv_key.to_string());
@@ -151,11 +151,9 @@ pub fn hangle_msg_scroll<'a>(
                                                 scroll_btn.write().clear(conv_id);
                                                 log::debug!("clearing scroll_btn");
                                             }
-                                        } else {
-                                            if !scroll_btn.read().get(conv_id) {
-                                                scroll_btn.write().set(conv_id);
-                                                log::debug!("setting scroll_btn");
-                                            }
+                                        } else if !scroll_btn.read().get(conv_id) {
+                                            scroll_btn.write().set(conv_id);
+                                            log::debug!("setting scroll_btn");
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
@@ -311,8 +309,8 @@ pub fn hangle_msg_scroll<'a>(
     ch.clone()
 }
 
-pub fn handle_warp_commands<'a>(
-    cx: &'a Scoped,
+pub fn handle_warp_commands(
+    cx: &Scoped,
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {

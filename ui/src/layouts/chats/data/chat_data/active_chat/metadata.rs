@@ -26,7 +26,7 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn new(s: &State, chat: &state::chats::Chat) -> Self {
-        let participants = s.chat_participants(&chat);
+        let participants = s.chat_participants(chat);
         // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
         // this would be "fixed" the next time uplink starts up
         let other_participants: Vec<Identity> = s.remove_self(&participants);
@@ -39,7 +39,7 @@ impl Metadata {
             ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
             _ => String::new(),
         };
-        let is_favorite = s.is_favorite(&chat);
+        let is_favorite = s.is_favorite(chat);
 
         let first_image = active_participant.profile_picture();
         let other_participants_names = State::join_usernames(&other_participants);

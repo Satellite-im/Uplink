@@ -54,7 +54,7 @@ impl ActiveChat {
     }
 
     pub fn key(&self) -> Uuid {
-        self.key.clone()
+        self.key
     }
 
     pub fn new_key(&mut self) {

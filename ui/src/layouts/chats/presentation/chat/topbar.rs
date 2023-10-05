@@ -102,7 +102,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                 loading: false,
                 platform: data.active_chat.platform(),
                 status: data.active_chat.active_participant().identity_status().into(),
-                image: data.active_chat.first_image().clone(),
+                image: data.active_chat.first_image(),
             }
         )} else {rsx! (
             UserImageGroup {

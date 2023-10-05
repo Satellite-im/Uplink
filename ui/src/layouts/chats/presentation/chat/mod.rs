@@ -52,7 +52,7 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-    let creator = data.active_chat.creator().clone();
+    let creator = data.active_chat.creator();
 
     let user_did: DID = state.read().did_key();
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();

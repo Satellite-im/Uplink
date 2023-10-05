@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+
 
 use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
 
