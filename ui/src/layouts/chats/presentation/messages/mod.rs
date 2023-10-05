@@ -138,7 +138,7 @@ pub fn get_messages(cx: Scope) -> Element {
 
     let active_chat_id = chat_data.read().active_chat.id();
     // used by the intersection observer to terminate itself.
-    let chat_key = chat_data.read().active_chat.messages_key().to_string();
+    let messages_key = chat_data.read().active_chat.messages_key().to_string();
     let chat_behavior = chat_data.read().get_chat_behavior(active_chat_id);
     let msg_container_end =
         if matches!(chat_behavior.on_scroll_top, data::ScrollBehavior::FetchMore) {
@@ -176,7 +176,7 @@ pub fn get_messages(cx: Scope) -> Element {
             },
             // used by the intersection observer to terminate itself
             div {
-                id: "{chat_key}",
+                id: "{messages_key}",
                 hidden: true,
             },
             span {
