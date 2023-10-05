@@ -47,9 +47,6 @@ pub fn Compose(cx: Scope) -> Element {
     let chat_id = data.active_chat.id();
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
-    if state.read().chats().active_chat_has_unreads() {
-        state.write().mutate(Action::ClearActiveUnreads);
-    }
 
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);

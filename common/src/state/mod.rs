@@ -838,6 +838,7 @@ impl State {
     }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         let msg_id = message.inner.id();
+        let is_active_scrolled = self.chats.active_chat_is_scrolled();
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message);
@@ -848,6 +849,7 @@ impl State {
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
+                || is_active_scrolled
             {
                 chat.add_unread(msg_id);
             }
@@ -1120,14 +1122,18 @@ impl State {
         } else if !self.chats.in_sidebar.contains(chat) {
             self.chats.in_sidebar.push_front(*chat);
         }
-        if let Some(chat) = self.chats.all.get_mut(chat) {
-            chat.clear_unreads();
-        }
+        // don't clear unreads here. need additional information, which is present in the Chatbar.
     }
 
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
+    }
+
+    pub fn set_chat_scrolled(&mut self, chat_id: Uuid, val: bool) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.is_scrolled = val;
+        }
     }
 
     // indicates that a conversation has a pending outgoing message

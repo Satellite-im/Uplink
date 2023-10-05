@@ -208,6 +208,14 @@ impl Chats {
         }
     }
 
+    pub fn active_chat_is_scrolled(&self) -> bool {
+        let id = match self.active {
+            Some(c) => c,
+            None => return false,
+        };
+        self.all.get(&id).map(|c| c.is_scrolled).unwrap_or_default()
+    }
+
     /// returns the UUID of the message being replied to by the active chat
     pub fn get_replying_to(&self) -> Option<Uuid> {
         self.active.and_then(|id| {

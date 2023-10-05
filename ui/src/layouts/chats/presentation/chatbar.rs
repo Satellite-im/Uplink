@@ -94,8 +94,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let with_scroll_btn = scroll_btn.read().get(chat_id);
 
-    if with_scroll_btn {
-        //state.write_silent()....
+    // if the active chat is scrolled up and a message is received, want to increment unreads
+    // but the needed information isn't accessible in main.rs. so a flag was added to State
+    // and is set here in the chatbar. This was done here instead of in messages.rs as
+    // an attempted optimization - don't want to re-render messages whenever scroll_btn
+    // is written to, which could be a lot.
+    state
+        .write_silent()
+        .set_chat_scrolled(chat_id, with_scroll_btn);
+
+    // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
+    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
+        state.write().mutate(Action::ClearActiveUnreads);
     }
 
     let update_send = move || {
@@ -655,6 +665,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     onclick: move |_| {
                         let _ = eval(SCROLL_BOTTOM);
                         scroll_btn.write().clear(chat_id);
+                        state.write().mutate(Action::ClearUnreads(chat_id));
                     },
                     get_local_text("messages.scroll-bottom"),
                 })
