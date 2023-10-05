@@ -237,7 +237,7 @@ pub async fn fetch_window<'a>(
     Ok((messages, chat_behavior))
 }
 
-async fn fetch_most_recent<'a>(
+pub async fn fetch_most_recent<'a>(
     mut chat_behavior: ChatBehavior,
     conv_id: Uuid,
     limit: usize,

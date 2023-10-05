@@ -35,15 +35,13 @@ use warp::{
 };
 
 const MAX_CHARS_LIMIT: usize = 1024;
-const SCROLL_BTN_THRESHOLD: i64 = -1000;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
-use super::super::scripts::SCROLL_BOTTOM;
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn},
+        chats::data::{self, ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -81,7 +79,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let eval = use_eval(cx);
     let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
     let chat_id = chat_data.read().active_chat.id();
@@ -146,6 +143,33 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .map(|(did, _)| did.clone())
         .collect();
     let users_typing = state.read().get_identities(&users_typing);
+
+    let scroll_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+        to_owned![chat_data, state];
+        async move {
+            while let Some(conv_id) = rx.next().await {
+                // todo: fetch new chat messages
+                match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
+                    data::ChatBehavior::default(),
+                    conv_id,
+                    DEFAULT_MESSAGES_TO_TAKE,
+                )
+                .await
+                {
+                    Ok((messages, behavior)) => {
+                        log::debug!("re-init messages with most recent");
+                        chat_data.write().set_active_chat(
+                            &state.read(),
+                            &conv_id,
+                            behavior,
+                            messages,
+                        );
+                    }
+                    Err(e) => log::error!("{e}"),
+                }
+            }
+        }
+    });
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
         to_owned![state];
@@ -663,9 +687,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: move |_| {
-                        let _ = eval(SCROLL_BOTTOM);
                         scroll_btn.write().clear(chat_id);
                         state.write().mutate(Action::ClearUnreads(chat_id));
+                        // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to 
+                        // fetch more messages - one could just use a regular javascript to scroll to the end of the page. 
+                        // however, this is easier and seems to work well enough. 
+                        scroll_ch.send(chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })

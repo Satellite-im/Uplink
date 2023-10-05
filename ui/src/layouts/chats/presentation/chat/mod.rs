@@ -1,5 +1,5 @@
 mod controls;
-mod coroutines;
+pub mod coroutines;
 mod edit_group;
 mod group_users;
 mod pinned_messages;
