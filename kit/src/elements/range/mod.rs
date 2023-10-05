@@ -45,7 +45,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             let value: f32 = internal_state.get() - step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            cx.props.onchange.call(internal_state.get().clone());
+                            cx.props.onchange.call(*internal_state.get());
                         }
                     }
                 })
@@ -80,7 +80,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             let value: f32 = internal_state.get() + step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            cx.props.onchange.call(internal_state.get().clone());
+                            cx.props.onchange.call(*internal_state.get());
                         }
                     }
                 })
