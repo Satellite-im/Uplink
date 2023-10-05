@@ -4,7 +4,7 @@ use common::{
     state::State,
     warp_runner::{
         ui_adapter::{self, MessageEvent},
-        FetchMessagesConfig, RayGunCmd, WarpCmd, WarpEvent,
+        FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd, WarpEvent,
     },
     WARP_CMD_CH, WARP_EVENT_CH,
 };
@@ -54,8 +54,9 @@ pub fn handle_warp_events(
                                 .scroll_to,
                             data::ScrollTo::MostRecent
                         ) && chat_data
-                                .write_silent()
-                                .new_message(conversation_id, message) {
+                            .write_silent()
+                            .new_message(conversation_id, message)
+                        {
                             log::info!("adding message to conversation");
                             chat_data.write().active_chat.messages.reset();
                             chat_data.write().active_chat.new_key();
@@ -176,9 +177,12 @@ pub async fn fetch_window<'a>(
     };
 
     match rsp {
-        Ok(r) => {
-            has_more_before = r.has_more;
-            messages = r.messages;
+        Ok(FetchMessagesResponse {
+            messages: mut new_messages,
+            has_more,
+        }) => {
+            has_more_before = has_more;
+            messages.append(&mut new_messages);
         }
         Err(e) => {
             bail!("FetchMessages command failed: {e}");

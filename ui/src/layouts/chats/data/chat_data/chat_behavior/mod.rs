@@ -36,17 +36,17 @@ impl ChatBehavior {
         }
     }
 
-    pub fn set_view_init(&mut self, init: ViewInit) {
-        self.view_init = init;
-    }
-
-    pub fn set_scroll_top_behavior(&mut self, behavior: ScrollBehavior) {
-        self.on_scroll_top = behavior;
-    }
-
-    pub fn set_scroll_end_behavior(&mut self, behavior: ScrollBehavior) {
-        self.on_scroll_end = behavior;
-    }
+    // pub fn set_view_init(&mut self, init: ViewInit) {
+    //     self.view_init = init;
+    // }
+    //
+    // pub fn set_scroll_top_behavior(&mut self, behavior: ScrollBehavior) {
+    //     self.on_scroll_top = behavior;
+    // }
+    //
+    // pub fn set_scroll_end_behavior(&mut self, behavior: ScrollBehavior) {
+    //     self.on_scroll_end = behavior;
+    // }
 }
 
 impl Default for ChatBehavior {

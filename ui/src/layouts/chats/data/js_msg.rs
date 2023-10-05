@@ -25,6 +25,5 @@ mod test {
         };
         let _s = serde_json::to_string(&m).unwrap();
         //assert_eq!(_s, "".to_string());
-        assert!(true);
     }
 }

@@ -43,7 +43,7 @@ pub fn hangle_msg_scroll(
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
                     let should_send_bottom_evt =
                         behavior.on_scroll_end != data::ScrollBehavior::DoNothing;
-                    drop(behavior);
+
                     let bottom_msg_id: Uuid = chat_data
                         .read()
                         .active_chat
@@ -93,13 +93,10 @@ pub fn hangle_msg_scroll(
                                         log::info!("got this from js: {msg:?}");
 
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
-                                        let is_evt_valid = match msg {
-                                            JsMsg::Top { key }
+                                        let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
                                             | JsMsg::Add { key, .. }
-                                            | JsMsg::Remove { key, .. } if key ==  _key => true,
-                                            _ => false
-                                        };
+                                            | JsMsg::Remove { key, .. } if key ==  _key);
 
                                         if !is_evt_valid {
                                             log::warn!("received js event from wrong conversation");
