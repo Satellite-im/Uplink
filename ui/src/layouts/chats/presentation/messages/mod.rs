@@ -86,6 +86,7 @@ pub fn get_messages(cx: Scope) -> Element {
     let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
     effects::init_msg_scroll(cx, chat_data, eval, ch);
 
+    // used by child Elements via use_coroutine_handle
     let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
 
     let active_chat_id = chat_data.read().active_chat.id();
