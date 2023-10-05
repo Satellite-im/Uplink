@@ -2,10 +2,8 @@ use std::{
     collections::{HashMap, HashSet},
     ffi::OsStr,
     path::PathBuf,
-    rc::Rc,
 };
 
-use data::ActiveChat;
 use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
@@ -25,7 +23,7 @@ use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     language::get_local_text_with_args,
-    state::{scope_ids::ScopeIds, ui::EmojiDestination, ToastNotification},
+    state::{ui::EmojiDestination, ToastNotification},
     warp_runner::ui_adapter::{self},
 };
 
@@ -44,7 +42,7 @@ use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
         data::{self, ChatData, ScrollBtn},
-        scripts::{READ_SCROLL, SHOW_CONTEXT},
+        scripts::SHOW_CONTEXT,
     },
     utils::format_timestamp::format_timestamp_timeago,
 };

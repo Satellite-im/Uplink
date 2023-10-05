@@ -1,18 +1,12 @@
 use crate::{
     layouts::chats::{
         data::{ChatData, ScrollTo},
-        scripts::{
-            self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
-        },
+        scripts::{self, SETUP_CONTEXT_PARENT},
     },
     utils,
 };
-use common::state::State;
 use dioxus_core::Scoped;
-use dioxus_hooks::{to_owned, use_effect, Coroutine, UseRef, UseSharedState};
-use uuid::Uuid;
-
-use super::NewelyFetchedMessages;
+use dioxus_hooks::{to_owned, use_effect, Coroutine, UseSharedState};
 
 pub fn init_msg_scroll<'a>(
     cx: &'a Scoped,
