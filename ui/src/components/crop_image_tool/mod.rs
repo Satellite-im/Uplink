@@ -74,7 +74,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             onclose: move |_| {
                 // Not close if user clicks outside modal
             },
-            transparent: false, 
+            transparent: false,
             show_close_button: false,
             close_on_click_inside_modal: false,
             dont_pad: false,
@@ -134,7 +134,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 };
                                                 let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
                                                 let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
-                                                    Ok(file) => file, 
+                                                    Ok(file) => file,
                                                     Err(e) => {
                                                         log::error!("Error creating cropped image file: {}", e);
                                                         return;
@@ -180,7 +180,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 display: "inline-block",
                                 vertical_align: "middle",
                                 onclick: move |e| e.stop_propagation(),
-                                
                             },
                         }
                         div {
