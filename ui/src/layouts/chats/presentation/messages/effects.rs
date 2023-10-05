@@ -1,13 +1,18 @@
 use crate::{
     layouts::chats::{
         data::{ChatData, ScrollTo},
-        scripts::{self, SETUP_CONTEXT_PARENT},
+        scripts::{
+            self, SCROLL_BOTTOM, SCROLL_TO, SCROLL_TO_MESSAGE, SCROLL_UNREAD, SETUP_CONTEXT_PARENT,
+        },
     },
     utils,
 };
-
+use common::state::State;
 use dioxus_core::Scoped;
-use dioxus_hooks::{to_owned, use_effect, Coroutine, UseSharedState};
+use dioxus_hooks::{to_owned, use_effect, Coroutine, UseRef, UseSharedState};
+use uuid::Uuid;
+
+use super::NewelyFetchedMessages;
 
 pub fn init_msg_scroll<'a>(
     cx: &'a Scoped,
@@ -15,7 +20,7 @@ pub fn init_msg_scroll<'a>(
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<()>,
 ) {
-    let chat_key = chat_data.read().active_chat.messages_key();
+    let chat_key = chat_data.read().active_chat.key();
     use_effect(cx, &chat_key, |_chat_key| {
         to_owned![eval_provider, ch, chat_data];
         async move {
@@ -32,15 +37,14 @@ pub fn init_msg_scroll<'a>(
                 chat_behavior.view_init.scroll_to
             );
             let unreads = chat_data.read().active_chat.unreads();
+            if unreads > 0 {
+                chat_data.write_silent().active_chat.clear_unreads();
+            }
+
             let scroll_script = match chat_behavior.view_init.scroll_to {
                 // if there are unreads, scroll up so first unread is at top of screen
                 // todo: if there are more than 40 unread messages, need to fetch more from warp.
                 ScrollTo::MostRecent => {
-                    // todo: is this even needed or is it taken care of in chat/coroutines.rs?
-                    if unreads > 0 {
-                        chat_data.write_silent().active_chat.clear_unreads();
-                    }
-
                     let msg_idx = chat_data
                         .read()
                         .active_chat

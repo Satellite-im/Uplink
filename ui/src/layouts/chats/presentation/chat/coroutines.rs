@@ -60,7 +60,7 @@ pub fn handle_warp_events(
                             {
                                 log::info!("adding message to conversation");
                                 chat_data.write().active_chat.messages.reset();
-                                chat_data.write().active_chat.new_messages_key();
+                                chat_data.write().active_chat.new_key();
                             }
                         }
                     }
@@ -105,8 +105,7 @@ pub fn init_chat_data<'a>(
     chat_data: &'a UseSharedState<ChatData>,
 ) -> &'a UseFuture<()> {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    let chat_key = chat_data.read().active_chat.chat_key();
-    use_future(cx, (&active_chat_id, &chat_key), |(conv_id, _)| {
+    use_future(cx, &active_chat_id, |conv_id| {
         to_owned![state, chat_data];
         async move {
             while !state.read().initialized {
@@ -114,7 +113,7 @@ pub fn init_chat_data<'a>(
             }
             log::info!("fetching messages for chat_id: {:?}", conv_id);
 
-            let conv_id: Uuid = match conv_id {
+            let conv_id = match conv_id {
                 None => return,
                 Some(x) => x,
             };

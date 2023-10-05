@@ -663,7 +663,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: move |_| {
-                        // todo: don't use this script if the user scrolled up a long way. instead just reload the view
                         let _ = eval(SCROLL_BOTTOM);
                         scroll_btn.write().clear(chat_id);
                         state.write().mutate(Action::ClearUnreads(chat_id));
