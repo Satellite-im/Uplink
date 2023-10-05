@@ -37,14 +37,14 @@ pub fn init_msg_scroll<'a>(
                 chat_behavior.view_init.scroll_to
             );
             let unreads = chat_data.read().active_chat.unreads();
-            if unreads > 0 {
-                chat_data.write_silent().active_chat.clear_unreads();
-            }
 
             let scroll_script = match chat_behavior.view_init.scroll_to {
                 // if there are unreads, scroll up so first unread is at top of screen
                 // todo: if there are more than 40 unread messages, need to fetch more from warp.
                 ScrollTo::MostRecent => {
+                    if unreads > 0 {
+                        chat_data.write_silent().active_chat.clear_unreads();
+                    }
                     let msg_idx = chat_data
                         .read()
                         .active_chat

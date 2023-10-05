@@ -146,7 +146,7 @@ pub fn init_chat_data<'a>(
     })
 }
 
-async fn fetch_window<'a>(
+pub async fn fetch_window<'a>(
     conv_id: Uuid,
     mut chat_behavior: ChatBehavior,
     date: DateTime<Utc>,
