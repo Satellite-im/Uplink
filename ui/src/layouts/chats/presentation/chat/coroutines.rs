@@ -140,7 +140,6 @@ pub fn init_chat_data<'a>(
                     chat_data
                         .write()
                         .set_active_chat(&state.read(), &conv_id, behavior, messages);
-                    chat_data.write().active_chat.new_messages_key();
                 }
                 Err(e) => log::error!("{e}"),
             }

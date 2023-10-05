@@ -63,6 +63,7 @@ impl ActiveChat {
 
     pub fn new_chat_key(&mut self) {
         self.chat_key = Uuid::new_v4();
+        self.new_messages_key();
     }
 
     pub fn messages_key(&self) -> Uuid {
