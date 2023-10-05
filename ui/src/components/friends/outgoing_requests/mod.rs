@@ -50,8 +50,11 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
         }
     });
 
+    if friends_list.is_empty() {
+        return render!({});
+    }
     cx.render(rsx! (
-        div {
+        rsx!(div {
             class: "friends-list",
             aria_label: "Outgoing Requests List",
             Label {
@@ -115,6 +118,6 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                     }
                 )
             })
-        }
+        })
     ))
 }

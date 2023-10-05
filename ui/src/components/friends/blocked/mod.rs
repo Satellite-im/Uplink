@@ -54,8 +54,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
         }
     });
 
+    if block_list.is_empty() {
+        return render!({});
+    }
     cx.render(rsx! (
-        div {
+        rsx!(div {
             class: "friends-list",
             aria_label: "Blocked List",
             Label {
@@ -117,6 +120,6 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     }
                 )
             })
-        }
+        })
     ))
 }
