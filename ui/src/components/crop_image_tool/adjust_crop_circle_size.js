@@ -10,7 +10,7 @@ function adjustCropCircleSize() {
 
     var minDimension = Math.min(imageWidth, imageHeight);
 
-    var cropCircleDiameter = (minDimension - 8);
+    var cropCircleDiameter = (minDimension - 24);
 
     cropCircle.style.width = cropCircleDiameter + 'px';
     cropCircle.style.height = cropCircleDiameter + 'px';

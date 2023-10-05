@@ -200,8 +200,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         min: 1.0,
                         max: 5.0,
                         step: 0.1,
-                        icon_left: Shape::Minus,
-                        icon_right: Shape::Plus,
+                        with_buttons: true,
                         onchange: move |size_f32| {
                             *image_scale.write() = size_f32;
                         }
