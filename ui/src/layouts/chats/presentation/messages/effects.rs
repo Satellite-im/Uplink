@@ -51,7 +51,7 @@ pub fn init_msg_scroll<'a>(
                         .messages
                         .all
                         .len()
-                        .saturating_sub(unreads);
+                        .saturating_sub(unreads + 1);
                     let msg_id = chat_data
                         .read()
                         .active_chat
