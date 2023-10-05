@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use common::{
     state::{Action, State},
-    warp_runner::{FetchMessagesConfig, RayGunCmd, WarpCmd},
+    warp_runner::{FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
@@ -205,12 +205,13 @@ pub fn hangle_msg_scroll<'a>(
                                         };
 
                                         match rsp {
-                                            Ok(rsp) => {
-                                                let new_messages = rsp.messages.len();
-                                                chat_data.write().insert_messages(conv_id, rsp.messages);
+                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                                let new_messages = messages.len();
+                                                chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                                                behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                //behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
@@ -266,17 +267,23 @@ pub fn hangle_msg_scroll<'a>(
                                         };
 
                                         match rsp {
-                                            Ok(rsp) => {
-                                                let new_messages = rsp.messages.len();
+                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                                let new_messages = messages.len();
+                                                chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
-                                                chat_data.write().insert_messages(conv_id, rsp.messages);
+                                                chat_data.write().active_chat.new_key();
 
-                                                if !rsp.has_more {
+                                                if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
                                                     chat_data.write().reset_messages(conv_id);
+                                                } else {
+                                                    let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                    behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
+                                                    behavior.on_scroll_end = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
+                                                    chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 }
-                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", chat_data.read().get_chat_behavior(conv_id));
-                                                chat_data.write().active_chat.new_key();
+                                                let behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {

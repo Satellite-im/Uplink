@@ -195,7 +195,9 @@ impl ChatData {
                     .back()
                     .map(|x| x.inner.id())
                     .unwrap_or_default();
-                if scroll_bottom.message_id == end_msg {
+                if scroll_bottom.message_id == end_msg
+                    && behavior.on_scroll_end == ScrollBehavior::DoNothing
+                {
                     behavior.view_init.scroll_to = ScrollTo::MostRecent;
                     behavior.view_init.msg_time.take();
                 } else {

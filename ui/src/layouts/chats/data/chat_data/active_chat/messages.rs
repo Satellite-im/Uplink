@@ -66,16 +66,19 @@ impl Messages {
         }
 
         if self.all.is_empty() {
+            log::debug!("appending messages");
             return self.append_messages(m);
         }
 
         // latest last
         if m.last().unwrap().inner.date() <= self.all.front().unwrap().inner.date() {
+            log::debug!("prepending messages");
             return self.prepend_messages(m);
         }
 
         // earliest first
         if m.first().unwrap().inner.date() >= self.all.back().unwrap().inner.date() {
+            log::debug!("appending messages");
             return self.append_messages(m);
         }
 

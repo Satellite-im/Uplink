@@ -65,7 +65,8 @@ pub fn init_msg_scroll<'a>(
                         }
                         None => {
                             log::error!("failed to init message scroll");
-                            scripts::SCROLL_TO_END.to_string()
+                            //scripts::SCROLL_TO_END.to_string()
+                            "return done;".to_string()
                         }
                     }
                 }
