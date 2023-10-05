@@ -525,6 +525,7 @@ impl State {
             MessageEvent::Deleted {
                 conversation_id,
                 message_id,
+                most_recent_message,
             } => {
                 // can't have 2 mutable borrows
                 let mut should_decrement_notifications = false;
@@ -534,6 +535,12 @@ impl State {
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
+
+                    if let Some(msg) = most_recent_message {
+                        if chat.messages.is_empty() {
+                            chat.messages.push_back(msg);
+                        }
+                    }
                 }
 
                 if should_decrement_notifications {

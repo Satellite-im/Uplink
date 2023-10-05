@@ -1,16 +1,20 @@
 use derive_more::Display;
+use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use uuid::Uuid;
 use warp::{
     constellation::Progression,
     crypto::DID,
     error::Error,
-    raygun::{self, MessageEventKind},
+    raygun::{self, MessageEventKind, MessageOptions},
 };
 
 use super::Message;
 use crate::{
     state::{self, pending_message::PendingMessage},
-    warp_runner::ui_adapter::{convert_raygun_message, did_to_identity},
+    warp_runner::{
+        ui_adapter::{convert_raygun_message, did_to_identity},
+        Messaging,
+    },
 };
 
 #[derive(Display, Clone)]
@@ -34,6 +38,8 @@ pub enum MessageEvent {
     Deleted {
         conversation_id: Uuid,
         message_id: Uuid,
+        // this makes it easy to keep the sidebar up to date with the most recent message
+        most_recent_message: Option<Message>,
     },
     #[display(fmt = "MessagePinned")]
     MessagePinned { message: warp::raygun::Message },
@@ -99,6 +105,7 @@ pub async fn convert_message_event(
         } => MessageEvent::Deleted {
             conversation_id,
             message_id,
+            most_recent_message: fetch_latest(messaging, conversation_id).await,
         },
         MessageEventKind::MessageReactionAdded {
             conversation_id,
@@ -169,4 +176,26 @@ pub async fn convert_message_event(
     };
 
     Ok(evt)
+}
+
+async fn fetch_latest(messaging: &mut Messaging, conv_id: Uuid) -> Option<Message> {
+    let total_messages = messaging.get_message_count(conv_id).await.ok()?;
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(total_messages.saturating_sub(1)..total_messages),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)
+        .ok()?;
+
+    let mut messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+
+    messages.pop()
 }

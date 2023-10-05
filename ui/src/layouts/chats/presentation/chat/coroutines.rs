@@ -76,6 +76,7 @@ pub fn handle_warp_events(
                     MessageEvent::Deleted {
                         conversation_id,
                         message_id,
+                        ..
                     } => {
                         if chat_data.read().active_chat.id() != conversation_id {
                             continue;
