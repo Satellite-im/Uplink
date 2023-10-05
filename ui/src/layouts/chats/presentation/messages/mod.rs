@@ -24,7 +24,6 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_with_args,
     state::{ui::EmojiDestination, ToastNotification},
-    warp_runner::ui_adapter::{self},
 };
 
 use common::language::get_local_text;
@@ -65,27 +64,11 @@ pub enum MessagesCommand {
         msg_id: Uuid,
         msg: Vec<String>,
     },
-    FetchMore {
-        conv_id: Uuid,
-        to_fetch: usize,
-        current_len: usize,
-    },
     Pin(raygun::Message),
 }
 
 pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
 
-pub struct NewelyFetchedMessages {
-    conversation_id: Uuid,
-    messages: Vec<ui_adapter::Message>,
-    has_more: bool,
-}
-
-/// Lazy loading scheme:
-/// load DEFAULT_NUM_TO_TAKE messages to start.
-/// tell group_messages to flag the first X messages.
-/// if onmouseout triggers over any of those messages, load Y more.
-const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[component(no_case_check)]
 pub fn get_messages(cx: Scope) -> Element {
     log::trace!("get_messages");
@@ -95,44 +78,15 @@ pub fn get_messages(cx: Scope) -> Element {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
-    let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id());
-    let newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
-
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
     let eval = use_eval(cx);
-
-    let currently_active = Some(chat_data.read().active_chat.id());
-
     let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
     effects::init_msg_scroll(cx, chat_data, eval, ch);
 
-    /*effects::update_chat_messages(cx, state, newly_fetched_messages);
-
-    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
-    // to the bottom when the user selects the active chat
-    // also must reset num_to_take when the active_chat changes
-    effects::check_message_scroll(
-        cx,
-        &chat_data.read().active_chat.scroll_to,
-        state,
-        eval,
-        &currently_active,
-    );
-
-    effects::scroll_to_bottom(
-        cx,
-        chat_data.read().active_chat.scroll_value,
-        eval,
-        chat_data.read().active_chat.unreads(),
-        chat_data.read().active_chat.id,
-        prev_chat_id,
-    );*/
-
-    let _ch =
-        coroutines::handle_warp_commands(cx, state, newly_fetched_messages, pending_downloads);
+    let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
 
     let active_chat_id = chat_data.read().active_chat.id();
     // used by the intersection observer to terminate itself.
@@ -444,8 +398,6 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
-        // todo: get rid of this should_fetch_more stuff
-        let should_fetch_more = false;
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -475,15 +427,6 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
             key: "{context_key}",
             id: msg_uuid.to_string(),
             devmode: state.read().configuration.developer.developer_mode,
-            on_mouseenter: move |_| {
-                // if should_fetch_more {
-                //     ch.send(MessagesCommand::FetchMore {
-                //         conv_id: cx.props.active_chat_id,
-                //         to_fetch: DEFAULT_NUM_TO_TAKE * 2,
-                //         current_len: cx.props.num_messages_in_conversation,
-                //     });
-                // }
-            },
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,

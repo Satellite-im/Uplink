@@ -18,7 +18,7 @@ use crate::layouts::chats::{
     scripts::OBSERVER_SCRIPT,
 };
 
-use super::{DownloadTracker, MessagesCommand, NewelyFetchedMessages};
+use super::{DownloadTracker, MessagesCommand};
 
 pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped,
@@ -314,11 +314,10 @@ pub fn hangle_msg_scroll<'a>(
 pub fn handle_warp_commands<'a>(
     cx: &'a Scoped,
     state: &UseSharedState<State>,
-    newly_fetched_messages: &UseRef<Option<NewelyFetchedMessages>>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, newly_fetched_messages, pending_downloads];
+        to_owned![state, pending_downloads];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -430,37 +429,6 @@ pub fn handle_warp_commands<'a>(
                         let res = rx.await.expect("command canceled");
                         if let Err(e) = res {
                             log::error!("failed to edit message: {}", e);
-                        }
-                    }
-                    MessagesCommand::FetchMore {
-                        conv_id,
-                        to_fetch,
-                        current_len,
-                    } => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessagesDeprecated {
-                                conv_id,
-                                to_fetch,
-                                current_len,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        match rx.await.expect("command canceled") {
-                            Ok((messages, has_more)) => {
-                                newly_fetched_messages.set(Some(NewelyFetchedMessages {
-                                    conversation_id: conv_id,
-                                    messages,
-                                    has_more,
-                                }));
-                            }
-                            Err(e) => {
-                                log::error!("failed to fetch more message: {}", e);
-                            }
                         }
                     }
                     MessagesCommand::Pin(msg) => {
