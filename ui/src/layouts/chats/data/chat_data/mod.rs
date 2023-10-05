@@ -31,7 +31,6 @@ impl ChatData {
             return;
         }
         self.active_chat.messages.add_message_to_view(message_id);
-        let behavior = self.get_chat_behavior(conv_id);
 
         if self
             .active_chat
@@ -42,8 +41,7 @@ impl ChatData {
             .unwrap_or_default()
         {
             self.scroll_up(conv_id);
-        } else if !matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent) {
-            // the matches! check is an extra precaution
+        } else {
             self.scroll_down(conv_id);
         }
     }
