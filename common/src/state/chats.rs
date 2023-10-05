@@ -69,12 +69,11 @@ pub struct Chat {
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
     pub files_attached_to_send: Vec<Location>,
+    // used to determine number of unread messages, for the active chat
     #[serde(skip)]
-    pub scroll_value: Option<i64>,
+    pub is_scrolled: bool,
     #[serde(skip)]
     pub pinned_messages: Vec<raygun::Message>,
-    #[serde(skip, default)]
-    pub scroll_to: Option<Uuid>,
 }
 
 // can't derive default because there is no default conversation_type
@@ -94,9 +93,8 @@ impl Default for Chat {
             has_more_messages: Default::default(),
             pending_outgoing_messages: Default::default(),
             files_attached_to_send: Default::default(),
-            scroll_value: Default::default(),
+            is_scrolled: false,
             pinned_messages: Default::default(),
-            scroll_to: Default::default(),
         }
     }
 }
@@ -118,16 +116,8 @@ impl Chat {
             conversation_name,
             creator,
             messages,
-            unreads: HashSet::new(),
-            replying_to: None,
-            typing_indicator: HashMap::new(),
-            draft: None,
-            has_more_messages: false,
-            pending_outgoing_messages: vec![],
-            files_attached_to_send: Vec::new(),
-            scroll_value: None,
             pinned_messages,
-            scroll_to: None,
+            ..Default::default()
         }
     }
     pub fn append_pending_msg(

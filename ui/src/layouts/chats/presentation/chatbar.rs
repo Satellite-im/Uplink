@@ -93,6 +93,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let emoji_suggestions = use_state(cx, Vec::new);
 
     let with_scroll_btn = scroll_btn.read().get(chat_id);
+
+    if with_scroll_btn {
+        //state.write_silent()....
+    }
+
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state

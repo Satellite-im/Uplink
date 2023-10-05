@@ -141,14 +141,20 @@ pub fn hangle_msg_scroll<'a>(
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
-                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm| pm.message_id == msg_id).unwrap_or_default() {
-                                            // should be most recent
-                                            if scroll_btn.read().get(conv_id) {
+                                        let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
+                                        let msg_end = chat_data.read().active_chat.messages.bottom();
+                                        // a message can be added to the top of the view without removing a message from the bottom of the view.
+                                        // need to explicitly compare the bottom of messages.all and messages.displayed
+                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm| matches!(msg_end, Some(x) if x == pm.message_id)).unwrap_or_default() {
+                                            // have to check on_scroll_end in case the user scrolled up and switched chats.
+                                            if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
+                                                log::debug!("clearing scroll_btn");
                                             }
                                         } else {
                                             if !scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().set(conv_id);
+                                                log::debug!("setting scroll_btn");
                                             }
                                         }
                                     },

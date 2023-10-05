@@ -989,21 +989,6 @@ impl State {
         }
     }
 
-    /// Enqueues a message scroll action that gets executed when message component updates
-    pub fn enqueue_message_scroll(&mut self, conversation_id: &Uuid, message_id: Uuid) {
-        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
-            chat.scroll_to = Some(message_id);
-        }
-    }
-
-    /// Obtains a potential message to scroll to resetting the value in the process
-    pub fn check_message_scroll(&mut self, conversation_id: &Uuid) -> Option<Uuid> {
-        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
-            return chat.scroll_to.take();
-        }
-        None
-    }
-
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
@@ -1225,12 +1210,6 @@ impl State {
     /// Removes the given chat from the user's favorites.
     fn unfavorite(&mut self, chat_id: Uuid) {
         self.chats.favorites.retain(|uid| *uid != chat_id);
-    }
-
-    pub fn update_chat_scroll(&mut self, chat_id: Uuid, scroll: i64) {
-        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
-            chat.scroll_value = Some(scroll);
-        }
     }
 }
 

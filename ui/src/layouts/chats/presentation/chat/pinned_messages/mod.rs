@@ -57,6 +57,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                     ChannelCommand::ScrollToUnloaded(conversation_id, message_id, message_date) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
+                        // todo: use new warp command to do this...or just use ChatData and trigger the use_eval
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessagesBetween {
                                 conv_id: conversation_id,
@@ -71,16 +72,17 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             continue;
                         }
 
+                        // todo: use ChatData to do this
                         match rx.await.expect("command canceled") {
                             Ok((m, has_more)) => {
-                                state
-                                    .write_silent()
-                                    .enqueue_message_scroll(&conversation_id, message_id);
-                                state.write().update_chat_messages(conversation_id, m);
-                                if !has_more {
-                                    log::debug!("finished loading chat: {conversation_id}");
-                                    state.write().finished_loading_chat(conversation_id);
-                                }
+                                // state
+                                //     .write_silent()
+                                //     .enqueue_message_scroll(&conversation_id, message_id);
+                                // state.write().update_chat_messages(conversation_id, m);
+                                // if !has_more {
+                                //     log::debug!("finished loading chat: {conversation_id}");
+                                //     state.write().finished_loading_chat(conversation_id);
+                                // }
                             }
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
