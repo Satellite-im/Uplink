@@ -76,7 +76,7 @@ pub fn PlayUntil(sound: ContinousSound, condition: Arc<AtomicBool>) {
                     }
                 }
             }
-            if Arc::strong_count(&condition) <= 1 || condition.load(Ordering::Relaxed) {
+            if Arc::strong_count(&condition) == 1 || condition.load(Ordering::Relaxed) {
                 if let Some(sink) = sound_inst {
                     log::trace!("Stopping sound {:?}", sound);
                     sink.stop();
