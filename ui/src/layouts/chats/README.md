@@ -3,6 +3,17 @@
 ## Overview
 The Chats layout has its own `UseSharedState` - `ChatData`. `State.chats` still contains the list of participants, their identities, and whether or not they are typing. `ChatData` contains all the messages (for the active chat) and the information needed to initialize the view for a chat. 
 
+## ChatData
+`ChatData` contains two fields - the `ActiveChat` and a `HashMap` of `ChatBehavior`s. 
+- `ChatBehavior` does the following
+    - describes how to intialize the view (which message should be at the top or bottom of the view)
+    - tells what to do when the top or bottom of the view is reached (fetch more messages or do nothing)
+- `ActiveChat` does the following
+    - stores the messages which were fetched from warp
+    - tracks which messages were displayed
+    - stores "metadata" which is stuff fetched from `state.chats`
+    - `ActiveChat` is further described in the section on scrolling behavior. 
+
 ## Communication with Warp
 - `presentation/chat/coroutine.rs` receives events from `Warp` (same way that `State` receives them in `main.rs`) and, if the message is for the active chat, updates `ChatData` accordingly. 
 
