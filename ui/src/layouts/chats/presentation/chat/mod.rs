@@ -15,7 +15,7 @@ use kit::{
 use crate::{
     components::media::calling::CallControl,
     layouts::chats::{
-        data::ChatData,
+        data::{ChatData, ScrollBtn},
         presentation::{
             chat::{edit_group::EditGroup, group_users::GroupUsers},
             chatbar::get_chatbar,
@@ -35,6 +35,7 @@ use warp::{crypto::DID, logging::tracing::log};
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     use_shared_state_provider(cx, ChatData::default);
+    use_shared_state_provider(cx, ScrollBtn::new);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 

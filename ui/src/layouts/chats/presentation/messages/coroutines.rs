@@ -14,7 +14,7 @@ use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
 use crate::layouts::chats::{
-    data::{self, ChatBehavior, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
+    data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
     scripts::OBSERVER_SCRIPT,
 };
 
@@ -24,9 +24,10 @@ pub fn hangle_msg_scroll<'a>(
     cx: &'a Scoped,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
+    scroll_btn: &UseSharedState<ScrollBtn>,
 ) -> Coroutine<()> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![eval_provider, chat_data];
+        to_owned![eval_provider, chat_data, scroll_btn];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
@@ -91,7 +92,7 @@ pub fn hangle_msg_scroll<'a>(
                                     Ok(msg) => {
                                         log::info!("got this from js: {msg:?}");
 
-                                        // perhaps this is redundant now that the IntersectionObserver self terminates. 
+                                        // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = match msg {
                                             JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -140,6 +141,15 @@ pub fn hangle_msg_scroll<'a>(
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                        if matches!(chat_data.read().get_chat_behavior(conv_id).view_init.scroll_to, data::ScrollTo::MostRecent) {
+                                            if scroll_btn.read().get(conv_id) {
+                                                scroll_btn.write().clear(conv_id);
+                                            }
+                                        } else {
+                                            if !scroll_btn.read().get(conv_id) {
+                                                scroll_btn.write().set(conv_id);
+                                            }
+                                        }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);

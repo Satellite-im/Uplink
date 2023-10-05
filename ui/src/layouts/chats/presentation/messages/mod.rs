@@ -43,7 +43,7 @@ use warp::{
 use crate::{
     components::emoji_group::EmojiGroup,
     layouts::chats::{
-        data::{self, ChatData},
+        data::{self, ChatData, ScrollBtn},
         scripts::{READ_SCROLL, SHOW_CONTEXT},
     },
     utils::format_timestamp::format_timestamp_timeago,
@@ -94,6 +94,7 @@ pub fn get_messages(cx: Scope) -> Element {
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+    let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || chat_data.read().active_chat.id());
@@ -107,7 +108,7 @@ pub fn get_messages(cx: Scope) -> Element {
 
     let currently_active = Some(chat_data.read().active_chat.id());
 
-    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data);
+    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
     effects::init_msg_scroll(cx, chat_data, eval, ch);
 
     /*effects::update_chat_messages(cx, state, newly_fetched_messages);

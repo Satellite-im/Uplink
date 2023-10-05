@@ -43,7 +43,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::ChatData,
+        chats::data::{ChatData, ScrollBtn},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -78,8 +78,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+    let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
+    let eval = use_eval(cx);
     let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
     let chat_id = chat_data.read().active_chat.id();
@@ -90,13 +92,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let emoji_suggestions = use_state(cx, Vec::new);
 
-    // todo: use chat behavior for scroll_btn
-    let with_scroll_btn = state
-        .read()
-        .get_active_chat()
-        .map(|c| c.scroll_value.unwrap_or_default())
-        .unwrap_or_default()
-        < SCROLL_BTN_THRESHOLD;
+    let with_scroll_btn = scroll_btn.read().get(chat_id);
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -651,8 +647,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_scroll_btn.then(|| {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
-                    onclick: |_| {
-                        let _ = use_eval(cx)(SCROLL_BOTTOM);
+                    onclick: move |_| {
+                        let _ = eval(SCROLL_BOTTOM);
+                        scroll_btn.write().clear(chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })
