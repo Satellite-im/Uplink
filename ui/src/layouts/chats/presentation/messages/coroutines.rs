@@ -36,7 +36,7 @@ pub fn hangle_msg_scroll<'a>(
                 // this is basically a goto
                 'CONFIGURE_EVAL: loop {
                     let conv_id = chat_data.read().active_chat.id();
-                    let conv_key = chat_data.read().active_chat.key();
+                    let conv_key = chat_data.read().active_chat.messages_key();
                     let behavior = chat_data.read().get_chat_behavior(conv_id);
 
                     let should_send_top_evt =
@@ -83,7 +83,7 @@ pub fn hangle_msg_scroll<'a>(
 
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
-                    let _key = chat_data.read().active_chat.key();
+                    let _key = chat_data.read().active_chat.messages_key();
                     let eval_stream = async_stream::stream! {
                         let mut should_break = false;
                         while !should_break {
@@ -213,7 +213,7 @@ pub fn hangle_msg_scroll<'a>(
                                                 behavior.on_scroll_top = if rsp.has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
-                                                chat_data.write().active_chat.new_key();
+                                                chat_data.write().active_chat.new_messages_key();
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {
@@ -276,7 +276,7 @@ pub fn hangle_msg_scroll<'a>(
                                                     chat_data.write().reset_messages(conv_id);
                                                 }
                                                 log::info!("fetched {new_messages} messages. new behavior: {:?}", chat_data.read().get_chat_behavior(conv_id));
-                                                chat_data.write().active_chat.new_key();
+                                                chat_data.write().active_chat.new_messages_key();
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {

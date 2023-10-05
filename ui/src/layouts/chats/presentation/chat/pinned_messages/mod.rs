@@ -4,7 +4,7 @@ use common::{
     warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
-use dioxus::prelude::*;
+use dioxus::prelude::{SvgAttributes, *};
 
 use futures::StreamExt;
 use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_image::UserImage};
@@ -94,14 +94,13 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             };
                             let behavior = data::ChatBehavior {
                                 view_init,
-                                // fetching more may cause a double render but that's ok.
-                                on_scroll_end: data::ScrollBehavior::FetchMore,
-                                on_scroll_top: data::ScrollBehavior::FetchMore,
+                                // these fields should get overwritten by init_chat_data
+                                ..Default::default()
                             };
                             chat_data
                                 .write()
                                 .set_chat_behavior(conversation_id, behavior);
-                            chat_data.write().active_chat.new_key();
+                            chat_data.write().active_chat.new_chat_key();
                             log::debug!("scrolling to pinned message");
 
                             cx.props.onclose.call(());

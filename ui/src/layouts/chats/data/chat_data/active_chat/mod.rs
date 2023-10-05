@@ -30,7 +30,10 @@ pub struct ActiveChat {
     pub is_initialized: bool,
     pub typing_indicator: HashMap<DID, Instant>,
     pub pinned_messages: Vec<raygun::Message>,
-    pub key: Uuid,
+    // used to re-render the use_future in chat/coroutines.rs
+    pub chat_key: Uuid,
+    // used to re-rener the use_effect in presentation/messages.rs
+    pub messages_key: Uuid,
 }
 
 impl ActiveChat {
@@ -45,7 +48,8 @@ impl ActiveChat {
             is_initialized: true,
             typing_indicator: HashMap::new(),
             pinned_messages: chat.pinned_messages.clone(),
-            key: Uuid::new_v4(),
+            chat_key: Uuid::new_v4(),
+            messages_key: Uuid::new_v4(),
         }
     }
 
@@ -53,12 +57,21 @@ impl ActiveChat {
         self.messages.all.clone()
     }
 
-    pub fn key(&self) -> Uuid {
-        self.key.clone()
+    pub fn chat_key(&self) -> Uuid {
+        self.chat_key.clone()
     }
 
-    pub fn new_key(&mut self) {
-        self.key = Uuid::new_v4();
+    pub fn new_chat_key(&mut self) {
+        self.chat_key = Uuid::new_v4();
+        self.new_messages_key();
+    }
+
+    pub fn messages_key(&self) -> Uuid {
+        self.messages_key.clone()
+    }
+
+    pub fn new_messages_key(&mut self) {
+        self.messages_key = Uuid::new_v4();
     }
 }
 
