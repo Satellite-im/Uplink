@@ -141,7 +141,8 @@ pub fn hangle_msg_scroll<'a>(
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
-                                        if matches!(chat_data.read().get_chat_behavior(conv_id).view_init.scroll_to, data::ScrollTo::MostRecent) {
+                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm| pm.message_id == msg_id).unwrap_or_default() {
+                                            // should be most recent
                                             if scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
                                             }

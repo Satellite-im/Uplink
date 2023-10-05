@@ -27,6 +27,7 @@ impl PartialEq for ChatData {
 impl ChatData {
     pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) {
         if conv_id != self.active_chat.id() {
+            log::warn!("add_message_to_view wrong chat id");
             return;
         }
         self.active_chat.messages.add_message_to_view(message_id);
@@ -49,6 +50,7 @@ impl ChatData {
 
     pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
         if conversation_id != self.active_chat.id() {
+            log::warn!("delete_message wrong chat id");
             return;
         }
 
@@ -64,6 +66,7 @@ impl ChatData {
 
     pub fn get_top_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
+            log::warn!("get_top_of_view wrong chat id");
             return None;
         }
 
@@ -72,6 +75,7 @@ impl ChatData {
 
     pub fn get_bottom_of_view(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
+            log::warn!("get_bottom_of_view wrong chat id");
             return None;
         }
 
@@ -85,6 +89,7 @@ impl ChatData {
 
     pub fn insert_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
         if self.active_chat.id() != conv_id {
+            log::warn!("insert_messages wrong chat id");
             return;
         }
 
@@ -94,6 +99,7 @@ impl ChatData {
     // returns true if the struct was mutated
     pub fn new_message(&mut self, conv_id: Uuid, msg: ui_adapter::Message) -> bool {
         if conv_id != self.active_chat.id() {
+            log::warn!("new_message wrong chat id");
             return false;
         }
 
@@ -118,6 +124,7 @@ impl ChatData {
 
     pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
         if conv_id != self.active_chat.id() {
+            log::warn!("remove_message_from_view wrong chat id");
             return;
         }
         self.active_chat
@@ -144,6 +151,7 @@ impl ChatData {
 
     pub fn update_message(&mut self, message: raygun::Message) {
         if self.active_chat.id() != message.conversation_id() {
+            log::warn!("update_message wrong chat id");
             return;
         }
 
@@ -172,7 +180,11 @@ impl ChatData {
                     view_top: scroll_top.message_id,
                 };
                 behavior.view_init.msg_time.replace(scroll_top.date);
+            } else {
+                log::warn!("failed to get earliest_displayed in ChatData::scroll_up");
             }
+        } else {
+            log::warn!("failed to get chat behavior in ChatData::scroll_up");
         }
     }
 
