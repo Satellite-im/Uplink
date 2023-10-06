@@ -194,14 +194,14 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 onclick: move |e| e.stop_propagation(),
                             },
                         }
-                        // div {
-                        //     id: "crop-box",
-                        //     class: "crop-box",
-                        // },
-                        // div {
-                        //     id: "shadow-img-mask",
-                        //     class: "shadow-img-mask",
-                        // }
+                        div {
+                            id: "crop-box",
+                            class: "crop-box",
+                        },
+                        div {
+                            id: "shadow-img-mask",
+                            class: "shadow-img-mask",
+                        }
                     }
                 },
                 div {

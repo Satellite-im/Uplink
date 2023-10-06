@@ -1,5 +1,5 @@
 const img = document.getElementById('image-preview-modal-file-embed');
-const container = img.parentElement;
+const container = document.getElementById('image-crop-box-container');
 let offsetX = 0, offsetY = 0, isDragging = false;
 
 container.addEventListener('mousedown', function(e) {
@@ -28,7 +28,6 @@ document.addEventListener('mouseup', function() {
     isDragging = false;
 });
 
-// Para prevenir o arrasto padrão da imagem.
 img.ondragstart = function() {
     return false;
 };
