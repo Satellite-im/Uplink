@@ -344,11 +344,15 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
+                let (width, height) = match state.read().ui.window_size {
+                    Some(s) => s,
+                    None => (950, 600),
+                };
                 if state.read().ui.window_maximized
                     && *first_resize.read()
                     && cfg!(not(target_os = "windows"))
                 {
-                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                    desktop.set_inner_size(LogicalSize::new(width, height));
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
@@ -363,6 +367,9 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                     state.write().ui.metadata = new_metadata;
+                }
+                if size.width != width || size.height != height {
+                    state.write().ui.window_size = Some((width, height));
                 }
             }
             _ => {}
