@@ -36,7 +36,7 @@ features = [
 
 [build-dependencies]
 glob = "0.3.0"
-rsass = "0.26.0"
+rsass = "0.28"
 
 [lib]
 doctest = false

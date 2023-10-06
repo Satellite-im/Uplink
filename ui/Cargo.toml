@@ -73,12 +73,12 @@ production_mode = ["common/production_mode"]
 [build-dependencies]
 glob = "0.3.0"
 rustc_version = "0.4.0"
-rsass = "0.26.0"
+rsass = "0.28"
 zip = { workspace = true }
 walkdir = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.24.1"
+cocoa = "0.25"
 objc = "0.2.7"
 core-foundation = "0.9.3"
 objc-foundation = "0.1.1"
