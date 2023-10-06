@@ -13,11 +13,11 @@ document.addEventListener('mousemove', function(e) {
         let left = e.clientX - offsetX;
         let top = e.clientY - offsetY;
         
-        // Garante que a imagem não saia da div
-        if (left > 0) left = 0;
-        if (top > 0) top = 0;
-        if (left < container.clientWidth - img.clientWidth) left = container.clientWidth - img.clientWidth;
-        if (top < container.clientHeight - img.clientHeight) top = container.clientHeight - img.clientHeight;
+        // // Garante que a imagem não saia da div
+        // if (left > 0) left = 0;
+        // if (top > 0) top = 0;
+        // if (left < container.clientWidth - img.clientWidth) left = container.clientWidth - img.clientWidth;
+        // if (top < container.clientHeight - img.clientHeight) top = container.clientHeight - img.clientHeight;
         
         img.style.left = `${left}px`;
         img.style.top = `${top}px`;

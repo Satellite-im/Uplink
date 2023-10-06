@@ -173,8 +173,8 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             id: "img-parent-div",
                             overflow: "hidden",
-                            width: "300px", 
-                            height: "300px",
+                            width: "auto", 
+                            height: "auto",
                             border: "3px solid var(--secondary)",
                             img {
                                 id: "image-preview-modal-file-embed",
