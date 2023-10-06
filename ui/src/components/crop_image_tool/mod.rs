@@ -68,7 +68,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 };
             }
             let _ = eval(&move_image_script);
-            println!("Arriving here");
         }
     });
 
@@ -172,9 +171,10 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         id: "image-crop-box-container",
                         display: "inline-flex",
                         div {
+                            id: "img-parent-div",
                             overflow: "hidden",
-                            width: "auto", 
-                            height: "auto",
+                            width: "300px", 
+                            height: "300px",
                             border: "3px solid var(--secondary)",
                             img {
                                 id: "image-preview-modal-file-embed",
@@ -189,20 +189,19 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 display: "inline-block",
                                 vertical_align: "middle",
                                 cursor: "move",
-                                position: "absolute",
-                                top: "0",
-                                left: "0",
+                                position: "relative",
+                                z_index: "-1",
                                 onclick: move |e| e.stop_propagation(),
                             },
                         }
-                        div {
-                            id: "crop-box",
-                            class: "crop-box",
-                        },
-                        div {
-                            id: "shadow-img-mask",
-                            class: "shadow-img-mask",
-                        }
+                        // div {
+                        //     id: "crop-box",
+                        //     class: "crop-box",
+                        // },
+                        // div {
+                        //     id: "shadow-img-mask",
+                        //     class: "shadow-img-mask",
+                        // }
                     }
                 },
                 div {
