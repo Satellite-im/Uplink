@@ -15,12 +15,12 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 once_cell = { workspace = true }
 clap = { workspace = true }
-rodio = "0.16"
+rodio = "0.17"
 uuid = { workspace = true }
 notify-rust = { workspace = true }
 dirs = { workspace = true }
 base64 = { workspace = true }
-lipsum = "0.8.2"
+lipsum = "0.9"
 chrono = { workspace = true }
 rand = { workspace = true }
 image = { workspace = true }
@@ -52,13 +52,13 @@ derive_more = { workspace = true }
 either = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.24.1"
+cocoa = "0.25"
 objc = "0.2.7"
 core-foundation = "0.9.3"
-mac-notification-sys = "0.5.6"
+mac-notification-sys = "0.6"
 
 [target.'cfg(target_env = "msvc")'.dependencies.windows]
-version = "0.24.0"
+version = "0.51"
 features = [
     "Win32_Foundation",
     "Foundation_Collections",
@@ -68,7 +68,7 @@ features = [
 ]
 
 [target.'cfg(target_env = "gnu")'.dependencies.windows]
-version = "0.24.0"
+version = "0.51"
 features = [
     "Win32_Foundation",
     "Foundation_Collections",
