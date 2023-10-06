@@ -25,6 +25,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
     let adjust_crop_circle_size_script = include_str!("./adjust_crop_circle_size.js");
+    let move_image_script = include_str!("./move_image.js");
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
@@ -49,7 +50,12 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _ = eval(script);
 
     use_future(cx, (), |_| {
-        to_owned![get_image_dimensions_script, eval, image_dimensions];
+        to_owned![
+            get_image_dimensions_script,
+            eval,
+            image_dimensions,
+            move_image_script
+        ];
         async move {
             while image_dimensions.read().width == 0 && image_dimensions.read().height == 0 {
                 if let Ok(r) = eval(&get_image_dimensions_script) {
@@ -61,6 +67,8 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 };
             }
+            let _ = eval(&move_image_script);
+            println!("Arriving here");
         }
     });
 
@@ -165,11 +173,12 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         display: "inline-flex",
                         div {
                             overflow: "hidden",
-                           width: "auto", 
-                           height: "auto",
+                            width: "auto", 
+                            height: "auto",
                             border: "3px solid var(--secondary)",
                             img {
                                 id: "image-preview-modal-file-embed",
+                                alt: "draggable image",
                                 aria_label: "image-preview-modal-file-embed",
                                 src: format_args!("{}", large_thumbnail.read()),
                                 transform: format_args!("scale({})", image_scale.read()),
@@ -179,6 +188,10 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 max_width: "50vw",
                                 display: "inline-block",
                                 vertical_align: "middle",
+                                cursor: "move",
+                                position: "absolute",
+                                top: "0",
+                                left: "0",
                                 onclick: move |e| e.stop_propagation(),
                             },
                         }
