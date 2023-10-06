@@ -1,4 +1,5 @@
 use arboard::Clipboard;
+use base64::Engine;
 use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, Identity, State, ToastNotification};
@@ -415,7 +416,7 @@ fn set_image() -> Result<String, Box<dyn std::error::Error>> {
         0 => "".to_string(),
         _ => {
             let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
+            let base64_image = base64::engine::general_purpose::STANDARD.encode(&file);
             let img = prefix + base64_image.as_str();
             img
         }

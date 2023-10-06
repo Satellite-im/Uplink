@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use crate::elements::button::Button;
 use crate::elements::Appearance;
 use crate::layout::modal::Modal;
+use base64::Engine;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
@@ -339,7 +340,7 @@ fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String
         0 => "".to_string(),
         _ => {
             let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
+            let base64_image = base64::engine::general_purpose::STANDARD.encode(&file);
             let img = prefix + base64_image.as_str();
             img
         }

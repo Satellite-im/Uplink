@@ -5,6 +5,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+use base64::Engine;
 use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
@@ -746,7 +747,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
     };
 
     let prefix = format!("data:image/{mime};base64,");
-    let base64_image = base64::encode(thumbnail);
+    let base64_image = base64::engine::general_purpose::STANDARD.encode(thumbnail);
 
     prefix + &base64_image
 }

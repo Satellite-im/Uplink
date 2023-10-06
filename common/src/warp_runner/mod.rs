@@ -1,4 +1,5 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
+use base64::Engine;
 use derive_more::Display;
 use std::sync::Arc;
 
@@ -357,9 +358,12 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.store_setting.default_profile_picture = Some(Arc::new(|identity| {
         let content = plot_icon::generate_png(identity.did_key().to_string().as_bytes(), 512)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        let mut base64_default_image = format!("data:image/png;base64,{}", base64::encode(content))
-            .as_bytes()
-            .to_vec();
+        let mut base64_default_image = format!(
+            "data:image/png;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(content)
+        )
+        .as_bytes()
+        .to_vec();
 
         base64_default_image.extend([11, 00, 23]);
 
