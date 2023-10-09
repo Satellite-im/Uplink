@@ -406,7 +406,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = warp.multipass.get_identity(Identifier::DID(did)).await; //(dids, &mut warp.multipass).await;
             let r = match r {
                 Ok(ids) => {
-                    if ids.len() == 0 {
+                    if ids.is_empty() {
                         Err(Error::IdentityExist)
                     } else {
                         let mut id = Identity::from(ids[0].clone());
