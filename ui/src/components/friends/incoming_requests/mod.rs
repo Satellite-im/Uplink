@@ -99,7 +99,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
             let _status_message = friend.status_message().unwrap_or_default();
             let did = friend.did_key();
             let did2 = did.clone();
-            let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+            let did_suffix = friend.short_id().to_string();
             let platform = friend.platform().into();
             let friend2 = friend.clone();
             let friend3 = friend.clone();
