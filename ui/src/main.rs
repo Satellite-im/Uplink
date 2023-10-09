@@ -348,11 +348,9 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     Some(s) => s,
                     None => (950, 600),
                 };
-                if state.read().ui.window_maximized
-                    && *first_resize.read()
-                    && cfg!(not(target_os = "windows"))
-                {
+                if *first_resize.read() {
                     desktop.set_inner_size(LogicalSize::new(width, height));
+                    desktop.set_maximized(state.read().ui.metadata.maximized);
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
@@ -369,7 +367,8 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     state.write().ui.metadata = new_metadata;
                 }
                 if size.width != width || size.height != height {
-                    state.write().ui.window_size = Some((width, height));
+                    state.write_silent().ui.window_size = Some((size.width, size.height));
+                    let _ = state.write_silent().save();
                 }
             }
             _ => {}
