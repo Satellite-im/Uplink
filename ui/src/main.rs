@@ -344,10 +344,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
-                let (width, height) = match state.read().ui.window_size {
-                    Some(s) => s,
-                    None => (950, 600),
-                };
+                let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
                 if *first_resize.read() {
                     desktop.set_inner_size(LogicalSize::new(width, height));
                     desktop.set_maximized(state.read().ui.metadata.maximized);
