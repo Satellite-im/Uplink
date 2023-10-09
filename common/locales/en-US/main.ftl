@@ -134,6 +134,7 @@ friends = Friends
     .unblock = Unblock
     .request-exist = Friend request is already pending!
     .add-name = ➕  Add { $name }
+    .nothing-to-see-here = Nothing to see here
 
 files = Files
     .file = File
@@ -167,6 +168,7 @@ files = Files
     .upload-in-progress-please-wait = Upload in progress. Please wait.
     .no-files-available = No files available.
     .share-files = Share Files
+    .go-to-files = Go to Files
 
 settings = Settings
     .settings = Settings
