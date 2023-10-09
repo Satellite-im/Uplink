@@ -1,5 +1,6 @@
 const img = document.getElementById('image-preview-modal-file-embed');
 const container = document.getElementById('image-crop-box-container');
+const cropBox = document.getElementById('crop-box');
 let offsetX = 0, offsetY = 0, isDragging = false;
 
 container.addEventListener('mousedown', function(e) {
@@ -10,15 +11,34 @@ container.addEventListener('mousedown', function(e) {
 
 document.addEventListener('mousemove', function(e) {
     if (isDragging) {
-        let left = e.clientX - offsetX;
-        let top = e.clientY - offsetY;
-        
-        // // Garante que a imagem não saia da div
-        // if (left > 0) left = 0;
-        // if (top > 0) top = 0;
-        // if (left < container.clientWidth - img.clientWidth) left = container.clientWidth - img.clientWidth;
-        // if (top < container.clientHeight - img.clientHeight) top = container.clientHeight - img.clientHeight;
-        
+        // var imgScale = Math.min(1, img.getBoundingClientRect().width / img.offsetWidth);
+
+
+        let left = (e.clientX - offsetX);
+        let top = (e.clientY - offsetY);
+
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const cropBoxWidth = cropBox.clientWidth;
+        const cropBoxHeight = cropBox.clientHeight;
+
+        var leftIsNegative = false;
+        var topIsNegative = false;
+
+
+        var leftIsNegative = left < 0;
+        var topIsNegative = top < 0;
+
+        left = Math.min(Math.abs(left), (containerWidth - cropBoxWidth) / 2);
+        top = Math.min(Math.abs(top), (containerHeight - cropBoxHeight) / 2);
+
+        if (leftIsNegative) {
+            left = -left;
+        }
+        if (topIsNegative) {
+            top = -top;
+        }
+
         img.style.left = `${left}px`;
         img.style.top = `${top}px`;
     }
@@ -31,3 +51,6 @@ document.addEventListener('mouseup', function() {
 img.ondragstart = function() {
     return false;
 };
+
+
+return {"left": img.style.left, "top": img.style.top};
