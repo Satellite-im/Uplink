@@ -127,7 +127,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout working directory 🔖
