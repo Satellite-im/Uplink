@@ -64,7 +64,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
             friends_list.into_iter().map(|friend| {
                 let did = friend.did_key();
                 let did2 = did.clone();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let did_suffix = friend.short_id().to_string();
                 let platform = friend.platform().into();
                 let any_button_disabled = remove_in_progress.current().contains(&did);
                 rsx!(
