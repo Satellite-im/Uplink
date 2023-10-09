@@ -81,6 +81,11 @@ pub fn get_uninitialized_identity(did: &DID) -> Result<state::Identity, Error> {
         .get(len - 3..)
         .ok_or(Error::OtherWithContext("DID too short".into()))?;
     default.set_username(&format!("{start}...{end}"));
+    let pk = did_str.as_bytes();
+    let short: [u8; 8] = pk[pk.len() - 8..]
+        .try_into()
+        .map_err(|_e| warp::error::Error::OtherWithContext("did to short".into()))?;
+    default.set_short_id(short);
     Ok(state::Identity::from(default))
 }
 
