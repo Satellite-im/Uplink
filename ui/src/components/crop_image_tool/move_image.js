@@ -11,7 +11,7 @@ container.addEventListener('mousedown', function(e) {
 
 document.addEventListener('mousemove', function(e) {
     if (isDragging) {
-        // var imgScale = Math.min(1, img.getBoundingClientRect().width / img.offsetWidth);
+        var imgScale = Math.max(1, img.getBoundingClientRect().width / img.offsetWidth);
 
 
         let left = (e.clientX - offsetX);
@@ -29,8 +29,8 @@ document.addEventListener('mousemove', function(e) {
         var leftIsNegative = left < 0;
         var topIsNegative = top < 0;
 
-        left = Math.min(Math.abs(left), (containerWidth - cropBoxWidth) / 2);
-        top = Math.min(Math.abs(top), (containerHeight - cropBoxHeight) / 2);
+        left = Math.min(Math.abs(left), ((containerWidth * imgScale) - cropBoxWidth) / 2);
+        top = Math.min(Math.abs(top), ((containerHeight * imgScale) - cropBoxHeight) / 2);
 
         if (leftIsNegative) {
             left = -left;
