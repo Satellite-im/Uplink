@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Version={{version}}
-Name=Uplink
-Comment=Experimental P2P Chat Application
-Categories=Communications;Chat;
-Exec=/opt/im.satellite/uplink
-Icon=/usr/share/icons/im.satellite/uplink_logo.png
-Terminal=false
