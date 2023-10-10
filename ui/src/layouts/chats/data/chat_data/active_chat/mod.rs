@@ -31,7 +31,6 @@ pub struct ActiveChat {
     pub typing_indicator: HashMap<DID, Instant>,
     pub pinned_messages: Vec<raygun::Message>,
     pub key: Uuid,
-    pub scrolled: bool,
 }
 
 impl ActiveChat {
@@ -67,17 +66,18 @@ impl ActiveChat {
         self.messages.times.contains_key(&id)
     }
 
-    pub fn set_scrolled(&mut self) {
-        self.scrolled = true;
-    }
-
-    pub fn clear_scrolled(&mut self) {
-        self.scrolled = false;
-    }
-
-    pub fn get_scrolled(&self) -> bool {
-        self.scrolled
-    }
+    // may need these later
+    // pub fn set_scrolled(&mut self) {
+    //     self.scrolled = true;
+    // }
+    //
+    // pub fn clear_scrolled(&mut self) {
+    //     self.scrolled = false;
+    // }
+    //
+    // pub fn get_scrolled(&self) -> bool {
+    //     self.scrolled
+    // }
 }
 
 // simplify access to metadata fields
