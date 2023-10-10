@@ -403,6 +403,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         }
         MultiPassCmd::GetIdentity { did, rsp } => {
             let pic = warp.multipass.identity_picture(&did).await;
+            let banner = warp.multipass.identity_banner(&did).await;
             let r = warp.multipass.get_identity(Identifier::DID(did)).await; //(dids, &mut warp.multipass).await;
             let r = match r {
                 Ok(ids) => {
@@ -411,6 +412,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     } else {
                         let mut id = Identity::from(ids[0].clone());
                         id.set_profile_picture(&pic.unwrap_or_default());
+                        id.set_profile_banner(&banner.unwrap_or_default());
                         Ok(id)
                     }
                 }
