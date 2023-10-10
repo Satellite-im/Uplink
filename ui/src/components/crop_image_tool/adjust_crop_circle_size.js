@@ -12,8 +12,6 @@ function adjustCropCircleSize() {
 }
 
 
-if (firstRender) {
-    window.addEventListener('resize', adjustCropCircleSize);
-}
+window.addEventListener('resize', adjustCropCircleSize);
 
 adjustCropCircleSize();
