@@ -110,7 +110,9 @@ impl ChatData {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else if let Some(behavior) = behavior {
-            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
+            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore)
+                && !matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent)
+            {
                 // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
                 behavior.on_scroll_end = ScrollBehavior::FetchMore;
                 true
