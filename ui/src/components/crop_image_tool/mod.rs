@@ -34,7 +34,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let crop_image = use_state(cx, || true);
     let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
-    let first_render = use_ref(cx, || true);
 
     let image_dimensions = use_ref(cx, || ImageDimensions {
         height: 0,
@@ -101,7 +100,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
-                                *first_render.write_silent() = true;
                                 cx.props.on_cancel.call(());
                                 crop_image.set(false);
                             }
@@ -113,7 +111,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
-                                *first_render.write_silent() = false;
                                 cx.spawn({
                                     to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                     async move {
