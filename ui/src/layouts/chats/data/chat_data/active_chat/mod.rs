@@ -60,6 +60,10 @@ impl ActiveChat {
     pub fn new_key(&mut self) {
         self.key = Uuid::new_v4();
     }
+
+    pub fn has_message_id(&self, id: Uuid) -> bool {
+        self.messages.times.contains_key(&id)
+    }
 }
 
 // simplify access to metadata fields

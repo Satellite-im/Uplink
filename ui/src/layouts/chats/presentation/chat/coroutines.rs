@@ -90,6 +90,12 @@ pub fn handle_warp_events(
                         }
                         chat_data.write().update_message(message);
                     }
+                    MessageEvent::MessagePinned { message }
+                    | MessageEvent::MessageUnpinned { message } => {
+                        if chat_data.read().active_chat.has_message_id(message.id()) {
+                            chat_data.write().update_message(message);
+                        }
+                    }
                     _ => continue,
                 }
             }
