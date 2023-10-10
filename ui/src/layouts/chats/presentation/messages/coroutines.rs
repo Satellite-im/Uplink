@@ -161,6 +161,7 @@ pub fn hangle_msg_scroll(
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                     }
                                     JsMsg::Top { .. } => {
+                                        log::debug!("top reached");
                                         // send uuid/timestamp of oldest message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_top_evt {
@@ -226,6 +227,7 @@ pub fn hangle_msg_scroll(
                                         }
                                     }
                                     JsMsg::Bottom { .. } => {
+                                        log::debug!("bottom reached");
                                         // send uuid/timestamp of most recent message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_bottom_evt {
