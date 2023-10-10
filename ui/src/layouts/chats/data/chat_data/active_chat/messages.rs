@@ -172,14 +172,14 @@ impl Messages {
 impl Messages {
     fn append_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
         m.retain(|x| !self.times.contains_key(&x.inner.id()));
-        let _len = m.len();
         for msg in m.iter() {
             self.times.insert(msg.inner.id(), msg.inner.date());
         }
         let mut new_msgs = VecDeque::from_iter(m.drain(..));
         self.all.append(&mut new_msgs);
 
-        for _ in 0.._len {
+        let extra = self.all.len().saturating_sub(DEFAULT_MESSAGES_TO_TAKE);
+        for _ in 0..extra {
             if let Some(msg) = self.all.pop_front() {
                 self.times.remove(&msg.inner.id());
             }
@@ -188,7 +188,6 @@ impl Messages {
 
     fn prepend_messages(&mut self, mut m: Vec<ui_adapter::Message>) {
         m.retain(|x| !self.times.contains_key(&x.inner.id()));
-        let _len = m.len();
         for msg in m.iter() {
             self.times.insert(msg.inner.id(), msg.inner.date());
         }
@@ -196,8 +195,9 @@ impl Messages {
         new_all.append(&mut self.all);
         self.all = new_all;
 
+        let extra = self.all.len().saturating_sub(DEFAULT_MESSAGES_TO_TAKE);
         let end = self.all.len();
-        let start = end.saturating_sub(_len);
+        let start = end - extra;
         for _ in start..end {
             if let Some(msg) = self.all.pop_back() {
                 self.times.remove(&msg.inner.id());
