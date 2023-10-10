@@ -1,6 +1,8 @@
 .message-typing-wrap {
 	display: inline-flex;
 	gap: var(--gap);
+	position: absolute;
+	bottom: -17px;
 	//padding: var(--padding-less);
 	//padding-top: var(--padding-less);
 }
