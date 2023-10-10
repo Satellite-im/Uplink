@@ -51,6 +51,3 @@ document.addEventListener('mouseup', function() {
 img.ondragstart = function() {
     return false;
 };
-
-
-return {"left": img.style.left, "top": img.style.top};
