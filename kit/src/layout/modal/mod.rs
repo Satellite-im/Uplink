@@ -12,6 +12,7 @@ pub struct Props<'a> {
     transparent: bool,
     #[props(optional)]
     dont_pad: Option<bool>,
+    show_close_button: Option<bool>,
     close_on_click_inside_modal: Option<bool>,
     children: Element<'a>,
     onclose: EventHandler<'a, ()>,
@@ -30,6 +31,9 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         ""
     };
+
+    let show_close_button = cx.props.show_close_button.unwrap_or(true);
+
     let title = cx.props.with_title.clone().unwrap_or_default();
 
     let close_on_click_inside_modal = cx.props.close_on_click_inside_modal.unwrap_or(true);
@@ -45,7 +49,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 class: "modal {cx.props.class.unwrap_or_default()}",
-                (!cx.props.transparent).then(|| rsx!(
+                (!cx.props.transparent && show_close_button).then(|| rsx!(
                     div {
                         class: "close-btn",
                         z_index: "10",
