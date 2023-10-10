@@ -1,12 +1,21 @@
 # Chats Layout
 
+## Code Organization
+- The first thing rendered (after the `ChatLayout`, found in the top level `mod.rs` file) is in `presentation/chat/mod.rs` - the `Compose` element. It composes the other elements defined in `presentation`.
+- The Dioxus functions `use_future`, `use_effect`, and `use_coroutine` tend to take lots of space and have been moved into their own files. 
+    - `use_coroutine` and `use_future` calls may be found in a file called `coroutines.rs`. (`use_future` can't go in a `futures.rs` file because that name conflicts with another crate). 
+    - `use_effect` may be found in a file called `effects.rs`. 
+- `data/` contains models used by the chats layout. 
+- `scripts/` contains scripts needed by the chats layout. Each script is its own `.js` file and is imported in the `mod.rs` file using `include_str!`. 
+- everything else is in `presentation/`
+
 ## Overview
 The Chats layout has its own `UseSharedState` - `ChatData`. `State.chats` still contains the list of participants, their identities, and whether or not they are typing. `ChatData` contains all the messages (for the active chat) and the information needed to initialize the view for a chat. 
 
 ## ChatData
 `ChatData` contains two fields - the `ActiveChat` and a `HashMap` of `ChatBehavior`s. 
 - `ChatBehavior` does the following
-    - describes how to intialize the view (which message should be at the top or bottom of the view)
+    - describes how to initialize the view (which message should be at the top or bottom of the view)
     - tells what to do when the top or bottom of the view is reached (fetch more messages or do nothing)
 - `ActiveChat` does the following
     - stores the messages which were fetched from warp
