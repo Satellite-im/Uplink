@@ -52,6 +52,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 (!cx.props.transparent && show_close_button).then(|| rsx!(
                     div {
                         class: "close-btn",
+                        aria_label: "close-modal-button",
                         z_index: "10",
                         Button {
                             icon: Icon::XMark,
