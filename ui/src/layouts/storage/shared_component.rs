@@ -207,7 +207,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         key: "{key}-menu",
                         id: file.id().to_string(),
                         items: cx.render(rsx!(
-                        if !send_files_mode {
+                        if !send_files_mode && !state.read().chats_sidebar().is_empty() {
                             rsx!(
                             ContextItem {
                                 icon: Icon::Share,
