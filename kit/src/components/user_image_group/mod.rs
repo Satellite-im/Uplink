@@ -65,7 +65,6 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 rsx!(
                                     UserImage {
                                         platform: user.platform,
-                                        status: user.status,
                                         image: user.photo.clone(),
                                         on_press: move |e| { let _ = cx.props.onpress.as_ref().map(|f| f.call(e)); },
                                     }

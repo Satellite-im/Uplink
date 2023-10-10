@@ -2,7 +2,6 @@ var imgElement = document.getElementById('image-preview-modal-file-embed');
 var cropCircle = document.getElementById('crop-box');
 var shadowImgMask = document.getElementById('shadow-img-mask');
 var image_crop_box_container = document.getElementById('image-crop-box-container');
-var firstRender = '$FIRST_RENDER';
 
 function adjustCropCircleSize() {
     var imageWidth = imgElement.clientWidth;
