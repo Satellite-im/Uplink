@@ -46,7 +46,6 @@ impl ActiveChat {
             typing_indicator: HashMap::new(),
             pinned_messages: chat.pinned_messages.clone(),
             key: Uuid::new_v4(),
-            scrolled: false,
         }
     }
 
