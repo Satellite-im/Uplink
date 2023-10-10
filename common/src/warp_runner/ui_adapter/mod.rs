@@ -230,7 +230,7 @@ pub async fn fetch_pinned_messages_from_chat(
             conv_id,
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_limit(MAX_PINNED_MESSAGES)
                 .set_pinned(),
         )
         .await
@@ -277,7 +277,7 @@ pub async fn conversation_to_chat(
             conv.id(),
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_limit(MAX_PINNED_MESSAGES)
                 .set_pinned(),
         )
         .await
