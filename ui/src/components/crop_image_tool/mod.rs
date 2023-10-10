@@ -10,6 +10,7 @@ use tokio::io::AsyncWriteExt;
 const ADJUST_CROP_CIRCLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_circle_size.js");
 const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("./get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
+const MOVE_IMAGE_SCRIPT: &str = include_str!("./move_image.js");
 
 #[derive(Debug, Clone)]
 struct ImageDimensions {
@@ -61,6 +62,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 };
             }
             let _ = eval(ADJUST_CROP_CIRCLE_SIZE_SCRIPT);
+            let _ = eval(MOVE_IMAGE_SCRIPT);
         }
     });
 
