@@ -71,8 +71,6 @@ pub fn hangle_msg_scroll(
                     observer_script =
                         observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
 
-                    log::info!("init handle_msg_scroll for conv id {}. top_id is {top_msg_id}, bottom_id is {bottom_msg_id}, send top is: {should_send_top_evt}, send bottom is {should_send_bottom_evt}, unreads is {}", conv_id, chat_data.read().active_chat.unreads());
-
                     let eval = match eval_provider(&observer_script) {
                         Ok(r) => r,
                         Err(e) => {
@@ -90,8 +88,6 @@ pub fn hangle_msg_scroll(
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
-                                        log::info!("got this from js: {msg:?}");
-
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -124,7 +120,7 @@ pub fn hangle_msg_scroll(
                             opt = rx.next() => {
                                 match opt {
                                     Some(_) => {
-                                        log::info!("coroutine restart triggered");
+                                        log::debug!("coroutine restart triggered");
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {
@@ -157,7 +153,6 @@ pub fn hangle_msg_scroll(
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                     }
                                     JsMsg::Top { .. } => {
-                                        log::info!("top reached for conv id: {conv_id}");
                                         // send uuid/timestamp of oldest message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_top_evt {
@@ -206,8 +201,8 @@ pub fn hangle_msg_scroll(
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
-                                                //behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
-                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                // behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
+                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
                                                 break 'HANDLE_EVAL;
@@ -220,7 +215,6 @@ pub fn hangle_msg_scroll(
                                         }
                                     }
                                     JsMsg::Bottom { .. } => {
-                                        log::info!("bottom reached for conv id: {conv_id}");
                                         // send uuid/timestamp of most recent message to WarpRunner to proces top event
                                         // receive the new messages and if there are more in that direction
 
@@ -278,7 +272,7 @@ pub fn hangle_msg_scroll(
                                                     chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 }
                                                 let behavior = chat_data.read().get_chat_behavior(conv_id);
-                                                log::info!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {

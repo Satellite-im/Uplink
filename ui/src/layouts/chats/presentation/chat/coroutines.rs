@@ -50,7 +50,7 @@ pub fn handle_warp_events(
                             .write_silent()
                             .new_message(conversation_id, message)
                         {
-                            log::info!("adding message to conversation");
+                            log::debug!("adding message to conversation");
                             chat_data.write().active_chat.messages.reset();
                             chat_data.write().active_chat.new_key();
                         }
@@ -109,7 +109,7 @@ pub fn init_chat_data<'a>(
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
-            log::info!("fetching messages for chat_id: {:?}", conv_id);
+            log::debug!("fetching messages for chat");
 
             let conv_id = match conv_id {
                 None => return,
@@ -264,7 +264,7 @@ pub async fn fetch_most_recent<'a>(
 
     match rsp {
         Ok(r) => {
-            log::info!("got FetchMessagesResponse to init chat {conv_id}");
+            log::debug!("got FetchMessagesResponse to init chat");
             chat_behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
             chat_behavior.on_scroll_top = if r.has_more {
                 data::ScrollBehavior::FetchMore
