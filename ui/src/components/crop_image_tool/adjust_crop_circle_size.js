@@ -4,8 +4,6 @@ var shadowImgMask = document.getElementById('shadow-img-mask');
 var image_crop_box_container = document.getElementById('image-crop-box-container');
 var img_parent_div = document.getElementById('img-parent-div');
 
-var firstRender = '$FIRST_RENDER';
-
 function adjustCropCircleSize() {
     var imageWidth = imgElement.clientWidth;
     var imageHeight = imgElement.clientHeight;
