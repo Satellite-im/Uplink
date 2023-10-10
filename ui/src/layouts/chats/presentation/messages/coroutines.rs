@@ -56,6 +56,13 @@ pub fn hangle_msg_scroll(
                         .messages
                         .top()
                         .unwrap_or(Uuid::nil());
+
+                    log::debug!(
+                        "top msg is: {}, bottom msg is: {}",
+                        top_msg_id,
+                        bottom_msg_id
+                    );
+
                     let mut observer_script = OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
                         if should_send_top_evt { "1" } else { "0" },
@@ -88,6 +95,7 @@ pub fn hangle_msg_scroll(
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
+                                        // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -197,7 +205,6 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                chat_data.write().remove_last_x(conv_id, new_messages);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
@@ -239,7 +246,7 @@ pub fn hangle_msg_scroll(
                                         let (tx, rx) = oneshot::channel();
                                         let cmd = RayGunCmd::FetchMessages{
                                             conv_id,
-                                            config: FetchMessagesConfig::Later { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                            config: FetchMessagesConfig::Later { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE / 2},
                                             rsp: tx
                                         };
 
@@ -261,7 +268,6 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                chat_data.write().remove_first_x(conv_id, new_messages);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 chat_data.write().active_chat.new_key();

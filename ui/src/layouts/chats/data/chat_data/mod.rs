@@ -130,30 +130,6 @@ impl ChatData {
         }
     }
 
-    pub fn remove_first_x(&mut self, conv_id: Uuid, to_remove: usize) {
-        if conv_id != self.active_chat.id() {
-            log::warn!("remove_first_x wrong chat id");
-            return;
-        }
-        let len = self.active_chat.messages.all.len();
-        let to_remove = std::cmp::min(len, to_remove);
-        for msg in self.active_chat.messages.all.drain(0..to_remove) {
-            self.active_chat.messages.times.remove(&msg.inner.id());
-        }
-    }
-
-    pub fn remove_last_x(&mut self, conv_id: Uuid, to_remove: usize) {
-        if conv_id != self.active_chat.id() {
-            log::warn!("remove_last_x wrong chat id");
-            return;
-        }
-        let end = self.active_chat.messages.all.len();
-        let start = end.saturating_sub(to_remove);
-        for msg in self.active_chat.messages.all.drain(start..end) {
-            self.active_chat.messages.times.remove(&msg.inner.id());
-        }
-    }
-
     pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
         if conv_id != self.active_chat.id() {
             log::warn!("remove_message_from_view wrong chat id");

@@ -21,7 +21,7 @@ pub use messages::*;
 pub use metadata::*;
 pub use partial_message::*;
 
-pub const DEFAULT_MESSAGES_TO_TAKE: usize = 40;
+pub const DEFAULT_MESSAGES_TO_TAKE: usize = 80;
 
 #[derive(Debug, Default, Clone)]
 pub struct ActiveChat {
@@ -31,6 +31,7 @@ pub struct ActiveChat {
     pub typing_indicator: HashMap<DID, Instant>,
     pub pinned_messages: Vec<raygun::Message>,
     pub key: Uuid,
+    pub scrolled: bool,
 }
 
 impl ActiveChat {
@@ -46,6 +47,7 @@ impl ActiveChat {
             typing_indicator: HashMap::new(),
             pinned_messages: chat.pinned_messages.clone(),
             key: Uuid::new_v4(),
+            scrolled: false,
         }
     }
 
@@ -63,6 +65,18 @@ impl ActiveChat {
 
     pub fn has_message_id(&self, id: Uuid) -> bool {
         self.messages.times.contains_key(&id)
+    }
+
+    pub fn set_scrolled(&mut self) {
+        self.scrolled = true;
+    }
+
+    pub fn clear_scrolled(&mut self) {
+        self.scrolled = false;
+    }
+
+    pub fn get_scrolled(&self) -> bool {
+        self.scrolled
     }
 }
 

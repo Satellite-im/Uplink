@@ -125,7 +125,9 @@ pub fn get_messages(cx: Scope) -> Element {
         div {
             id: "messages",
             onscroll: move |_| {
-                // do nothing
+                if !chat_data.read().active_chat.get_scrolled() {
+                    chat_data.write().active_chat.set_scrolled();
+                }
             },
             // used by the intersection observer to terminate itself
             div {
