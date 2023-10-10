@@ -16,8 +16,8 @@ const scaleY = naturalHeight / (image.height / scale);
 const imageLeftPosition = image.style.left ? parseFloat(image.style.left) : 0;
 const imageTopPosition = image.style.top ? parseFloat(image.style.top) : 0;
 
-const cropX = Math.max(Math.abs(((naturalWidth - scaleX * width) / 2) - (scaleX * imageLeftPosition)), 0);
-const cropY = Math.max(Math.abs(((naturalHeight - scaleY * height) / 2) - (scaleY * imageTopPosition)), 0);
+const cropX = Math.max(((naturalWidth - scaleX * width) / 2) - (scaleX * imageLeftPosition), 0);
+const cropY = Math.max(((naturalHeight - scaleY * height) / 2) - (scaleY * imageTopPosition), 0);
 
 ctx.drawImage(image, cropX, cropY, scaleX * width, scaleY * height, 0, 0, width, height);
 
