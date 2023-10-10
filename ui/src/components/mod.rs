@@ -1,4 +1,5 @@
 pub mod community;
+pub mod crop_image_tool;
 pub mod debug_logger;
 pub mod emoji_group;
 pub mod files;
