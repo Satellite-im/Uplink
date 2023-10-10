@@ -54,8 +54,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
         }
     });
 
+    if block_list.is_empty() {
+        return render!({});
+    }
     cx.render(rsx! (
-        div {
+        rsx!(div {
             class: "friends-list",
             aria_label: "Blocked List",
             Label {
@@ -64,7 +67,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
             },
             block_list.into_iter().map(|blocked_user| {
                 let did = blocked_user.did_key();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let did_suffix = blocked_user.short_id().to_string();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
                 let platform = blocked_user.platform().into();
@@ -117,6 +120,6 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     }
                 )
             })
-        }
+        })
     ))
 }

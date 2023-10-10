@@ -81,6 +81,11 @@ pub fn get_uninitialized_identity(did: &DID) -> Result<state::Identity, Error> {
         .get(len - 3..)
         .ok_or(Error::OtherWithContext("DID too short".into()))?;
     default.set_username(&format!("{start}...{end}"));
+    let pk = did_str.as_bytes();
+    let short: [u8; 8] = pk[pk.len() - 8..]
+        .try_into()
+        .map_err(|_e| warp::error::Error::OtherWithContext("did to short".into()))?;
+    default.set_short_id(short);
     Ok(state::Identity::from(default))
 }
 
@@ -225,7 +230,7 @@ pub async fn fetch_pinned_messages_from_chat(
             conv_id,
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_limit(MAX_PINNED_MESSAGES)
                 .set_pinned(),
         )
         .await
@@ -272,7 +277,7 @@ pub async fn conversation_to_chat(
             conv.id(),
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_limit(MAX_PINNED_MESSAGES)
                 .set_pinned(),
         )
         .await
