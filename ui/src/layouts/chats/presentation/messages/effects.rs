@@ -26,9 +26,9 @@ pub fn init_msg_scroll(
             let chat_id = chat_data.read().active_chat.id();
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
             log::debug!(
-                "use_effect for init_msg_scroll {}. scrolling to: {:?}",
+                "use_effect for init_msg_scroll {}. behavior: {:?}",
                 chat_id,
-                chat_behavior.view_init.scroll_to
+                chat_behavior
             );
             let unreads = chat_data.read().active_chat.unreads();
 

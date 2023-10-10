@@ -131,7 +131,7 @@ pub fn init_chat_data<'a>(
 
             match r {
                 Ok((messages, behavior)) => {
-                    log::debug!("init_chat_data with behavior {:?}", behavior);
+                    log::debug!("init_chat_data");
                     chat_data
                         .write()
                         .set_active_chat(&state.read(), &conv_id, behavior, messages);
