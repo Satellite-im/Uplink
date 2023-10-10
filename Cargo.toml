@@ -44,8 +44,8 @@ libloading = "0.8"
 warp = { git = "https://github.com/Satellite-im/Warp", rev = "15c125a92712438cd8c919b87c4073c28442f16a" }
 warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "15c125a92712438cd8c919b87c4073c28442f16a" }
 warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "15c125a92712438cd8c919b87c4073c28442f16a" }
-rfd = "0.11.3"
-mime = "0.3.16"
+rfd = "0.11.4"
+mime = "0.3"
 serde = "1.0"
 serde_json = "1.0"
 chrono = "0.4"
