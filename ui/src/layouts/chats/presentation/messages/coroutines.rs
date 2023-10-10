@@ -142,11 +142,11 @@ pub fn hangle_msg_scroll(
                                             // have to check on_scroll_end in case the user scrolled up and switched chats.
                                             if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
-                                                log::debug!("clearing scroll_btn");
+                                                log::trace!("clearing scroll_btn");
                                             }
                                         } else if !scroll_btn.read().get(conv_id) {
                                             scroll_btn.write().set(conv_id);
-                                            log::debug!("setting scroll_btn");
+                                            log::trace!("setting scroll_btn");
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
@@ -175,7 +175,7 @@ pub fn hangle_msg_scroll(
                                         let (tx, rx) = oneshot::channel();
                                         let cmd = RayGunCmd::FetchMessages{
                                             conv_id,
-                                            config: FetchMessagesConfig::Earlier { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE },
+                                            config: FetchMessagesConfig::Earlier { start_date: msg.date, limit: DEFAULT_MESSAGES_TO_TAKE / 2 },
                                             rsp: tx
                                         };
 
@@ -197,11 +197,15 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
+                                                chat_data.write().remove_last_x(conv_id, new_messages);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
-                                                // behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
+                                                if new_messages > 0 {
+                                                    behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
+                                                }
+
                                                 log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
@@ -257,6 +261,7 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
+                                                chat_data.write().remove_first_x(conv_id, new_messages);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 chat_data.write().active_chat.new_key();
