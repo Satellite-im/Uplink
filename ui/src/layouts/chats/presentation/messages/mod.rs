@@ -209,68 +209,6 @@ pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) ->
 }
 
 #[derive(Props)]
-pub struct PendingMessagesListenerProps<'a> {
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
-}
-
-//The component that listens for upload events
-pub fn render_pending_messages_listener<'a>(
-    cx: Scope<'a, PendingMessagesListenerProps>,
-) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-    state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
-    let chat = match state.read().get_active_chat() {
-        Some(c) => c,
-        None => return cx.render(rsx!(())),
-    };
-    cx.render(rsx!(pending_wrapper {
-        msg: chat.pending_outgoing_messages,
-        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
-    }))
-}
-
-#[derive(Props)]
-struct PendingWrapperProps<'a> {
-    msg: Vec<PendingMessage>,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
-}
-
-//We need to do it this way due to reference ownership
-fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
-    let chat_data = use_shared_state::<ChatData>(cx)?;
-    let data = chat_data.read();
-    cx.render(rsx!(render_pending_messages {
-        pending_outgoing_message: data::pending_group_messages(
-            &cx.props.msg,
-            data.active_chat.my_id().did_key(),
-        ),
-        active: data.active_chat.id(),
-        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
-    }))
-}
-
-#[derive(Props)]
-struct PendingMessagesProps<'a> {
-    #[props(!optional)]
-    pending_outgoing_message: Option<data::MessageGroup>,
-    active: Uuid,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
-}
-
-fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'a> {
-    cx.render(rsx!(cx.props.pending_outgoing_message.as_ref().map(
-        |group| {
-            rsx!(render_message_group {
-                group: group,
-                active_chat_id: cx.props.active,
-                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
-                pending: true
-            },)
-        }
-    )))
-}
-
-#[derive(Props)]
 struct MessageGroupProps<'a> {
     group: &'a data::MessageGroup,
     active_chat_id: Uuid,
@@ -666,4 +604,66 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             } // Highlights Pre blocks
         }
     ))
+}
+
+#[derive(Props)]
+pub struct PendingMessagesListenerProps<'a> {
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+//The component that listens for upload events
+pub fn render_pending_messages_listener<'a>(
+    cx: Scope<'a, PendingMessagesListenerProps>,
+) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
+    let chat = match state.read().get_active_chat() {
+        Some(c) => c,
+        None => return cx.render(rsx!(())),
+    };
+    cx.render(rsx!(pending_wrapper {
+        msg: chat.pending_outgoing_messages,
+        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+    }))
+}
+
+#[derive(Props)]
+struct PendingWrapperProps<'a> {
+    msg: Vec<PendingMessage>,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+//We need to do it this way due to reference ownership
+fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let data = chat_data.read();
+    cx.render(rsx!(render_pending_messages {
+        pending_outgoing_message: data::pending_group_messages(
+            &cx.props.msg,
+            data.active_chat.my_id().did_key(),
+        ),
+        active: data.active_chat.id(),
+        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+    }))
+}
+
+#[derive(Props)]
+struct PendingMessagesProps<'a> {
+    #[props(!optional)]
+    pending_outgoing_message: Option<data::MessageGroup>,
+    active: Uuid,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'a> {
+    cx.render(rsx!(cx.props.pending_outgoing_message.as_ref().map(
+        |group| {
+            rsx!(render_message_group {
+                group: group,
+                active_chat_id: cx.props.active,
+                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
+                pending: true
+            },)
+        }
+    )))
 }
