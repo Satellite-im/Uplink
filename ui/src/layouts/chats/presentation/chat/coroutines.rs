@@ -46,14 +46,7 @@ pub fn handle_warp_events(
                         if conversation_id != chat_id {
                             continue;
                         }
-                        if matches!(
-                            chat_data
-                                .read()
-                                .get_chat_behavior(conversation_id)
-                                .view_init
-                                .scroll_to,
-                            data::ScrollTo::MostRecent
-                        ) && chat_data
+                        if chat_data
                             .write_silent()
                             .new_message(conversation_id, message)
                         {

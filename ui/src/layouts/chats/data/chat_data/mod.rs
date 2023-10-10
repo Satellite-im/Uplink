@@ -93,23 +93,34 @@ impl ChatData {
         self.active_chat.messages.insert_messages(messages);
     }
 
-    // returns true if the struct was mutated
+    // returns true if the view (or javascript) needs to be updated
     pub fn new_message(&mut self, conv_id: Uuid, msg: ui_adapter::Message) -> bool {
         if conv_id != self.active_chat.id() {
             log::warn!("new_message wrong chat id");
             return false;
         }
 
-        let should_append_msg = self
-            .chat_behaviors
-            .get(&conv_id)
+        let behavior = self.chat_behaviors.get_mut(&conv_id);
+        let should_append_msg = behavior
+            .as_ref()
             .map(|behavior| matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent))
             .unwrap_or_default();
 
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
+            true
+        } else if let Some(behavior) = behavior {
+            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
+                // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
+                behavior.on_scroll_end = ScrollBehavior::FetchMore;
+                true
+            } else {
+                false
+            }
+        } else {
+            log::warn!("unexpected state in ChatData::new_mesage");
+            false
         }
-        should_append_msg
     }
 
     pub fn reset_messages(&mut self, conv_id: Uuid) {
