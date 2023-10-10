@@ -61,7 +61,7 @@ use self::storage::Storage;
 use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
-pub const MAX_PINNED_MESSAGES: usize = 100;
+pub const MAX_PINNED_MESSAGES: u8 = 100;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -1015,7 +1015,7 @@ impl State {
                 return true;
             }
         };
-        conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
+        conv.pinned_messages.len() >= MAX_PINNED_MESSAGES.into()
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
