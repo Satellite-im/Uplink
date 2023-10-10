@@ -144,11 +144,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .collect();
     let users_typing = state.read().get_identities(&users_typing);
 
+    // this is used to scroll to the bottom of the chat.
     let scroll_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
         to_owned![chat_data, state];
         async move {
             while let Some(conv_id) = rx.next().await {
-                // todo: fetch new chat messages
                 match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
                     data::ChatBehavior::default(),
                     conv_id,
