@@ -110,8 +110,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
-            rsx!(
-                get_file_modal {
+            rsx!(get_file_modal {
                     on_dismiss: |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
                     },

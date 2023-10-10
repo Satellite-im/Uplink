@@ -1,0 +1,33 @@
+.crop-cursor {
+    width: 100px;
+    height: 100px;
+    border: 2px solid red;
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none; 
+}
+
+.container {
+    position: relative;
+    text-align: center; /* Center content horizontally */
+}
+
+.crop-box {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed red; /* Dotted border style */
+}
+
+.crop-image-topbar-left-title {
+    color: var(--text-color);
+    margin-right: 32px;
+    line-height: 1.0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
