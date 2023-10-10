@@ -179,9 +179,11 @@ impl Messages {
         self.all.append(&mut new_msgs);
 
         let extra = self.all.len().saturating_sub(DEFAULT_MESSAGES_TO_TAKE);
-        for _ in 0..extra {
-            if let Some(msg) = self.all.pop_front() {
-                self.times.remove(&msg.inner.id());
+        if extra > 0 {
+            for _ in 0..extra {
+                if let Some(msg) = self.all.pop_front() {
+                    self.times.remove(&msg.inner.id());
+                }
             }
         }
     }
