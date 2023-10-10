@@ -41,7 +41,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{self, ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        chats::data::{ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -150,7 +150,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         async move {
             while let Some(conv_id) = rx.next().await {
                 match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
-                    data::ChatBehavior::default(),
                     conv_id,
                     DEFAULT_MESSAGES_TO_TAKE,
                 )

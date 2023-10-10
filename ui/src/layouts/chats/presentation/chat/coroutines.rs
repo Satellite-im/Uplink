@@ -117,14 +117,11 @@ pub fn init_chat_data<'a>(
             };
 
             let behavior = chat_data.read().get_chat_behavior(conv_id);
-            let config = chat_data
-                .read()
-                .get_chat_behavior(conv_id)
-                .messages_config();
+            let config = behavior.messages_config();
 
             let r = match config {
                 FetchMessagesConfig::MostRecent { limit } => {
-                    fetch_most_recent(behavior, conv_id, limit).await
+                    fetch_most_recent(conv_id, limit).await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
                     fetch_window(conv_id, behavior, center, half_size).await
@@ -134,6 +131,7 @@ pub fn init_chat_data<'a>(
 
             match r {
                 Ok((messages, behavior)) => {
+                    log::debug!("init_chat_data with behavior {:?}", behavior);
                     chat_data
                         .write()
                         .set_active_chat(&state.read(), &conv_id, behavior, messages);
@@ -146,7 +144,7 @@ pub fn init_chat_data<'a>(
 
 pub async fn fetch_window<'a>(
     conv_id: Uuid,
-    mut chat_behavior: ChatBehavior,
+    chat_behavior: ChatBehavior,
     date: DateTime<Utc>,
     half_size: usize,
 ) -> anyhow::Result<(Vec<ui_adapter::Message>, ChatBehavior)> {
@@ -223,23 +221,24 @@ pub async fn fetch_window<'a>(
         }
     };
 
-    chat_behavior.on_scroll_end = if has_more_after {
-        data::ScrollBehavior::FetchMore
-    } else {
-        data::ScrollBehavior::DoNothing
+    let new_behavior = ChatBehavior {
+        view_init: chat_behavior.view_init,
+        on_scroll_end: if has_more_after {
+            data::ScrollBehavior::FetchMore
+        } else {
+            data::ScrollBehavior::DoNothing
+        },
+        on_scroll_top: if has_more_before {
+            data::ScrollBehavior::FetchMore
+        } else {
+            data::ScrollBehavior::DoNothing
+        },
     };
 
-    chat_behavior.on_scroll_top = if has_more_before {
-        data::ScrollBehavior::FetchMore
-    } else {
-        data::ScrollBehavior::DoNothing
-    };
-
-    Ok((messages, chat_behavior))
+    Ok((messages, new_behavior))
 }
 
 pub async fn fetch_most_recent<'a>(
-    mut chat_behavior: ChatBehavior,
     conv_id: Uuid,
     limit: usize,
 ) -> anyhow::Result<(Vec<ui_adapter::Message>, ChatBehavior)> {
@@ -263,15 +262,16 @@ pub async fn fetch_most_recent<'a>(
     };
 
     match rsp {
-        Ok(r) => {
-            log::debug!("got FetchMessagesResponse to init chat");
-            chat_behavior.on_scroll_end = data::ScrollBehavior::DoNothing;
-            chat_behavior.on_scroll_top = if r.has_more {
-                data::ScrollBehavior::FetchMore
-            } else {
-                data::ScrollBehavior::DoNothing
+        Ok(FetchMessagesResponse { messages, has_more }) => {
+            let chat_behavior = ChatBehavior {
+                on_scroll_top: if has_more {
+                    data::ScrollBehavior::FetchMore
+                } else {
+                    data::ScrollBehavior::DoNothing
+                },
+                ..Default::default()
             };
-            Ok((r.messages, chat_behavior))
+            Ok((messages, chat_behavior))
         }
         Err(e) => {
             bail!("FetchMessages command failed: {e}");
