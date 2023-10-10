@@ -86,21 +86,21 @@ impl Messages {
     }
 
     pub fn get_earliest_displayed(&self) -> Option<PartialMessage> {
-        self.displayed
-            .front()
-            .and_then(|id| self.times.get(id).map(|date| PartialMessage {
-                    message_id: *id,
-                    date: *date,
-                }))
+        self.displayed.front().and_then(|id| {
+            self.times.get(id).map(|date| PartialMessage {
+                message_id: *id,
+                date: *date,
+            })
+        })
     }
 
     pub fn get_latest_displayed(&self) -> Option<PartialMessage> {
-        self.displayed
-            .back()
-            .and_then(|id| self.times.get(id).map(|date| PartialMessage {
-                    message_id: *id,
-                    date: *date,
-                }))
+        self.displayed.back().and_then(|id| {
+            self.times.get(id).map(|date| PartialMessage {
+                message_id: *id,
+                date: *date,
+            })
+        })
     }
 
     pub fn add_message_to_view(&mut self, message_id: Uuid) {

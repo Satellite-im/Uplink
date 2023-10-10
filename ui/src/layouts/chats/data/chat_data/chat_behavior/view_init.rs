@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-
 use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
 
 use super::ScrollTo;
