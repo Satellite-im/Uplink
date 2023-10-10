@@ -229,6 +229,7 @@ pub struct EmojiSuggestionProps<'a> {
 fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(div {
         class: "emoji-suggestions",
+        aria_label: "emoji-suggestions-container",
         onmouseenter: move |_| {
             *cx.props.selected.write() = None;
         },
@@ -241,6 +242,11 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
                     Some(v) => if *v == num {"emoji-selected"} else {""},
                     None => ""
                 }),
+                aria_label: {
+                    format_args!(
+                        "emoji-suggested-{emoji}",
+                    )
+                },
                 onclick: move |_| {
                     cx.props.on_emoji_click.call((emoji.clone(), alias.clone()))
                 },
