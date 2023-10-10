@@ -1,0 +1,578 @@
+name: UI Tests on Windows and MacOS 🧪
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-mac:
+    runs-on: macos-13
+    steps:
+      - name: Checkout Repo 🔖
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache 🛠️
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.70.0
+          override: true
+          components: rustfmt, clippy
+
+      - name: Add Targets for MacOS
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
+      - name: Build executable 🖥️
+        run: make dmg
+        continue-on-error: true
+
+      - name: Create ZIP archive on MacOS 🗳️
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
+
+      - name: Calculate hashes 🧮
+        run: |
+          shasum -a 256 Uplink-Mac-Universal.zip > Uplink-Mac-Universal.zip.sha256.txt
+
+      - name: Upload Artifact ⬆️
+        uses: actions/upload-artifact@v3
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        with:
+          name: app-macos
+          if-no-files-found: error
+          path: |
+            Uplink-Mac-Universal.zip
+            Uplink-Mac-Universal.zip.sha256.txt
+
+      - name: Add label if any of build or test jobs failed
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: add
+
+  build-windows:
+    runs-on:
+      labels: windows-latest
+
+    steps:
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache 🛠️
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.70.0
+          override: true
+          components: rustfmt, clippy
+
+      - name: Build executable 🖥️
+        run: cargo build --release -F production_mode
+        continue-on-error: true
+
+      - name: Copy Extensions 🗳️
+        run: |
+          mkdir ./ui/extra/extensions
+          cp -r ./target/release/emoji_selector.d ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll.exp ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll.lib ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.pdb ./ui/extra/extensions/
+
+      - name: Upload Executable ⬆️
+        uses: actions/upload-artifact@v3
+        with:
+          name: Uplink-Windows
+          if-no-files-found: error
+          path: |
+            target/release/uplink.exe
+
+      - name: Upload Windows Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: |
+            ui/extra/images/
+            ui/extra/prism_langs/
+            ui/extra/themes/
+            ui/extra/extensions/
+
+      - name: Add label if any of build or test jobs failed
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: add
+
+  test-mac:
+    needs: build-mac
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: "./appium-tests"
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install NPM dependencies 📦
+        working-directory: ./appium-tests
+        run: npm ci
+
+      - name: Enable opening app not codesigned 🖥️
+        run: sudo spctl --master-disable
+
+      - name: Download the MacOS app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: app-macos
+          path: ./appium-tests/apps
+
+      - name: Copy DMG to Appium Apps Directory 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          unzip Uplink-Mac-Universal.zip
+          cp -r ./Uplink.app /Applications/
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
+
+      - name: Install Appium Server 💻
+        run: |
+          npm install -g appium@next
+          appium -v
+
+      - name: Install Appium Driver 💻
+        run: |
+          appium driver install mac2
+          appium driver list
+
+      - name: Update MacOS runner to not autocorrect text
+        run: |
+          defaults write -g NSAutomaticCapitalizationEnabled -bool false
+          defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
+          defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+
+      - name: Delete Cache Folder and copy reusable data
+        run: |
+          rm -rf ~/.uplink
+          mkdir ./appium-tests/tests/fixtures/users/mac2
+          cp -r ./appium-tests/tests/fixtures/users/FriendsTestUser/ ./appium-tests/tests/fixtures/users/mac2/FriendsTestUser
+
+      - name: Run Tests on MacOS 🧪
+        run: |
+          cd ./appium-tests
+          npm run mac.ci
+
+      - name: Upload Test Report - MacOS CI
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report-macos-ci
+          path: ./appium-tests/test-report/*.xml
+
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-mac-ci
+          path: ./appium-tests/allure-results/
+
+      - name: Upload Screenshots for MacOS 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots-MacOS
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log for MacOS 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log-macos
+          path: ./appium-tests/appium.log
+
+      - name: Add label if any of test jobs failed
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: add
+
+  test-windows-chats:
+    needs: build-windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: "./appium-tests"
+
+      - name: Change resolution on Windows Runner
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+        shell: powershell
+
+      - name: Download the Windows app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
+
+      - name: Download the Windows app assets
+        uses: actions/download-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: ./appium-tests/apps
+
+      - name: Copy app to have two instances 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          cp -r ./uplink.exe ./uplink2.exe
+
+      - name: Move Windows assets to correct locations 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          mkdir ./bin/extra
+          mkdir ./extra
+          mv ./uplink.exe ./bin/
+          mv ./uplink2.exe ./bin/
+          mv ./images/ ./bin/extra/
+          mv ./prism_langs/ ./bin/extra/
+          mv ./themes/ ./extra/
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install NPM dependencies 📦
+        working-directory: ./appium-tests
+        run: npm ci
+
+      - name: Install Appium Server 💻
+        run: |
+          npm install -g appium@next
+          appium -v
+
+      - name: Install Appium Driver 💻
+        run: |
+          appium driver install --source=npm appium-windows-driver
+          appium driver list
+
+      - name: Setup FFMPEG to record screen
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        id: setup-ffmpeg
+
+      - name: Run Chat Tests on Windows 🧪
+        working-directory: ./appium-tests
+        run: npm run windows.multiremote
+
+      - name: Upload Test Report - Windows Chats
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report-windows-chats
+          path: ./appium-tests/test-report/*.xml
+
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-windows-chats
+          path: ./appium-tests/allure-results/
+
+      - name: Upload Screenshots for Windows - Chats 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots-windows-chats
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log for Windows - Chats 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log-windows-chats
+          path: |
+            ./appium-tests/appium.log
+
+      - name: Add label if any of test jobs failed
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: add
+
+  test-windows:
+    needs: build-windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: "./appium-tests"
+
+      - name: Change resolution on Windows Runner
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+        shell: powershell
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install NPM dependencies 📦
+        working-directory: ./appium-tests
+        run: npm ci
+
+      - name: Download the Windows app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
+
+      - name: Download the Windows app assets
+        uses: actions/download-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: ./appium-tests/apps
+
+      - name: Move Windows assets to correct locations 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          mkdir ./bin/extra
+          mkdir ./extra
+          mv ./uplink.exe ./bin/
+          mv ./images/ ./bin/extra/
+          mv ./prism_langs/ ./bin/extra/
+          mv ./themes/ ./extra/
+
+      - name: Install and Run Appium Server 💻
+        run: |
+          npm install -g appium@next
+          appium -v
+
+      - name: Install Appium Driver 💻
+        run: |
+          appium driver install --source=npm appium-windows-driver
+          appium driver list
+
+      - name: Setup FFMPEG to record screen
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        id: setup-ffmpeg
+
+      - name: Delete Cache Folder if exists - Windows
+        run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
+        shell: powershell
+
+      - name: Run Tests on Windows 🧪
+        working-directory: ./appium-tests
+        run: npm run windows.ci
+
+      - name: Upload Test Report - Windows CI
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report-windows-ci
+          path: ./appium-tests/test-report/*.xml
+
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-windows-ci
+          path: ./appium-tests/allure-results/
+
+      - name: Upload Screenshots for Windows 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots-windows
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log for Windows 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log-windows
+          path: ./appium-tests/appium.log
+
+      - name: Add label if any of test jobs failed
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: add
+
+  publish-results:
+    if: always()
+    needs:
+      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: write
+      issues: read
+
+    steps:
+      - name: Download Test Report for MacOS CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-report-macos-ci
+          path: artifacts
+
+      - name: Download Test Report for Windows Chats
+        uses: actions/download-artifact@v3
+        with:
+          name: test-report-windows-chats
+          path: artifacts
+
+      - name: Download Test Report for Windows CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-report-windows-ci
+          path: artifacts
+
+      - name: Download Allure Results for MacOS CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-mac-ci
+          path: allure
+
+      - name: Download Allure Results for Windows CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-windows-ci
+          path: allure
+
+      - name: Download Allure Results for Windows Chats
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-windows-chats
+          path: allure
+
+      - name: Publish Test Results Summary
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: success()
+        with:
+          junit_files: "artifacts/**/*.xml"
+          ignore_runs: true
+          job_summary: false
+          compare_to_earlier_commit: false
+          check_name: "UI Automated Test Results Summary for MacOS/Windows"
+
+      - name: Get Allure history
+        uses: actions/checkout@v3
+        if: success()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Allure Report action from marketplace
+        uses: simple-elf/allure-report-action@master
+        if: success()
+        id: allure-report
+        with:
+          gh_pages: gh-pages
+          allure_results: allure
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Publish test report to Github Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Comment PR with the Test Results
+        if: success()
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/Uplink/${{ github.run_number }})
+
+  remove-artifacts:
+    needs:
+      [
+        build-mac,
+        build-windows,
+        test-mac,
+        test-windows-chats,
+        test-windows,
+        publish-results,
+      ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Remove label if all test jobs succeeded
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            Failed Automated Test
+          type: remove
+
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            Uplink-Windows
+            uplink-windows-assets
+            app-macos
+            test-report-macos-ci
+            test-report-windows-ci
+            test-report-windows-chats
+            test-allure-mac-ci
+            test-allure-windows-ci
+            test-allure-windows-chats

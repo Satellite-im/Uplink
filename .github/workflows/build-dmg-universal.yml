@@ -1,0 +1,91 @@
+# https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
+# notarization info from here^
+name: Make dmg
+
+# Watch for tags being created, after self hosted runner setup we can change this back, or make it when a user manually requests a dmg
+on:
+  push:
+    tags:
+      - "*"
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build_sign_macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.70.0
+          override: true
+          components: rustfmt, clippy
+      - name: Install Dependencies
+        continue-on-error: true
+        run: |
+          brew update
+          brew install cmake rustup-init gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav gst-rtsp-server gst-editing-services
+      - name: Add Targets
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+      - name: Codesign and Build executable
+        continue-on-error: true
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+          MACOS_KEYCHAIN_NAME: ${{ secrets.MACOS_KEYCHAIN_NAME }}
+          MACOS_CERT_ID: ${{secrets.MACOS_CERT_ID}}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
+          security default-keychain -s builduplink.keychain
+          security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
+          security set-keychain-settings builduplink.keychain
+          security import certificate.p12 -k builduplink.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
+          security find-identity -p codesigning -v
+          security list-keychains
+          make dmg SIGNING_KEY="$MACOS_CERT_ID"
+      - name: "Notarize executable"
+        env:
+          PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
+          PROD_MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}
+          PROD_MACOS_NOTARIZATION_PWD: ${{ secrets.MACOS_NOTARIZATION_PWD }}
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+        run: |
+          echo "Create keychain profile"
+          xcrun notarytool store-credentials "uplink-notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
+          echo "Creating temp notarization archive"
+          ditto -c -k --keepParent "target/release/macos/Uplink.app" "notarization.zip"
+          echo "Notarize app"
+          xcrun notarytool submit "notarization.zip" --keychain-profile "uplink-notarytool-profile" --wait
+          echo "Attach staple"
+          xcrun stapler staple "target/release/macos/Uplink.app"
+      - name: Create ZIP archive
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
+      - name: Calculate hashes
+        run: |
+          shasum -a 256 Uplink-Mac-Universal.zip > Uplink-Mac-Universal.zip.sha256.txt
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        with:
+          name: Uplink Universal Mac App
+          path: |
+            target/release/macos/Uplink.dmg
+            Uplink-Mac-Universal.zip
+            Uplink-Mac-Universal.zip.sha256.txt
+      - name: Copy file to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/release/macos/Uplink.dmg
+            Uplink-Mac-Universal.zip

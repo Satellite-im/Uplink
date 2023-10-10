@@ -1,0 +1,91 @@
+[package]
+name = "uplink"
+rust-version = { workspace = true }
+version = { workspace = true }
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.70"
+dioxus = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-router = { workspace = true }
+dioxus-desktop = { workspace = true, features = ["transparent"] }
+raw-window-handle = { workspace = true }
+dioxus-core = { workspace = true }
+kit = { workspace = true }
+common = { workspace = true }
+extensions = { workspace = true }
+tokio-util = { workspace = true }
+arboard = { workspace = true }
+humansize = { workspace = true }
+uuid = { workspace = true }
+libloading = { workspace = true }
+warp = { workspace = true }
+warp-ipfs = { workspace = true }
+rfd = { workspace = true }
+mime = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+either = { workspace = true }
+base64 = { workspace = true }
+timeago = { workspace = true }
+dirs = { workspace = true }
+opener = { workspace = true }
+open = { workspace = true }
+derive_more = { workspace = true }
+colored = { workspace = true }
+notify = { workspace = true }
+rand = { workspace = true }
+notify-rust = { workspace = true }
+titlecase = { workspace = true }
+
+tempfile = { workspace = true }
+fdlimit = { workspace = true }
+
+once_cell = { workspace = true }
+
+futures = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+isolang = { workspace = true }
+regex = { workspace = true }
+image = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+walkdir = { workspace = true }
+zip = { workspace = true }
+filetime = "0.2.20"
+reqwest = { workspace = true, default-features = false, features = [
+    "json",
+    "rustls-tls",
+    "stream",
+] }
+log = { version = "0.4.17", features = ["std"] }
+
+[features]
+default = ["dioxus-desktop/devtools"]
+fullscreen = ["dioxus-desktop/fullscreen"]
+transparent = ["dioxus-desktop/transparent"]
+tray = ["dioxus-desktop/tray"]
+production_mode = ["common/production_mode"]
+
+[build-dependencies]
+glob = "0.3.0"
+rustc_version = "0.4.0"
+rsass = "0.26.0"
+zip = { workspace = true }
+walkdir = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.24.1"
+objc = "0.2.7"
+core-foundation = "0.9.3"
+objc-foundation = "0.1.1"
+objc_id = "0.1.1"
+
+[target.'cfg(windows)'.dependencies]
+clipboard-win = "4.5.0"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"

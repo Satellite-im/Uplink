@@ -1,0 +1,21 @@
+#pre-release {
+    padding: 0 var(--gap-less) !important;
+
+    cursor: default;
+    p {
+      color: var(--warning-light);
+      font-size: var(--text-size-less);
+      cursor: pointer;
+    }
+    svg {
+      fill: transparent;
+      stroke: var(--warning-light);
+      height: var(--text-size-less);
+      align-self: center;
+      width: var(--text-size-less);
+    }
+  }
+
+.mac-spacer {
+    margin-left: 4rem;
+}

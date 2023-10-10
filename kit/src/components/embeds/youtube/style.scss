@@ -1,0 +1,12 @@
+#youtube-player {
+    width: 100%;
+    min-height: 360px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+
+    iframe {
+        border: none;
+        width: 100%;
+        min-height: 360px;
+    }
+}

@@ -1,0 +1,66 @@
+.slimbar {
+    height: 100%;
+    min-width: calc(var(--height-input) + var(--gap) * 2);
+    width: calc(var(--height-input) + var(--gap) * 2);
+    gap: var(--gap);
+    display: inline-flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-subtle-color);
+    justify-content: space-between;
+    background-color: var(--background-color-dark);
+    padding: var(--gap);
+    padding-bottom: 0;
+    position: relative;
+    z-index: 1;
+    // overflow-x: hidden; // TODO: This breaks tooltips.
+
+    &::-webkit-scrollbar {
+        display: none; 
+    }
+
+    // TODO: This is really tricky to get to work cleanly.
+    // .slimbar-scroll {
+    //     flex: 1;
+    //     max-height: 100%;
+    //     overflow-x: scroll;
+    //     width: fit-content;
+    //     justify-content: flex-end;
+    //     display: inline-flex;
+    //     direction: rtl;
+    //     margin-left: calc(var(--gap) * -1);
+    //     padding-left: var(--gap);
+
+    //     div {
+    //         direction: ltr;
+    //     }
+     
+    //     &::-webkit-scrollbar {
+    //         width: 4px;
+    //         margin-right: -4px;
+    //     }
+    // }
+
+    .nav-vertical-wrapper {
+        .nav {
+            flex-direction: column;
+            gap: var(--gap);
+            padding: var(--padding) 0;
+        }
+    }
+
+    .slimbar-top {
+        padding-bottom: var(--gap);
+        border-bottom: 1px solid var(--border-subtle-color);
+    }
+
+    .slimbar-spacer {
+        min-height: 0;
+        flex: 1;
+        width: 100%;
+    }
+
+    .slimbar-back {
+        padding-bottom: var(--gap);
+        border-bottom: 1px solid var(--border-subtle-color);
+    }
+}

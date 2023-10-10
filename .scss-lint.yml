@@ -1,0 +1,17 @@
+linters:
+  Indentation:
+    enabled: false
+  SelectorDepth:
+    enabled: false
+  UrlQuotes:
+    enabled: false
+  NestingDepth:
+    enabled: false
+  SelectorFormat:
+    enabled: false
+  PropertySortOrder:
+    enabled: true
+  Shorthand:
+    enabled: false
+  FinalNewline:
+    enabled: false

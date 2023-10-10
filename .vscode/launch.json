@@ -1,0 +1,44 @@
+{
+    // Debug runs using breakpoints.
+    // Needs the CodeLLDB plugin for vsc
+    "version": "0.2.1",
+    "configurations": [
+        {
+            "name": "Cargo Based UI Debug",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    // "--bin=example",
+                    // "--package=example"
+                ],
+            },
+            "args": [
+                "debug"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "UI Debug (running target/debug/uplink)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/uplink",
+            "args": [
+                "debug"
+            ],
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "UI Debug With Mock (running target/debug/uplink)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/uplink",
+            "args": [
+                "--with-mock",
+                "debug"
+            ],
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}

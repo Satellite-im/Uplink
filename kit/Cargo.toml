@@ -1,0 +1,42 @@
+[package]
+name = "kit"
+rust-version = { workspace = true }
+version = { workspace = true }
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.8.4"
+scraper = "0.17.1"
+chrono = { workspace = true }
+dioxus = { workspace = true }
+dioxus-core = { workspace = true }
+dioxus-desktop = { workspace = true, features = ["transparent"] }
+dioxus-hooks = { workspace = true }
+dioxus-html = { workspace = true }
+timeago = { workspace = true }
+humansize = { workspace = true }
+common = { workspace = true }
+warp = { workspace = true }
+derive_more = { workspace = true }
+pulldown-cmark = "0.9.2"
+linkify = { workspace = true }
+reqwest = { workspace = true }
+base64 = { workspace = true }
+mime = { workspace = true }
+
+[dependencies.uuid]
+workspace = true
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]
+
+[build-dependencies]
+glob = "0.3.0"
+rsass = "0.26.0"
+
+[lib]
+doctest = false

@@ -1,0 +1,22 @@
+.select select{
+    --webkit-appearance: none;
+    color: var(--text-color-dark);
+    appearance: none;
+    border-radius: 5rem;
+    min-width: fit-content;
+    width: 100%;
+    height: 40px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='black'><polygon points='0,0 40,0 20,20'/></svg>")
+    no-repeat;
+    background-size: 12px;
+    background-position: calc(100% - 16px) 18px;
+    background-repeat: no-repeat;
+    background-color: var(--primary);
+    outline: none;
+    cursor: pointer;
+    align-items: center;
+    padding-left: var(--padding-less);
+    /* This is for the arrow */
+    padding-right: 2.5rem;
+}
+  

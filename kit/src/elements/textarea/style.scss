@@ -1,0 +1,44 @@
+// all the rest of the styling for textarea is in elements/input/style.scss
+
+textarea {
+	width: 100%;
+	height: "auto";
+	max-height: 250px; //Maybe make max variable?
+	margin: 9px 0;
+	&.disabled {
+		cursor: not-allowed;
+		filter: brightness(85%);
+	}
+}
+
+textarea::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 0px rgba(255, 255, 255, 0);
+}
+
+textarea::-webkit-scrollbar-thumb {
+	background-color: var(--primary);
+}
+
+//Hide horizontal scrollbar
+textarea::-webkit-scrollbar:horizontal {
+	height: 0;
+	width: 0;
+	display: none;
+}
+
+textarea::-webkit-scrollbar-thumb:horizontal {
+	display: none;
+}
+
+.input-char-counter {
+	padding: 2px 9px;
+    position: absolute;
+    right: 0;
+    bottom: -17px;
+	flex-direction: row;
+	display: flex;
+}
+
+.char-counter-p-element {
+    font-size: var(--text-size-less);
+}
