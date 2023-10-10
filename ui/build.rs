@@ -10,7 +10,6 @@ use std::{
 use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    env::set_var("RUST_BACKTRACE", "1");
     let version = rustc_version::version().unwrap();
 
     if cfg!(feature = "production_mode") {
