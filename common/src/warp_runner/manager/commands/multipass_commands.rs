@@ -402,17 +402,22 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             };
         }
         MultiPassCmd::GetIdentity { did, rsp } => {
-            let pic = warp.multipass.identity_picture(&did).await;
-            let banner = warp.multipass.identity_banner(&did).await;
-            let r = warp.multipass.get_identity(Identifier::DID(did)).await; //(dids, &mut warp.multipass).await;
-            let r = match r {
+            let r = match warp
+                .multipass
+                .get_identity(Identifier::DID(did.clone()))
+                .await
+            {
                 Ok(ids) => {
                     if ids.is_empty() {
-                        Err(Error::IdentityExist)
+                        Err(Error::IdentityDoesntExist)
                     } else {
                         let mut id = Identity::from(ids[0].clone());
-                        id.set_profile_picture(&pic.unwrap_or_default());
-                        id.set_profile_banner(&banner.unwrap_or_default());
+                        if let Ok(pic) = warp.multipass.identity_picture(&did).await {
+                            id.set_profile_picture(&pic);
+                        }
+                        if let Ok(banner) = warp.multipass.identity_banner(&did).await {
+                            id.set_profile_banner(&banner);
+                        }
                         Ok(id)
                     }
                 }
