@@ -292,6 +292,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
     cx.render(rsx!(div {
         id: "remote-controls",
+        aria_label: "remote-controls",
         class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
         (*recording.read()).then(||{
             rsx!(
@@ -314,10 +315,12 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             class: format_args!("call-label {}", if cx.props.in_chat {"in-chat"} else {""}),
             outgoing.then(|| rsx!(Label {
                 text: get_local_text("remote-controls.outgoing-call"),
+                aria_label: "outgoing-call-label".into(),
             }))
         }
         div {
             class: "call-info",
+            aria_label: "call-info",
             div {
                 class: format_args!("calling {}", if cx.props.in_chat {"in-chat"} else {""}),
                 div {
@@ -345,18 +348,22 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             (!cx.props.in_chat).then(||rsx!(
                 p {
                     class: "call-name",
+                    aria_label: "call-name",
                     "{participants_name}"
                 }
             )),
             p {
                 class: format_args!("call-time {}", if cx.props.in_chat {"in-chat"} else {""}),
+                aria_label: "call-time",
                 format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
             }
         },
         div {
             class: "controls",
+            aria_label: "call-controls",
             Button {
                 icon: Icon::Microphone,
+                aria_label: "call-mic-button".into(),
                 appearance: if call.self_muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
@@ -370,6 +377,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             },
             Button {
                 icon: if call.call_silenced { Icon::SignalSlash } else { Icon::Signal },
+                aria_label: "call-speaker-button".into(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
@@ -402,6 +410,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             }),
             Button {
                 icon: Icon::PhoneXMark,
+                aria_label: "call-hangup-button".into(),
                 appearance: Appearance::Danger,
                 onpress: move |_| {
                     ch.send(CallDialogCmd::Hangup(call.id));
