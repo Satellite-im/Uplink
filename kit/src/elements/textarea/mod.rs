@@ -172,7 +172,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeyup: move |evt| {
                         let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
                         // this is now redundant
-                        let shift_key_as_modifier = false; // evt.data.modifiers().contains(Modifiers::SHIFT);
+                        let shift_key_as_modifier = evt.data.modifiers().contains(Modifiers::SHIFT);
 
                         if evt.code() == Code::ShiftLeft {
                             left_shift_pressed.set(false);
