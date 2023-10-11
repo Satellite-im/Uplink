@@ -56,8 +56,8 @@ pub struct Props<'a> {
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
     let eval = use_eval(cx);
-    let left_shift_pressed = use_ref(cx, || false);
-    let right_shift_pressed = use_ref(cx, || false);
+    let left_shift_pressed = use_state(cx, || false);
+    let right_shift_pressed = use_state(cx, || false);
     let cursor_position = use_ref(cx, || None);
 
     let Props {
@@ -166,18 +166,19 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::ShiftLeft {
                             left_shift_pressed.set(true);
                         } else if evt.code() == Code::ShiftRight {
-                            right_shift_pressed.set(false);
+                            right_shift_pressed.set(true);
                         }
                     },
                     onkeyup: move |evt| {
                         let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
+                        // this is now redundant
                         let shift_key_as_modifier = false; // evt.data.modifiers().contains(Modifiers::SHIFT);
 
                         if evt.code() == Code::ShiftLeft {
-                            *left_shift_pressed.write_silent() = false;
+                            left_shift_pressed.set(false);
                         } else if evt.code() == Code::ShiftRight {
-                            *right_shift_pressed.write_silent() = false;
-                        } else if enter_pressed && !(shift_key_as_modifier || *right_shift_pressed.read() || *left_shift_pressed.read()) {
+                            right_shift_pressed.set(false);
+                        } else if enter_pressed && !(shift_key_as_modifier || *right_shift_pressed.get() || *left_shift_pressed.get()) {
                             if *show_char_counter {
                                 let _ = eval(&clear_counter_script);
                             }
