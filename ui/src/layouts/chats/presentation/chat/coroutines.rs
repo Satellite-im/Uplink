@@ -51,7 +51,6 @@ pub fn handle_warp_events(
                             .new_message(conversation_id, message)
                         {
                             log::debug!("adding message to conversation");
-                            chat_data.write().active_chat.messages.reset();
                             chat_data.write().active_chat.new_key();
                         }
                     }
