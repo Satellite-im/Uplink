@@ -29,15 +29,18 @@ impl ChatData {
             log::warn!("add_message_to_view wrong chat id");
             return;
         }
-        self.active_chat.messages.add_message_to_view(message_id);
 
-        if self
-            .active_chat
-            .messages
-            .all
-            .front()
-            .map(|x| x.inner.id() == message_id)
-            .unwrap_or_default()
+        self.active_chat.messages.add_message_to_view(message_id);
+        let len = self.active_chat.messages.all.len();
+        // for the first message, want to scroll down, not up.
+        if len > 1
+            && self
+                .active_chat
+                .messages
+                .all
+                .front()
+                .map(|x| x.inner.id() == message_id)
+                .unwrap_or_default()
         {
             self.scroll_up(conv_id);
         } else {
@@ -104,19 +107,24 @@ impl ChatData {
         let should_append_msg = behavior
             .as_ref()
             .map(|behavior| matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent))
-            .unwrap_or_default();
+            .unwrap_or(true);
+
+        if behavior.is_none() {
+            log::warn!("unexpected state in ChatData::new_mesage - chat behavior is none");
+        }
 
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else if let Some(behavior) = behavior {
             if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
+                // this seemingly useless if statement helps detect bugs regarding the caht behavior.
                 if self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE {
                     // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
                     behavior.on_scroll_end = ScrollBehavior::FetchMore;
                 } else {
                     log::warn!(
-                        "unexpected condition in ChatData::new_message regarding chat behavior"
+                        "unexpected condition in ChatData::new_message. behavior is: {:?}, num messages is: {}", behavior, self.active_chat.messages.all.len()
                     );
                 }
                 true
@@ -124,8 +132,7 @@ impl ChatData {
                 false
             }
         } else {
-            log::warn!("unexpected state in ChatData::new_mesage - chat behavior is none");
-            false
+            unreachable!()
         }
     }
 

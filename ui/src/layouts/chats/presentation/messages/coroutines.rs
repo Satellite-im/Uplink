@@ -35,6 +35,11 @@ pub fn hangle_msg_scroll(
             while rx.next().await.is_some() {
                 // this is basically a goto
                 'CONFIGURE_EVAL: loop {
+                    // if there are no messages to render, don't bother with the javascript.
+                    if chat_data.read().active_chat.messages.top().is_none() {
+                        break 'CONFIGURE_EVAL;
+                    }
+
                     chat_data
                         .write_silent()
                         .active_chat
@@ -102,6 +107,7 @@ pub fn hangle_msg_scroll(
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
+                                        // note: if something is wrong with messages, the first thing you should do is to uncomment this log
                                         // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
