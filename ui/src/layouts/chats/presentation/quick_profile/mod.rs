@@ -344,6 +344,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     if state.read().configuration.developer.experimental_features {
                         rsx!(
                             Range {
+                                aria_label: "range-quick-profile-speaker".into(),
                                 initial_value: volume,
                                 min: USER_VOL_MIN,
                                 max: USER_VOL_MAX,
