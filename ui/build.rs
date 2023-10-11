@@ -1,7 +1,6 @@
 use glob::glob;
 use rsass::{compile_scss, output};
 use std::{
-    env,
     error::Error,
     fs::{self, File},
     io::{Read, Write},
