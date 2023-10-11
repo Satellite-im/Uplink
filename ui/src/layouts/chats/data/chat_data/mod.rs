@@ -111,14 +111,20 @@ impl ChatData {
             true
         } else if let Some(behavior) = behavior {
             if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
-                // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
-                behavior.on_scroll_end = ScrollBehavior::FetchMore;
+                if self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE {
+                    // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
+                    behavior.on_scroll_end = ScrollBehavior::FetchMore;
+                } else {
+                    log::warn!(
+                        "unexpected condition in ChatData::new_message regarding chat behavior"
+                    );
+                }
                 true
             } else {
                 false
             }
         } else {
-            log::warn!("unexpected state in ChatData::new_mesage");
+            log::warn!("unexpected state in ChatData::new_mesage - chat behavior is none");
             false
         }
     }

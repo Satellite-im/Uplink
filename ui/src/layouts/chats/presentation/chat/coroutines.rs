@@ -108,7 +108,6 @@ pub fn init_chat_data<'a>(
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
-            log::debug!("fetching messages for chat");
 
             let conv_id = match conv_id {
                 None => return,
@@ -120,9 +119,11 @@ pub fn init_chat_data<'a>(
 
             let r = match config {
                 FetchMessagesConfig::MostRecent { limit } => {
+                    log::debug!("fetching most recent messages for chat");
                     fetch_most_recent(conv_id, limit).await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
+                    log::debug!("fetching window for chat");
                     fetch_window(conv_id, behavior, center, half_size).await
                 }
                 _ => unreachable!(),
