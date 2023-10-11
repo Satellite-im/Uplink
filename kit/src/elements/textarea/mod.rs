@@ -162,11 +162,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                     },
-                    onkeypress: move |evt| {
+                    onkeydown: move |evt| {
                         if evt.code() == Code::ShiftLeft {
-                            *left_shift_pressed.write_silent() = true;
+                            left_shift_pressed.set(true);
                         } else if evt.code() == Code::ShiftRight {
-                            *right_shift_pressed.write_silent() = true;
+                            right_shift_pressed.set(false);
                         }
                     },
                     onkeyup: move |evt| {
