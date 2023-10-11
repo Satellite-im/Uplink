@@ -117,11 +117,11 @@ impl ChatData {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else if let Some(behavior) = behavior {
-            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
-                if self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE {
-                    // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
-                    behavior.on_scroll_end = ScrollBehavior::FetchMore;
-                }
+            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore)
+                && self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE
+            {
+                // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
+                behavior.on_scroll_end = ScrollBehavior::FetchMore;
                 true
             } else {
                 false
