@@ -35,6 +35,18 @@ pub fn hangle_msg_scroll(
             while rx.next().await.is_some() {
                 // this is basically a goto
                 'CONFIGURE_EVAL: loop {
+                    // if there are no messages to render, don't bother with the javascript.
+                    if chat_data.read().active_chat.messages.top().is_none() {
+                        break 'CONFIGURE_EVAL;
+                    }
+
+                    chat_data
+                        .write_silent()
+                        .active_chat
+                        .messages
+                        .displayed
+                        .clear();
+
                     let conv_id = chat_data.read().active_chat.id();
                     let conv_key = chat_data.read().active_chat.key();
                     let behavior = chat_data.read().get_chat_behavior(conv_id);
@@ -95,6 +107,7 @@ pub fn hangle_msg_scroll(
                             match eval.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
+                                        // note: if something is wrong with messages, the first thing you should do is to uncomment this log
                                         // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
@@ -176,7 +189,6 @@ pub fn hangle_msg_scroll(
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = data::ScrollBehavior::DoNothing;
                                                 chat_data.write_silent().set_chat_behavior(conv_id, behavior);
-                                                chat_data.write_silent().active_chat.messages.displayed.clear();
                                                 continue 'HANDLE_EVAL;
                                             }
                                         };
@@ -207,7 +219,6 @@ pub fn hangle_msg_scroll(
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
                                                 chat_data.write().insert_messages(conv_id, messages);
-                                                chat_data.write().active_chat.messages.displayed.clear();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                 if new_messages > 0 {
@@ -240,7 +251,6 @@ pub fn hangle_msg_scroll(
                                             None => {
                                                 log::error!("no messages at bottom of view");
                                                 chat_data.write_silent().set_chat_behavior(conv_id, ChatBehavior::default());
-                                                chat_data.write_silent().active_chat.messages.displayed.clear();
                                                 continue 'HANDLE_EVAL;
                                             }
                                         };
@@ -270,21 +280,18 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                let had_more = chat_data.read().active_chat.messages.all.len() + new_messages > DEFAULT_MESSAGES_TO_TAKE;
                                                 chat_data.write().insert_messages(conv_id, messages);
-                                                chat_data.write().active_chat.messages.displayed.clear();
                                                 chat_data.write().active_chat.new_key();
-
+                                                let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
-                                                    chat_data.write().reset_messages(conv_id, had_more);
+                                                    chat_data.write().reset_messages(conv_id);
                                                 } else {
-                                                    let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                     behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
                                                     behavior.on_scroll_end = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
-                                                    chat_data.write().set_chat_behavior(conv_id, behavior);
+                                                    chat_data.write().set_chat_behavior(conv_id, behavior.clone());
                                                 }
-                                                let behavior = chat_data.read().get_chat_behavior(conv_id);
+
                                                 log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 break 'HANDLE_EVAL;
                                             },
