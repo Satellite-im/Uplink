@@ -342,6 +342,7 @@ quickprofile = Quick Profile
     .unblock = Unblock User
     .chat-placeholder = Message
     .self-edit = Edit Profile
+    .volume = User Volume
 
 toast_actions = Toast Actions
     .DisplayChat = Open Chat
