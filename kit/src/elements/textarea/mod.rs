@@ -177,7 +177,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             *left_shift_pressed.write_silent() = false;
                         } else if evt.code() == Code::ShiftRight {
                             *right_shift_pressed.write_silent() = false;
-                        } else if enter_pressed && (shift_key_as_modifier || *right_shift_pressed.read() || *left_shift_pressed.read()) {
+                        } else if enter_pressed && !(shift_key_as_modifier || *right_shift_pressed.read() || *left_shift_pressed.read()) {
                             if *show_char_counter {
                                 let _ = eval(&clear_counter_script);
                             }
