@@ -71,6 +71,20 @@
       stroke: var(--danger-light);
     }
   }
+  &.appearance-danger-alternative {
+    background-color: var(--danger);
+    color: var(--danger-light);
+    &:hover {
+      background-color: var(--danger-light);
+      color: var(--text-color-bright);
+      svg {
+        stroke: var(--text-color-bright);
+      }
+    }
+    svg {
+      stroke: var(--text-color-bright);
+    }
+  }
   &.appearance-transparent {
     background-color: transparent;
     color: var(--text-color);

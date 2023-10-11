@@ -36,6 +36,9 @@ pub enum Appearance {
     #[display(fmt = "danger")]
     Danger,
 
+    #[display(fmt = "danger-alternative")]
+    DangerAlternative,
+
     #[display(fmt = "disabled")]
     Disabled,
 
