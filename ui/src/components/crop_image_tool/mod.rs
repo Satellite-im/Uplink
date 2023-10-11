@@ -83,6 +83,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
+                    aria_label: "crop-image-topbar",
                     background: "var(--secondary)",
                     height: "70px",
                     border_radius: "12px",
@@ -94,11 +95,13 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             class: "crop-image-topbar-left-title",
                             Label {
-                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                                text: get_local_text("settings.please-select-area-you-want-to-crop"),
+                                aria_label: "crop-image-topbar-label".into(),
                             }
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,
+                            aria_label: "crop-image-cancel-button".into(),
                             icon: Shape::XMark,
                             onpress: move |_| {
                                 *first_render.write_silent() = true;
@@ -111,6 +114,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                         Button {
                             appearance: Appearance::Success,
+                            aria_label: "crop-image-confirm-button".into(),
                             icon: Shape::Check,
                             onpress: move |_| {
                                 *first_render.write_silent() = false;
@@ -186,6 +190,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
                 Range {
+                    aria_label: "range-crop-image".into(),
                     initial_value: 1.0,
                     min: 1.0,
                     max: 5.0,
