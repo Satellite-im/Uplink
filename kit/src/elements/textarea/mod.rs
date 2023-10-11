@@ -3,6 +3,7 @@
 //! that might helpful if a textarea needed to perform input validation.
 
 use dioxus::prelude::*;
+use dioxus_elements::input_data::keyboard_types::Modifiers;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
 use warp::logging::tracing::log;
@@ -161,7 +162,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                     },
-                    onkeydown: move |evt| {
+                    onkeypress: move |evt| {
                         if evt.code() == Code::ShiftLeft {
                             *left_shift_pressed.write_silent() = true;
                         } else if evt.code() == Code::ShiftRight {
@@ -170,12 +171,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
+                        let shift_key_as_modifier = false; // evt.data.modifiers().contains(Modifiers::SHIFT);
 
                         if evt.code() == Code::ShiftLeft {
                             *left_shift_pressed.write_silent() = false;
                         } else if evt.code() == Code::ShiftRight {
                             *right_shift_pressed.write_silent() = false;
-                        } else if enter_pressed && (*right_shift_pressed.read() || *left_shift_pressed.read()) {
+                        } else if enter_pressed && (shift_key_as_modifier || *right_shift_pressed.read() || *left_shift_pressed.read()) {
                             if *show_char_counter {
                                 let _ = eval(&clear_counter_script);
                             }
