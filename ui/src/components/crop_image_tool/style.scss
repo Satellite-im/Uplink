@@ -1,15 +1,6 @@
-.crop-cursor {
-    width: 100px;
-    height: 100px;
-    border: 2px solid red;
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none; 
-}
-
 .container {
     position: relative;
-    text-align: center; /* Center content horizontally */
+    text-align: center;
 }
 
 .crop-box {
@@ -18,8 +9,39 @@
     transform: translate(-50%, -50%);
     position: absolute;
     border-radius: 50%;
-    border: 2px dashed red; /* Dotted border style */
+    border: 2px dashed var(--text-color-link);
 }
+
+.shadow-img-mask {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed transparent;
+}
+
+.shadow-img-mask::before {
+    content: "";
+    display: block;
+    position: absolute;
+    opacity: 0.8;
+    top: var(--shadow-img-mask-before-top);
+    left: var(--shadow-img-mask-before-left);
+    right: var(--shadow-img-mask-before-right);
+    bottom: var(--shadow-img-mask-before-bottom);
+    background: var(--shadow-img-mask-before-background);
+    mix-blend-mode: multiply;
+  }
+
+  .range-background {
+    height: 55px;
+    border-radius: 20px;
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-left: 16px;
+    background: var(--secondary);
+  }
 
 .crop-image-topbar-left-title {
     color: var(--text-color);
