@@ -53,7 +53,7 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_wry_event_handler, DesktopService};
+use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -350,14 +350,14 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     desktop.set_maximized(state.read().ui.metadata.maximized);
                     *first_resize.write_silent() = false;
                 }
-                let size = webview.inner_size();
+                let size = scaled_window_size(webview.inner_size(), &desktop);
                 let metadata = state.read().ui.metadata.clone();
                 //log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
                     minimized: desktop.is_minimized(),
-                    minimal_view: size.width < get_window_minimal_width(&desktop),
+                    minimal_view: size.width < 600,
                 };
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
@@ -972,13 +972,18 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     Ok(extensions)
 }
 
-fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
+fn scaled_window_size(
+    inner: PhysicalSize<u32>,
+    desktop: &std::rc::Rc<DesktopService>,
+) -> PhysicalSize<u32> {
     if cfg!(target_os = "macos") {
         // On Mac window sizes are kinda funky.
         // They are scaled with the window scale factor so they dont correspond to app pixels
-        (600_f64 * desktop.webview.window().scale_factor()) as u32
+        let logical: LogicalSize<f64> = (inner.width as f64, inner.height as f64).into();
+        let scale = desktop.webview.window().scale_factor();
+        logical.to_physical(1_f64 / scale)
     } else {
-        600
+        inner
     }
 }
 
