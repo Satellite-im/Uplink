@@ -127,7 +127,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         return;
                                                     },
                                                 };
-                                                let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
+                                                let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image_for_banner.png");
                                                 let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
                                                     Ok(file) => file,
                                                     Err(e) => {
@@ -184,7 +184,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                         div {
                             id: "crop-box",
-                            class: "crop-box",
+                            class: "crop-box-rectangle-format",
                         },
                         div {
                             id: "shadow-img-mask",
