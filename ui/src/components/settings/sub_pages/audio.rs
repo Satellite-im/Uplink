@@ -152,6 +152,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
             SettingSectionSimple {
                 Range {
+                    aria_label: "range-input-device".into(),
                     initial_value: 100.0,
                     min: VOL_MIN,
                     max: VOL_MAX,
@@ -174,6 +175,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
             SettingSectionSimple {
                 Range {
+                    aria_label: "range-output-device".into(),
                     initial_value: VOL_MIN,
                     min: 0.0,
                     max: VOL_MAX,
