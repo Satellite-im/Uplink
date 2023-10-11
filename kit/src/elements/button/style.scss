@@ -32,6 +32,17 @@
     padding: unset;
   }
 
+  &.appearance-primary-alternative {
+    background-color: var(--text-selection);
+    color: var(--text-color-bright);
+    svg {
+      stroke: var(--text-color-dark);
+      fill: transparent;
+    }
+    &:hover {
+      background-color: var(--primary-light);
+    }
+  }
   &.appearance-secondary {
     background-color: var(--secondary);
     color: var(--text-color-bright);
