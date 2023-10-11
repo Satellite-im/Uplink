@@ -32,7 +32,6 @@ function adjustCropCircleSize() {
     shadowImgMask.style.setProperty('--shadow-img-mask-before-background', 'radial-gradient(circle at center, transparent ' + `${correctPercentage}` + '%, black 50%)');
 }
 
-
 window.addEventListener('resize', adjustCropCircleSize);
 
 adjustCropCircleSize();
