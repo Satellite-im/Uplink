@@ -3,7 +3,6 @@
 //! that might helpful if a textarea needed to perform input validation.
 
 use dioxus::prelude::*;
-use dioxus_elements::input_data::keyboard_types::Modifiers;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
 use warp::logging::tracing::log;
@@ -58,6 +57,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let eval = use_eval(cx);
     let left_shift_pressed = use_state(cx, || false);
     let right_shift_pressed = use_state(cx, || false);
+    let enter_pressed = use_state(cx, || false);
+    let numpad_enter_pressed = use_state(cx, || false);
     let cursor_position = use_ref(cx, || None);
 
     let Props {
@@ -162,28 +163,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                     },
-                    onkeydown: move |evt| {
-                        if evt.code() == Code::ShiftLeft {
-                            left_shift_pressed.set(true);
-                        } else if evt.code() == Code::ShiftRight {
-                            right_shift_pressed.set(true);
-                        }
-                    },
                     onkeyup: move |evt| {
-                        let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
-                        // this is now redundant
-                        let shift_key_as_modifier = evt.data.modifiers().contains(Modifiers::SHIFT);
-
-                        if evt.code() == Code::ShiftLeft {
-                            left_shift_pressed.set(false);
-                        } else if evt.code() == Code::ShiftRight {
-                            right_shift_pressed.set(false);
-                        } else if enter_pressed && !(shift_key_as_modifier || *right_shift_pressed.get() || *left_shift_pressed.get()) {
-                            if *show_char_counter {
-                                let _ = eval(&clear_counter_script);
-                            }
-                            onreturn.call((text_value.read().clone(), true, evt.code()));
-                        }
+                        match evt.code() {
+                            Code::ShiftLeft => left_shift_pressed.set(false),
+                            Code::ShiftRight => right_shift_pressed.set(false),
+                            Code::Enter => enter_pressed.set(false),
+                            Code::NumpadEnter => numpad_enter_pressed.set(false),
+                            _ => {}
+                        };
                     },
                     onmousedown: {
                         to_owned![eval, cursor_eval];
@@ -203,6 +190,27 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeydown: {
                         to_owned![eval, cursor_eval];
                         move |evt| {
+                            // special codepath to handle onreturn
+                            let old_enter_pressed = *enter_pressed.current();
+                            let old_numpad_enter_pressed = *numpad_enter_pressed.current();
+                            match evt.code() {
+                                Code::ShiftLeft => if !*left_shift_pressed.current() { left_shift_pressed.set(true); },
+                                Code::ShiftRight => if !*right_shift_pressed.current() { right_shift_pressed.set(true); },
+                                Code::Enter => if !*enter_pressed.current() { enter_pressed.set(true); } ,
+                                Code::NumpadEnter => if !*numpad_enter_pressed.current() { numpad_enter_pressed.set(true); },
+                                _ => {}
+                            };
+                            let enter_toggled = !old_enter_pressed && *enter_pressed.current();
+                            let numpad_enter_toggled = !old_numpad_enter_pressed && *numpad_enter_pressed.current();
+                            if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.current() || *left_shift_pressed.current())
+                            {
+                                 if *show_char_counter {
+                                        let _ = eval(&clear_counter_script);
+                                    }
+                                    onreturn.call((text_value.read().clone(), true, evt.code()));
+                            }
+
+                            // special codepath to handle the arrow keys
                             let arrow = match evt.code() {
                                 Code::ArrowDown|Code::ArrowUp => {
                                     if let Some(e) = onup_down_arrow {
