@@ -270,14 +270,13 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                let had_more = chat_data.read().active_chat.messages.all.len() + new_messages > DEFAULT_MESSAGES_TO_TAKE;
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.messages.displayed.clear();
                                                 chat_data.write().active_chat.new_key();
 
                                                 if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
-                                                    chat_data.write().reset_messages(conv_id, had_more);
+                                                    chat_data.write().reset_messages(conv_id);
                                                 } else {
                                                     let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                     behavior.on_scroll_top = data::ScrollBehavior::FetchMore;

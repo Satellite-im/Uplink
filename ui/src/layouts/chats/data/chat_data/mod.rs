@@ -81,14 +81,7 @@ impl ChatData {
 
     // call this first to fetch the messages
     pub fn get_chat_behavior(&self, id: Uuid) -> ChatBehavior {
-        self.chat_behaviors
-            .get(&id)
-            .cloned()
-            .unwrap_or(ChatBehavior {
-                view_init: ViewInit::default(),
-                on_scroll_end: ScrollBehavior::DoNothing,
-                on_scroll_top: ScrollBehavior::DoNothing,
-            })
+        self.chat_behaviors.get(&id).cloned().unwrap_or_default()
     }
 
     pub fn insert_messages(&mut self, conv_id: Uuid, messages: Vec<ui_adapter::Message>) {
@@ -118,7 +111,7 @@ impl ChatData {
             true
         } else if let Some(behavior) = behavior {
             if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore)
-                && self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE
+                && !matches!(behavior.view_init.scroll_to, ScrollTo::MostRecent)
             {
                 // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
                 behavior.on_scroll_end = ScrollBehavior::FetchMore;
@@ -132,18 +125,10 @@ impl ChatData {
         }
     }
 
-    pub fn reset_messages(&mut self, conv_id: Uuid, had_more: bool) {
+    pub fn reset_messages(&mut self, conv_id: Uuid) {
         if self.active_chat.id() == conv_id {
             self.active_chat.messages.reset();
-            if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-                behavior.on_scroll_end = ScrollBehavior::DoNothing;
-                behavior.on_scroll_top = if had_more {
-                    ScrollBehavior::FetchMore
-                } else {
-                    ScrollBehavior::DoNothing
-                };
-                behavior.view_init = ViewInit::default();
-            }
+            self.set_chat_behavior(conv_id, ChatBehavior::default());
         }
     }
 

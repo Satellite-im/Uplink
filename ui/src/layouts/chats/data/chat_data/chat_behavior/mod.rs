@@ -53,7 +53,7 @@ impl Default for ChatBehavior {
     fn default() -> Self {
         Self {
             view_init: ViewInit::default(),
-            on_scroll_top: ScrollBehavior::DoNothing,
+            on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
         }
     }

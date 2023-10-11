@@ -264,13 +264,12 @@ pub async fn fetch_most_recent<'a>(
     match rsp {
         Ok(FetchMessagesResponse { messages, has_more }) => {
             let chat_behavior = ChatBehavior {
-                view_init: data::ViewInit::default(),
                 on_scroll_top: if has_more {
                     data::ScrollBehavior::FetchMore
                 } else {
                     data::ScrollBehavior::DoNothing
                 },
-                on_scroll_end: data::ScrollBehavior::DoNothing,
+                ..Default::default()
             };
             Ok((messages, chat_behavior))
         }
