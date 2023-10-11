@@ -13,6 +13,7 @@ pub struct Props<'a> {
     no_num: Option<bool>,
     icon_left: Option<Icon>,
     icon_right: Option<Icon>,
+    aria_label: Option<String>,
 }
 
 #[allow(non_snake_case)]
@@ -25,10 +26,12 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
     let step = cx.props.step.unwrap_or(1_f32);
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
     cx.render(rsx!(
         div {
             class: "range",
+            aria_label: "{aria_label}",
             cx.props.icon_left.is_some().then(|| rsx! {
                 IconElement {
                     icon: cx.props.icon_left.unwrap_or(Icon::NoSymbol),
@@ -39,6 +42,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 "type": "range",
                 min: "{cx.props.min}",
                 max: "{cx.props.max}",
+                aria_label: "range-input",
                 step: "{step}",
                 value: "{internal_state}",
                 oninput: move |event| {
@@ -54,6 +58,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             }),
             (!cx.props.no_num.unwrap_or_default()).then(||rsx!(
                 p {
+                    aria_label: "range-value",
                     class: "range-value",
                     "{internal_state.get()}"
                 }
