@@ -207,11 +207,11 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                         key: "{key}-menu",
                         id: file.id().to_string(),
                         items: cx.render(rsx!(
-                        if !send_files_mode {
+                        if !send_files_mode && !state.read().chats_sidebar().is_empty() {
                             rsx!(
                             ContextItem {
                                 icon: Icon::Share,
-                                aria_label: "files-download".into(),
+                                aria_label: "files-share".into(),
                                 text: get_local_text("files.share-files"),
                                 onpress: move |_| {
                                     if let Some(f) = &cx.props.on_click_share_files {

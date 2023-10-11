@@ -32,6 +32,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             )),
             img {
                 id: "file_preview_img",
+                aria_label: "file-preview-image",
                 src: "{thumbnail}",
             },
         },

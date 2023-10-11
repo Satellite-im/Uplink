@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use arboard::Clipboard;
 use common::get_images_dir;
 use common::language::get_local_text;
@@ -18,6 +20,8 @@ use kit::elements::{
 use mime::*;
 use rfd::FileDialog;
 use warp::{error::Error, logging::tracing::log};
+
+use crate::components::crop_image_tool::CropImageModal;
 
 #[derive(Clone)]
 enum ChanCmd {
@@ -42,6 +46,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
+    let open_crop_image_modal = use_state(cx, || (false, String::new()));
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
@@ -262,13 +267,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "profile-picture",
                         style: "background-image: url({image});",
                         onclick: move |_| {
-                            set_profile_picture(ch.clone());
+                            set_profile_picture(open_crop_image_modal.clone());
                         },
                         Button {
                             icon: Icon::Plus,
                             aria_label: "add-picture-button".into(),
                             onpress: move |_| {
-                            set_profile_picture(ch.clone());
+                            set_profile_picture(open_crop_image_modal.clone());
                             }
                         },
                     },
@@ -352,16 +357,31 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                         },
                     }
+                },
+                if open_crop_image_modal.get().0 {
+                    rsx!(CropImageModal {
+                        large_thumbnail: open_crop_image_modal.1.clone(),
+                        on_cancel: |_| {
+                            open_crop_image_modal.set((false, String::new()));
+                        },
+                        on_crop: move |image_pathbuf: PathBuf| {
+                            match transform_file_into_base64_image(image_pathbuf) {
+                                Ok(img_cropped) => ch.send(ChanCmd::Profile(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.clone())),
+                            }
+                            open_crop_image_modal.set((false, String::new()));
+                        }
+                    })
                 }
             }
         }
     ))
 }
 
-fn set_profile_picture(ch: Coroutine<ChanCmd>) {
+fn set_profile_picture(open_crop_image_modal: UseState<(bool, String)>) {
     match set_image() {
         Ok(img) => {
-            ch.send(ChanCmd::Profile(img));
+            open_crop_image_modal.set((true, img));
         }
         Err(e) => {
             log::error!("failed to set pfp: {e}");
@@ -390,6 +410,12 @@ fn set_image() -> Result<String, Box<dyn std::error::Error>> {
         None => return Err(Box::from(Error::InvalidItem)),
     };
 
+    transform_file_into_base64_image(path)
+}
+
+fn transform_file_into_base64_image(
+    path: std::path::PathBuf,
+) -> Result<String, Box<dyn std::error::Error>> {
     let file = std::fs::read(&path)?;
 
     let filename = path

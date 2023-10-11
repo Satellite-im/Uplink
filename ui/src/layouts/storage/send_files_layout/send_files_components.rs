@@ -1,11 +1,14 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text_with_args;
 use common::MAX_FILES_PER_MESSAGE;
+use common::{icons::outline::Shape as Icon, language::get_local_text};
 use dioxus::prelude::*;
+use dioxus_router::prelude::use_navigator;
 use kit::elements::{button::Button, checkbox::Checkbox, Appearance};
 use warp::raygun::Location;
 
-use crate::layouts::storage::files_layout::controller::StorageController;
+use crate::{layouts::storage::files_layout::controller::StorageController, UplinkRoute};
+
+use super::SendFilesStartLocation;
 
 #[component]
 pub fn FileCheckbox(
@@ -37,25 +40,33 @@ pub fn FileCheckbox(
 #[component]
 pub fn SendFilesTopbar<'a>(
     cx: Scope<'a>,
+    send_files_from_storage_state: UseState<bool>,
+    send_files_start_location: SendFilesStartLocation,
     storage_controller: UseRef<StorageController>,
     on_send: EventHandler<'a, Vec<Location>>,
 ) -> Element<'a> {
+    let router = use_navigator(cx);
+
     return cx.render(rsx! (
             div {
                 class: "send-files-button",
                 Button {
-                    text: "Go to Files".into(),
+                    text: get_local_text("files.go-to-files"),
                     icon: Icon::FolderPlus,
-                    disabled: true,
                     aria_label: "go_to_files_btn".into(),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        // TODO: Add navigation to FilesLayout 
+                        if send_files_start_location.eq(&SendFilesStartLocation::Storage) {
+                            send_files_from_storage_state.set(false);
+                        } else {
+                            router.replace(UplinkRoute::FilesLayout {});
+                        }
                     },
                 },
                 Button {
                     text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE).into())]),
                     aria_label: "send_files_modal_send_button".into(),
+                    disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || f.chats_selected_to_send.is_empty()),
                     appearance: Appearance::Primary,
                     icon: Icon::ChevronRight,
                     onpress: move |_| {
