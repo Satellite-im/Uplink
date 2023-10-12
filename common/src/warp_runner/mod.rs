@@ -3,6 +3,7 @@ use derive_more::Display;
 use std::sync::Arc;
 
 use tokio::sync::{
+    broadcast,
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
 };
@@ -28,16 +29,17 @@ use crate::{STATIC_ARGS, WARP_CMD_CH};
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
 mod conv_stream;
+mod data;
 mod manager;
 pub mod ui_adapter;
 
+pub use data::*;
 pub use manager::commands::thumbnail_to_base64;
 pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
-pub type WarpEventTx = UnboundedSender<WarpEvent>;
-pub type WarpEventRx = Arc<Mutex<UnboundedReceiver<WarpEvent>>>;
+pub type WarpEventTx = broadcast::Sender<WarpEvent>;
 
 pub struct WarpCmdChannels {
     pub tx: WarpCmdTx,
@@ -46,7 +48,6 @@ pub struct WarpCmdChannels {
 
 pub struct WarpEventChannels {
     pub tx: WarpEventTx,
-    pub rx: WarpEventRx,
 }
 
 type Account = Box<dyn MultiPass>;
@@ -55,7 +56,7 @@ type Messaging = Box<dyn RayGun>;
 type Calling = Box<dyn Blink>;
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Display)]
+#[derive(Display, Clone)]
 pub enum WarpEvent {
     #[display(fmt = "RayGunEvent {{ {_0} }} ")]
     RayGun(RayGunEvent),
