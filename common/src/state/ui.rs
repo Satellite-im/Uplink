@@ -119,6 +119,7 @@ pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,
     pub minimized: bool,
+    pub full_screen: bool,
     pub minimal_view: bool, // We can use this to detect mobile or portrait mode
 }
 

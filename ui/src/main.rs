@@ -346,8 +346,12 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             } => {
                 let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
                 if *first_resize.read() {
-                    desktop.set_inner_size(LogicalSize::new(width, height));
-                    desktop.set_maximized(state.read().ui.metadata.maximized);
+                    if state.read().ui.metadata.full_screen {
+                        desktop.set_fullscreen(true);
+                    } else {
+                        desktop.set_inner_size(LogicalSize::new(width, height));
+                        desktop.set_maximized(state.read().ui.metadata.maximized);
+                    }
                     *first_resize.write_silent() = false;
                 }
                 let size = scaled_window_size(webview.inner_size(), &desktop);
@@ -357,6 +361,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
                     minimized: desktop.is_minimized(),
+                    full_screen: desktop.fullscreen().is_some(),
                     minimal_view: size.width < 600,
                 };
                 if metadata != new_metadata {
