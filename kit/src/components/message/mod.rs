@@ -612,6 +612,31 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                 }
             }));
         }
-        None => return cx.render(rsx!(div {})),
+        None => {
+            return cx.render(rsx!(div {
+                class: "embed-identity",
+                div {
+                    class: "profile-container empty-profile",
+                    div {
+                        class: "unknown-user",
+                        aria_label: "unknown-user",
+                        p {
+                            class: "text",
+                            aria_label: "unknown-user-value",
+                            get_local_text("messages.unknown-identity")
+                        }
+                    },
+                    div {
+                        id: "unknown-user-did",
+                        aria_label: "unknown-user-did",
+                        p {
+                            class: "text",
+                            aria_label: "unknown-user-did-value",
+                            cx.props.id.to_string()
+                        }
+                    }
+                }
+            }))
+        }
     }
 }

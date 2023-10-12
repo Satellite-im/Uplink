@@ -119,6 +119,19 @@
 	.profile-container {
 		max-width: 300px;
 	}
+	.empty-profile {
+		margin-left: 0;
+	}
+	.unknown-user {
+		.text {
+			font-size: var(--text-size-more);
+		  }
+	}
+	.unknown-user-did {
+		.text {
+			font-size: var(--text-size-less);
+		  }
+	}
 	.btn-wrap {
 		padding-top: var(--padding-less);
 		.btn {

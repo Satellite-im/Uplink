@@ -97,7 +97,8 @@ messages = Messages
     .pinned-none = There are no pinned messages in this chat
     .pinned-max = You reached the maximum amount of pinned messages for this chat
     .missing-emoji-picker = Emoji extension is disabled
-    
+    .unknown-identity = User not found:
+
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
