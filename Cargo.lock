@@ -5485,7 +5485,7 @@ dependencies = [
 [[package]]
 name = "markdowns"
 version = "0.1.0"
-source = "git+https://github.com/satellite-im/markdowns?rev=085c5093e1995badb5c1b3e1a342ed04a2af3a81#085c5093e1995badb5c1b3e1a342ed04a2af3a81"
+source = "git+https://github.com/satellite-im/markdowns?rev=57cfd947369eddeacdd95276a9958c1d7c40b643#57cfd947369eddeacdd95276a9958c1d7c40b643"
 
 [[package]]
 name = "markup5ever"
