@@ -704,7 +704,7 @@
   bottom: 100%;
   color: var(--text-color); 
   background-color: var(--secondary); 
-  padding: 4px; 
+  padding: var(--gap-less) var(--gap); 
   border-radius: var(--border-radius);
   max-height: 200px; 
   width: calc(100% - var(--padding-more)); 
@@ -720,20 +720,22 @@
   &::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-light);
   }
-}
 
-.emoji-suggestion {
-  padding-left: 4px; 
-  padding-right: 4px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  border-radius: var(--border-radius);
-  &.emoji-selected {
-    background-color: var(--secondary-dark); 
-  }
-  &:hover {
-    cursor: pointer;
-    background-color: var(--secondary-dark); 
+
+  .emoji-suggestion {
+    display: flex;
+    align-items: center;
+    border-radius: var(--border-radius);
+    padding: var(--gap-less) var(--gap);
+    padding: var(--gap-less) var(--gap);
+    width: 100%;
+    
+    &.emoji-selected {
+      background-color: var(--secondary-dark); 
+    }
+    &:hover {
+      cursor: pointer;
+      background-color: var(--secondary-dark); 
+    }
   }
 }
