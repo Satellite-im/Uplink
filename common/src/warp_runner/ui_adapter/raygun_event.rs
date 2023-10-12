@@ -5,7 +5,7 @@ use warp::{error::Error, logging::tracing::log, raygun::RayGunEventKind};
 use super::{super::conv_stream, init_conversation, ChatAdapter};
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Display)]
+#[derive(Display, Clone)]
 pub enum RayGunEvent {
     #[display(fmt = "ConversationCreated ")]
     ConversationCreated(ChatAdapter),

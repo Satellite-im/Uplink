@@ -75,12 +75,34 @@ pub struct ChatBase<T> {
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
     pub files_attached_to_send: Vec<Location>,
+    // used to determine number of unread messages, for the active chat
     #[serde(skip)]
-    pub scroll_value: Option<i64>,
+    pub is_scrolled: bool,
     #[serde(skip)]
     pub pinned_messages: Vec<raygun::Message>,
-    #[serde(skip, default)]
-    pub scroll_to: Option<Uuid>,
+}
+
+// can't derive default because there is no default conversation_type
+impl<T> Default for ChatBase<T> {
+    fn default() -> Self {
+        Self {
+            id: Default::default(),
+            participants: Default::default(),
+            conversation_type: ConversationType::Direct,
+            conversation_name: Default::default(),
+            creator: Default::default(),
+            messages: Default::default(),
+            unreads: Default::default(),
+            replying_to: Default::default(),
+            typing_indicator: Default::default(),
+            draft: Default::default(),
+            has_more_messages: Default::default(),
+            pending_outgoing_messages: Default::default(),
+            files_attached_to_send: Default::default(),
+            is_scrolled: false,
+            pinned_messages: Default::default(),
+        }
+    }
 }
 
 impl Eq for Chat {}
@@ -102,16 +124,8 @@ impl<T> ChatBase<T> {
             conversation_name,
             creator,
             messages,
-            unreads: HashSet::new(),
-            replying_to: None,
-            typing_indicator: HashMap::new(),
-            draft: None,
-            has_more_messages: false,
-            pending_outgoing_messages: vec![],
-            files_attached_to_send: Vec::new(),
-            scroll_value: None,
             pinned_messages,
-            scroll_to: None,
+            ..Default::default()
         }
     }
     pub fn append_pending_msg(
@@ -193,8 +207,7 @@ impl From<SendableChat> for Chat {
             pending_outgoing_messages: value.pending_outgoing_messages,
             files_attached_to_send: value.files_attached_to_send,
             pinned_messages: value.pinned_messages,
-            scroll_to: value.scroll_to,
-            scroll_value: None,
+            is_scrolled: false,
         }
     }
 }
@@ -227,6 +240,14 @@ impl Chats {
             Some(c) => c.unreads() > 0,
             None => false,
         }
+    }
+
+    pub fn active_chat_is_scrolled(&self) -> bool {
+        let id = match self.active {
+            Some(c) => c,
+            None => return false,
+        };
+        self.all.get(&id).map(|c| c.is_scrolled).unwrap_or_default()
     }
 
     /// returns the UUID of the message being replied to by the active chat

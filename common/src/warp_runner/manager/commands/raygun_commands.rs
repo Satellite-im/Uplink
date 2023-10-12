@@ -20,11 +20,11 @@ use crate::{
     warp_runner::{
         conv_stream,
         ui_adapter::{
-            self, conversation_to_chat, dids_to_identity, fetch_messages_between,
+            self, conversation_to_chat, dids_to_identity, fetch_messages2, fetch_messages_between,
             fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
             MessageEvent,
         },
-        Account, Messaging, WarpEvent,
+        Account, FetchMessagesConfig, FetchMessagesResponse, Messaging, WarpEvent,
     },
     WARP_EVENT_CH,
 };
@@ -71,8 +71,15 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
-    #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
+    #[display(fmt = "FetchMessages")]
     FetchMessages {
+        conv_id: Uuid,
+        // if None, will start from the beginning of the conversation.
+        config: FetchMessagesConfig,
+        rsp: oneshot::Sender<Result<FetchMessagesResponse, warp::error::Error>>,
+    },
+    #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
+    FetchMessagesDeprecated {
         conv_id: Uuid,
         // the total number of messages that should be in the conversation
         to_fetch: usize,
@@ -233,6 +240,14 @@ pub async fn handle_raygun_cmd(
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessages {
+            conv_id,
+            config,
+            rsp,
+        } => {
+            let r = fetch_messages2(conv_id, messaging, config).await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::FetchMessagesDeprecated {
             conv_id,
             to_fetch,
             current_len,
