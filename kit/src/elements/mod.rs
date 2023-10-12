@@ -24,6 +24,9 @@ pub enum Appearance {
     #[display(fmt = "primary")]
     Primary,
 
+    #[display(fmt = "primary-alternative")]
+    PrimaryAlternative,
+
     #[display(fmt = "secondary")]
     Secondary,
 

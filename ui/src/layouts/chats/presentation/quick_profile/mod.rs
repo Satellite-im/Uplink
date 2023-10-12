@@ -86,6 +86,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
+    let in_vc = state
+        .read()
+        .get_active_chat()
+        .map(|call| call.participants.contains(did))
+        .unwrap_or_default();
     let blocked = state.read().is_blocked(did);
     let volume = state
         .read()
@@ -338,9 +343,15 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }*/
                         )
                     }
-                    if state.read().configuration.developer.experimental_features {
+                    if state.read().configuration.developer.experimental_features && in_vc {
                         rsx!(
+                            p {
+                                class: "text",
+                                aria_label: "user-volume-label",
+                                get_local_text("quickprofile.volume")
+                            },
                             Range {
+                                aria_label: "range-quick-profile-speaker".into(),
                                 initial_value: volume,
                                 min: USER_VOL_MIN,
                                 max: USER_VOL_MAX,

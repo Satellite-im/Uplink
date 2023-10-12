@@ -34,7 +34,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let crop_image = use_state(cx, || true);
     let cropped_image_pathbuf = use_ref(cx, PathBuf::new);
     let clicked_button_to_crop = use_state(cx, || false);
-    let first_render = use_ref(cx, || true);
 
     let image_dimensions = use_ref(cx, || ImageDimensions {
         height: 0,
@@ -72,7 +71,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             onclose: move |_| {
                 // Not close if user clicks outside modal
             },
-            transparent: false, 
+            transparent: false,
             show_close_button: false,
             close_on_click_inside_modal: false,
             dont_pad: false,
@@ -83,6 +82,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
+                    aria_label: "crop-image-topbar",
                     background: "var(--secondary)",
                     height: "70px",
                     border_radius: "12px",
@@ -94,14 +94,15 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             class: "crop-image-topbar-left-title",
                             Label {
-                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                                text: get_local_text("settings.please-select-area-you-want-to-crop"),
+                                aria_label: "crop-image-topbar-label".into(),
                             }
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,
+                            aria_label: "crop-image-cancel-button".into(),
                             icon: Shape::XMark,
                             onpress: move |_| {
-                                *first_render.write_silent() = true;
                                 cx.props.on_cancel.call(());
                                 crop_image.set(false);
                             }
@@ -111,9 +112,9 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                         Button {
                             appearance: Appearance::Success,
+                            aria_label: "crop-image-confirm-button".into(),
                             icon: Shape::Check,
                             onpress: move |_| {
-                                *first_render.write_silent() = false;
                                 cx.spawn({
                                     to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                     async move {
@@ -132,7 +133,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 };
                                                 let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
                                                 let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
-                                                    Ok(file) => file, 
+                                                    Ok(file) => file,
                                                     Err(e) => {
                                                         log::error!("Error creating cropped image file: {}", e);
                                                         return;
@@ -160,9 +161,11 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     padding: "16px",
                     div {
                         id: "image-crop-box-container",
-                        width: "auto",
+                        display: "inline-flex",
                         div {
                             overflow: "hidden",
+                           width: "auto", 
+                           height: "auto",
                             border: "3px solid var(--secondary)",
                             img {
                                 id: "image-preview-modal-file-embed",
@@ -176,28 +179,34 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 display: "inline-block",
                                 vertical_align: "middle",
                                 onclick: move |e| e.stop_propagation(),
-                                
                             },
                         }
                         div {
                             id: "crop-box",
                             class: "crop-box",
+                        },
+                        div {
+                            id: "shadow-img-mask",
+                            class: "shadow-img-mask",
+                        }
+                    }
+                },
+                div {
+                    class: "range-background",
+                    Range {
+                        aria_label: "range-crop-image".into(),
+                        initial_value: 1.0,
+                        min: 1.0,
+                        max: 5.0,
+                        step: 0.1,
+                        with_buttons: true,
+                        onchange: move |size_f32| {
+                            *image_scale.write() = size_f32;
                         }
                     }
                 }
-                Range {
-                    initial_value: 1.0,
-                    min: 1.0,
-                    max: 5.0,
-                    step: 0.1,
-                    icon_left: Shape::Minus,
-                    icon_right: Shape::Plus,
-                    onchange: move |size_f32| {
-                        *image_scale.write() = size_f32;
-                    }
-                }
             }
-            
         }
-    },));
+    },
+));
 }
