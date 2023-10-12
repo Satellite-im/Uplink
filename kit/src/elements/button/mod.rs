@@ -134,7 +134,8 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     )
                 }
                 // We only need to include the text if it contains something.
-                (!text.is_empty()).then(|| rsx!(p {
+                (!text.is_empty()).then(|| rsx!(div {
+                    class: "btn-text",
                     cursor: if disabled {"unset"} else {"pointer"},
                     "{text2}"
                 })),
