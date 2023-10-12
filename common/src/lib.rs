@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use tokio::sync::Mutex;
+use tokio::sync::{broadcast, Mutex};
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
@@ -165,11 +165,8 @@ pub static WARP_CMD_CH: Lazy<WarpCmdChannels> = Lazy::new(|| {
 // allows the UI to receive events to Warp
 // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
 pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    WarpEventChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
+    let (tx, _) = broadcast::channel(128);
+    WarpEventChannels { tx }
 });
 
 pub const MAX_FILES_PER_MESSAGE: usize = 8;

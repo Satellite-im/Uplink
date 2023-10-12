@@ -28,6 +28,8 @@ use warp::{
     raygun::{self, Conversation, MessageOptions},
 };
 
+use super::{FetchMessagesConfig, FetchMessagesResponse};
+
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -40,6 +42,7 @@ pub struct Message {
     pub key: String,
 }
 
+#[derive(Clone)]
 pub struct ChatAdapter {
     pub inner: chats::Chat,
     pub identities: HashSet<state::identity::Identity>,
@@ -230,7 +233,7 @@ pub async fn fetch_pinned_messages_from_chat(
             conv_id,
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES)
+                .set_limit((MAX_PINNED_MESSAGES as i64).try_into().unwrap_or_default())
                 .set_pinned(),
         )
         .await
@@ -246,13 +249,55 @@ pub async fn fetch_pinned_messages_from_chat(
     Ok(messages)
 }
 
+pub async fn fetch_messages2(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+    config: FetchMessagesConfig,
+) -> Result<FetchMessagesResponse, Error> {
+    let total_messages = messaging.get_message_count(conv_id).await?;
+
+    let message_options = match config {
+        FetchMessagesConfig::MostRecent { limit } => MessageOptions::default()
+            .set_range(total_messages.saturating_sub(limit)..total_messages),
+        FetchMessagesConfig::Earlier { start_date, limit } => MessageOptions::default()
+            .set_date_range(DateTime::<Utc>::default()..start_date)
+            .set_reverse()
+            .set_limit(limit as _),
+        FetchMessagesConfig::Later { start_date, limit } => MessageOptions::default()
+            .set_date_range(start_date..chrono::offset::Utc::now())
+            .set_limit(limit as _),
+        _ => unreachable!(),
+    };
+
+    let messages = messaging
+        .get_messages(conv_id, message_options)
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let mut messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+
+    if matches!(config, FetchMessagesConfig::Earlier { .. }) {
+        messages = messages.drain(..).rev().collect();
+    }
+
+    let has_more = messages.len() >= config.get_limit();
+
+    Ok(FetchMessagesResponse { messages, has_more })
+}
+
 pub async fn conversation_to_chat(
     conv: &Conversation,
     messaging: &super::Messaging,
 ) -> Result<chats::Chat, Error> {
-    // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let total_messages = messaging.get_message_count(conv.id()).await?;
-    let to_take = std::cmp::min(total_messages, 20);
+    // only want 1 message - for the sidebar
+    let to_take = std::cmp::min(total_messages, 1);
     let to_skip = total_messages.saturating_sub(to_take + 1);
 
     let messages = messaging
@@ -277,14 +322,14 @@ pub async fn conversation_to_chat(
             conv.id(),
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(MAX_PINNED_MESSAGES)
+                .set_limit((MAX_PINNED_MESSAGES as i64).try_into().unwrap_or_default())
                 .set_pinned(),
         )
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let has_more_messages = total_messages > to_take;
-    let mut chat = chats::Chat::new(
+    // let has_more_messages = total_messages > to_take;
+    let chat = chats::Chat::new(
         conv.id(),
         HashSet::from_iter(conv.recipients()),
         conv.conversation_type(),
@@ -293,7 +338,7 @@ pub async fn conversation_to_chat(
         messages,
         pinned_messages,
     );
-    chat.has_more_messages = has_more_messages;
+    // chat.has_more_messages = has_more_messages;
     Ok(chat)
 }
 
