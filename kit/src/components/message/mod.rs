@@ -572,7 +572,8 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
             return cx.render(rsx!(div {
                 class: "embed-identity",
                 IdentityHeader {
-                    sender_did: identity.did_key()
+                    sender_did: identity.did_key(),
+                    with_status: false,
                 },
                 div {
                     class: "profile-container",

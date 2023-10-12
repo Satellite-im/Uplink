@@ -122,6 +122,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 #[derive(PartialEq, Props)]
 pub struct IdentityProps {
     sender_did: DID,
+    with_status: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -133,6 +134,7 @@ pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
         .unwrap_or_default();
     let image = sender.profile_picture();
     let banner = sender.profile_banner();
+    let with_status = cx.props.with_status.unwrap_or(true);
     cx.render(rsx!(
         div {
             class: "identity-header",
@@ -145,10 +147,12 @@ pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
                     id: "profile-image",
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
-                    Indicator {
-                        status: sender.identity_status().into(),
-                        platform: sender.platform().into(),
-                    }
+                    with_status.then(||{
+                        rsx!(Indicator {
+                            status: sender.identity_status().into(),
+                            platform: sender.platform().into(),
+                        })
+                    })
                 }
             }
         }
