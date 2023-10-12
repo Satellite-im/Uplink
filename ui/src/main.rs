@@ -381,12 +381,11 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
-            let warp_event_rx = WARP_EVENT_CH.rx.clone();
+            let mut ch = WARP_EVENT_CH.tx.subscribe();
             log::trace!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_event_rx.lock().await;
-            while let Some(evt) = ch.recv().await {
+            while let Ok(evt) = ch.recv().await {
                 // Update only relevant components for attachment progress events
                 if let WarpEvent::Message(MessageEvent::AttachmentProgress {
                     progress,

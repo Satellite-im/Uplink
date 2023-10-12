@@ -1,9 +1,7 @@
-use std::ops::Range;
-
 use chrono::{DateTime, Utc};
 use common::{
     language::get_local_text,
-    state::{Chat, Identity, State},
+    state::{Identity, State},
     warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -14,32 +12,51 @@ use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_ima
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
-use crate::layouts::chats::scripts::SCROLL_TO_MESSAGE;
+use crate::layouts::chats::{
+    data::{self, ChatData, DEFAULT_MESSAGES_TO_TAKE},
+    presentation::chat::coroutines::fetch_window,
+};
 
 pub enum ChannelCommand {
-    RemovePinnedMessage(Uuid, Uuid),
-    ScrollToUnloaded(Uuid, Uuid, DateTime<Utc>),
+    RemovePinnedMessage {
+        conversation_id: Uuid,
+        message_id: Uuid,
+    },
+    GoToPinnedMessage {
+        conversation_id: Uuid,
+        message_id: Uuid,
+        message_date: DateTime<Utc>,
+    },
 }
 
 #[derive(Props)]
 pub struct Props<'a> {
-    active_chat: Chat,
     onclose: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
 pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering pinned_messages");
-    let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+
+    let close_triggered = use_state(cx, || false);
+
+    if *close_triggered.current() {
+        close_triggered.set(false);
+        cx.props.onclose.call(());
+    }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
-        to_owned![state];
+        to_owned![chat_data, state, close_triggered];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    ChannelCommand::RemovePinnedMessage(conversation_id, message_id) => {
+                    ChannelCommand::RemovePinnedMessage {
+                        conversation_id,
+                        message_id,
+                    } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
                             conversation_id,
@@ -56,37 +73,47 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             log::error!("failed to pin message: {}", e);
                         }
                     }
-                    ChannelCommand::ScrollToUnloaded(conversation_id, message_id, message_date) => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessagesBetween {
-                                conv_id: conversation_id,
-                                date_range: Range {
-                                    start: message_date,
-                                    end: Utc::now(),
-                                },
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
+                    ChannelCommand::GoToPinnedMessage {
+                        conversation_id,
+                        message_id,
+                        message_date,
+                    } => {
+                        log::debug!("fetching pinned message");
+                        let view_init = data::ViewInit {
+                            scroll_to: data::ScrollTo::ScrollUp {
+                                view_top: message_id,
+                            },
+                            msg_time: Some(message_date),
+                            limit: data::DEFAULT_MESSAGES_TO_TAKE,
+                        };
+                        let behavior = data::ChatBehavior {
+                            view_init,
+                            // these fields will be overwritten by fetch_window
+                            on_scroll_end: data::ScrollBehavior::FetchMore,
+                            on_scroll_top: data::ScrollBehavior::FetchMore,
+                        };
+                        let r = fetch_window(
+                            conversation_id,
+                            behavior,
+                            message_date,
+                            DEFAULT_MESSAGES_TO_TAKE / 2,
+                        )
+                        .await;
+
+                        match r {
+                            Ok((messages, behavior)) => {
+                                log::debug!("re-init messages with pinned message");
+                                chat_data.write().set_active_chat(
+                                    &state.read(),
+                                    &conversation_id,
+                                    behavior,
+                                    messages,
+                                );
+                            }
+                            Err(e) => log::error!("{e}"),
                         }
 
-                        match rx.await.expect("command canceled") {
-                            Ok((m, has_more)) => {
-                                state
-                                    .write_silent()
-                                    .enqueue_message_scroll(&conversation_id, message_id);
-                                state.write().update_chat_messages(conversation_id, m);
-                                if !has_more {
-                                    log::debug!("finished loading chat: {conversation_id}");
-                                    state.write().finished_loading_chat(conversation_id);
-                                }
-                            }
-                            Err(e) => {
-                                log::error!("failed to fetch more message: {}", e);
-                            }
-                        }
+                        close_triggered.set(true);
                     }
                 }
             }
@@ -98,7 +125,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "pinned-messages",
             aria_label: "pinned-messages-container",
-            if chat.pinned_messages.is_empty() {
+            if chat_data.read().active_chat.pinned_messages.is_empty() {
                 rsx!(div {
                     class: "pinned-empty",
                     aria_label: "pinned-empty",
@@ -107,22 +134,23 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 })
             } else {
-                rsx!(chat.pinned_messages.iter().map(|message|{
+                rsx!(chat_data.read().active_chat.pinned_messages.iter().map(|message|{
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
+                    let conversation_id = message.conversation_id();
+                    let message_id = message.id();
+                    let message_date = message.date();
                     rsx!(PinnedMessage {
                         message: message.clone(),
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
-                            ch.send(ChannelCommand::RemovePinnedMessage(*conv, msg.id()))
-                        },
-                        onclose: move |_| {
-                            cx.props.onclose.call(());
+                            ch.send(ChannelCommand::RemovePinnedMessage{ conversation_id: *conv, message_id: msg.id() })
                         },
                         time: time,
-                        is_loaded: state.read().message_exist(message),
-                        ch: ch.clone()
+                        onclick: move |_| {
+                            ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date});
+                        }
                     })
                 }))
             }
@@ -137,20 +165,13 @@ pub struct PinnedMessageProp<'a> {
     sender: Option<Identity>,
     onremove: EventHandler<'a, (Event<MouseData>, warp::raygun::Message)>,
     time: String,
-    is_loaded: bool,
-    ch: Coroutine<ChannelCommand>,
-    onclose: EventHandler<'a, ()>,
+    onclick: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
 pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
     let message = &cx.props.message;
-    let chat_id = message.conversation_id();
-    let id = message.id();
-    let date = message.date();
     let attachments = message.attachments();
-
-    let eval = use_eval(cx);
 
     let attachment_list = attachments.iter().map(|file| {
         let key = file.id();
@@ -201,12 +222,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                         class: "pinned-buttons",
                                         aria_label: "pin-button-go-to",
                                         onclick: move |_| {
-                                            cx.props.onclose.call(());
-                                            if cx.props.is_loaded {
-                                                let _ = eval(&SCROLL_TO_MESSAGE.replace("$UUID", &id.to_string()));
-                                            } else {
-                                                cx.props.ch.send(ChannelCommand::ScrollToUnloaded(chat_id, id, date));
-                                            }
+                                            cx.props.onclick.call(());
                                         },
                                         get_local_text("messages.pin-button-goto")
                                     },
