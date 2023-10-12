@@ -4,7 +4,7 @@ use warp::{error::Error, multipass::MultiPassEventKind};
 use crate::state::{self};
 
 use super::did_to_identity;
-#[derive(Display)]
+#[derive(Display, Clone)]
 pub enum MultiPassEvent {
     #[display(fmt = "None")]
     None,

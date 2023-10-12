@@ -525,6 +525,7 @@ impl State {
             MessageEvent::Deleted {
                 conversation_id,
                 message_id,
+                most_recent_message,
             } => {
                 // can't have 2 mutable borrows
                 let mut should_decrement_notifications = false;
@@ -534,6 +535,12 @@ impl State {
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
+
+                    if let Some(msg) = most_recent_message {
+                        if chat.messages.is_empty() {
+                            chat.messages.push_back(msg);
+                        }
+                    }
                 }
 
                 if should_decrement_notifications {
@@ -838,12 +845,18 @@ impl State {
     }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         let msg_id = message.inner.id();
+        let is_active_scrolled = self.chats.active_chat_is_scrolled();
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message);
+            // only care about the most recent message, for the sidebar
+            if chat.messages.len() > 1 {
+                chat.messages.pop_front();
+            }
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
+                || is_active_scrolled
             {
                 chat.add_unread(msg_id);
             }
@@ -985,21 +998,6 @@ impl State {
         }
     }
 
-    /// Enqueues a message scroll action that gets executed when message component updates
-    pub fn enqueue_message_scroll(&mut self, conversation_id: &Uuid, message_id: Uuid) {
-        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
-            chat.scroll_to = Some(message_id);
-        }
-    }
-
-    /// Obtains a potential message to scroll to resetting the value in the process
-    pub fn check_message_scroll(&mut self, conversation_id: &Uuid) -> Option<Uuid> {
-        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
-            return chat.scroll_to.take();
-        }
-        None
-    }
-
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
@@ -1018,17 +1016,6 @@ impl State {
             }
         };
         conv.pinned_messages.len() >= MAX_PINNED_MESSAGES.into()
-    }
-
-    pub fn message_exist(&self, message: &warp::raygun::Message) -> bool {
-        let conv = match self.chats.all.get(&message.conversation_id()) {
-            Some(c) => c,
-            None => {
-                log::warn!("attempted to get nonexistent conversation");
-                return false;
-            }
-        };
-        conv.messages.iter().any(|m| m.inner.id() == message.id())
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
@@ -1131,14 +1118,18 @@ impl State {
         } else if !self.chats.in_sidebar.contains(chat) {
             self.chats.in_sidebar.push_front(*chat);
         }
-        if let Some(chat) = self.chats.all.get_mut(chat) {
-            chat.clear_unreads();
-        }
+        // don't clear unreads here. need additional information, which is present in the Chatbar.
     }
 
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
+    }
+
+    pub fn set_chat_scrolled(&mut self, chat_id: Uuid, val: bool) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.is_scrolled = val;
+        }
     }
 
     // indicates that a conversation has a pending outgoing message
@@ -1221,12 +1212,6 @@ impl State {
     /// Removes the given chat from the user's favorites.
     fn unfavorite(&mut self, chat_id: Uuid) {
         self.chats.favorites.retain(|uid| *uid != chat_id);
-    }
-
-    pub fn update_chat_scroll(&mut self, chat_id: Uuid, scroll: i64) {
-        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
-            chat.scroll_value = Some(scroll);
-        }
     }
 }
 

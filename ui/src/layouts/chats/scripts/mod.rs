@@ -1,77 +1,9 @@
-pub const SETUP_CONTEXT_PARENT: &str = r#"
-    const right_clickable = document.getElementsByClassName("has-context-handler")
-    console.log("E", right_clickable)
-    for (var i = 0; i < right_clickable.length; i++) {
-        //Disable default right click actions (opening the inspect element dropdown)
-        right_clickable.item(i).addEventListener("contextmenu",
-        function (ev) {
-        ev.preventDefault()
-        })
-    }
-"#;
+// although it's annoying to not immediately see the contents of the script when you ctrl+click the variable,
+// it is easier to read and write the script when it's in a separate .js file. Having a folder of .js scripts
+// also makes it easier to see what scripts are available.
 
-pub const SCROLL_TO: &str = r#"
-    const chat = document.getElementById("messages")
-    chat.scrollTo(0, $VALUE)
-"#;
-
-pub const SCROLL_UNREAD: &str = r#"
-    const chat = document.getElementById("messages")
-    const child = chat.children[chat.childElementCount - $UNREADS]
-    chat.scrollTop = chat.scrollHeight
-    child.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-pub const SCROLL_BOTTOM: &str = r#"
-    const chat = document.getElementById("messages")
-    const lastChild = chat.lastElementChild
-    chat.scrollTop = chat.scrollHeight
-    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
-
-pub const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
-
-pub const SHOW_CONTEXT: &str = r#"
-let xPadding = 30
-let yPadding = 10
-
-var menus = document.getElementsByClassName("context-menu")
-for (var i = 0; i < menus.length; i++) {
-  menus.item(i).classList.add("hidden")
-}
-// Select the current one
-var context_menu = document.getElementById("UUID-context-menu")
-context_menu.classList.remove("hidden")
-var { width, height } = context_menu.getBoundingClientRect()
-// The offset coords using the clicked position as absolute screen coords
-let offsetX = $PAGE_X + xPadding
-let offsetY = $PAGE_Y - yPadding + height
-// Sizes of the whole app screen
-let screenWidth = window.innerWidth || document.documentElement.clientWidth
-let screenHeight = window.innerHeight || document.documentElement.clientHeight
-
-let overFlowY = offsetY + yPadding > screenHeight
-context_menu.style = ""
-context_menu.style.position = "absolute"
-context_menu.style.bottom = `${overFlowY ? yPadding : screenHeight - offsetY}px`
-if ($SELF) {
-  context_menu.style.right = `${screenWidth - offsetX}px`
-} else {
-  // The context menu should be relative to the parents dimensions
-  let parentRect = context_menu.parentElement.parentElement.getBoundingClientRect()
-  let parentOffsetX = parentRect.left
-  context_menu.style.left = `${offsetX - parentOffsetX}px`
-}
-"#;
-
-pub const SCROLL_TO_MESSAGE: &str = r#"
-var message = document.getElementById("message-$UUID-false")
-message.scrollIntoView({ behavior: 'smooth', block: 'end' })
-
-var parent = message.parentElement;
-
-parent.classList.add("background-highlight");
-setTimeout(function() {
-    parent.classList.remove("background-highlight")
-}, 2 * 1000);
-"#;
+pub const SETUP_CONTEXT_PARENT: &str = include_str!("./setup_context_parent.js");
+pub const SHOW_CONTEXT: &str = include_str!("./show_context.js");
+pub const SCROLL_TO_TOP: &str = include_str!("./scroll_to_top.js");
+pub const SCROLL_TO_BOTTOM: &str = include_str!("./scroll_to_bottom.js");
+pub const OBSERVER_SCRIPT: &str = include_str!("./observer_script.js");
