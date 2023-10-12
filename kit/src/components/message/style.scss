@@ -22,6 +22,18 @@
 		display: inline-flex;
 		flex-direction: column;
 		white-space:pre-wrap;
+
+		s {
+			text-decoration: line-through;
+		}
+
+		strong {
+			font-weight: bold;
+		}
+
+		em {
+			font-style: italic;
+		}
 	}
 	.pending-text {
 		color: var(--text-color-muted);
