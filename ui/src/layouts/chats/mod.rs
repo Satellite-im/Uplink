@@ -4,6 +4,7 @@ mod scripts;
 pub use presentation::sidebar::Sidebar as ChatSidebar;
 use presentation::welcome::Welcome;
 
+pub use data::ActiveChat;
 use std::{path::PathBuf, rc::Rc};
 
 use crate::{
