@@ -4443,8 +4443,8 @@ dependencies = [
  "glob",
  "humansize",
  "linkify",
+ "markdowns",
  "mime",
- "pulldown-cmark",
  "regex",
  "reqwest",
  "rsass",
@@ -5481,6 +5481,11 @@ checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "markdowns"
+version = "0.1.0"
+source = "git+https://github.com/satellite-im/markdowns?branch=main#e1938d098a53da9c92982abdc368a2180e66a4f2"
 
 [[package]]
 name = "markup5ever"
@@ -6851,18 +6856,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.38",
-]
-
-[[package]]
-name = "pulldown-cmark"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77a1a2f1f0a7ecff9c31abbe177637be0e97a0aef46cf8738ece09327985d998"
-dependencies = [
- "bitflags 1.3.2",
- "getopts",
- "memchr",
- "unicase",
 ]
 
 [[package]]
@@ -9026,15 +9019,6 @@ dependencies = [
  "quote",
  "syn 1.0.109",
  "unic-langid-impl",
-]
-
-[[package]]
-name = "unicase"
-version = "2.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
-dependencies = [
- "version_check",
 ]
 
 [[package]]
