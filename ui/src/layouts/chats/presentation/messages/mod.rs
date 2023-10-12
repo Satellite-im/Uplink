@@ -554,7 +554,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 attachments_pending_download: pending_downloads.read().get(&message.inner.conversation_id()).cloned(),
                 on_click_reaction: move |emoji: String| {
                     let message = grouped_message.message.clone();
-                    ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
+                    ch.send(MessagesCommand::React((user_did.clone(), message.inner, emoji)));
                 },
                 pending: cx.props.pending,
                 pinned: message.inner.pinned(),
