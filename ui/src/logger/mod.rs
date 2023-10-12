@@ -109,8 +109,8 @@ impl crate::log::Log for LogGlue {
             return;
         }
 
-        let msg = format!("{}", record.args());
-        LOGGER.write().log(record.level(), &msg);
+        let msg = record.args();
+        LOGGER.write().log(record.level(), &msg.to_string());
     }
 
     fn flush(&self) {}
@@ -198,7 +198,7 @@ impl Logger {
         if self.file_tx.is_some() {
             return;
         }
-        
+
         if let Some(path) = self.log_file.parent() {
             if !path.is_dir() {
                 let _ = std::fs::create_dir_all(path);
@@ -211,7 +211,7 @@ impl Logger {
             .open(&self.log_file)
             .unwrap();
 
-        let (tx, rx) = std::sync::mpsc::sync_channel(10);
+        let (tx, rx) = std::sync::mpsc::sync_channel(100);
         let thread = std::thread::spawn(move || log_thread(file, rx));
 
         self.file_thread = Some(thread);
