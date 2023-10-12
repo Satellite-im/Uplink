@@ -24,7 +24,7 @@ linkify = { workspace = true }
 reqwest = { workspace = true }
 base64 = { workspace = true }
 mime = { workspace = true }
-markdowns = { git = "https://github.com/satellite-im/markdowns", rev = "92fdeb9c111b9786fef7a9f32fb21a9f27e8a72b" }
+markdowns = { git = "https://github.com/satellite-im/markdowns", rev = "085c5093e1995badb5c1b3e1a342ed04a2af3a81" }
 
 [dependencies.uuid]
 workspace = true
