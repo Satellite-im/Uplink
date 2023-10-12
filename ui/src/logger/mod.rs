@@ -165,7 +165,7 @@ impl Logger {
             // keeping a running log of entries probably won't help identify a crash if the log is filled with trace logs.
             self.log_entries.push_back(new_log.clone());
 
-            if self.log_entries.len() >= self.max_logs {
+            if self.log_entries.len() > self.max_logs {
                 self.log_entries.pop_front();
             }
         }
