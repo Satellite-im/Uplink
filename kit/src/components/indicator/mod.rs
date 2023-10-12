@@ -29,6 +29,12 @@ pub enum Platform {
     Unknown,
 }
 
+impl Default for Platform {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 impl Platform {
     // Convert a Platform value to an Icon value
     pub fn to_icon(&self) -> Icon {

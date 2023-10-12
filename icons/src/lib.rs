@@ -1,5 +1,5 @@
 #![allow(clippy::type_complexity)]
-//! Dioxus components for [heroicons](https://heroicons.com/)
+// Dioxus components for [heroicons](https://heroicons.com/)
 //
 // MIT License
 //
@@ -22,48 +22,48 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-//!
-//! This library provides two components. The [`Icon`] component produces the
-//! SVG for a heroicon. The [`IconButton`] component wraps the icon with a
-//! HTML `button`.
-//!
-//! In your own components, you can call them like this:
-//!
-//! ```rust
-//! use dioxus::prelude::*;
-//! use dioxus_heroicons::{Icon, IconButton, solid::Shape};
-//!
-//! #[component]
-//! fn DeleteButton(cx: Scope, foo: u8) -> Element {
-//!     let onclick = move |evt| {
-//!         // Delete a thing
-//!     };
-//!     let disabled = if *foo < 42 { true } else { false };
-//!     cx.render(rsx! {
-//!         IconButton {
-//!             onclick: onclick,
-//!             class: "some-css-class",
-//!             title: "Delete it",
-//!             disabled: disabled,
-//!             size: 30,
-//!             icon: Shape::Trash,
-//!         }
-//!     })
-//! }
-//!
-//! fn PointsRight(cx: Scope) -> Element {
-//!     cx.render(rsx! {
-//!         Icon {
-//!             icon: Shape::ArrowRight,
-//!             fill: "blue",
-//!         }
-//!     })
-//! }
-//! ```
-//!
-//! Check out https://jkelleyrtp.github.io/icon-chooser/ for an icon chooser
-//! that shows you all the solid icons and lets you copy the relevant
-//! component code to the clipboard.
+//
+// This library provides two components. The [`Icon`] component produces the
+// SVG for a heroicon. The [`IconButton`] component wraps the icon with a
+// HTML `button`.
+//
+// In your own components, you can call them like this:
+//
+// ```rust
+// use dioxus::prelude::*;
+// use dioxus_heroicons::{Icon, IconButton, solid::Shape};
+//
+// #[component]
+// fn DeleteButton(cx: Scope, foo: u8) -> Element {
+//     let onclick = move |evt| {
+//         // Delete a thing
+//     };
+//     let disabled = if *foo < 42 { true } else { false };
+//     cx.render(rsx! {
+//         IconButton {
+//             onclick: onclick,
+//             class: "some-css-class",
+//             title: "Delete it",
+//             disabled: disabled,
+//             size: 30,
+//             icon: Shape::Trash,
+//         }
+//     })
+// }
+//
+// fn PointsRight(cx: Scope) -> Element {
+//     cx.render(rsx! {
+//         Icon {
+//             icon: Shape::ArrowRight,
+//             fill: "blue",
+//         }
+//     })
+// }
+// ```
+//
+// Check out https://jkelleyrtp.github.io/icon-chooser/ for an icon chooser
+// that shows you all the solid icons and lets you copy the relevant
+// component code to the clipboard.
 
 /// This module contains all the outline icon shapes.
 pub mod outline {
