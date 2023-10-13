@@ -64,7 +64,6 @@ pub fn Compose(cx: Scope) -> Element {
         }
     }
 
-
     cx.render(rsx!(
         div {
             id: "compose",
