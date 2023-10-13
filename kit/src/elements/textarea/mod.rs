@@ -103,7 +103,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
-    let cursor_eval = include_str!("./cursor_script.js").replace("$ID", &id2);
+    let cursor_script = include_str!("./cursor_script.js").replace("$ID", &id2);
 
     let text_value = use_ref(cx, || value.clone());
     use_future(cx, value, |val| {
@@ -146,15 +146,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
                     oninput: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |evt| {
                             let current_val = evt.value.clone();
                             *text_value.write_silent() = current_val.clone();
                             onchange.call((current_val, true));
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
@@ -173,12 +173,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         };
                     },
                     onmousedown: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |_| {
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
@@ -188,7 +188,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     onkeydown: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |evt| {
                             // special codepath to handle onreturn
                             let old_enter_pressed = *enter_pressed.current();
@@ -225,10 +225,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     false
                                 }
                             };
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update && arrow {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
