@@ -22,6 +22,7 @@ pub struct Metadata {
     pub creator: Option<DID>,
     pub replying_to: Option<raygun::Message>,
     pub unreads: usize,
+    pub pinned_messages: Vec<raygun::Message>,
 }
 
 impl Metadata {
@@ -61,6 +62,7 @@ impl Metadata {
             creator: chat.creator.clone(),
             replying_to: chat.replying_to.clone(),
             unreads: chat.unreads() as _,
+            pinned_messages: chat.pinned_messages.clone(),
         }
     }
 }
