@@ -374,5 +374,8 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 }
 
 pub fn markdown(text: &str) -> String {
-    format!("<p>{}</p>", markdowns::text_to_html(text))
+    format!(
+        "<p>{}</p>",
+        markdowns::transform_single_emoji(&markdowns::text_to_html(text))
+    )
 }
