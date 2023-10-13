@@ -50,6 +50,7 @@ pub(crate) fn use_boostrap<'a>(
             focused: desktop.is_focused(),
             maximized: desktop.is_maximized(),
             minimized: desktop.is_minimized(),
+            full_screen: state.ui.metadata.full_screen,
             minimal_view: size.width < 600,
         };
         state.ui.metadata = window_meta;
