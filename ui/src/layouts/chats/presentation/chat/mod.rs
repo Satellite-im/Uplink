@@ -42,22 +42,18 @@ pub fn Compose(cx: Scope) -> Element {
     let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
-    // todo: get rid fo this data variable
-    let data = chat_data.read();
-    let chat_id = data.active_chat.id();
-
     state.write_silent().ui.current_layout = ui::Layout::Compose;
 
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-    let creator = data.active_chat.creator();
+    let creator = chat_data.read().active_chat.creator();
 
+    let chat_id = chat_data.read().active_chat.id();
+    let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
     let user_did: DID = state.read().did_key();
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
-
-    let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
     if init.value().is_some() {
         if let Some(chat) = state.read().get_active_chat() {
@@ -67,6 +63,7 @@ pub fn Compose(cx: Scope) -> Element {
             }
         }
     }
+
 
     cx.render(rsx!(
         div {
