@@ -173,6 +173,7 @@ settings = Settings
     .settings = Settings
     .profile = Profile
     .general = General 
+    .messages = Messages 
     .privacy = Privacy
     .audio = Sounds & Audio
     .files = Files
@@ -209,6 +210,12 @@ settings-general = General Settings
     .font = Font
     .font-description = Change the font of the app.
     .clear-accent = Clear accent color
+
+settings-messages = Message Settings
+    .emoji-conversion = Convert Emoji
+    .emoji-conversion-description = Convert Emoji text like ':)' into an emoji symbol like '😊'.
+    .markdown-support = Markdown support
+    .markdown-support-description = Enables the support of the Markdown markup language in messaging. 
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
