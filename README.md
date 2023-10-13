@@ -72,7 +72,7 @@ And for Windows, I followed the steps on this site here
 ## How to add the extension settings in Uplink:
 
 - Open Uplink and navigate to Settings > Extensions > Settings > Open Extensions.
--In another Finder window, open Uplink.
+- In another Finder window, open Uplink.
 - Inside Uplink, go to Target > Debug, where you'll find the Emoji selector.
 - Drag the Emoji selector to the Extensions window that is still open.
 - Close all open windows.
