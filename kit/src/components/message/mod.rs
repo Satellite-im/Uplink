@@ -391,7 +391,7 @@ fn is_only_emojis(input: &str) -> bool {
     let input = input.trim();
     let mut indices = unic_segment::GraphemeIndices::new(input);
     indices.all(|(_, grapheme)| {
-        grapheme.chars().all(|char| {
+        grapheme.trim().chars().all(|char| {
             is_emoji(char)
                 || is_emoji_component(char)
                 || is_emoji_modifier(char)
