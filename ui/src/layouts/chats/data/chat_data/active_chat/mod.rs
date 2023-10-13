@@ -65,6 +65,14 @@ impl ActiveChat {
         self.messages.times.contains_key(&id)
     }
 
+    pub fn metadata_changed(&self, metadata: &Metadata) -> bool {
+        &self.metadata != metadata
+    }
+
+    pub fn set_metadata(&mut self, metadata: Metadata) {
+        self.metadata = metadata;
+    }
+
     // may need these later
     // pub fn set_scrolled(&mut self) {
     //     self.scrolled = true;

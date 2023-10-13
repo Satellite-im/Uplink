@@ -6,7 +6,7 @@ use warp::{
     raygun::{self, ConversationType},
 };
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Metadata {
     pub chat_id: Uuid,
     pub my_id: Identity,

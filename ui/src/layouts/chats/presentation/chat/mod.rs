@@ -15,7 +15,7 @@ use kit::{
 use crate::{
     components::media::calling::CallControl,
     layouts::chats::{
-        data::{ChatData, ScrollBtn},
+        data::{self, ChatData, ScrollBtn},
         presentation::{
             chat::{edit_group::EditGroup, group_users::GroupUsers},
             chatbar::get_chatbar,
@@ -58,6 +58,15 @@ pub fn Compose(cx: Scope) -> Element {
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
 
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
+
+    if init.value().is_some() {
+        if let Some(chat) = state.read().get_active_chat() {
+            let metadata = data::Metadata::new(&state.read(), &chat);
+            if chat_data.read().active_chat.metadata_changed(&metadata) {
+                chat_data.write().active_chat.set_metadata(metadata);
+            }
+        }
+    }
 
     cx.render(rsx!(
         div {
