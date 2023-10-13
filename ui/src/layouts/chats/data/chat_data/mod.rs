@@ -15,6 +15,7 @@ use warp::raygun;
 pub struct ChatData {
     pub active_chat: ActiveChat,
     pub chat_behaviors: HashMap<Uuid, ChatBehavior>,
+    replying_to: HashMap<Uuid, raygun::Message>,
 }
 
 impl PartialEq for ChatData {
@@ -168,6 +169,18 @@ impl ChatData {
             self.active_chat = ActiveChat::default();
             log::error!("failed to set active chat to id: {chat_id}");
         }
+    }
+
+    pub fn set_replying_to(&mut self, conv_id: Uuid, message: raygun::Message) {
+        self.replying_to.insert(conv_id, message);
+    }
+
+    pub fn get_replying_to(&self, conv_id: Uuid) -> Option<raygun::Message> {
+        self.replying_to.get(&conv_id).cloned()
+    }
+
+    pub fn clear_replying_to(&mut self, conv_id: Uuid) {
+        self.replying_to.remove(&conv_id);
     }
 
     pub fn update_message(&mut self, message: raygun::Message) {
