@@ -55,10 +55,10 @@ pub struct Props<'a> {
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
     let eval = use_eval(cx);
-    let left_shift_pressed = use_state(cx, || false);
-    let right_shift_pressed = use_state(cx, || false);
-    let enter_pressed = use_state(cx, || false);
-    let numpad_enter_pressed = use_state(cx, || false);
+    let left_shift_pressed = use_ref(cx, || false);
+    let right_shift_pressed = use_ref(cx, || false);
+    let enter_pressed = use_ref(cx, || false);
+    let numpad_enter_pressed = use_ref(cx, || false);
     let cursor_position = use_ref(cx, || None);
 
     let Props {
@@ -165,10 +165,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         match evt.code() {
-                            Code::ShiftLeft => left_shift_pressed.set(false),
-                            Code::ShiftRight => right_shift_pressed.set(false),
-                            Code::Enter => enter_pressed.set(false),
-                            Code::NumpadEnter => numpad_enter_pressed.set(false),
+                            Code::ShiftLeft => *left_shift_pressed.write_silent() = false,
+                            Code::ShiftRight => *right_shift_pressed.write_silent() = false,
+                            Code::Enter => *enter_pressed.write_silent() = false,
+                            Code::NumpadEnter => *numpad_enter_pressed.write_silent() = false,
                             _ => {}
                         };
                     },
@@ -191,18 +191,19 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         to_owned![eval, cursor_script];
                         move |evt| {
                             // special codepath to handle onreturn
-                            let old_enter_pressed = *enter_pressed.current();
-                            let old_numpad_enter_pressed = *numpad_enter_pressed.current();
+                            let old_enter_pressed = *enter_pressed.read();
+                            let old_numpad_enter_pressed = *numpad_enter_pressed.read();
                             match evt.code() {
-                                Code::ShiftLeft => if !*left_shift_pressed.current() { left_shift_pressed.set(true); },
-                                Code::ShiftRight => if !*right_shift_pressed.current() { right_shift_pressed.set(true); },
-                                Code::Enter => if !*enter_pressed.current() { enter_pressed.set(true); } ,
-                                Code::NumpadEnter => if !*numpad_enter_pressed.current() { numpad_enter_pressed.set(true); },
+                                Code::ShiftLeft => if !*left_shift_pressed.read() { *left_shift_pressed.write_silent() = true; },
+                                Code::ShiftRight => if !*right_shift_pressed.read() { *right_shift_pressed.write_silent() = true; },
+                                Code::Enter => if !*enter_pressed.read() { *enter_pressed.write_silent() = true; } ,
+                                Code::NumpadEnter => if !*numpad_enter_pressed.read() { *numpad_enter_pressed.write_silent() = true; },
                                 _ => {}
                             };
-                            let enter_toggled = !old_enter_pressed && *enter_pressed.current();
-                            let numpad_enter_toggled = !old_numpad_enter_pressed && *numpad_enter_pressed.current();
-                            if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.current() || *left_shift_pressed.current())
+                            // write_silent() doesn't update immediately. if the enter key is pressed, have to check the evt code
+                            let enter_toggled = !old_enter_pressed && matches!(evt.code(), Code::Enter);
+                            let numpad_enter_toggled = !old_numpad_enter_pressed && matches!(evt.code(), Code::NumpadEnter);
+                            if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.read() || *left_shift_pressed.read())
                             {
                                  if *show_char_counter {
                                         let _ = eval(&clear_counter_script);
