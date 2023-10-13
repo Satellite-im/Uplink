@@ -404,14 +404,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         if STATIC_ARGS.use_mock {
             state.write().mutate(Action::MockSend(active_chat_id, msg));
         } else {
-            let replying_to = state.read().chats().get_replying_to();
+            let read = state.read();
+            let replying_to = read.chats().get_replying_to();
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(active_chat_id));
             }
             let ui_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
+            msg_ch.send((msg, active_chat_id, ui_id, replying_to.map(|m| m.id())));
         }
     };
 
@@ -551,7 +552,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        chat_data.read().active_chat.replying_to().map(|msg| {
+                        state.read().chats().get_replying_to().map(|msg| {
                             let our_did = state.read().did_key();
                             let msg_owner = if chat_data.read().active_chat.my_id().did_key() == msg.sender() {
                                 Some(chat_data.read().active_chat.my_id())

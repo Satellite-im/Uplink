@@ -11,7 +11,10 @@ use warp::{
     raygun::{self, ConversationType, Location},
 };
 
-use crate::{warp_runner::ui_adapter, STATIC_ARGS};
+use crate::{
+    warp_runner::ui_adapter::{self},
+    STATIC_ARGS,
+};
 
 use super::pending_message::{progress_file, PendingMessage};
 
@@ -217,12 +220,9 @@ impl Chats {
     }
 
     /// returns the UUID of the message being replied to by the active chat
-    pub fn get_replying_to(&self) -> Option<Uuid> {
-        self.active.and_then(|id| {
-            self.all
-                .get(&id)
-                .and_then(|chat| chat.replying_to.as_ref().map(|msg| msg.id()))
-        })
+    pub fn get_replying_to(&self) -> Option<&raygun::Message> {
+        self.active
+            .and_then(|id| self.all.get(&id).and_then(|chat| chat.replying_to.as_ref()))
     }
 }
 
