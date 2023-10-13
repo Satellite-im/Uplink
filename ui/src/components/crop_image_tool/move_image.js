@@ -33,6 +33,7 @@ document.addEventListener('mousemove', function(e) {
         left = Math.min(Math.abs(left), ((containerWidth * imgScale) - cropBoxWidth) / 2);
         top = Math.min(Math.abs(top), ((containerHeight * imgScale) - cropBoxHeight) / 2);
 
+        // Small adjustment to make sure the image doesn't go inside of the crop box
         if (leftIsNegative) {
             left = -left;
         } else {
