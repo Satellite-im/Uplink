@@ -134,7 +134,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ..UIRoute::default()
     };
 
-    let routes = vec![
+    let mut routes = vec![
         profile,
         general,
         //privacy,
@@ -143,10 +143,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         extensions,
         accessibility,
         notifications,
-        developer,
         about,
         licenses,
     ];
+
+    if state.read().ui.show_dev_settings {
+        routes.push(developer);
+    }
 
     let active_route = routes[0].clone();
 

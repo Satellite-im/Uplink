@@ -27,6 +27,8 @@ pub fn AboutPage(cx: Scope) -> Element {
     let download_available: &UseState<Option<GitHubRelease>> = use_state(cx, || None);
     let desktop = use_window(cx);
 
+    let click_count = use_state(cx, || 0);
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
         to_owned![download_available, update_button_loading, state];
         async move {
@@ -172,13 +174,24 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_label: get_local_text("settings-about.info"),
                 section_description: app_name.into(),
             },
-            SettingSection {
-                section_label:  get_local_text("settings-about.version"),
-                section_description: version.into(),
-                div {
-                    about_button
-                }
-            },
+            div {
+                width: "100%",
+                onclick: |_| {
+                    if click_count.get() < &10 {
+                        click_count.set(click_count.get() + 1);
+                    } else {
+                        click_count.set(0);
+                        state.write().mutate(Action::SetDevSettings(true));
+                    }
+                },
+                SettingSection {
+                    section_label:  get_local_text("settings-about.version"),
+                    section_description: version.into(),
+                    div {
+                        about_button
+                    }
+                },
+            }
             SettingSection {
                 section_label: get_local_text("settings-about.open-website"),
                 section_description: get_local_text("settings-about.open-website-description"),
