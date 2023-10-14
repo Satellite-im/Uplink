@@ -4,6 +4,7 @@ use kit::{
     elements::{button::Button, label::Label, range::Range, Appearance},
     layout::modal::Modal,
 };
+
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
@@ -20,7 +21,7 @@ struct ImageDimensions {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    pub large_thumbnail: String,
+    pub large_thumbnail: (Vec<u8>, String),
     pub on_cancel: EventHandler<'a, ()>,
     pub on_crop: EventHandler<'a, PathBuf>,
 }
@@ -144,6 +145,12 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     log::error!("Error writing cropped image file. {}", e);
                                                     return;
                                                 }
+
+                                                if let Err(e) = file.sync_all().await {
+                                                    log::error!("Error writing cropped image file. {}", e);
+                                                    return;
+                                                }
+
                                                 cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
                                                 clicked_button_to_crop.set(true);
                                             }
@@ -172,7 +179,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "image-preview-modal-file-embed",
                                 alt: "draggable image",
                                 aria_label: "image-preview-modal-file-embed",
-                                src: format_args!("{}", large_thumbnail.read()),
+                                src: format_args!("{}", b64_encode(large_thumbnail.read().clone())),
                                 transform: format_args!("scale({})", image_scale.read()),
                                 overflow: "hidden",
                                 transition: "transform 0.2s ease",
@@ -214,4 +221,10 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     },
 ));
+}
+
+fn b64_encode((data, prefix): (Vec<u8>, String)) -> String {
+    let base64_image = base64::encode(data);
+    let img = prefix + base64_image.as_str();
+    img
 }
