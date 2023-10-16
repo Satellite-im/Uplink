@@ -50,7 +50,7 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let storage_controller = StorageController::new(cx, state);
     let first_render = use_ref(cx, || true);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
-
+    let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
     functions::get_items_from_current_directory(cx, ch);
 
     functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
@@ -77,9 +77,10 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
                 storage_controller: storage_controller.clone(),
                 on_send: move |files_location_path| {
                     cx.props.on_files_attached.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
-                }
+                },
+                in_files: in_files
             }
-            if send_files_start_location.eq(&SendFilesStartLocation::Storage) {
+            if in_files {
                 rsx!(ChatsToSelect {
                     storage_controller: storage_controller,
                 })
