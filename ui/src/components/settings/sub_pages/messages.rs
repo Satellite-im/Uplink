@@ -27,6 +27,7 @@ pub fn Messages(cx: Scope) -> Element {
                 section_label: get_local_text("settings-messages.markdown-support"),
                 section_description: get_local_text("settings-messages.markdown-support-description"),
                 Switch {
+                    active: state.read().ui.should_transform_markdown_text(),
                     onflipped: move|flag| {
                         state.write().mutate(Action::SetTransformMarkdownText(flag));
                     }
