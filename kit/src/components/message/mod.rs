@@ -438,9 +438,9 @@ mod tests {
     }
 
     #[test]
-    fn test_double_emoji() {
-        let input = "😮😮";
-        let expected = "<span class=\"single-emoji\">😮😮</span>";
+    fn test_triple_emoji() {
+        let input = "😮😮👨‍👩‍👦‍👦";
+        let expected = "<span class=\"single-emoji\">😮😮👨‍👩‍👦‍👦</span>";
         assert_eq!(&transform_only_emoji(input), expected);
     }
 
