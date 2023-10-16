@@ -322,11 +322,7 @@ pub struct ChatMessageProps {
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
-    let mut formatted_text = if cx.props.markdown {
-        markdown(&cx.props.text)
-    } else {
-        cx.props.text.clone()
-    };
+    let mut formatted_text = format_text(&cx.props.text, cx.props.markdown);
     formatted_text = wrap_links_with_a_tags(&formatted_text);
 
     let finder = LinkFinder::new();
@@ -373,12 +369,16 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-pub fn markdown(text: &str) -> String {
-    let marked_down = markdowns::text_to_html(text);
-    if is_only_emojis(&marked_down) {
-        format!("<span class=\"big-emoji\"><{marked_down}></span>")
+pub fn format_text(text: &str, should_markdown: bool) -> String {
+    let maybe_marked_down = if should_markdown {
+        markdowns::text_to_html(text)
     } else {
-        format!("<p>{marked_down}</p>",)
+        text.to_string()
+    };
+    if is_only_emojis(&maybe_marked_down) {
+        format!("<span class=\"big-emoji\"><{maybe_marked_down}></span>")
+    } else {
+        format!("<p>{maybe_marked_down}</p>",)
     }
 }
 

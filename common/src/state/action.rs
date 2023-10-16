@@ -54,6 +54,8 @@ pub enum Action<'a> {
     TrackEmojiUsage(String),
     #[display(fmt = "SetEmojiPickerVisible")]
     SetEmojiPickerVisible(bool),
+    #[display(fmt = "SetTransformMarkdownText")]
+    SetTransformMarkdownText(bool),
     // RemoveToastNotification,
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]

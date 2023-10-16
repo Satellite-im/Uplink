@@ -202,6 +202,8 @@ pub struct UI {
     pub emojis: EmojiCounter,
     pub emoji_destination: Option<EmojiDestination>,
     pub emoji_picker_visible: bool,
+    #[serde(default = "bool_true")]
+    transform_markdown_text: bool,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -247,6 +249,7 @@ impl Default for UI {
             show_settings_welcome: true,
             cached_username: Default::default(),
             ignore_focus: Default::default(),
+            transform_markdown_text: true,
         }
     }
 }
@@ -310,6 +313,14 @@ impl UI {
 
     pub fn get_meta(&self) -> WindowMeta {
         self.metadata.clone()
+    }
+
+    pub fn should_transform_markdown_text(&self) -> bool {
+        self.transform_markdown_text
+    }
+
+    pub fn transform_markdown_text(&mut self, flag: bool) {
+        self.transform_markdown_text = flag;
     }
 
     pub fn is_minimal_view(&self) -> bool {
