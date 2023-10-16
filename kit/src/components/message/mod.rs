@@ -376,7 +376,7 @@ pub fn format_text(text: &str, should_markdown: bool) -> String {
         text.to_string()
     };
     if is_only_emojis(&maybe_marked_down) {
-        format!("<span class=\"big-emoji\"><{maybe_marked_down}></span>")
+        format!("<span class=\"big-emoji\">{maybe_marked_down}</span>")
     } else {
         format!("<p>{maybe_marked_down}</p>",)
     }
