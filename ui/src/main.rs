@@ -1025,8 +1025,8 @@ fn scaled_window_position(
     desktop: &std::rc::Rc<DesktopService>,
 ) -> PhysicalPosition<i32> {
     if cfg!(target_os = "macos") {
-        // On Mac window sizes are kinda funky.
-        // They are scaled with the window scale factor so they dont correspond to app pixels
+        // On Mac window the positions are kinda funky.
+        // They are scaled with the window scale factor so they dont correspond to actual position
         let logical: LogicalPosition<f64> = (position.x as f64, position.y as f64).into();
         let scale = desktop.webview.window().scale_factor();
         logical.to_physical(1_f64 / scale)
