@@ -177,11 +177,13 @@ pub fn AboutPage(cx: Scope) -> Element {
             div {
                 width: "100%",
                 onclick: |_| {
-                    if click_count.get() < &10 {
-                        click_count.set(click_count.get() + 1);
+                    if *click_count.get() < 9 {
+                        click_count.with_mut(|x| *x += 1);
                     } else {
                         click_count.set(0);
-                        state.write().mutate(Action::SetDevSettings(true));
+                        if !state.read().ui.show_dev_settings {
+                             state.write().mutate(Action::SetDevSettings(true));
+                        }
                     }
                 },
                 SettingSection {
