@@ -513,6 +513,13 @@ impl State {
                     {
                         *msg = message.clone();
                     }
+
+                    if let Some(msg) = chat.replying_to.as_mut() {
+                        if msg.id() == message.inner.id() {
+                            *msg = message.inner.clone()
+                        }
+                    }
+
                     if let Some(msg) = chat
                         .pinned_messages
                         .iter_mut()
@@ -540,6 +547,15 @@ impl State {
                         if chat.messages.is_empty() {
                             chat.messages.push_back(msg);
                         }
+                    }
+
+                    if chat
+                        .replying_to
+                        .as_ref()
+                        .map(|msg| msg.id() == message_id)
+                        .unwrap_or_default()
+                    {
+                        chat.replying_to.take();
                     }
                 }
 
