@@ -15,6 +15,7 @@ use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
 use dioxus::prelude::*;
+use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
@@ -341,9 +342,26 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 .write()
                 .mutate(Action::ClearAllPopoutWindows(desktop.clone())),
             WryEvent::WindowEvent {
+                event: WindowEvent::Moved(_),
+                ..
+            } => {
+                // Dont use the arg provided by the WindowEvent as its not right on mac
+                let position =
+                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+                state.write_silent().ui.window_position = Some((position.x, position.y));
+                let _ = state.write().save();
+            }
+            WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
+                let current_position =
+                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+                let (pos_x, pos_y) = state
+                    .read()
+                    .ui
+                    .window_position
+                    .unwrap_or(current_position.into());
                 let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
                 if *first_resize.read() {
                     if state.read().ui.metadata.full_screen {
@@ -352,11 +370,11 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         desktop.set_inner_size(LogicalSize::new(width, height));
                         desktop.set_maximized(state.read().ui.metadata.maximized);
                     }
+                    desktop.set_outer_position(LogicalPosition::new(pos_x, pos_y));
                     *first_resize.write_silent() = false;
                 }
                 let size = scaled_window_size(webview.inner_size(), &desktop);
                 let metadata = state.read().ui.metadata.clone();
-                //log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
@@ -364,13 +382,24 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     full_screen: desktop.fullscreen().is_some(),
                     minimal_view: size.width < 600,
                 };
+                let mut changed = false;
                 if metadata != new_metadata {
-                    state.write().ui.sidebar_hidden = new_metadata.minimal_view;
-                    state.write().ui.metadata = new_metadata;
+                    state.write_silent().ui.sidebar_hidden = new_metadata.minimal_view;
+                    state.write_silent().ui.metadata = new_metadata;
+                    changed = true;
                 }
                 if size.width != width || size.height != height {
                     state.write_silent().ui.window_size = Some((size.width, size.height));
                     let _ = state.write_silent().save();
+                    changed = true;
+                }
+                if current_position.x != pos_x || current_position.y != pos_y {
+                    state.write_silent().ui.window_position =
+                        Some((current_position.x, current_position.y));
+                    changed = true;
+                }
+                if changed {
+                    let _ = state.write().save();
                 }
             }
             _ => {}
@@ -988,6 +1017,21 @@ fn scaled_window_size(
         logical.to_physical(1_f64 / scale)
     } else {
         inner
+    }
+}
+
+fn scaled_window_position(
+    position: PhysicalPosition<i32>,
+    desktop: &std::rc::Rc<DesktopService>,
+) -> PhysicalPosition<i32> {
+    if cfg!(target_os = "macos") {
+        // On Mac window sizes are kinda funky.
+        // They are scaled with the window scale factor so they dont correspond to app pixels
+        let logical: LogicalPosition<f64> = (position.x as f64, position.y as f64).into();
+        let scale = desktop.webview.window().scale_factor();
+        logical.to_physical(1_f64 / scale)
+    } else {
+        position
     }
 }
 

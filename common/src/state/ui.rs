@@ -197,6 +197,7 @@ pub struct UI {
     pub sidebar_hidden: bool,
     pub window_maximized: bool,
     pub window_size: Option<(u32, u32)>,
+    pub window_position: Option<(i32, i32)>,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emojis: EmojiCounter,
@@ -235,6 +236,7 @@ impl Default for UI {
             sidebar_hidden: Default::default(),
             window_maximized: Default::default(),
             window_size: None,
+            window_position: None,
             metadata: Default::default(),
             emojis: default_emojis(),
             emoji_destination: Default::default(),
