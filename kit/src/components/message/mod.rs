@@ -391,14 +391,14 @@ fn is_only_emojis(input: &str) -> bool {
     let input = input.trim();
     let mut indices = unic_segment::GraphemeIndices::new(input);
     indices.all(|(_, grapheme)| {
-        grapheme.trim().chars().all(|char| {
-            is_emoji(char)
-                || is_emoji_component(char)
-                || is_emoji_modifier(char)
-                || is_emoji_modifier_base(char)
-                || is_emoji_presentation(char)
+        grapheme.trim().chars().all(|c| {
+            is_emoji(c)
+                || is_emoji_component(c)
+                || is_emoji_modifier(c)
+                || is_emoji_modifier_base(c)
+                || is_emoji_presentation(c)
                 // some emojis are multiple emojis joined by this character
-                || char == '\u{200d}'
+                || c == '\u{200d}'
         })
     })
 }
