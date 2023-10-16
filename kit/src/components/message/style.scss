@@ -51,6 +51,10 @@
 		em {
 			font-style: italic;
 		}
+
+		.big-emoji {
+			font-size: var(--emoji-size);
+		}
 	}
 	.pending-text {
 		color: var(--text-color-muted);
