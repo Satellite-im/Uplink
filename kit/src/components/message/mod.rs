@@ -445,6 +445,13 @@ mod tests {
     }
 
     #[test]
+    fn test_multiple_emoji() {
+        let input = "🤓😎🥸🤓";
+        let expected = "<span class=\"single-emoji\">🤓😎🥸🤓</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
     fn test_double_emoji_with_space() {
         let input = "😮 😮";
         let expected = "<span class=\"single-emoji\">😮 😮</span>";
