@@ -4440,6 +4440,7 @@ dependencies = [
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-html",
+ "emojis",
  "glob",
  "humansize",
  "linkify",
