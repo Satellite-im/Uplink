@@ -29,7 +29,6 @@ pub struct ActiveChat {
     pub messages: Messages,
     pub is_initialized: bool,
     pub typing_indicator: HashMap<DID, Instant>,
-    pub pinned_messages: Vec<raygun::Message>,
     pub key: Uuid,
 }
 
@@ -44,7 +43,6 @@ impl ActiveChat {
             messages: Messages::new(messages),
             is_initialized: true,
             typing_indicator: HashMap::new(),
-            pinned_messages: chat.pinned_messages.clone(),
             key: Uuid::new_v4(),
         }
     }
@@ -63,6 +61,14 @@ impl ActiveChat {
 
     pub fn has_message_id(&self, id: Uuid) -> bool {
         self.messages.times.contains_key(&id)
+    }
+
+    pub fn metadata_changed(&self, metadata: &Metadata) -> bool {
+        &self.metadata != metadata
+    }
+
+    pub fn set_metadata(&mut self, metadata: Metadata) {
+        self.metadata = metadata;
     }
 
     // may need these later
@@ -122,6 +128,10 @@ impl ActiveChat {
 
     pub fn replying_to(&self) -> Option<raygun::Message> {
         self.metadata.replying_to.clone()
+    }
+
+    pub fn pinned_messages(&self) -> Vec<raygun::Message> {
+        self.metadata.pinned_messages.clone()
     }
 
     pub fn unreads(&self) -> usize {
