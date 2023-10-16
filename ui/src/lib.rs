@@ -98,7 +98,7 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
-fn main() {
+pub fn main() {
     // 1. fix random system quirks
     bootstrap::platform_quirks();
 
