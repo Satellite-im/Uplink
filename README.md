@@ -69,6 +69,17 @@ And for Windows, I followed the steps on this site here
 | ffmpeg| `sudo apt-get install ffmpeg` |
 | libopus-dev| `sudo apt-get install libopus-dev` |
 
+## How to add the extension settings in Uplink:
+
+- Open Uplink and navigate to Settings > Extensions > Settings > Open Extensions.
+- In another Finder window, open Uplink.
+- Inside Uplink, go to Target > Debug, where you'll find the Emoji selector.
+- Drag the Emoji selector to the Extensions window that is still open.
+- Close all open windows.
+- Finally, run cargo run trace2.
+
+https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2
+
 
 ## Contributing
 
