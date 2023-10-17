@@ -119,6 +119,7 @@ pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,
     pub minimized: bool,
+    pub full_screen: bool,
     pub minimal_view: bool, // We can use this to detect mobile or portrait mode
 }
 
@@ -195,8 +196,8 @@ pub struct UI {
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
     pub window_maximized: bool,
-    pub window_width: u32,
-    pub window_height: u32,
+    pub window_size: Option<(u32, u32)>,
+    pub window_position: Option<(i32, i32)>,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emojis: EmojiCounter,
@@ -215,6 +216,7 @@ pub struct UI {
     pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
+    pub show_dev_settings: bool,
     // Cached username used in login page
     pub cached_username: Option<String>,
     #[serde(skip)]
@@ -236,8 +238,8 @@ impl Default for UI {
             active_welcome: Default::default(),
             sidebar_hidden: Default::default(),
             window_maximized: Default::default(),
-            window_width: Default::default(),
-            window_height: Default::default(),
+            window_size: None,
+            window_position: None,
             metadata: Default::default(),
             emojis: default_emojis(),
             emoji_destination: Default::default(),
@@ -247,6 +249,7 @@ impl Default for UI {
             extensions: Default::default(),
             file_previews: Default::default(),
             show_settings_welcome: true,
+            show_dev_settings: false,
             cached_username: Default::default(),
             ignore_focus: Default::default(),
             transform_markdown_text: true,
