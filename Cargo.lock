@@ -2512,13 +2512,22 @@ dependencies = [
  "common",
  "dioxus",
  "dioxus-desktop",
- "emojis",
+ "emojis 0.6.1",
  "extensions",
  "futures",
  "kit",
  "once_cell",
  "uuid",
  "warp",
+]
+
+[[package]]
+name = "emojis"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3407bc749191827d456a282321770847daf4b0a1128fde02597a8ed2e987b95d"
+dependencies = [
+ "phf 0.11.2",
 ]
 
 [[package]]
@@ -4440,7 +4449,7 @@ dependencies = [
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-html",
- "emojis",
+ "emojis 0.5.3",
  "glob",
  "humansize",
  "linkify",
@@ -5488,7 +5497,7 @@ dependencies = [
 [[package]]
 name = "markdowns"
 version = "0.1.0"
-source = "git+https://github.com/satellite-im/markdowns?rev=170a3f7c5be57e09739713c07762a14217cd2805#170a3f7c5be57e09739713c07762a14217cd2805"
+source = "git+https://github.com/satellite-im/markdowns?rev=aea02b46e22f85939ece8215681a7b0e988a74f5#aea02b46e22f85939ece8215681a7b0e988a74f5"
 
 [[package]]
 name = "markup5ever"
