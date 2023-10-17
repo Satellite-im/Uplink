@@ -214,6 +214,7 @@ pub struct UI {
     pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
+    pub show_dev_settings: bool,
     // Cached username used in login page
     pub cached_username: Option<String>,
     #[serde(skip)]
@@ -246,6 +247,7 @@ impl Default for UI {
             extensions: Default::default(),
             file_previews: Default::default(),
             show_settings_welcome: true,
+            show_dev_settings: false,
             cached_username: Default::default(),
             ignore_focus: Default::default(),
         }
