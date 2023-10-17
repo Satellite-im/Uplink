@@ -28,6 +28,8 @@ pub enum Action<'a> {
     #[display(fmt = "SetExtensionEnabled")]
     SetExtensionEnabled(String, bool),
     // UI
+    #[display(fmt = "SetDevSettings {_0}")]
+    SetDevSettings(bool),
     #[display(fmt = "SetAccentColor")]
     SetAccentColor((u8, u8, u8)),
     #[display(fmt = "ClearAccentColor")]
