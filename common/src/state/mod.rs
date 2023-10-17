@@ -153,6 +153,9 @@ impl State {
             Action::ClearAccentColor => {
                 self.ui.accent_color = None;
             }
+            Action::SetDevSettings(enabled) => {
+                self.set_show_dev_settings(enabled);
+            }
             Action::SetExtensionEnabled(extension, enabled) => {
                 if enabled {
                     self.ui.extensions.enable(extension);
@@ -1349,6 +1352,10 @@ impl State {}
 
 // for settings
 impl State {
+    fn set_show_dev_settings(&mut self, value: bool) {
+        self.ui.show_dev_settings = value;
+    }
+
     /// Sets the user's language.
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
