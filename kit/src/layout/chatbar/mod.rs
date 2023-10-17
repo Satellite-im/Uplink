@@ -3,7 +3,7 @@ use dioxus_elements::input_data::keyboard_types::Code;
 use warp::constellation::file::File;
 
 use crate::{
-    components::{embeds::file_embed::FileEmbed, message_typing::MessageTyping},
+    components::{embeds::file_embed::FileEmbed, message_typing::MessageTyping, message::format_text},
     elements::{button::Button, label::Label, textarea, Appearance},
 };
 
@@ -53,11 +53,13 @@ pub struct ReplyProps<'a> {
     attachments: Option<Vec<File>>,
     onclose: EventHandler<'a>,
     children: Element<'a>,
+    markdown: Option<bool>
 }
 
 #[allow(non_snake_case)]
 pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
     let remote = cx.props.remote.unwrap_or_default();
+    let message = format_text(&cx.props.message, cx.props.markdown.unwrap_or_default());
 
     let has_attachments = cx
         .props
@@ -107,7 +109,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                     aria_label: {
                         format_args!("reply-text-message{}", if remote { "-remote" } else { "" })
                     },
-                    "{cx.props.message}"
+                    dangerous_inner_html: { "{message}" }
                     has_attachments.then(|| {
                         rsx!(
                             attachment_list.map(|list| {
