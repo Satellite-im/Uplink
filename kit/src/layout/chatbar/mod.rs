@@ -109,7 +109,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                     aria_label: {
                         format_args!("reply-text-message{}", if remote { "-remote" } else { "" })
                     },
-                    dangerous_inner_html: { "{message}" }
+                    dangerous_inner_html: { "{message}" },
                     has_attachments.then(|| {
                         rsx!(
                             attachment_list.map(|list| {
