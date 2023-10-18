@@ -16,13 +16,16 @@ pub fn Messages(cx: Scope) -> Element {
         div {
             id: "settings-messages",
             aria_label: "settings-messages",
-            // the markdowns crate does something special to prevent it from converting :) to emoji within code segments and it's hard to 
-            // separate the two. It can currently either do emoji + markdown or nothing. 
-            // SettingSection {
-            //     section_label: get_local_text("settings-messages.emoji-conversion"),
-            //     section_description: get_local_text("settings-messages.emoji-conversion-description"),
-            //     Switch {}
-            // },
+             SettingSection {
+                 section_label: get_local_text("settings-messages.emoji-conversion"),
+                 section_description: get_local_text("settings-messages.emoji-conversion-description"),
+                 Switch {
+                    active: state.read().ui.should_transform_markdown_text(),
+                    onflipped: move|flag| {
+                        state.write().mutate(Action::SetTransformMarkdownText(flag));
+                    }
+                 }
+             },
             SettingSection {
                 section_label: get_local_text("settings-messages.markdown-support"),
                 section_description: get_local_text("settings-messages.markdown-support-description"),

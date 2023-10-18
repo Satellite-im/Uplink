@@ -236,6 +236,7 @@ impl State {
             Action::SetEmojiDestination(destination) => self.ui.emoji_destination = destination,
             Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             Action::SetTransformMarkdownText(flag) => self.ui.transform_markdown_text(flag),
+            Action::SetTransformAsciiEmojis(flag) => self.ui.transform_ascii_emojis(flag),
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
