@@ -377,11 +377,13 @@ pub fn format_text(text: &str, should_markdown: bool, should_replace_ascii_emoji
         let (mut text, indices) = markdowns::text_to_html(text);
         if should_replace_ascii_emojis {
             for Range { start, end } in indices {
-                let replaced = markdowns::replace_emojis(&text[start..end]);
+                let replaced = replace_emojis(&text[start..end]);
                 text.replace_range(start..end, &replaced);
             }
         }
         text
+    } else if should_replace_ascii_emojis {
+        replace_emojis(text)
     } else {
         text.to_string()
     };
@@ -413,6 +415,57 @@ fn is_only_emojis(input: &str) -> bool {
                 || emojis::get(&String::from(c)).is_some()
         })
     })
+}
+
+pub fn replace_emojis(input: &str) -> String {
+    fn process_stack<'a>(stack: &'a str) -> &'a str {
+        match stack {
+            "<3" => "❤️",
+            ">:)" => "😈",
+            ">:(" => "😠",
+            ":)" => "🙂",
+            ":(" => " 🙁",
+            ":/" => "🫤",
+            ";)" => "😉",
+            ":D" => "😁",
+            "xD" => "😆",
+            ":p" | ":P" => "😛",
+            ";p" | ";P" => "😜",
+            "xP" => "😝",
+            ":|" => "😐",
+            ":O" => "😮",
+            _ => stack,
+        }
+    }
+
+    let mut builder = String::new();
+    let mut stack = String::new();
+
+    for char in input.chars() {
+        match char {
+            ' ' => {
+                builder += process_stack(&stack);
+                stack.clear();
+                builder.push(char);
+            }
+            _ => stack.push(char),
+        }
+    }
+
+    builder += process_stack(&stack);
+    builder
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn replace_emojis_test1() {
+        let input = ":)";
+        let expected = "🙂";
+        assert_eq!(&replace_emojis(input), expected);
+    }
 }
 
 #[cfg(test)]

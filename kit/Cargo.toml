@@ -25,7 +25,7 @@ linkify = { workspace = true }
 reqwest = { workspace = true }
 base64 = { workspace = true }
 mime = { workspace = true }
-markdowns = { git = "https://github.com/satellite-im/markdowns", rev = "db5a882620fa606252db3febe3f485d02a28a6c9" }
+markdowns = { git = "https://github.com/satellite-im/markdowns", rev = "23c7243a635362f71033ff88cbfcb1c2a1bcd675" }
 unic-segment = "0.9"
 unic-emoji-char = "0.9"
 
