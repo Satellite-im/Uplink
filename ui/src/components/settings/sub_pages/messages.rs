@@ -20,9 +20,9 @@ pub fn Messages(cx: Scope) -> Element {
                  section_label: get_local_text("settings-messages.emoji-conversion"),
                  section_description: get_local_text("settings-messages.emoji-conversion-description"),
                  Switch {
-                    active: state.read().ui.should_transform_markdown_text(),
+                    active: state.read().ui.should_transform_ascii_emojis(),
                     onflipped: move|flag| {
-                        state.write().mutate(Action::SetTransformMarkdownText(flag));
+                        state.write().mutate(Action::SetTransformAsciiEmojis(flag));
                     }
                  }
              },
