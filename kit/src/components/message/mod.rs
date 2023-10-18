@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::Range};
 
 use common::state::pending_message::progress_file;
 use common::warp_runner::thumbnail_to_base64;
@@ -78,6 +78,7 @@ pub struct Props<'a> {
 
     /// If true, the markdown parser will be rendered
     parse_markdown: bool,
+    transform_ascii_emojis: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
 
@@ -235,6 +236,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
+                    ascii_emoji: cx.props.transform_ascii_emojis,
                 }
             )),
             has_attachments.then(|| {
@@ -318,11 +320,12 @@ pub struct ChatMessageProps {
     remote: bool,
     pending: bool,
     markdown: bool,
+    ascii_emoji: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
-    let mut formatted_text = format_text(&cx.props.text, cx.props.markdown);
+    let mut formatted_text = format_text(&cx.props.text, cx.props.markdown, cx.props.ascii_emoji);
     formatted_text = wrap_links_with_a_tags(&formatted_text);
 
     let finder = LinkFinder::new();
@@ -369,9 +372,16 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-pub fn format_text(text: &str, should_markdown: bool) -> String {
+pub fn format_text(text: &str, should_markdown: bool, should_replace_ascii_emojis: bool) -> String {
     let maybe_marked_down = if should_markdown {
-        markdowns::text_to_html(text)
+        let (mut text, indices) = markdowns::text_to_html(text);
+        if should_replace_ascii_emojis {
+            for Range { start, end } in indices {
+                let replaced = markdowns::replace_emojis(&text[start..end]);
+                text.replace_range(start..end, &replaced);
+            }
+        }
+        text
     } else {
         text.to_string()
     };

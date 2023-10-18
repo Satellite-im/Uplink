@@ -277,6 +277,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
                     let markdown = state.read().ui.should_transform_markdown_text();
+                    let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
                     // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                     let participants_name = match chat.conversation_name {
@@ -285,7 +286,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     };
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                        Some(v) => format_text(v, markdown),
+                        Some(v) => format_text(v, markdown, should_transform_ascii_emojis),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),

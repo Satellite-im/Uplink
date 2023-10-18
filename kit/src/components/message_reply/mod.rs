@@ -41,6 +41,7 @@ pub struct Props<'a> {
     #[props(optional)]
     replier_did: Option<DID>,
     markdown: Option<bool>,
+    transform_ascii_emojis: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -48,6 +49,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = format_text(
         &cx.props.with_text.clone().unwrap_or_default(),
         cx.props.markdown.unwrap_or_default(),
+        cx.props.transform_ascii_emojis.unwrap_or_default(),
     );
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
