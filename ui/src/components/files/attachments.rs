@@ -47,12 +47,6 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         Location::Constellation { path } => PathBuf::from(path),
                         Location::Disk { path } => path.clone(),
                     };
-                    // let s = path
-                    //     .file_name()
-                    //     .unwrap_or_default()
-                    //     .to_string_lossy()
-                    //     .to_string();
-                    // s != filename
                     path_to_retain != path
                 });
                 cx.props.on_remove.call(attachments);
