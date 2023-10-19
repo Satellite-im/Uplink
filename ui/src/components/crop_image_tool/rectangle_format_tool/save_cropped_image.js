@@ -21,6 +21,26 @@ const cropY = Math.max(((naturalHeight - scaleY * height) / 2) - (scaleY * image
 
 ctx.drawImage(image, cropX, cropY, scaleX * width, scaleY * height, 0, 0, width, height);
 
+function dataURItoBlob(dataURI) {
+    const byteString = atob(dataURI.split(',')[1]);
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const int8Array = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < byteString.length; i++) {
+        int8Array[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([int8Array], { type: 'image/png' });
+}
+
+let blob = dataURItoBlob(canvas.toDataURL("image/png"));
+if (blob.size > 20 * 1024 * 1024) {
+    let quality = 1;
+    while (blob.size > 20 * 1024 * 1024 && quality > 0.1) {
+        const dataURL = canvas.toDataURL("image/png", quality);
+        blob = dataURItoBlob(dataURL);
+        quality -= 0.1;  
+    }
+}
+
 const base64Canvas = canvas.toDataURL("image/png").split(';base64,')[1];
 
 return base64Canvas;
