@@ -17,7 +17,13 @@ lazy_static! {
 }
 
 fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
-    let mut last_called = LAST_CALLED.lock().unwrap();
+    let mut last_called = match LAST_CALLED.lock() {
+        Ok(mutex_guard) => mutex_guard,
+        Err(e) => {
+            log::error!("Failed to lock the mutex: {:?}", e);
+            return;
+        }
+    };
     let now = Instant::now();
 
     if now.duration_since(*last_called) > debounce_duration {
