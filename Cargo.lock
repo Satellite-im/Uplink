@@ -9150,6 +9150,7 @@ dependencies = [
  "image",
  "isolang",
  "kit",
+ "lazy_static",
  "libloading",
  "log",
  "mime",

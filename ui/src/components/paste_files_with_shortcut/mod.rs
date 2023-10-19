@@ -1,4 +1,8 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::Mutex,
+    time::{Duration, Instant},
+};
 
 use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
@@ -7,6 +11,20 @@ use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use dioxus_hooks::{to_owned, use_ref};
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
+
+lazy_static! {
+    static ref LAST_CALLED: Mutex<Instant> = Mutex::new(Instant::now() - Duration::from_secs(2));
+}
+
+fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
+    let mut last_called = LAST_CALLED.lock().unwrap();
+    let now = Instant::now();
+
+    if now.duration_since(*last_called) > debounce_duration {
+        callback();
+        *last_called = now;
+    }
+}
 
 #[derive(Props)]
 pub struct ShortCutProps<'a> {
@@ -52,10 +70,15 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     use_global_shortcut(cx, (key, modifiers), {
         to_owned![files_local_path_to_upload];
         move || {
-            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-            if !files_local_path.is_empty() {
-                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
-            }
+            debounced_callback(
+                || {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        files_local_path_to_upload.with_mut(|i| *i = files_local_path);
+                    }
+                },
+                Duration::from_secs(1),
+            );
         }
     });
     None
