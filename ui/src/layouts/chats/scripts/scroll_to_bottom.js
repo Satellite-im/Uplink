@@ -5,6 +5,5 @@ var time = message.parentElement.parentElement.getElementsByClassName("time-ago"
 if (time) {
     message = time;
 }
-console.log("msg ", message);
 message.scrollIntoView({ behavior: 'instant', block: 'end' });
 return "done";
