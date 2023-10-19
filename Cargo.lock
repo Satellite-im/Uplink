@@ -2523,9 +2523,9 @@ dependencies = [
 
 [[package]]
 name = "emojis"
-version = "0.5.3"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3407bc749191827d456a282321770847daf4b0a1128fde02597a8ed2e987b95d"
+checksum = "4ee61eb945bff65ee7d19d157d39c67c33290ff0742907413fd5eefd29edc979"
 dependencies = [
  "phf 0.11.2",
 ]
@@ -9290,7 +9290,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=15c125a92712438cd8c919b87c4073c28442f16a#15c125a92712438cd8c919b87c4073c28442f16a"
+source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9346,7 +9346,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=15c125a92712438cd8c919b87c4073c28442f16a#15c125a92712438cd8c919b87c4073c28442f16a"
+source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9377,7 +9377,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=15c125a92712438cd8c919b87c4073c28442f16a#15c125a92712438cd8c919b87c4073c28442f16a"
+source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
 dependencies = [
  "paste",
  "quote",
@@ -9387,7 +9387,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=15c125a92712438cd8c919b87c4073c28442f16a#15c125a92712438cd8c919b87c4073c28442f16a"
+source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
 dependencies = [
  "anyhow",
  "async-stream",

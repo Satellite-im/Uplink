@@ -223,10 +223,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
-                                let outer_size = desktop.outer_size();
                                 let is_maximized = desktop.is_maximized();
-                                state.write_silent().ui.window_height = outer_size.height;
-                                state.write_silent().ui.window_width = outer_size.width;
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
