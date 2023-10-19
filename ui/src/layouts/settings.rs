@@ -39,6 +39,20 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         first_render.set(false);
     }
 
+    let settings = match to.read().get() {
+        Page::About => rsx!(AboutPage {}),
+        Page::General => rsx!(GeneralSettings {}),
+        Page::Accessibility => rsx!(AccessibilitySettings {}),
+        Page::Profile => rsx!(ProfileSettings {}),
+        Page::Audio => rsx!(AudioSettings {}),
+        // Page::Privacy => rsx!(PrivacySettings {}),
+        // Page::Files => rsx!(FilesSettings {}),
+        Page::Extensions => rsx!(ExtensionSettings {}),
+        Page::Developer => rsx!(DeveloperSettings {}),
+        Page::Notifications => rsx!(NotificationSettings {}),
+        Page::Licenses => rsx!(Licenses {}),
+    };
+
     cx.render(rsx!(
         div {
             id: "settings-layout",
@@ -67,19 +81,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
                 div {
                     id: "content",
                     class: "full-width",
-                    match to.read().get() {
-                        Page::About => rsx!(AboutPage {}),
-                        Page::General => rsx!(GeneralSettings {}),
-                        Page::Accessibility => rsx!(AccessibilitySettings {}),
-                        Page::Profile => rsx!(ProfileSettings {}),
-                        Page::Audio => rsx!(AudioSettings {}),
-                        // Page::Privacy => rsx!(PrivacySettings {}),
-                        // Page::Files => rsx!(FilesSettings {}),
-                        Page::Extensions => rsx!(ExtensionSettings {}),
-                        Page::Developer => rsx!(DeveloperSettings {}),
-                        Page::Notifications => rsx!(NotificationSettings {}),
-                        Page::Licenses => rsx!(Licenses {}),
-                    }
+                    settings,
                 },
                  (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
