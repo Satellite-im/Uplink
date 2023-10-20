@@ -3,7 +3,7 @@
 //! that might helpful if a textarea needed to perform input validation.
 
 use dioxus::prelude::*;
-use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
+use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
@@ -55,7 +55,10 @@ pub struct Props<'a> {
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
     let eval = use_eval(cx);
-
+    let left_shift_pressed = use_ref(cx, || false);
+    let right_shift_pressed = use_ref(cx, || false);
+    let enter_pressed = use_ref(cx, || false);
+    let numpad_enter_pressed = use_ref(cx, || false);
     let cursor_position = use_ref(cx, || None);
 
     let Props {
@@ -100,7 +103,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
-    let cursor_eval = include_str!("./cursor_script.js").replace("$ID", &id2);
+    let cursor_script = include_str!("./cursor_script.js").replace("$ID", &id2);
 
     let text_value = use_ref(cx, || value.clone());
     use_future(cx, value, |val| {
@@ -143,15 +146,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
                     oninput: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |evt| {
                             let current_val = evt.value.clone();
                             *text_value.write_silent() = current_val.clone();
                             onchange.call((current_val, true));
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
@@ -161,23 +164,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     onkeyup: move |evt| {
-                        let enter_pressed = evt.code() == Code::Enter || evt.code() == Code::NumpadEnter;
-                        let shift_key_as_modifier = evt.data.modifiers().contains(Modifiers::SHIFT);
-
-                        if enter_pressed && !shift_key_as_modifier {
-                            if *show_char_counter {
-                                let _ = eval(&clear_counter_script);
-                            }
-                            onreturn.call((text_value.read().clone(), true, evt.code()));
-                        }
+                        match evt.code() {
+                            Code::ShiftLeft => *left_shift_pressed.write_silent() = false,
+                            Code::ShiftRight => *right_shift_pressed.write_silent() = false,
+                            Code::Enter => *enter_pressed.write_silent() = false,
+                            Code::NumpadEnter => *numpad_enter_pressed.write_silent() = false,
+                            _ => {}
+                        };
                     },
                     onmousedown: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |_| {
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
@@ -187,8 +188,30 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     onkeydown: {
-                        to_owned![eval, cursor_eval];
+                        to_owned![eval, cursor_script];
                         move |evt| {
+                            // special codepath to handle onreturn
+                            let old_enter_pressed = *enter_pressed.read();
+                            let old_numpad_enter_pressed = *numpad_enter_pressed.read();
+                            match evt.code() {
+                                Code::ShiftLeft => if !*left_shift_pressed.read() { *left_shift_pressed.write_silent() = true; },
+                                Code::ShiftRight => if !*right_shift_pressed.read() { *right_shift_pressed.write_silent() = true; },
+                                Code::Enter => if !*enter_pressed.read() { *enter_pressed.write_silent() = true; } ,
+                                Code::NumpadEnter => if !*numpad_enter_pressed.read() { *numpad_enter_pressed.write_silent() = true; },
+                                _ => {}
+                            };
+                            // write_silent() doesn't update immediately. if the enter key is pressed, have to check the evt code
+                            let enter_toggled = !old_enter_pressed && matches!(evt.code(), Code::Enter);
+                            let numpad_enter_toggled = !old_numpad_enter_pressed && matches!(evt.code(), Code::NumpadEnter);
+                            if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.read() || *left_shift_pressed.read())
+                            {
+                                 if *show_char_counter {
+                                        let _ = eval(&clear_counter_script);
+                                    }
+                                    onreturn.call((text_value.read().clone(), true, evt.code()));
+                            }
+
+                            // special codepath to handle the arrow keys
                             let arrow = match evt.code() {
                                 Code::ArrowDown|Code::ArrowUp => {
                                     if let Some(e) = onup_down_arrow {
@@ -203,10 +226,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     false
                                 }
                             };
-                            to_owned![eval, cursor_eval, cursor_position];
+                            to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update && arrow {
-                                    if let Ok(r) = eval(&cursor_eval) {
+                                    if let Ok(r) = eval(&cursor_script) {
                                         if let Ok(val) = r.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
