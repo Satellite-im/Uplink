@@ -28,6 +28,7 @@ pub(crate) fn use_boostrap<'a>(
 ) -> Option<&'a UseSharedState<State>> {
     let desktop = use_window(cx);
     use_shared_state_provider(cx, DownloadState::default);
+    use_shared_state_provider(cx, || components::settings::sidebar::Page::Profile);
     use_shared_state_provider(cx, || {
         let mut state = State::load();
 
