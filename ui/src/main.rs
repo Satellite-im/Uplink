@@ -16,7 +16,6 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
-use dioxus_desktop::tao::event_loop::EventLoopBuilder;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
@@ -61,7 +60,7 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_wry_event_handler, wry, DesktopService, PhysicalSize};
+use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -124,41 +123,42 @@ fn main() {
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
 
+    let main_menu = Menu::new();
+    let app_menu = Submenu::new("Uplink", true);
+    let edit_menu = Submenu::new("Edit", true);
+    let window_menu = Submenu::new("Window", true);
+
+    let _ = app_menu.append_items(&[
+        &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
+        &PredefinedMenuItem::quit(None),
+    ]);
+    // add native shortcuts to `edit_menu` menu
+    // in macOS native item are required to get keyboard shortcut
+    // to works correctly
+    let _ = edit_menu.append_items(&[
+        &PredefinedMenuItem::undo(None),
+        &PredefinedMenuItem::redo(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::cut(None),
+        &PredefinedMenuItem::copy(None),
+        &PredefinedMenuItem::paste(None),
+        &PredefinedMenuItem::select_all(None),
+    ]);
+
+    let _ = window_menu.append_items(&[
+        &PredefinedMenuItem::minimize(None),
+        //&PredefinedMenuItem::zoom(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::show_all(None),
+        &PredefinedMenuItem::fullscreen(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::close_window(None),
+    ]);
+
+    let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
+
     #[cfg(target_os = "macos")]
     {
-        let main_menu = Menu::new();
-        let app_menu = Submenu::new("Uplink", true);
-        let edit_menu = Submenu::new("Edit", true);
-        let window_menu = Submenu::new("Window", true);
-
-        let _ = app_menu.append_items(&[
-            &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
-            &PredefinedMenuItem::quit(None),
-        ]);
-        // add native shortcuts to `edit_menu` menu
-        // in macOS native item are required to get keyboard shortcut
-        // to works correctly
-        let _ = edit_menu.append_items(&[
-            &PredefinedMenuItem::undo(None),
-            &PredefinedMenuItem::redo(None),
-            &PredefinedMenuItem::separator(),
-            &PredefinedMenuItem::cut(None),
-            &PredefinedMenuItem::copy(None),
-            &PredefinedMenuItem::paste(None),
-            &PredefinedMenuItem::select_all(None),
-        ]);
-
-        let _ = window_menu.append_items(&[
-            &PredefinedMenuItem::minimize(None),
-            //&PredefinedMenuItem::zoom(None),
-            &PredefinedMenuItem::separator(),
-            &PredefinedMenuItem::show_all(None),
-            &PredefinedMenuItem::fullscreen(None),
-            &PredefinedMenuItem::separator(),
-            &PredefinedMenuItem::close_window(None),
-        ]);
-
-        let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
         main_menu.init_for_nsapp();
     }
 
