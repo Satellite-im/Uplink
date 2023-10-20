@@ -377,14 +377,14 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     if should_markdown {
         markdown(text, emojis)
     } else if emojis {
-        let s = replace_emojis(text);
+        let s = replace_emojis(text.trim());
         if is_only_emojis(&s) {
             format!("<span class=\"big-emoji\">{s}</span>")
         } else {
             format!("<p>{s}</p>")
         }
     } else {
-        format!("<p>{text}</p>")
+        format!("<p>{}</p>", text.trim())
     }
 }
 
