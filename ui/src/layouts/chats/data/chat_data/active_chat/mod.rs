@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    time::Instant,
-};
+use std::collections::VecDeque;
 
 use common::{
     state::{self, Identity, State},
@@ -28,7 +25,6 @@ pub struct ActiveChat {
     metadata: Metadata,
     pub messages: Messages,
     pub is_initialized: bool,
-    pub typing_indicator: HashMap<DID, Instant>,
     pub key: Uuid,
 }
 
@@ -42,7 +38,6 @@ impl ActiveChat {
             metadata: Metadata::new(s, chat),
             messages: Messages::new(messages),
             is_initialized: true,
-            typing_indicator: HashMap::new(),
             key: Uuid::new_v4(),
         }
     }
