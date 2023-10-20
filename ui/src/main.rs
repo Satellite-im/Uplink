@@ -61,7 +61,7 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
+use dioxus_desktop::{use_wry_event_handler, wry, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -124,38 +124,6 @@ fn main() {
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
 
-    // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
-}
-
-#[allow(clippy::enum_variant_names)]
-#[derive(Routable, Clone, Eq, PartialEq)]
-pub enum UplinkRoute {
-    // We want to wrap every router in a layout that renders the content via an outlet
-    #[layout(app_layout)]
-    //
-    //
-    #[redirect("/", || UplinkRoute::ChatLayout {})]
-    #[route("/chat")]
-    ChatLayout {},
-
-    #[route("/settings")]
-    SettingsLayout {},
-
-    #[route("/friends")]
-    FriendsLayout {},
-
-    #[route("/files")]
-    FilesLayout {},
-
-    #[route("/community")]
-    CommunityLayout {},
-}
-
-fn app(cx: Scope) -> Element {
-    // 1. Make sure the warp engine is turned on before doing anything
-    bootstrap::use_warp_runner(cx);
-
     let mut event_loop_builder = EventLoopBuilder::new();
     let main_menu = Menu::new();
 
@@ -177,7 +145,7 @@ fn app(cx: Scope) -> Element {
     let window = window_builder::get_window_builder(true)
         .with_title("Uplink")
         .build(&event_loop)
-        .ok()?;
+        .unwrap();
 
     let app_menu = Submenu::new("Uplink", true);
     let edit_menu = Submenu::new("Edit", true);
@@ -224,6 +192,38 @@ fn app(cx: Scope) -> Element {
     {
         main_menu.init_for_nsapp();
     }
+
+    // 5. Finally, launch the app
+    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
+}
+
+#[allow(clippy::enum_variant_names)]
+#[derive(Routable, Clone, Eq, PartialEq)]
+pub enum UplinkRoute {
+    // We want to wrap every router in a layout that renders the content via an outlet
+    #[layout(app_layout)]
+    //
+    //
+    #[redirect("/", || UplinkRoute::ChatLayout {})]
+    #[route("/chat")]
+    ChatLayout {},
+
+    #[route("/settings")]
+    SettingsLayout {},
+
+    #[route("/friends")]
+    FriendsLayout {},
+
+    #[route("/files")]
+    FilesLayout {},
+
+    #[route("/community")]
+    CommunityLayout {},
+}
+
+fn app(cx: Scope) -> Element {
+    // 1. Make sure the warp engine is turned on before doing anything
+    bootstrap::use_warp_runner(cx);
 
     // 2. Guard the app with the auth
     let auth = use_state(cx, || AuthPages::Unlock);
