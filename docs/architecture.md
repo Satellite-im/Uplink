@@ -38,7 +38,7 @@
 - the rest of the variables are channels. 
 
 ## Global Channels
-- `WARP_CMD_CH`: used to communicate with `warp_runner`. Rather than block the UI while `Warp` performs a task, `warp_runner` receives commands via the channel and responds via a one-shot channel. `WARP_CMD_CH.tx` is used from within a Dioxus Element, inside a `use_future` or a `use_coroutine`. 
+- `WARP_CMD_CH`: used to communicate with `warp_runner`. Rather than block the UI while `Warp` performs a task, `warp_runner` receives commands via the channel and responds via a oneshot channel. `WARP_CMD_CH.tx` is used from within a Dioxus Element, inside a `use_future` or a `use_coroutine`. 
 - `WARP_EVENT_CH`: the `app` Element from `main.rs` reads events from this channel and updates `State` accordingly. 
 - `WINDOW_CMD_CH`: if Uplink spawns a child window, it is controlled via this channel. Commands are passed to the `window_manager` module, which, at a minimum, allows for closing the window in response to a UI event such as a button press. 
 
