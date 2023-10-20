@@ -377,9 +377,14 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     if should_markdown {
         markdown(text, emojis)
     } else if emojis {
-        replace_emojis(text)
+        let s = replace_emojis(text);
+        if is_only_emojis(&s) {
+            format!("<span class=\"big-emoji\">{s}</span>")
+        } else {
+            format!("<p>{s}</p>")
+        }
     } else {
-        text.to_string()
+        format!("<p>{text}</p>")
     }
 }
 
@@ -595,6 +600,13 @@ mod tests {
     }
 
     #[test]
+    fn test_single_emoji4() {
+        let input = "🙂";
+        let expected = "<span class=\"single-emoji\">🙂</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
     fn test_triple_emoji() {
         let input = "😮😮👨‍👩‍👦‍👦";
         let expected = "<span class=\"single-emoji\">😮😮👨‍👩‍👦‍👦</span>";
@@ -603,8 +615,8 @@ mod tests {
 
     #[test]
     fn test_multiple_emoji() {
-        let input = "🤓😎🥸🤓";
-        let expected = "<span class=\"single-emoji\">🤓😎🥸🤓</span>";
+        let input = "🤓😎🥸🤓 🙂";
+        let expected = "<span class=\"single-emoji\">🤓😎🥸🤓 🙂</span>";
         assert_eq!(&transform_only_emoji(input), expected);
     }
 
