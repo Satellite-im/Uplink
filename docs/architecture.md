@@ -27,7 +27,7 @@
 - next `auth_page_manager` is rendered. `Warp` requires a user account. Until an account is created, the user data can't be decrypted and loaded. `auth_page_manager` uses the `auth_wrapper` element to handle user authentication and account creation. When done, `app_bootstrap` is rendered. 
 - The global `State` variable drives the Uplink UI. It is initialized via `use_shared_state_provider`. We don't want this variable to be re-loaded every time the app updates, so `app_bootstrap` is used to initialize state. 
 - finally, `app` is rendered. All the global channels are polled here, each with their own `use_future`. 
-    + conversations are loaded from the warp and added to `State`
+    + conversations are loaded from warp and added to `State`
     + friends are loaded from the warp and added to `State`
     + warp events are passed to `State::process_warp_event`
     + after all the `use_future`s, `cx.render()` is called with the various parts of the page.
