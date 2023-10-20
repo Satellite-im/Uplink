@@ -16,6 +16,7 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+use dioxus_desktop::tao::platform::unix::WindowExtUnix;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
@@ -118,6 +119,39 @@ fn main() {
     bootstrap::create_uplink_dirs();
 
     let config = webview_config::webview_config();
+    // 5. Finally, launch the app
+    dioxus_desktop::launch_cfg(app, config)
+}
+
+#[allow(clippy::enum_variant_names)]
+#[derive(Routable, Clone, Eq, PartialEq)]
+pub enum UplinkRoute {
+    // We want to wrap every router in a layout that renders the content via an outlet
+    #[layout(app_layout)]
+    //
+    //
+    #[redirect("/", || UplinkRoute::ChatLayout {})]
+    #[route("/chat")]
+    ChatLayout {},
+
+    #[route("/settings")]
+    SettingsLayout {},
+
+    #[route("/friends")]
+    FriendsLayout {},
+
+    #[route("/files")]
+    FilesLayout {},
+
+    #[route("/community")]
+    CommunityLayout {},
+}
+
+fn app(cx: Scope) -> Element {
+    // 1. Make sure the warp engine is turned on before doing anything
+    bootstrap::use_warp_runner(cx);
+
+    let window = use_window(cx);
     let main_menu = Menu::new();
     let app_menu = Submenu::new("Uplink", true);
     let edit_menu = Submenu::new("Edit", true);
@@ -158,44 +192,12 @@ fn main() {
     }
     #[cfg(target_os = "linux")]
     {
-        main_menu.init_for_gtk_window(window.gtk_window(), window.default_vbox());
+        let _ = main_menu.init_for_gtk_window(window.gtk_window(), window.default_vbox());
     }
     #[cfg(target_os = "macos")]
     {
         main_menu.init_for_nsapp();
     }
-
-    // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(app, config)
-}
-
-#[allow(clippy::enum_variant_names)]
-#[derive(Routable, Clone, Eq, PartialEq)]
-pub enum UplinkRoute {
-    // We want to wrap every router in a layout that renders the content via an outlet
-    #[layout(app_layout)]
-    //
-    //
-    #[redirect("/", || UplinkRoute::ChatLayout {})]
-    #[route("/chat")]
-    ChatLayout {},
-
-    #[route("/settings")]
-    SettingsLayout {},
-
-    #[route("/friends")]
-    FriendsLayout {},
-
-    #[route("/files")]
-    FilesLayout {},
-
-    #[route("/community")]
-    CommunityLayout {},
-}
-
-fn app(cx: Scope) -> Element {
-    // 1. Make sure the warp engine is turned on before doing anything
-    bootstrap::use_warp_runner(cx);
 
     // 2. Guard the app with the auth
     let auth = use_state(cx, || AuthPages::Unlock);
