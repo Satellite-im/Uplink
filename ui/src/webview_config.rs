@@ -5,12 +5,8 @@ use warp::logging::tracing::log;
 
 pub(crate) fn webview_config() -> Config {
     let window = crate::window_builder::get_window_builder(true);
-    let config = if cfg!(not(target_os = "macos")) {
-        Config::new().with_window(window)
-    } else {
-        Config::new()
-    };
-    let config = config
+    let config = Config::new()
+        .with_window(window)
         .with_custom_index(
             r#"
 <!doctype html>
