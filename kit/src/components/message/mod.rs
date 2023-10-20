@@ -430,7 +430,12 @@ pub fn replace_emojis(input: &str) -> String {
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
 
-    if is_only_emojis(txt) {
+    if emojis {
+        let r = replace_emojis(text);
+        if is_only_emojis(&r) {
+            return format!("<span class=\"big-emoji\">{r}</span>");
+        }
+    } else if is_only_emojis(txt) {
         return format!("<span class=\"big-emoji\">{txt}</span>");
     }
 
@@ -555,6 +560,19 @@ mod test {
         let input = ":)";
         let expected = "🙂";
         assert_eq!(&replace_emojis(input), expected);
+    }
+}
+
+#[cfg(test)]
+mod tests2 {
+    use super::*;
+
+    #[test]
+    fn test_format_text1() {
+        let input = ":) ";
+        let expected = "<span class=\"big-emoji\">🙂 </span>";
+        assert_eq!(&format_text(input, true, true), expected);
+        assert_eq!(&format_text(input, false, true), expected);
     }
 }
 
