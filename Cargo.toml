@@ -10,6 +10,9 @@ members = [
 
 resolver = "2"
 
+[profile.dev]
+panic = "abort"
+
 [profile.rapid]
 inherits = "dev"
 opt-level = 2
