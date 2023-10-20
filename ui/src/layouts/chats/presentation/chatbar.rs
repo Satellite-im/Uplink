@@ -132,16 +132,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .mutate(Action::SetChatAttachments(chat_id, files_attached));
     }
 
-    // todo: update the typing indicator in a coroutine
     let my_id = state.read().did_key();
-    let users_typing: Vec<DID> = chat_data
+    let users_typing: Vec<DID> = state
         .read()
-        .active_chat
-        .typing_indicator
-        .iter()
-        .filter(|(did, _)| *did != &my_id)
-        .map(|(did, _)| did.clone())
-        .collect();
+        .get_active_chat()
+        .map(|x| {
+            x.typing_indicator
+                .keys()
+                .cloned()
+                .filter(|did| *did != my_id)
+                .collect()
+        })
+        .unwrap_or_default();
     let users_typing = state.read().get_identities(&users_typing);
 
     // this is used to scroll to the bottom of the chat.

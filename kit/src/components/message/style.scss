@@ -22,6 +22,10 @@
 		display: inline-flex;
 		flex-direction: column;
 		white-space:pre-wrap;
+
+		.big-emoji {
+			font-size: var(--emoji-size);
+		}
 	}
 	.pending-text {
 		color: var(--text-color-muted);
