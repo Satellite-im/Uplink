@@ -377,6 +377,10 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 pub fn markdown(text: &str) -> String {
     let txt = text.trim();
 
+    if is_only_emojis(txt) {
+        return format!("<span class=\"big-emoji\">{txt}</span>");
+    }
+
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
 
@@ -459,4 +463,111 @@ pub fn markdown(text: &str) -> String {
     }
 
     html_output
+}
+
+use unic_emoji_char::{
+    is_emoji, is_emoji_component, is_emoji_modifier, is_emoji_modifier_base, is_emoji_presentation,
+};
+
+// matches strings conssisting of emojis and whitespace
+fn is_only_emojis(input: &str) -> bool {
+    let input = input.trim();
+    let mut indices = unic_segment::GraphemeIndices::new(input);
+    indices.all(|(_, grapheme)| {
+        grapheme.trim().chars().all(|c| {
+            is_emoji(c)
+            || is_emoji_component(c)
+            || is_emoji_modifier(c)
+            || is_emoji_modifier_base(c)
+            || is_emoji_presentation(c)
+            // some emojis are multiple emojis joined by this character
+            || c == '\u{200d}'
+            // failsafe
+            || emojis::get(&String::from(c)).is_some()
+        })
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // too lazy to change the unit tests
+    fn transform_only_emoji(input: &str) -> String {
+        if is_only_emojis(input) {
+            format!("<span class=\"single-emoji\">{}</span>", input.trim())
+        } else {
+            input.trim().to_string()
+        }
+    }
+
+    #[test]
+    fn test_single_no_emoji() {
+        let input = "abc";
+        let expected = "abc";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_single_emoji() {
+        let input = "😮";
+        let expected = "<span class=\"single-emoji\">😮</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_single_emoji2() {
+        let input = "😮  ";
+        let expected = "<span class=\"single-emoji\">😮</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_single_emoji3() {
+        let input = "👍🏾  ";
+        let expected = "<span class=\"single-emoji\">👍🏾</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_triple_emoji() {
+        let input = "😮😮👨‍👩‍👦‍👦";
+        let expected = "<span class=\"single-emoji\">😮😮👨‍👩‍👦‍👦</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_multiple_emoji() {
+        let input = "🤓😎🥸🤓";
+        let expected = "<span class=\"single-emoji\">🤓😎🥸🤓</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_multiple_emoji2() {
+        let input = "🤓😎🤓🤓";
+        let expected = "<span class=\"single-emoji\">🤓😎🤓🤓</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_double_emoji_with_space() {
+        let input = "😮 😮";
+        let expected = "<span class=\"single-emoji\">😮 😮</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_comples_emoji() {
+        let input = "👨‍👩‍👦‍👦";
+        let expected = "<span class=\"single-emoji\">👨‍👩‍👦‍👦</span>";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
+
+    #[test]
+    fn test_emoji_and_words() {
+        let input = "👨‍👩‍👦‍👦abc";
+        let expected = "👨‍👩‍👦‍👦abc";
+        assert_eq!(&transform_only_emoji(input), expected);
+    }
 }
