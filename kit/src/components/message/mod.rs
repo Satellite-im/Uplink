@@ -79,6 +79,7 @@ pub struct Props<'a> {
 
     /// If true, the markdown parser will be rendered
     parse_markdown: bool,
+    transform_ascii_emojis: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
 
@@ -236,6 +237,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
+                    ascii_emoji: cx.props.transform_ascii_emojis,
                 }
             )),
             has_attachments.then(|| {
@@ -319,15 +321,12 @@ pub struct ChatMessageProps {
     remote: bool,
     pending: bool,
     markdown: bool,
+    ascii_emoji: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
-    let mut formatted_text = if cx.props.markdown {
-        markdown(&cx.props.text)
-    } else {
-        cx.props.text.clone()
-    };
+    let mut formatted_text = format_text(&cx.props.text, cx.props.markdown, cx.props.ascii_emoji);
     formatted_text = wrap_links_with_a_tags(&formatted_text);
 
     let finder = LinkFinder::new();
@@ -374,7 +373,56 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-pub fn markdown(text: &str) -> String {
+pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
+    if should_markdown {
+        markdown(text, emojis)
+    } else if emojis {
+        replace_emojis(text)
+    } else {
+        text.to_string()
+    }
+}
+
+pub fn replace_emojis(input: &str) -> String {
+    fn process_stack<'a>(stack: &'a str) -> &'a str {
+        match stack {
+            "<3" => "❤️",
+            ">:)" => "😈",
+            ">:(" => "😠",
+            ":)" => "🙂",
+            ":(" => " 🙁",
+            ":/" => "🫤",
+            ";)" => "😉",
+            ":D" => "😁",
+            "xD" => "😆",
+            ":p" | ":P" => "😛",
+            ";p" | ";P" => "😜",
+            "xP" => "😝",
+            ":|" => "😐",
+            ":O" => "😮",
+            _ => stack,
+        }
+    }
+
+    let mut builder = String::new();
+    let mut stack = String::new();
+
+    for char in input.chars() {
+        match char {
+            ' ' => {
+                builder += process_stack(&stack);
+                stack.clear();
+                builder.push(char);
+            }
+            _ => stack.push(char),
+        }
+    }
+
+    builder += process_stack(&stack);
+    builder
+}
+
+fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
 
     if is_only_emojis(txt) {
@@ -419,10 +467,15 @@ pub fn markdown(text: &str) -> String {
                     in_paragraph = false;
                 }
                 pulldown_cmark::Event::Text(t) => {
+                    let t = if emojis {
+                        replace_emojis(&t)
+                    } else {
+                        t.to_string()
+                    };
                     let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
                         t.replace("\n\n", "<br/>").into()
                     } else {
-                        t
+                        t.into()
                     };
                     pulldown_cmark::html::push_html(
                         &mut html_output,
@@ -486,6 +539,18 @@ fn is_only_emojis(input: &str) -> bool {
             || emojis::get(&String::from(c)).is_some()
         })
     })
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn replace_emojis_test1() {
+        let input = ":)";
+        let expected = "🙂";
+        assert_eq!(&replace_emojis(input), expected);
+    }
 }
 
 #[cfg(test)]
