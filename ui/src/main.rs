@@ -16,6 +16,7 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+use dioxus_desktop::tao::event_loop::EventLoopBuilder;
 use dioxus_desktop::tao::platform::unix::WindowExtUnix;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
@@ -150,8 +151,29 @@ fn app(cx: Scope) -> Element {
     // 1. Make sure the warp engine is turned on before doing anything
     bootstrap::use_warp_runner(cx);
 
-    let window = use_window(cx);
+    let mut event_loop_builder = EventLoopBuilder::new();
     let main_menu = Menu::new();
+
+    #[cfg(target_os = "windows")]
+    {
+        let menu_bar = main_menu.clone();
+        event_loop_builder.with_msg_hook(move |msg| {
+            use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
+            unsafe {
+                let msg = msg as *const MSG;
+                let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel(), msg);
+                translated == 1
+            }
+        });
+    }
+
+    let event_loop = event_loop_builder.build();
+
+    let window = window_builder::get_window_builder(true)
+        .with_title("Uplink")
+        .build(&event_loop)
+        .ok()?;
+
     let app_menu = Submenu::new("Uplink", true);
     let edit_menu = Submenu::new("Edit", true);
     let window_menu = Submenu::new("Window", true);
