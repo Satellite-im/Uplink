@@ -119,6 +119,8 @@ fn main() {
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
 
+    // mac needs the menu built a certain way.
+    // the main_menu must not be dropped before launch_cfg is called.
     let main_menu = Menu::new();
     let app_menu = Submenu::new("Uplink", true);
     let edit_menu = Submenu::new("Edit", true);
