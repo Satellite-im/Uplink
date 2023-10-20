@@ -864,6 +864,16 @@ impl State {
             .cloned()
             .collect()
     }
+
+    // hide IF favorites.len() = 0 AND not is_minimal_view OR is_sidebar_hidden
+    pub fn show_slimbar(&self) -> bool {
+        let has_favs = !self.chats_favorites().is_empty();
+        let is_minimal_view = self.ui.is_minimal_view();
+        let sidebar_hidden = self.ui.sidebar_hidden;
+        let experimental_features = self.configuration.developer.experimental_features;
+
+        has_favs || is_minimal_view || sidebar_hidden || experimental_features
+    }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         let msg_id = message.inner.id();
         let is_active_scrolled = self.chats.active_chat_is_scrolled();
