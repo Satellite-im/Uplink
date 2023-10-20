@@ -42,6 +42,7 @@ notify = { workspace = true }
 rand = { workspace = true }
 notify-rust = { workspace = true }
 titlecase = { workspace = true }
+muda = { workspace = true }
 
 tempfile = { workspace = true }
 fdlimit = { workspace = true }
