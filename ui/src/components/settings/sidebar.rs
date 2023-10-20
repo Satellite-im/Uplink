@@ -12,7 +12,7 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Page {
     About,
     Audio,
@@ -32,7 +32,7 @@ impl Page {
         *self = p;
     }
     pub fn get(&self) -> Self {
-        self.clone()
+        *self
     }
     pub fn matches_str(&self, s: &str) -> bool {
         let other = match Self::from_str(s) {
