@@ -118,9 +118,8 @@ fn main() {
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
 
-    let config = webview_config::webview_config();
     // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(app, config)
+    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
 }
 
 #[allow(clippy::enum_variant_names)]
