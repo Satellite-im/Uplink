@@ -124,72 +124,41 @@ fn main() {
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
 
-    let mut event_loop_builder = EventLoopBuilder::new();
-    let main_menu = Menu::new();
-
-    #[cfg(target_os = "windows")]
-    {
-        let menu_bar = main_menu.clone();
-        event_loop_builder.with_msg_hook(move |msg| {
-            use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
-            unsafe {
-                let msg = msg as *const MSG;
-                let translated = TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel(), msg);
-                translated == 1
-            }
-        });
-    }
-
-    let event_loop = event_loop_builder.build();
-
-    let window = window_builder::get_window_builder(true)
-        .with_title("Uplink")
-        .build(&event_loop)
-        .unwrap();
-
-    let app_menu = Submenu::new("Uplink", true);
-    let edit_menu = Submenu::new("Edit", true);
-    let window_menu = Submenu::new("Window", true);
-
-    let _ = app_menu.append_items(&[
-        &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
-        &PredefinedMenuItem::quit(None),
-    ]);
-    // add native shortcuts to `edit_menu` menu
-    // in macOS native item are required to get keyboard shortcut
-    // to works correctly
-    let _ = edit_menu.append_items(&[
-        &PredefinedMenuItem::undo(None),
-        &PredefinedMenuItem::redo(None),
-        &PredefinedMenuItem::separator(),
-        &PredefinedMenuItem::cut(None),
-        &PredefinedMenuItem::copy(None),
-        &PredefinedMenuItem::paste(None),
-        &PredefinedMenuItem::select_all(None),
-    ]);
-
-    let _ = window_menu.append_items(&[
-        &PredefinedMenuItem::minimize(None),
-        //&PredefinedMenuItem::zoom(None),
-        &PredefinedMenuItem::separator(),
-        &PredefinedMenuItem::show_all(None),
-        &PredefinedMenuItem::fullscreen(None),
-        &PredefinedMenuItem::separator(),
-        &PredefinedMenuItem::close_window(None),
-    ]);
-
-    let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
-
-    #[cfg(target_os = "windows")]
-    {
-        main_menu.init_for_hwnd(window.hwnd() as _);
-    }
-    #[cfg(target_os = "linux")]
-    {
-        let _ = main_menu.init_for_gtk_window(window.gtk_window(), window.default_vbox());
-    }
     #[cfg(target_os = "macos")]
     {
+        let main_menu = Menu::new();
+        let app_menu = Submenu::new("Uplink", true);
+        let edit_menu = Submenu::new("Edit", true);
+        let window_menu = Submenu::new("Window", true);
+
+        let _ = app_menu.append_items(&[
+            &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
+            &PredefinedMenuItem::quit(None),
+        ]);
+        // add native shortcuts to `edit_menu` menu
+        // in macOS native item are required to get keyboard shortcut
+        // to works correctly
+        let _ = edit_menu.append_items(&[
+            &PredefinedMenuItem::undo(None),
+            &PredefinedMenuItem::redo(None),
+            &PredefinedMenuItem::separator(),
+            &PredefinedMenuItem::cut(None),
+            &PredefinedMenuItem::copy(None),
+            &PredefinedMenuItem::paste(None),
+            &PredefinedMenuItem::select_all(None),
+        ]);
+
+        let _ = window_menu.append_items(&[
+            &PredefinedMenuItem::minimize(None),
+            //&PredefinedMenuItem::zoom(None),
+            &PredefinedMenuItem::separator(),
+            &PredefinedMenuItem::show_all(None),
+            &PredefinedMenuItem::fullscreen(None),
+            &PredefinedMenuItem::separator(),
+            &PredefinedMenuItem::close_window(None),
+        ]);
+
+        let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
         main_menu.init_for_nsapp();
     }
 

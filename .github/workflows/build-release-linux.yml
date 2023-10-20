@@ -16,7 +16,7 @@ jobs:
       - name: Get latest package list
         run: sudo apt-get update
       - name: Install libwebkit2gtk
-        run: sudo apt-get install -y build-essential pkg-config libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev librust-alsa-sys-dev dpkg-dev gzip
+        run: sudo apt-get install -y build-essential pkg-config libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev librust-alsa-sys-dev dpkg-dev gzip libxdo-dev
       - name: Checkout sources
         uses: actions/checkout@v2
       - name: Build executable
