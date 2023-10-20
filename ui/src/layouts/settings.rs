@@ -28,7 +28,7 @@ use kit::layout::topbar::Topbar;
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let to = use_state(cx, || Page::Profile);
+    let to = use_shared_state::<Page>(cx)?;
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
@@ -40,7 +40,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         first_render.set(false);
     }
 
-    let settings_page = match to.get() {
+    let settings = match to.read().get() {
         Page::About => rsx!(AboutPage {}),
         Page::General => rsx!(GeneralSettings {}),
         Page::Messages => rsx!(Messages {}),
@@ -62,11 +62,11 @@ pub fn SettingsLayout(cx: Scope) -> Element {
             SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
             Sidebar {
                 onpress: move |p| {
+                    to.write().set(p);
                     // If on mobile, we should hide the sidebar here.
                     if state.read().ui.is_minimal_view() {
                         state.write().mutate(Action::SidebarHidden(true));
                     }
-                    to.set(p);
                 },
             },
             div {
@@ -83,7 +83,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
                 div {
                     id: "content",
                     class: "full-width",
-                    settings_page
+                    settings,
                 },
                  (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
