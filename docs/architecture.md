@@ -5,7 +5,7 @@
 ## Background
 - The Uplink repository consists of two `Cargo` projects: `kit` (a library) and `uplink` (the executable).  
 - Uplink relies on [Warp](https://github.com/Satellite-im/Warp) and [Dioxus](https://github.com/DioxusLabs/dioxus). It is assumed the reader is familiar with the [Dioxus Documentation](https://dioxuslabs.com/guide/). 
-- At a high level, Warp sends messages (it does much more), while Uplink is just the UI. Sending and receiving messages is asynchronous, and Uplink has a separate module to handle this: `warp_runner`. All the data for the Uplink UI is contained in a `State` struct. Changing the `State` struct drives the UI. When `warp_runner` handles an event from `Warp`, `State` is modified, and the entire UI is re-rendered.   
+- At a high level, Warp sends messages (it does much more), while Uplink is just the UI. Sending and receiving messages is asynchronous, and Uplink has a separate module to handle this: `warp_runner`. All the data for the Uplink UI is contained in a `State` struct. Changing the `State` struct drives the UI. When `warp_runner` handles an event from the `Warp`, `State` is modified, and the entire UI is re-rendered.   
 
 ## Running the Application
 - `uplink --help`
