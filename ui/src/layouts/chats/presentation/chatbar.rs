@@ -573,6 +573,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     attachments: msg.attachments(),
                                     message: msg.value().join("\n"), 
                                     markdown: state.read().ui.should_transform_markdown_text(),
+                                    transform_ascii_emojis: state.read().ui.should_transform_ascii_emojis(),
                                     UserImage {
                                         image: profile_picture,
                                         platform: platform,
