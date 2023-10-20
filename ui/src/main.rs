@@ -16,15 +16,11 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
 };
-
-#[cfg(target_os = "linux")]
-use wry::application::platform::unix::WindowExtUnix;
-#[cfg(target_os = "windows")]
-use wry::application::platform::windows::{EventLoopBuilderExtWindows, WindowExtWindows};
 
 use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};
 use extensions::UplinkExtension;
