@@ -68,6 +68,7 @@ And for Windows, I followed the steps on this site here
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 | ffmpeg| `sudo apt-get install ffmpeg` |
 | libopus-dev| `sudo apt-get install libopus-dev` |
+| libxdo-dev| `sudo apt install libxdo-dev` |
 
 ## How to add the extension settings in Uplink:
 
