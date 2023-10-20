@@ -389,7 +389,7 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
 }
 
 pub fn replace_emojis(input: &str) -> String {
-    fn process_stack<'a>(stack: &'a str) -> &'a str {
+    fn process_stack(stack: &str) -> &str {
         match stack {
             "<3" => "❤️",
             ">:)" => "😈",
