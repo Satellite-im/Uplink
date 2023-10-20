@@ -34,7 +34,7 @@
 
 ## Global Variables
 - Uplink uses global variables to do some essential things. They are all in `main.rs`. 
-- `STATIC_ARGS` is for constant variables that may be affected by command line options
+- `STATIC_ARGS` is for constant variables which may be affected by command line options
 - the rest of the variables are channels. 
 
 ## Global Channels
