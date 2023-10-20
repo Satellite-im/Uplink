@@ -4,7 +4,7 @@ use common::{
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
 };
 use dioxus::prelude::*;
-use emojis::Group;
+use emojis::{Group, UnicodeVersion};
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use futures::StreamExt;
 use kit::{
@@ -35,6 +35,11 @@ fn group_to_str(group: emojis::Group) -> String {
     }
 }
 
+fn is_supported(unicode_version: UnicodeVersion) -> bool {
+    let (major, minor, _) = std::char::UNICODE_VERSION;
+    unicode_version.major() <= major as u32 && unicode_version.minor() <= minor as u32
+}
+
 #[component(no_case_check)]
 fn build_nav(cx: Scope<'_>) -> Element<'_> {
     let routes = vec![
@@ -63,6 +68,14 @@ fn build_nav(cx: Scope<'_>) -> Element<'_> {
             ..Route::default()
         },
         Route {
+            to: "Food & Drink",
+            name: group_to_str(Group::FoodAndDrink),
+            icon: Icon::Cake,
+            with_badge: None,
+            loading: None,
+            ..Route::default()
+        },
+        Route {
             to: "Travel & Places",
             name: group_to_str(Group::TravelAndPlaces),
             icon: Icon::BuildingStorefront,
@@ -81,7 +94,7 @@ fn build_nav(cx: Scope<'_>) -> Element<'_> {
         Route {
             to: "Objects",
             name: group_to_str(Group::Objects),
-            icon: Icon::Cake,
+            icon: Icon::Clock,
             with_badge: None,
             loading: None,
             ..Route::default()
@@ -222,7 +235,7 @@ fn render_selector<'a>(
                             div {
                                 class: "emojis-container",
                                 aria_label: "emojis-container",
-                                group.emojis().map(|emoji| {
+                                group.emojis().filter(|emoji|is_supported(emoji.unicode_version())).map(|emoji| {
                                     rsx!(
                                         div {
                                             aria_label: emoji.as_str(),
