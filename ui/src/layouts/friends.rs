@@ -34,7 +34,7 @@ pub enum FriendRoute {
 pub fn FriendsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
-
+    let show_slimbar = state.read().show_slimbar();
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
@@ -78,7 +78,11 @@ pub fn FriendsLayout(cx: Scope) -> Element {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
-            SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
+            if show_slimbar {
+                cx.render(rsx!(
+                    SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
+                ))
+            },
             ChatSidebar {
                 active_route: crate::UplinkRoute::FriendsLayout {},
             },
