@@ -13,7 +13,7 @@ dioxus-desktop = { workspace = true }
 extensions = { workspace = true }
 common = { workspace = true }
 kit = { workspace = true }
-emojis = "0.5.2"
+emojis = "0.6.1"
 once_cell = { workspace = true }
 warp = { workspace = true}
 uuid = { workspace = true }

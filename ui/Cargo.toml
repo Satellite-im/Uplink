@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
+async-stream = "0.3"
 dioxus = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-router = { workspace = true }
@@ -41,6 +42,7 @@ notify = { workspace = true }
 rand = { workspace = true }
 notify-rust = { workspace = true }
 titlecase = { workspace = true }
+muda = { workspace = true }
 
 tempfile = { workspace = true }
 fdlimit = { workspace = true }
@@ -67,7 +69,6 @@ log = { version = "0.4.17", features = ["std"] }
 default = ["dioxus-desktop/devtools"]
 fullscreen = ["dioxus-desktop/fullscreen"]
 transparent = ["dioxus-desktop/transparent"]
-tray = ["dioxus-desktop/tray"]
 production_mode = ["common/production_mode"]
 
 [build-dependencies]

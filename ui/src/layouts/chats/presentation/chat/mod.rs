@@ -1,10 +1,12 @@
 mod controls;
+pub mod coroutines;
 mod edit_group;
 mod group_users;
 mod pinned_messages;
 mod topbar;
 
 use dioxus::prelude::*;
+
 use kit::{
     components::message_group::MessageGroupSkeletal,
     layout::{modal::Modal, topbar::Topbar},
@@ -13,7 +15,7 @@ use kit::{
 use crate::{
     components::media::calling::CallControl,
     layouts::chats::{
-        data::ChatData,
+        data::{self, ChatData, ScrollBtn},
         presentation::{
             chat::{edit_group::EditGroup, group_users::GroupUsers},
             chatbar::get_chatbar,
@@ -32,39 +34,35 @@ use warp::{crypto::DID, logging::tracing::log};
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
+    use_shared_state_provider(cx, ChatData::default);
+    use_shared_state_provider(cx, ScrollBtn::new);
     let state = use_shared_state::<State>(cx)?;
-    let data = ChatData::get(state);
-    let data2 = data.clone();
-    let chat_id = data2
-        .as_ref()
-        .map(|data| data.active_chat.id)
-        .unwrap_or(Uuid::nil());
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+
+    let init = coroutines::init_chat_data(cx, state, chat_data);
+    coroutines::handle_warp_events(cx, state, chat_data);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
-    if state.read().chats().active_chat_has_unreads() {
-        state.write().mutate(Action::ClearActiveUnreads);
-    }
 
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
+    let creator = chat_data.read().active_chat.creator();
 
-    let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let creator = if let Some(chat) = active_chat.as_ref() {
-        chat.creator.clone()
-    } else {
-        None
-    };
-
-    let user_did: DID = state.read().did_key();
-    let is_owner = if let Some(creator_did) = creator {
-        creator_did == user_did
-    } else {
-        false
-    };
-
+    let chat_id = chat_data.read().active_chat.id();
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
+    let user_did: DID = state.read().did_key();
+    let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
+
+    if init.value().is_some() {
+        if let Some(chat) = state.read().get_active_chat() {
+            let metadata = data::Metadata::new(&state.read(), &chat);
+            if chat_data.read().active_chat.metadata_changed(&metadata) {
+                chat_data.write().active_chat.set_metadata(metadata);
+            }
+        }
+    }
 
     cx.render(rsx!(
         div {
@@ -76,7 +74,6 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 controls: cx.render(rsx!(controls::get_controls{
-                    data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
@@ -84,7 +81,6 @@ pub fn Compose(cx: Scope) -> Element {
                     is_edit_group: is_edit_group,
                 })),
                 topbar::get_topbar_children {
-                    data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
@@ -132,19 +128,19 @@ pub fn Compose(cx: Scope) -> Element {
         CallControl {
             in_chat: true
         },
-        match data.as_ref() {
-            None => rsx!(
+        if init.value().is_none() {
+           rsx!(
                 div {
                     id: "messages",
                     MessageGroupSkeletal {},
                     MessageGroupSkeletal { alt: true },
                     MessageGroupSkeletal {},
                 }
-            ),
-            Some(_data) =>  rsx!(get_messages { data: _data.clone() }),
+            )
+        } else {
+            rsx!(get_messages{})
         },
         get_chatbar {
-            data: data.clone(),
             show_edit_group: show_edit_group.clone(),
             show_group_users: show_group_users.clone(),
             ignore_focus: should_ignore_focus,

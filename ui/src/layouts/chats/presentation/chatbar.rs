@@ -35,14 +35,15 @@ use warp::{
 };
 
 const MAX_CHARS_LIMIT: usize = 1024;
-const SCROLL_BTN_THRESHOLD: i64 = -1000;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
-use super::super::scripts::SCROLL_BOTTOM;
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
-    layouts::storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
+    layouts::{
+        chats::data::{ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
+    },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -74,14 +75,13 @@ struct TypingInfo {
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
-    let data = &cx.props.data;
-    let is_loading = data.is_none();
-    let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-    let chat_id = data
-        .as_ref()
-        .map(|data| data.active_chat.id)
-        .unwrap_or(Uuid::nil());
+
+    let is_loading = !chat_data.read().active_chat.is_initialized;
+    let active_chat_id = chat_data.read().active_chat.id();
+    let chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -89,12 +89,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let emoji_suggestions = use_state(cx, Vec::new);
 
-    let with_scroll_btn = state
-        .read()
-        .get_active_chat()
-        .map(|c| c.scroll_value.unwrap_or_default())
-        .unwrap_or_default()
-        < SCROLL_BTN_THRESHOLD;
+    let with_scroll_btn = scroll_btn.read().get(chat_id);
+
+    // if the active chat is scrolled up and a message is received, want to increment unreads
+    // but the needed information isn't accessible in main.rs. so a flag was added to State
+    // and is set here in the chatbar. This was done here instead of in messages.rs as
+    // an attempted optimization - don't want to re-render messages whenever scroll_btn
+    // is written to, which could be a lot.
+    state
+        .write_silent()
+        .set_chat_scrolled(chat_id, with_scroll_btn);
+
+    // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
+    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
+        state.write().mutate(Action::ClearActiveUnreads);
+    }
+
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -122,21 +132,45 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .mutate(Action::SetChatAttachments(chat_id, files_attached));
     }
 
-    // used to render the typing indicator
-    // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
-    let users_typing: Vec<DID> = data
-        .as_ref()
-        .map(|data| {
-            data.active_chat
-                .typing_indicator
-                .iter()
-                .filter(|(did, _)| *did != &my_id)
-                .map(|(did, _)| did.clone())
+    let users_typing: Vec<DID> = state
+        .read()
+        .get_active_chat()
+        .map(|x| {
+            x.typing_indicator
+                .keys()
+                .cloned()
+                .filter(|did| *did != my_id)
                 .collect()
         })
         .unwrap_or_default();
     let users_typing = state.read().get_identities(&users_typing);
+
+    // this is used to scroll to the bottom of the chat.
+    let scroll_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+        to_owned![chat_data, state];
+        async move {
+            while let Some(conv_id) = rx.next().await {
+                match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
+                    conv_id,
+                    DEFAULT_MESSAGES_TO_TAKE,
+                )
+                .await
+                {
+                    Ok((messages, behavior)) => {
+                        log::debug!("re-init messages with most recent");
+                        chat_data.write().set_active_chat(
+                            &state.read(),
+                            &conv_id,
+                            behavior,
+                            messages,
+                        );
+                    }
+                    Err(e) => log::error!("{e}"),
+                }
+            }
+        }
+    });
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
         to_owned![state];
@@ -320,8 +354,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
-            if let Some(c) = current_chat {
-                local_typing_ch1.send(TypingIndicator::Refresh(c));
+            if !current_chat.is_nil() {
+                local_typing_ch1.send(TypingIndicator::Refresh(current_chat));
             }
         }
     });
@@ -356,38 +390,31 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .map(|x| x.trim_end().to_string())
             .collect::<Vec<String>>();
 
-        if let Some(id) = active_chat_id {
+        if !active_chat_id.is_nil() {
             state
                 .write()
-                .mutate(Action::SetChatDraft(id, String::new()));
+                .mutate(Action::SetChatDraft(active_chat_id, String::new()));
         }
 
         emoji_suggestions.set(vec![]);
 
-        if !msg_valid(&msg) {
+        if !msg_valid(&msg) || active_chat_id.is_nil() {
             return;
         }
-        let id = match active_chat_id {
-            Some(i) => i,
-            None => return,
-        };
+
         can_send.set(false);
         if STATIC_ARGS.use_mock {
-            state.write().mutate(Action::MockSend(id, msg));
+            state.write().mutate(Action::MockSend(active_chat_id, msg));
         } else {
             let replying_to = state.read().chats().get_replying_to();
             if replying_to.is_some() {
-                state.write().mutate(Action::CancelReply(id));
+                state.write().mutate(Action::CancelReply(active_chat_id));
             }
             let ui_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, id, ui_id, replying_to));
+            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
         }
-    };
-    let id = match active_chat_id {
-        Some(i) => i,
-        None => uuid::Uuid::new_v4(),
     };
 
     let extensions = &state.read().ui.extensions;
@@ -400,7 +427,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();
-    let error = use_state(cx, || (false, id));
+    // todo: don't define a hook so far down
+    let error = use_state(cx, || (false, active_chat_id));
     let value_chatbar = state
         .read()
         .get_active_chat()
@@ -409,9 +437,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .unwrap_or_default();
 
     if value_chatbar.len() >= MAX_CHARS_LIMIT && !error.0 {
-        error.set((true, id));
+        error.set((true, active_chat_id));
     } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
-        error.set((false, id));
+        error.set((false, active_chat_id));
     }
 
     let validate_max = move || {
@@ -422,9 +450,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default();
         if value_chatbar.len() >= MAX_CHARS_LIMIT {
-            error.set((true, id));
+            error.set((true, active_chat_id));
         } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
-            error.set((false, id));
+            error.set((false, active_chat_id));
         }
     };
     let placeholder_text = if !state.read().ui.is_minimal_view() {
@@ -437,19 +465,19 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let chatbar = cx.render(rsx!(
         Chatbar {
-            key: "{id}",
-            id: format!("{}-chatbar", id.to_string()),
+            key: "{active_chat_id}",
+            id: format!("{}-chatbar", active_chat_id.to_string()),
             loading: is_loading,
             placeholder: placeholder_text,
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onchange: move |v: String| {
-                if let Some(id) = &active_chat_id {
-                    state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                if !active_chat_id.is_nil() {
+                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
                     validate_max();
                     update_send();
-                    local_typing_ch.send(TypingIndicator::Typing(*id));
+                    local_typing_ch.send(TypingIndicator::Typing(active_chat_id));
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
@@ -457,7 +485,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             emoji_suggestions: emoji_suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
-                if let Some(id) = &active_chat_id {
+                if !active_chat_id.is_nil() {
                     let sub: String = v.chars().take(p as usize).collect();
                     let capture = EMOJI_REGEX.captures(&sub);
                     match capture {
@@ -474,7 +502,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                 let replacement = s.first();
                                 if let Some((emoji, _)) = replacement {
                                     v = v.replace(&sub, &sub.replace(&format!(":{alias}:"), emoji));
-                                    state.write().mutate(Action::SetChatDraft(*id, v));
+                                    state.write().mutate(Action::SetChatDraft(active_chat_id, v));
                                 }
                                 emoji_suggestions.set(vec![])
                             } else {
@@ -489,7 +517,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 }
             },
             on_emoji_click: move |(emoji, _, p): (String, String, i64)| {
-                if let Some(id) = &active_chat_id {
+                if !active_chat_id.is_nil() {
                     let mut draft = state
                         .read()
                         .get_active_chat()
@@ -502,7 +530,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         draft = draft.replace(&sub, &sub.replace(&e[0].to_string(), &emoji));
                         state
                             .write()
-                            .mutate(Action::SetChatDraft(*id, draft));
+                            .mutate(Action::SetChatDraft(active_chat_id, draft));
                     }
                     emoji_suggestions.set(vec![])
                 }
@@ -522,26 +550,25 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     }
                 ),
             ),
-            with_replying_to: data.as_ref().filter(|_| !disabled).map(|data| {
-                let active_chat = &data.active_chat;
+            with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        active_chat.replying_to.as_ref().map(|msg| {
+                        chat_data.read().active_chat.replying_to().map(|msg| {
                             let our_did = state.read().did_key();
-                            let msg_owner = if data.my_id.did_key() == msg.sender() {
-                                Some(&data.my_id)
+                            let msg_owner = if chat_data.read().active_chat.my_id().did_key() == msg.sender() {
+                                Some(chat_data.read().active_chat.my_id())
                             } else {
-                                data.other_participants.iter().find(|x| x.did_key() == msg.sender())
+                                chat_data.read().active_chat.other_participants().iter().find(|x| x.did_key() == msg.sender()).cloned()
                             };
 
-                            let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
+                            let (platform, status, profile_picture) = get_platform_and_status(msg_owner.as_ref());
 
                             rsx!(
                                 Reply {
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(active_chat.id))
+                                        state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id()))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.value().join("\n"),
@@ -660,8 +687,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_scroll_btn.then(|| {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
-                    onclick: |_| {
-                        let _ = use_eval(cx)(SCROLL_BOTTOM);
+                    onclick: move |_| {
+                        scroll_btn.write().clear(chat_id);
+                        state.write().mutate(Action::ClearUnreads(chat_id));
+                        // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to 
+                        // fetch more messages - one could just use a regular javascript to scroll to the end of the page. 
+                        // however, this is easier and seems to work well enough. 
+                        scroll_ch.send(chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })

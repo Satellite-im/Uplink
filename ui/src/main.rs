@@ -15,10 +15,13 @@ use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
 use dioxus::prelude::*;
+use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
 };
+
 use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};
 use extensions::UplinkExtension;
 use futures::channel::oneshot;
@@ -53,10 +56,15 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_wry_event_handler, DesktopService};
+use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
+
+use muda::AboutMetadata;
+use muda::Menu;
+use muda::PredefinedMenuItem;
+use muda::Submenu;
 
 use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
@@ -110,6 +118,47 @@ fn main() {
 
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
+
+    // mac needs the menu built a certain way.
+    // the main_menu must not be dropped before launch_cfg is called.
+    let main_menu = Menu::new();
+    let app_menu = Submenu::new("Uplink", true);
+    let edit_menu = Submenu::new("Edit", true);
+    let window_menu = Submenu::new("Window", true);
+
+    let _ = app_menu.append_items(&[
+        &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
+        &PredefinedMenuItem::quit(None),
+    ]);
+    // add native shortcuts to `edit_menu` menu
+    // in macOS native item are required to get keyboard shortcut
+    // to works correctly
+    let _ = edit_menu.append_items(&[
+        &PredefinedMenuItem::undo(None),
+        &PredefinedMenuItem::redo(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::cut(None),
+        &PredefinedMenuItem::copy(None),
+        &PredefinedMenuItem::paste(None),
+        &PredefinedMenuItem::select_all(None),
+    ]);
+
+    let _ = window_menu.append_items(&[
+        &PredefinedMenuItem::minimize(None),
+        //&PredefinedMenuItem::zoom(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::show_all(None),
+        &PredefinedMenuItem::fullscreen(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::close_window(None),
+    ]);
+
+    let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
+
+    #[cfg(target_os = "macos")]
+    {
+        main_menu.init_for_nsapp();
+    }
 
     // 5. Finally, launch the app
     dioxus_desktop::launch_cfg(app, webview_config::webview_config())
@@ -341,28 +390,64 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 .write()
                 .mutate(Action::ClearAllPopoutWindows(desktop.clone())),
             WryEvent::WindowEvent {
+                event: WindowEvent::Moved(_),
+                ..
+            } => {
+                // Dont use the arg provided by the WindowEvent as its not right on mac
+                let position =
+                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+                state.write_silent().ui.window_position = Some((position.x, position.y));
+                let _ = state.write().save();
+            }
+            WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
-                if state.read().ui.window_maximized
-                    && *first_resize.read()
-                    && cfg!(not(target_os = "windows"))
-                {
-                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                let current_position =
+                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+                let (pos_x, pos_y) = state
+                    .read()
+                    .ui
+                    .window_position
+                    .unwrap_or(current_position.into());
+                let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
+                if *first_resize.read() {
+                    if state.read().ui.metadata.full_screen {
+                        desktop.set_fullscreen(true);
+                    } else {
+                        desktop.set_inner_size(LogicalSize::new(width, height));
+                        desktop.set_maximized(state.read().ui.metadata.maximized);
+                    }
+                    desktop.set_outer_position(LogicalPosition::new(pos_x, pos_y));
                     *first_resize.write_silent() = false;
                 }
-                let size = webview.inner_size();
+                let size = scaled_window_size(webview.inner_size(), &desktop);
                 let metadata = state.read().ui.metadata.clone();
-                //log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
                     minimized: desktop.is_minimized(),
-                    minimal_view: size.width < get_window_minimal_width(&desktop),
+                    full_screen: desktop.fullscreen().is_some(),
+                    minimal_view: size.width < 600,
                 };
+                let mut changed = false;
                 if metadata != new_metadata {
-                    state.write().ui.sidebar_hidden = new_metadata.minimal_view;
-                    state.write().ui.metadata = new_metadata;
+                    state.write_silent().ui.sidebar_hidden = new_metadata.minimal_view;
+                    state.write_silent().ui.metadata = new_metadata;
+                    changed = true;
+                }
+                if size.width != width || size.height != height {
+                    state.write_silent().ui.window_size = Some((size.width, size.height));
+                    let _ = state.write_silent().save();
+                    changed = true;
+                }
+                if current_position.x != pos_x || current_position.y != pos_y {
+                    state.write_silent().ui.window_position =
+                        Some((current_position.x, current_position.y));
+                    changed = true;
+                }
+                if changed {
+                    let _ = state.write().save();
                 }
             }
             _ => {}
@@ -378,12 +463,11 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
-            let warp_event_rx = WARP_EVENT_CH.rx.clone();
+            let mut ch = WARP_EVENT_CH.tx.subscribe();
             log::trace!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_event_rx.lock().await;
-            while let Some(evt) = ch.recv().await {
+            while let Ok(evt) = ch.recv().await {
                 // Update only relevant components for attachment progress events
                 if let WarpEvent::Message(MessageEvent::AttachmentProgress {
                     progress,
@@ -969,13 +1053,33 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     Ok(extensions)
 }
 
-fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
+fn scaled_window_size(
+    inner: PhysicalSize<u32>,
+    desktop: &std::rc::Rc<DesktopService>,
+) -> PhysicalSize<u32> {
     if cfg!(target_os = "macos") {
         // On Mac window sizes are kinda funky.
         // They are scaled with the window scale factor so they dont correspond to app pixels
-        (600_f64 * desktop.webview.window().scale_factor()) as u32
+        let logical: LogicalSize<f64> = (inner.width as f64, inner.height as f64).into();
+        let scale = desktop.webview.window().scale_factor();
+        logical.to_physical(1_f64 / scale)
     } else {
-        600
+        inner
+    }
+}
+
+fn scaled_window_position(
+    position: PhysicalPosition<i32>,
+    desktop: &std::rc::Rc<DesktopService>,
+) -> PhysicalPosition<i32> {
+    if cfg!(target_os = "macos") {
+        // On Mac window the positions are kinda funky.
+        // They are scaled with the window scale factor so they dont correspond to actual position
+        let logical: LogicalPosition<f64> = (position.x as f64, position.y as f64).into();
+        let scale = desktop.webview.window().scale_factor();
+        logical.to_physical(1_f64 / scale)
+    } else {
+        position
     }
 }
 

@@ -4,8 +4,7 @@ use dioxus_desktop::Config;
 use warp::logging::tracing::log;
 
 pub(crate) fn webview_config() -> Config {
-    let window = crate::window_builder::get_window_builder(true, true);
-
+    let window = crate::window_builder::get_window_builder(true);
     let config = Config::new()
         .with_window(window)
         .with_custom_index(

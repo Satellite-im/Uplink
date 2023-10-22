@@ -23,7 +23,7 @@ use common::language::get_local_text;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::UplinkRoute;
+use crate::{components::settings::sidebar::Page, UplinkRoute};
 
 pub const USER_VOL_MIN: f32 = 0.25;
 pub const USER_VOL_MAX: f32 = 5.0;
@@ -51,6 +51,7 @@ enum QuickProfileCmd {
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let settings_page = use_shared_state::<Page>(cx)?;
     let id = cx.props.id;
 
     let identity = state
@@ -313,6 +314,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         aria_label: "quick-profile-self-edit".into(),
                         text: get_local_text("quickprofile.self-edit"),
                         onpress: move |_| {
+                            settings_page.write().set(Page::Profile);
                             router.replace(UplinkRoute::SettingsLayout {});
                         }
                     })

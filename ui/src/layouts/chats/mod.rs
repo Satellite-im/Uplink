@@ -4,6 +4,7 @@ mod scripts;
 pub use presentation::sidebar::Sidebar as ChatSidebar;
 use presentation::welcome::Welcome;
 
+pub use data::ActiveChat;
 use std::{path::PathBuf, rc::Rc};
 
 use crate::{
@@ -75,6 +76,8 @@ pub fn ChatLayout(cx: Scope) -> Element {
     let window = use_window(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
+    let show_slimbar = state.read().show_slimbar();
+
     // #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![state, window, drag_event, eval];
@@ -103,7 +106,11 @@ pub fn ChatLayout(cx: Scope) -> Element {
                 p {id: "overlay-text0", class: "overlay-text"},
                 p {id: "overlay-text", class: "overlay-text"}
             },
-            SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
+            if show_slimbar {
+                cx.render(rsx!(
+                    SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
+                ))
+            },
             // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
             // creating a new account on a mobile device.
             ChatSidebar {

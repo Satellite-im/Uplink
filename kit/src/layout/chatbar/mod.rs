@@ -236,6 +236,9 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
         onmouseleave: move |_| {
             *cx.props.selected.write() = None;
         },
+        Label {
+            text: "Suggested Emoji".into()
+        },
         cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
             cx.render(rsx!(div {
                 class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
