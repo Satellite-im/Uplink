@@ -5,7 +5,7 @@ use common::{
 use dioxus::prelude::*;
 use kit::{
     components::{
-        message::markdown, user::User, user_image::UserImage, user_image_group::UserImageGroup,
+        message::format_text, user::User, user_image::UserImage, user_image_group::UserImageGroup,
     },
     elements::{checkbox::Checkbox, label::Label},
 };
@@ -143,7 +143,7 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
             let is_checked = storage_controller.read().chats_selected_to_send.iter().any(|uuid| {uuid.eq(&chat.id)});
             let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
             let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                Some(v) => markdown(v),
+                Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis()),
                 _ => match &unwrapped_message.attachments()[..] {
                     [] => get_local_text("sidebar.chat-new"),
                     [ file ] => file.name(),

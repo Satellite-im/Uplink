@@ -6,6 +6,8 @@ use warp::{constellation::file::File, crypto::DID};
 
 use crate::components::embeds::file_embed::FileEmbed;
 
+use super::message::format_text;
+
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
     #[display(fmt = "message-first")]
@@ -38,11 +40,17 @@ pub struct Props<'a> {
     sender_did: Option<DID>,
     #[props(optional)]
     replier_did: Option<DID>,
+    markdown: Option<bool>,
+    transform_ascii_emojis: Option<bool>,
 }
 
 #[allow(non_snake_case)]
 pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let text = cx.props.with_text.clone().unwrap_or_default();
+    let text = format_text(
+        &cx.props.with_text.clone().unwrap_or_default(),
+        cx.props.markdown.unwrap_or_default(),
+        cx.props.transform_ascii_emojis.unwrap_or_default(),
+    );
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
@@ -103,7 +111,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
                         background: if replier_did == sender_did {"var(--secondary)"} else {"var(--secondary-dark)"},
-                        "{text}"
+                        dangerous_inner_html: "{text}",
                         has_attachments.then(|| {
                             rsx!(
                                 attachment_list.map(|list| {
