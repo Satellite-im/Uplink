@@ -68,6 +68,18 @@ And for Windows, I followed the steps on this site here
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 | ffmpeg| `sudo apt-get install ffmpeg` |
 | libopus-dev| `sudo apt-get install libopus-dev` |
+| libxdo-dev| `sudo apt install libxdo-dev` |
+
+## How to add the extension settings in Uplink:
+
+- Open Uplink and navigate to Settings > Extensions > Settings > Open Extensions.
+- In another Finder window, open Uplink.
+- Inside Uplink, go to Target > Debug, where you'll find the Emoji selector.
+- Drag the Emoji selector to the Extensions window that is still open.
+- Close all open windows.
+- Finally, run cargo run trace2.
+
+https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2
 
 
 ## Contributing
@@ -75,3 +87,8 @@ And for Windows, I followed the steps on this site here
 All contributions are welcome! Please keep in mind we're still a relatively small team, and any work done to ensure contributions don't cause bugs or issues in the application is much appreciated.
 
 Guidelines for contributing are located in the [`contributing_process.md`](docs/contributing_process.md).
+
+# Contributors
+
+![GitHub Contributors Image](https://contrib.rocks/image?repo=Satellite-im/Uplink)
+

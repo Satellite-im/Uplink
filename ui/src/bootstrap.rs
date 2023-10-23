@@ -28,6 +28,7 @@ pub(crate) fn use_boostrap<'a>(
 ) -> Option<&'a UseSharedState<State>> {
     let desktop = use_window(cx);
     use_shared_state_provider(cx, DownloadState::default);
+    use_shared_state_provider(cx, || components::settings::sidebar::Page::Profile);
     use_shared_state_provider(cx, || {
         let mut state = State::load();
 
@@ -44,13 +45,14 @@ pub(crate) fn use_boostrap<'a>(
             state.ui.overlays.push(window);
         }
 
-        let size = desktop.webview.inner_size();
+        let size = scaled_window_size(desktop.webview.inner_size(), desktop);
         // Update the window metadata now that we've created a window
         let window_meta = WindowMeta {
             focused: desktop.is_focused(),
             maximized: desktop.is_maximized(),
             minimized: desktop.is_minimized(),
-            minimal_view: size.width < get_window_minimal_width(desktop),
+            full_screen: state.ui.metadata.full_screen,
+            minimal_view: size.width < 600,
         };
         state.ui.metadata = window_meta;
         state.set_warp_ch(WARP_CMD_CH.tx.clone());

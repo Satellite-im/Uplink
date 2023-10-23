@@ -62,7 +62,7 @@ pub async fn convert_raygun_message(
         inner: msg.clone(),
         in_reply_to: reply.map(|msg: raygun::Message| {
             (
-                msg.value().first().cloned().unwrap_or_default(),
+                msg.lines().first().cloned().unwrap_or_default(),
                 msg.attachments(),
                 msg.sender(),
             )

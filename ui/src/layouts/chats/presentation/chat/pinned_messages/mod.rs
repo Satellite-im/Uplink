@@ -119,13 +119,15 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             }
         }
     });
+    let pinned_messages = chat_data.read().active_chat.pinned_messages();
+
     cx.render(rsx!(div {
         id: "pinned-messages-container",
         aria_label: "pinned-messages-label",
         div {
             class: "pinned-messages",
             aria_label: "pinned-messages-container",
-            if chat_data.read().active_chat.pinned_messages.is_empty() {
+            if pinned_messages.is_empty() {
                 rsx!(div {
                     class: "pinned-empty",
                     aria_label: "pinned-empty",
@@ -134,7 +136,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 })
             } else {
-                rsx!(chat_data.read().active_chat.pinned_messages.iter().map(|message|{
+                rsx!(pinned_messages.iter().map(|message|{
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     let conversation_id = message.conversation_id();
@@ -244,7 +246,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         }
                     }
                     ChatText {
-                        text: message.value().join("\n"),
+                        text: message.lines().join("\n"),
                         remote: true,
                         pending: false,
                         markdown: true,
