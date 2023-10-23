@@ -28,6 +28,7 @@ use kit::layout::topbar::Topbar;
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_shared_state::<Page>(cx)?;
+    let show_slimbar = state.read().show_slimbar();
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
@@ -57,7 +58,11 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
-            SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
+            if show_slimbar {
+                cx.render(rsx!(
+                    SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
+                ))
+            },
             Sidebar {
                 onpress: move |p| {
                     to.write().set(p);
