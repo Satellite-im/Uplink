@@ -571,7 +571,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                         state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id()))
                                     },
                                     attachments: msg.attachments(),
-                                    message: msg.lines().join("\n"),
+                                    message: msg.lines().join("\n"), 
+                                    markdown: state.read().ui.should_transform_markdown_text(),
+                                    transform_ascii_emojis: state.read().ui.should_transform_ascii_emojis(),
                                     UserImage {
                                         image: profile_picture,
                                         platform: platform,

@@ -172,6 +172,7 @@ pub struct PinnedMessageProp<'a> {
 
 #[allow(non_snake_case)]
 pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
     let message = &cx.props.message;
     let attachments = message.attachments();
 
@@ -249,7 +250,8 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         text: message.lines().join("\n"),
                         remote: true,
                         pending: false,
-                        markdown: true,
+                        markdown: state.read().ui.should_transform_markdown_text(),
+                        ascii_emoji: state.read().ui.should_transform_ascii_emojis(),
                     }
                 },
                 has_attachments.then(|| {

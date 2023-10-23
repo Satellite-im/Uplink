@@ -10,7 +10,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::components::message::markdown;
+use kit::components::message::format_text;
 use kit::layout::modal::Modal;
 use kit::{
     components::{
@@ -276,6 +276,8 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     let is_active = state.read().get_active_chat().map(|c| c.id) == Some(chat.id);
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
+                    let markdown = state.read().ui.should_transform_markdown_text();
+                    let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
                     // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                     let participants_name = match chat.conversation_name {
@@ -284,7 +286,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     };
 
                     let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                        Some(v) => markdown(v),
+                        Some(v) => format_text(v, markdown, should_transform_ascii_emojis),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
