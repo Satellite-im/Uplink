@@ -6,7 +6,9 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
+use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
+use regex::Regex;
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -17,6 +19,11 @@ use common::icons::outline::Shape as Icon;
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
+
+pub static STRIKE_THROUGH_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(~~[^~]+~~)").unwrap());
+pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
+});
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -92,17 +99,16 @@ pub struct Props<'a> {
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
-    let re = regex::Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap();
-
-    re.replace_all(text, |caps: &regex::Captures| {
-        let url = caps.get(0).unwrap().as_str();
-        if url.starts_with("www.") {
-            format!("<a href=\"https://{}\">{}</a>", url, url)
-        } else {
-            format!("<a href=\"{}\">{}</a>", url, url)
-        }
-    })
-    .into_owned()
+    LINK_TAGS_REGEX
+        .replace_all(text, |caps: &regex::Captures| {
+            let url = caps.get(0).unwrap().as_str();
+            if url.starts_with("www.") {
+                format!("<a href=\"https://{}\">{}</a>", url, url)
+            } else {
+                format!("<a href=\"{}\">{}</a>", url, url)
+            }
+        })
+        .into_owned()
 }
 
 #[allow(non_snake_case)]
@@ -383,6 +389,8 @@ pub fn markdown(text: &str) -> String {
     let modified_lines: Vec<String> = txt
         .split('\n')
         .map(|line| {
+            // For strikethrough to be fully detected they need leading and trailing whitespaces
+            let line = STRIKE_THROUGH_REGEX.replace_all(line, " $1 ");
             if line.starts_with('>') {
                 format!("\\{}", line)
             } else {
@@ -399,13 +407,16 @@ pub fn markdown(text: &str) -> String {
     let mut add_text_language = true;
 
     for line in &mut modified_lines_refs {
-        let parser = pulldown_cmark::Parser::new_ext(line, options);
+        let parser = pulldown_cmark::Parser::new_ext(&line, options);
         let line_trim = line.trim();
         if line_trim == "```" && add_text_language {
             *line = "```text";
             add_text_language = false;
         }
-        for event in parser {
+        let mut it = parser.into_iter().peekable();
+        let mut previous_event = None;
+        while let Some(event) = it.next() {
+            let prev = event.clone();
             match event {
                 pulldown_cmark::Event::Start(Tag::Paragraph) => {
                     in_paragraph = true;
@@ -415,10 +426,22 @@ pub fn markdown(text: &str) -> String {
                     in_paragraph = false;
                 }
                 pulldown_cmark::Event::Text(t) => {
-                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
-                        t.replace("\n\n", "<br/>").into()
+                    // Remove the one leading/trailing whitespace from strikethrough processing
+                    let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
+                        previous_event
+                    {
+                        t.strip_prefix(" ").unwrap_or(&t).into()
+                    } else if let Some(&pulldown_cmark::Event::Start(Tag::Strikethrough)) =
+                        it.peek()
+                    {
+                        t.strip_suffix(" ").unwrap_or(&t).into()
                     } else {
-                        t
+                        t.to_string()
+                    };
+                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                        text.replace("\n\n", "<br/>").into()
+                    } else {
+                        text.into()
                     };
                     pulldown_cmark::html::push_html(
                         &mut html_output,
@@ -453,10 +476,10 @@ pub fn markdown(text: &str) -> String {
                 }
                 _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
             }
+            previous_event = Some(prev);
         }
 
         html_output.push('\n');
     }
-
     html_output
 }
