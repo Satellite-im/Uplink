@@ -2177,7 +2177,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -2190,7 +2190,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -2206,7 +2206,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "constcat",
  "dioxus-core",
@@ -2225,7 +2225,7 @@ checksum = "2ea539174bb236e0e7dc9c12b19b88eae3cb574dedbd0252a2d43ea7e6de13e2"
 [[package]]
 name = "dioxus-desktop"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "async-trait",
  "core-foundation",
@@ -2256,7 +2256,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-debug-cell",
@@ -2269,7 +2269,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-html",
@@ -2282,7 +2282,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -2301,12 +2301,12 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 
 [[package]]
 name = "dioxus-router"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "anyhow",
  "dioxus",
@@ -2326,7 +2326,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router-macro"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2337,7 +2337,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "proc-macro2",
