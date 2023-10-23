@@ -5,8 +5,6 @@
 #![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
-#[macro_use]
-extern crate lazy_static;
 
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
