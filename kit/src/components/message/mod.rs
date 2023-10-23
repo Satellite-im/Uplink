@@ -407,7 +407,7 @@ pub fn markdown(text: &str) -> String {
     let mut add_text_language = true;
 
     for line in &mut modified_lines_refs {
-        let parser = pulldown_cmark::Parser::new_ext(&line, options);
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
         let line_trim = line.trim();
         if line_trim == "```" && add_text_language {
             *line = "```text";
@@ -430,11 +430,11 @@ pub fn markdown(text: &str) -> String {
                     let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
                         previous_event
                     {
-                        t.strip_prefix(" ").unwrap_or(&t).into()
+                        t.strip_prefix(' ').unwrap_or(&t).into()
                     } else if let Some(&pulldown_cmark::Event::Start(Tag::Strikethrough)) =
                         it.peek()
                     {
-                        t.strip_suffix(" ").unwrap_or(&t).into()
+                        t.strip_suffix(' ').unwrap_or(&t).into()
                     } else {
                         t.to_string()
                     };
