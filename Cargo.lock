@@ -4582,6 +4582,7 @@ dependencies = [
  "humansize",
  "linkify",
  "mime",
+ "once_cell",
  "pulldown-cmark",
  "regex",
  "reqwest",
