@@ -25,6 +25,9 @@ linkify = { workspace = true }
 reqwest = { workspace = true }
 base64 = { workspace = true }
 mime = { workspace = true }
+emojis = "0.5"
+unic-segment = "0.9"
+unic-emoji-char = "0.9"
 
 [dependencies.uuid]
 workspace = true
