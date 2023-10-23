@@ -19,10 +19,12 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
 };
+
 use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};
 use extensions::UplinkExtension;
 use futures::channel::oneshot;
@@ -61,6 +63,11 @@ use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
+
+use muda::AboutMetadata;
+use muda::Menu;
+use muda::PredefinedMenuItem;
+use muda::Submenu;
 
 use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
@@ -114,6 +121,47 @@ fn main() {
 
     // 4. Make sure all system dirs are ready
     bootstrap::create_uplink_dirs();
+
+    // mac needs the menu built a certain way.
+    // the main_menu must not be dropped before launch_cfg is called.
+    let main_menu = Menu::new();
+    let app_menu = Submenu::new("Uplink", true);
+    let edit_menu = Submenu::new("Edit", true);
+    let window_menu = Submenu::new("Window", true);
+
+    let _ = app_menu.append_items(&[
+        &PredefinedMenuItem::about("About".into(), Some(AboutMetadata::default())),
+        &PredefinedMenuItem::quit(None),
+    ]);
+    // add native shortcuts to `edit_menu` menu
+    // in macOS native item are required to get keyboard shortcut
+    // to works correctly
+    let _ = edit_menu.append_items(&[
+        &PredefinedMenuItem::undo(None),
+        &PredefinedMenuItem::redo(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::cut(None),
+        &PredefinedMenuItem::copy(None),
+        &PredefinedMenuItem::paste(None),
+        &PredefinedMenuItem::select_all(None),
+    ]);
+
+    let _ = window_menu.append_items(&[
+        &PredefinedMenuItem::minimize(None),
+        //&PredefinedMenuItem::zoom(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::show_all(None),
+        &PredefinedMenuItem::fullscreen(None),
+        &PredefinedMenuItem::separator(),
+        &PredefinedMenuItem::close_window(None),
+    ]);
+
+    let _ = main_menu.append_items(&[&app_menu, &edit_menu, &window_menu]);
+
+    #[cfg(target_os = "macos")]
+    {
+        main_menu.init_for_nsapp();
+    }
 
     // 5. Finally, launch the app
     dioxus_desktop::launch_cfg(app, webview_config::webview_config())
