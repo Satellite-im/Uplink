@@ -41,8 +41,11 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
             id: "app-wrap",
             div {
                 class: "titlebar disable-select",
-                id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
-                onmousedown: move |_| { desktop.drag(); },
+                id: "lockscreen-controls",
+                div {
+                    class: "draggable-topbar",
+                    onmousedown: move |_| { desktop.drag(); },
+                },
                 TopbarControls {},
             },
 

@@ -960,13 +960,16 @@ fn Titlebar(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             class: "titlebar disable-select",
-            onmousedown: move |_| { desktop.drag(); },
             Release_Info{},
-            cx.render(rsx!(span {
+            div {
+                class: "draggable-topbar",
+                onmousedown: move |_| { desktop.drag(); },
+            },
+            span {
                 class: "inline-controls",
                 get_update_icon{},
                 TopbarControls {}
-            })),
+            },
         },
     ))
 }
