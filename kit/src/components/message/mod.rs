@@ -401,7 +401,7 @@ pub fn replace_emojis(input: &str) -> String {
             ":-(" | ":(" => "☹️",   // Frowning face
             ":-D" | ":D" => "😄",   // Grinning face
             ":-P" | ":P" => "😛",   // Sticking out tongue
-            ":-D" | ":D" => "😉",   // Winking face
+            ";)" => "😉",   // Winking face
             ":-O" | ":O" => "😮",   // Surprised face
             ":-|" | ":|" => "😐",   // Neutral face
             ":-/" | ":/" => "🤨",   // Skeptical face
