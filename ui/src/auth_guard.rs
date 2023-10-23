@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
-use kit::components::topbar_controls::Topbar_Controls;
+use kit::components::topbar_controls::TopbarControls;
 use kit::STYLE as UIKIT_STYLES;
 use warp::multipass;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -43,7 +43,7 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
                 class: "titlebar disable-select",
                 id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
                 onmousedown: move |_| { desktop.drag(); },
-                Topbar_Controls {},
+                TopbarControls {},
             },
 
             match *page.current() {
