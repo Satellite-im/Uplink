@@ -405,7 +405,7 @@ pub fn replace_emojis(input: &str) -> String {
             ":-O" | ":O" => "😮",   // Surprised face
             ":-|" | ":|" => "😐",   // Neutral face
             ":-/" | ":/" => "🤨",   // Skeptical face
-            ">:-)" | ">:)" => "😈", // Devilish grin
+            ">:)" => "😈", // Devilish grin
             ":-*" | ":*" => "😘",   // Kiss
             ":-[" | ":[|" => "🧛", // Vampire face
             ":-]" | ":]" => "😃",   // Happy face
