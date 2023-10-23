@@ -401,7 +401,7 @@ pub fn replace_emojis(input: &str) -> String {
             ":-(" | ":(" => "☹️",   // Frowning face
             ":-D" | ":D" => "😄",   // Grinning face
             ":-P" | ":P" => "😛",   // Sticking out tongue
-            ";-D" | ";D" => "😉",   // Winking face
+            ":-D" | ":D" => "😉",   // Winking face
             ":-O" | ":O" => "😮",   // Surprised face
             ":-|" | ":|" => "😐",   // Neutral face
             ":-/" | ":/" => "🤨",   // Skeptical face
@@ -415,16 +415,16 @@ pub fn replace_emojis(input: &str) -> String {
             "<3" => "❤️",          // Heart
             "^_^" => "😊",          // Happy face with closed eyes
             ">_<" => "😣",          // Annoyed or frustrated
-            ":-\" => "😕",         // Undecided
-            ":-X" | ":X" => "🤐",   // Sealed lips or "I won't tell"
-            "<(^^<)" => "🎶",      // Happy dancing
-            "(>'-')>" => "🎶",     // Happy dancing
-            "XD" => "😆",           // Laughing with eyes closed
-            "O_o" => "😳",          // Confused or surprised
-            "-_-" => "😑",          // Unimpressed or bored
-            "0_o" => "😳",          // Wide-eyed surprise
-            "\\m/" => "🤘",         // Rock on!
-            "<(\")" => "🐧",       // Penguin
+            ":-\"" => "😕 ",        // Undecided
+            ":-X" | ":X" => "🤐 ",  // Sealed lips or "I won't tell"
+            "<(^^<)" => "🎶 ",      // Happy dancing
+            "(>'-')>" => "🎶 ",     // Happy dancing
+            "XD" => "😆 ",          // Laughing with eyes closed
+            "O_o" => "😳 ",         // Confused or surprised
+            "-_-" => "😑 ",         // Unimpressed or bored
+            "0_o" => "😳 ",         // Wide-eyed surprise
+            "\\m/" => "🤘 ",        // Rock on!
+            "<(\")" => "🐧",        // Penguin
             _ => stack,
         }
     }
