@@ -28,7 +28,9 @@ use warp::{
     raygun::{self, Conversation, MessageOptions},
 };
 
-use super::{FetchMessagesConfig, FetchMessagesResponse, manager::commands::identity_image_to_base64};
+use super::{
+    manager::commands::identity_image_to_base64, FetchMessagesConfig, FetchMessagesResponse,
+};
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
