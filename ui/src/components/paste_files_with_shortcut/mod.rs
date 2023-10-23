@@ -9,21 +9,15 @@ use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use dioxus_hooks::{to_owned, use_ref};
+use once_cell::sync::Lazy;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 
-lazy_static! {
-    static ref LAST_CALLED: Mutex<Instant> = Mutex::new(Instant::now() - Duration::from_secs(2));
-}
+static LAST_CALLED: Lazy<Mutex<Instant>> =
+    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(2)));
 
 fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
-    let mut last_called = match LAST_CALLED.lock() {
-        Ok(mutex_guard) => mutex_guard,
-        Err(e) => {
-            log::error!("Failed to lock the mutex: {:?}", e);
-            return;
-        }
-    };
+    let mut last_called = LAST_CALLED.lock().unwrap();
     let now = Instant::now();
 
     if now.duration_since(*last_called) > debounce_duration {
