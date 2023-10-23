@@ -20,7 +20,8 @@
 
 #emoji_selector .emojis-container {
   width: calc(100% - var(--gap));
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: repeat(7, 0fr);
   flex-wrap: wrap;
   margin-bottom: var(--gap);
   gap: var(--gap);
