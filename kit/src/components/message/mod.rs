@@ -409,11 +409,8 @@ pub fn replace_emojis(input: &str) -> String {
             ":-*" | ":*" => "😘",   // Kiss
             ":-[" | ":[|" => "🧛", // Vampire face
             ":-]" | ":]" => "😃",   // Happy face
-            ":-{" | ":{" => "😃",   // Mustache face
-            ":-}" | ":}" => "😃",   // Big grin
             ":'(" => "😢",         // Crying
             "<3" => "❤️",          // Heart
-            "^_^" => "😊",          // Happy face with closed eyes
             ">_<" => "😣",          // Annoyed or frustrated
             ":-\"" => "😕 ",        // Undecided
             ":-X" | ":X" => "🤐 ",  // Sealed lips or "I won't tell"
