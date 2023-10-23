@@ -397,20 +397,34 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
 pub fn replace_emojis(input: &str) -> String {
     fn process_stack(stack: &str) -> &str {
         match stack {
-            "<3" => "❤️",
-            ">:)" => "😈",
-            ">:(" => "😠",
-            ":)" => "🙂",
-            ":(" => " 🙁",
-            ":/" => "🫤",
-            ";)" => "😉",
-            ":D" => "😁",
-            "xD" => "😆",
-            ":p" | ":P" => "😛",
-            ";p" | ";P" => "😜",
-            "xP" => "😝",
-            ":|" => "😐",
-            ":O" => "😮",
+            ":-)" | ":)" => "😊",   // Smiley face
+            ":-(" | ":(" => "☹️",   // Frowning face
+            ":-D" | ":D" => "😄",   // Grinning face
+            ":-P" | ":P" => "😛",   // Sticking out tongue
+            ";-D" | ";D" => "😉",   // Winking face
+            ":-O" | ":O" => "😮",   // Surprised face
+            ":-|" | ":|" => "😐",   // Neutral face
+            ":-/" | ":/" => "🤨",   // Skeptical face
+            ">:-)" | ">:)" => "😈", // Devilish grin
+            ":-*" | ":*" => "😘",   // Kiss
+            ":-[" | ":[|" => "🧛", // Vampire face
+            ":-]" | ":]" => "😃",   // Happy face
+            ":-{" | ":{" => "😃",   // Mustache face
+            ":-}" | ":}" => "😃",   // Big grin
+            ":'(" => "😢",         // Crying
+            "<3" => "❤️",          // Heart
+            "^_^" => "😊",          // Happy face with closed eyes
+            ">_<" => "😣",          // Annoyed or frustrated
+            ":-\" => "😕",         // Undecided
+            ":-X" | ":X" => "🤐",   // Sealed lips or "I won't tell"
+            "<(^^<)" => "🎶",      // Happy dancing
+            "(>'-')>" => "🎶",     // Happy dancing
+            "XD" => "😆",           // Laughing with eyes closed
+            "O_o" => "😳",          // Confused or surprised
+            "-_-" => "😑",          // Unimpressed or bored
+            "0_o" => "😳",          // Wide-eyed surprise
+            "\\m/" => "🤘",         // Rock on!
+            "<(\")" => "🐧",       // Penguin
             _ => stack,
         }
     }
