@@ -2177,7 +2177,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -2190,7 +2190,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -2206,7 +2206,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "constcat",
  "dioxus-core",
@@ -2225,7 +2225,7 @@ checksum = "2ea539174bb236e0e7dc9c12b19b88eae3cb574dedbd0252a2d43ea7e6de13e2"
 [[package]]
 name = "dioxus-desktop"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "async-trait",
  "core-foundation",
@@ -2256,7 +2256,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-debug-cell",
@@ -2269,7 +2269,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "dioxus-html",
@@ -2282,7 +2282,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -2301,12 +2301,12 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 
 [[package]]
 name = "dioxus-router"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "anyhow",
  "dioxus",
@@ -2326,7 +2326,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router-macro"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2337,7 +2337,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.4.2"
-source = "git+https://github.com/satellite-im/dioxus?rev=1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2#1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2"
+source = "git+https://github.com/satellite-im/dioxus?rev=99cf5c79ff76241eb4b5763539931261d71e114f#99cf5c79ff76241eb4b5763539931261d71e114f"
 dependencies = [
  "dioxus-core",
  "proc-macro2",
@@ -2579,13 +2579,22 @@ dependencies = [
  "common",
  "dioxus",
  "dioxus-desktop",
- "emojis",
+ "emojis 0.6.1",
  "extensions",
  "futures",
  "kit",
  "once_cell",
  "uuid",
  "warp",
+]
+
+[[package]]
+name = "emojis"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3407bc749191827d456a282321770847daf4b0a1128fde02597a8ed2e987b95d"
+dependencies = [
+ "phf 0.11.2",
 ]
 
 [[package]]
@@ -4568,16 +4577,20 @@ dependencies = [
  "dioxus-desktop",
  "dioxus-hooks",
  "dioxus-html",
+ "emojis 0.5.3",
  "glob",
  "humansize",
  "linkify",
  "mime",
+ "once_cell",
  "pulldown-cmark",
  "regex",
  "reqwest",
  "rsass",
  "scraper 0.17.1",
  "timeago",
+ "unic-emoji-char",
+ "unic-segment",
  "uuid",
  "warp",
 ]
@@ -9150,6 +9163,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "unic-char-property"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221"
+dependencies = [
+ "unic-char-range",
+]
+
+[[package]]
+name = "unic-char-range"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc"
+
+[[package]]
+name = "unic-common"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc"
+
+[[package]]
+name = "unic-emoji-char"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b07221e68897210270a38bde4babb655869637af0f69407f96053a34f76494d"
+dependencies = [
+ "unic-char-property",
+ "unic-char-range",
+ "unic-ucd-version",
+]
+
+[[package]]
 name = "unic-langid"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9190,6 +9235,35 @@ dependencies = [
  "quote",
  "syn 1.0.109",
  "unic-langid-impl",
+]
+
+[[package]]
+name = "unic-segment"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4ed5d26be57f84f176157270c112ef57b86debac9cd21daaabbe56db0f88f23"
+dependencies = [
+ "unic-ucd-segment",
+]
+
+[[package]]
+name = "unic-ucd-segment"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2079c122a62205b421f499da10f3ee0f7697f012f55b675e002483c73ea34700"
+dependencies = [
+ "unic-char-property",
+ "unic-char-range",
+ "unic-ucd-version",
+]
+
+[[package]]
+name = "unic-ucd-version"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4"
+dependencies = [
+ "unic-common",
 ]
 
 [[package]]
@@ -9455,7 +9529,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
+source = "git+https://github.com/Satellite-im/Warp?rev=463c8cf0069fa8e0048941cf347b1781041ed83e#463c8cf0069fa8e0048941cf347b1781041ed83e"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9511,7 +9585,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
+source = "git+https://github.com/Satellite-im/Warp?rev=463c8cf0069fa8e0048941cf347b1781041ed83e#463c8cf0069fa8e0048941cf347b1781041ed83e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9542,7 +9616,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
+source = "git+https://github.com/Satellite-im/Warp?rev=463c8cf0069fa8e0048941cf347b1781041ed83e#463c8cf0069fa8e0048941cf347b1781041ed83e"
 dependencies = [
  "paste",
  "quote",
@@ -9552,7 +9626,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=efbc29205a0cbc91a3ae7451d8435550dd412e89#efbc29205a0cbc91a3ae7451d8435550dd412e89"
+source = "git+https://github.com/Satellite-im/Warp?rev=463c8cf0069fa8e0048941cf347b1781041ed83e#463c8cf0069fa8e0048941cf347b1781041ed83e"
 dependencies = [
  "anyhow",
  "async-stream",
