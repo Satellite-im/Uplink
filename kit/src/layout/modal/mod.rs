@@ -36,7 +36,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let title = cx.props.with_title.clone().unwrap_or_default();
 
-    let close_on_click_inside_modal = cx.props.close_on_click_inside_modal.unwrap_or(true);
+    let close_on_click_inside_modal = cx.props.close_on_click_inside_modal.unwrap_or_default();
 
     cx.render(rsx!(cx.props.open.then(|| rsx!(
         div {
