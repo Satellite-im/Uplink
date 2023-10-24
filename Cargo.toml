@@ -31,15 +31,15 @@ version = "0.1.6"
 rust-version = "1.70"
 
 [workspace.dependencies]
-dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
-dioxus-hooks = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
-dioxus-html = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
-dioxus-router = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
-dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f", features = ["transparent"] }
+dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+dioxus-hooks = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+dioxus-html = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+dioxus-router = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2", features = ["transparent"] }
 muda = "0.9.4"
 raw-window-handle = "0.5"
-dioxus-core = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
-fermi = { git = "https://github.com/satellite-im/dioxus", rev = "99cf5c79ff76241eb4b5763539931261d71e114f" }
+dioxus-core = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+fermi = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
 tokio-util = { version = "0.7", features = ["full"] }
 arboard = "3.2"
 humansize = "2.1.3"
