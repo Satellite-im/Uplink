@@ -131,9 +131,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                 }
                 },
-            onclick: |_| {
-                storage_controller.write().finish_renaming_item(false);
-            },
             if show_slimbar {
                 cx.render(rsx!(
                     SlimbarLayout {
@@ -166,7 +163,9 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                         }
                                     )),
                                     onpress: move |_| {
+                                        log::debug!("click {} ", upload_file_controller.files_been_uploaded.read());
                                         if !*upload_file_controller.files_been_uploaded.read() {
+                                            log::debug!("r ");
                                             storage_controller.write().finish_renaming_item(true);
                                         }
                                     },
