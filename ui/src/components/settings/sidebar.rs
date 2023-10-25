@@ -19,6 +19,7 @@ pub enum Page {
     Developer,
     Extensions,
     General,
+    Messages,
     //Files,
     //Privacy,
     Profile,
@@ -52,6 +53,7 @@ impl FromStr for Page {
             "extensions" => Ok(Page::Extensions),
             //"files" => Ok(Page::Files),
             "general" => Ok(Page::General),
+            "messages" => Ok(Page::Messages),
             //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
@@ -94,6 +96,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to: "general",
         name: get_local_text("settings.general"),
         icon: Icon::Cog6Tooth,
+        ..UIRoute::default()
+    };
+
+    let messages = UIRoute {
+        to: "messages",
+        name: get_local_text("settings.messages"),
+        icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
 
@@ -155,6 +164,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let mut routes = vec![
         profile,
         general,
+        messages,
         //privacy,
         audio,
         // files,
