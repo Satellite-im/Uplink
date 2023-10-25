@@ -24,7 +24,7 @@ document.getElementById("UUID").addEventListener(
     if (compose) {
       minX = compose.getBoundingClientRect().right
     }
-    let topX = Math.max(compose.getBoundingClientRect().right, overFlowX ? offsetX - width : offsetX)
+    let topX = Math.max(minX, overFlowX ? offsetX - width : offsetX)
     context_menu.style.top = `${topY}px`
     context_menu.style.left = `${topX}px`
     return false
