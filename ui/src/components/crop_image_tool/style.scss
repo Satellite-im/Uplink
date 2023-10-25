@@ -12,6 +12,15 @@
     border: 2px dashed var(--text-color-link);
 }
 
+.crop-box-rectangle-format {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    border-radius: 0%;
+    border: 2px dashed var(--text-color-link);
+}
+
 .shadow-img-mask {
     top: 50%;
     left: 50%;

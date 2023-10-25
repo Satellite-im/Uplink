@@ -1,6 +1,7 @@
 const img = document.getElementById('image-preview-modal-file-embed');
 const container = document.getElementById('image-crop-box-container');
 const cropBox = document.getElementById('crop-box');
+const pixelsToAdjustBordersOnImageMovement = 6;
 let offsetX = 0, offsetY = 0, isDragging = false;
 
 container.addEventListener('mousedown', function(e) {
@@ -32,13 +33,19 @@ document.addEventListener('mousemove', function(e) {
         left = Math.min(Math.abs(left), ((containerWidth * imgScale) - cropBoxWidth) / 2);
         top = Math.min(Math.abs(top), ((containerHeight * imgScale) - cropBoxHeight) / 2);
 
+        // Small adjustment to make sure the image doesn't go inside of the crop box
         if (leftIsNegative) {
             left = -left;
-        }
-        if (topIsNegative) {
-            top = -top;
+        } else {
+            left = left - pixelsToAdjustBordersOnImageMovement;
         }
 
+        if (topIsNegative) {
+            top = -top;
+        } else {
+            top = top - pixelsToAdjustBordersOnImageMovement;
+        }
+        
         img.style.left = `${left}px`;
         img.style.top = `${top}px`;
     }
