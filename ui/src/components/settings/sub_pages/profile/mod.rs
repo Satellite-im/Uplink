@@ -21,7 +21,8 @@ use mime::*;
 use rfd::FileDialog;
 use warp::{error::Error, logging::tracing::log};
 
-use crate::components::crop_image_tool::CropImageModal;
+use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
+use crate::components::crop_image_tool::rectangle_format_tool::CropRectImageModal;
 
 #[derive(Clone)]
 enum ChanCmd {
@@ -47,6 +48,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
     let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
+    let open_crop_image_modal_for_banner_picture =
+        use_state(cx, || (false, (Vec::new(), String::new())));
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
@@ -244,7 +247,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "profile-banner",
                         style: "background-image: url({banner});",
                         onclick: move |_| {
-                            set_banner(ch.clone());
+                            set_banner(open_crop_image_modal_for_banner_picture.clone());
                         },
                         p {class: "change-banner-text", "{change_banner_text}" },
                     },
@@ -358,8 +361,23 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                     }
                 },
+                if open_crop_image_modal_for_banner_picture.get().0 {
+                    rsx!(CropRectImageModal {
+                        large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
+                        on_cancel: |_| {
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
+                        },
+                        on_crop: move |image_pathbuf: PathBuf| {
+                            match transform_file_into_base64_image(image_pathbuf) {
+                                Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
+                            }
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
+                        }
+                    })
+                }
                 if open_crop_image_modal.get().0 {
-                    rsx!(CropImageModal {
+                    rsx!(CropCircleImageModal {
                         large_thumbnail: open_crop_image_modal.1.clone(),
                         on_cancel: |_| {
                             open_crop_image_modal.set((false, (Vec::new(), String::new())));
@@ -389,10 +407,10 @@ fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))
     };
 }
 
-fn set_banner(ch: Coroutine<ChanCmd>) {
+fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>, String))>) {
     match set_image() {
-        Ok((img, _)) => {
-            ch.send(ChanCmd::Banner(img));
+        Ok(img) => {
+            open_crop_image_modal_for_banner_picture.set((true, img));
         }
         Err(e) => {
             log::error!("failed to set banner: {e}");
