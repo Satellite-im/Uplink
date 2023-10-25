@@ -27,7 +27,7 @@ use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::components::topbar_controls::Topbar_Controls;
+use kit::components::topbar_controls::TopbarControls;
 use kit::elements::button::Button;
 use kit::elements::tooltip::ArrowPosition;
 use kit::elements::Appearance;
@@ -961,13 +961,16 @@ fn Titlebar(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             class: "titlebar disable-select",
-            onmousedown: move |_| { desktop.drag(); },
             Release_Info{},
-            cx.render(rsx!(span {
+            div {
+                class: "draggable-topbar",
+                onmousedown: move |_| { desktop.drag(); },
+            },
+            span {
                 class: "inline-controls",
                 get_update_icon{},
-                Topbar_Controls {}
-            })),
+                TopbarControls {}
+            },
         },
     ))
 }

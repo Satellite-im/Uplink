@@ -525,6 +525,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let user_did_2 = user_did.clone();
     // todo: get attachment progress from a hook like state.
     let pending_uploads = vec![];
+    let render_markdown = state.read().ui.should_transform_markdown_text();
+    let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
     cx.render(rsx!(
         div {
@@ -538,6 +540,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     remote_message: cx.props.is_remote,
                     sender_did: sender_did.clone(),
                     replier_did: user_did_2.clone(),
+                    markdown: render_markdown,
+                    transform_ascii_emojis: should_transform_ascii_emojis,
                 }
             )),
             Message {
@@ -559,7 +563,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 pending: cx.props.pending,
                 pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
-                parse_markdown: true,
+                parse_markdown: render_markdown,
+                transform_ascii_emojis: should_transform_ascii_emojis,
                 on_download: move |file: warp::constellation::file::File| {
                     let message = grouped_message.message.clone();
                     let file_name = file.name();
