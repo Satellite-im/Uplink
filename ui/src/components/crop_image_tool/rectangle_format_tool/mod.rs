@@ -140,6 +140,12 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     log::error!("Error writing cropped image file. {}", e);
                                                     return;
                                                 }
+
+                                                if let Err(e) = file.sync_all().await {
+                                                    log::error!("Error syncing cropped image file. {}", e);
+                                                    return;
+                                                }
+
                                                 cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
                                                 clicked_button_to_crop.set(true);
                                             }
