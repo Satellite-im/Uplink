@@ -150,9 +150,9 @@ pub fn AudioSettings(cx: Scope) -> Element {
         to_owned![ch];
         async move {
             loop {
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 ch.send(AudioCmd::FetchInputDevices);
                 ch.send(AudioCmd::FetchOutputDevices);
+                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
             }
         }
     });
