@@ -127,6 +127,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             margin_top: "12px",
                         },
                         Input {
+                                aria_label: "file-name-input".into(),
                                 disabled: disabled,
                                 placeholder: String::new(),
                                 default_text: placeholder,
