@@ -247,7 +247,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         }
                     }
                     ChatText {
-                        text: message.value().join("\n"),
+                        text: message.lines().join("\n"),
                         remote: true,
                         pending: false,
                         markdown: state.read().ui.should_transform_markdown_text(),
