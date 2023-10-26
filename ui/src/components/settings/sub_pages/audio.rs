@@ -1,11 +1,8 @@
-use std::vec;
-
 use common::icons::outline::Shape;
 use common::language::get_local_text;
 use common::warp_runner::{BlinkCmd, WarpCmd};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::radio_list::RadioList;
 use kit::elements::range::Range;
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
@@ -36,89 +33,79 @@ pub fn AudioSettings(cx: Scope) -> Element {
         to_owned![state, input_devices, output_devices];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    AudioCmd::FetchInputDevices => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx
-                            .send(WarpCmd::Blink(BlinkCmd::GetAllMicrophones { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
 
-                        let res = rx.await.expect("warp runner failed to get input devices");
-                        match res {
-                            Ok(res) => {
-                                state.write_silent().settings.input_device = res.selected;
-                                *input_devices.write() = res.available_devices;
-                            }
-                            Err(e) => {
-                                log::error!("could not get input devices: {e}");
-                            }
-                        }
-                    }
-                    AudioCmd::FetchOutputDevices => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::GetAllSpeakers { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+            'GET_AUDIO_CONFIG: loop {
+                let audio_config = {
+                    let (tx, rx) = oneshot::channel();
+                    warp_cmd_tx
+                        .send(WarpCmd::Blink(BlinkCmd::GetAudioDeviceConfig { rsp: tx }))
+                        .expect("failed to send command");
+                    rx.await.expect("warp runner failed to get audio config")
+                };
 
-                        let res = rx.await.expect("warp runner failed to get output devices");
-                        match res {
-                            Ok(res) => {
-                                state.write_silent().settings.output_device = res.selected;
-                                *output_devices.write() = res.available_devices;
-                            }
-                            Err(e) => {
-                                log::error!("could not get output devices: {e}");
-                            }
+                while let Some(cmd) = rx.next().await {
+                    match cmd {
+                        AudioCmd::FetchInputDevices => {
+                            state.write_silent().settings.input_device =
+                                audio_config.microphone_device_name();
+                            *input_devices.write() =
+                                audio_config.get_available_microphones().unwrap_or_default();
                         }
-                    }
-                    AudioCmd::SetInputDevice(device_name) => {
-                        let device = device_name.clone();
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetMicrophone {
-                            device_name,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
+                        AudioCmd::FetchOutputDevices => {
+                            state.write_silent().settings.output_device =
+                                audio_config.speaker_device_name();
+                            *output_devices.write() =
+                                audio_config.get_available_speakers().unwrap_or_default();
                         }
+                        AudioCmd::SetInputDevice(device_name) => {
+                            let device = device_name.clone();
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) =
+                                warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetMicrophone {
+                                    device_name,
+                                    rsp: tx,
+                                }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write_silent().settings.input_device = Some(device);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to set input device: {e}");
+                            match rx.await {
+                                Ok(_) => {
+                                    state.write_silent().settings.input_device = Some(device);
+                                    continue 'GET_AUDIO_CONFIG;
+                                }
+                                Err(e) => {
+                                    log::error!("warp_runner failed to set input device: {e}");
+                                }
                             }
                         }
-                    }
-                    AudioCmd::SetOutputDevice(device_name) => {
-                        let device = device_name.clone();
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetSpeaker {
-                            device_name,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        AudioCmd::SetOutputDevice(device_name) => {
+                            let device = device_name.clone();
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) =
+                                warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetSpeaker {
+                                    device_name,
+                                    rsp: tx,
+                                }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write_silent().settings.output_device = Some(device);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to set output device: {e}");
+                            match rx.await {
+                                Ok(_) => {
+                                    state.write_silent().settings.output_device = Some(device);
+                                    continue 'GET_AUDIO_CONFIG;
+                                }
+                                Err(e) => {
+                                    log::error!("warp_runner failed to set output device: {e}");
+                                }
                             }
                         }
                     }
                 }
+                break;
             }
         }
     });
@@ -127,7 +114,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
         to_owned![ch];
         async move {
             loop {
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 ch.send(AudioCmd::FetchInputDevices);
                 ch.send(AudioCmd::FetchOutputDevices);
             }
@@ -187,41 +174,44 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             }
 
-            SettingSection {
-                section_label: get_local_text("settings-audio.sample-rate"),
-                section_description: get_local_text("settings-audio.sample-rate-description"),
-                Select {
-                    initial_value: "48000 Hz".into(),
-                    options: vec!["24000 Hz".into(), "48000 Hz".into(), "96000 Hz".into()],
-                    onselect: move |_| {}
-                },
-            },
+            // currently does nothing
+            //SettingSection {
+            //    section_label: get_local_text("settings-audio.sample-rate"),
+            //    section_description: get_local_text("settings-audio.sample-rate-description"),
+            //    Select {
+            //        initial_value: "48000 Hz".into(),
+            //        options: vec!["24000 Hz".into(), "48000 Hz".into(), "96000 Hz".into()],
+            //        onselect: move |_| {}
+            //    },
+            //},
 
-            SettingSection {
-                section_label: get_local_text("settings-audio.noise-suppression"),
-                section_description: get_local_text("settings-audio.noise-suppression-description"),
-                no_border: true,
-            },
-            SettingSectionSimple {
-                RadioList {
-                    initial_value: "None".into(),
-                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
-                    onchange: move |_| {}
-                },
-            }
+            // currently not implemented and not planned
+            //SettingSection {
+            //    section_label: get_local_text("settings-audio.noise-suppression"),
+            //    section_description: get_local_text("settings-audio.noise-suppression-description"),
+            //    no_border: true,
+            //},
+            //SettingSectionSimple {
+            //    RadioList {
+            //        initial_value: "None".into(),
+            //        values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
+            //        onchange: move |_| {}
+            //    },
+            //}
 
-            SettingSection {
-                section_label: get_local_text("settings-audio.echo-cancellation"),
-                section_description: get_local_text("settings-audio.echo-cancellation-description"),
-                no_border: true,
-            },
-            SettingSectionSimple {
-                RadioList {
-                    initial_value: "None".into(),
-                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
-                    onchange: move |_| {}
-                },
-            }
+            // currently is either on or off
+            //SettingSection {
+            //    section_label: get_local_text("settings-audio.echo-cancellation"),
+            //    section_description: get_local_text("settings-audio.echo-cancellation-description"),
+            //    no_border: true,
+            //},
+            //SettingSectionSimple {
+            //    RadioList {
+            //        initial_value: "None".into(),
+            //        values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
+            //        onchange: move |_| {}
+            //    },
+            //}
 
             SettingSection {
                 section_label: get_local_text("settings-audio.interface-sounds"),
