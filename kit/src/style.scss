@@ -73,6 +73,7 @@ meter {
 
 /* reset default text opacity of input placeholder */
 ::placeholder {
+  opacity: 50%;
   color: unset;
 }
 
