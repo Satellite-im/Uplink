@@ -12,7 +12,7 @@ use warp::{
         Blink::{self},
         BlinkEventKind,
     },
-    constellation::Constellation,
+    constellation::{file::FileType, Constellation},
     error::Error,
     logging::tracing::log,
     multipass::{self, MultiPass},
@@ -356,15 +356,15 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.store_setting.share_platform = true;
     config.store_setting.update_events = UpdateEvents::Enabled;
     config.store_setting.default_profile_picture = Some(Arc::new(|identity| {
-        let content = plot_icon::generate_png(identity.did_key().to_string().as_bytes(), 512)
+        let mut content = plot_icon::generate_png(identity.did_key().to_string().as_bytes(), 512)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        let mut base64_default_image = format!("data:image/png;base64,{}", base64::encode(content))
-            .as_bytes()
-            .to_vec();
 
-        base64_default_image.extend([11, 00, 23]);
+        content.extend([11, 00, 23]);
 
-        Ok(base64_default_image)
+        Ok((
+            content,
+            FileType::Mime("image/png".parse().expect("Correct mime")),
+        ))
     }));
     config.thumbnail_size = (500, 500);
     config.thumbnail_exact_format = false;

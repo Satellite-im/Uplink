@@ -150,7 +150,7 @@ impl Chat {
         uuid: Option<Uuid>,
     ) {
         let opt = self.pending_outgoing_messages.iter().position(|e| {
-            e.message.inner.value().eq(&msg)
+            e.message.inner.lines().eq(&msg)
                 && e.attachments_progress
                     .keys()
                     .all(|a| attachments.contains(a))
