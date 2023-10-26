@@ -200,7 +200,6 @@ fn render_selector<'a>(
                     state.write().mutate(Action::SetEmojiDestination(
                         Some(common::state::ui::EmojiDestination::Chatbar),
                     ));
-                    
                     if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
                         state.write().mutate(Action::SetEmojiPickerVisible(false));
                     }
