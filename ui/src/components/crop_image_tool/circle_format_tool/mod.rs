@@ -82,6 +82,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
+                    aria_label: "crop-image-topbar",
                     background: "var(--secondary)",
                     height: "70px",
                     border_radius: "12px",
@@ -93,10 +94,12 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             class: "crop-image-topbar-left-title",
                             Label {
-                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                                text: get_local_text("settings.please-select-area-you-want-to-crop"),
+                                aria_label: "crop-image-topbar-label".into(),
                             }
                         },
                         Button {
+                            aria_label: "crop-image-cancel-button".into(),
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
@@ -108,6 +111,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             margin_right: "16px",
                         }
                         Button {
+                            aria_label: "crop-image-confirm-button".into(),
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
@@ -173,6 +177,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     padding: "16px",
                     div {
                         id: "image-crop-box-container",
+                        aria_label: "image-crop-box-container",
                         display: "inline-flex",
                         div {
                             id: "img-parent-div",
@@ -211,6 +216,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "range-background",
                     Range {
+                        aria_label: "range-crop-image".into(),
                         initial_value: 1.0,
                         min: 1.0,
                         max: 5.0,
