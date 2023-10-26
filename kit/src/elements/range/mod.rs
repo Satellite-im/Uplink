@@ -18,6 +18,7 @@ pub struct Props<'a> {
     icon_left: Option<Icon>,
     icon_right: Option<Icon>,
     aria_label: Option<String>,
+    disabled: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -42,6 +43,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 rsx!(Button {
                     icon: Icon::Minus,
                     appearance: Appearance::PrimaryAlternative,
+                    disabled: cx.props.disabled.unwrap_or_default(),
                     aria_label: "decrease_range_value_button".into(),
                     onpress: move |_| {
                         if internal_state.get() > &cx.props.min {
@@ -69,6 +71,7 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 aria_label: "range-input",
                 step: "{step}",
                 value: "{internal_state}",
+                disabled: cx.props.disabled.unwrap_or_default(),
                 oninput: move |event| {
                     internal_state.set(event.value.parse().unwrap_or_default());
                     cx.props.onchange.call(event.value.parse().unwrap_or_default());

@@ -158,6 +158,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     max: VOL_MAX,
                     icon_left: Shape::Microphone,
                     icon_right: Shape::MicrophoneWave,
+                    disabled: true,
                     onchange: move |_| {}
                 }
             }
@@ -176,11 +177,12 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSectionSimple {
                 Range {
                     aria_label: "range-output-device".into(),
-                    initial_value: VOL_MIN,
-                    min: 0.0,
+                    initial_value: 100.0,
+                    min: VOL_MIN,
                     max: VOL_MAX,
                     icon_left: Shape::Speaker,
                     icon_right: Shape::SpeakerWave,
+                    disabled: true,
                     onchange: move |_| {}
                 }
             }
