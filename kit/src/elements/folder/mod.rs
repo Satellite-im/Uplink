@@ -73,6 +73,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 with_rename.then(||
                         rsx! (
                             Input {
+                                aria_label: "folder-name-input".into(),
                                 disabled: disabled,
                                 placeholder: String::new(),
                                 default_text: placeholder,
