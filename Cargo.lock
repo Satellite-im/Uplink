@@ -1396,7 +1396,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "anyhow",
  "base64 0.20.0",
@@ -2729,7 +2729,7 @@ dependencies = [
 
 [[package]]
 name = "extensions"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "dioxus",
  "libloading",
@@ -4107,7 +4107,7 @@ dependencies = [
 
 [[package]]
 name = "icons"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "dioxus",
  "dioxus-html",
@@ -4566,7 +4566,7 @@ dependencies = [
 
 [[package]]
 name = "kit"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "base64 0.20.0",
  "chrono",
@@ -9358,7 +9358,7 @@ checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "uplink"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "anyhow",
  "arboard",
