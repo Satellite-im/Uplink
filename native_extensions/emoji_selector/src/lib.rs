@@ -146,9 +146,7 @@ fn render_selector<'a>(
     nav: Element<'a>,
 ) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    #[cfg(not(target_os = "macos"))]
     let mouse_over_emoji_selector = use_ref(cx, || false);
-    #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
     let focus_script = r#"
@@ -188,17 +186,11 @@ fn render_selector<'a>(
     cx.render(rsx! (
             div {
                 onmouseenter: |_| {
-                    #[cfg(not(target_os = "macos"))]
-                    {
-                        *mouse_over_emoji_selector.write_silent() = true;
-                    }
+                    *mouse_over_emoji_selector.write_silent() = true;
                 },
                 onmouseleave: |_| {
-                    #[cfg(not(target_os = "macos"))]
-                    {
-                        *mouse_over_emoji_selector.write_silent() = false;
-                        let _ = eval(focus_script);
-                    }
+                    *mouse_over_emoji_selector.write_silent() = false;
+                    let _ = eval(focus_script);
                 },
                 id: "emoji_selector",
                 aria_label: "emoji-selector",
@@ -208,17 +200,9 @@ fn render_selector<'a>(
                     state.write().mutate(Action::SetEmojiDestination(
                         Some(common::state::ui::EmojiDestination::Chatbar),
                     ));
-                    #[cfg(target_os = "macos")] 
-                    {
-                        if !*mouse_over_emoji_button.read() {
-                            state.write().mutate(Action::SetEmojiPickerVisible(false));
-                        }
-                    }
-                    #[cfg(not(target_os = "macos"))]
-                    {
-                        if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
-                            state.write().mutate(Action::SetEmojiPickerVisible(false));
-                        }
+                    
+                    if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
+                        state.write().mutate(Action::SetEmojiPickerVisible(false));
                     }
                 },
                 div {
@@ -287,6 +271,7 @@ fn render_1(cx: Scope, _unused: bool) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
+    log::debug!("vis {}", visible);
 
     use_effect(cx, (), |_| {
         to_owned![state];
