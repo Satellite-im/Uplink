@@ -150,7 +150,7 @@ fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
             let temp_dir = TempDir::new()?;
             let temp_path = temp_dir
                 .into_path()
-                .join(String::from("image_uplink_clipboard.png"));
+                .join(String::from("img_from_clipboard.png"));
             let image = DynamicImage::ImageRgba8(image);
             let file = std::fs::File::create(temp_path.clone())?;
             let mut buffered_writer = BufWriter::new(file);
