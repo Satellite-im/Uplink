@@ -18,8 +18,15 @@ document.getElementById("UUID").addEventListener(
     let screenHeight = ev.view.innerHeight
     let overFlowY = screenHeight < height + offsetY
     let overFlowX = screenWidth < width + offsetX
-    context_menu.style.top = `${overFlowY ? offsetY - height : offsetY}px`
-    context_menu.style.left = `${overFlowX ? offsetX - width : offsetX}px`
+    let topY = Math.max(5, overFlowY ? offsetY - height : offsetY)
+    let minX = 5
+    let compose = document.getElementsByClassName("slimbar")[0]
+    if (compose) {
+      minX = compose.getBoundingClientRect().right
+    }
+    let topX = Math.max(minX, overFlowX ? offsetX - width : offsetX)
+    context_menu.style.top = `${topY}px`
+    context_menu.style.left = `${topX}px`
     return false
   },
   false,

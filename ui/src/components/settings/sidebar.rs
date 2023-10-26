@@ -12,18 +12,36 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Page {
     About,
     Audio,
     Developer,
     Extensions,
     General,
+    Messages,
     //Files,
     //Privacy,
     Profile,
     Notifications,
     Accessibility,
     Licenses,
+}
+
+impl Page {
+    pub fn set(&mut self, p: Page) {
+        *self = p;
+    }
+    pub fn get(&self) -> Self {
+        *self
+    }
+    pub fn matches_str(&self, s: &str) -> bool {
+        let other = match Self::from_str(s) {
+            Ok(x) => x,
+            Err(_) => return false,
+        };
+        self == &other
+    }
 }
 
 impl FromStr for Page {
@@ -35,6 +53,7 @@ impl FromStr for Page {
             "extensions" => Ok(Page::Extensions),
             //"files" => Ok(Page::Files),
             "general" => Ok(Page::General),
+            "messages" => Ok(Page::Messages),
             //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
@@ -63,6 +82,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let page = use_shared_state::<Page>(cx)?;
     let _router = dioxus_router::hooks::use_navigator(cx);
 
     let profile = UIRoute {
@@ -76,6 +96,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to: "general",
         name: get_local_text("settings.general"),
         icon: Icon::Cog6Tooth,
+        ..UIRoute::default()
+    };
+
+    let messages = UIRoute {
+        to: "messages",
+        name: get_local_text("settings.messages"),
+        icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
 
@@ -137,6 +164,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let mut routes = vec![
         profile,
         general,
+        messages,
         //privacy,
         audio,
         // files,
@@ -151,7 +179,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         routes.push(developer);
     }
 
-    let active_route = routes[0].clone();
+    // not the prettiest but matches the current code design.
+    let active_page = page.read().get();
+    let active_route = routes
+        .iter()
+        .find(|x| active_page.matches_str(x.to))
+        .cloned()
+        .unwrap_or(routes[0].clone());
 
     cx.render(rsx!(
         ReusableSidebar {

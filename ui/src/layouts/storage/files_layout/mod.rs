@@ -55,6 +55,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
+    let show_slimbar = state.read().show_slimbar();
 
     functions::use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
@@ -133,9 +134,13 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            SlimbarLayout {
-                active: crate::UplinkRoute::FilesLayout {}
-            },
+            if show_slimbar {
+                cx.render(rsx!(
+                    SlimbarLayout {
+                        active: crate::UplinkRoute::FilesLayout {}
+                    },
+                ))
+            }
             ChatSidebar {
                 active_route: crate::UplinkRoute::FilesLayout {},
             },
