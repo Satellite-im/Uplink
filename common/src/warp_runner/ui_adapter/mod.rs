@@ -28,7 +28,9 @@ use warp::{
     raygun::{self, Conversation, MessageOptions},
 };
 
-use super::{FetchMessagesConfig, FetchMessagesResponse};
+use super::{
+    manager::commands::identity_image_to_base64, FetchMessagesConfig, FetchMessagesResponse,
+};
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
@@ -62,7 +64,7 @@ pub async fn convert_raygun_message(
         inner: msg.clone(),
         in_reply_to: reply.map(|msg: raygun::Message| {
             (
-                msg.value().first().cloned().unwrap_or_default(),
+                msg.lines().first().cloned().unwrap_or_default(),
                 msg.attachments(),
                 msg.sender(),
             )
@@ -119,11 +121,11 @@ pub async fn did_to_identity(
             let mut id = state::Identity::new(id, status, platform);
 
             if let Ok(picture) = account.identity_picture(&id.did_key()).await {
-                id.set_profile_picture(&picture);
+                id.set_profile_picture(&identity_image_to_base64(&picture));
             }
 
             if let Ok(banner) = account.identity_banner(&id.did_key()).await {
-                id.set_profile_banner(&banner);
+                id.set_profile_banner(&identity_image_to_base64(&banner));
             }
 
             id
@@ -150,11 +152,11 @@ pub async fn dids_to_identity(
         let mut id = state::Identity::new(id, status, platform);
 
         if let Ok(picture) = account.identity_picture(&id.did_key()).await {
-            id.set_profile_picture(&picture);
+            id.set_profile_picture(&identity_image_to_base64(&picture));
         }
 
         if let Ok(banner) = account.identity_banner(&id.did_key()).await {
-            id.set_profile_banner(&banner);
+            id.set_profile_banner(&identity_image_to_base64(&banner));
         }
 
         id

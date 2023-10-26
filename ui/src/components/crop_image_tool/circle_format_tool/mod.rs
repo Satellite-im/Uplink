@@ -7,6 +7,8 @@ use kit::{
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
+use crate::components::crop_image_tool::b64_encode;
+
 const ADJUST_CROP_CIRCLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_circle_size.js");
 const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("../get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
@@ -20,7 +22,7 @@ struct ImageDimensions {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    pub large_thumbnail: String,
+    pub large_thumbnail: (Vec<u8>, String),
     pub on_cancel: EventHandler<'a, ()>,
     pub on_crop: EventHandler<'a, PathBuf>,
 }
@@ -184,7 +186,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "image-preview-modal-file-embed",
                                 alt: "draggable image",
                                 aria_label: "image-preview-modal-file-embed",
-                                src: format_args!("{}", large_thumbnail.read()),
+                                src: format_args!("{}", b64_encode(large_thumbnail.read().clone())),
                                 transform: format_args!("scale({})", image_scale.read()),
                                 overflow: "hidden",
                                 transition: "transform 0.2s ease",
