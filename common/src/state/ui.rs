@@ -66,7 +66,6 @@ impl EmojiCounter {
         if pattern.is_empty() {
             return vec![];
         }
-        let pattern = &pattern.to_lowercase();
         let mut matches: HashMap<String, String> = default_emoji_list()
             .iter()
             .filter_map(|(emoji, alias)| {

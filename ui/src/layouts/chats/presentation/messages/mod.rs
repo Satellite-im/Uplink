@@ -549,7 +549,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
-                with_text: message.inner.lines().join("\n"),
+                with_text: message.inner.value().join("\n"),
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message
@@ -596,7 +596,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     edit_msg.set(None);
                     state.write().ui.ignore_focus = false;
                     let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
-                    if  message.inner.lines() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
+                    if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
                     }
                     ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})

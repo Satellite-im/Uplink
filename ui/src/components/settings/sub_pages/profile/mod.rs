@@ -21,14 +21,13 @@ use mime::*;
 use rfd::FileDialog;
 use warp::{error::Error, logging::tracing::log};
 
-use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
-use crate::components::crop_image_tool::rectangle_format_tool::CropRectImageModal;
+use crate::components::crop_image_tool::CropImageModal;
 
 #[derive(Clone)]
 enum ChanCmd {
-    Profile(Vec<u8>),
+    Profile(String),
     ClearProfile,
-    Banner(Vec<u8>),
+    Banner(String),
     ClearBanner,
     Username(String),
     Status(String),
@@ -47,9 +46,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
-    let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
-    let open_crop_image_modal_for_banner_picture =
-        use_state(cx, || (false, (Vec::new(), String::new())));
+    let open_crop_image_modal = use_state(cx, || (false, String::new()));
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
@@ -247,7 +244,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "profile-banner",
                         style: "background-image: url({banner});",
                         onclick: move |_| {
-                            set_banner(open_crop_image_modal_for_banner_picture.clone());
+                            set_banner(ch.clone());
                         },
                         p {class: "change-banner-text", "{change_banner_text}" },
                     },
@@ -361,33 +358,18 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                     }
                 },
-                if open_crop_image_modal_for_banner_picture.get().0 {
-                    rsx!(CropRectImageModal {
-                        large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
-                        on_cancel: |_| {
-                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
-                        },
-                        on_crop: move |image_pathbuf: PathBuf| {
-                            match transform_file_into_base64_image(image_pathbuf) {
-                                Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
-                            }
-                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
-                        }
-                    })
-                }
                 if open_crop_image_modal.get().0 {
-                    rsx!(CropCircleImageModal {
+                    rsx!(CropImageModal {
                         large_thumbnail: open_crop_image_modal.1.clone(),
                         on_cancel: |_| {
-                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
+                            open_crop_image_modal.set((false, String::new()));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
                             match transform_file_into_base64_image(image_pathbuf) {
-                                Ok((img_cropped, _)) => ch.send(ChanCmd::Profile(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.0.clone()) ),
+                                Ok(img_cropped) => ch.send(ChanCmd::Profile(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.clone())),
                             }
-                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
+                            open_crop_image_modal.set((false, String::new()));
                         }
                     })
                 }
@@ -396,7 +378,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))>) {
+fn set_profile_picture(open_crop_image_modal: UseState<(bool, String)>) {
     match set_image() {
         Ok(img) => {
             open_crop_image_modal.set((true, img));
@@ -407,10 +389,10 @@ fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))
     };
 }
 
-fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>, String))>) {
+fn set_banner(ch: Coroutine<ChanCmd>) {
     match set_image() {
         Ok(img) => {
-            open_crop_image_modal_for_banner_picture.set((true, img));
+            ch.send(ChanCmd::Banner(img));
         }
         Err(e) => {
             log::error!("failed to set banner: {e}");
@@ -418,7 +400,7 @@ fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>
     };
 }
 
-fn set_image() -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
+fn set_image() -> Result<String, Box<dyn std::error::Error>> {
     let path = match FileDialog::new()
         .add_filter("image", &["jpg", "png", "jpeg", "svg"])
         .set_directory(".")
@@ -433,7 +415,7 @@ fn set_image() -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
 
 fn transform_file_into_base64_image(
     path: std::path::PathBuf,
-) -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let file = std::fs::read(&path)?;
 
     let filename = path
@@ -455,12 +437,17 @@ fn transform_file_into_base64_image(
         None => "".to_string(),
     };
 
-    let prefix = match &file.len() {
+    let image = match &file.len() {
         0 => "".to_string(),
-        _ => format!("data:{mime};base64,"),
+        _ => {
+            let prefix = format!("data:{mime};base64,");
+            let base64_image = base64::encode(&file);
+            let img = prefix + base64_image.as_str();
+            img
+        }
     };
 
-    Ok((file, prefix))
+    Ok(image)
 }
 
 fn get_input_options(validation_options: Validation) -> Options {

@@ -68,7 +68,7 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
         }
     }
 
-    let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or_default();
+    let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or(Vec::new());
     if !image_from_clipboard.is_empty() {
         return Ok(image_from_clipboard);
     }
@@ -150,7 +150,7 @@ fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
             let temp_dir = TempDir::new()?;
             let temp_path = temp_dir
                 .into_path()
-                .join(String::from("img_from_clipboard.png"));
+                .join(String::from("image_uplink_clipboard.png"));
             let image = DynamicImage::ImageRgba8(image);
             let file = std::fs::File::create(temp_path.clone())?;
             let mut buffered_writer = BufWriter::new(file);

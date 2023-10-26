@@ -142,7 +142,7 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
             };
             let is_checked = storage_controller.read().chats_selected_to_send.iter().any(|uuid| {uuid.eq(&chat.id)});
             let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
-            let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+            let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                 Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis()),
                 _ => match &unwrapped_message.attachments()[..] {
                     [] => get_local_text("sidebar.chat-new"),

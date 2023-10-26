@@ -1,16 +1,16 @@
-pub mod circle_format_tool;
-pub mod rectangle_format_tool;
+use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
+use dioxus::prelude::*;
+use kit::{
+    elements::{button::Button, label::Label, range::Range, Appearance},
+    layout::modal::Modal,
+};
+use std::path::PathBuf;
+use tokio::io::AsyncWriteExt;
 
 const ADJUST_CROP_CIRCLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_circle_size.js");
 const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("./get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
 const MOVE_IMAGE_SCRIPT: &str = include_str!("./move_image.js");
-
-pub fn b64_encode((data, prefix): (Vec<u8>, String)) -> String {
-    let base64_image = base64::encode(data);
-    let img = prefix + base64_image.as_str();
-    img
-}
 
 #[derive(Debug, Clone)]
 struct ImageDimensions {

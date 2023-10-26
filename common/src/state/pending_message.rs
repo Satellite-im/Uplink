@@ -20,7 +20,7 @@ impl PendingMessage {
         if let Some(m_id) = id {
             inner.set_id(m_id);
         }
-        inner.set_lines(text);
+        inner.set_value(text);
         let message = Message {
             inner,
             in_reply_to: None,
@@ -49,7 +49,7 @@ impl PendingMessage {
         inner.set_id(Uuid::new_v4());
         inner.set_sender(did);
         inner.set_conversation_id(chat_id);
-        inner.set_lines(text);
+        inner.set_value(text);
         let attachments = attachments
             .iter()
             .filter(|location| match location {
@@ -91,7 +91,7 @@ impl PendingMessage {
 
 impl PartialEq for PendingMessage {
     fn eq(&self, other: &Self) -> bool {
-        self.message.inner.lines().eq(&other.message.inner.lines())
+        self.message.inner.value().eq(&other.message.inner.value())
             && self
                 .attachments
                 .iter()
