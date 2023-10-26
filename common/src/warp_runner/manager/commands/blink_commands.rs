@@ -64,6 +64,11 @@ pub enum BlinkCmd {
     GetAudioDeviceConfig {
         rsp: oneshot::Sender<Box<dyn AudioDeviceConfig>>,
     },
+    #[display(fmt = "SetEchoCancellation")]
+    SetEchoCancellation {
+        flag: bool,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
@@ -111,6 +116,13 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         }
         BlinkCmd::GetAudioDeviceConfig { rsp } => {
             let _ = rsp.send(blink.get_audio_device_config().await);
+        }
+        BlinkCmd::SetEchoCancellation { flag, rsp } => {
+            if flag {
+                let _ = rsp.send(blink.enable_automute());
+            } else {
+                let _ = rsp.send(blink.disable_automute());
+            }
         }
     }
 }
