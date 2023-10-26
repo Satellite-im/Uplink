@@ -4,12 +4,13 @@ use derive_more::Display;
 
 use futures::channel::oneshot;
 use warp::{
+    constellation::file::FileType,
     crypto::DID,
     error::Error,
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, Identifier, IdentityUpdate},
+        identity::{self, Identifier, IdentityImage, IdentityUpdate},
     },
 };
 
@@ -82,16 +83,16 @@ pub enum MultiPassCmd {
     #[display(fmt = "UpdateProfilePicture")]
     GetProfilePicture {
         did: DID,
-        rsp: oneshot::Sender<Result<String, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<IdentityImage, warp::error::Error>>,
     },
     #[display(fmt = "UpdateProfilePicture")]
     GetProfileBanner {
         did: DID,
-        rsp: oneshot::Sender<Result<String, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<IdentityImage, warp::error::Error>>,
     },
     #[display(fmt = "UpdateProfilePicture")]
     UpdateProfilePicture {
-        pfp: String,
+        pfp: Vec<u8>,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
     #[display(fmt = "ClearProfilePicture")]
@@ -104,7 +105,7 @@ pub enum MultiPassCmd {
     },
     #[display(fmt = "UpdateBanner")]
     UpdateBanner {
-        banner: String,
+        banner: Vec<u8>,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
     #[display(fmt = "UpdateStatus")]
@@ -252,11 +253,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                         });
                     if let Ok(id) = id.as_mut() {
                         if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&picture);
+                            id.set_profile_picture(&identity_image_to_base64(&picture));
                         }
 
                         if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&banner);
+                            id.set_profile_banner(&identity_image_to_base64(&banner));
                         }
                     }
                     rsp.send(id)
@@ -280,11 +281,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     Ok(_) => {
                         if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await
                         {
-                            my_id.set_profile_picture(&picture);
+                            my_id.set_profile_picture(&identity_image_to_base64(&picture));
                         }
 
                         if let Ok(banner) = warp.multipass.identity_banner(&my_id.did_key()).await {
-                            my_id.set_profile_banner(&banner);
+                            my_id.set_profile_banner(&identity_image_to_base64(&banner));
                         }
 
                         rsp.send(Ok(my_id))
@@ -310,11 +311,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
                     if let Ok(id) = id.as_mut() {
                         if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&picture);
+                            id.set_profile_picture(&identity_image_to_base64(&picture));
                         }
 
                         if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&banner);
+                            id.set_profile_banner(&identity_image_to_base64(&banner));
                         }
                     }
                     rsp.send(id)
@@ -335,11 +336,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
                     if let Ok(id) = id.as_mut() {
                         if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&picture);
+                            id.set_profile_picture(&identity_image_to_base64(&picture));
                         }
 
                         if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&banner);
+                            id.set_profile_banner(&identity_image_to_base64(&banner));
                         }
                     }
                     rsp.send(id)
@@ -358,11 +359,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
             if let Ok(id) = id.as_mut() {
                 if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                    id.set_profile_picture(&picture);
+                    id.set_profile_picture(&identity_image_to_base64(&picture));
                 }
 
                 if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                    id.set_profile_banner(&banner);
+                    id.set_profile_banner(&identity_image_to_base64(&banner));
                 }
             }
             let _ = match r {
@@ -381,11 +382,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
             if let Ok(id) = id.as_mut() {
                 if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                    id.set_profile_picture(&picture);
+                    id.set_profile_picture(&identity_image_to_base64(&picture));
                 }
 
                 if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                    id.set_profile_banner(&banner);
+                    id.set_profile_banner(&identity_image_to_base64(&banner));
                 }
             }
             let _ = match r {
@@ -427,4 +428,23 @@ async fn _multipass_get_identities(
         log::warn!("No identities found");
     }
     Ok(identities_hashmap)
+}
+
+pub fn identity_image_to_base64(image: &IdentityImage) -> String {
+    let image_data = image.data();
+
+    if image_data.is_empty() {
+        return String::new();
+    }
+
+    let ty = image.image_type();
+    let mime = match ty {
+        FileType::Mime(mime) => mime.to_string(),
+        FileType::Generic => "application/octet-stream".into(),
+    };
+
+    let prefix = format!("data:image/{mime};base64,");
+    let base64_image = base64::encode(image_data);
+
+    prefix + &base64_image
 }
