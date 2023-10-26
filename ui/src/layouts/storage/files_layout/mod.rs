@@ -260,7 +260,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     let msg = vec!["".to_owned()];
                     let attachments = files_location;
                     let ui_msg_id = None;
-                    let convs_id = convs_id;
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
                         convs_id,
                         msg,
