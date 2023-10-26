@@ -386,7 +386,10 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     }
                 )),
                 onpress: move |_| {
-                    // todo: send command
+                    //TODO this only tells the state to update the current silence value.
+                    //It doesn't actually do anything yet
+                    state.write().ui.toggle_silenced();
+
                 }
             },
             (!outgoing).then(||{
