@@ -1,16 +1,18 @@
-pub mod circle_format_tool;
-pub mod rectangle_format_tool;
+use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
+use dioxus::prelude::*;
+use kit::{
+    elements::{button::Button, label::Label, range::Range, Appearance},
+    layout::modal::Modal,
+};
+use std::path::PathBuf;
+use tokio::io::AsyncWriteExt;
 
-const ADJUST_CROP_CIRCLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_circle_size.js");
-const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("./get_image_dimensions.js");
+use crate::components::crop_image_tool::b64_encode;
+
+const ADJUST_CROP_RECTANGLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_rectangle_size.js");
+const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("../get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
-const MOVE_IMAGE_SCRIPT: &str = include_str!("./move_image.js");
-
-pub fn b64_encode((data, prefix): (Vec<u8>, String)) -> String {
-    let base64_image = base64::encode(data);
-    let img = prefix + base64_image.as_str();
-    img
-}
+const MOVE_IMAGE_SCRIPT: &str = include_str!("../move_image.js");
 
 #[derive(Debug, Clone)]
 struct ImageDimensions {
@@ -20,13 +22,13 @@ struct ImageDimensions {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    pub large_thumbnail: String,
+    pub large_thumbnail: (Vec<u8>, String),
     pub on_cancel: EventHandler<'a, ()>,
     pub on_crop: EventHandler<'a, PathBuf>,
 }
 
 #[allow(non_snake_case)]
-pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
@@ -60,7 +62,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 };
             }
-            let _ = eval(ADJUST_CROP_CIRCLE_SIZE_SCRIPT);
+            let _ = eval(ADJUST_CROP_RECTANGLE_SIZE_SCRIPT);
             let _ = eval(MOVE_IMAGE_SCRIPT);
         }
     });
@@ -73,6 +75,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             transparent: false,
             show_close_button: false,
+            close_on_click_inside_modal: false,
             dont_pad: false,
             div {
                 max_height: "85vh",
@@ -81,7 +84,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
-                    aria_label: "crop-image-topbar",
                     background: "var(--secondary)",
                     height: "70px",
                     border_radius: "12px",
@@ -93,13 +95,11 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             class: "crop-image-topbar-left-title",
                             Label {
-                                text: get_local_text("settings.please-select-area-you-want-to-crop"),
-                                aria_label: "crop-image-topbar-label".into(),
+                                text: get_local_text("settings.please-select-area-you-want-to-crop")
                             }
                         },
                         Button {
                             appearance: Appearance::DangerAlternative,
-                            aria_label: "crop-image-cancel-button".into(),
                             icon: Shape::XMark,
                             onpress: move |_| {
                                 cx.props.on_cancel.call(());
@@ -111,7 +111,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                         Button {
                             appearance: Appearance::Success,
-                            aria_label: "crop-image-confirm-button".into(),
                             icon: Shape::Check,
                             onpress: move |_| {
                                 cx.spawn({
@@ -130,7 +129,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         return;
                                                     },
                                                 };
-                                                let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
+                                                let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image_for_banner.png");
                                                 let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
                                                     Ok(file) => file,
                                                     Err(e) => {
@@ -143,6 +142,12 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     log::error!("Error writing cropped image file. {}", e);
                                                     return;
                                                 }
+
+                                                if let Err(e) = file.sync_all().await {
+                                                    log::error!("Error syncing cropped image file. {}", e);
+                                                    return;
+                                                }
+
                                                 cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
                                                 clicked_button_to_crop.set(true);
                                             }
@@ -171,7 +176,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "image-preview-modal-file-embed",
                                 alt: "draggable image",
                                 aria_label: "image-preview-modal-file-embed",
-                                src: format_args!("{}", large_thumbnail.read()),
+                                src: format_args!("{}", b64_encode(large_thumbnail.read().clone())),
                                 transform: format_args!("scale({})", image_scale.read()),
                                 overflow: "hidden",
                                 transition: "transform 0.2s ease",
@@ -187,7 +192,7 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                         div {
                             id: "crop-box",
-                            class: "crop-box",
+                            class: "crop-box-rectangle-format",
                         },
                         div {
                             id: "shadow-img-mask",
@@ -198,7 +203,6 @@ pub fn CropImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "range-background",
                     Range {
-                        aria_label: "range-crop-image".into(),
                         initial_value: 1.0,
                         min: 1.0,
                         max: 5.0,
