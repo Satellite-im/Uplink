@@ -57,8 +57,8 @@ pub struct Privacy {
 
 #[derive(Debug, Deserialize, Serialize, Copy, Clone, Eq, PartialEq)]
 pub struct AudioVideo {
-    #[serde(default)]
-    pub noise_suppression: bool,
+    #[serde(default = "bool_true")]
+    pub echo_cancellation: bool,
     #[serde(default)]
     pub call_timer: bool,
     #[serde(default)]
@@ -72,7 +72,7 @@ pub struct AudioVideo {
 impl Default for AudioVideo {
     fn default() -> Self {
         Self {
-            noise_suppression: false,
+            echo_cancellation: false,
             call_timer: false,
             interface_sounds: false,
             message_sounds: true,
@@ -177,6 +177,7 @@ impl Configuration {
             ConfigAction::SetAutoEnableExtensions(flag) => {
                 self.extensions.enable_automatically = flag
             }
+            ConfigAction::SetEchoCancellation(flag) => self.audiovideo.echo_cancellation = flag,
         }
 
         if self.audiovideo != old_audiovideo {
