@@ -210,7 +210,7 @@
     gap: 0;
     flex: 1;
     min-height: 0;
-    overflow-y: scroll;
+    overflow-y: auto;
 
     .friend-group {
       display: inline-flex;
