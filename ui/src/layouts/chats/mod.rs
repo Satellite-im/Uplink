@@ -16,7 +16,7 @@ use crate::{
 };
 
 use common::{
-    language::get_local_text,
+    language::{get_local_text, get_local_text_with_args},
     state::{ui, Action, State},
 };
 use dioxus::prelude::*;
@@ -171,10 +171,12 @@ async fn drag_and_drop_function(
                     let feedback_script = &FEEDBACK_TEXT_SCRIPT.replace(
                         "$TEXT",
                         &format!(
-                            "{} {}!",
-                            paths.len(),
+                            "{}"
                             if paths.len() > 1 {
-                                get_local_text("files.files-to-upload")
+                                get_local_text_with_args(
+                                    "files.files-to-upload",
+                                    vec![("num", paths.len())],
+                                )
                             } else {
                                 get_local_text("files.one-file-to-upload")
                             }
