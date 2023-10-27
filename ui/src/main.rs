@@ -199,7 +199,7 @@ fn app(cx: Scope) -> Element {
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
-    bootstrap::use_boostrap(cx, identity)?;
+    bootstrap::use_bootstrap(cx, identity)?;
 
     // 4. Throw up a loading screen until our assets are ready
     if use_loaded_assets(cx).value().is_none() {
@@ -875,6 +875,7 @@ pub fn get_download_modal<'a>(
         onclose: move |_| on_dismiss.call(()),
         open: true,
         transparent: false,
+        close_on_click_inside_modal: true,
         children: cx.render(rsx!(
             div {
             class: "download-modal disp-flex col",

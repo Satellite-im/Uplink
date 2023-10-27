@@ -268,6 +268,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
 
                     let datetime = unwrapped_message.date();
 
+                    let has_unreads = chat.unreads() > 0;
                     let badge = if chat.unreads() > 0 {
                         chat.unreads().to_string()
                     } else { "".into() };
@@ -316,6 +317,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                     icon: Icon::BellSlash,
                                     aria_label: "chats-clear-unreads".into(),
                                     text: get_local_text("uplink.clear-unreads"),
+                                    should_render: has_unreads,
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }

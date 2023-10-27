@@ -22,7 +22,7 @@ pub fn use_warp_runner(cx: &ScopeState) {
     });
 }
 
-pub(crate) fn use_boostrap<'a>(
+pub(crate) fn use_bootstrap<'a>(
     cx: &'a ScopeState,
     identity: &multipass::identity::Identity,
 ) -> Option<&'a UseSharedState<State>> {

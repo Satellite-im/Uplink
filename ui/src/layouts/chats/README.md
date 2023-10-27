@@ -44,7 +44,7 @@ The Chats layout has its own `UseSharedState` - `ChatData`. `State.chats` still 
     - obtain the message id and timestamp of the message most recently scrolled to, and if the scroll was up or down. 
     - obtain `DEFAULT_MESSAGES_TO_TAKE`/2 before and after the message timestamp and add them to `active_chat.messages.all`. 
     - if the user had scrolled to the bottom of the view, instead fetch the most recent messages.
-    - render the messges and scroll to the message id of previously mentioned message. 
+    - render the messages and scroll to the message id of previously mentioned message. 
 
 ## More Initialization
 - `presentation/messages/coroutine.rs` needs to do the following:
