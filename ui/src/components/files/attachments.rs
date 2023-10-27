@@ -43,16 +43,11 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
             on_press: move |_| {
                 let mut attachments = cx.props.files_to_attach.clone();
                 attachments.retain(|location| {
-                    let path = match location {
+                    let path_to_retain = match location {
                         Location::Constellation { path } => PathBuf::from(path),
                         Location::Disk { path } => path.clone(),
                     };
-                    let s = path
-                        .file_name()
-                        .unwrap_or_default()
-                        .to_string_lossy()
-                        .to_string();
-                    s != filename
+                    path_to_retain != path
                 });
                 cx.props.on_remove.call(attachments);
             },

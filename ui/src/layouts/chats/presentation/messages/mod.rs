@@ -525,6 +525,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let user_did_2 = user_did.clone();
     // todo: get attachment progress from a hook like state.
     let pending_uploads = vec![];
+    let render_markdown = state.read().ui.should_transform_markdown_text();
+    let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
     cx.render(rsx!(
         div {
@@ -538,6 +540,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     remote_message: cx.props.is_remote,
                     sender_did: sender_did.clone(),
                     replier_did: user_did_2.clone(),
+                    markdown: render_markdown,
+                    transform_ascii_emojis: should_transform_ascii_emojis,
                 }
             )),
             Message {
@@ -545,7 +549,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
-                with_text: message.inner.value().join("\n"),
+                with_text: message.inner.lines().join("\n"),
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message
@@ -558,7 +562,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 pending: cx.props.pending,
                 pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
-                parse_markdown: true,
+                parse_markdown: render_markdown,
+                transform_ascii_emojis: should_transform_ascii_emojis,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();
                     let file_extension = std::path::Path::new(&file_name)
@@ -591,7 +596,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     edit_msg.set(None);
                     state.write().ui.ignore_focus = false;
                     let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
-                    if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
+                    if  message.inner.lines() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
                     }
                     ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})

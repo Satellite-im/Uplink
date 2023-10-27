@@ -11,6 +11,7 @@ use crate::{
             extensions::ExtensionSettings,
             general::GeneralSettings,
             licenses::Licenses,
+            messages::Messages,
             notifications::NotificationSettings,
             // files::FilesSettings,
             // privacy::PrivacySettings,
@@ -43,6 +44,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
     let settings = match to.read().get() {
         Page::About => rsx!(AboutPage {}),
         Page::General => rsx!(GeneralSettings {}),
+        Page::Messages => rsx!(Messages {}),
         Page::Accessibility => rsx!(AccessibilitySettings {}),
         Page::Profile => rsx!(ProfileSettings {}),
         Page::Audio => rsx!(AudioSettings {}),
