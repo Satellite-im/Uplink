@@ -4602,6 +4602,7 @@ dependencies = [
  "glob",
  "humansize",
  "linkify",
+ "log",
  "mime",
  "once_cell",
  "pulldown-cmark",
