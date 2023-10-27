@@ -15,6 +15,7 @@ pub fn get_file_modal<'a>(
         open: true,
         transparent: false,
         dont_pad: true,
+        close_on_click_inside_modal: true,
         children: cx.render(rsx!(FilePreview {
             file: file,
             on_download: |_| {
