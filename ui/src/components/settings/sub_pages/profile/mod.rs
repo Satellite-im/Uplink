@@ -26,9 +26,9 @@ use crate::components::crop_image_tool::rectangle_format_tool::CropRectImageModa
 
 #[derive(Clone)]
 enum ChanCmd {
-    Profile(String),
+    Profile(Vec<u8>),
     ClearProfile,
-    Banner(String),
+    Banner(Vec<u8>),
     ClearBanner,
     Username(String),
     Status(String),
@@ -47,8 +47,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
-    let open_crop_image_modal = use_state(cx, || (false, String::new()));
-    let open_crop_image_modal_for_banner_picture = use_state(cx, || (false, String::new()));
+    let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
+    let open_crop_image_modal_for_banner_picture =
+        use_state(cx, || (false, (Vec::new(), String::new())));
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
@@ -364,14 +365,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     rsx!(CropRectImageModal {
                         large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
                         on_cancel: |_| {
-                            open_crop_image_modal_for_banner_picture.set((false, String::new()));
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
                             match transform_file_into_base64_image(image_pathbuf) {
-                                Ok(img_cropped) => ch.send(ChanCmd::Banner(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.clone())),
+                                Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
                             }
-                            open_crop_image_modal_for_banner_picture.set((false, String::new()));
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
                         }
                     })
                 }
@@ -379,14 +380,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     rsx!(CropCircleImageModal {
                         large_thumbnail: open_crop_image_modal.1.clone(),
                         on_cancel: |_| {
-                            open_crop_image_modal.set((false, String::new()));
+                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
                             match transform_file_into_base64_image(image_pathbuf) {
-                                Ok(img_cropped) => ch.send(ChanCmd::Profile(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.clone())),
+                                Ok((img_cropped, _)) => ch.send(ChanCmd::Profile(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.0.clone()) ),
                             }
-                            open_crop_image_modal.set((false, String::new()));
+                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
                         }
                     })
                 }
@@ -395,7 +396,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn set_profile_picture(open_crop_image_modal: UseState<(bool, String)>) {
+fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))>) {
     match set_image() {
         Ok(img) => {
             open_crop_image_modal.set((true, img));
@@ -406,7 +407,7 @@ fn set_profile_picture(open_crop_image_modal: UseState<(bool, String)>) {
     };
 }
 
-fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, String)>) {
+fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>, String))>) {
     match set_image() {
         Ok(img) => {
             open_crop_image_modal_for_banner_picture.set((true, img));
@@ -417,7 +418,7 @@ fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, String)>
     };
 }
 
-fn set_image() -> Result<String, Box<dyn std::error::Error>> {
+fn set_image() -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
     let path = match FileDialog::new()
         .add_filter("image", &["jpg", "png", "jpeg", "svg"])
         .set_directory(".")
@@ -432,7 +433,7 @@ fn set_image() -> Result<String, Box<dyn std::error::Error>> {
 
 fn transform_file_into_base64_image(
     path: std::path::PathBuf,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
     let file = std::fs::read(&path)?;
 
     let filename = path
@@ -454,17 +455,12 @@ fn transform_file_into_base64_image(
         None => "".to_string(),
     };
 
-    let image = match &file.len() {
+    let prefix = match &file.len() {
         0 => "".to_string(),
-        _ => {
-            let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
-            let img = prefix + base64_image.as_str();
-            img
-        }
+        _ => format!("data:{mime};base64,"),
     };
 
-    Ok(image)
+    Ok((file, prefix))
 }
 
 fn get_input_options(validation_options: Validation) -> Options {

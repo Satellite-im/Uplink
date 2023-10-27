@@ -7,6 +7,8 @@ use kit::{
 use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
+use crate::components::crop_image_tool::b64_encode;
+
 const ADJUST_CROP_CIRCLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_circle_size.js");
 const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("../get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
@@ -20,7 +22,7 @@ struct ImageDimensions {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    pub large_thumbnail: String,
+    pub large_thumbnail: (Vec<u8>, String),
     pub on_cancel: EventHandler<'a, ()>,
     pub on_crop: EventHandler<'a, PathBuf>,
 }
@@ -82,6 +84,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |_| {},
                 div {
                     id: "crop-image-topbar", 
+                    aria_label: "crop-image-topbar",
                     background: "var(--secondary)",
                     height: "70px",
                     border_radius: "12px",
@@ -93,10 +96,12 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         div {
                             class: "crop-image-topbar-left-title",
                             Label {
-                                text: get_local_text("settings.please-select-area-you-want-to-crop")
+                                text: get_local_text("settings.please-select-area-you-want-to-crop"),
+                                aria_label: "crop-image-topbar-label".into(),
                             }
                         },
                         Button {
+                            aria_label: "crop-image-cancel-button".into(),
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
@@ -108,6 +113,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             margin_right: "16px",
                         }
                         Button {
+                            aria_label: "crop-image-confirm-button".into(),
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
@@ -173,6 +179,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     padding: "16px",
                     div {
                         id: "image-crop-box-container",
+                        aria_label: "image-crop-box-container",
                         display: "inline-flex",
                         div {
                             id: "img-parent-div",
@@ -184,7 +191,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "image-preview-modal-file-embed",
                                 alt: "draggable image",
                                 aria_label: "image-preview-modal-file-embed",
-                                src: format_args!("{}", large_thumbnail.read()),
+                                src: format_args!("{}", b64_encode(large_thumbnail.read().clone())),
                                 transform: format_args!("scale({})", image_scale.read()),
                                 overflow: "hidden",
                                 transition: "transform 0.2s ease",
@@ -211,6 +218,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "range-background",
                     Range {
+                        aria_label: "range-crop-image".into(),
                         initial_value: 1.0,
                         min: 1.0,
                         max: 5.0,
