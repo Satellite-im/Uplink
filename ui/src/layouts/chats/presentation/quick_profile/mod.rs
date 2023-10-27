@@ -397,11 +397,14 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             hr{},
                             Input {
                                 placeholder: get_local_text("quickprofile.chat-placeholder"),
+                                disable_onblur: true,
                                 onreturn: move |(val, _,_): (String,bool,Code)|{
                                     let ui_id = state
                                         .write_silent()
                                         .increment_outgoing_messages(vec![val.clone()], &[]);
                                     ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                                    let script = format!(r#"document.getElementById("{id}-context-menu").classList.add("hidden")"#);
+                                    let _ = eval(&script);
                                 }
                             }
                         )
