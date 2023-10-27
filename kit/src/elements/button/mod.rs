@@ -16,6 +16,7 @@ pub struct Props<'a> {
     appearance: Option<Appearance>,
     with_badge: Option<String>,
     small: Option<bool>,
+    with_title: Option<bool>,
 }
 
 /// Generates the appearance for the button.
@@ -56,6 +57,11 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = cx.props.disabled.unwrap_or_default();
     let appearance = get_appearance(&cx);
     let small = cx.props.small.unwrap_or_default();
+    let title = if cx.props.with_title.unwrap_or(true) {
+        text.clone()
+    } else {
+        String::new()
+    };
 
     let tooltip_visible = use_state(cx, || false);
 
@@ -103,7 +109,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             button {
                 aria_label: "{aria_label}",
                 name: "{aria_label}",
-                title: "{text}",
+                title: "{title}",
                 disabled: if disabled { "true" } else { "false" },
                 class: "{button_class}",
                 // Optionally pass through click events.
@@ -128,7 +134,11 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     )
                 }
                 // We only need to include the text if it contains something.
-                (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                (!text.is_empty()).then(|| rsx!(div {
+                    class: "btn-text",
+                    cursor: if disabled {"unset"} else {"pointer"},
+                    "{text2}"
+                })),
             },
         },
     ))

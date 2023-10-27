@@ -9,19 +9,18 @@ pub(crate) fn webview_config() -> Config {
         .with_window(window)
         .with_custom_index(
             r#"
-<!doctype html>
-<html>
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-</html>"#
+            <!doctype html>
+            <html>
+            <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+            <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+            </html>"#
                 .to_string(),
         )
         .with_file_drop_handler(|_w, drag_event| {
             log::info!("Drag Event: {:?}", drag_event);
             *DRAG_EVENT.write() = drag_event;
             true
-        })
-        .with_disable_context_menu(false);
+        });
 
     if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
         let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");

@@ -284,27 +284,30 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 sender_did: identity.did_key()
             },
             div {
-                id: "profile-name",
-                aria_label: "profile-name",
-                p {
-                    class: "text",
-                    aria_label: "profile-name-value",
-                    format!("{}", identity.username())
-                }
-            }
-            identity.status_message().and_then(|s|{
-                cx.render(rsx!(
-                    div {
-                        id: "profile-status",
-                        aria_label: "profile-status",
-                        p {
-                            class: "text",
-                            aria_label: "profile-status-value",
-                            s
-                        }
+                class: "profile-container",
+                div {
+                    id: "profile-name",
+                    aria_label: "profile-name",
+                    p {
+                        class: "text",
+                        aria_label: "profile-name-value",
+                        format!("{}", identity.username())
                     }
-                ))
-            }),
+                }
+                identity.status_message().and_then(|s|{
+                    cx.render(rsx!(
+                        div {
+                            id: "profile-status",
+                            aria_label: "profile-status",
+                            p {
+                                class: "text",
+                                aria_label: "profile-status-value",
+                                s
+                            }
+                        }
+                    ))
+                }),
+            }
             div {
                 class: "profile-context-items",
                 if is_self {
