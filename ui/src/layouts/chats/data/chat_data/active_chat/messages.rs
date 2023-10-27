@@ -132,7 +132,7 @@ impl Messages {
         } else {
             // this isn't always an error
             // log::warn!(
-            //     "invalid insert in to active_chat.dispalyed: {:?}",
+            //     "invalid insert in to active_chat.displayed: {:?}",
             //     message_id
             // );
         }

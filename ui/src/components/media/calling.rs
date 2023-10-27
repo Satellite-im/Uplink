@@ -24,7 +24,7 @@ use crate::utils::{
 };
 use common::{
     icons::outline::Shape as Icon,
-    sounds::{ContinousSound, PlayUntil},
+    sounds::{ContinuousSound, PlayUntil},
     state::{
         call::{ActiveCall, Call},
         ui::Layout,
@@ -509,7 +509,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
     let alive = use_ref(cx, || Arc::new(AtomicBool::new(false)));
     use_effect(cx, (), |_| {
         to_owned![alive];
-        async move { PlayUntil(ContinousSound::RingTone, alive.read().clone()) }
+        async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
     let mut participants = state.read().get_identities(&call.participants);
     participants = state.read().remove_self(&participants);
