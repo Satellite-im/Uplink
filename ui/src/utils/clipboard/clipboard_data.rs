@@ -68,7 +68,7 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
         }
     }
 
-    let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or(Vec::new());
+    let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or_default();
     if !image_from_clipboard.is_empty() {
         return Ok(image_from_clipboard);
     }
