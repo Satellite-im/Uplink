@@ -41,7 +41,6 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
                             send_files_from_storage_state: send_files_from_storage.clone(),
                             files_pre_selected_to_send: files_pre_selected_to_send,
                             on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
-                                log::info!("files attached: {:?}", files_location);
                                 cx.props.on_send.call((files_location, convs_id));
                                 send_files_from_storage.set(false);
                             },
