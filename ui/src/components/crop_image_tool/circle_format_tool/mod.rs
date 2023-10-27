@@ -75,7 +75,6 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             transparent: false,
             show_close_button: false,
-            close_on_click_inside_modal: false,
             dont_pad: false,
             div {
                 max_height: "85vh",
