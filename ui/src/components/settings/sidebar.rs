@@ -12,6 +12,8 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
+use crate::components::media::calling::CallControl;
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Page {
     About,
@@ -203,6 +205,11 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             ..Options::default()
                         }
                     }
+                }
+            )),
+            with_call_controls: cx.render(rsx!(
+                CallControl {
+                    in_chat: false
                 }
             )),
             with_nav: cx.render(rsx!(
