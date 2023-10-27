@@ -173,6 +173,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             open: *fullscreen_preview.clone(),
                             onclose: move |_| fullscreen_preview.set(false),
                             transparent: false,
+                            close_on_click_inside_modal: true,
                             dont_pad: true,
                             img {
                                 id: "image-preview-modal-file-embed",

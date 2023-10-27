@@ -275,7 +275,7 @@ impl State {
                 let mut m = raygun::Message::default();
                 m.set_conversation_id(id);
                 m.set_sender(sender);
-                m.set_value(msg);
+                m.set_lines(msg);
                 let m = ui_adapter::Message {
                     inner: m,
                     in_reply_to: None,
@@ -495,7 +495,7 @@ impl State {
                 self.send_chat_to_top_of_sidebar(conversation_id);
                 self.decrement_outgoing_messages(
                     conversation_id,
-                    message_clone.inner.value(),
+                    message_clone.inner.lines(),
                     message_clone
                         .inner
                         .attachments()
