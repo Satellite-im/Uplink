@@ -148,7 +148,6 @@ files = Files
     .no-thumbnail = No Thumbnail
     .one-file-to-upload = File to Upload 1!
     .files-to-upload = Files to Upload { $num }!
-    .no-thumbnail-preview = No thumbnail to see
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .no-size-available = No size available for file: { $file }

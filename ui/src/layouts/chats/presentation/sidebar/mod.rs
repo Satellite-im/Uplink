@@ -291,7 +291,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
                             _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
-                                Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name.into())]),
+                                Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name)]),
                                 None => {
                                     log::error!("error calculating subtext for sidebar chat");
                                     // Still return default message
