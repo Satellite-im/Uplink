@@ -209,7 +209,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ContextItem {
                         icon: icons::outline::Shape::CommandLine,
                         text: get_local_text("uplink.open-devtools"),
-                        onpress: move |_| window.devtool(),
+                        onpress: move |_| window.webview.open_devtools(),
                     }
                 ))
             },
