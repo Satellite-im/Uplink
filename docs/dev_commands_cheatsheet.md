@@ -28,7 +28,7 @@ ____
 ___
 
 ## Copy Extensions and Run App (from within the Uplink folder)
-#### dylib is a macos specific extension, it will have a different extension on windows and linux
+#### dylib is a macos specific extension, it will have a different extension on Windows and Linux
 ```cargo build --release && cp ./target/release/libemoji_selector.dylib ~/.uplink/extensions && cargo run --release```
 
 ___
