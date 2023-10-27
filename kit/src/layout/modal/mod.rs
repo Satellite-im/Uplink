@@ -36,19 +36,22 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let title = cx.props.with_title.clone().unwrap_or_default();
 
-    let close_on_click_inside_modal = cx.props.close_on_click_inside_modal.unwrap_or(true);
+    let close_on_click_inside_modal = cx.props.close_on_click_inside_modal.unwrap_or_default();
 
     cx.render(rsx!(cx.props.open.then(|| rsx!(
         div {
             class: "modal-wrap {transparent_class} {no_padding_class}",
             aria_label: "modal",
             onclick: move |_| {
-                if close_on_click_inside_modal {
-                    cx.props.onclose.call(());
-                }
+                cx.props.onclose.call(());
             },
             div {
                 class: "modal {cx.props.class.unwrap_or_default()}",
+                onclick: move |e| {
+                    if !close_on_click_inside_modal {
+                        e.stop_propagation();
+                    }
+                },
                 (!cx.props.transparent && show_close_button).then(|| rsx!(
                     div {
                         class: "close-btn",
