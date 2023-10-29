@@ -1303,7 +1303,7 @@ impl State {
 
             friends_by_first_letter
                 .entry(first_letter)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(friend.clone());
         }
 
