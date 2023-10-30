@@ -110,7 +110,7 @@ impl ChatData {
             .unwrap_or(true);
 
         if behavior.is_none() {
-            log::warn!("unexpected state in ChatData::new_mesage - chat behavior is none");
+            log::warn!("unexpected state in ChatData::new_message - chat behavior is none");
         }
 
         if should_append_msg {

@@ -115,7 +115,7 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
         }
 
         if clipboard_text.is_empty() {
-            // It means image pixes in clipboard
+            // It means image pixels in clipboard
             Ok(ClipboardDataType::File)
         } else {
             Ok(ClipboardDataType::String)

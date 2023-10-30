@@ -116,3 +116,37 @@
 		stroke: var(--text-color-link);
 	}
 }
+
+.embed-identity {
+	display: flex;
+	flex-direction: column;
+	.profile-container {
+		max-width: 300px;
+	}
+	.empty-profile {
+		margin-left: 0;
+	}
+	.unknown-user {
+		.text {
+			font-size: var(--text-size-more);
+		  }
+	}
+	.unknown-user-did {
+		.text {
+			font-size: var(--text-size-less);
+		  }
+	}
+	.btn-wrap {
+		padding-top: var(--padding-less);
+		.btn {
+			max-width: calc(var(--height-input) * 2 + 300px);
+			width: 100%;
+			.btn-text {
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				overflow: hidden;
+				color: var(--text-color-dark);
+			}
+		}
+	}
+}
