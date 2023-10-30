@@ -57,7 +57,7 @@ use crate::{
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 
 #[derive(Eq, PartialEq)]
-enum TypingIndicator {
+pub enum TypingIndicator {
     // reset the typing indicator timer
     Typing(Uuid),
     // clears the typing indicator, ensuring the indicator
@@ -154,80 +154,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
         coroutines::get_msg_ch(cx, chat_data, state);
 
-    // typing indicator notes
-    // consider side A, the local side, and side B, the remote side
-    // side A -> (typing indicator) -> side B
-    // side B removes the typing indicator after a timeout
-    // side A doesn't want to send too many typing indicators, say once every 4-5 seconds
-    // should we consider matching the timeout with the send frequency so we can closely match if a person is straight up typing for 5 mins straight.
-
-    // tracks if the local participant is typing
-    // re-sends typing indicator in response to the Refresh command
-    let local_typing_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<TypingIndicator>| {
-        // to_owned![];
-        async move {
-            let mut typing_info: Option<TypingInfo> = None;
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-
-            let send_typing_indicator = |conv_id| async move {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                let event = raygun::MessageEvent::Typing;
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendEvent {
-                    conv_id,
-                    event,
-                    rsp: tx,
-                })) {
-                    log::error!("failed to send warp command: {}", e);
-                    // return from the closure
-                    return;
-                }
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send typing indicator: {}", e);
-                }
-            };
-
-            while let Some(indicator) = rx.next().await {
-                match indicator {
-                    TypingIndicator::Typing(chat_id) => {
-                        // if typing_info was none or the chat id changed, send the indicator immediately
-                        let should_send_indicator = match typing_info {
-                            None => true,
-                            Some(info) => info.chat_id != chat_id,
-                        };
-                        if should_send_indicator {
-                            send_typing_indicator.clone()(chat_id).await;
-                        }
-                        typing_info = Some(TypingInfo {
-                            chat_id,
-                            last_update: Instant::now(),
-                        });
-                    }
-                    TypingIndicator::NotTyping => {
-                        typing_info = None;
-                    }
-                    TypingIndicator::Refresh(conv_id) => {
-                        let info = match &typing_info {
-                            Some(i) => i.clone(),
-                            None => continue,
-                        };
-                        if info.chat_id != conv_id {
-                            typing_info = None;
-                            continue;
-                        }
-                        // todo: verify duration for timeout
-                        let now = Instant::now();
-                        if now - info.last_update
-                            <= (Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)
-                                - Duration::from_millis(500))
-                        {
-                            send_typing_indicator.clone()(conv_id).await;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    let local_typing_ch = coroutines::get_typing_ch(cx);
+    let local_typing_ch2 = local_typing_ch.clone();
 
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
@@ -326,6 +254,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         }
     };
 
+    let submit_fn2 = submit_fn.clone();
+
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .values()
@@ -386,7 +316,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
                     validate_max();
                     update_send();
-                    local_typing_ch.send(TypingIndicator::Typing(active_chat_id));
+                    local_typing_ch2.send(TypingIndicator::Typing(active_chat_id));
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
@@ -451,7 +381,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         disabled: is_loading || disabled,
                         appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
                         aria_label: "send-message-button".into(),
-                        onpress: move |_| submit_fn(),
+                        onpress: move |_| submit_fn2(),
                         tooltip: cx.render(rsx!(Tooltip {
                             arrow_position: ArrowPosition::Bottom,
                             text :get_local_text("uplink.send"),
