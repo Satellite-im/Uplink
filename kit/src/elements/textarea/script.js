@@ -11,6 +11,14 @@ for (let i = 0; i < textareas.length; i++) {
         txt.addEventListener("keypress", keyPressListener);
         txt.addEventListener("keydown", arrowHandlerListener);
         txt.event_listener = true;
+        let styled_text = txt.parentNode.getElementsByClassName("textarea-styled")[0]
+        if (styled_text) {
+            // Sync scrolls of the styled text
+            txt.addEventListener("scroll", e => {
+                console.log("Syncing scroll", txt.scrollTop);
+                styled_text.scrollTop = txt.scrollTop;
+            });
+        }
         if (i == 0) {
             txt.addEventListener("keypress", (event) => {
             if (event.keyCode === 13 && !event.shiftKey) {

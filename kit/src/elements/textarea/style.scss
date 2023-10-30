@@ -1,6 +1,6 @@
 // all the rest of the styling for textarea is in elements/input/style.scss
 
-textarea {
+textarea, .textarea-styled {
 	width: 100%;
 	height: "auto";
 	max-height: 250px; //Maybe make max variable?
@@ -41,4 +41,36 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 
 .char-counter-p-element {
     font-size: var(--text-size-less);
+}
+
+.input {
+	position: relative;
+}
+
+.text-area-highlight {
+	//color: transparent;
+	caret-color: white;
+	z-index: 1;
+}
+
+.textarea-styled[id*="-styled-text"] {
+	position: absolute;
+	top: 0;
+	width: calc(100% - var(--padding) * 2);
+	background-color: transparent;
+	white-space: pre;
+	z-index: 0;
+	overflow: hidden;
+	margin: 9px 0;
+	padding: 0;
+	font-family: "Noto", sans-serif;
+	line-height: normal; 
+	code[class*="language-"],
+	pre[class*="language-"] {
+		background-color: transparent;
+		margin: 0;
+		padding: 0;
+		font-family: "Noto", sans-serif;
+		line-height: normal; 
+	}
 }

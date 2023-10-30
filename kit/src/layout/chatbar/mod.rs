@@ -147,13 +147,14 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             cx.props.with_file_upload.as_ref(),
             div{
                 class: "chatbar-group",
-                textarea::Input {
+                textarea::Input2 {
                     key: "{controlled_input_id}",
                     id: controlled_input_id.clone(),
                     loading: cx.props.loading.unwrap_or_default(),
                     placeholder: cx.props.placeholder.clone(),
                     ignore_focus: cx.props.ignore_focus,
                     show_char_counter: true,
+                    with_highlight: true,
                     value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
                     onchange: move |(v, _)| cx.props.onchange.call(v),
                     onreturn: move |(v, is_valid, _)| {
