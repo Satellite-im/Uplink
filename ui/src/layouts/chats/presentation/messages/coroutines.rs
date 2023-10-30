@@ -108,7 +108,7 @@ pub fn hangle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                        log::trace!("{:?}", msg);
+                                        //log::trace!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
