@@ -12,7 +12,6 @@ use common::{
     MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
-use futures::{StreamExt};
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -29,11 +28,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-    raygun::{Location},
-};
+use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
@@ -44,7 +39,7 @@ use crate::{
     layouts::{
         chats::{
             data::{self, ChatData, ScrollBtn},
-            presentation::chatbar::coroutines::msg_ch_input,
+            presentation::chatbar::coroutines::MsgChInput,
         },
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
@@ -75,7 +70,6 @@ struct TypingInfo {
     pub last_update: Instant,
 }
 
-// todo: display loading indicator if sending a message that takes a long time to upload attachments
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
@@ -89,6 +83,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let _local_typing_ch = coroutines::get_typing_ch(cx);
 
+    // anything needed from the UseSharedState<ChatData> is moved into ChatbarProps here.
+    // this prevents a re-render in chatbar when the user scrolls.
     render!(get_chatbar_internal {
         show_edit_group: cx.props.show_edit_group.clone(),
         show_group_users: cx.props.show_group_users.clone(),
@@ -174,7 +170,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
         .unwrap_or_default();
     let users_typing = state.read().get_identities(&users_typing);
 
-    let msg_ch = use_coroutine_handle::<msg_ch_input>(cx)?;
+    let msg_ch = use_coroutine_handle::<MsgChInput>(cx)?;
     let scroll_ch = use_coroutine_handle::<Uuid>(cx)?;
     let local_typing_ch = use_coroutine_handle::<TypingIndicator>(cx)?;
     let local_typing_ch2 = local_typing_ch.clone();
