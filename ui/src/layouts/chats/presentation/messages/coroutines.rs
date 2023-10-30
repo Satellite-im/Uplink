@@ -108,7 +108,7 @@ pub fn hangle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                        // log::debug!("{:?}", msg);
+                                        log::trace!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -156,10 +156,9 @@ pub fn hangle_msg_scroll(
                                     JsMsg::Add { msg_id, .. } => {
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
-                                        let msg_end = chat_data.read().active_chat.messages.bottom();
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
                                         // need to explicitly compare the bottom of messages.all and messages.displayed
-                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm| matches!(msg_end, Some(x) if x == pm.message_id)).unwrap_or_default() {
+                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm|  pm.message_id) == chat_data.read().active_chat.messages.bottom(){
                                             // have to check on_scroll_end in case the user scrolled up and switched chats.
                                             if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
