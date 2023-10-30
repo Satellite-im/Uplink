@@ -17,11 +17,12 @@ use crate::layouts::chats::data::{self, ChatProps, DEFAULT_MESSAGES_TO_TAKE};
 
 use super::{ChatInput, TypingIndicator, TypingInfo};
 
+pub type msg_ch_input = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 pub fn get_msg_ch<'a>(
     cx: &Scoped<'a, ChatProps>,
     chat_data: &UseSharedState<data::ChatData>,
     state: &UseSharedState<State>,
-) -> Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> {
+) -> Coroutine<msg_ch_input> {
     use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
         to_owned![state];
         async move {

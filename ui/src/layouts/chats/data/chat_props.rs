@@ -1,3 +1,4 @@
+use common::state::Identity;
 use dioxus::prelude::*;
 use uuid::Uuid;
 use warp::raygun;
@@ -12,7 +13,7 @@ pub struct ChatProps {
 }
 
 #[derive(PartialEq, Props)]
-pub struct ChatBarProps {
+pub struct ChatbarProps {
     pub show_edit_group: UseState<Option<Uuid>>,
     pub show_group_users: UseState<Option<Uuid>>,
     pub ignore_focus: bool,
@@ -20,5 +21,5 @@ pub struct ChatBarProps {
     pub replying_to: Option<raygun::Message>,
     pub chat_initialized: bool,
     pub chat_id: Option<Uuid>,
-    pub other_participants: Vec<Uuid>,
+    pub other_participants: Vec<Identity>,
 }

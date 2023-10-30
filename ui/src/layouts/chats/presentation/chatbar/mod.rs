@@ -43,7 +43,10 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        chats::{
+            data::{self, ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+            presentation::chatbar::coroutines::msg_ch_input,
+        },
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -78,12 +81,36 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+
+    // this is used to scroll to the bottom of the chat.
+    let _scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
+
+    let _msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
+        coroutines::get_msg_ch(cx, chat_data, state);
+
+    let _local_typing_ch = coroutines::get_typing_ch(cx);
+
+    render!(get_chatbar_internal {
+        show_edit_group: cx.props.show_edit_group.clone(),
+        show_group_users: cx.props.show_group_users.clone(),
+        ignore_focus: cx.props.ignore_focus.clone(),
+        is_owner: cx.props.is_owner.clone(),
+        replying_to: chat_data.read().active_chat.replying_to(),
+        chat_initialized: chat_data.read().active_chat.is_initialized,
+        chat_id: chat_data.read().active_chat.id(),
+        other_participants: chat_data.read().active_chat.other_participants()
+    })
+}
+
+fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'a> {
+    log::trace!("get_chatbar_internal");
+    let state = use_shared_state::<State>(cx)?;
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = !chat_data.read().active_chat.is_initialized;
-    let active_chat_id = chat_data.read().active_chat.id();
-    let chat_id = chat_data.read().active_chat.id();
+    let is_loading = cx.props.chat_initialized;
+    let active_chat_id = cx.props.chat_id.unwrap_or_default();
+    let chat_id = cx.props.chat_id.unwrap_or_default();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -148,13 +175,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .unwrap_or_default();
     let users_typing = state.read().get_identities(&users_typing);
 
-    // this is used to scroll to the bottom of the chat.
-    let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-
-    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, chat_data, state);
-
-    let local_typing_ch = coroutines::get_typing_ch(cx);
+    let msg_ch = use_coroutine_handle::<msg_ch_input>(cx)?;
+    let scroll_ch = use_coroutine_handle::<Uuid>(cx)?;
+    let local_typing_ch = use_coroutine_handle::<TypingIndicator>(cx)?;
     let local_typing_ch2 = local_typing_ch.clone();
 
     // drives the sending of TypingIndicator
@@ -392,12 +415,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        chat_data.read().active_chat.replying_to().map(|msg| {
+                        cx.props.replying_to.map(|msg| {
                             let our_did = state.read().did_key();
-                            let msg_owner = if chat_data.read().active_chat.my_id().did_key() == msg.sender() {
-                                Some(chat_data.read().active_chat.my_id())
+                            let msg_owner = if state.read().did_key() == msg.sender() {
+                                state.read().get_identity(&state.read().did_key())
                             } else {
-                                chat_data.read().active_chat.other_participants().iter().find(|x| x.did_key() == msg.sender()).cloned()
+                                cx.props.other_participants.iter().find(|x| x.did_key() == msg.sender()).cloned()
                             };
 
                             let (platform, status, profile_picture) = get_platform_and_status(msg_owner.as_ref());
@@ -407,7 +430,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id()))
+                                        state.write().mutate(Action::CancelReply(cx.props.chat_id.unwrap_or_default()))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.lines().join("\n"), 
