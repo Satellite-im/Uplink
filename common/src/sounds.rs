@@ -15,7 +15,7 @@ pub enum Sounds {
 }
 
 #[derive(Debug)]
-pub enum ContinousSound {
+pub enum ContinuousSound {
     RingTone,
 }
 
@@ -53,14 +53,14 @@ pub fn Play(sound: Sounds) {
 
 // Play a sound till the condition has no refs anymore or is set to false
 #[allow(non_snake_case)]
-pub fn PlayUntil(sound: ContinousSound, condition: Arc<AtomicBool>) {
+pub fn PlayUntil(sound: ContinuousSound, condition: Arc<AtomicBool>) {
     // Create a Soloud instance
     std::thread::spawn(move || {
         let Ok((_stream, audio_handle)) = rodio::OutputStream::try_default() else {
             return;
         };
         let buffer = match sound {
-            ContinousSound::RingTone => RING_TONE,
+            ContinuousSound::RingTone => RING_TONE,
         };
         let mut sound_inst = None;
         loop {

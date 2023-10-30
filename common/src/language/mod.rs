@@ -71,7 +71,7 @@ pub fn get_local_text_with_args(text: &str, args: Vec<(&str, FluentValue<'_>)>) 
 }
 
 // Looks and formats a local text using the given args
-// Provides the undelying args map
+// Provides the underlying args map
 pub fn get_local_text_args_builder<'a, F, T: AsRef<str>>(text: &str, builder: F) -> String
 where
     F: FnOnce(&mut HashMap<T, FluentValue<'a>>),
