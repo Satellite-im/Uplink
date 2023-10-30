@@ -1,3 +1,5 @@
+mod coroutines;
+
 use std::{
     path::PathBuf,
     time::{Duration, Instant},
@@ -147,103 +149,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let users_typing = state.read().get_identities(&users_typing);
 
     // this is used to scroll to the bottom of the chat.
-    let scroll_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
-        to_owned![chat_data, state];
-        async move {
-            while let Some(conv_id) = rx.next().await {
-                match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
-                    conv_id,
-                    DEFAULT_MESSAGES_TO_TAKE,
-                )
-                .await
-                {
-                    Ok((messages, behavior)) => {
-                        log::debug!("re-init messages with most recent");
-                        chat_data.write().set_active_chat(
-                            &state.read(),
-                            &conv_id,
-                            behavior,
-                            messages,
-                        );
-                    }
-                    Err(e) => log::error!("{e}"),
-                }
-            }
-        }
-    });
+    let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
 
-    let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
-        to_owned![state];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
-                let msg_clone = msg.clone();
-                let cmd = match reply {
-                    Some(reply_to) => RayGunCmd::Reply {
-                        conv_id,
-                        reply_to,
-                        msg,
-                        attachments,
-                        rsp: tx,
-                    },
-                    None => RayGunCmd::SendMessage {
-                        conv_id,
-                        msg,
-                        attachments,
-                        ui_msg_id,
-                        rsp: tx,
-                    },
-                };
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
-                state
-                    .write_silent()
-                    .mutate(Action::ClearChatAttachments(conv_id));
-                let attachment_files: Vec<String> = attachments
-                    .iter()
-                    .map(|p| {
-                        let pathbuf = match p {
-                            Location::Disk { path } => path.clone(),
-                            Location::Constellation { path } => PathBuf::from(path),
-                        };
-                        pathbuf
-                            .file_name()
-                            .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
-                    })
-                    .collect();
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                    log::error!("failed to send warp command: {}", e);
-                    state.write().decrement_outgoing_messages(
-                        conv_id,
-                        msg_clone,
-                        attachment_files,
-                        ui_msg_id,
-                    );
-                    continue;
-                }
-
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send message: {}", e);
-                    state.write().decrement_outgoing_messages(
-                        conv_id,
-                        msg_clone,
-                        attachment_files,
-                        ui_msg_id,
-                    );
-                }
-            }
-        }
-    });
+    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
+        coroutines::get_msg_ch(cx, chat_data, state);
 
     // typing indicator notes
     // consider side A, the local side, and side B, the remote side
