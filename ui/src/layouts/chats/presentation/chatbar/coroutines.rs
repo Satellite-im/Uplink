@@ -13,9 +13,11 @@ use futures::{channel::oneshot, StreamExt};
 use uuid::Uuid;
 use warp::raygun::{self, Location};
 
-use crate::layouts::chats::data::{self, ChatProps, DEFAULT_MESSAGES_TO_TAKE};
+use crate::layouts::chats::data::{
+    self, ChatInput, ChatProps, TypingInfo, DEFAULT_MESSAGES_TO_TAKE,
+};
 
-use super::{ChatInput, TypingIndicator, TypingInfo};
+use super::TypingIndicator;
 
 pub type MsgChInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 pub fn get_msg_ch(

@@ -1,9 +1,6 @@
 mod coroutines;
 
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::{path::PathBuf, time::Duration};
 
 use common::{
     icons::{self},
@@ -38,7 +35,7 @@ use crate::{
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
         chats::{
-            data::{self, ChatData, ScrollBtn},
+            data::{self, ChatData, ScrollBtn, TypingIndicator},
             presentation::chatbar::coroutines::MsgChInput,
         },
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
@@ -50,25 +47,6 @@ use crate::{
         },
     },
 };
-
-type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
-
-#[derive(Eq, PartialEq)]
-pub enum TypingIndicator {
-    // reset the typing indicator timer
-    Typing(Uuid),
-    // clears the typing indicator, ensuring the indicator
-    // will not be refreshed
-    NotTyping,
-    // resend the typing indicator
-    Refresh(Uuid),
-}
-
-#[derive(Clone)]
-struct TypingInfo {
-    pub chat_id: Uuid,
-    pub last_update: Instant,
-}
 
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
