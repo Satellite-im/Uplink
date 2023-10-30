@@ -8,7 +8,7 @@ use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
-use crate::components::message::{markdown, STRIKE_THROUGH_REGEX};
+use crate::components::message::STRIKE_THROUGH_REGEX;
 
 #[derive(Clone, Copy)]
 pub enum Size {
