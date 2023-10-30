@@ -18,8 +18,8 @@ use crate::layouts::chats::data::{self, ChatProps, DEFAULT_MESSAGES_TO_TAKE};
 use super::{ChatInput, TypingIndicator, TypingInfo};
 
 pub type msg_ch_input = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
-pub fn get_msg_ch<'a>(
-    cx: &Scoped<'a, ChatProps>,
+pub fn get_msg_ch(
+    cx: &Scoped<'_, ChatProps>,
     state: &UseSharedState<State>,
 ) -> Coroutine<msg_ch_input> {
     use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
@@ -97,8 +97,8 @@ pub fn get_msg_ch<'a>(
     .clone()
 }
 
-pub fn get_scroll_ch<'a>(
-    cx: &Scoped<'a, ChatProps>,
+pub fn get_scroll_ch(
+    cx: &Scoped<'_, ChatProps>,
     chat_data: &UseSharedState<data::ChatData>,
     state: &UseSharedState<State>,
 ) -> Coroutine<Uuid> {
@@ -138,7 +138,7 @@ pub fn get_scroll_ch<'a>(
 
 // tracks if the local participant is typing
 // re-sends typing indicator in response to the Refresh command
-pub fn get_typing_ch<'a>(cx: &Scoped<'a, ChatProps>) -> Coroutine<TypingIndicator> {
+pub fn get_typing_ch(cx: &Scoped<'_, ChatProps>) -> Coroutine<TypingIndicator> {
     use_coroutine(cx, |mut rx: UnboundedReceiver<TypingIndicator>| {
         // to_owned![];
         async move {

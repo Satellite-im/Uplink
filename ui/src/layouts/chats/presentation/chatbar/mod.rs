@@ -9,11 +9,10 @@ use common::{
     icons::{self},
     language::{get_local_text, get_local_text_with_args},
     state::{Action, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
+    MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
-use futures::{channel::oneshot, StreamExt};
+use futures::{StreamExt};
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -33,7 +32,7 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     logging::tracing::log,
-    raygun::{self, Location},
+    raygun::{Location},
 };
 
 const MAX_CHARS_LIMIT: usize = 1024;
@@ -44,7 +43,7 @@ use crate::{
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
         chats::{
-            data::{self, ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+            data::{self, ChatData, ScrollBtn},
             presentation::chatbar::coroutines::msg_ch_input,
         },
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
@@ -93,8 +92,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     render!(get_chatbar_internal {
         show_edit_group: cx.props.show_edit_group.clone(),
         show_group_users: cx.props.show_group_users.clone(),
-        ignore_focus: cx.props.ignore_focus.clone(),
-        is_owner: cx.props.is_owner.clone(),
+        ignore_focus: cx.props.ignore_focus,
+        is_owner: cx.props.is_owner,
         replying_to: chat_data.read().active_chat.replying_to(),
         chat_initialized: chat_data.read().active_chat.is_initialized,
         chat_id: chat_data.read().active_chat.id(),
@@ -277,7 +276,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
         }
     };
 
-    let submit_fn2 = submit_fn.clone();
+    let submit_fn2 = submit_fn;
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
