@@ -18,8 +18,9 @@ pub struct ChatbarProps {
     pub show_group_users: UseState<Option<Uuid>>,
     pub ignore_focus: bool,
     pub is_owner: bool,
+    #[props(!optional)]
     pub replying_to: Option<raygun::Message>,
     pub chat_initialized: bool,
-    pub chat_id: Option<Uuid>,
+    pub chat_id: Uuid,
     pub other_participants: Vec<Identity>,
 }

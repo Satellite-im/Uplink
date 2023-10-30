@@ -109,8 +109,8 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
     let is_loading = cx.props.chat_initialized;
-    let active_chat_id = cx.props.chat_id.unwrap_or_default();
-    let chat_id = cx.props.chat_id.unwrap_or_default();
+    let active_chat_id = cx.props.chat_id;
+    let chat_id = cx.props.chat_id;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -415,7 +415,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        cx.props.replying_to.map(|msg| {
+                        cx.props.replying_to.as_ref().map(|msg| {
                             let our_did = state.read().did_key();
                             let msg_owner = if state.read().did_key() == msg.sender() {
                                 state.read().get_identity(&state.read().did_key())
@@ -430,7 +430,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(cx.props.chat_id.unwrap_or_default()))
+                                        state.write().mutate(Action::CancelReply(cx.props.chat_id))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.lines().join("\n"), 
