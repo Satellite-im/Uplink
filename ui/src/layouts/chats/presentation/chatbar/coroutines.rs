@@ -20,7 +20,6 @@ use super::{ChatInput, TypingIndicator, TypingInfo};
 pub type msg_ch_input = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 pub fn get_msg_ch<'a>(
     cx: &Scoped<'a, ChatProps>,
-    chat_data: &UseSharedState<data::ChatData>,
     state: &UseSharedState<State>,
 ) -> Coroutine<msg_ch_input> {
     use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {

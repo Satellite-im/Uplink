@@ -86,7 +86,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let _scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
 
     let _msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, chat_data, state);
+        coroutines::get_msg_ch(cx, state);
 
     let _local_typing_ch = coroutines::get_typing_ch(cx);
 
