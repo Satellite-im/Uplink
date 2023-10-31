@@ -173,18 +173,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     }
                 },
             },
-            SettingSectionSimple {
-                Range {
-                    aria_label: "range-input-device".into(),
-                    initial_value: 100.0,
-                    min: VOL_MIN,
-                    max: VOL_MAX,
-                    icon_left: Shape::Microphone,
-                    icon_right: Shape::MicrophoneWave,
-                    disabled: true,
-                    onchange: move |_| {}
-                }
-            }
+            // SettingSectionSimple {
+            //     Range {
+            //         aria_label: "range-input-device".into(),
+            //         initial_value: 100.0,
+            //         min: VOL_MIN,
+            //         max: VOL_MAX,
+            //         icon_left: Shape::Microphone,
+            //         icon_right: Shape::MicrophoneWave,
+            //         disabled: true,
+            //         onchange: move |_| {}
+            //     }
+            // }
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
@@ -197,18 +197,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     }
                 },
             },
-            SettingSectionSimple {
-                Range {
-                    aria_label: "range-output-device".into(),
-                    initial_value: 100.0,
-                    min: VOL_MIN,
-                    max: VOL_MAX,
-                    icon_left: Shape::Speaker,
-                    icon_right: Shape::SpeakerWave,
-                    disabled: true,
-                    onchange: move |_| {}
-                }
-            }
+            // SettingSectionSimple {
+            //     Range {
+            //         aria_label: "range-output-device".into(),
+            //         initial_value: 100.0,
+            //         min: VOL_MIN,
+            //         max: VOL_MAX,
+            //         icon_left: Shape::Speaker,
+            //         icon_right: Shape::SpeakerWave,
+            //         disabled: true,
+            //         onchange: move |_| {}
+            //     }
+            // }
 
             // currently does nothing
             //SettingSection {
