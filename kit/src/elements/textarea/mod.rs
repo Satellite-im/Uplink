@@ -246,13 +246,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 //This kinda works. 
-                // But needs 1. adding the stripped symbols like ```
+                // But needs 1. adding the stripped formatting symbols like ``` back
                 // 2. Does not work if using bold...
                 with_highlight.then(||{
                     rsx!(pre {
                         class: "textarea-styled",
                         id: "{id3}-styled-text",
-                        dangerous_inner_html: format_args!("{}", style_text(&text_value.read()))
+                        dangerous_inner_html: format_args!("{}", syntax_highlight(&text_value.read()))
                     })
                 }),
                 if *show_char_counter {
@@ -282,34 +282,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
-fn style_text(txt: &String) -> String {
-    let txt = if txt.ends_with("\n") {
-        return format!("{} ", txt);
-    } else {
-        txt.to_string()
-    };
-
-    let test = syntax_highlight_2("```json\n{\"text\":true}\n```");
-    let v = syntax_highlight(&txt);
-    let v2 = syntax_highlight_2(&txt);
-
-    v2
-}
-
-// Without doing any special things
-pub fn syntax_highlight_2(text: &str) -> String {
-    let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
-    let parser = pulldown_cmark::Parser::new_ext(text, options);
-
-    // Write to a new String buffer.
-    let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, parser);
-    html_output
-        .replace("<strong>", "**<strong>")
-        .replace("</strong>", "<strong>**")
-}
-
+// Like the one for messages in message::markdown. But tweaked a bit
 pub fn syntax_highlight(text: &str) -> String {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -327,7 +300,9 @@ pub fn syntax_highlight(text: &str) -> String {
         .collect();
 
     let mut modified_lines_refs: Vec<&str> = modified_lines.iter().map(|s| s.as_str()).collect();
-
+    //if text.ends_with("\n") {
+    //    modified_lines_refs.push(" ");
+    //}
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
@@ -335,7 +310,8 @@ pub fn syntax_highlight(text: &str) -> String {
 
     for line in &mut modified_lines_refs {
         if line.is_empty() {
-            *line = " "
+            html_output.push_str("<p> </p>");
+            continue;
         }
         let parser = pulldown_cmark::Parser::new_ext(line, options);
         let line_trim = line.trim();
@@ -380,18 +356,16 @@ pub fn syntax_highlight(text: &str) -> String {
                 }
                 pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
                     add_text_language = false;
-                    if !in_code_block {
-                        match code_block_kind {
-                            CodeBlockKind::Fenced(language_o) => {
-                                let language = if language_o.is_empty() {
-                                    "text"
-                                } else {
-                                    &language_o
-                                };
-                                html_output.push_str(&format!(
-                                    "<pre><code class=\"language-{}\">",
-                                    language
-                                ));
+                    match code_block_kind {
+                        CodeBlockKind::Fenced(language_o) => {
+                            let language = if language_o.is_empty() {
+                                "text"
+                            } else {
+                                &language_o
+                            };
+                            html_output
+                                .push_str(&format!("<pre><code class=\"language-{}\">", language));
+                            if !in_code_block && !language_o.is_empty() {
                                 html_output.push_str(&format!(
                                     "<p>```{}",
                                     if language_o.is_empty() {
@@ -401,29 +375,59 @@ pub fn syntax_highlight(text: &str) -> String {
                                     }
                                 ));
                             }
-                            _ => {
-                                html_output.push_str(&format!("```"));
-                                html_output.push_str("<pre><code class=\"language-text\">");
-                                html_output.push_str(&format!("```"));
-                            }
                         }
-                    }
+                        _ => html_output.push_str("<pre><code class=\"language-text\">"),
+                    };
                     in_code_block = true;
                 }
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
                     if in_code_block && line_trim == "```" {
                         in_code_block = false;
                         add_text_language = true;
+                        // HACK: To close block code is necessary to push tags 2 times
+                        html_output.push_str("</code></pre>");
                         html_output.push_str("<p>```");
                         html_output.push_str("</code></pre>");
                     }
                 }
+                pulldown_cmark::Event::Code(txt) => {
+                    html_output.push_str("`");
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Code(txt)),
+                    );
+                    html_output.push_str("`");
+                }
+                pulldown_cmark::Event::Start(tag) => match tag {
+                    // Add back removed markdown formatting symbols. Also since bold doesn't work properly disable it
+                    Tag::List(opt) => html_output.push_str(
+                        &opt.map(|i| format!("<p>{}. ", i))
+                            .unwrap_or(String::from("<p>*")),
+                    ),
+                    Tag::Item => {}
+                    Tag::Emphasis => html_output.push_str("*<em>"),
+                    Tag::Strong => html_output.push_str("**"),
+                    Tag::Strikethrough => html_output.push_str("~~<del>"),
+                    _ => pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Start(tag)),
+                    ),
+                },
+                pulldown_cmark::Event::End(tag) => match tag {
+                    Tag::List(_) => html_output.push_str("</p>"),
+                    Tag::Item => {}
+                    Tag::Emphasis => html_output.push_str("</em>*"),
+                    Tag::Strong => html_output.push_str("**"),
+                    Tag::Strikethrough => html_output.push_str("</del>~~"),
+                    _ => pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Start(tag)),
+                    ),
+                },
                 _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
             }
             previous_event = Some(prev);
         }
-
-        html_output.push('\n');
     }
     html_output
 }
@@ -519,7 +523,7 @@ pub fn Input2<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "{aria_label}",
                     width: "100%",
                     contenteditable: true,
-                    dangerous_inner_html: format_args!("{}", style_text(&text_value.read())),
+                    dangerous_inner_html: format_args!("{}", syntax_highlight(&text_value.read())),
                     //disabled: "{disabled}",
                     //value: "{text_value.read()}",
                     //maxlength: "{max_length}",
@@ -619,7 +623,7 @@ pub fn Input2<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             }
                         }
-                    }
+                    },
                 },
                 if *show_char_counter {
                     rsx!(

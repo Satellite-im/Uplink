@@ -1,18 +1,15 @@
 function countGraphemeClusters(input) {
   return Array.from(input).length;
 }
-var id = '$UUID'
-var text = "$TEXT"
-
 // Update char counter if exist
-var counter = document.getElementById(`${id}-char-counter`);
+var counter = document.getElementById("$UUID-chatbar-char-counter");
 if (counter) {
-  counter.innerText = countGraphemeClusters(text);
+  counter.innerText = countGraphemeClusters("$TEXT");
 }
 
 // Sync scroll value if exist
-var styled = document.getElementById(`${id}-styled-text`);
+var styled = document.getElementById(`$UUID-styled-text`);
 if (styled) {
-  styled.scrollTop = document.getElementById(id).scrollTop;
+  styled.scrollTop = document.getElementById("$UUID").scrollTop;
   Prism.highlightAllUnder(styled);
 }
