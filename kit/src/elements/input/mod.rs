@@ -220,7 +220,7 @@ fn validate_alphanumeric(
         }
         return Some(get_local_text_with_args(
             "warning-messages.disallowed-characters",
-            vec![("chars", t.into())],
+            vec![("chars", t)],
         ));
     }
 
@@ -236,7 +236,7 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     if max > 0 && val.len() > max {
         return Some(get_local_text_with_args(
             "warning-messages.maximum-of",
-            vec![("num", max.into())],
+            vec![("num", max)],
         ));
     }
 
@@ -244,10 +244,7 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     // then make sure the value's length is greater than or equal to the minimum
     if min > 0 && val.len() < min {
         return Some(if min > 1 {
-            get_local_text_with_args(
-                "warning-messages.please-enter-at-least",
-                vec![("num", min.into())],
-            )
+            get_local_text_with_args("warning-messages.please-enter-at-least", vec![("num", min)])
         } else {
             get_local_text("warning-messages.please-enter-at-least-one")
         });
