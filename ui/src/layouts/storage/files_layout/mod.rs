@@ -22,7 +22,7 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use uuid::Uuid;
 use warp::raygun::Location;
 
@@ -182,13 +182,13 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                         }
                                     )),
                                     onpress: move |_| {
-                                        storage_controller.with_mut(|i|  i.is_renaming_map = None);
-                                        let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
-                                            Some(path) => path,
-                                            None => return
-                                        };
-                                        functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
-                                        upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
+                                        // storage_controller.with_mut(|i|  i.is_renaming_map = None);
+                                        // let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
+                                        //     Some(path) => path,
+                                        //     None => return
+                                        // };
+                                        // functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
+                                        // upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                     },
                                 }
                             )

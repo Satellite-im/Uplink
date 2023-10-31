@@ -8,7 +8,7 @@ use futures::TryStreamExt;
 use reqwest::header;
 use reqwest::Client;
 
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
@@ -53,17 +53,18 @@ struct GitHubAsset {
 }
 
 pub fn _get_download_dest() -> Option<PathBuf> {
-    match FileDialog::new()
-        .set_directory(dirs::home_dir().unwrap_or(".".into()))
-        .set_title(&get_local_text("uplink.pick-download-directory"))
-        .pick_folder()
-    {
-        Some(x) => Some(x),
-        None => {
-            log::debug!("update download canceled by user");
-            None
-        }
-    }
+    // match FileDialog::new()
+    //     .set_directory(dirs::home_dir().unwrap_or(".".into()))
+    //     .set_title(&get_local_text("uplink.pick-download-directory"))
+    //     .pick_folder()
+    // {
+    //     Some(x) => Some(x),
+    //     None => {
+    //         log::debug!("update download canceled by user");
+    //         None
+    //     }
+    // }
+    None
 }
 
 pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {

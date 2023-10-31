@@ -19,13 +19,13 @@ kit = { workspace = true }
 common = { workspace = true }
 extensions = { workspace = true }
 tokio-util = { workspace = true }
-arboard = { workspace = true }
+# arboard = { workspace = true }
 humansize = { workspace = true }
 uuid = { workspace = true }
 libloading = { workspace = true }
 warp = { workspace = true }
 warp-ipfs = { workspace = true }
-rfd = { workspace = true }
+# rfd = { workspace = true }
 mime = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -40,9 +40,9 @@ derive_more = { workspace = true }
 colored = { workspace = true }
 notify = { workspace = true }
 rand = { workspace = true }
-notify-rust = { workspace = true }
+# notify-rust = { workspace = true }
 titlecase = { workspace = true }
-muda = { workspace = true }
+# muda = { workspace = true }
 
 tempfile = { workspace = true }
 fdlimit = { workspace = true }

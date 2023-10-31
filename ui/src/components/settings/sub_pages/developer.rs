@@ -15,7 +15,7 @@ use common::{
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::{button::Button, switch::Switch, Appearance};
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use warp::logging::tracing::log;
 
 use crate::{components::settings::SettingSection, logger};
@@ -97,7 +97,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             get_local_text("settings-developer.test-popup"),
                             get_local_text("settings-developer.test-popup"),
                             Some(Sounds::General),
-                            notify_rust::Timeout::Milliseconds(4),
+                            // notify_rust::Timeout::Milliseconds(4),
                             NotificationAction::Dummy
                         );
                         state
@@ -128,9 +128,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
-                        if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
-                            ch.send(path);
-                        };
+                        // if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
+                        //     ch.send(path);
+                        // };
                     }
                 }
             },

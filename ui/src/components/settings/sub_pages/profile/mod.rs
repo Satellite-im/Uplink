@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use arboard::Clipboard;
+// use arboard::Clipboard;
 use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, Identity, State, ToastNotification};
@@ -18,7 +18,7 @@ use kit::elements::{
     label::Label,
 };
 use mime::*;
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use warp::{error::Error, logging::tracing::log};
 
 use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
@@ -322,16 +322,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    let mut clipboard = Clipboard::new().unwrap();
-                                    clipboard.set_text(did_string.clone()).unwrap();
-                                    state
-                                        .write()
-                                        .mutate(Action::AddToastNotification(ToastNotification::init(
-                                            "".into(),
-                                            get_local_text("friends.copied-did"),
-                                            None,
-                                            2,
-                                        )));
+                                    // let mut clipboard = Clipboard::new().unwrap();
+                                    // clipboard.set_text(did_string.clone()).unwrap();
+                                    // state
+                                    //     .write()
+                                    //     .mutate(Action::AddToastNotification(ToastNotification::init(
+                                    //         "".into(),
+                                    //         get_local_text("friends.copied-did"),
+                                    //         None,
+                                    //         2,
+                                    //     )));
                                 }
                             }
                         }
@@ -419,16 +419,17 @@ fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>
 }
 
 fn set_image() -> Result<(Vec<u8>, String), Box<dyn std::error::Error>> {
-    let path = match FileDialog::new()
-        .add_filter("image", &["jpg", "png", "jpeg", "svg"])
-        .set_directory(".")
-        .pick_file()
-    {
-        Some(path) => path,
-        None => return Err(Box::from(Error::InvalidItem)),
-    };
+    // let path = match FileDialog::new()
+    //     .add_filter("image", &["jpg", "png", "jpeg", "svg"])
+    //     .set_directory(".")
+    //     .pick_file()
+    // {
+    //     Some(path) => path,
+    //     None => return Err(Box::from(Error::InvalidItem)),
+    // };
 
-    transform_file_into_base64_image(path)
+    // transform_file_into_base64_image(path)
+    Ok((Vec::new(), String::new()))
 }
 
 fn transform_file_into_base64_image(

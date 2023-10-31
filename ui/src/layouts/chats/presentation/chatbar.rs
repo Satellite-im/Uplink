@@ -26,7 +26,7 @@ use kit::{
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -614,22 +614,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             show_storage_modal.set(true);
                         },
                         on_press_local_disk: move |_| {
-                            if disabled {
-                                return;
-                            }
-                            if let Some(new_files) = FileDialog::new()
-                            .set_directory(dirs::home_dir().unwrap_or_default())
-                            .pick_files()
-                        {
-                            let new_files: Vec<Location> = new_files.iter()
-                            .map(|path| Location::Disk { path: path.clone() })
-                            .collect();
-                            let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
-                            current_files.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
-                            update_send();
-                            }
+                        //     if disabled {
+                        //         return;
+                        //     }
+                        //     if let Some(new_files) = FileDialog::new()
+                        //     .set_directory(dirs::home_dir().unwrap_or_default())
+                        //     .pick_files()
+                        // {
+                        //     let new_files: Vec<Location> = new_files.iter()
+                        //     .map(|path| Location::Disk { path: path.clone() })
+                        //     .collect();
+                        //     let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                        //     .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
+                        //     current_files.extend(new_files);
+                        //     state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
+                        //     update_send();
+                        //     }
                         },
                     }
                 ),

@@ -1,4 +1,4 @@
-use arboard::Clipboard;
+// use arboard::Clipboard;
 use std::str::FromStr;
 
 use common::language::get_local_text;
@@ -72,17 +72,17 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     if let Some(id) = my_id.get().clone() {
-        let mut clipboard = Clipboard::new().unwrap();
-        clipboard.set_text(id).unwrap();
-        state
-            .write()
-            .mutate(Action::AddToastNotification(ToastNotification::init(
-                "".into(),
-                get_local_text("friends.copied-did"),
-                None,
-                2,
-            )));
-        my_id.set(None);
+        // let mut clipboard = Clipboard::new().unwrap();
+        // clipboard.set_text(id).unwrap();
+        // state
+        //     .write()
+        //     .mutate(Action::AddToastNotification(ToastNotification::init(
+        //         "".into(),
+        //         get_local_text("friends.copied-did"),
+        //         None,
+        //         2,
+        //     )));
+        // my_id.set(None);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {

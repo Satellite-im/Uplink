@@ -16,7 +16,7 @@ use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
@@ -139,29 +139,29 @@ pub fn format_item_size(item_size: usize) -> String {
 }
 
 pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
-    let file_extension = std::path::Path::new(&file_name)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|s| s.to_string())
-        .unwrap_or_default();
-    let file_stem = PathBuf::from(&file_name)
-        .file_stem()
-        .and_then(OsStr::to_str)
-        .map(str::to_string)
-        .unwrap_or_default();
-    let file_path_buf = match FileDialog::new()
-        .set_directory(".")
-        .set_file_name(&file_stem)
-        .add_filter("", &[&file_extension])
-        .save_file()
-    {
-        Some(path) => path,
-        None => return,
-    };
-    ch.send(ChanCmd::DownloadFile {
-        file_name: file_name.to_string(),
-        local_path_to_save_file: file_path_buf,
-    });
+    // let file_extension = std::path::Path::new(&file_name)
+    //     .extension()
+    //     .and_then(OsStr::to_str)
+    //     .map(|s| s.to_string())
+    //     .unwrap_or_default();
+    // let file_stem = PathBuf::from(&file_name)
+    //     .file_stem()
+    //     .and_then(OsStr::to_str)
+    //     .map(str::to_string)
+    //     .unwrap_or_default();
+    // let file_path_buf = match FileDialog::new()
+    //     .set_directory(".")
+    //     .set_file_name(&file_stem)
+    //     .add_filter("", &[&file_extension])
+    //     .save_file()
+    // {
+    //     Some(path) => path,
+    //     None => return,
+    // };
+    // ch.send(ChanCmd::DownloadFile {
+    //     file_name: file_name.to_string(),
+    //     local_path_to_save_file: file_path_buf,
+    // });
 }
 
 pub fn add_files_in_queue_to_upload(

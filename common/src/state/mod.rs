@@ -369,7 +369,7 @@ impl State {
                             vec![("name", identity.username().into())],
                         ),
                         Some(crate::sounds::Sounds::Notification),
-                        notify_rust::Timeout::Milliseconds(4),
+                        // notify_rust::Timeout::Milliseconds(4),
                         NotificationAction::FriendListPending,
                     );
                 }
@@ -478,7 +478,7 @@ impl State {
                         get_local_text("messages.new"),
                         text,
                         sound,
-                        notify_rust::Timeout::Milliseconds(4),
+                        // notify_rust::Timeout::Milliseconds(4),
                         NotificationAction::DisplayChat(conversation_id),
                     );
                 }

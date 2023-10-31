@@ -17,7 +17,7 @@ once_cell = { workspace = true }
 clap = { workspace = true }
 rodio = "0.16"
 uuid = { workspace = true }
-notify-rust = { workspace = true }
+# notify-rust = { workspace = true }
 dirs = { workspace = true }
 base64 = { workspace = true }
 lipsum = "0.8.2"
