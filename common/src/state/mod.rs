@@ -366,7 +366,7 @@ impl State {
                         get_local_text("friends.new-request"),
                         get_local_text_with_args(
                             "friends.new-request-name",
-                            vec![("name", identity.username().into())],
+                            vec![("name", identity.username())],
                         ),
                         Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
@@ -470,7 +470,7 @@ impl State {
                     let text = match id {
                         Some(id) => get_local_text_with_args(
                             "messages.user-sent-message",
-                            vec![("user", id.username().into())],
+                            vec![("user", id.username())],
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
@@ -1313,7 +1313,7 @@ impl State {
 
             friends_by_first_letter
                 .entry(first_letter)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(friend.clone());
         }
 
