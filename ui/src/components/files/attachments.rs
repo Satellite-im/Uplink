@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use common::{icons, language::get_local_text_args_builder, MAX_FILES_PER_MESSAGE};
+use common::{
+    icons, language::get_local_text_args_builder, state::State, warp_runner::thumbnail_to_base64,
+    MAX_FILES_PER_MESSAGE,
+};
 use dioxus::prelude::*;
 use kit::components::embeds::file_embed::FileEmbed;
 use uuid::Uuid;
@@ -15,40 +18,54 @@ pub struct AttachmentProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
     let files_attached_to_send = cx.props.files_to_attach.clone();
-    let files_attached_to_send2 = files_attached_to_send.clone();
     let files_attached_to_send3 = files_attached_to_send;
 
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(files_attached_to_send2.iter().map(|location| {
-        let path = match location {
-            Location::Constellation { path } => PathBuf::from(path),
-            Location::Disk { path } => path.clone(),
+    let attachments = cx.render(rsx!(cx.props.files_to_attach.iter().map(|location| {
+        let (filename, filepath, thumbnail) = match &location {
+            Location::Constellation { path } => {
+                let filename = PathBuf::from(&path)
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
+
+                let warp_file = state
+                    .read()
+                    .storage
+                    .files
+                    .iter()
+                    .find(|x| x.name() == filename)
+                    .cloned();
+
+                let thumbnail = match warp_file {
+                    Some(f) => thumbnail_to_base64(&f),
+                    None => String::new(),
+                };
+
+                (filename, PathBuf::from(&path), thumbnail)
+            }
+            Location::Disk { path } => (
+                path.file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
+                path.clone(),
+                String::new(),
+            ),
         };
 
-        let filename = path
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
-
         rsx!(FileEmbed {
-            filename: filename.clone(),
-            filepath: match location {
-                Location::Constellation { path } => PathBuf::from(&path),
-                Location::Disk { path } => path.clone(),
-            },
+            filename: filename,
+            filepath: filepath,
             remote: false,
+            thumbnail: thumbnail,
             button_icon: icons::outline::Shape::Minus,
             on_press: move |_| {
                 let mut attachments = cx.props.files_to_attach.clone();
-                attachments.retain(|location| {
-                    let path_to_retain = match location {
-                        Location::Constellation { path } => PathBuf::from(path),
-                        Location::Disk { path } => path.clone(),
-                    };
-                    path_to_retain != path
-                });
+                attachments.retain(|location2| location2 != location);
                 cx.props.on_remove.call(attachments);
             },
         })

@@ -469,7 +469,7 @@ pub fn start_upload_file_listener(
                                     "".into(),
                                     get_local_text_with_args(
                                         "files.no-size-available",
-                                        vec![("file", file_name.into())],
+                                        vec![("file", file_name)],
                                     ),
                                     None,
                                     3,

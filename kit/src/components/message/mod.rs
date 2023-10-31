@@ -693,7 +693,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     onpress: move |_| {
                         ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
                     },
-                    text: get_local_text_with_args("friends.add-name", vec![("name", identity.username().into())]),
+                    text: get_local_text_with_args("friends.add-name", vec![("name", identity.username())]),
                     appearance: crate::elements::Appearance::Primary
                 }
             }));
