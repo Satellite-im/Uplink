@@ -474,7 +474,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT.into())])
+                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])
             }
         ))
     ));
