@@ -1,20 +1,19 @@
-use common::icons::outline::Shape;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::warp_runner::{BlinkCmd, WarpCmd};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::range::Range;
+
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
 use warp::logging::tracing::log;
 
-use crate::components::settings::{SettingSection, SettingSectionSimple};
+use crate::components::settings::SettingSection;
 use common::state::{action::ConfigAction, Action, State};
 use common::{sounds, WARP_CMD_CH};
 
-pub const VOL_MIN: f32 = 0.0;
-pub const VOL_MAX: f32 = 200.0;
+// pub const VOL_MIN: f32 = 0.0;
+// pub const VOL_MAX: f32 = 200.0;
 
 enum AudioCmd {
     FetchOutputDevices,
