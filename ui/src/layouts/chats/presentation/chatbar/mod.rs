@@ -81,7 +81,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = cx.props.chat_initialized;
+    let is_loading = !cx.props.chat_initialized;
     let active_chat_id = cx.props.chat_id;
     let chat_id = cx.props.chat_id;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
