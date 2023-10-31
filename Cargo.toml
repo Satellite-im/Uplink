@@ -7,6 +7,7 @@ members = [
     "extensions",
     "native_extensions/emoji_selector",
 ]
+exclude = ["mobile"]
 
 resolver = "2"
 
@@ -31,11 +32,15 @@ version = "0.1.7"
 rust-version = "1.70"
 
 [workspace.dependencies]
-dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+# dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
+dioxus = { path = "/Users/lucasmarchi/Documents/development/rust_projects/dioxus/packages/dioxus" }
+dioxus-desktop = { path = "/Users/lucasmarchi/Documents/development/rust_projects/dioxus/packages/desktop", features = ["transparent",
+    "tokio_runtime",
+], default-features = false }
 dioxus-hooks = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
 dioxus-html = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
 dioxus-router = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
-dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2", features = ["transparent"] }
+# dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2", features = ["transparent"] }
 muda = "0.9.4"
 raw-window-handle = "0.5"
 dioxus-core = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
