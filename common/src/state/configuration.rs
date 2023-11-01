@@ -57,22 +57,17 @@ pub struct Privacy {
 
 #[derive(Debug, Deserialize, Serialize, Copy, Clone, Eq, PartialEq)]
 pub struct AudioVideo {
-    #[serde(default = "bool_true")]
     pub echo_cancellation: bool,
-    #[serde(default)]
     pub call_timer: bool,
-    #[serde(default)]
     pub interface_sounds: bool,
-    #[serde(default = "bool_true")]
     pub message_sounds: bool,
-    #[serde(default = "bool_true")]
     pub media_sounds: bool,
 }
 
 impl Default for AudioVideo {
     fn default() -> Self {
         Self {
-            echo_cancellation: false,
+            echo_cancellation: true,
             call_timer: false,
             interface_sounds: false,
             message_sounds: true,
@@ -105,16 +100,10 @@ fn bool_true() -> bool {
 // This is a good place to start.
 #[derive(Debug, Deserialize, Serialize, Copy, Clone, Eq, PartialEq)]
 pub struct Notifications {
-    #[serde(default = "bool_true")]
     pub enabled: bool,
-    #[serde(default)]
     pub show_app_icon: bool,
-    #[serde(default = "bool_true")]
     pub friends_notifications: bool,
-    #[serde(default = "bool_true")]
     pub messages_notifications: bool,
-    // By default we leave this one off.
-    #[serde(default)]
     pub settings_notifications: bool,
 }
 
@@ -125,6 +114,7 @@ impl Default for Notifications {
             show_app_icon: false,
             friends_notifications: true,
             messages_notifications: true,
+            // By default we leave this one off.
             settings_notifications: false,
         }
     }
@@ -192,30 +182,5 @@ impl Configuration {
                 log::error!("failed to save login_config: {e}");
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn deserialize_notifications_config() {
-        let empty_str = String::from("{}");
-        let serde_notifications: Notifications =
-            serde_json::from_str(&empty_str).expect("failed to deserialize empty string");
-        let default_notifications = Notifications::default();
-
-        assert_eq!(default_notifications, serde_notifications);
-    }
-
-    #[test]
-    fn deserialize_audiovideo_config() {
-        let empty_str = String::from("{}");
-        let serde_audiovideo: AudioVideo =
-            serde_json::from_str(&empty_str).expect("failed to deserialize empty string");
-        let default_audiovideo = AudioVideo::default();
-
-        assert_eq!(default_audiovideo, serde_audiovideo);
     }
 }
