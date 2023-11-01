@@ -329,5 +329,5 @@ fn get_welcome_message(state: &State) -> String {
         None => String::from("UNKNOWN"),
     };
 
-    get_local_text_with_args("unlock.welcome", vec![("name", name.into())])
+    get_local_text_with_args("unlock.welcome", vec![("name", name)])
 }

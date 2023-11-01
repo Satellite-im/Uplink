@@ -133,7 +133,6 @@ files = Ficheiros
     .no-thumbnail = Sem miniatura
     .one-file-to-upload = Ficheiro para carregar: 1!
     .files-to-upload = Ficheiros a carregar { $num }!
-    .files-to-upload = Ficheiros a carregar
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
     .directory-already-with-name = Já existe um directório com este nome
     .no-size-available = Sem tamanho disponível para o ficheiro: { $file }
