@@ -226,4 +226,6 @@ pub enum ConfigAction {
     SetSettingsNotificationsEnabled(bool),
     #[display(fmt = "SetAutoEnableExtensions {_0}")]
     SetAutoEnableExtensions(bool),
+    #[display(fmt = "SetEchoCancellation {_0}")]
+    SetEchoCancellation(bool),
 }
