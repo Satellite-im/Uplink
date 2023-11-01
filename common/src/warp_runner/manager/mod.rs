@@ -22,7 +22,7 @@ pub struct Warp {
     pub multipass: Account,
     pub raygun: Messaging,
     pub constellation: Storage,
-    pub blink: Calling,
+    // pub blink: Calling,
 }
 
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
@@ -39,7 +39,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     // receive events from RayGun and MultiPass
     let mut raygun_stream = get_raygun_stream(&mut warp.raygun).await;
     let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
-    let mut blink_stream = get_blink_stream(&mut warp.blink).await;
+    // let mut blink_stream = get_blink_stream(&mut warp.blink).await;
 
     log::debug!("warp_runner::manager::run");
     loop {
@@ -54,14 +54,14 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                     break;
                 }
             },
-            opt = blink_stream.next() => {
-                if let Some(evt) = opt {
-                    if let Err(e) = events::handle_blink_event(evt, &mut warp).await {
-                        log::error!("failed to handle blink event: {e}");
-                        break;
-                    }
-                }
-            },
+            // opt = blink_stream.next() => {
+            //     if let Some(evt) = opt {
+            //         if let Err(e) = events::handle_blink_event(evt, &mut warp).await {
+            //             log::error!("failed to handle blink event: {e}");
+            //             break;
+            //         }
+            //     }
+            // },
             opt = conversation_msg_rx.recv() => {
                 if events::handle_message_event(opt, &mut warp).await.is_err() {
                     break;

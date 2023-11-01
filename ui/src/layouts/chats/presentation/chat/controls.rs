@@ -68,31 +68,31 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                         participants,
                         conversation_id,
                     } => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
-                            conversation_id,
-                            participants: participants.clone(),
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send command to warp_runner: {e}");
-                            call_pending.set(false);
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
+                        //     conversation_id,
+                        //     participants: participants.clone(),
+                        //     rsp: tx,
+                        // })) {
+                        //     log::error!("failed to send command to warp_runner: {e}");
+                        //     call_pending.set(false);
+                        //     continue;
+                        // }
 
-                        let res = rx.await.expect("warp runner failed");
-                        match res {
-                            Ok(call_id) => {
-                                state.write().mutate(Action::OfferCall(call::Call::new(
-                                    call_id,
-                                    conversation_id,
-                                    participants,
-                                )));
-                            }
-                            Err(e) => {
-                                log::error!("BlinkCmd::OfferCall failed: {e}");
-                            }
-                        }
-                        call_pending.set(false);
+                        // let res = rx.await.expect("warp runner failed");
+                        // match res {
+                        //     Ok(call_id) => {
+                        //         state.write().mutate(Action::OfferCall(call::Call::new(
+                        //             call_id,
+                        //             conversation_id,
+                        //             participants,
+                        //         )));
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("BlinkCmd::OfferCall failed: {e}");
+                        //     }
+                        // }
+                        // call_pending.set(false);
                     }
                 }
             }

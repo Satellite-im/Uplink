@@ -249,28 +249,28 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         chat_with.set(Some(c));
                     }
                     QuickProfileCmd::AdjustVolume(user, volume) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
-                            user: user.clone(),
-                            volume,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
+                        //     user: user.clone(),
+                        //     volume,
+                        //     rsp: tx,
+                        // })) {
+                        //     log::error!("failed to send blink command: {e}");
+                        //     continue;
+                        // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state
-                                    .write_silent()
-                                    .settings
-                                    .user_volumes
-                                    .insert(user, volume);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to unmute self: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state
+                        //             .write_silent()
+                        //             .settings
+                        //             .user_volumes
+                        //             .insert(user, volume);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to unmute self: {e}");
+                        //     }
+                        // }
                     }
                 }
             }

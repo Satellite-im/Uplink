@@ -84,8 +84,8 @@ pub enum WarpCmd {
     RayGun(RayGunCmd),
     #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
-    #[display(fmt = "Blink {{ {_0} }} ")]
-    Blink(BlinkCmd),
+    // #[display(fmt = "Blink {{ {_0} }} ")]
+    // Blink(BlinkCmd),
     // these commands may not actually be warp commands, but just require a long running
     // async task, executed separately from the UI
     #[display(fmt = "Other {{ {_0} }} ")]
@@ -122,12 +122,12 @@ impl WarpRunner {
     // spawns a task which will terminate when WarpRunner is dropped
     pub fn run(&mut self) {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
-        self.ran_once = true;
+        // self.ran_once = true;
 
-        let notify = self.notify.clone();
-        tokio::spawn(async move {
-            handle_login(notify.clone()).await;
-        });
+        // let notify = self.notify.clone();
+        // tokio::spawn(async move {
+        //     handle_login(notify.clone()).await;
+        // });
     }
 }
 
@@ -375,14 +375,14 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         .finalize()
         .await?;
 
-    let blink = warp_blink_wrtc::BlinkImpl::new(multipass.clone()).await?;
+    // let blink = warp_blink_wrtc::BlinkImpl::new(multipass.clone()).await?;
 
     Ok(manager::Warp {
         tesseract,
         multipass,
         raygun,
         constellation,
-        blink,
+        // blink,
     })
 }
 

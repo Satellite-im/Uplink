@@ -39,84 +39,84 @@ pub fn AudioSettings(cx: Scope) -> Element {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     AudioCmd::FetchInputDevices => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx
-                            .send(WarpCmd::Blink(BlinkCmd::GetAllMicrophones { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(_e) = warp_cmd_tx
+                        //     .send(WarpCmd::Blink(BlinkCmd::GetAllMicrophones { rsp: tx }))
+                        // {
+                        //     log::error!("failed to send blink command");
+                        //     continue;
+                        // }
 
-                        let res = rx.await.expect("warp runner failed to get input devices");
-                        match res {
-                            Ok(res) => {
-                                state.write_silent().settings.input_device = res.selected;
-                                *input_devices.write() = res.available_devices;
-                            }
-                            Err(e) => {
-                                log::error!("could not get input devices: {e}");
-                            }
-                        }
+                        // let res = rx.await.expect("warp runner failed to get input devices");
+                        // match res {
+                        //     Ok(res) => {
+                        //         state.write_silent().settings.input_device = res.selected;
+                        //         *input_devices.write() = res.available_devices;
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("could not get input devices: {e}");
+                        //     }
+                        // }
                     }
                     AudioCmd::FetchOutputDevices => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::GetAllSpeakers { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(_e) =
+                        //     warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::GetAllSpeakers { rsp: tx }))
+                        // {
+                        //     log::error!("failed to send blink command");
+                        //     continue;
+                        // }
 
-                        let res = rx.await.expect("warp runner failed to get output devices");
-                        match res {
-                            Ok(res) => {
-                                state.write_silent().settings.output_device = res.selected;
-                                *output_devices.write() = res.available_devices;
-                            }
-                            Err(e) => {
-                                log::error!("could not get output devices: {e}");
-                            }
-                        }
+                        // let res = rx.await.expect("warp runner failed to get output devices");
+                        // match res {
+                        //     Ok(res) => {
+                        //         state.write_silent().settings.output_device = res.selected;
+                        //         *output_devices.write() = res.available_devices;
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("could not get output devices: {e}");
+                        //     }
+                        // }
                     }
                     AudioCmd::SetInputDevice(device_name) => {
-                        let device = device_name.clone();
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetMicrophone {
-                            device_name,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let device = device_name.clone();
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetMicrophone {
+                        //     device_name,
+                        //     rsp: tx,
+                        // })) {
+                        //     log::error!("failed to send blink command");
+                        //     continue;
+                        // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write_silent().settings.input_device = Some(device);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to set input device: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state.write_silent().settings.input_device = Some(device);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to set input device: {e}");
+                        //     }
+                        // }
                     }
                     AudioCmd::SetOutputDevice(device_name) => {
-                        let device = device_name.clone();
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetSpeaker {
-                            device_name,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let device = device_name.clone();
+                        // let (tx, rx) = oneshot::channel();
+                        // if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SetSpeaker {
+                        //     device_name,
+                        //     rsp: tx,
+                        // })) {
+                        //     log::error!("failed to send blink command");
+                        //     continue;
+                        // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write_silent().settings.output_device = Some(device);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to set output device: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state.write_silent().settings.output_device = Some(device);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to set output device: {e}");
+                        //     }
+                        // }
                     }
                 }
             }

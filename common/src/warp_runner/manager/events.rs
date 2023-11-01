@@ -167,7 +167,7 @@ pub async fn handle_warp_command(
         }
 
         WarpCmd::Constellation(cmd) => handle_constellation_cmd(cmd, &mut warp.constellation).await,
-        WarpCmd::Blink(cmd) => handle_blink_cmd(cmd, &mut warp.blink).await,
+        // WarpCmd::Blink(cmd) => handle_blink_cmd(cmd, &mut warp.blink).await,
     }
     Ok(())
 }

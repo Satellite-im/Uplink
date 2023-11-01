@@ -134,126 +134,126 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     CallDialogCmd::Hangup(_id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::LeaveCall { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(e) =
+                        // //     warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::LeaveCall { rsp: tx }))
+                        // // {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().mutate(Action::EndCall);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state.write().mutate(Action::EndCall);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to answer call: {e}");
+                        //     }
+                        // }
                     }
                     CallDialogCmd::MuteSelf => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::MuteSelf { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(e) =
+                        // //     warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::MuteSelf { rsp: tx }))
+                        // // {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                // disaster waiting to happen if State ever gets out of sync with blink.
-                                state.write().mutate(Action::ToggleMute);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to mute self: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         // disaster waiting to happen if State ever gets out of sync with blink.
+                        //         state.write().mutate(Action::ToggleMute);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to mute self: {e}");
+                        //     }
+                        // }
                     }
                     CallDialogCmd::UnmuteSelf => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(e) =
+                        // //     warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx }))
+                        // // {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                // disaster waiting to happen if State ever gets out of sync with blink.
-                                state.write().mutate(Action::ToggleMute);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to unmute self: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         // disaster waiting to happen if State ever gets out of sync with blink.
+                        //         state.write().mutate(Action::ToggleMute);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to unmute self: {e}");
+                        //     }
+                        // }
                     }
                     CallDialogCmd::RecordCall => {
-                        let (tx, rx) = oneshot::channel();
-                        let time = Local::now().format("%d-%m-%Y_%H-%M-%S").to_string();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StartRecording {
-                            output_dir: STATIC_ARGS
-                                .recordings
-                                .join(time)
-                                .to_string_lossy()
-                                .to_string(),
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // let time = Local::now().format("%d-%m-%Y_%H-%M-%S").to_string();
+                        // // if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StartRecording {
+                        // //     output_dir: STATIC_ARGS
+                        // //         .recordings
+                        // //         .join(time)
+                        // //         .to_string_lossy()
+                        // //         .to_string(),
+                        // //     rsp: tx,
+                        // // })) {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                recording.with_mut(|v| *v = true);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to start recording: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         recording.with_mut(|v| *v = true);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to start recording: {e}");
+                        //     }
+                        // }
                     }
                     CallDialogCmd::StopRecording => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StopRecording { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(e) =
+                        // //     warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::StopRecording { rsp: tx }))
+                        // // {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                recording.with_mut(|v| *v = false);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to stop recording: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         recording.with_mut(|v| *v = false);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to stop recording: {e}");
+                        //     }
+                        // }
                     }
                     CallDialogCmd::AdjustVolume(user, volume) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
-                            user: *user.clone(),
-                            volume,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command: {e}");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AdjustVolume {
+                        // //     user: *user.clone(),
+                        // //     volume,
+                        // //     rsp: tx,
+                        // // })) {
+                        // //     log::error!("failed to send blink command: {e}");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state
-                                    .write_silent()
-                                    .settings
-                                    .user_volumes
-                                    .insert(*user, volume);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to adjust voluem: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state
+                        //             .write_silent()
+                        //             .settings
+                        //             .user_volumes
+                        //             .insert(*user, volume);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to adjust voluem: {e}");
+                        //     }
+                        // }
                     } // TODO: Method to end call before a connection is made
                 }
             }
@@ -449,42 +449,42 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     PendingCallDialogCmd::Accept(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
+                        // //     call_id: id,
+                        // //     rsp: tx,
+                        // // })) {
+                        // //     log::error!("failed to send blink command");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().mutate(Action::AnswerCall(id));
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state.write().mutate(Action::AnswerCall(id));
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to answer call: {e}");
+                        //     }
+                        // }
                     }
                     PendingCallDialogCmd::Reject(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
+                        // let (tx, rx) = oneshot::channel();
+                        // // if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                        // //     call_id: id,
+                        // //     rsp: tx,
+                        // // })) {
+                        // //     log::error!("failed to send blink command");
+                        // //     continue;
+                        // // }
 
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().ui.call_info.reject_call(id);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
+                        // match rx.await {
+                        //     Ok(_) => {
+                        //         state.write().ui.call_info.reject_call(id);
+                        //     }
+                        //     Err(e) => {
+                        //         log::error!("warp_runner failed to answer call: {e}");
+                        //     }
+                        // }
                     }
                 }
             }

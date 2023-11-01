@@ -1,3 +1,5 @@
+use uplink::main_lib;
+
 pub fn main() {
-    uplink::main();
+    main_lib();
 }

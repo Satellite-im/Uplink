@@ -12,7 +12,9 @@ scraper = "0.17.1"
 chrono = { workspace = true }
 dioxus = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-desktop = { workspace = true, features = ["transparent"] }
+dioxus-desktop = { workspace = true, features = [
+    "tokio_runtime",
+], default-features = false }
 dioxus-hooks = { workspace = true }
 dioxus-html = { workspace = true }
 timeago = { workspace = true }
