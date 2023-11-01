@@ -57,6 +57,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    //log::trace!("rendering file embed: {}", cx.props.filename);
     let fullscreen_preview = use_state(cx, || false);
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
@@ -199,6 +200,23 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             ),
                             src: "{thumbnail}",
                         }
+                        // if anyone asks for the file name from constellation, uncomment this. 
+                        // div {
+                        //     class: "file-info",
+                        //     width: "100%",
+                        //     aria_label: "file-info",
+                        //     p {
+                        //         class: "name",
+                        //         aria_label: "file-name",
+                        //         color: "var(--text-color)",
+                        //         "{filename}"
+                        //     },
+                        //     p {
+                        //         class: "meta",
+                        //         aria_label: "file-meta",
+                        //         "{file_description}"
+                        //     }
+                        // },
                         if with_download_button {
                             rsx!(Button {
                                         icon: btn_icon,

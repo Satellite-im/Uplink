@@ -244,7 +244,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 div {
                     class: "blocked-container",
                     p {
-                        get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
+                        get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])
                     },
                     p {
                         style: "white-space: pre",
@@ -264,7 +264,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             div {
                 class: "blocked-container",
                 p {
-                    get_local_text_with_args("messages.blocked", vec![("amount", messages.len().into())])
+                    get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])
                 },
                 p {
                     style: "white-space: pre",

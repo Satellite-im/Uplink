@@ -150,7 +150,8 @@ files = Files
     .no-thumbnail = No Thumbnail
     .one-file-to-upload = File to Upload 1!
     .files-to-upload = Files to Upload { $num }!
-    .no-thumbnail-preview = No thumbnail to see
+        .placeholder = Files to Upload!
+
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .no-size-available = No size available for file: { $file }
@@ -243,6 +244,7 @@ settings-audio = Audio & Sound Settings
     .media-sounds-description = When enabled, media related events such as toggling microphone or headphones and other real time events, will play sounds.
     .message-sounds = Message Sounds
     .message-sounds-description = When enabled you will hear a notification when a new message is received.
+    .failed = Failed to update settings
 
 settings-files = Files Settings
     .local-sync = Local Sync
