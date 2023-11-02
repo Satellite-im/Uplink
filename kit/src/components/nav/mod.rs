@@ -116,7 +116,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
-                let name2: String = name.clone().to_lowercase();
+                let name2: String = name.to_lowercase();
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
                 let tooltip = if cx.props.bubble.is_some() {
