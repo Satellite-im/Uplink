@@ -19,6 +19,7 @@ use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+use std::path::PathBuf;
 use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
@@ -48,7 +49,7 @@ impl std::fmt::Display for Log {
 pub struct Logger {
     file_tx: Option<std::sync::mpsc::SyncSender<Log>>,
     file_thread: Option<std::thread::JoinHandle<()>>,
-    log_file: String,
+    log_file: PathBuf,
     // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
     log_entries: VecDeque<Log>,
     subscribers: Vec<mpsc::UnboundedSender<Log>>,
@@ -108,8 +109,8 @@ impl crate::log::Log for LogGlue {
             return;
         }
 
-        let msg = format!("{}", record.args());
-        LOGGER.write().log(record.level(), &msg);
+        let msg = record.args();
+        LOGGER.write().log(record.level(), &msg.to_string());
     }
 
     fn flush(&self) {}
@@ -117,12 +118,7 @@ impl crate::log::Log for LogGlue {
 
 impl Logger {
     fn load() -> Self {
-        let logger_path = STATIC_ARGS.logger_path.to_string_lossy().to_string();
-        let _ = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&logger_path);
-
+        let logger_path = STATIC_ARGS.logger_path.clone();
         Self {
             file_tx: None,
             file_thread: None,
@@ -169,7 +165,7 @@ impl Logger {
             // keeping a running log of entries probably won't help identify a crash if the log is filled with trace logs.
             self.log_entries.push_back(new_log.clone());
 
-            if self.log_entries.len() >= self.max_logs {
+            if self.log_entries.len() > self.max_logs {
                 self.log_entries.pop_front();
             }
         }
@@ -203,13 +199,19 @@ impl Logger {
             return;
         }
 
+        if let Some(path) = self.log_file.parent() {
+            if !path.is_dir() {
+                let _ = std::fs::create_dir_all(path);
+            }
+        }
+
         let file = OpenOptions::new()
             .append(true)
             .create(true)
             .open(&self.log_file)
             .unwrap();
 
-        let (tx, rx) = std::sync::mpsc::sync_channel(10);
+        let (tx, rx) = std::sync::mpsc::sync_channel(100);
         let thread = std::thread::spawn(move || log_thread(file, rx));
 
         self.file_thread = Some(thread);
@@ -276,26 +278,14 @@ pub fn set_write_to_stdout(b: bool) {
 }
 
 pub fn load_debug_log() -> Vec<String> {
-    let raw_file = match std::fs::read_to_string(&STATIC_ARGS.logger_path) {
-        Ok(l) => l,
-        Err(e) => {
-            log::error!("failed to read debug.log: {}", e);
-            return vec![];
-        }
-    };
-
-    let mut in_memory: Vec<_> = LOGGER
+    //Note: We shouldnt read from the file since it may be too big or contain irrelevant information related to uplink
+    //      unless we have a specific file related to uplink/dioxus logging, in which case we should read only the last few lines
+    LOGGER
         .read()
         .log_entries
         .iter()
         .map(|x| x.to_string())
-        .collect();
-
-    raw_file
-        .lines()
-        .map(|x| x.to_string())
-        .chain(in_memory.drain(..))
-        .collect::<Vec<_>>()
+        .collect()
 }
 
 // this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.

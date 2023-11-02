@@ -1651,8 +1651,6 @@ impl State {
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {
             *friend = ident;
-        } else {
-            log::warn!("failed up update identity: {}", ident.username());
         }
     }
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.
