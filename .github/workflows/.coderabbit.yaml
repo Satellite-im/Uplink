@@ -1,10 +1,6 @@
 settings:
   # Enables automatic reviewing of draft pull requests.
   enable_draft_pr_reviews: true
-  # Specifies additional base/target branches to be reviewed.  
-  additional_branches_to_be_reviewed:
-    - "master"
-    - "yaml/test"
   # Disables generation of release notes.    
   disable_high_level_summary: true
   # Comma separated list of keywords in the title that should be ignored.          
