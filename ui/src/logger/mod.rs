@@ -278,7 +278,7 @@ pub fn set_write_to_stdout(b: bool) {
 }
 
 pub fn load_debug_log() -> Vec<String> {
-    //Note: We shouldnt read from the file since it may be too big or contain irrevelent information related to uplink
+    //Note: We shouldnt read from the file since it may be too big or contain irrelevant information related to uplink
     //      unless we have a specific file related to uplink/dioxus logging, in which case we should read only the last few lines
     LOGGER
         .read()
