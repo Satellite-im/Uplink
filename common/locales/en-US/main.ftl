@@ -41,7 +41,8 @@ uplink = Uplink
     .download-update = Download Update
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
-
+    .clear-unreads = Clear Unreads
+    
 community = Community
     .invited = You're Invited!
     .join = Join
