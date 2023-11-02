@@ -63,7 +63,7 @@ reqwest = { workspace = true, default-features = false, features = [
     "rustls-tls",
     "stream",
 ] }
-log = { version = "0.4.17", features = ["std"] }
+log = { workspace = true }
 
 [features]
 default = ["dioxus-desktop/devtools"]

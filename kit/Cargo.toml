@@ -30,6 +30,7 @@ once_cell = { workspace = true }
 emojis = "0.5"
 unic-segment = "0.9"
 unic-emoji-char = "0.9"
+log = { workspace = true }
 
 [dependencies.uuid]
 workspace = true
