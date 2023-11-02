@@ -47,7 +47,8 @@ pub fn Compose(cx: Scope) -> Element {
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    let should_ignore_focus = state.read().ui.ignore_focus;
+    // if the emoji picker is visible, autofocusing on the chatbar will close the emoji picker.
+    let should_ignore_focus = state.read().ui.ignore_focus || state.read().ui.emoji_picker_visible;
     let creator = chat_data.read().active_chat.creator();
 
     let chat_id = chat_data.read().active_chat.id();
