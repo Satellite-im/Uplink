@@ -34,10 +34,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::{
-            data::{self, ChatData, ScrollBtn, TypingIndicator},
-            presentation::chatbar::coroutines::MsgChInput,
-        },
+        chats::data::{ChatData, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -52,38 +49,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
-
-    // this is used to scroll to the bottom of the chat.
-    let _scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-
-    let _msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, state);
-
-    let _local_typing_ch = coroutines::get_typing_ch(cx);
-
-    // anything needed from the UseSharedState<ChatData> is moved into ChatbarProps here.
-    // this prevents a re-render in chatbar when the user scrolls.
-    render!(get_chatbar_internal {
-        show_edit_group: cx.props.show_edit_group.clone(),
-        show_group_users: cx.props.show_group_users.clone(),
-        ignore_focus: cx.props.ignore_focus,
-        is_owner: cx.props.is_owner,
-        replying_to: chat_data.read().active_chat.replying_to(),
-        chat_initialized: chat_data.read().active_chat.is_initialized,
-        chat_id: chat_data.read().active_chat.id(),
-        other_participants: chat_data.read().active_chat.other_participants()
-    })
-}
-
-fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'a> {
-    log::trace!("get_chatbar_internal");
-    let state = use_shared_state::<State>(cx)?;
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = !cx.props.chat_initialized;
-    let active_chat_id = cx.props.chat_id;
-    let chat_id = cx.props.chat_id;
+    let is_loading = !chat_data.read().active_chat.is_initialized;
+    let active_chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -91,7 +61,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
 
     let emoji_suggestions = use_state(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
@@ -100,7 +70,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
     // is written to, which could be a lot.
     state
         .write_silent()
-        .set_chat_scrolled(chat_id, with_scroll_btn);
+        .set_chat_scrolled(active_chat_id, with_scroll_btn);
 
     // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
     if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
@@ -131,7 +101,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
         files_attached.truncate(MAX_FILES_PER_MESSAGE);
         state
             .write()
-            .mutate(Action::SetChatAttachments(chat_id, files_attached));
+            .mutate(Action::SetChatAttachments(active_chat_id, files_attached));
     }
 
     let my_id = state.read().did_key();
@@ -148,9 +118,11 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
         .unwrap_or_default();
     let users_typing = state.read().get_identities(&users_typing);
 
-    let msg_ch = use_coroutine_handle::<MsgChInput>(cx)?;
-    let scroll_ch = use_coroutine_handle::<Uuid>(cx)?;
-    let local_typing_ch = use_coroutine_handle::<TypingIndicator>(cx)?;
+    // this is used to scroll to the bottom of the chat.
+    let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
+    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
+        coroutines::get_msg_ch(cx, state);
+    let local_typing_ch = coroutines::get_typing_ch(cx);
     let local_typing_ch2 = local_typing_ch.clone();
 
     // drives the sending of TypingIndicator
@@ -205,6 +177,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
+        let active_chat_id = chat_data.read().active_chat.id();
 
         let files_to_upload = state
             .read()
@@ -250,7 +223,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
         }
     };
 
-    let submit_fn2 = submit_fn;
+    let submit_fn2 = submit_fn.clone();
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -388,12 +361,12 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        cx.props.replying_to.as_ref().map(|msg| {
+                        chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
                             let our_did = state.read().did_key();
                             let msg_owner = if state.read().did_key() == msg.sender() {
                                 state.read().get_identity(&state.read().did_key())
                             } else {
-                                cx.props.other_participants.iter().find(|x| x.did_key() == msg.sender()).cloned()
+                                chat_data.read().active_chat.other_participants().iter().find(|x| x.did_key() == msg.sender()).cloned()
                             };
 
                             let (platform, status, profile_picture) = get_platform_and_status(msg_owner.as_ref());
@@ -403,7 +376,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(cx.props.chat_id))
+                                        state.write().mutate(Action::CancelReply(active_chat_id))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.lines().join("\n"), 
@@ -462,7 +435,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                             let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
                             .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
                             current_files.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
+                            state.write().mutate(Action::SetChatAttachments(active_chat_id, current_files));
                             update_send();
                             }
                         },
@@ -499,7 +472,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                         current_files.extend(new_files);
                     state
                         .write()
-                        .mutate(Action::SetChatAttachments(chat_id, current_files));
+                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
                     }
                 }})}
                 SendFilesLayoutModal {
@@ -515,7 +488,7 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                         .cloned()
                         .collect();
                         new_files_to_upload.extend(files_location);
-                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
                         update_send();
                     },
                 },
@@ -525,12 +498,12 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: move |_| {
-                        scroll_btn.write().clear(chat_id);
-                        state.write().mutate(Action::ClearUnreads(chat_id));
+                        scroll_btn.write().clear(active_chat_id);
+                        state.write().mutate(Action::ClearUnreads(active_chat_id));
                         // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to 
                         // fetch more messages - one could just use a regular javascript to scroll to the end of the page. 
                         // however, this is easier and seems to work well enough. 
-                        scroll_ch.send(chat_id);
+                        scroll_ch.send(active_chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })
@@ -559,17 +532,17 @@ fn get_chatbar_internal<'a>(cx: &'a Scoped<'a, data::ChatbarProps>) -> Element<'
                                 .map(|path| Location::Disk { path: path.clone() })
                                 .collect();
                             new_files_to_upload.extend(local_disk_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                            state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
                         }
                     },
                 })
             }
         },
         Attachments {
-            chat_id: chat_id,
+            chat_id: active_chat_id,
             files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
             on_remove: move |files_attached| {
-                state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
+                state.write().mutate(Action::SetChatAttachments(active_chat_id, files_attached));
                 update_send();
             }
         },
