@@ -717,6 +717,9 @@ impl State {
                     log::error!("{e}");
                 }
             }
+            BlinkEventKind::AudioStreamError => {
+                // todo
+            }
         }
     }
 }
