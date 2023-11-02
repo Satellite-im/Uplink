@@ -35,6 +35,14 @@ pub enum BlinkCmd {
     UnmuteSelf {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "SilenceCall")]
+    SilenceCall {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "UnsilenceCall")]
+    UnsilenceCall {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     #[display(fmt = "AdjustVolume")]
     AdjustVolume {
         user: DID,
@@ -94,6 +102,12 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         }
         BlinkCmd::UnmuteSelf { rsp } => {
             let _ = rsp.send(blink.unmute_self().await);
+        }
+        BlinkCmd::SilenceCall { rsp } => {
+            let _ = rsp.send(blink.silence_call().await);
+        }
+        BlinkCmd::UnsilenceCall { rsp } => {
+            let _ = rsp.send(blink.unsilence_call().await);
         }
         BlinkCmd::AdjustVolume { user, volume, rsp } => {
             let _ = rsp.send(blink.set_peer_audio_gain(user, volume).await);
