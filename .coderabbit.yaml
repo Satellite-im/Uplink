@@ -13,3 +13,5 @@ settings:
   collapse_walkthrough_comment: true
   # Disable automatic code reviews for this repository.  
   disable_review: false
+  # If set to false, enables the "poem" feature. 
+  disable_poem: true
