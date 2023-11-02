@@ -39,6 +39,8 @@ pub struct Call {
     pub participants: Vec<DID>,
     pub participants_joined: Vec<DID>,
     pub participants_speaking: HashMap<DID, Instant>,
+    pub participants_muted: Vec<DID>,
+    pub participants_deafened: Vec<DID>,
     pub self_muted: bool,
     pub call_silenced: bool,
 }
@@ -197,6 +199,42 @@ impl CallInfo {
         Ok(())
     }
 
+    pub fn participant_muted(&mut self, id: DID) -> anyhow::Result<()> {
+        let active_call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        active_call.call.participant_muted(id);
+        Ok(())
+    }
+
+    pub fn participant_unmuted(&mut self, id: DID) -> anyhow::Result<()> {
+        let active_call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        active_call.call.participant_unmuted(&id);
+        Ok(())
+    }
+
+    pub fn participant_deafened(&mut self, id: DID) -> anyhow::Result<()> {
+        let active_call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        active_call.call.participant_deafened(id);
+        Ok(())
+    }
+
+    pub fn participant_undeafened(&mut self, id: DID) -> anyhow::Result<()> {
+        let active_call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        active_call.call.participant_undeafened(&id);
+        Ok(())
+    }
+
     pub fn set_popout_window_id(&mut self, popout_window_id: WindowId) {
         if let Some(ac) = self.active_call.as_mut() {
             ac.popout_window_id = Some(popout_window_id);
@@ -221,6 +259,8 @@ impl Call {
             participants_speaking: HashMap::new(),
             self_muted: false,
             call_silenced: false,
+            participants_deafened: vec![],
+            participants_muted: vec![],
         }
     }
 
@@ -270,5 +310,25 @@ impl Call {
 
     fn unsilence_call(&mut self) {
         self.call_silenced = false;
+    }
+
+    fn participant_muted(&mut self, id: DID) {
+        if !self.participants_muted.contains(&id) {
+            self.participants_muted.push(id);
+        }
+    }
+
+    fn participant_unmuted(&mut self, id: &DID) {
+        self.participants_muted.retain(|x| x != id);
+    }
+
+    fn participant_deafened(&mut self, id: DID) {
+        if !self.participants_deafened.contains(&id) {
+            self.participants_deafened.push(id);
+        }
+    }
+
+    fn participant_undeafened(&mut self, id: &DID) {
+        self.participants_deafened.retain(|x| x != id);
     }
 }
