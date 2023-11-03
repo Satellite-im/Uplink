@@ -8,9 +8,10 @@ use warp::{
 use crate::{
     warp_runner::{
         conv_stream,
-        manager::commands::handle_blink_cmd,
+        // manager::commands::handle_blink_cmd,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
-        WarpCmd, WarpEvent,
+        WarpCmd,
+        WarpEvent,
     },
     WARP_EVENT_CH,
 };
@@ -111,7 +112,7 @@ pub async fn handle_blink_event(
     _warp: &mut super::Warp,
 ) -> anyhow::Result<()> {
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
-    warp_event_tx.send(WarpEvent::Blink(evt))?;
+    // warp_event_tx.send(WarpEvent::Blink(evt))?;
     Ok(())
 }
 

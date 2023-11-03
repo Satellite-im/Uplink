@@ -66,6 +66,7 @@ reqwest = { workspace = true, default-features = false, features = [
     "stream",
 ] }
 log = { version = "0.4.17", features = ["std"] }
+log-panics = "2.1.0"
 
 [features]
 default = ["dioxus-desktop/devtools"]

@@ -329,18 +329,18 @@ impl State {
 
     pub fn process_warp_event(&mut self, event: WarpEvent) {
         // Blink events are very frequent
-        if !matches!(
-            event,
-            WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
-                | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
-        ) {
-            log::debug!("process_warp_event: {event}");
-        }
+        // if !matches!(
+        //     event,
+        //     WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
+        //         | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
+        // ) {
+        //     log::debug!("process_warp_event: {event}");
+        // }
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
-            WarpEvent::Blink(evt) => self.process_blink_event(evt),
+            // WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
         let _ = self.save();

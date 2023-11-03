@@ -47,7 +47,9 @@ warp-ipfs = { workspace = true }
 
 
 dioxus = { workspace = true }
-dioxus-desktop = { workspace = true, features = ["transparent"] }
+dioxus-desktop = { workspace = true, features = [
+    "tokio_runtime",
+], default-features = false }
 derive_more = { workspace = true }
 either = { workspace = true }
 

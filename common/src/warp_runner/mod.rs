@@ -8,10 +8,10 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
-    blink::{
-        Blink::{self},
-        BlinkEventKind,
-    },
+    // blink::{
+    //     Blink::{self},
+    //     BlinkEventKind,
+    // },
     constellation::{file::FileType, Constellation},
     error::Error,
     logging::tracing::log,
@@ -35,7 +35,7 @@ pub mod ui_adapter;
 
 pub use data::*;
 pub use manager::commands::thumbnail_to_base64;
-pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -53,7 +53,7 @@ pub struct WarpEventChannels {
 type Account = Box<dyn MultiPass>;
 type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
-type Calling = Box<dyn Blink>;
+// type Calling = Box<dyn Blink>;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display, Clone)]
@@ -64,8 +64,8 @@ pub enum WarpEvent {
     Message(ui_adapter::MessageEvent),
     #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
-    #[display(fmt = "BlinkEvent {{ {_0} }} ")]
-    Blink(BlinkEventKind),
+    // #[display(fmt = "BlinkEvent {{ {_0} }} ")]
+    // Blink(BlinkEventKind),
 }
 
 impl std::fmt::Debug for WarpEvent {

@@ -7,14 +7,14 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 
 use warp::{
-    blink::BlinkEventStream, logging::tracing::log, multipass::MultiPassEventStream,
-    raygun::RayGunEventStream, tesseract::Tesseract,
+    logging::tracing::log, multipass::MultiPassEventStream, raygun::RayGunEventStream,
+    tesseract::Tesseract,
 };
 
-use super::{conv_stream, Account, Calling, Messaging, Storage};
+use super::{conv_stream, Account, Messaging, Storage};
 use crate::WARP_CMD_CH;
 
-pub use commands::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use commands::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 /// Contains the structs needed for run() to handle various events
 pub struct Warp {
@@ -116,13 +116,13 @@ async fn get_multipass_stream(account: &mut Account) -> MultiPassEventStream {
     }
 }
 
-async fn get_blink_stream(blink: &mut Calling) -> BlinkEventStream {
-    loop {
-        match blink.get_event_stream().await {
-            Ok(stream) => break stream,
-            Err(_e) => {
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            }
-        }
-    }
-}
+// async fn get_blink_stream(blink: &mut Calling) -> BlinkEventStream {
+//     loop {
+//         match blink.get_event_stream().await {
+//             Ok(stream) => break stream,
+//             Err(_e) => {
+//                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+//             }
+//         }
+//     }
+// }

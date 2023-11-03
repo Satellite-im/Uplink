@@ -6,7 +6,7 @@ mod raygun_commands;
 mod tesseract_commands;
 
 // this shortens the path required to use the functions and structs
-pub use blink_commands::{handle_blink_cmd, BlinkCmd};
+// pub use blink_commands::{handle_blink_cmd, BlinkCmd};
 pub use constellation_commands::{handle_constellation_cmd, thumbnail_to_base64, ConstellationCmd};
 pub use multipass_commands::{handle_multipass_cmd, identity_image_to_base64, MultiPassCmd};
 pub use other_commands::*;
