@@ -174,6 +174,7 @@ async fn handle_login(notify: Arc<Notify>) {
                                 Ok(w) => w,
                                 Err(e) => {
                                     log::error!("warp init failed: {}", e);
+                                    let _ = rsp.send(Err(e));
                                     return;
                                 }
                             };
