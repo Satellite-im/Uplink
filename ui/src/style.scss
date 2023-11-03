@@ -218,6 +218,12 @@ body {
   right: -4px; 
   padding: 2px;
   text-align: center;
+  display: flex;
+  span {
+    align-self: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 h1, h2, h3, h4, h5 {

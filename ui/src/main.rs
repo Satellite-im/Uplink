@@ -1111,7 +1111,9 @@ fn AppNav<'a>(
         child: (unreads > 0).then(|| {
             cx.render(rsx!(div {
                 class: "nav-unread-indicator",
-                unreads.to_string(),
+                span {
+                    unreads.to_string(),
+                }
             }))
         }),
         ..UIRoute::default()
