@@ -32,7 +32,8 @@
       z-index: 1001;
       position: relative;
       overflow: hidden;
-
+      margin: 0 var(--gap-less);
+      
       &:hover {
         .close-btn {
           visibility: visible;
