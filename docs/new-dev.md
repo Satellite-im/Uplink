@@ -4,11 +4,11 @@ This document contains some useful resources for anyone wishing to contribute to
 
 ## Quick Start
 
-1. Get a TL;DR about Satellite and Uplink from [the doc](docs/what.md)
+1. Get a TL;DR about Satellite and Uplink from [the doc](https://github.com/Satellite-im/Uplink/blob/dev/docs/architecture.md)
 
 2. Ensure you run physical and automated tests before submitting a PR for review. We work really hard to have no regressions even if a new feature may be "more important".
 
-3. Review both open and closed [issues](https://github.com/ssatellite-im/Uplink/issues), there may be others working on a similar feature.
+3. Review both open and closed [issues](https://github.com/satellite-im/Uplink/issues), there may be others working on a similar feature.
 
 4. Be aware that unless you explicitly state otherwise, contributions you make to this project will be under the licensing rights of the original author's, Satellite.im's, specified license terms (to be outlined in the repository).
 
