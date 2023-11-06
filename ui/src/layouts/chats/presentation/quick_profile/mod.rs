@@ -31,8 +31,8 @@ pub const USER_VOL_MAX: f32 = 5.0;
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,
-    did_key: DID,
-    update_script: &'a UseState<String>,
+    did_key: &'a DID,
+    update_script: &'a String,
     children: Element<'a>,
 }
 
@@ -56,7 +56,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let identity = state
         .read()
-        .get_identity(&cx.props.did_key)
+        .get_identity(cx.props.did_key)
         .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
@@ -78,9 +78,8 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     use_future(cx, cx.props.update_script, |update_script| {
         to_owned![eval];
         async move {
-            let script = update_script.get();
-            if !script.is_empty() {
-                _ = eval(script);
+            if !update_script.is_empty() {
+                _ = eval(&update_script);
             }
         }
     });
@@ -277,7 +276,9 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         }
     });
 
-    cx.render(rsx!(ContextMenu {
+    cx.render(rsx!(div{
+        class: "quick-profile-context",
+        ContextMenu {
         id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
@@ -414,5 +415,5 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         ))
         ,
         &cx.props.children
-    }))
+    }}))
 }
