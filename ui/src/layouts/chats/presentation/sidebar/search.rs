@@ -108,10 +108,11 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                 div {
                                     padding_right: "32px",
                                     aria_label: "search-result-blocked-user",
+                                    display: "flex",
                                     IconElement {
                                         size: 40,
                                         fill: "var(--text-color-muted)",
-                                        icon: Icon::NoSymbol,
+                                        icon: Icon::UserBlocked,
                                     },
                                 }
                             )
@@ -273,11 +274,12 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     rsx!(
                                         div {
                                             padding_right: "32px",
+                                            display: "flex",
                                             aria_label: "search-result-blocked-user-in-group",
                                             IconElement {
                                                 size: 40,
                                                 fill: "var(--text-color-muted)",
-                                                icon: Icon::NoSymbol,
+                                                icon: Icon::UserBlocked,
                                             },
                                         }
                                     )
