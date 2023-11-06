@@ -32,7 +32,7 @@ pub const USER_VOL_MAX: f32 = 5.0;
 pub struct QuickProfileProps<'a> {
     id: &'a String,
     did_key: &'a DID,
-    update_script: &'a String,
+    update_script: &'a UseState<String>,
     children: Element<'a>,
 }
 
