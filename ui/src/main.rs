@@ -1112,6 +1112,7 @@ fn AppNav<'a>(
             cx.render(rsx!(div {
                 class: "nav-unread-indicator",
                 span {
+                    class: "unread-text",
                     unreads.to_string(),
                 }
             }))
