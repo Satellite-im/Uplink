@@ -165,8 +165,8 @@ pub static WARP_CMD_CH: Lazy<WarpCmdChannels> = Lazy::new(|| {
 // allows the UI to receive events to Warp
 // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
 pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
-    let (tx, _) = broadcast::channel(128);
-    WarpEventChannels { tx }
+    let (tx, _rx) = broadcast::channel(128);
+    WarpEventChannels { tx, _rx }
 });
 
 pub const MAX_FILES_PER_MESSAGE: usize = 8;
