@@ -32,7 +32,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.70.0
+          toolchain: 1.73.0
           override: true
 
       - name: Build executable 🖥️
@@ -50,7 +50,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.70.0
+          toolchain: 1.73.0
           override: true
           components: rustfmt, clippy
 
@@ -106,7 +106,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.70.0
+          toolchain: 1.73.0
           override: true
           components: rustfmt, clippy
 

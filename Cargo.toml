@@ -28,7 +28,7 @@ codegen-units = 1
 
 [workspace.package]
 version = "0.1.7"
-rust-version = "1.70"
+rust-version = "1.73"
 
 [workspace.dependencies]
 dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
