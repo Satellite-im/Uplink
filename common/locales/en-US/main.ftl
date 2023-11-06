@@ -353,6 +353,8 @@ quickprofile = Quick Profile
     .chat-placeholder = Message
     .self-edit = Edit Profile
     .volume = User Volume
+    .friend-request = Send Friend Request
+    .pending-friend-request = Pending Friend Request
 
 toast_actions = Toast Actions
     .DisplayChat = Open Chat

@@ -10,6 +10,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    state::{Identity, ToastNotification},
     warp_runner::{BlinkCmd, MultiPassCmd},
 };
 use common::{
@@ -21,7 +22,7 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{crypto::DID, error::Error, logging::tracing::log};
 
 use crate::{components::settings::sidebar::Page, UplinkRoute};
 
@@ -45,6 +46,7 @@ enum QuickProfileCmd {
     RemoveDirectConvs(DID),
     Chat(Option<Chat>, Vec<String>, Option<Uuid>),
     AdjustVolume(DID, f32),
+    SendFriendRequest(DID, Vec<Identity>),
 }
 
 // Create a quick profile context menu
@@ -271,6 +273,43 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     }
+                    QuickProfileCmd::SendFriendRequest(id, outgoing_requests) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                            id: id.to_string(),
+                            outgoing_requests,
+                            rsp: tx,
+                        }));
+                        let res = rx.await.expect("failed to get response from warp_runner");
+                        match res {
+                            Ok(_) => {}
+                            Err(e) => match e {
+                                Error::PublicKeyIsBlocked => {
+                                    log::warn!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.key-blocked"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                                _ => {
+                                    //The other errors are covered by button already
+                                    log::error!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.add-failed"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                            },
+                        }
+                    }
                 }
             }
         }
@@ -347,6 +386,20 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 text: get_local_text("quickprofile.call"),
                                 // TODO: Impl missing
                             }*/
+                        )
+                    } else {
+                        let outgoing = state.read().outgoing_fr_identities();
+                        let disabled = outgoing.contains(&identity);
+                        rsx!(
+                            ContextItem {
+                                icon: Icon::Plus,
+                                aria_label: "quick-profile-friend-request".into(),
+                                text: if disabled {get_local_text("quickprofile.pending-friend-request")} else {get_local_text("quickprofile.friend-request")},
+                                disabled: disabled,
+                                onpress: move |_| {
+                                    ch.send(QuickProfileCmd::SendFriendRequest(identity.did_key(), outgoing.clone()));
+                                }
+                            }
                         )
                     }
                     if state.read().configuration.developer.experimental_features && in_vc {
