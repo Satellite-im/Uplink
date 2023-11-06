@@ -243,6 +243,10 @@
     padding-left: 16px;
     padding-bottom: 4px;
     margin-bottom: 4px;
+    div {
+      margin-top: auto;
+      margin-bottom: auto;
+    }
     #profile-image {
       margin: var(--gap-less);
       //TODO(Lucas): Look to it, should be width: var(--height-input);
