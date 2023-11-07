@@ -135,7 +135,8 @@ friends = Friends
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
     .request-exist = Friend request is already pending!
-    .add-name = ➕  Add { $name }
+    .add-name = Add { $name }
+    .already-friends = Already Friends
     .nothing-to-see-here = Nothing to see here
 
 files = Files
