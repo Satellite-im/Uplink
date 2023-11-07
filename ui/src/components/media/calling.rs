@@ -91,7 +91,8 @@ pub struct ActiveCallProps {
     unmute_text: String,
     listen_text: String,
     silence_text: String,
-    recording_text: String,
+    start_recording_text: String,
+    stop_recording_text: String,
 }
 
 #[allow(non_snake_case)]
