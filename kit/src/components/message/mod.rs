@@ -451,13 +451,13 @@ fn markdown(text: &str, emojis: bool) -> String {
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.contains('#') // for multiple #
-           && !r.contains('*') // for multiple #
+           && !r.contains('*') // for multiple *
            && !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
            && is_only_emojis(&r)
         {
             return format!("<span class=\"big-emoji\">{r}</span>");
         } else {
-            return format!("<span>{r}</span>");
+            return format!("<p>{r}</p>");
         }
     }
 
