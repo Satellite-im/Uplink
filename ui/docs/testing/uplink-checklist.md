@@ -318,7 +318,7 @@ Headings
 - [ ] Only show developer settings after clicking version number 10 times
 
 **Licenses**
-- [ ] TO BE ADDED.
+- [ ] It displays the licenses we have and a button that opens the license as well.
 
 ### Sidebar
 
