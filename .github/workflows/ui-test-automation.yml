@@ -13,6 +13,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+
   build-ubuntu:
     runs-on: ubuntu-latest
     steps:
@@ -475,14 +476,7 @@ jobs:
   publish-results:
     if: always()
     needs:
-      [
-        build-ubuntu,
-        build-mac,
-        build-windows,
-        test-mac,
-        test-windows-chats,
-        test-windows,
-      ]
+      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -574,7 +568,6 @@ jobs:
   remove-artifacts:
     needs:
       [
-        build-ubuntu,
         build-mac,
         build-windows,
         test-mac,
