@@ -70,7 +70,7 @@ pub fn CallControl(cx: Scope<Props>) -> Element {
             unmute_text: get_local_text("remote-controls.unmute"),
             listen_text: get_local_text("remote-controls.listen"),
             silence_text: get_local_text("remote-controls.silence"),
-            start_recording_text: get_local_text("remote-controls.recording"),
+            start_recording_text: get_local_text("remote-controls.start-recording"),
             stop_recording_text: get_local_text("remote-controls.recording"),
         })),
         None => match state.read().ui.call_info.pending_calls().first() {
