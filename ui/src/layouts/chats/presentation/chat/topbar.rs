@@ -90,7 +90,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     all_participants.push(active_participant);
     let members_count = get_local_text_with_args(
         "uplink.members-count",
-        vec![("num", all_participants.len().into())],
+        vec![("num", all_participants.len())],
     );
 
     let conv_id = data.active_chat.id();

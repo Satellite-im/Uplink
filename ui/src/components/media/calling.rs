@@ -45,6 +45,8 @@ enum CallDialogCmd {
     AdjustVolume(Box<DID>, f32),
     RecordCall,
     StopRecording,
+    SilenceCall,
+    UnsilenceCall,
 }
 
 enum PendingCallDialogCmd {
@@ -188,6 +190,44 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                         //         log::error!("warp_runner failed to unmute self: {e}");
                         //     }
                         // }
+                    }
+                    CallDialogCmd::SilenceCall => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SilenceCall { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                // disaster waiting to happen if State ever gets out of sync with blink.
+                                state.write().mutate(Action::ToggleSilence);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to silence call: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::UnsilenceCall => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnsilenceCall { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command: {e}");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                // disaster waiting to happen if State ever gets out of sync with blink.
+                                state.write().mutate(Action::ToggleSilence);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to unsilence call: {e}");
+                            }
+                        }
                     }
                     CallDialogCmd::RecordCall => {
                         // let (tx, rx) = oneshot::channel();
@@ -386,10 +426,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     }
                 )),
                 onpress: move |_| {
-                    //TODO this only tells the state to update the current silence value.
-                    //It doesn't actually do anything yet
-                    state.write().ui.toggle_silenced();
-
+                    if call.call_silenced { ch.send(CallDialogCmd::UnsilenceCall); } else { ch.send(CallDialogCmd::SilenceCall); }
                 }
             },
             (!outgoing).then(||{

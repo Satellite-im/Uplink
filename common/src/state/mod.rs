@@ -260,6 +260,7 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
+            Action::ClearAllUnreads => self.chats.all.values_mut().for_each(|c| c.clear_unreads()),
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::SetChatAttachments(chat_id, value) => {
@@ -366,7 +367,7 @@ impl State {
                         get_local_text("friends.new-request"),
                         get_local_text_with_args(
                             "friends.new-request-name",
-                            vec![("name", identity.username().into())],
+                            vec![("name", identity.username())],
                         ),
                         Some(crate::sounds::Sounds::Notification),
                         // notify_rust::Timeout::Milliseconds(4),
@@ -470,7 +471,7 @@ impl State {
                     let text = match id {
                         Some(id) => get_local_text_with_args(
                             "messages.user-sent-message",
-                            vec![("user", id.username().into())],
+                            vec![("user", id.username())],
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
@@ -696,6 +697,29 @@ impl State {
             | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
+            }
+            BlinkEventKind::ParticipantMuted { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_muted(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantUnmuted { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_unmuted(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantDeafened { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_deafened(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantUndeafened { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_undeafened(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::AudioStreamError => {
+                // todo
             }
         }
     }
@@ -1303,7 +1327,7 @@ impl State {
 
             friends_by_first_letter
                 .entry(first_letter)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(friend.clone());
         }
 
@@ -1628,8 +1652,6 @@ impl State {
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {
             *friend = ident;
-        } else {
-            log::warn!("failed up update identity: {}", ident.username());
         }
     }
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.

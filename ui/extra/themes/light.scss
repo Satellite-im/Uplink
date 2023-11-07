@@ -54,6 +54,7 @@
     --background: white;
     --background-light:  color-mix(in srgb, var(--background) 50%, #bebebe);
     --background-dark:  color-mix(in srgb, var(--background) 85%, black);
+    --background-modal: rgba(224, 224, 224, 0.9);
     --success: #17b7ba;
     --success-light: #079a7c;
     --warning: #df9d10;

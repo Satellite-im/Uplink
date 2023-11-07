@@ -48,6 +48,7 @@ pub struct WarpCmdChannels {
 
 pub struct WarpEventChannels {
     pub tx: WarpEventTx,
+    pub _rx: tokio::sync::broadcast::Receiver<WarpEvent>,
 }
 
 type Account = Box<dyn MultiPass>;
@@ -174,6 +175,7 @@ async fn handle_login(notify: Arc<Notify>) {
                                 Ok(w) => w,
                                 Err(e) => {
                                     log::error!("warp init failed: {}", e);
+                                    let _ = rsp.send(Err(e));
                                     return;
                                 }
                             };

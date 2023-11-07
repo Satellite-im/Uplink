@@ -35,8 +35,8 @@ pub async fn handle_multipass_event(
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_multipass_event(evt, &mut warp.multipass, &mut warp.raygun).await {
         Ok(evt) => {
-            if warp_event_tx.send(WarpEvent::MultiPass(evt)).is_err() {
-                log::error!("failed to send warp_event");
+            if let Err(e) = warp_event_tx.send(WarpEvent::MultiPass(evt)) {
+                log::error!("failed to send warp_event: {e}");
                 return Err(());
             }
         }
@@ -68,8 +68,8 @@ pub async fn handle_raygun_event(
     .await
     {
         Ok(evt) => {
-            if warp_event_tx.send(WarpEvent::RayGun(evt)).is_err() {
-                log::error!("failed to send warp_event");
+            if let Err(e) = warp_event_tx.send(WarpEvent::RayGun(evt)) {
+                log::error!("failed to send warp_event: {e}");
                 return Err(());
             }
         }
@@ -92,8 +92,8 @@ pub async fn handle_message_event(
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_message_event(msg, &mut warp.multipass, &mut warp.raygun).await {
         Ok(evt) => {
-            if warp_event_tx.send(WarpEvent::Message(evt)).is_err() {
-                log::error!("failed to send warp_event");
+            if let Err(e) = warp_event_tx.send(WarpEvent::Message(evt)) {
+                log::error!("failed to send warp_event: {e}");
                 return Err(());
             }
         }
@@ -140,22 +140,20 @@ pub async fn handle_warp_command(
             // todo: handle block events
             if let MultiPassCmd::Block { did, .. } = &cmd {
                 if let Ok(ident) = did_to_identity(did, &warp.multipass).await {
-                    if warp_event_tx
-                        .send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident)))
-                        .is_err()
+                    if let Err(e) =
+                        warp_event_tx.send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident)))
                     {
-                        log::error!("failed to send warp_event");
+                        log::error!("failed to send warp_event: {e}");
                         return Err(());
                     }
                 }
             }
             if let MultiPassCmd::Unblock { did, .. } = &cmd {
                 if let Ok(ident) = did_to_identity(did, &warp.multipass).await {
-                    if warp_event_tx
-                        .send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident)))
-                        .is_err()
+                    if let Err(e) =
+                        warp_event_tx.send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident)))
                     {
-                        log::error!("failed to send warp_event");
+                        log::error!("failed to send warp_event: {e}");
                         return Err(());
                     }
                 }

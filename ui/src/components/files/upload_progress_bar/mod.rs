@@ -227,12 +227,9 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
 fn count_files_to_show(files_to_upload_len: usize) -> String {
     if files_to_upload_len > 1 {
-        get_local_text_with_args(
-            "files.files-to-upload",
-            vec![("num", files_to_upload_len.into())],
-        )
+        get_local_text_with_args("files.files-to-upload", vec![("num", files_to_upload_len)])
     } else {
-        get_local_text_with_args("files.one-file-to-upload", vec![("num", 1.into())])
+        get_local_text_with_args("files.one-file-to-upload", vec![("num", 1)])
     }
 }
 

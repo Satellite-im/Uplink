@@ -1,28 +1,26 @@
-use std::vec;
-
-use common::icons::outline::Shape;
 use common::language::get_local_text;
+use common::state::ToastNotification;
 use common::warp_runner::{BlinkCmd, WarpCmd};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::radio_list::RadioList;
-use kit::elements::range::Range;
+
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
 use warp::logging::tracing::log;
 
-use crate::components::settings::{SettingSection, SettingSectionSimple};
+use crate::components::settings::SettingSection;
 use common::state::{action::ConfigAction, Action, State};
 use common::{sounds, WARP_CMD_CH};
 
-pub const VOL_MIN: f32 = 0.0;
-pub const VOL_MAX: f32 = 200.0;
+// pub const VOL_MIN: f32 = 0.0;
+// pub const VOL_MAX: f32 = 200.0;
 
 enum AudioCmd {
     FetchOutputDevices,
     SetOutputDevice(String),
     FetchInputDevices,
     SetInputDevice(String),
+    SetEchoCancellation(bool),
 }
 
 #[allow(non_snake_case)]
@@ -119,6 +117,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         // }
                     }
                 }
+                break;
             }
         }
     });
@@ -127,9 +126,9 @@ pub fn AudioSettings(cx: Scope) -> Element {
         to_owned![ch];
         async move {
             loop {
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 ch.send(AudioCmd::FetchInputDevices);
                 ch.send(AudioCmd::FetchOutputDevices);
+                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
             }
         }
     });
@@ -150,17 +149,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     }
                 },
             },
-            SettingSectionSimple {
-                Range {
-                    aria_label: "range-input-device".into(),
-                    initial_value: 100.0,
-                    min: VOL_MIN,
-                    max: VOL_MAX,
-                    icon_left: Shape::Microphone,
-                    icon_right: Shape::MicrophoneWave,
-                    onchange: move |_| {}
-                }
-            }
+            // SettingSectionSimple {
+            //     Range {
+            //         aria_label: "range-input-device".into(),
+            //         initial_value: 100.0,
+            //         min: VOL_MIN,
+            //         max: VOL_MAX,
+            //         icon_left: Shape::Microphone,
+            //         icon_right: Shape::MicrophoneWave,
+            //         disabled: true,
+            //         onchange: move |_| {}
+            //     }
+            // }
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
@@ -169,57 +169,64 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("default".into()),
                     options: output_devices.read().clone(),
                     onselect: move |device| {
-                        ch.send(AudioCmd::SetOutputDevice(device))
+                        ch.send(AudioCmd::SetOutputDevice(device));
                     }
                 },
             },
-            SettingSectionSimple {
-                Range {
-                    aria_label: "range-output-device".into(),
-                    initial_value: VOL_MIN,
-                    min: 0.0,
-                    max: VOL_MAX,
-                    icon_left: Shape::Speaker,
-                    icon_right: Shape::SpeakerWave,
-                    onchange: move |_| {}
-                }
-            }
+            // SettingSectionSimple {
+            //     Range {
+            //         aria_label: "range-output-device".into(),
+            //         initial_value: 100.0,
+            //         min: VOL_MIN,
+            //         max: VOL_MAX,
+            //         icon_left: Shape::Speaker,
+            //         icon_right: Shape::SpeakerWave,
+            //         disabled: true,
+            //         onchange: move |_| {}
+            //     }
+            // }
 
-            SettingSection {
-                section_label: get_local_text("settings-audio.sample-rate"),
-                section_description: get_local_text("settings-audio.sample-rate-description"),
-                Select {
-                    initial_value: "48000 Hz".into(),
-                    options: vec!["24000 Hz".into(), "48000 Hz".into(), "96000 Hz".into()],
-                    onselect: move |_| {}
-                },
-            },
+            // currently does nothing
+            //SettingSection {
+            //    section_label: get_local_text("settings-audio.sample-rate"),
+            //    section_description: get_local_text("settings-audio.sample-rate-description"),
+            //    Select {
+            //        initial_value: "48000 Hz".into(),
+            //        options: vec!["24000 Hz".into(), "48000 Hz".into(), "96000 Hz".into()],
+            //        onselect: move |_| {}
+            //    },
+            //},
 
-            SettingSection {
-                section_label: get_local_text("settings-audio.noise-suppression"),
-                section_description: get_local_text("settings-audio.noise-suppression-description"),
-                no_border: true,
-            },
-            SettingSectionSimple {
-                RadioList {
-                    initial_value: "None".into(),
-                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
-                    onchange: move |_| {}
-                },
-            }
+            // currently not implemented
+            //SettingSection {
+            //    section_label: get_local_text("settings-audio.noise-suppression"),
+            //    section_description: get_local_text("settings-audio.noise-suppression-description"),
+            //    no_border: true,
+            //},
+            //SettingSectionSimple {
+            //    RadioList {
+            //        initial_value: "None".into(),
+            //        values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
+            //        onchange: move |_| {}
+            //    },
+            //}
 
             SettingSection {
                 section_label: get_local_text("settings-audio.echo-cancellation"),
                 section_description: get_local_text("settings-audio.echo-cancellation-description"),
-                no_border: true,
+                Switch {
+                    active: state.read().configuration.audiovideo.echo_cancellation,
+                    onflipped: move |e| {
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::Flip);
+                        }
+                        ch.send(AudioCmd::SetEchoCancellation(e));
+                        state.write().mutate(Action::Config(
+                            ConfigAction::SetEchoCancellation(e),
+                        ));
+                    }
+                }
             },
-            SettingSectionSimple {
-                RadioList {
-                    initial_value: "None".into(),
-                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
-                    onchange: move |_| {}
-                },
-            }
 
             SettingSection {
                 section_label: get_local_text("settings-audio.interface-sounds"),
