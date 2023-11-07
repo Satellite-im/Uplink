@@ -434,22 +434,22 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             },
             (!outgoing).then(||{
-    if *recording.read() {
-        rsx!(Button {
-            icon: Icon::StopCircle,
-            appearance: Appearance::Danger,
-            tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
-                Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: cx.props.stop_recording_text.clone()
-                }
-            )),
-            onpress: move |_| {
-                ch.send(CallDialogCmd::StopRecording);
-            },
-        })
-    } else {
-        rsx!(Button {
+                if *recording.read() {
+                    rsx!(Button {
+                        icon: Icon::StopCircle,
+                        appearance: Appearance::Danger,
+                        tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
+                            Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: cx.props.stop_recording_text.clone()
+                        }
+                      )),
+                   onpress: move |_| {
+                   ch.send(CallDialogCmd::StopRecording);
+                    },
+                  })
+                } else {
+                    rsx!(Button {
             icon: Icon::RadioSelected,
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
@@ -458,12 +458,12 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     text: cx.props.start_recording_text.clone()
                 }
             )),
-            onpress: move |_| {
-                ch.send(CallDialogCmd::RecordCall);
-            },
-        })
-    }
-}),
+                        onpress: move |_| {
+                        ch.send(CallDialogCmd::RecordCall);
+               },
+            })
+         }
+      }),
             Button {
                 icon: Icon::PhoneXMark,
                 aria_label: "call-hangup-button".into(),
