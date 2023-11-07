@@ -194,6 +194,8 @@ pub enum Action<'a> {
     ClearUnreads(Uuid),
     #[display(fmt = "ClearActiveUnreads")]
     ClearActiveUnreads,
+    #[display(fmt = "ClearAllUnreads")]
+    ClearAllUnreads,
     #[display(fmt = "Config {_0}")]
     Config(ConfigAction),
 }
