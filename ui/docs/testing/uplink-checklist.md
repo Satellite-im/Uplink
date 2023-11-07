@@ -137,9 +137,37 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] User is able to scroll, change chat, go again to the previous chat and scroll will appear in the same scroll position.
 - [ ] User can send max 8 files per message.
 - [ ] User is able to paste images or files from the clipboard.
-      
-### Markdown
-- [ ] TO BE ADDED.
+
+## Supported markdown
+
+Italics
+- [ ]  `*x*`
+- [ ]  `_x_`
+
+Bold
+- [ ]  `**x**`
+- [ ]  `__x__`
+
+Strikethrough
+- [ ] `~~x~~`
+
+Code
+- [ ]  `int a = 0;`
+- [ ] ```int a = 0;```
+- [ ]  multiline code
+     ```
+     int a = 0;
+     int b = 0;
+     ```
+- [ ]  multiline code with a language
+     ```rust
+     let a = 0;
+     let b = 0;
+     ```
+Headings
+- [ ]  `# heading title`
+- [ ]  `## heading title`
+- [ ]  `##### heading title`
 
 ### Calling & Video
 
