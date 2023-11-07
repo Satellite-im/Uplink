@@ -9,7 +9,7 @@
     left: 0;
     bottom: 0;
     right: 0;
-    background: rgba(0,0,0, 0.9);
+    background: var(--background-modal);
 
     .close-btn {
       position: absolute;
@@ -32,7 +32,8 @@
       z-index: 1001;
       position: relative;
       overflow: hidden;
-
+      margin: 0 var(--gap-less);
+      
       &:hover {
         .close-btn {
           visibility: visible;

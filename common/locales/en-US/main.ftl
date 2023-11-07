@@ -41,7 +41,8 @@ uplink = Uplink
     .download-update = Download Update
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
-
+    .clear-unreads = Clear Unreads
+    
 community = Community
     .invited = You're Invited!
     .join = Join
@@ -318,8 +319,8 @@ media-player = Media Player
 remote-controls = Remote Controls 
     .mute = Mute
     .unmute = Unmute 
-    .listen = Listen (Coming Soon)
-    .silence = Silence (Coming Soon)
+    .listen = Listen
+    .silence = Silence
     .incoming-call = Incoming Transmission ...
     .outgoing-call = Outgoing Transmission ...
     .empty = Nobody is here

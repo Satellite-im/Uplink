@@ -260,6 +260,7 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
+            Action::ClearAllUnreads => self.chats.all.values_mut().for_each(|c| c.clear_unreads()),
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::SetChatAttachments(chat_id, value) => {
@@ -696,6 +697,29 @@ impl State {
             | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
+            }
+            BlinkEventKind::ParticipantMuted { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_muted(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantUnmuted { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_unmuted(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantDeafened { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_deafened(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::ParticipantUndeafened { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_undeafened(peer_id) {
+                    log::error!("{e}");
+                }
+            }
+            BlinkEventKind::AudioStreamError => {
+                // todo
             }
         }
     }
@@ -1638,8 +1662,6 @@ impl State {
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {
             *friend = ident;
-        } else {
-            log::warn!("failed up update identity: {}", ident.username());
         }
     }
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.

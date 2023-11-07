@@ -1,9 +1,13 @@
 use dioxus::prelude::*;
+use uuid::Uuid;
 
-use crate::elements::{
-    button::Button,
-    tooltip::{ArrowPosition, Tooltip},
-    Appearance,
+use crate::{
+    components::context_menu::ContextMenu,
+    elements::{
+        button::Button,
+        tooltip::{ArrowPosition, Tooltip},
+        Appearance,
+    },
 };
 use common::icons::outline::Shape as Icon;
 pub type To = &'static str;
@@ -16,6 +20,7 @@ pub struct Route<'a> {
     pub with_badge: Option<String>,
     pub loading: Option<bool>,
     pub child: Option<Element<'a>>,
+    pub context_items: Option<Element<'a>>,
 }
 
 impl Default for Route<'_> {
@@ -27,6 +32,7 @@ impl Default for Route<'_> {
             with_badge: None,
             loading: None,
             child: None,
+            context_items: None,
         }
     }
 }
@@ -98,7 +104,8 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(cx, || get_active(&cx));
     let bubble = cx.props.bubble.unwrap_or_default();
     let tooltip_direction = cx.props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
-
+    // For some reason if you dont do this the first render will not have a context menu
+    let uuid = use_ref(cx, || Uuid::new_v4().to_string());
     cx.render(rsx!(
         div {
             aria_label: "button-nav",
@@ -109,6 +116,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
+                let name2: String = name.to_lowercase();
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
                 let tooltip = if cx.props.bubble.is_some() {
@@ -120,7 +128,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }))
                 };
 
-                rsx!(
+                let btn = rsx!(
                     div {
                         position: "relative",
                         display: "inline-grid",
@@ -141,7 +149,18 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         },
                         route.child.as_ref()
                     }
-                )
+                );
+                match route.context_items.as_ref() {
+                    None => btn,
+                    Some(items) => {
+                        rsx!(ContextMenu{
+                            id: format!("route-{}-{}", name2, uuid.read()),
+                            key: "{name2}-{uuid.read()}",
+                            items: items.clone(),
+                            btn
+                        })
+                    }
+                }
             })
         }
     ))
