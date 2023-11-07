@@ -54,3 +54,20 @@
     max-width: 100%;
     color: var(--text-color);
 }
+
+.modal-share-friends {
+    width: 60vh; 
+    height: 70vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow-x: auto;
+    .modal-share-friend {
+        &:hover {
+			background: var(--secondary);
+			cursor: pointer;
+		}
+        *:hover{
+            cursor: pointer;
+        }
+    }
+}

@@ -137,6 +137,8 @@ friends = Friends
     .request-exist = Friend request is already pending!
     .add-name = ➕  Add { $name }
     .nothing-to-see-here = Nothing to see here
+    .share = Share DID
+    .select-chat = Select Chat
 
 files = Files
     .file = File

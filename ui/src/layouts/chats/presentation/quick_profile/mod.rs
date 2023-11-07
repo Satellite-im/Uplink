@@ -23,7 +23,10 @@ use common::language::get_local_text;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::{components::settings::sidebar::Page, UplinkRoute};
+use crate::{
+    components::{friends::friends_list::ShareFriendsModal, settings::sidebar::Page},
+    UplinkRoute,
+};
 
 pub const USER_VOL_MIN: f32 = 0.25;
 pub const USER_VOL_MAX: f32 = 5.0;
@@ -53,6 +56,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let state = use_shared_state::<State>(cx)?;
     let settings_page = use_shared_state::<Page>(cx)?;
     let id = cx.props.id;
+    let share_did = use_state(cx, || None);
 
     let identity = state
         .read()
@@ -63,6 +67,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let did = &identity.did_key();
     let did_cloned = did.clone();
+    let did_cloned_2 = did.clone();
     let chat_of = state.read().get_chat_with_friend(identity.did_key());
     let chat_send = chat_of.clone();
 
@@ -395,6 +400,17 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     },
+                    if is_friend {
+                        rsx!(ContextItem {
+                            danger: true,
+                            icon: Icon::Link,
+                            text: get_local_text("friends.share"),
+                            aria_label: "friends-share".into(),
+                            onpress: move |_| {
+                                share_did.set(Some(did_cloned_2.clone()));
+                            }
+                        })
+                    },
                     if is_friend && !chat_is_current {
                         rsx!(
                             hr{},
@@ -413,6 +429,17 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             }
         ))
         ,
+        share_did.is_some().then(||{
+            match state.read().get_active_chat() {
+                Some(chat) => rsx!(ShareFriendsModal{
+                    did: share_did.clone(),
+                    excluded_chat: chat.id
+                }),
+                None => rsx!(ShareFriendsModal{
+                    did: share_did.clone(),
+                })
+            }
+        }),
         &cx.props.children
     }))
 }
