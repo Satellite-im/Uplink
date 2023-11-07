@@ -67,6 +67,7 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 
 - [ ] Clicking *Settings* button should take User to the *Settings* Page.
 - [ ] User should be able to click+drag Pop-out player anywhere on the screen.
+- [ ] When getting a call, a ringtone is heard.
 
 ## **Visual & UX Checklist**
 
@@ -113,7 +114,7 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Timestamps should update in chat and sidebar. (now, then goes by minutes-hours-days)
 - [ ] Clicking *Phone* icon should open call modal.
 - [ ] Chat should close if the User blocks the friend they are in the current chat with.
-- [ ] Typing indicator appears (if User has that extension toggled on).
+- [ ] Typing indicator appears when user is typing.
 - [ ] Usernames are both displayed in the call modal.
 - [ ] Friends Username/Profile Pic/Status should be displayed at the top of the active chat.
 - [ ] Tooltip should appear for *Call* button.
@@ -123,6 +124,50 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] User can reply to a message by right+clicking and selecting in the context menu.
 - [ ] User can react to a message by right+clicking and selecting in the context menu.
 - [ ] User should enter chat at the bottom with the most recent messages.
+- [ ] Sending a DID will generate a quick profile card within the chat.
+- [ ] When on a call, call controls should display in the sidebar.
+- [ ] User should not have any conversations limit in the chat list.
+- [ ] Sending specific ASCII emojis such as : joy : will convert into the emoji.
+- [ ] When user scrolls we fetch messages on demand and we show a scroll to bottom option to scroll all to the bottom.
+- [ ] The scroll to bottom option should not display if there are no messages after that.
+- [ ] Groups should not have a online indicator.
+- [ ] Download icon when sending a image should only appear when hovering the image.
+- [ ] User is able to drag and drop files and image within the chat.
+- [ ] When a chat has unreads, a unread indicator is displayed in the chat icon in the sidebar and the chat itself in the chat list.
+- [ ] User is able to scroll, change chat, go again to the previous chat and scroll will appear in the same scroll position.
+- [ ] User can send max 8 files per message.
+- [ ] User is able to paste images or files from the clipboard.
+
+## Supported markdown
+
+Italics
+- [ ]  `*x*`
+- [ ]  `_x_`
+
+Bold
+- [ ]  `**x**`
+- [ ]  `__x__`
+
+Strikethrough
+- [ ] `~~x~~`
+
+Code
+- [ ]  `int a = 0;`
+- [ ] ```int a = 0;```
+- [ ]  multiline code
+     ```
+     int a = 0;
+     int b = 0;
+     ```
+- [ ]  multiline code with a language
+     ```rust
+     let a = 0;
+     let b = 0;
+     ```
+Headings
+- [ ]  `# heading title`
+- [ ]  `## heading title`
+- [ ]  `##### heading title`
 
 ### Calling & Video
 
@@ -135,7 +180,11 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Call should expand when User enters *Fullscreen*.
 - [ ] Pop-Out player should appear when the user enables it.
 - [ ] While Pop-out is enabled original call should display *Media Detached*.
-
+- [ ] While on call, silence option will display and when used will cut off the audio from the other user.
+- [ ] User volum option should only be displayed if user activated the experimental settings.
+- [ ] While on a call, recording option appears and if user clicks on it, saves a file on recordings folder within the .uplink folder.
+- [ ] There is an indicator for when a user is speaking in a call and username will be enlarged and highlighted.
+- [ ] 
 ### **Friends**
 
 **Friends List**
@@ -205,6 +254,9 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Progress Bar should show the actual amount of Files uploaded.
 - [ ] Free Space should appear at the top of the Files Page.
 - [ ] Total Space should appear at the top of the Files Page.
+- [ ] Going to files and right-click, share should not appear if user has no chats.
+- [ ] User is able to send a file from within files section in the app and from the computer to various chats.
+- [ ] User is able to drag and drop files within files section.
 
 ### Settings
 
@@ -217,6 +269,9 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Clicking *Edit* should display the username and status input fields.
 - [ ] Error message should appear when the User tries to type a username or status message longer than 32 characters.
 - [ ] Error message should appear when the User attempts to save a username or status with less than 4 characters.
+- [ ] User can upload and crop a banner image.
+- [ ] User can upload and crop a profile image.
+- [ ] User can move the image within the crop.
 
 **General**
 
@@ -225,7 +280,9 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Clicking *Clear Themes* should set the theme back to default.
 - [ ] UI should change accordingly when the User sets a new theme.
 - [ ] User should be able to change the language by selecting from the Language Dropdown menu.
-  
+- [ ] When you go to settings and go to other part of the app, going again to settings should be on the same section where you were previously.
+- [ ] Window size is remembered and reloaded on app start
+
 **Privacy**
 
 - [ ] Clicking *Backup Phrase* in the *Privacy* tab should backup Users account phrase.
@@ -258,7 +315,11 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Clicking the Tablet dev tool should resize the window to replicate a Tablet.
 - [ ] Clicking the Desktop dev tool should resize the window to the original Desktop view.
 - [ ] Clicking the fullscreen dev tool should resize the window to take up the entire screen.
-  
+- [ ] Only show developer settings after clicking version number 10 times
+
+**Licenses**
+- [ ] It displays the licenses we have and a button that opens the license as well.
+
 ### Sidebar
 
 **Basics**
@@ -280,3 +341,5 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 - [ ] Tooltip should appear when hovering the cursor over *Settings Page* icon.
 - [ ] User can search within Settings by clicking on Settings Search Bar.
 - [ ] Call controls should appear in Sidebar when User enters a call.
+- [ ] Clear unreads should not appear when there are no unreads.
+- [ ] Sidebar should not display when there are no favorites or chats or anything unless is dev features are activated.
