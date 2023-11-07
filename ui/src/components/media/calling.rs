@@ -71,7 +71,7 @@ pub fn CallControl(cx: Scope<Props>) -> Element {
             listen_text: get_local_text("remote-controls.listen"),
             silence_text: get_local_text("remote-controls.silence"),
             start_recording_text: get_local_text("remote-controls.start-recording"),
-            stop_recording_text: get_local_text("remote-controls.recording"),
+            stop_recording_text: get_local_text("remote-controls.stop-recording"),
         })),
         None => match state.read().ui.call_info.pending_calls().first() {
             Some(call) => cx.render(rsx!(PendingCallDialog {
