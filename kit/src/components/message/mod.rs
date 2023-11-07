@@ -447,7 +447,7 @@ fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
 
     if emojis {
-        let r = replace_emojis(text);
+        let r = replace_emojis(txt);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.to_string().contains("#") // for multiple #
@@ -459,8 +459,6 @@ fn markdown(text: &str, emojis: bool) -> String {
         } else {
             return format!("<span>{r}</span>");
         }
-        // } else if is_only_emojis(txt) {
-        //     return format!("<span class=\"big-emoji\">{txt}</span>");
     }
 
     let mut options = Options::empty();
