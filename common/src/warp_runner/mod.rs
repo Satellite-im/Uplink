@@ -48,6 +48,7 @@ pub struct WarpCmdChannels {
 
 pub struct WarpEventChannels {
     pub tx: WarpEventTx,
+    pub _rx: tokio::sync::broadcast::Receiver<WarpEvent>,
 }
 
 type Account = Box<dyn MultiPass>;
