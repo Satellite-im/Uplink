@@ -445,16 +445,15 @@ pub fn replace_emojis(input: &str) -> String {
 
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
-    let string_to_exclude = "0123456789#*".to_string();
 
     if emojis {
         let r = replace_emojis(text);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
-        // This is a temporary workaround for some characters rust-unic thinks are emojis
-        if !string_to_exclude.contains(&r)
-            && !r.to_string().contains("#") // for multiple #
-            && !r.to_string().contains("*") // for multiple #
-            && is_only_emojis(&r)
+        // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
+        if !r.to_string().contains("#") // for multiple #
+           && !r.to_string().contains("*") // for multiple #
+           && !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
+           && is_only_emojis(&r)
         {
             return format!("<span class=\"big-emoji\">{r}</span>");
         } else {
