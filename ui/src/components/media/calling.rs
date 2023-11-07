@@ -70,6 +70,8 @@ pub fn CallControl(cx: Scope<Props>) -> Element {
             unmute_text: get_local_text("remote-controls.unmute"),
             listen_text: get_local_text("remote-controls.listen"),
             silence_text: get_local_text("remote-controls.silence"),
+            recording_text: get_local_text("remote-controls.recording"),
+
         })),
         None => match state.read().ui.call_info.pending_calls().first() {
             Some(call) => cx.render(rsx!(PendingCallDialog {
@@ -89,6 +91,7 @@ pub struct ActiveCallProps {
     unmute_text: String,
     listen_text: String,
     silence_text: String,
+    recording_text: String,
 }
 
 #[allow(non_snake_case)]
@@ -430,24 +433,36 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             },
             (!outgoing).then(||{
-                if *recording.read() {
-                    rsx!(Button {
-                        icon: Icon::StopCircle,
-                        appearance: Appearance::Danger,
-                        onpress: move |_| {
-                            ch.send(CallDialogCmd::StopRecording);
-                        },
-                    })
-                } else {
-                    rsx!(Button {
-                        icon: Icon::RadioSelected,
-                        appearance: Appearance::Secondary,
-                        onpress: move |_| {
-                            ch.send(CallDialogCmd::RecordCall);
-                        },
-                    })
+    if *recording.read() {
+        rsx!(Button {
+            icon: Icon::StopCircle,
+            appearance: Appearance::Danger,
+            tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
+                Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: cx.props.stop_recording_text.clone()
                 }
-            }),
+            )),
+            onpress: move |_| {
+                ch.send(CallDialogCmd::StopRecording);
+            },
+        })
+    } else {
+        rsx!(Button {
+            icon: Icon::RadioSelected,
+            appearance: Appearance::Secondary,
+            tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
+                Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: cx.props.start_recording_text.clone()
+                }
+            )),
+            onpress: move |_| {
+                ch.send(CallDialogCmd::RecordCall);
+            },
+        })
+    }
+}),
             Button {
                 icon: Icon::PhoneXMark,
                 aria_label: "call-hangup-button".into(),
@@ -456,7 +471,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     ch.send(CallDialogCmd::Hangup(call.id));
                 },
             },
-            //Currently not impl
+            //Currently not implemented
             /*Button {
                 icon: Icon::Cog6Tooth,
                 appearance: Appearance::Secondary,
