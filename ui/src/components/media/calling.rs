@@ -452,7 +452,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     rsx!(Button {
             icon: Icon::RadioSelected,
             appearance: Appearance::Secondary,
-            tooltip: cx.render(rsx!(  // Add the tooltip for the recording button
+            tooltip: cx.render(rsx!( 
                 Tooltip {
                     arrow_position: ArrowPosition::Bottom,
                     text: cx.props.start_recording_text.clone()
