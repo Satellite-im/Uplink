@@ -5,6 +5,7 @@ use std::{
 };
 
 use dioxus::prelude::{EventHandler, *};
+use arboard::Clipboard;
 
 mod coroutines;
 mod effects;
@@ -428,6 +429,16 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                         ));
                         reacting_to.set(Some(msg_uuid));
                         state.write().mutate(Action::SetEmojiPickerVisible(true));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::ClipboardDocument,
+                    aria_label: "messages-copy".into(),
+                    text: get_local_text("uplink.copy-text"),
+                    onpress: move |_| {
+                        let text = message.inner.lines().join("\n");
+                        let mut clipboard = Clipboard::new().unwrap();
+                        clipboard.set_text(text).unwrap();
                     }
                 },
                 ContextItem {
