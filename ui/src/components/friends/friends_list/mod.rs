@@ -372,7 +372,7 @@ pub struct FriendProps {
 
 pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let chats_selected = use_ref(cx, || vec![]);
+    let chats_selected = use_ref(cx, Vec::new);
     let ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
