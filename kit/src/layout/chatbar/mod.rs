@@ -154,7 +154,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     placeholder: cx.props.placeholder.clone(),
                     ignore_focus: cx.props.ignore_focus,
                     show_char_counter: true,
-                    value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
+                    value: if cx.props.is_disabled { get_local_text("messages.loading")} else { cx.props.value.clone().unwrap_or_default()},
                     onchange: move |(v, _)| cx.props.onchange.call(v),
                     onreturn: move |(v, is_valid, _)| {
                         if let Some(i) = selected_emoji.write_silent().take() {
