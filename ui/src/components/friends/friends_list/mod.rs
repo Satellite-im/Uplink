@@ -11,7 +11,7 @@ use kit::{
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
-    elements::label::Label,
+    elements::{button::Button, checkbox::Checkbox, label::Label, Appearance},
     layout::modal::Modal,
 };
 
@@ -372,49 +372,29 @@ pub struct FriendProps {
 
 pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let router = use_navigator(cx);
-    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
-    if let Some(id) = *chat_with.get() {
-        chat_with.set(None);
-        state.write().mutate(Action::ChatWith(&id, true));
-        if state.read().ui.is_minimal_view() {
-            state.write().mutate(Action::SidebarHidden(true));
-        }
-        router.replace(UplinkRoute::ChatLayout {});
-    }
+    let chats_selected = use_ref(cx, || vec![]);
     let ch = use_coroutine(
         cx,
-        |mut rx: UnboundedReceiver<(DID, Uuid, Option<Uuid>)>| {
-            to_owned![state, chat_with];
-            async move {
-                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                while let Some((id, uuid, ui_msg_id)) = rx.next().await {
-                    let msg = vec![id.to_string()];
-                    let msg_vec = msg.clone();
-                    let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                    let cmd = RayGunCmd::SendMessage {
-                        conv_id: uuid,
-                        msg,
-                        attachments: Vec::new(),
-                        ui_msg_id,
-                        rsp: tx,
-                    };
-                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                        log::error!("failed to send warp command: {}", e);
-                        state
-                            .write_silent()
-                            .decrement_outgoing_messagess(uuid, msg_vec, ui_msg_id);
-                        continue;
-                    }
+        |mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((id, uuid)) = rx.next().await {
+                let msg = vec![id.to_string()];
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let cmd = RayGunCmd::SendMessageForSeveralChats {
+                    convs_id: uuid,
+                    msg,
+                    attachments: Vec::new(),
+                    ui_msg_id: None,
+                    rsp: tx,
+                };
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
-                    let rsp = rx.await.expect("command canceled");
-                    if let Err(e) = rsp {
-                        log::error!("failed to send message: {}", e);
-                        state
-                            .write_silent()
-                            .decrement_outgoing_messagess(uuid, msg_vec, ui_msg_id);
-                    }
-                    chat_with.set(Some(uuid));
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    log::error!("failed to send message: {}", e);
                 }
             }
         },
@@ -429,12 +409,28 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
         div {
             class: "modal-share-friends",
             div {
+                class: "modal-share-friends-header",
                 padding: "12px",
                 Label {
                     text: get_local_text("friends.select-chat"),
+                },
+                div {
+                    class: "send-chat-button",
+                    Button {
+                        text: get_local_text("friends.share-to-chat"),
+                        icon: Icon::ArrowTopRightOnSquare,
+                        aria_label: "share_to_chat".into(),
+                        appearance: Appearance::Secondary,
+                        disabled: chats_selected.read().is_empty(),
+                        onpress: move |_| {
+                            ch.send((cx.props.did.as_ref().unwrap().clone(), chats_selected.read().clone()));
+                            cx.props.did.set(None);
+                        },
+                    },
                 }
             }
             state.read().chats_sidebar().iter().filter(|c|cx.props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
+                let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let other_participants =  state.read().remove_self(&participants);
                 let user: Identity = other_participants.first().cloned().unwrap_or_default();
@@ -460,36 +456,54 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                         }
                     }
                 };
+                let selected = chats_selected.read().contains(&id);
                 rsx!(div {
-                    class: "modal-share-friend",
+                    class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
                     height: "80px",
                     padding: "16px",
                     display: "inline-flex",
+                    Checkbox {
+                        disabled: false,
+                        width: "1em".into(),
+                        height: "1em".into(),
+                        is_checked: selected,
+                        on_click: move |_| {
+                            chats_selected.with_mut(|v|{
+                                if !selected {
+                                    v.push(id);
+                                } else {
+                                    v.retain(|c|!c.eq(&id));
+                                }
+                            });
+                        }
+                    }
                     User {
                         username: participants_name,
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
                         user_image: cx.render(rsx!(
-                            if chat.conversation_type == ConversationType::Direct {rsx! (
-                                UserImage {
+                            match chat.conversation_type {
+                                ConversationType::Direct => rsx!(UserImage {
                                     platform: platform,
                                     status:  user.identity_status().into(),
                                     image: user.profile_picture(),
                                     typing: false,
-                                }
-                            )} else {rsx! (
-                                UserImageGroup {
+                                }),
+                                _ => rsx!(UserImageGroup {
                                     participants: build_participants(&participants),
                                     typing: false,
-                                }
-                            )}
+                                })
+                            }
                         )),
                         onpress: move |_| {
-                            let ui_id = state
-                                        .write_silent()
-                                        .increment_outgoing_messages(vec![cx.props.did.as_ref().unwrap().to_string()], &[]);
-                            ch.send((cx.props.did.as_ref().unwrap().clone(), chat.id, ui_id));
+                            chats_selected.with_mut(|v|{
+                                if !selected {
+                                    v.push(id);
+                                } else {
+                                    v.retain(|c|!c.eq(&id));
+                                }
+                            });
                         }
                     }
                 }
