@@ -9,13 +9,16 @@ use dioxus::prelude::{EventHandler, *};
 mod coroutines;
 mod effects;
 
-use kit::components::{
-    context_menu::{ContextItem, ContextMenu},
-    indicator::Status,
-    message::{Message, Order, ReactionAdapter},
-    message_group::MessageGroup,
-    message_reply::MessageReply,
-    user_image::UserImage,
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        indicator::Status,
+        message::{Message, Order, ReactionAdapter},
+        message_group::MessageGroup,
+        message_reply::MessageReply,
+        user_image::UserImage,
+    },
+    elements::tooltip::{ArrowPosition, Tooltip},
 };
 
 use common::state::{pending_message::PendingMessage, Action, Identity, State};
@@ -336,6 +339,11 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let has_extension = state
+        .read()
+        .ui
+        .extensions
+        .enabled_extension("emoji_selector");
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
@@ -418,16 +426,27 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                     icon: Icon::FaceSmile,
                     aria_label: "messages-react".into(),
                     text: get_local_text("messages.react"),
+                    disabled: !has_extension,
+                    tooltip:  if has_extension {
+                        cx.render(rsx!(()))
+                    } else {
+                        cx.render(rsx!(Tooltip {
+                            arrow_position: ArrowPosition::Top,
+                            text: get_local_text("messages.missing-emoji-picker")
+                        }))
+                    },
                     onpress: move |_| {
-                        state.write().ui.ignore_focus = true;
-                        state.write().mutate(Action::SetEmojiDestination(
-                            // Tells the default emojipicker where to place the next emoji
-                            Some(
-                                common::state::ui::EmojiDestination::Message(conversation_id, msg_uuid)
-                            )
-                        ));
-                        reacting_to.set(Some(msg_uuid));
-                        state.write().mutate(Action::SetEmojiPickerVisible(true));
+                        if has_extension {
+                            state.write().ui.ignore_focus = true;
+                            state.write().mutate(Action::SetEmojiDestination(
+                                // Tells the default emojipicker where to place the next emoji
+                                Some(
+                                    common::state::ui::EmojiDestination::Message(conversation_id, msg_uuid)
+                                )
+                            ));
+                            reacting_to.set(Some(msg_uuid));
+                            state.write().mutate(Action::SetEmojiPickerVisible(true));
+                        }
                     }
                 },
                 ContextItem {
