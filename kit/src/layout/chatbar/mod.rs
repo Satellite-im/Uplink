@@ -1,3 +1,4 @@
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 use warp::constellation::file::File;
@@ -138,6 +139,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let is_typing = !cx.props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
     let selected_emoji: &UseRef<Option<usize>> = use_ref(cx, || None);
+    let emoji_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
     let eval = use_eval(cx);
 
     cx.render(rsx!(
@@ -155,7 +157,15 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ignore_focus: cx.props.ignore_focus,
                     show_char_counter: true,
                     value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
-                    onchange: move |(v, _)| cx.props.onchange.call(v),
+                    onkeyup: move |keycode| {
+                        if !*emoji_suggestion_modal_closed.read() && keycode == Code::Escape {
+                            emoji_suggestion_modal_closed.with_mut(|i| *i = true);
+                        }
+                    },
+                    onchange: move |(v, _)| {
+                        cx.props.onchange.call(v);
+                        *emoji_suggestion_modal_closed.write_silent() = false;
+                    },
                     onreturn: move |(v, is_valid, _)| {
                         if let Some(i) = selected_emoji.write_silent().take() {
                             if let Some(e) = cx.props.on_emoji_click.as_ref() {
@@ -212,8 +222,12 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "controls",
                 cx.props.controls.as_ref()
             },
-            (!cx.props.emoji_suggestions.is_empty()).then(|| rsx!(EmojiSuggesions {
+            (!cx.props.emoji_suggestions.is_empty() && !*emoji_suggestion_modal_closed.read()).then(|| 
+                rsx!(EmojiSuggesions {
                 suggestions: cx.props.emoji_suggestions,
+                on_close: move |_| {
+                    emoji_suggestion_modal_closed.with_mut(|i| *i = true);
+                },
                 on_emoji_click: move |(emoji, alias)| {
                     if let Some(e) = cx.props.on_emoji_click.as_ref() {
                         if let Some(p) = cursor_position.read().as_ref() {
@@ -231,6 +245,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 pub struct EmojiSuggestionProps<'a> {
     suggestions: &'a Vec<(String, String)>,
     on_emoji_click: EventHandler<'a, (String, String)>,
+    on_close: EventHandler<'a, ()>,
     selected: UseRef<Option<usize>>,
 }
 
@@ -244,6 +259,14 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
         },
         onmouseleave: move |_| {
             *cx.props.selected.write() = None;
+        },
+        Button {
+            aria_label: "emoji-suggestion-close-button".into(),
+            icon: Icon::XMark,
+            appearance: Appearance::Transparent,
+            onpress: move |_| {
+               cx.props.on_close.call(());
+            }
         },
         Label {
             text: "Suggested Emoji".into()
@@ -265,5 +288,6 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
                 format_args!("{emoji}  :{alias}:"),
             }))
         })
+        
     }))
 }
