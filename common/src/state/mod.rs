@@ -260,6 +260,7 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
+            Action::ClearAllUnreads => self.chats.all.values_mut().for_each(|c| c.clear_unreads()),
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::SetChatAttachments(chat_id, value) => {

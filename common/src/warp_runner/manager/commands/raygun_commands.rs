@@ -292,22 +292,18 @@ pub async fn handle_raygun_cmd(
                                     break result;
                                 }
                                 AttachmentKind::AttachedProgress(progress) => {
-                                    if WARP_EVENT_CH
-                                        .tx
-                                        .send(WarpEvent::Message(
-                                            MessageEvent::AttachmentProgress {
-                                                progress,
-                                                conversation_id: conv_id,
-                                                msg: PendingMessage::for_compare(
-                                                    msg_clone,
-                                                    &attachments,
-                                                    ui_id,
-                                                ),
-                                            },
-                                        ))
-                                        .is_err()
-                                    {
-                                        log::error!("failed to send warp_event");
+                                    if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
+                                        MessageEvent::AttachmentProgress {
+                                            progress,
+                                            conversation_id: conv_id,
+                                            msg: PendingMessage::for_compare(
+                                                msg_clone,
+                                                &attachments,
+                                                ui_id,
+                                            ),
+                                        },
+                                    )) {
+                                        log::error!("failed to send warp_event: {e}");
                                     }
                                 }
                             }
@@ -344,22 +340,18 @@ pub async fn handle_raygun_cmd(
                                         break result;
                                     }
                                     AttachmentKind::AttachedProgress(progress) => {
-                                        if WARP_EVENT_CH
-                                            .tx
-                                            .send(WarpEvent::Message(
-                                                MessageEvent::AttachmentProgress {
-                                                    progress,
-                                                    conversation_id: chat_id,
-                                                    msg: PendingMessage::for_compare(
-                                                        msg_clone,
-                                                        &attachments,
-                                                        ui_id,
-                                                    ),
-                                                },
-                                            ))
-                                            .is_err()
-                                        {
-                                            log::error!("failed to send warp_event");
+                                        if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
+                                            MessageEvent::AttachmentProgress {
+                                                progress,
+                                                conversation_id: chat_id,
+                                                msg: PendingMessage::for_compare(
+                                                    msg_clone,
+                                                    &attachments,
+                                                    ui_id,
+                                                ),
+                                            },
+                                        )) {
+                                            log::error!("failed to send warp_event: {e}");
                                         }
                                     }
                                 }

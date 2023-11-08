@@ -41,7 +41,8 @@ uplink = Uplink
     .download-update = Download Update
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
-
+    .clear-unreads = Clear Unreads
+    
 community = Community
     .invited = You're Invited!
     .join = Join
@@ -71,6 +72,7 @@ messages = Messages
     .replying = Replying to:
     .react = React
     .reply = Reply
+    .loading = Loading...
     .say-something-placeholder = Say Something...
     .user-sent-message = { $user } sent you a message.
     .unknown-sent-message = someone sent you a message.
@@ -320,6 +322,8 @@ remote-controls = Remote Controls
     .unmute = Unmute 
     .listen = Listen
     .silence = Silence
+    .start-recording = Start Recording
+    .stop-recording = Stop Recording
     .incoming-call = Incoming Transmission ...
     .outgoing-call = Outgoing Transmission ...
     .empty = Nobody is here
