@@ -239,7 +239,7 @@ pre code {
   --text-color-bright: #ffffff;
   --text-color-link: #ff860d;
   --text-selection: #e0e0e0;
-  --placeholder: #fff;
+  --placeholder: #bcbcbc;
   --primary: #fcfbf4;
   --primary-dark: color-mix(in srgb, var(--primary) 50%, black);
   --primary-light: color-mix(in srgb, var(--primary) 50%, white);
@@ -250,6 +250,7 @@ pre code {
   --background: #000000;
   --background-light: var(--secondary-light);
   --background-dark: #161a21;
+  --background-modal: rgba(0,0,0, 0.9);
   --success: #1dd1a1;
   --success-light: #00c29c;
   --info: #1B9CFC;

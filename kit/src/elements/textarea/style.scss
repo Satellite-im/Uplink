@@ -4,6 +4,7 @@ textarea {
 	width: 100%;
 	height: "auto";
 	max-height: 250px; //Maybe make max variable?
+	min-height: 22px;
 	margin: 9px 0;
 	&.disabled {
 		cursor: not-allowed;
@@ -34,7 +35,7 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 	padding: 2px 9px;
     position: absolute;
     right: 0;
-    bottom: -17px;
+    bottom: -19px;
 	flex-direction: row;
 	display: flex;
 }

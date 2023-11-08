@@ -754,13 +754,11 @@ fn get_update_icon(cx: Scope) -> Element {
         None => return cx.render(rsx!("")),
     };
 
-    let update_msg = get_local_text_with_args(
-        "uplink.update-available",
-        vec![("version", new_version.into())],
-    );
+    let update_msg =
+        get_local_text_with_args("uplink.update-available", vec![("version", new_version)]);
     let downloading_msg = get_local_text_with_args(
         "uplink.update-downloading",
-        vec![("progress", (download_state.read().progress as u32).into())],
+        vec![("progress", download_state.read().progress as u32)],
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
@@ -1115,6 +1113,15 @@ fn AppNav<'a>(
                 class: "nav-unread-indicator",
                 unreads.to_string(),
             }))
+        }),
+        context_items: (unreads > 0).then(|| {
+            cx.render(rsx!(ContextItem {
+                aria_label: "clear-unreads".into(),
+                text: get_local_text("uplink.clear-unreads"),
+                onpress: move |_| {
+                    state.write().mutate(Action::ClearAllUnreads);
+                }
+            },))
         }),
         ..UIRoute::default()
     };

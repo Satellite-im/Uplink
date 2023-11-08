@@ -177,7 +177,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                     aria_label: "upload-file".into(),
                                     tooltip: cx.render(rsx!(
                                         Tooltip {
-                                            arrow_position: ArrowPosition::Top,
+                                            arrow_position: ArrowPosition::TopRight,
                                             text: get_local_text("files.upload"),
                                         }
                                     )),

@@ -27,7 +27,7 @@ pub fn MessageTyping(cx: Scope<Props>) -> Element {
         } else {
             users
         };
-        get_local_text_with_args(translation, vec![(key, users.into())])
+        get_local_text_with_args(translation, vec![(key, users)])
     };
 
     cx.render(rsx! (

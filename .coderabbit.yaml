@@ -1,0 +1,17 @@
+settings:
+  # Enables automatic reviewing of draft pull requests.
+  enable_draft_pr_reviews: true
+  # Disables generation of release notes.    
+  disable_high_level_summary: true
+  # Comma separated list of keywords in the title that should be ignored.          
+  ignored_pr_titles: "WIP"
+  # ISO Code for the review language.  
+  review_language: "en"
+  # Disables review and other status comments.  
+  disable_review_status: false
+  # Add walkthrough comment in a collapsible section.  
+  collapse_walkthrough_comment: true
+  # Disable automatic code reviews for this repository.  
+  disable_review: false
+  # If set to false, enables the "poem" feature. 
+  disable_poem: true

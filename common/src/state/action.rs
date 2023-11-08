@@ -194,6 +194,8 @@ pub enum Action<'a> {
     ClearUnreads(Uuid),
     #[display(fmt = "ClearActiveUnreads")]
     ClearActiveUnreads,
+    #[display(fmt = "ClearAllUnreads")]
+    ClearAllUnreads,
     #[display(fmt = "Config {_0}")]
     Config(ConfigAction),
 }
@@ -226,4 +228,6 @@ pub enum ConfigAction {
     SetSettingsNotificationsEnabled(bool),
     #[display(fmt = "SetAutoEnableExtensions {_0}")]
     SetAutoEnableExtensions(bool),
+    #[display(fmt = "SetEchoCancellation {_0}")]
+    SetEchoCancellation(bool),
 }

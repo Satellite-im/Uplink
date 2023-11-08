@@ -1,17 +1,14 @@
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+mod coroutines;
+
+use std::{path::PathBuf, time::Duration};
 
 use common::{
     icons::{self},
     language::{get_local_text, get_local_text_with_args},
     state::{Action, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
+    MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
-use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -28,11 +25,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-    raygun::{self, Location},
-};
+use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
@@ -41,7 +34,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        chats::data::{ChatData, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -52,26 +45,6 @@ use crate::{
     },
 };
 
-type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
-
-#[derive(Eq, PartialEq)]
-enum TypingIndicator {
-    // reset the typing indicator timer
-    Typing(Uuid),
-    // clears the typing indicator, ensuring the indicator
-    // will not be refreshed
-    NotTyping,
-    // resend the typing indicator
-    Refresh(Uuid),
-}
-
-#[derive(Clone)]
-struct TypingInfo {
-    pub chat_id: Uuid,
-    pub last_update: Instant,
-}
-
-// todo: display loading indicator if sending a message that takes a long time to upload attachments
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
@@ -81,7 +54,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
-    let chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -89,7 +61,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let emoji_suggestions = use_state(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
@@ -98,7 +70,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     // is written to, which could be a lot.
     state
         .write_silent()
-        .set_chat_scrolled(chat_id, with_scroll_btn);
+        .set_chat_scrolled(active_chat_id, with_scroll_btn);
 
     // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
     if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
@@ -129,7 +101,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         files_attached.truncate(MAX_FILES_PER_MESSAGE);
         state
             .write()
-            .mutate(Action::SetChatAttachments(chat_id, files_attached));
+            .mutate(Action::SetChatAttachments(active_chat_id, files_attached));
     }
 
     let my_id = state.read().did_key();
@@ -147,178 +119,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let users_typing = state.read().get_identities(&users_typing);
 
     // this is used to scroll to the bottom of the chat.
-    let scroll_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
-        to_owned![chat_data, state];
-        async move {
-            while let Some(conv_id) = rx.next().await {
-                match crate::layouts::chats::presentation::chat::coroutines::fetch_most_recent(
-                    conv_id,
-                    DEFAULT_MESSAGES_TO_TAKE,
-                )
-                .await
-                {
-                    Ok((messages, behavior)) => {
-                        log::debug!("re-init messages with most recent");
-                        chat_data.write().set_active_chat(
-                            &state.read(),
-                            &conv_id,
-                            behavior,
-                            messages,
-                        );
-                    }
-                    Err(e) => log::error!("{e}"),
-                }
-            }
-        }
-    });
-
-    let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
-        to_owned![state];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
-                let msg_clone = msg.clone();
-                let cmd = match reply {
-                    Some(reply_to) => RayGunCmd::Reply {
-                        conv_id,
-                        reply_to,
-                        msg,
-                        attachments,
-                        rsp: tx,
-                    },
-                    None => RayGunCmd::SendMessage {
-                        conv_id,
-                        msg,
-                        attachments,
-                        ui_msg_id,
-                        rsp: tx,
-                    },
-                };
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
-                state
-                    .write_silent()
-                    .mutate(Action::ClearChatAttachments(conv_id));
-                let attachment_files: Vec<String> = attachments
-                    .iter()
-                    .map(|p| {
-                        let pathbuf = match p {
-                            Location::Disk { path } => path.clone(),
-                            Location::Constellation { path } => PathBuf::from(path),
-                        };
-                        pathbuf
-                            .file_name()
-                            .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
-                    })
-                    .collect();
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                    log::error!("failed to send warp command: {}", e);
-                    state.write().decrement_outgoing_messages(
-                        conv_id,
-                        msg_clone,
-                        attachment_files,
-                        ui_msg_id,
-                    );
-                    continue;
-                }
-
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send message: {}", e);
-                    state.write().decrement_outgoing_messages(
-                        conv_id,
-                        msg_clone,
-                        attachment_files,
-                        ui_msg_id,
-                    );
-                }
-            }
-        }
-    });
-
-    // typing indicator notes
-    // consider side A, the local side, and side B, the remote side
-    // side A -> (typing indicator) -> side B
-    // side B removes the typing indicator after a timeout
-    // side A doesn't want to send too many typing indicators, say once every 4-5 seconds
-    // should we consider matching the timeout with the send frequency so we can closely match if a person is straight up typing for 5 mins straight.
-
-    // tracks if the local participant is typing
-    // re-sends typing indicator in response to the Refresh command
-    let local_typing_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<TypingIndicator>| {
-        // to_owned![];
-        async move {
-            let mut typing_info: Option<TypingInfo> = None;
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-
-            let send_typing_indicator = |conv_id| async move {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                let event = raygun::MessageEvent::Typing;
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendEvent {
-                    conv_id,
-                    event,
-                    rsp: tx,
-                })) {
-                    log::error!("failed to send warp command: {}", e);
-                    // return from the closure
-                    return;
-                }
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send typing indicator: {}", e);
-                }
-            };
-
-            while let Some(indicator) = rx.next().await {
-                match indicator {
-                    TypingIndicator::Typing(chat_id) => {
-                        // if typing_info was none or the chat id changed, send the indicator immediately
-                        let should_send_indicator = match typing_info {
-                            None => true,
-                            Some(info) => info.chat_id != chat_id,
-                        };
-                        if should_send_indicator {
-                            send_typing_indicator.clone()(chat_id).await;
-                        }
-                        typing_info = Some(TypingInfo {
-                            chat_id,
-                            last_update: Instant::now(),
-                        });
-                    }
-                    TypingIndicator::NotTyping => {
-                        typing_info = None;
-                    }
-                    TypingIndicator::Refresh(conv_id) => {
-                        let info = match &typing_info {
-                            Some(i) => i.clone(),
-                            None => continue,
-                        };
-                        if info.chat_id != conv_id {
-                            typing_info = None;
-                            continue;
-                        }
-                        // todo: verify duration for timeout
-                        let now = Instant::now();
-                        if now - info.last_update
-                            <= (Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)
-                                - Duration::from_millis(500))
-                        {
-                            send_typing_indicator.clone()(conv_id).await;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
+    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
+        coroutines::get_msg_ch(cx, state);
+    let local_typing_ch = coroutines::get_typing_ch(cx);
+    let local_typing_ch2 = local_typing_ch.clone();
 
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
@@ -372,6 +177,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
+        let active_chat_id = chat_data.read().active_chat.id();
 
         let files_to_upload = state
             .read()
@@ -416,6 +222,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             msg_ch.send((msg, active_chat_id, ui_id, replying_to));
         }
     };
+
+    let submit_fn2 = submit_fn.clone();
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -477,7 +285,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
                     validate_max();
                     update_send();
-                    local_typing_ch.send(TypingIndicator::Typing(active_chat_id));
+                    local_typing_ch2.send(TypingIndicator::Typing(active_chat_id));
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
@@ -542,7 +350,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         disabled: is_loading || disabled,
                         appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
                         aria_label: "send-message-button".into(),
-                        onpress: move |_| submit_fn(),
+                        onpress: move |_| submit_fn2(),
                         tooltip: cx.render(rsx!(Tooltip {
                             arrow_position: ArrowPosition::Bottom,
                             text :get_local_text("uplink.send"),
@@ -553,10 +361,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             with_replying_to: (!disabled).then(|| {
                 cx.render(
                     rsx!(
-                        chat_data.read().active_chat.replying_to().map(|msg| {
+                        chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
                             let our_did = state.read().did_key();
-                            let msg_owner = if chat_data.read().active_chat.my_id().did_key() == msg.sender() {
-                                Some(chat_data.read().active_chat.my_id())
+                            let msg_owner = if state.read().did_key() == msg.sender() {
+                                state.read().get_identity(&state.read().did_key())
                             } else {
                                 chat_data.read().active_chat.other_participants().iter().find(|x| x.did_key() == msg.sender()).cloned()
                             };
@@ -568,7 +376,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     label: get_local_text("messages.replying"),
                                     remote: our_did != msg.sender(),
                                     onclose: move |_| {
-                                        state.write().mutate(Action::CancelReply(chat_data.read().active_chat.id()))
+                                        state.write().mutate(Action::CancelReply(active_chat_id))
                                     },
                                     attachments: msg.attachments(),
                                     message: msg.lines().join("\n"), 
@@ -627,7 +435,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
                             .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
                             current_files.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, current_files));
+                            state.write().mutate(Action::SetChatAttachments(active_chat_id, current_files));
                             update_send();
                             }
                         },
@@ -639,7 +447,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT.into())])
+                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])
             }
         ))
     ));
@@ -664,7 +472,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         current_files.extend(new_files);
                     state
                         .write()
-                        .mutate(Action::SetChatAttachments(chat_id, current_files));
+                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
                     }
                 }})}
                 SendFilesLayoutModal {
@@ -680,7 +488,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         .cloned()
                         .collect();
                         new_files_to_upload.extend(files_location);
-                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
                         update_send();
                     },
                 },
@@ -690,12 +498,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: move |_| {
-                        scroll_btn.write().clear(chat_id);
-                        state.write().mutate(Action::ClearUnreads(chat_id));
+                        scroll_btn.write().clear(active_chat_id);
+                        state.write().mutate(Action::ClearUnreads(active_chat_id));
                         // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to 
                         // fetch more messages - one could just use a regular javascript to scroll to the end of the page. 
                         // however, this is easier and seems to work well enough. 
-                        scroll_ch.send(chat_id);
+                        scroll_ch.send(active_chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })
@@ -724,17 +532,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                 .map(|path| Location::Disk { path: path.clone() })
                                 .collect();
                             new_files_to_upload.extend(local_disk_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                            state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
                         }
                     },
                 })
             }
         },
         Attachments {
-            chat_id: chat_id,
+            chat_id: active_chat_id,
             files_to_attach: state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default(),
             on_remove: move |files_attached| {
-                state.write().mutate(Action::SetChatAttachments(chat_id, files_attached));
+                state.write().mutate(Action::SetChatAttachments(active_chat_id, files_attached));
                 update_send();
             }
         },
