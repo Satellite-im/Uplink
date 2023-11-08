@@ -222,7 +222,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "controls",
                 cx.props.controls.as_ref()
             },
-            (!cx.props.emoji_suggestions.is_empty() && !*emoji_suggestion_modal_closed.read()).then(|| 
+            (!cx.props.emoji_suggestions.is_empty() && !*emoji_suggestion_modal_closed.read()).then(||
                 rsx!(EmojiSuggesions {
                 suggestions: cx.props.emoji_suggestions,
                 on_close: move |_| {
@@ -288,6 +288,5 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
                 format_args!("{emoji}  :{alias}:"),
             }))
         })
-        
     }))
 }
