@@ -429,7 +429,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             }
         ))
         ,
-        share_did.is_some().then(||{
+        share_did.as_ref().map(|_|{
             match state.read().get_active_chat() {
                 Some(chat) => rsx!(ShareFriendsModal{
                     did: share_did.clone(),
