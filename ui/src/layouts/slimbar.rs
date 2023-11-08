@@ -47,7 +47,8 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                         id: "favorites",
                         aria_label: "Favorites",
                         favorites.iter().cloned().map(|chat| {
-                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
+                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key())
+                                && !state.read().chats_sidebar().contains(&chat);
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let chat_id = chat.id;
