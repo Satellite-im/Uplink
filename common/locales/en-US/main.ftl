@@ -72,6 +72,7 @@ messages = Messages
     .replying = Replying to:
     .react = React
     .reply = Reply
+    .loading = Loading...
     .say-something-placeholder = Say Something...
     .user-sent-message = { $user } sent you a message.
     .unknown-sent-message = someone sent you a message.
