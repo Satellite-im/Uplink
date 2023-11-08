@@ -284,6 +284,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 && !storage_controller.read().add_new_folder {
                     rsx!(
                         div {
+                            class: "no-files-div",
                             padding: "48px",
                             Label {
                                 text: get_local_text("files.no-files-available"),
