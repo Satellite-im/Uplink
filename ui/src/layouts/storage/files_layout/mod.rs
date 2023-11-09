@@ -55,7 +55,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
-    let show_slimbar = state.read().show_slimbar();
+    let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     functions::use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
@@ -284,6 +284,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 && !storage_controller.read().add_new_folder {
                     rsx!(
                         div {
+                            class: "no-files-div",
                             padding: "48px",
                             Label {
                                 text: get_local_text("files.no-files-available"),
