@@ -49,7 +49,8 @@
 
     --secondary: #e4edf6;
     --secondary-light: color-mix(in srgb, var(--secondary) 50%, #cccccc);
-    --secondary-dark: color-mix(in srgb, var(--secondary) 95%, black);
+    --secondary-dark: color-mix(in srgb, var(--secondary) 90%, black);
+    --secondary-darker: color-mix(in srgb, var(--secondary) 97%, black);
 
     --background: white;
     --background-light:  color-mix(in srgb, var(--background) 50%, #bebebe);
