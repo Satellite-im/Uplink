@@ -7,7 +7,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use dioxus_core::Scoped;
+use dioxus_core::ScopeState;
 use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
@@ -22,7 +22,7 @@ use crate::layouts::chats::{
 use super::{DownloadTracker, MessagesCommand};
 
 pub fn hangle_msg_scroll(
-    cx: &Scoped,
+    cx: &ScopeState,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
     scroll_btn: &UseSharedState<ScrollBtn>,
@@ -321,7 +321,7 @@ pub fn hangle_msg_scroll(
 }
 
 pub fn handle_warp_commands(
-    cx: &Scoped,
+    cx: &ScopeState,
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {

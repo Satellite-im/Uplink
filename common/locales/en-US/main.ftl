@@ -138,7 +138,10 @@ friends = Friends
     .request-exist = Friend request is already pending!
     .add-name = ➕  Add { $name }
     .nothing-to-see-here = Nothing to see here
-
+    .share = Share DID
+    .select-chat = Select Chat
+    .share-to-chat = Share
+    
 files = Files
     .file = File
     .files = Files
@@ -359,6 +362,8 @@ quickprofile = Quick Profile
     .chat-placeholder = Message
     .self-edit = Edit Profile
     .volume = User Volume
+    .friend-request = Send Friend Request
+    .pending-friend-request = Pending Friend Request
 
 toast_actions = Toast Actions
     .DisplayChat = Open Chat
