@@ -301,22 +301,36 @@ impl Extensions {
         self.map.keys()
     }
 
-    pub fn check_if_extension_lib_file_exists(
-        &mut self,
-        extension: &str,
-        disable_extension_if_file_does_not_exist: bool,
-    ) -> bool {
+    pub fn check_extensions(&mut self, extensions: Vec<String>) {
+        if extensions.is_empty() {
+            return;
+        }
+        let mut to_disable = Vec::new();
+
+        for extension in extensions {
+            let lib_file_exists = self.check_if_extension_lib_file_exists(extension.as_str());
+            if !lib_file_exists {
+                to_disable.push(extension.to_string());
+            }
+        }
+
+        for extension in to_disable {
+            self.map.remove(&extension);
+            self.enabled.remove(&extension);
+        }
+    }
+
+    pub fn check_if_extension_lib_file_exists(&self, extension: &str) -> bool {
         let extension_lib_file_path = format!(
             "{}/lib{}.dylib",
             STATIC_ARGS.extensions_path.to_string_lossy(),
             extension,
         );
         let lib_file_exists = Path::new(&extension_lib_file_path).exists();
-        if !lib_file_exists && disable_extension_if_file_does_not_exist {
-            self.disable(extension.to_string());
-            self.map.remove(extension);
-            self.enabled.remove(extension);
-        }
+        // if !lib_file_exists && self.map.contains_key(extension) {
+        //     self.map.remove(extension);
+        //     self.enabled.remove(extension);
+        // }
         lib_file_exists
     }
 

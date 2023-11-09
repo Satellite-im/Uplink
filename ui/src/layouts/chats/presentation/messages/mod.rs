@@ -343,10 +343,10 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
     let emoji_selector_extension = "emoji_selector";
 
     let emoji_selector_lib_file_exists = state
-        .write_silent()
+        .read()
         .ui
         .extensions
-        .check_if_extension_lib_file_exists(emoji_selector_extension, false);
+        .check_if_extension_lib_file_exists(emoji_selector_extension);
 
     let has_extension = if !emoji_selector_lib_file_exists {
         false

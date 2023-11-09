@@ -79,20 +79,26 @@ pub fn Explore(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 pub fn Installed(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let extensions = state.with(|i| {
+        i.ui.extensions
+            .ext()
+            .into_iter()
+            .cloned()
+            .collect::<Vec<_>>()
+    });
+
+    state
+        .write_silent()
+        .ui
+        .extensions
+        .check_extensions(extensions);
 
     let metas: Vec<_> = state
         .read()
         .ui
         .extensions
         .values()
-        .map(|(enabled, ext)| {
-            state
-                .write_silent()
-                .ui
-                .extensions
-                .check_if_extension_lib_file_exists(ext.details().meta.clone().name, true);
-            (enabled, ext.details().meta.clone())
-        })
+        .map(|(enabled, ext)| (enabled, ext.details().meta.clone()))
         .collect();
 
     cx.render(rsx!(
