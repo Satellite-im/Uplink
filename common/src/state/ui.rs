@@ -321,11 +321,28 @@ impl Extensions {
     }
 
     pub fn check_if_extension_lib_file_exists(&self, extension: &str) -> bool {
-        let extension_lib_file_path = format!(
-            "{}/lib{}.dylib",
-            STATIC_ARGS.extensions_path.to_string_lossy(),
-            extension,
-        );
+        let extension_lib_file_path = if cfg!(target_os = "macos") {
+            format!(
+                "{}/lib{}.dylib",
+                STATIC_ARGS.extensions_path.to_string_lossy(),
+                extension,
+            )
+        } else if cfg!(target_os = "windows") {
+            format!(
+                "{}/{}.dll",
+                STATIC_ARGS.extensions_path.to_string_lossy(),
+                extension,
+            )
+        } else if cfg!(target_os = "linux") {
+            format!(
+                "{}/lib{}.so",
+                STATIC_ARGS.extensions_path.to_string_lossy(),
+                extension,
+            )
+        } else {
+            return false;
+        };
+
         Path::new(&extension_lib_file_path).exists()
     }
 
