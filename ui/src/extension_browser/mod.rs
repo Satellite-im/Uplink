@@ -79,12 +79,7 @@ pub fn Explore(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 pub fn Installed(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let extensions = state.with(|i| {
-        i.ui.extensions
-            .ext()
-            .cloned()
-            .collect::<Vec<_>>()
-    });
+    let extensions = state.with(|i| i.ui.extensions.ext().cloned().collect::<Vec<_>>());
 
     state
         .write_silent()
