@@ -82,7 +82,6 @@ pub fn Installed(cx: Scope) -> Element {
     let extensions = state.with(|i| {
         i.ui.extensions
             .ext()
-            .into_iter()
             .cloned()
             .collect::<Vec<_>>()
     });
