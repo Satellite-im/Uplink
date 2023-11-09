@@ -626,10 +626,26 @@
 }
 
 .profile-context-items {
-  margin: var(--padding-less);
   display: inline-flex;
   gap: var(--gap);
   flex-direction: column;
+
+  .input {
+    border-radius: var(--border-radius-more);
+  }
+
+  .range-container {
+    padding: var(--padding-less);
+
+    .range {
+      margin-top: var(--gap);  
+      .range-value {
+          display: inline-flex;
+          background-color: var(--secondary-light);
+      }
+    }
+  }
+  
 
   .context-item {
     width: 100%;
@@ -673,12 +689,12 @@
 }
 
 .scroll-bottom-btn {
-  color: var(--text-color);
-  background-color: var(--secondary);
-  border-radius: var(--border-radius);
+  color: var(--text-color-dark);
+  background-color: var(--primary);
+  border-radius: var(--border-radius-more);
   width: calc(100% - (var(--gap) * 2));
   padding: var(--gap-less);
-  height: fit-content;
+  height: var(--height-input);
   position: absolute;
   bottom: calc(100% + var(--gap-less));
   left: 0;
@@ -690,7 +706,7 @@
 
   &:hover {
     cursor: pointer;
-    background-color: var(--secondary-light);
+    background-color: var(--primary-light);
   }
 }
 
