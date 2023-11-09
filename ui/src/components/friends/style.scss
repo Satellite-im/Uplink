@@ -53,3 +53,33 @@
     max-width: 100%;
     color: var(--text-color);
 }
+
+.modal-share-friends {
+    width: 70vh; 
+    height: 70vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow-x: auto;
+    .share-friend-selected{
+        background: color-mix(in srgb, transparent 80%, black);
+    }
+    .modal-share-friend {
+        &:hover {
+			background: color-mix(in srgb, transparent 90%, black);
+			cursor: pointer;
+		}
+        *:hover{
+            cursor: pointer;
+        }
+    }
+}
+
+.modal-share-friends-header {
+    display: flex;
+    flex-direction: row;
+    padding: var(--padding-less);
+    label {
+        width: 100%;
+        align-self: center;
+    }
+}
