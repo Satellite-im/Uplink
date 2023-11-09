@@ -339,11 +339,24 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let has_extension = state
-        .read()
+
+    let emoji_selector_extension = "emoji_selector";
+
+    let emoji_selector_lib_file_exists = state
+        .write_silent()
         .ui
         .extensions
-        .enabled_extension("emoji_selector");
+        .check_if_extension_lib_file_exists(emoji_selector_extension, false);
+
+    let has_extension = if !emoji_selector_lib_file_exists {
+        false
+    } else {
+        state
+            .read()
+            .ui
+            .extensions
+            .enabled_extension(emoji_selector_extension)
+    };
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {

@@ -1,8 +1,10 @@
 use crate::icons::outline::Shape as Icon;
+use crate::STATIC_ARGS;
 use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::rc::Rc;
 use std::{
     cmp::Ordering,
@@ -297,6 +299,25 @@ impl Extensions {
 
     pub fn ext(&self) -> hash_map::Keys<String, UplinkExtension> {
         self.map.keys()
+    }
+
+    pub fn check_if_extension_lib_file_exists(
+        &mut self,
+        extension: &str,
+        disable_extension_if_file_does_not_exist: bool,
+    ) -> bool {
+        let extension_lib_file_path = format!(
+            "{}/lib{}.dylib",
+            STATIC_ARGS.extensions_path.to_string_lossy(),
+            extension,
+        );
+        let lib_file_exists = Path::new(&extension_lib_file_path).exists();
+        if !lib_file_exists && disable_extension_if_file_does_not_exist {
+            self.disable(extension.to_string());
+            self.map.remove(extension);
+            self.enabled.remove(extension);
+        }
+        lib_file_exists
     }
 
     pub fn enabled_extension(&self, extension: &str) -> bool {

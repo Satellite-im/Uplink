@@ -18,11 +18,24 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let emojis = state.read().ui.emojis.clone();
     let sorted_list = emojis.get_sorted_vec(Some(4));
-    let has_extension = state
-        .read()
+    let emoji_selector_extension = "emoji_selector";
+
+    let emoji_selector_lib_file_exists = state
+        .write_silent()
         .ui
         .extensions
-        .enabled_extension("emoji_selector");
+        .check_if_extension_lib_file_exists(emoji_selector_extension, false);
+
+    let has_extension = if !emoji_selector_lib_file_exists {
+        false
+    } else {
+        state
+            .read()
+            .ui
+            .extensions
+            .enabled_extension(emoji_selector_extension)
+    };
+
     let picker_tooltip = if has_extension {
         cx.render(rsx!(()))
     } else {
