@@ -12,6 +12,9 @@
     padding: var(--gap);
     border-bottom: 1px solid transparent;
 		flex-direction: row;
+    .input {
+      padding: 0 var(--gap);
+    }
   }
   .children {
     flex: 1;

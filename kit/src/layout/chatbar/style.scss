@@ -5,7 +5,7 @@
 .chatbar {
 	width: 100%;
 	border-top: 1px solid transparent;
-	padding: var(--padding);
+	padding: var(--padding) var(--gap);
 	position: relative;
 	.input-group {
 		flex: 1;
@@ -33,9 +33,6 @@
 	border: 1px solid var(--border-subtle-color);
 	background: var(--secondary-dark);
 	
-	label {
-		color: var(--text-color-dark);
-	}
 	.content {
 		display: inline-flex;
 		padding: 0;

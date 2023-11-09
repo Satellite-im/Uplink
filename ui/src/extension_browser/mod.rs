@@ -123,7 +123,7 @@ pub fn ExtensionsBrowser(cx: Scope) -> Element {
     let routes = vec![
         Route {
             name: get_local_text("settings-extensions.installed"),
-            icon: Icon::CheckCircle,
+            icon: Icon::Check,
             to: "installed",
             ..Default::default()
         },
