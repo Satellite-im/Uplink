@@ -58,6 +58,10 @@
     }
 }
 
+.quick-profile-context {
+    z-index: 1005;
+}
+
 @media (max-width: 400px) {
     .modal-div-files-layout {
         width: 60vw;
