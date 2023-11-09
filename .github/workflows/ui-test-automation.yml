@@ -202,7 +202,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-allure-mac-ci
+          name: test-allure-macos-ci
           path: ./appium-tests/allure-results/
 
       - name: Upload Screenshots for MacOS 📷
@@ -228,9 +228,9 @@ jobs:
             Failed Automated Test
           type: add
 
-  test-windows-chats:
-    needs: build-windows
-    runs-on: windows-latest
+  test-mac-chats:
+    needs: build-mac
+    runs-on: macos-13
 
     steps:
       - name: Checkout working directory 🔖
@@ -242,46 +242,36 @@ jobs:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
 
-      - name: Change resolution on Windows Runner
-        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
-        shell: powershell
-
-      - name: Download the Windows app 🗳️
-        uses: actions/download-artifact@v3
-        with:
-          name: Uplink-Windows
-          path: ./appium-tests/apps
-
-      - name: Download the Windows app assets
-        uses: actions/download-artifact@v3
-        with:
-          name: uplink-windows-assets
-          path: ./appium-tests/apps
-
-      - name: Copy app to have two instances 💿
-        working-directory: ./appium-tests/apps
-        run: |
-          cp -r ./uplink.exe ./uplink2.exe
-
-      - name: Move Windows assets to correct locations 💿
-        working-directory: ./appium-tests/apps
-        run: |
-          mkdir ./bin/extra
-          mkdir ./extra
-          mv ./uplink.exe ./bin/
-          mv ./uplink2.exe ./bin/
-          mv ./images/ ./bin/extra/
-          mv ./prism_langs/ ./bin/extra/
-          mv ./themes/ ./extra/
-
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: "npm"
 
       - name: Install NPM dependencies 📦
         working-directory: ./appium-tests
         run: npm ci
+
+      - name: Enable opening app not codesigned 🖥️
+        run: sudo spctl --master-disable
+
+      - name: Download the MacOS app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: app-macos
+          path: ./appium-tests/apps
+
+      - name: Copy DMG to Appium Apps Directory 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          unzip Uplink-Mac-Universal.zip
+          cp -r ./Uplink.app ./Uplink2.app
+          perl -i -pe 's/im.satellite.uplink/im.satellite.uplinkChatUserA/g' ./Uplink.app/Contents/Info.plist
+          perl -i -pe 's/im.satellite.uplink/im.satellite.uplinkChatUserB/g' ./Uplink2.app/Contents/Info.plist
+          cp -r ./Uplink.app /Applications/
+          cp -r ./Uplink2.app /Applications/
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink2.app
 
       - name: Install Appium Server 💻
         run: |
@@ -290,45 +280,47 @@ jobs:
 
       - name: Install Appium Driver 💻
         run: |
-          appium driver install --source=npm appium-windows-driver
+          appium driver install mac2
           appium driver list
 
-      - name: Setup FFMPEG to record screen
-        uses: FedericoCarboni/setup-ffmpeg@v2
-        id: setup-ffmpeg
+      - name: Update MacOS runner to not autocorrect text
+        run: |
+          defaults write -g NSAutomaticCapitalizationEnabled -bool false
+          defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
+          defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
 
-      - name: Run Chat Tests on Windows 🧪
-        working-directory: ./appium-tests
-        run: npm run windows.multiremote
+      - name: Run Tests on MacOS 🧪
+        run: |
+          cd ./appium-tests
+          npm run mac.multiremote
 
-      - name: Upload Test Report - Windows Chats
+      - name: Upload Test Report - MacOS Chats
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-report-windows-chats
+          name: test-report-macos-chats
           path: ./appium-tests/test-report/*.xml
 
-      - name: Upload Allure Test Results
+      - name: Upload Allure Test Results for MacOS Chats
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-allure-windows-chats
+          name: test-allure-macos-chats
           path: ./appium-tests/allure-results/
 
-      - name: Upload Screenshots for Windows - Chats 📷
+      - name: Upload Screenshots for MacOS Chats 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: appium-screenshots-windows-chats
+          name: appium-screenshots-MacOS-chats
           path: ./appium-tests/test-results
 
-      - name: Upload Appium Log for Windows - Chats 📷
+      - name: Upload Appium Log for MacOS Chats 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: appium-log-windows-chats
-          path: |
-            ./appium-tests/appium.log
+          name: appium-log-macos-chats
+          path: ./appium-tests/appium.log
 
       - name: Add label if any of test jobs failed
         if: failure()
@@ -449,8 +441,7 @@ jobs:
 
   publish-results:
     if: always()
-    needs:
-      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
+    needs: [build-mac, build-windows, test-mac, test-mac-chats, test-windows]
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -465,10 +456,10 @@ jobs:
           name: test-report-macos-ci
           path: artifacts
 
-      - name: Download Test Report for Windows Chats
+      - name: Download Test Report for MacOS Chats
         uses: actions/download-artifact@v3
         with:
-          name: test-report-windows-chats
+          name: test-report-macos-chats
           path: artifacts
 
       - name: Download Test Report for Windows CI
@@ -480,7 +471,7 @@ jobs:
       - name: Download Allure Results for MacOS CI
         uses: actions/download-artifact@v3
         with:
-          name: test-allure-mac-ci
+          name: test-allure-macos-ci
           path: allure
 
       - name: Download Allure Results for Windows CI
@@ -489,10 +480,10 @@ jobs:
           name: test-allure-windows-ci
           path: allure
 
-      - name: Download Allure Results for Windows Chats
+      - name: Download Allure Results for MacOS Chats
         uses: actions/download-artifact@v3
         with:
-          name: test-allure-windows-chats
+          name: test-allure-macos-chats
           path: allure
 
       - name: Publish Test Results Summary
@@ -545,7 +536,7 @@ jobs:
         build-mac,
         build-windows,
         test-mac,
-        test-windows-chats,
+        test-mac-chats,
         test-windows,
         publish-results,
       ]
@@ -572,7 +563,7 @@ jobs:
             app-macos
             test-report-macos-ci
             test-report-windows-ci
-            test-report-windows-chats
-            test-allure-mac-ci
+            test-report-macos-chats
+            test-allure-macos-ci
             test-allure-windows-ci
-            test-allure-windows-chats
+            test-allure-macos-chats
