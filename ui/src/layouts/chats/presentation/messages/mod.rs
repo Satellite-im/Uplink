@@ -4,6 +4,7 @@ use std::{
     path::PathBuf,
 };
 
+use arboard::Clipboard;
 use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
@@ -397,6 +398,24 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                         ));
                         reacting_to.set(Some(msg_uuid));
                         state.write().mutate(Action::SetEmojiPickerVisible(true));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::ClipboardDocument,
+                    aria_label: "messages-copy".into(),
+                    text: get_local_text("uplink.copy-text"),
+                    onpress: move |_| {
+                        let text = message.inner.lines().join("\n");
+                        match Clipboard::new() {
+                            Ok(mut c) => {
+                                if let Err(e) = c.set_text(text) {
+                                    log::warn!("Unable to set text to clipboard: {e}");
+                                }
+                            }
+                            Err(e) => {
+                                log::warn!("Unable to create clipboard reference: {e}");
+                            }
+                        };
                     }
                 },
                 ContextItem {

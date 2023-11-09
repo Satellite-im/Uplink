@@ -5,7 +5,7 @@ use futures::{channel::oneshot, StreamExt};
 
 use kit::{
     components::context_menu::{ContextItem, ContextMenu, IdentityHeader},
-    elements::{input::Input, range::Range},
+    elements::{input::Input, label::Label, range::Range},
 };
 
 use common::{
@@ -368,6 +368,30 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     })
                 } else {
                     rsx!(
+                    if state.read().configuration.developer.experimental_features && in_vc {
+                        rsx!(
+                            div {
+                                class: "range-container",
+                                Label {
+                                    text: get_local_text("quickprofile.volume")
+                                },
+                                Range {
+                                    aria_label: "range-quick-profile-speaker".into(),
+                                    initial_value: volume,
+                                    min: USER_VOL_MIN,
+                                    max: USER_VOL_MAX,
+                                    step: 0.1,
+                                    no_num: true,
+                                    icon_left: Icon::Speaker,
+                                    icon_right: Icon::SpeakerWave,
+                                    onchange: move |val| {
+                                        ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
+                                    }
+                                }
+                            },
+                            hr{}
+                        )
+                    }
                         /*ContextItem {
                         icon: Icon::UserCircle,
                         text: get_local_text("quickprofile.profile"),
@@ -407,29 +431,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         )
                     }
-                    if state.read().configuration.developer.experimental_features && in_vc {
-                        rsx!(
-                            p {
-                                class: "text",
-                                aria_label: "user-volume-label",
-                                get_local_text("quickprofile.volume")
-                            },
-                            Range {
-                                aria_label: "range-quick-profile-speaker".into(),
-                                initial_value: volume,
-                                min: USER_VOL_MIN,
-                                max: USER_VOL_MAX,
-                                step: 0.1,
-                                no_num: true,
-                                icon_left: Icon::Speaker,
-                                icon_right: Icon::SpeakerWave,
-                                onchange: move |val| {
-                                    ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
-                                }
-                            }
-                        )
-                    }
-                    hr{},
                     if is_friend {
                         rsx!(ContextItem {
                             icon: Icon::UserMinus,
