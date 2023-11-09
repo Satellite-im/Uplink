@@ -4,8 +4,8 @@ use std::{
     path::PathBuf,
 };
 
-use dioxus::prelude::{EventHandler, *};
 use arboard::Clipboard;
+use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
 mod effects;
@@ -411,7 +411,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                                 if let Err(e) = c.set_text(text) {
                                     log::warn!("Unable to set text to clipboard: {e}");
                                 }
-                            },
+                            }
                             Err(e) => {
                                 log::warn!("Unable to create clipboard reference: {e}");
                             }

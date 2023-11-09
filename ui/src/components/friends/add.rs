@@ -77,7 +77,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 if let Err(e) = c.set_text(id) {
                     log::warn!("Unable to set text to clipboard: {e}");
                 }
-            },
+            }
             Err(e) => {
                 log::warn!("Unable to create clipboard reference: {e}");
             }
