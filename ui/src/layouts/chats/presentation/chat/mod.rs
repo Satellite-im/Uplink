@@ -21,10 +21,11 @@ use crate::{
             chatbar::get_chatbar,
             messages::get_messages,
         },
+        scripts::SHOW_CONTEXT,
     },
 };
 
-use common::state::{ui, Action, State};
+use common::state::{ui, Action, Identity, State};
 
 use common::language::get_local_text;
 
@@ -46,6 +47,25 @@ pub fn Compose(cx: Scope) -> Element {
 
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
+
+    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let quickprofile_data: &UseRef<Option<(f64, f64, Identity, bool)>> = use_ref(cx, || None);
+    let update_script = use_state(cx, String::new);
+    let identity_profile = use_state(cx, DID::default);
+    use_effect(cx, quickprofile_data, |data| {
+        to_owned![quick_profile_uuid, update_script, identity_profile];
+        async move {
+            if let Some((x, y, id, right)) = data.read().as_ref() {
+                let script = SHOW_CONTEXT
+                    .replace("UUID", &quick_profile_uuid)
+                    .replace("$PAGE_X", &x.to_string())
+                    .replace("$PAGE_Y", &y.to_string())
+                    .replace("$SELF", &right.to_string());
+                update_script.set(script);
+                identity_profile.set(id.did_key());
+            }
+        }
+    });
 
     // if the emoji picker is visible, autofocusing on the chatbar will close the emoji picker.
     let should_ignore_focus = state.read().ui.ignore_focus || state.read().ui.emoji_picker_visible;
@@ -123,6 +143,7 @@ pub fn Compose(cx: Scope) -> Element {
                     },
                     GroupUsers {
                         active_chat: state.read().get_active_chat(),
+                        quickprofile_data: quickprofile_data.clone(),
                     }
                 }
         )),
@@ -139,7 +160,7 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             )
         } else {
-            rsx!(get_messages{})
+            rsx!(get_messages{quickprofile_data: quickprofile_data.clone()})
         },
         get_chatbar {
             show_edit_group: show_edit_group.clone(),
@@ -147,6 +168,11 @@ pub fn Compose(cx: Scope) -> Element {
             ignore_focus: should_ignore_focus,
             is_owner: is_owner,
             is_edit_group: is_edit_group,
+        },
+        super::quick_profile::QuickProfileContext{
+            id: quick_profile_uuid,
+            update_script: update_script,
+            did_key: identity_profile,
         }
     }
     ))

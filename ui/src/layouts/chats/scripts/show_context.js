@@ -1,5 +1,8 @@
 let xPadding = 30
 let yPadding = 10
+if ($SELF) {
+  xPadding *= -1;
+}
 
 var menus = document.getElementsByClassName("context-menu")
 for (var i = 0; i < menus.length; i++) {

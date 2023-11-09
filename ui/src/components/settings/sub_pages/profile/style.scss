@@ -146,7 +146,7 @@
     width: 100%;
     gap: var(--gap-less);
   }
-
+  
   .profile-group-username {
     display: inline-flex;
   }
@@ -173,4 +173,15 @@
       background: var(--secondary);
     }
   }
+  @media (max-width: 600px) {
+    .profile-group-username {
+      display: inline; 
+    }
+    .profile-id-btn {
+      display: inline-flex;
+      float: right;
+      margin-top: -80px;
+    }
+    }
+
 }
