@@ -694,7 +694,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                         ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
                     },
                     icon: if disabled {
-                        Icon::Check 
+                        Icon::Check
                     } else {
                         Icon::Plus
                     },
