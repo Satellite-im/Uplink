@@ -228,9 +228,10 @@ pub enum ChanCmd {
 pub fn init_coroutine<'a>(
     cx: &'a ScopeState,
     controller: &'a UseRef<StorageController>,
+    state: &'a UseSharedState<State>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![controller];
+        to_owned![controller, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -339,20 +340,56 @@ pub fn init_coroutine<'a>(
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::DownloadFile {
-                                file_name,
+                                file_name: file_name.clone(),
                                 local_path_to_save_file,
                                 rsp: tx,
                             },
                         )) {
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text_with_args(
+                                        "files.download-failed",
+                                        vec![("file", file_name)],
+                                    ),
+                                    None,
+                                    2,
+                                ),
+                            ));
                             log::error!("failed to download file {}", e);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-
-                        if let Err(error) = rsp {
-                            log::error!("failed to download file: {}", error);
-                            continue;
+                        match rsp {
+                            Ok(_) => {
+                                state.write().mutate(Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        get_local_text_with_args(
+                                            "files.download-success",
+                                            vec![("file", file_name)],
+                                        ),
+                                        None,
+                                        2,
+                                    ),
+                                ));
+                            }
+                            Err(error) => {
+                                state.write().mutate(Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        get_local_text_with_args(
+                                            "files.download-failed",
+                                            vec![("file", file_name)],
+                                        ),
+                                        None,
+                                        2,
+                                    ),
+                                ));
+                                log::error!("failed to download file: {}", error);
+                                continue;
+                            }
                         }
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {

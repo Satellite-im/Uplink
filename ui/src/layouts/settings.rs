@@ -29,7 +29,7 @@ use kit::layout::topbar::Topbar;
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_shared_state::<Page>(cx)?;
-    let show_slimbar = state.read().show_slimbar();
+    let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
