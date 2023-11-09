@@ -177,6 +177,8 @@ files = Files
     .no-files-available = No files available.
     .share-files = Share Files
     .go-to-files = Go to Files
+    .download-failed = Failed to download file { $file }
+    .download-success = Downloaded file { $file }
 
 settings = Settings
     .settings = Settings

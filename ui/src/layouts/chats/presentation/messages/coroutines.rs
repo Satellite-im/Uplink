@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use common::{
-    state::{Action, State},
+    language::get_local_text_with_args,
+    state::{Action, State, ToastNotification},
     warp_runner::{FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -397,6 +398,17 @@ pub fn handle_warp_commands(
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text_with_args(
+                                        "files.download-failed",
+                                        vec![("file", file.name())],
+                                    ),
+                                    None,
+                                    2,
+                                ),
+                            ));
                             if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
                                 conv.remove(&file);
                             }
@@ -409,8 +421,30 @@ pub fn handle_warp_commands(
                                 while let Some(p) = stream.next().await {
                                     log::debug!("{p:?}");
                                 }
+                                state.write().mutate(Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        get_local_text_with_args(
+                                            "files.download-success",
+                                            vec![("file", file.name())],
+                                        ),
+                                        None,
+                                        2,
+                                    ),
+                                ));
                             }
                             Err(e) => {
+                                state.write().mutate(Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        get_local_text_with_args(
+                                            "files.download-failed",
+                                            vec![("file", file.name())],
+                                        ),
+                                        None,
+                                        2,
+                                    ),
+                                ));
                                 log::error!("failed to download attachment: {}", e);
                             }
                         }
