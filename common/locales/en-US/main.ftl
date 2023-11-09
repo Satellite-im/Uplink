@@ -42,6 +42,7 @@ uplink = Uplink
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
     .clear-unreads = Clear Unreads
+    .copy-text = Copy Text
     
 community = Community
     .invited = You're Invited!
