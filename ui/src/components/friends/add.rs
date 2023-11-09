@@ -72,8 +72,16 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     if let Some(id) = my_id.get().clone() {
-        let mut clipboard = Clipboard::new().unwrap();
-        clipboard.set_text(id).unwrap();
+        match Clipboard::new() {
+            Ok(mut c) => {
+                if let Err(e) = c.set_text(id) {
+                    log::warn!("Unable to set text to clipboard: {e}");
+                }
+            },
+            Err(e) => {
+                log::warn!("Unable to create clipboard reference: {e}");
+            }
+        };
         state
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
