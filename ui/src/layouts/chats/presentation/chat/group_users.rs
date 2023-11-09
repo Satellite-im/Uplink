@@ -14,10 +14,11 @@ use kit::{
 };
 use warp::{crypto::DID, logging::tracing::log};
 
-#[derive(Props, Eq, PartialEq)]
+#[derive(Props, PartialEq)]
 pub struct Props {
     #[props(!optional)]
     active_chat: Option<Chat>,
+    quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
 
 #[allow(non_snake_case)]
@@ -26,6 +27,8 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
     log::trace!("rendering group_users");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
+
+    let quickprofile_data = &cx.props.quickprofile_data;
 
     let active_chat = match cx.props.active_chat.as_ref() {
         Some(r) => r,
@@ -46,6 +49,22 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
     let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
     let creator_id = creator_id_vector.get(0).cloned()?;
 
+    let eval = use_eval(cx);
+    use_effect(cx, (), |_| {
+        to_owned![eval];
+        async move {
+            let _ = eval(
+                r#"
+                const right_clickable = document.getElementsByClassName("friend-container");
+                const prevent_default = function (ev) { ev.preventDefault(); };
+                for (var i = 0; i < right_clickable.length; i++) {
+                    //Disable default right click actions (opening the inspect element dropdown)
+                    right_clickable.item(i).removeEventListener("contextmenu", prevent_default);
+                    right_clickable.item(i).addEventListener("contextmenu", prevent_default);
+                }"#,
+            );
+        }
+    });
     cx.render(rsx!(
         div {
             id: "group-users",
@@ -69,11 +88,13 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                     },
                 }
             }
-                render_friends {
-                    group_participants: group_participants,
-                    name_prefix: friend_prefix.clone(),
-                    creator: creator_id,
-                },
+            render_friends {
+                group_participants: group_participants,
+                name_prefix: friend_prefix.clone(),
+                creator: creator_id,
+                is_dev: state.read().configuration.developer.developer_mode,
+                context_data: quickprofile_data.clone(),
+            }
         }
     ))
 }
@@ -83,6 +104,8 @@ pub struct FriendsProps {
     group_participants: Vec<Identity>,
     name_prefix: UseState<String>,
     creator: DID,
+    is_dev: bool,
+    context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
 
 fn render_friends(cx: Scope<FriendsProps>) -> Element {
@@ -111,6 +134,8 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                             rsx!(render_friend {
                                 friend: _friend.clone(),
                                 is_creator: friendid == creator,
+                                is_dev: cx.props.is_dev,
+                                context_data: cx.props.context_data.clone(),
                             }
                         )})
                     }
@@ -131,16 +156,26 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
 pub struct FriendProps {
     friend: Identity,
     is_creator: bool,
+    is_dev: bool,
+    context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
 fn render_friend(cx: Scope<FriendProps>) -> Element {
     cx.render(rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",
+            oncontextmenu: move |e| {
+                cx.props
+                    .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, cx.props.friend.to_owned(), true)));
+            },
             UserImage {
                 platform: cx.props.friend.platform().into(),
                 status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture()
+                image: cx.props.friend.profile_picture(),
+                oncontextmenu: move |e: Event<MouseData>| {
+                    cx.props
+                        .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, cx.props.friend.to_owned(), true)));
+                }
             },
             div {
                 class: "flex-1",

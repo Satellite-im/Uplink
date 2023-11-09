@@ -10,6 +10,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    state::{Identity, ToastNotification},
     warp_runner::{BlinkCmd, MultiPassCmd},
 };
 use common::{
@@ -21,9 +22,12 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{crypto::DID, error::Error, logging::tracing::log};
 
-use crate::{components::settings::sidebar::Page, UplinkRoute};
+use crate::{
+    components::{friends::friends_list::ShareFriendsModal, settings::sidebar::Page},
+    UplinkRoute,
+};
 
 pub const USER_VOL_MIN: f32 = 0.25;
 pub const USER_VOL_MAX: f32 = 5.0;
@@ -31,7 +35,7 @@ pub const USER_VOL_MAX: f32 = 5.0;
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,
-    did_key: DID,
+    did_key: &'a DID,
     update_script: &'a UseState<String>,
     children: Element<'a>,
 }
@@ -45,6 +49,7 @@ enum QuickProfileCmd {
     RemoveDirectConvs(DID),
     Chat(Option<Chat>, Vec<String>, Option<Uuid>),
     AdjustVolume(DID, f32),
+    SendFriendRequest(DID, Vec<Identity>),
 }
 
 // Create a quick profile context menu
@@ -53,16 +58,18 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let state = use_shared_state::<State>(cx)?;
     let settings_page = use_shared_state::<Page>(cx)?;
     let id = cx.props.id;
+    let share_did = use_state(cx, || None);
 
     let identity = state
         .read()
-        .get_identity(&cx.props.did_key)
+        .get_identity(cx.props.did_key)
         .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
     let did = &identity.did_key();
     let did_cloned = did.clone();
+    let did_cloned_2 = did.clone();
     let chat_of = state.read().get_chat_with_friend(identity.did_key());
     let chat_send = chat_of.clone();
 
@@ -78,9 +85,8 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     use_future(cx, cx.props.update_script, |update_script| {
         to_owned![eval];
         async move {
-            let script = update_script.get();
-            if !script.is_empty() {
-                _ = eval(script);
+            if !update_script.is_empty() {
+                _ = eval(&update_script);
             }
         }
     });
@@ -272,12 +278,51 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     }
+                    QuickProfileCmd::SendFriendRequest(id, outgoing_requests) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                            id: id.to_string(),
+                            outgoing_requests,
+                            rsp: tx,
+                        }));
+                        let res = rx.await.expect("failed to get response from warp_runner");
+                        match res {
+                            Ok(_) => {}
+                            Err(e) => match e {
+                                Error::PublicKeyIsBlocked => {
+                                    log::warn!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.key-blocked"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                                _ => {
+                                    //The other errors are covered by button already
+                                    log::error!("add friend failed: {}", e);
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.add-failed"),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                            },
+                        }
+                    }
                 }
             }
         }
     });
 
-    cx.render(rsx!(ContextMenu {
+    cx.render(rsx!(div{
+        class: "quick-profile-context",
+        ContextMenu {
         id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
@@ -347,6 +392,20 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 // TODO: Impl missing
                             }*/
                         )
+                    } else {
+                        let outgoing = state.read().outgoing_fr_identities();
+                        let disabled = outgoing.contains(&identity);
+                        rsx!(
+                            ContextItem {
+                                icon: Icon::Plus,
+                                aria_label: "quick-profile-friend-request".into(),
+                                text: if disabled {get_local_text("quickprofile.pending-friend-request")} else {get_local_text("quickprofile.friend-request")},
+                                disabled: disabled,
+                                onpress: move |_| {
+                                    ch.send(QuickProfileCmd::SendFriendRequest(identity.did_key(), outgoing.clone()));
+                                }
+                            }
+                        )
                     }
                     if state.read().configuration.developer.experimental_features && in_vc {
                         rsx!(
@@ -395,16 +454,30 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     },
+                    if is_friend {
+                        rsx!(ContextItem {
+                            danger: true,
+                            icon: Icon::Link,
+                            text: get_local_text("friends.share"),
+                            aria_label: "friends-share".into(),
+                            onpress: move |_| {
+                                share_did.set(Some(did_cloned_2.clone()));
+                            }
+                        })
+                    },
                     if is_friend && !chat_is_current {
                         rsx!(
                             hr{},
                             Input {
                                 placeholder: get_local_text("quickprofile.chat-placeholder"),
+                                disable_onblur: true,
                                 onreturn: move |(val, _,_): (String,bool,Code)|{
-                                    let ui_id = state
+                                    let ui_id = chat_send.as_ref().and_then(|chat|state
                                         .write_silent()
-                                        .increment_outgoing_messages(vec![val.clone()], &[]);
+                                        .increment_outgoing_messages_for(vec![val.clone()], &[], chat.id));
                                     ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                                    let script = format!(r#"document.getElementById("{id}-context-menu").classList.add("hidden")"#);
+                                    let _ = eval(&script);
                                 }
                             }
                         )
@@ -413,6 +486,17 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             }
         ))
         ,
+        share_did.as_ref().map(|_|{
+            match state.read().get_active_chat() {
+                Some(chat) => rsx!(ShareFriendsModal{
+                    did: share_did.clone(),
+                    excluded_chat: chat.id
+                }),
+                None => rsx!(ShareFriendsModal{
+                    did: share_did.clone(),
+                })
+            }
+        }),
         &cx.props.children
-    }))
+    }}))
 }

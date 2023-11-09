@@ -1194,11 +1194,21 @@ impl State {
         msg: Vec<String>,
         attachments: &[Location],
     ) -> Option<Uuid> {
-        let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
-            if let Some(chat) = self.chats.all.get_mut(&id) {
-                return Some(chat.append_pending_msg(id, did, msg, attachments));
-            }
+            return self.increment_outgoing_messages_for(msg, attachments, id);
+        }
+        None
+    }
+
+    pub fn increment_outgoing_messages_for(
+        &mut self,
+        msg: Vec<String>,
+        attachments: &[Location],
+        id: Uuid,
+    ) -> Option<Uuid> {
+        let did = self.get_own_identity().did_key();
+        if let Some(chat) = self.chats.all.get_mut(&id) {
+            return Some(chat.append_pending_msg(id, did, msg, attachments));
         }
         None
     }
