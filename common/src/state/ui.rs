@@ -326,12 +326,7 @@ impl Extensions {
             STATIC_ARGS.extensions_path.to_string_lossy(),
             extension,
         );
-        let lib_file_exists = Path::new(&extension_lib_file_path).exists();
-        // if !lib_file_exists && self.map.contains_key(extension) {
-        //     self.map.remove(extension);
-        //     self.enabled.remove(extension);
-        // }
-        lib_file_exists
+        Path::new(&extension_lib_file_path).exists()
     }
 
     pub fn enabled_extension(&self, extension: &str) -> bool {
