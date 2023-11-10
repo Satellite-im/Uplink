@@ -376,7 +376,7 @@ pub fn init_coroutine<'a>(
                                         2,
                                     ),
                                 ));
-                                on_finish();
+                                on_finish.await
                             }
                             Err(error) => {
                                 state.write().mutate(Action::AddToastNotification(

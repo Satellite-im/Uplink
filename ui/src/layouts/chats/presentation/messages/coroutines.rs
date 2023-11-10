@@ -436,7 +436,7 @@ pub fn handle_warp_commands(
                                         2,
                                     ),
                                 ));
-                                on_finish();
+                                on_finish.await
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(
