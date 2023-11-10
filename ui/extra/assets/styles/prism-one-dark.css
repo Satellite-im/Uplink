@@ -36,9 +36,9 @@ pre[class*="language-"] {
 	font-family: "Fira Code", "Fira Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	direction: ltr;
 	text-align: left;
-	white-space: pre;
+	white-space: pre-wrap;
 	word-spacing: normal;
-	word-break: normal;
+	word-break: break-word;
 	line-height: 1.5;
 	-moz-tab-size: 2;
 	-o-tab-size: 2;
