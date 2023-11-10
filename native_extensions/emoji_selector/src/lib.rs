@@ -7,7 +7,6 @@ use dioxus::prelude::*;
 use emojis::{Group, UnicodeVersion};
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use futures::StreamExt;
-use kit::elements::input::Input;
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
@@ -185,29 +184,6 @@ fn render_selector<'a>(
     });
 
     cx.render(rsx! (
-        // div {
-        //     class: "search-input disable-select",
-        //     Input {
-        //         placeholder: get_local_text("uplink.search-placeholder"),
-        //         // TODO: Pending implementation
-        //         disabled: false,
-        //         aria_label: "chat-search-input".into(),
-        //         icon: Icon::MagnifyingGlass,
-        //         reset: reset_searchbar.clone(),
-        //         options: Options {
-        //             with_clear_btn: true,
-        //             react_to_esc_key: true,
-        //             clear_on_submit: true,
-        //             ..Options::default()
-        //         },
-        //         onreturn: move |(v, _, key): (String, _, Code)| {
-                   
-        //         },
-        //         onchange: move |(v, _): (String, _)| {
-                   
-        //         },
-        //         }
-        //     },
             div {
                 onmouseenter: |_| {
                     *mouse_over_emoji_selector.write_silent() = true;
