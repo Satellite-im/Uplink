@@ -4,6 +4,7 @@ use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 use std::{
@@ -334,11 +335,27 @@ impl Extensions {
                 extension,
             )
         } else if cfg!(target_os = "linux") {
-            format!(
-                "{}/lib{}.so",
-                STATIC_ARGS.extensions_path.to_string_lossy(),
-                extension,
-            )
+            match fs::read_dir(STATIC_ARGS.extensions_path.clone()) {
+                Ok(entries) => {
+                    let mut found = false;
+                    for entry in entries.filter_map(|e| e.ok()) {
+                        let path = entry.path();
+                        if path
+                            .file_name()
+                            .and_then(|name| name.to_str())
+                            .map(|name| name.contains(extension))
+                            .unwrap_or(false)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    return found;
+                }
+                Err(_) => {
+                    return false;
+                }
+            }
         } else {
             return false;
         };
