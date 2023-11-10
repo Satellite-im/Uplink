@@ -14,9 +14,12 @@ use futures::{channel::oneshot, pin_mut, StreamExt};
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
 
-use crate::layouts::chats::{
-    data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
-    scripts::OBSERVER_SCRIPT,
+use crate::{
+    layouts::chats::{
+        data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        scripts::OBSERVER_SCRIPT,
+    },
+    utils::download::get_download_path,
 };
 
 use super::{DownloadTracker, MessagesCommand};
@@ -387,13 +390,14 @@ pub fn handle_warp_commands(
                         file,
                         file_path_to_download,
                     } => {
+                        let (temp_file_path, on_finish) = get_download_path(file_path_to_download);
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
                                 conv_id,
                                 msg_id,
                                 file_name: file.name(),
-                                file_path_to_download,
+                                file_path_to_download: temp_file_path,
                                 rsp: tx,
                             }))
                         {
@@ -432,6 +436,7 @@ pub fn handle_warp_commands(
                                         2,
                                     ),
                                 ));
+                                on_finish();
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(
