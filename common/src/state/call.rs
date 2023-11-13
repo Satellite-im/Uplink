@@ -242,7 +242,7 @@ impl Call {
     }
 
     fn participant_left(&mut self, id: &DID) {
-        self.participants_joined.remove(&id);
+        self.participants_joined.remove(id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
