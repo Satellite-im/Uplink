@@ -319,7 +319,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     }
     let call = &active_call.call;
 
-    let participants = state.read().get_identities(&call.participants);
+    let participants = state.read().get_identities(&call.participants_joined);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
 
@@ -564,7 +564,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
-    let mut participants = state.read().get_identities(&call.participants);
+    let mut participants = state.read().get_identities(&call.participants_joined);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
         Some(c) => match c.conversation_name {
