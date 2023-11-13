@@ -11,6 +11,7 @@ use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
 pub mod auto_updater;
 pub mod clipboard;
+pub mod download;
 pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod lifecycle;

@@ -4,6 +4,7 @@ use std::{
     path::PathBuf,
 };
 
+use arboard::Clipboard;
 use dioxus::prelude::{EventHandler, *};
 
 mod coroutines;
@@ -39,10 +40,7 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::{
-        data::{self, ChatData, ScrollBtn},
-        scripts::SHOW_CONTEXT,
-    },
+    layouts::chats::data::{self, ChatData, ScrollBtn},
     utils::format_timestamp::format_timestamp_timeago,
 };
 
@@ -70,17 +68,16 @@ pub enum MessagesCommand {
 pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
 
 #[component(no_case_check)]
-pub fn get_messages(cx: Scope) -> Element {
+pub fn get_messages(
+    cx: Scope,
+    quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
+) -> Element {
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
-
-    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
-    let identity_profile = use_state(cx, Identity::default);
-    let update_script = use_state(cx, String::new);
 
     let eval = use_eval(cx);
     let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
@@ -140,52 +137,25 @@ pub fn get_messages(cx: Scope) -> Element {
                     loop_over_message_groups {
                         groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), chat_data.read().active_chat.messages()),
                         active_chat_id: chat_data.read().active_chat.id(),
-                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                        on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
-                            if !identity_profile.get().eq(&id) {
-                                let id = if own {
-                                    let mut id = id;
-                                    id.set_identity_status(IdentityStatus::Online);
-                                    id
-                                } else {
-                                    id
-                                };
-                                identity_profile.set(id);
-                            }
-                            //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT
-                                .replace("UUID", quick_profile_uuid)
-                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
-                                .replace("$SELF", &own.to_string());
-                            update_script.set(script);
+                            if own {
+                                id.set_identity_status(IdentityStatus::Online);
+                            };
+                            quickprofile_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, id.clone(), own)));
                         }
                     },
                     render_pending_messages_listener {
                         on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
-                            if !identity_profile.get().eq(&id) {
-                                if own {
-                                    id.set_identity_status(IdentityStatus::Online);
-                                }
-                                identity_profile.set(id);
-                            }
-                            //Dont think there is any way of manually moving elements via dioxus
-                            let script = SHOW_CONTEXT
-                                .replace("UUID", quick_profile_uuid)
-                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
-                                .replace("$SELF", &own.to_string());
-                            update_script.set(script);
+                            if own {
+                                id.set_identity_status(IdentityStatus::Online);
+                            };
+                            quickprofile_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, id.clone(), own)));
                         }
                     }
                 )
             }
-        },
-        super::quick_profile::QuickProfileContext{
-            id: quick_profile_uuid,
-            update_script: update_script,
-            did_key: identity_profile.did_key()
         }
     ))
 }
@@ -428,6 +398,24 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                         ));
                         reacting_to.set(Some(msg_uuid));
                         state.write().mutate(Action::SetEmojiPickerVisible(true));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::ClipboardDocument,
+                    aria_label: "messages-copy".into(),
+                    text: get_local_text("uplink.copy-text"),
+                    onpress: move |_| {
+                        let text = message.inner.lines().join("\n");
+                        match Clipboard::new() {
+                            Ok(mut c) => {
+                                if let Err(e) = c.set_text(text) {
+                                    log::warn!("Unable to set text to clipboard: {e}");
+                                }
+                            }
+                            Err(e) => {
+                                log::warn!("Unable to create clipboard reference: {e}");
+                            }
+                        };
                     }
                 },
                 ContextItem {

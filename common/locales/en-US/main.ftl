@@ -42,6 +42,7 @@ uplink = Uplink
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
     .clear-unreads = Clear Unreads
+    .copy-text = Copy Text
     
 community = Community
     .invited = You're Invited!
@@ -136,9 +137,13 @@ friends = Friends
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
     .request-exist = Friend request is already pending!
-    .add-name = ➕  Add { $name }
+    .add-name = Add { $name }
+    .already-friends = Already Friends
     .nothing-to-see-here = Nothing to see here
-
+    .share = Share DID
+    .select-chat = Select Chat
+    .share-to-chat = Share
+    
 files = Files
     .file = File
     .files = Files
@@ -173,6 +178,8 @@ files = Files
     .no-files-available = No files available.
     .share-files = Share Files
     .go-to-files = Go to Files
+    .download-failed = Failed to download file { $file }
+    .download-success = Downloaded file { $file }
 
 settings = Settings
     .settings = Settings
@@ -357,6 +364,8 @@ quickprofile = Quick Profile
     .chat-placeholder = Message
     .self-edit = Edit Profile
     .volume = User Volume
+    .friend-request = Send Friend Request
+    .pending-friend-request = Pending Friend Request
 
 toast_actions = Toast Actions
     .DisplayChat = Open Chat
