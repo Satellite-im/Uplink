@@ -4,7 +4,7 @@
 use std::collections::VecDeque;
 
 use common::{state::pending_message::PendingMessage, warp_runner::ui_adapter};
-use warp::crypto::DID;
+use warp::{constellation::Progression, crypto::DID};
 
 // Define a struct to represent a group of messages from the same sender.
 #[derive(Clone)]
@@ -32,6 +32,7 @@ pub struct MessageGroupMsg {
     pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
+    pub file_progress: Option<Vec<Progression>>,
 }
 
 impl MessageGroupMsg {
@@ -54,6 +55,7 @@ pub fn create_message_groups(
                     is_pending: false,
                     is_first: false,
                     is_last: true,
+                    file_progress: None,
                 };
                 // I really hope last() is O(1) time
                 if let Some(g) = group.messages.iter_mut().last() {
@@ -72,6 +74,7 @@ pub fn create_message_groups(
             is_pending: false,
             is_first: true,
             is_last: true,
+            file_progress: None,
         };
         grp.messages.push(g);
         messages.push(grp);
@@ -93,6 +96,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
                 is_pending: true,
                 is_first: false,
                 is_last: true,
+                file_progress: Some(msg.attachments_progress.values().cloned().collect()),
             };
             messages.push(g);
             continue;
@@ -102,6 +106,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
             is_pending: true,
             is_first: true,
             is_last: true,
+            file_progress: Some(msg.attachments_progress.values().cloned().collect()),
         };
         messages.push(g);
     }
