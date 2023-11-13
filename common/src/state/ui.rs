@@ -302,64 +302,6 @@ impl Extensions {
         self.map.keys()
     }
 
-    pub fn check_extensions(&mut self, extensions: Vec<String>) {
-        if extensions.is_empty() {
-            return;
-        }
-        let mut to_disable = Vec::new();
-
-        for extension in extensions {
-            let lib_file_exists = self.check_if_extension_lib_file_exists(extension.as_str());
-            if !lib_file_exists {
-                to_disable.push(extension.to_string());
-            }
-        }
-
-        for extension in to_disable {
-            self.map.remove(&extension);
-            self.enabled.remove(&extension);
-        }
-    }
-
-    pub fn check_if_extension_lib_file_exists(&self, extension: &str) -> bool {
-        let extensions_dir = get_extensions_dir().unwrap_or_default();
-        let extension_lib_file_path = if cfg!(target_os = "macos") {
-            format!(
-                "{}/lib{}.dylib",
-                extensions_dir.to_string_lossy(),
-                extension,
-            )
-        } else if cfg!(target_os = "windows") {
-            format!("{}/{}.dll", extensions_dir.to_string_lossy(), extension,)
-        } else if cfg!(target_os = "linux") {
-            match fs::read_dir(extensions_dir) {
-                Ok(entries) => {
-                    let mut found = false;
-                    for entry in entries.filter_map(|e| e.ok()) {
-                        let path = entry.path();
-                        if path
-                            .file_name()
-                            .and_then(|name| name.to_str())
-                            .map(|name| name.contains(extension))
-                            .unwrap_or(false)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    return found;
-                }
-                Err(_) => {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        };
-
-        Path::new(&extension_lib_file_path).exists()
-    }
-
     pub fn enabled_extension(&self, extension: &str) -> bool {
         match self.enabled.get(extension) {
             Some(enabled) => *enabled,

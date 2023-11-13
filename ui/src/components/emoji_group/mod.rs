@@ -20,21 +20,11 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let sorted_list = emojis.get_sorted_vec(Some(4));
     let emoji_selector_extension = "emoji_selector";
 
-    let emoji_selector_lib_file_exists = state
+    let has_extension = state
         .read()
         .ui
         .extensions
-        .check_if_extension_lib_file_exists(emoji_selector_extension);
-
-    let has_extension = if !emoji_selector_lib_file_exists {
-        false
-    } else {
-        state
-            .read()
-            .ui
-            .extensions
-            .enabled_extension(emoji_selector_extension)
-    };
+        .enabled_extension(emoji_selector_extension);
 
     let picker_tooltip = if has_extension {
         cx.render(rsx!(()))
