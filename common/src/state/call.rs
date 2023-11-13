@@ -161,10 +161,7 @@ impl CallInfo {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        if !active_call.call.participants.contains(&id) {
-            bail!("participant not in call");
-        }
-        active_call.call.participants_joined.insert(id, state);
+        active_call.call.update_participant_state(id, state);
         Ok(())
     }
 
@@ -272,6 +269,12 @@ impl Call {
 
     fn unmute_self(&mut self) {
         self.self_muted = false;
+    }
+
+    fn update_participant_state(&mut self, id: DID, state: ParticipantState) {
+        if self.participants.contains(&id) {
+            self.participants_joined.insert(id, state);
+        }
     }
 
     fn silence_call(&mut self) {
