@@ -41,6 +41,7 @@ pub struct Props<'a> {
     onchange: EventHandler<'a, (String, bool)>,
     onreturn: EventHandler<'a, (String, bool, Code)>,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
+    onkeyup: Option<EventHandler<'a, Code>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -72,6 +73,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onchange,
         onreturn,
         oncursor_update,
+        onkeyup,
         value,
         is_disabled,
         show_char_counter,
@@ -171,6 +173,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             Code::NumpadEnter => *numpad_enter_pressed.write_silent() = false,
                             _ => {}
                         };
+                        if let Some(e) = onkeyup {
+                            e.call(evt.code());
+                        }
                     },
                     onmousedown: {
                         to_owned![eval, cursor_script];

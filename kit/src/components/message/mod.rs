@@ -787,7 +787,7 @@ mod tests2 {
     #[test]
     fn test_format_text1() {
         let input = ":) ";
-        let expected = "<span class=\"big-emoji\">🙂 </span>";
+        let expected = "<span class=\"big-emoji\">🙂</span>";
         assert_eq!(&format_text(input, true, true), expected);
         assert_eq!(&format_text(input, false, true), expected);
     }
