@@ -322,8 +322,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    let mut clipboard = Clipboard::new().unwrap();
-                                    clipboard.set_text(did_string.clone()).unwrap();
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            if let Err(e) = c.set_text(did_string.clone()) {
+                                                log::warn!("Unable to set text to clipboard: {e}");
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
                                     state
                                         .write()
                                         .mutate(Action::AddToastNotification(ToastNotification::init(

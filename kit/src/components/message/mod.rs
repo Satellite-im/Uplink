@@ -664,7 +664,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     .friend_identities()
                     .iter()
                     .any(|req| req.did_key().eq(&identity.did_key()));
-            return cx.render(rsx!(div {
+            return cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
                 class: "embed-identity",
                 IdentityHeader {
                     sender_did: identity.did_key(),
@@ -702,7 +702,16 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     onpress: move |_| {
                         ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
                     },
-                    text: get_local_text_with_args("friends.add-name", vec![("name", identity.username())]),
+                    icon: if disabled {
+                        Icon::Check
+                    } else {
+                        Icon::Plus
+                    },
+                    text: if disabled {
+                        get_local_text("friends.already-friends")
+                    } else {
+                        get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                    },
                     appearance: crate::elements::Appearance::Primary
                 }
             }));
@@ -778,7 +787,7 @@ mod tests2 {
     #[test]
     fn test_format_text1() {
         let input = ":) ";
-        let expected = "<span class=\"big-emoji\">🙂 </span>";
+        let expected = "<span class=\"big-emoji\">🙂</span>";
         assert_eq!(&format_text(input, true, true), expected);
         assert_eq!(&format_text(input, false, true), expected);
     }

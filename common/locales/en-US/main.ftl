@@ -42,6 +42,7 @@ uplink = Uplink
     .date-time-format = %d/%m/%Y %I:%M %p
     .open-devtools = Open Console
     .clear-unreads = Clear Unreads
+    .copy-text = Copy Text
     
 community = Community
     .invited = You're Invited!
@@ -136,7 +137,8 @@ friends = Friends
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
     .request-exist = Friend request is already pending!
-    .add-name = ➕  Add { $name }
+    .add-name = Add { $name }
+    .already-friends = Already Friends
     .nothing-to-see-here = Nothing to see here
     .share = Share DID
     .select-chat = Select Chat
