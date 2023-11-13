@@ -1,5 +1,5 @@
 use crate::icons::outline::Shape as Icon;
-use crate::STATIC_ARGS;
+use crate::{get_extensions_dir, STATIC_ARGS};
 use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
@@ -322,20 +322,17 @@ impl Extensions {
     }
 
     pub fn check_if_extension_lib_file_exists(&self, extension: &str) -> bool {
+        let extensions_dir = get_extensions_dir().unwrap_or_default();
         let extension_lib_file_path = if cfg!(target_os = "macos") {
             format!(
                 "{}/lib{}.dylib",
-                STATIC_ARGS.extensions_path.to_string_lossy(),
+                extensions_dir.to_string_lossy(),
                 extension,
             )
         } else if cfg!(target_os = "windows") {
-            format!(
-                "{}/{}.dll",
-                STATIC_ARGS.extensions_path.to_string_lossy(),
-                extension,
-            )
+            format!("{}/{}.dll", extensions_dir.to_string_lossy(), extension,)
         } else if cfg!(target_os = "linux") {
-            match fs::read_dir(STATIC_ARGS.extensions_path.clone()) {
+            match fs::read_dir(extensions_dir) {
                 Ok(entries) => {
                     let mut found = false;
                     for entry in entries.filter_map(|e| e.ok()) {
