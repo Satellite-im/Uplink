@@ -21,7 +21,7 @@ use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::components::files::upload_progress_bar;
+use crate::{components::files::upload_progress_bar, utils::download::get_download_path};
 
 use super::files_layout::controller::{StorageController, UploadFileController};
 
@@ -336,6 +336,8 @@ pub fn init_coroutine<'a>(
                         file_name,
                         local_path_to_save_file,
                     } => {
+                        let (local_path_to_save_file, on_finish) =
+                            get_download_path(local_path_to_save_file);
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -374,6 +376,7 @@ pub fn init_coroutine<'a>(
                                         2,
                                     ),
                                 ));
+                                on_finish.await
                             }
                             Err(error) => {
                                 state.write().mutate(Action::AddToastNotification(
