@@ -511,8 +511,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .collect();
 
     let user_did_2 = user_did.clone();
-    // todo: get attachment progress from a hook like state.
-    let pending_uploads = vec![];
+
+    let pending_uploads = grouped_message.file_progress.as_ref();
     let render_markdown = state.read().ui.should_transform_markdown_text();
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
