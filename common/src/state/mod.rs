@@ -337,7 +337,15 @@ impl State {
                 | WarpEvent::Message(MessageEvent::TypingIndicator { .. })
         ) {
             log::debug!("process_warp_event: {event}");
+        } else if matches!(
+            event,
+            WarpEvent::Message(MessageEvent::TypingIndicator { .. })
+        ) {
+            {
+                log::trace!("process_warp_event: {event}");
+            }
         }
+
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
