@@ -405,7 +405,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             let script = SHOW_CONTEXT
                                 .replace("UUID", upload_button_menu_uuid)
                                 .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string());
+                                .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string())
+                                .replace("$SELF", "false");
                             update_script.set(script);
                         },
                         tooltip: cx.render(rsx!(
