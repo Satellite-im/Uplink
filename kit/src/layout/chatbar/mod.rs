@@ -178,7 +178,6 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                         if is_valid {
-                            println!("is_first_time_onreturn_on_code_block: {}", *is_first_time_onreturn_on_code_block.read());
                             if v.trim().ends_with("```") && *is_first_time_onreturn_on_code_block.read() {
                                 *is_first_time_onreturn_on_code_block.write_silent() = false;
                             } else {
