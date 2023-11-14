@@ -334,6 +334,7 @@ impl State {
             event,
             WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
                 | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
+                | WarpEvent::Message(MessageEvent::TypingIndicator { .. })
         ) {
             log::debug!("process_warp_event: {event}");
         }
