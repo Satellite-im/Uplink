@@ -89,6 +89,7 @@ pub fn configure_logger(profile: Option<LogProfile>) {
     let max_log_level = if let Some(profile) = profile {
         match profile {
             LogProfile::Debug => {
+                logger::allow_other_crates(Level::Debug, Some(&["warp-blink-wrtc"]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Debug
             }
@@ -98,27 +99,28 @@ pub fn configure_logger(profile: Option<LogProfile>) {
                 LevelFilter::Debug
             }
             LogProfile::Trace => {
-                logger::allow_uplink_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
             LogProfile::TraceWarp => {
-                logger::allow_uplink_trace(true);
-                logger::allow_other_crates(Level::Trace, Some(&["warp"]));
+                logger::allow_other_crates(Level::Trace, Some(&["warp", "warp-blink-wrtc"]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
             LogProfile::TraceDioxus => {
-                logger::allow_uplink_trace(true);
                 logger::allow_other_crates(Level::Trace, Some(&["dioxus"]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
             LogProfile::TraceAll => {
-                logger::allow_uplink_trace(true);
                 logger::allow_other_crates(Level::Trace, None);
                 logger::set_save_to_file(true);
                 LevelFilter::Trace
+            }
+            LogProfile::TraceBlink => {
+                logger::allow_other_crates(Level::Trace, Some(&["warp-blink-wrtc"]));
+                logger::set_write_to_stdout(true);
+                LevelFilter::Debug
             }
             _ => LevelFilter::Debug,
         }

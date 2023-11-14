@@ -48,6 +48,8 @@ pub enum LogProfile {
     DebugAll,
     /// Logs trace level from all crates to a file
     TraceAll,
+    /// maximum logging for blink
+    TraceBlink,
 }
 
 #[derive(Debug, Parser)]
