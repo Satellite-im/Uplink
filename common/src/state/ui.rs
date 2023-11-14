@@ -1,11 +1,10 @@
 use crate::icons::outline::Shape as Icon;
-use crate::{get_extensions_dir, STATIC_ARGS};
+
 use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::Path;
+
 use std::rc::Rc;
 use std::{
     cmp::Ordering,
