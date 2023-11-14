@@ -140,6 +140,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let cursor_position = use_ref(cx, || None);
     let selected_emoji: &UseRef<Option<usize>> = use_ref(cx, || None);
     let is_emoji_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
+    let is_first_time_onreturn_on_code_block: &UseRef<bool> = use_ref(cx, || true);
     let eval = use_eval(cx);
 
     cx.render(rsx!(
@@ -166,7 +167,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         cx.props.onchange.call(v);
                         *is_emoji_suggestion_modal_closed.write_silent() = false;
                     },
-                    onreturn: move |(v, is_valid, _)| {
+                    onreturn: move |(v, is_valid, _): (String, bool, _)| {
                         if let Some(i) = selected_emoji.write_silent().take() {
                             if let Some(e) = cx.props.on_emoji_click.as_ref() {
                                 if let Some(p) = cursor_position.read().as_ref() {
@@ -177,7 +178,13 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                         if is_valid {
-                            cx.props.onreturn.call(v);
+                            println!("is_first_time_onreturn_on_code_block: {}", *is_first_time_onreturn_on_code_block.read());
+                            if v.trim().ends_with("```") && *is_first_time_onreturn_on_code_block.read() {
+                                *is_first_time_onreturn_on_code_block.write_silent() = false;
+                            } else {
+                                *is_first_time_onreturn_on_code_block.write_silent() = true;
+                                cx.props.onreturn.call(v);
+                            }
                         }
                     },
                     oncursor_update: move |(v,p)| {
