@@ -50,7 +50,7 @@ pub fn handle_warp_events(
                             .write_silent()
                             .new_message(conversation_id, message)
                         {
-                            log::debug!("adding message to conversation");
+                            log::trace!("adding message to conversation");
                             chat_data.write().active_chat.new_key();
                         }
                     }
@@ -119,11 +119,11 @@ pub fn init_chat_data<'a>(
 
             let r = match config {
                 FetchMessagesConfig::MostRecent { limit } => {
-                    log::debug!("fetching most recent messages for chat");
+                    log::trace!("fetching most recent messages for chat");
                     fetch_most_recent(conv_id, limit).await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
-                    log::debug!("fetching window for chat");
+                    log::trace!("fetching window for chat");
                     fetch_window(conv_id, behavior, center, half_size).await
                 }
                 _ => unreachable!(),
