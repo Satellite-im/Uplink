@@ -101,7 +101,8 @@ pub struct Props<'a> {
     pending: bool,
 
     // Progress for attachments which are being uploaded
-    attachments_pending_uploads: Option<Vec<Progression>>,
+    #[props(!optional)]
+    attachments_pending_uploads: Option<&'a Vec<Progression>>,
 
     pinned: bool,
 }
