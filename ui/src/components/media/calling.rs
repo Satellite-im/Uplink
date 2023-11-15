@@ -686,7 +686,9 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                     Ok(value) => {
                         amount.set(value.as_f64().unwrap_or(3_f64) as i64);
                     }
-                    Err(_) => {}
+                    Err(e) => {
+                        log::error!("eval receiver failed: {:?}", e);
+                    }
                 }
             }
         }
