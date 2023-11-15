@@ -4,7 +4,6 @@ use common::{
     icons::outline::Shape as Icon,
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
 };
-use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
 use emojis::{Group, UnicodeVersion};
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
@@ -215,16 +214,16 @@ fn render_selector<'a>(
                     class: "search-input disable-select",
                     textarea::Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
-                        key: "{controlled_input_id}",
+                        key: "emoji-search-input",
                         id: String::from("emoji-search-input"),
                         loading: false,
                         ignore_focus: false,
                         show_char_counter: false,                        
                         aria_label: "emoji-search-input".into(),
                         value: String::new(),
-                        onreturn: move |(_, _, _): (String, _, Code)| {},
-                        onchange: move |(_, _)| {},
-                        onkeyup: move |_| {},
+                        onreturn:  |_| {},
+                        onchange: |_| {},
+                        onkeyup: |_| {},
                         prevent_up_down_arrows: !emoji_suggestions.is_empty(),
                         oncursor_update: move |(v, p): (String, i64)| {
                             let mut sub: String = v.chars().take(p as usize).collect();
@@ -252,40 +251,14 @@ fn render_selector<'a>(
                     },
                 div {
                     id: "scrolling",
+                    padding_top: if !emoji_suggestions.is_empty() {"4px"} else {""},
                     if !emoji_suggestions.is_empty() {
                         rsx!(emoji_suggestions.iter().map(|(emoji, _)| {
                             rsx!(
                                 div {
                                     aria_label: emoji.as_str(),
                                     class: "emoji",
-                                    padding_top: "4px",
-                                    onclick: move |_| {
-                                        let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
-                                        match destination {
-                                            EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
-                                                let c =  match state.read().get_active_chat() {
-                                                    Some(c) => c,
-                                                    None => {
-                                                        log::warn!("can't send emoji to chatbar - no active chat");
-                                                        return;
-                                                    }
-                                                };
-                                                let draft: String = c.draft.unwrap_or_default();
-                                                let new_draft = format!("{draft}{emoji}");
-                                                state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
-                                                    cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
-                                                };
-                                            },
-                                            EmojiDestination::Message(conversation_uuid, message_uuid) => {
-                                                ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
-                                                state.write_silent().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
-                                                state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji.to_string()));
-                                            },
-                                        }
-                                        // Hide the selector when clicking an emoji
-                                        state.write().mutate(Action::SetEmojiPickerVisible(false));
-                                    },
+                                    onclick: move |_| select_emoji_to_send(cx.scope, &state, emoji.to_string(), &ch),
                                     emoji.as_str()
                                 }
                             )
@@ -308,33 +281,7 @@ fn render_selector<'a>(
                                             div {
                                                 aria_label: emoji.as_str(),
                                                 class: "emoji",
-                                                onclick: move |_| {
-                                                    let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
-                                                    match destination {
-                                                        EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
-                                                            let c =  match state.read().get_active_chat() {
-                                                                Some(c) => c,
-                                                                None => {
-                                                                    log::warn!("can't send emoji to chatbar - no active chat");
-                                                                    return;
-                                                                }
-                                                            };
-                                                            let draft: String = c.draft.unwrap_or_default();
-                                                            let new_draft = format!("{draft}{emoji}");
-                                                            state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                            if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
-                                                                cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
-                                                            };
-                                                        },
-                                                        EmojiDestination::Message(conversation_uuid, message_uuid) => {
-                                                            ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
-                                                            state.write_silent().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
-                                                            state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji.to_string()));
-                                                        },
-                                                    }
-                                                    // Hide the selector when clicking an emoji
-                                                    state.write().mutate(Action::SetEmojiPickerVisible(false));
-                                                },
+                                                onclick: move |_| select_emoji_to_send(cx.scope, &state, emoji.to_string(), &ch),
                                                 emoji.as_str()
                                             }
                                         )
@@ -432,4 +379,32 @@ impl Extension for EmojiSelector {
             )
         ))
     }
+}
+
+fn select_emoji_to_send(cx: &ScopeState, state: &UseSharedState<State>, emoji: String, ch: &Coroutine<Command>) {
+    let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
+    match destination {
+        EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
+            let c =  match state.read().get_active_chat() {
+                Some(c) => c,
+                None => {
+                    log::warn!("can't send emoji to chatbar - no active chat");
+                    return;
+                }
+            };
+            let draft: String = c.draft.unwrap_or_default();
+            let new_draft = format!("{draft}{emoji}");
+            state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
+            if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
+                cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+            };
+        },
+        EmojiDestination::Message(conversation_uuid, message_uuid) => {
+            ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
+            state.write_silent().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
+            state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji.to_string()));
+        },
+    }
+    // Hide the selector when clicking an emoji
+    state.write().mutate(Action::SetEmojiPickerVisible(false));
 }
