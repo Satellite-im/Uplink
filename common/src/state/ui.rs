@@ -1,8 +1,10 @@
 use crate::icons::outline::Shape as Icon;
+
 use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
+
 use std::rc::Rc;
 use std::{
     cmp::Ordering,
