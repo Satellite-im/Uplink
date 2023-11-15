@@ -321,17 +321,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     }
     let call = &active_call.call;
 
-    let mut participants = state.read().get_identities(&call.participants_joined);
-    let mut p = participants.clone();
-    let mut p2 = participants.clone();
-    let mut p4 = participants.clone();
-    let mut p5 = participants.clone();
-
-    participants.append(&mut p);
-    participants.append(&mut p2);
-    participants.append(&mut p4);
-    participants.append(&mut p5);
-
+    let participants = state.read().get_identities(&call.participants_joined);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
 
