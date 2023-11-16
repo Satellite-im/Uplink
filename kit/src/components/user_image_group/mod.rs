@@ -73,22 +73,23 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             div {
                                 class: "plus-some",
                                 aria_label: "plus-some",
-                                (additional_participants > 0).then(|| rsx!(
-                                    if cx.props.typing.unwrap_or_default() {
-                                        rsx!(
-                                            div { class: "dot dot-1" },
-                                            div { class: "dot dot-2" },
-                                            div { class: "dot dot-3" }
-                                        )
-                                    } else {
-                                        rsx! (
-                                            p {
-                                                "+{additional_participants}"
-                                            }
-                                        )
-                                    }
+                                (additional_participants > 0 && !cx.props.typing.unwrap_or_default()).then(|| rsx!(
+                                    rsx! (
+                                        p {
+                                            "+{additional_participants}"
+                                        }
+                                    )
                                 ))
-                            }
+                            },
+                            cx.props.typing.unwrap_or_default().then(|| rsx!(
+                                div {
+                                    class: "profile-typing",
+                                    aria_label: "profile-typing",
+                                    div { class: "dot dot-1" },
+                                    div { class: "dot dot-2" },
+                                    div { class: "dot dot-3" }
+                                }
+                            ))
                         )
                     },
                     if !is_using_tooltip {

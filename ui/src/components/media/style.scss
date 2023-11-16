@@ -233,6 +233,10 @@
             bottom: var(--padding);
         }
     }
+    .self-identity {
+        position: absolute; 
+        bottom: var(--padding-less);
+    }
     .controls {
         display: inline-flex;
         gap: var(--gap);
