@@ -77,7 +77,6 @@ messages = Messages
     .say-something-placeholder = Say Something...
     .user-sent-message = { $user } sent you a message.
     .unknown-sent-message = someone sent you a message.
-    .not-friends = You are not friends anymore
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create Group Chat
     .group-name = Group Name
@@ -157,7 +156,6 @@ files = Files
     .no-thumbnail = No Thumbnail
     .one-file-to-upload = File to Upload 1!
     .files-to-upload = Files to Upload { $num }!
-        .placeholder = Files to Upload!
 
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
