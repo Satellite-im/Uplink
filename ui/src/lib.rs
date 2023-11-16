@@ -106,6 +106,11 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
+const UNREAD_ASPECT_RATIO: &str = r#"for (element of document.getElementsByClassName("nav-unread-indicator")) {
+    console.log("EL ", element, " h ", element.getBoundingClientRect().width)
+    element.style.height = element.getBoundingClientRect().width + "px"
+}"#;
+
 pub fn main_lib() {
     // 1. fix random system quirks
     bootstrap::platform_quirks();
@@ -1114,6 +1119,9 @@ fn AppNav<'a>(
                 span {
                     class: "unread-text",
                     unreads.to_string(),
+                },
+                script {
+                    UNREAD_ASPECT_RATIO
                 }
             }))
         }),
