@@ -74,7 +74,6 @@ messages = Nachrichten
     .say-something-placeholder = Sag irgendwas...
     .user-sent-message = { $user } hat dir eine Nachricht gesendet.
     .unknown-sent-message = irgendjemand hat dir eine Nachricht gesendet.
-    .not-friends = Ihr seid keine Freunde mehr
     .msg-banner = Nachrichten sind sicher end-to-end verschlüsselt und werden über peer-to-peer Netzwerk gesendet.
     .create-group-chat = Erstelle ein Gruppen-Chat
     .group-name = Gruppenname
