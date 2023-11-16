@@ -79,6 +79,7 @@ pub fn Explore(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 pub fn Installed(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+
     let metas: Vec<_> = state
         .read()
         .ui
@@ -115,7 +116,7 @@ pub fn ExtensionsBrowser(cx: Scope) -> Element {
     let routes = vec![
         Route {
             name: get_local_text("settings-extensions.installed"),
-            icon: Icon::CheckCircle,
+            icon: Icon::Check,
             to: "installed",
             ..Default::default()
         },

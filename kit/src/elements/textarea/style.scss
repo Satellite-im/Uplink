@@ -4,7 +4,9 @@ textarea {
 	width: 100%;
 	height: "auto";
 	max-height: 250px; //Maybe make max variable?
+	min-height: 22px;
 	margin: 9px 0;
+	word-wrap: anywhere;
 	&.disabled {
 		cursor: not-allowed;
 		filter: brightness(85%);

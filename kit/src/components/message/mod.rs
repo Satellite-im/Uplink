@@ -101,7 +101,8 @@ pub struct Props<'a> {
     pending: bool,
 
     // Progress for attachments which are being uploaded
-    attachments_pending_uploads: Option<Vec<Progression>>,
+    #[props(!optional)]
+    attachments_pending_uploads: Option<&'a Vec<Progression>>,
 
     pinned: bool,
 }
@@ -447,12 +448,21 @@ fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
 
     if emojis {
-        let r = replace_emojis(text);
-        if is_only_emojis(&r) {
+        let r = replace_emojis(txt);
+        // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
+        // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
+        if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
+           && r != "#"
+           && r != "*"
+           && r != "##"
+           && r != "**"
+           && r != "-"
+           && is_only_emojis(&r)
+        {
             return format!("<span class=\"big-emoji\">{r}</span>");
+        } else if is_only_emojis(txt) || r == "-" {
+            return format!("<p>{txt}</p>");
         }
-    } else if is_only_emojis(txt) {
-        return format!("<span class=\"big-emoji\">{txt}</span>");
     }
 
     let mut options = Options::empty();
@@ -655,7 +665,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     .friend_identities()
                     .iter()
                     .any(|req| req.did_key().eq(&identity.did_key()));
-            return cx.render(rsx!(div {
+            return cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
                 class: "embed-identity",
                 IdentityHeader {
                     sender_did: identity.did_key(),
@@ -693,7 +703,16 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     onpress: move |_| {
                         ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
                     },
-                    text: get_local_text_with_args("friends.add-name", vec![("name", identity.username())]),
+                    icon: if disabled {
+                        Icon::Check
+                    } else {
+                        Icon::Plus
+                    },
+                    text: if disabled {
+                        get_local_text("friends.already-friends")
+                    } else {
+                        get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                    },
                     appearance: crate::elements::Appearance::Primary
                 }
             }));
@@ -769,7 +788,7 @@ mod tests2 {
     #[test]
     fn test_format_text1() {
         let input = ":) ";
-        let expected = "<span class=\"big-emoji\">🙂 </span>";
+        let expected = "<span class=\"big-emoji\">🙂</span>";
         assert_eq!(&format_text(input, true, true), expected);
         assert_eq!(&format_text(input, false, true), expected);
     }

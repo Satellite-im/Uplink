@@ -70,6 +70,8 @@ pub fn CallControl(cx: Scope<Props>) -> Element {
             unmute_text: get_local_text("remote-controls.unmute"),
             listen_text: get_local_text("remote-controls.listen"),
             silence_text: get_local_text("remote-controls.silence"),
+            start_recording_text: get_local_text("remote-controls.start-recording"),
+            stop_recording_text: get_local_text("remote-controls.stop-recording"),
         })),
         None => match state.read().ui.call_info.pending_calls().first() {
             Some(call) => cx.render(rsx!(PendingCallDialog {
@@ -89,6 +91,8 @@ pub struct ActiveCallProps {
     unmute_text: String,
     listen_text: String,
     silence_text: String,
+    start_recording_text: String,
+    stop_recording_text: String,
 }
 
 #[allow(non_snake_case)]
@@ -315,7 +319,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     }
     let call = &active_call.call;
 
-    let participants = state.read().get_identities(&call.participants);
+    let participants = state.read().get_identities(&call.participants_joined);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
 
@@ -434,20 +438,32 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     rsx!(Button {
                         icon: Icon::StopCircle,
                         appearance: Appearance::Danger,
-                        onpress: move |_| {
-                            ch.send(CallDialogCmd::StopRecording);
-                        },
-                    })
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: cx.props.stop_recording_text.clone()
+                        }
+                      )),
+                   onpress: move |_| {
+                   ch.send(CallDialogCmd::StopRecording);
+                    },
+                  })
                 } else {
                     rsx!(Button {
-                        icon: Icon::RadioSelected,
-                        appearance: Appearance::Secondary,
-                        onpress: move |_| {
-                            ch.send(CallDialogCmd::RecordCall);
-                        },
-                    })
+            icon: Icon::RadioSelected,
+            appearance: Appearance::Secondary,
+            tooltip: cx.render(rsx!(
+                Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: cx.props.start_recording_text.clone()
                 }
-            }),
+            )),
+                        onpress: move |_| {
+                        ch.send(CallDialogCmd::RecordCall);
+               },
+            })
+         }
+      }),
             Button {
                 icon: Icon::PhoneXMark,
                 aria_label: "call-hangup-button".into(),
@@ -456,7 +472,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     ch.send(CallDialogCmd::Hangup(call.id));
                 },
             },
-            //Currently not impl
+            //Currently not implemented
             /*Button {
                 icon: Icon::Cog6Tooth,
                 appearance: Appearance::Secondary,
@@ -548,7 +564,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
-    let mut participants = state.read().get_identities(&call.participants);
+    let mut participants = state.read().get_identities(&call.participants_joined);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
         Some(c) => match c.conversation_name {

@@ -5,7 +5,7 @@
 	min-height: var(--height-input);
 	display: inline-flex;
 	align-items: center;
-	padding: var(--padding-less) var(--padding);
+	padding: var(--padding-less);
 	width: fit-content;
 	align-self: flex-end;
 	overflow: hidden;
@@ -57,7 +57,7 @@
 .message.remote {
 	align-self: flex-start;
 	align-items: flex-start;
-	background: var(--secondary-dark);
+	background: var(--secondary-darker);
 	border-radius: var(--border-radius-more);
 	border-bottom-left-radius: var(--border-radius);
 }
@@ -120,33 +120,12 @@
 .embed-identity {
 	display: flex;
 	flex-direction: column;
-	.profile-container {
-		max-width: 300px;
-	}
-	.empty-profile {
-		margin-left: 0;
-	}
-	.unknown-user {
-		.text {
-			font-size: var(--text-size-more);
-		  }
-	}
-	.unknown-user-did {
-		.text {
-			font-size: var(--text-size-less);
-		  }
-	}
+
 	.btn-wrap {
-		padding-top: var(--padding-less);
+		padding-top: var(--gap);
+		width: 100%;
 		.btn {
-			max-width: calc(var(--height-input) * 2 + 300px);
 			width: 100%;
-			.btn-text {
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				overflow: hidden;
-				color: var(--text-color-dark);
-			}
 		}
 	}
 }

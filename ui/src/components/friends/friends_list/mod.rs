@@ -6,23 +6,33 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
+        message::format_text,
+        user::User,
         user_image::UserImage,
+        user_image_group::UserImageGroup,
     },
-    elements::label::Label,
+    elements::{button::Button, checkbox::Checkbox, label::Label, Appearance},
+    layout::modal::Modal,
 };
 
-use common::language::get_local_text;
-use common::{get_images_dir, icons::outline::Shape as Icon};
+use common::{get_images_dir, icons::outline::Shape as Icon, language::get_local_text_with_args};
+use common::{language::get_local_text, state::Identity};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
+use warp::{
+    crypto::DID,
+    logging::tracing::log,
+    multipass::identity::Relationship,
+    raygun::{self, ConversationType},
+};
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
+    utils::build_participants,
     UplinkRoute,
 };
 
@@ -47,6 +57,8 @@ pub fn Friends(cx: Scope) -> Element {
     );
     let block_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+
+    let share_did = use_state(cx, || None);
 
     let friends = State::get_friends_by_first_letter(friends_list);
     let router = use_navigator(cx);
@@ -183,6 +195,11 @@ pub fn Friends(cx: Scope) -> Element {
                     },
                 }
             )),
+            share_did.is_some().then(||{
+                rsx!(ShareFriendsModal{
+                    did: share_did.clone()
+                })
+            })
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
                 rsx!(
@@ -205,6 +222,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let block_friend = friend.clone();
                             let block_friend_2 = friend.clone();
                             let context_friend = friend.clone();
+                            let share_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
                             let platform = friend.platform().into();
@@ -271,6 +289,15 @@ pub fn Friends(cx: Scope) -> Element {
                                                 }
                                             }
                                         },
+                                        ContextItem {
+                                            danger: true,
+                                            icon: Icon::Link,
+                                            text: get_local_text("friends.share"),
+                                            aria_label: "friends-share".into(),
+                                            onpress: move |_| {
+                                                share_did.set(Some(share_friend.did_key()));
+                                            }
+                                        },
                                     )),
                                     Friend {
                                         username: friend.username(),
@@ -335,4 +362,153 @@ pub fn FriendsSkeletal(cx: Scope) -> Element {
             SkeletalFriend {},
         }
     ))
+}
+
+#[derive(PartialEq, Props)]
+pub struct FriendProps {
+    did: UseState<Option<DID>>,
+    excluded_chat: Option<Uuid>,
+}
+
+pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let chats_selected = use_ref(cx, Vec::new);
+    let ch = use_coroutine(
+        cx,
+        |mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((id, uuid)) = rx.next().await {
+                let msg = vec![id.to_string()];
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let cmd = RayGunCmd::SendMessageForSeveralChats {
+                    convs_id: uuid,
+                    msg,
+                    attachments: Vec::new(),
+                    ui_msg_id: None,
+                    rsp: tx,
+                };
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    log::error!("failed to send message: {}", e);
+                }
+            }
+        },
+    );
+    cx.render(rsx!(Modal {
+        open: cx.props.did.get().is_some(),
+        onclose: move |_| cx.props.did.set(None),
+        show_close_button: false,
+        transparent: false,
+        close_on_click_inside_modal: false,
+        dont_pad: true,
+        div {
+            class: "modal-share-friends",
+            div {
+                class: "modal-share-friends-header",
+                padding: "12px",
+                Label {
+                    text: get_local_text("friends.select-chat"),
+                },
+                div {
+                    class: "send-chat-button",
+                    Button {
+                        text: get_local_text("friends.share-to-chat"),
+                        icon: Icon::ArrowTopRightOnSquare,
+                        aria_label: "share_to_chat".into(),
+                        appearance: Appearance::Secondary,
+                        disabled: chats_selected.read().is_empty(),
+                        onpress: move |_| {
+                            ch.send((cx.props.did.as_ref().unwrap().clone(), chats_selected.read().clone()));
+                            cx.props.did.set(None);
+                        },
+                    },
+                }
+            }
+            state.read().chats_sidebar().iter().filter(|c|cx.props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
+                let id = chat.id;
+                let participants = state.read().chat_participants(&chat);
+                let other_participants =  state.read().remove_self(&participants);
+                let user: Identity = other_participants.first().cloned().unwrap_or_default();
+                let platform = user.platform().into();
+                // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
+                let participants_name = match chat.conversation_name {
+                    Some(name) => name,
+                    None => State::join_usernames(&other_participants)
+                };
+                let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
+                let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                    Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis()),
+                    _ => match &unwrapped_message.attachments()[..] {
+                        [] => get_local_text("sidebar.chat-new"),
+                        [ file ] => file.name(),
+                        _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
+                            Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name)]),
+                            None => {
+                                log::error!("error calculating subtext for sidebar chat");
+                                // Still return default message
+                                get_local_text("sidebar.chat-new")
+                            }
+                        }
+                    }
+                };
+                let selected = chats_selected.read().contains(&id);
+                rsx!(div {
+                    class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
+                    height: "80px",
+                    padding: "16px",
+                    display: "inline-flex",
+                    Checkbox {
+                        disabled: false,
+                        width: "1em".into(),
+                        height: "1em".into(),
+                        is_checked: selected,
+                        on_click: move |_| {
+                            chats_selected.with_mut(|v|{
+                                if !selected {
+                                    v.push(id);
+                                } else {
+                                    v.retain(|c|!c.eq(&id));
+                                }
+                            });
+                        }
+                    }
+                    User {
+                        username: participants_name,
+                        subtext: subtext_val,
+                        timestamp: raygun::Message::default().date(),
+                        active: false,
+                        user_image: cx.render(rsx!(
+                            match chat.conversation_type {
+                                ConversationType::Direct => rsx!(UserImage {
+                                    platform: platform,
+                                    status:  user.identity_status().into(),
+                                    image: user.profile_picture(),
+                                    typing: false,
+                                }),
+                                _ => rsx!(UserImageGroup {
+                                    participants: build_participants(&participants),
+                                    typing: false,
+                                })
+                            }
+                        )),
+                        onpress: move |_| {
+                            chats_selected.with_mut(|v|{
+                                if !selected {
+                                    v.push(id);
+                                } else {
+                                    v.retain(|c|!c.eq(&id));
+                                }
+                            });
+                        }
+                    }
+                }
+            )
+            })
+        }
+    }))
 }
