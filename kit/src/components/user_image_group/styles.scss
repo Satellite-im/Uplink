@@ -84,8 +84,8 @@
 		max-width: 100%;
 	}
     .dot {
-		height: var(--text-size-less);
-		width: var(--text-size-less);
+		height: 8px;
+		width: 8px;
 		border-radius: 50%;
 		background: var(--text-color-bright);
 	}
@@ -98,4 +98,7 @@
 	.dot-3 {
 		animation: 1s pulse 0.66s infinite;
 	}
+    .profile-typing {
+        z-index: 4;
+    }
 }
