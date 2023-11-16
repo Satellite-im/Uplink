@@ -57,7 +57,6 @@
       .modal { 
         position: absolute;
         top: calc(var(--height-topbar) + var(--gap-less));
-        right: var(--gap-less);
         display: inline-flex;
         flex-direction: column;
 
@@ -65,5 +64,9 @@
           margin-bottom: var(--gap);
         }
       }
+    }
+
+    .horizontal-position {
+      right: var(--gap-less);
     }
 }
