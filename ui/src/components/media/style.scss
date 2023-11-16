@@ -265,7 +265,7 @@
         .additional-participant-name {
             margin-top: auto;
             margin-bottom: auto;
-            padding-left: var((--padding-less));
+            padding-left: var(--padding-less);
         }
         &.speaking {
             .image {
