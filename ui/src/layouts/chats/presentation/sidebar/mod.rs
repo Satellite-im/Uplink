@@ -277,7 +277,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     let is_active = state.read().get_active_chat().map(|c| c.id) == Some(chat.id);
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
-                    let markdown = state.read().ui.should_transform_markdown_text();
+                    let markdown = false;
                     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
 
                     // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
