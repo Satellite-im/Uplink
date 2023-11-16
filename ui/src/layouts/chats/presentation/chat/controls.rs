@@ -185,6 +185,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             Modal {
                 open: true,
                 transparent: true,
+                change_horizontal_position: true,
                 with_title: get_local_text("messages.pin-view"),
                 onclose: move |_| {
                     show_pinned.set(false);
