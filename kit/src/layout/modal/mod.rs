@@ -14,6 +14,7 @@ pub struct Props<'a> {
     dont_pad: Option<bool>,
     show_close_button: Option<bool>,
     close_on_click_inside_modal: Option<bool>,
+    change_horizontal_position: Option<bool>,
     children: Element<'a>,
     onclose: EventHandler<'a, ()>,
     class: Option<&'a str>,
@@ -32,6 +33,12 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ""
     };
 
+    let horizontal_position_class = if cx.props.change_horizontal_position.unwrap_or_default() {
+        "horizontal-position"
+    } else {
+        ""
+    };
+
     let show_close_button = cx.props.show_close_button.unwrap_or(true);
 
     let title = cx.props.with_title.clone().unwrap_or_default();
@@ -46,7 +53,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.onclose.call(());
             },
             div {
-                class: "modal {cx.props.class.unwrap_or_default()}",
+                class: "modal {cx.props.class.unwrap_or_default()} {horizontal_position_class}",
                 onclick: move |e| {
                     if !close_on_click_inside_modal {
                         e.stop_propagation();
