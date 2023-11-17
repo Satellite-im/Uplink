@@ -64,7 +64,6 @@ messages = Mensagens
     .say-something-placeholder = Dizer algo...
     .user-sent-message = { $user } enviou-lhe uma mensagem.
     .unknown-sent-message = alguém enviou-lhe uma mensagem.
-    .not-friends = Já não são amigos
     .msg-banner = As mensagens são protegidas por encriptação de ponta a ponta e enviadas através de uma rede ponto a ponto.
     .create-group-chat = Criar um chat de grupo
     .group-name = Nome do grupo
