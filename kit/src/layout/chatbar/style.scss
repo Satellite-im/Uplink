@@ -65,3 +65,57 @@
 		padding-top: var(--height-input-less);
 	}
 }
+
+.chatbar-suggestions {
+	position: absolute; 
+	bottom: 100%;
+	color: var(--text-color); 
+	background-color: var(--secondary); 
+	padding: var(--gap-less) var(--gap); 
+	border-radius: var(--border-radius);
+	max-height: 200px; 
+	width: calc(100% - var(--padding-more)); 
+	overflow: scroll;
+	&::-webkit-scrollbar-track {
+	  background: transparent;
+	}
+  
+	&::-webkit-scrollbar-thumb {
+	  background: var(--secondary-dark);
+	}
+  
+	&::-webkit-scrollbar-thumb:hover {
+	  background: var(--secondary-light);
+	}
+  
+	.chatbar-suggestion {
+	  display: flex;
+	  align-items: center;
+	  border-radius: var(--border-radius);
+	  padding: var(--gap-less) var(--gap);
+	  padding: var(--gap-less) var(--gap);
+	  width: 100%;
+	  
+	  &.chatbar-selected {
+		background-color: var(--secondary-dark); 
+	  }
+	  &:hover {
+		cursor: pointer;
+		background-color: var(--secondary-dark); 
+	  }
+	}
+
+	.user-suggestion-profile {
+		display: flex; 
+		padding-right: var(--padding-less);
+		div {
+			max-width: calc(0.8 * var(--height-input));
+			max-height: calc(0.8 * var(--height-input));
+			width: calc(0.8 * var(--height-input));
+			height: calc(0.8 * var(--height-input));
+		}
+		.indicator {
+			left: calc(100% - 1.3rem);
+		}
+	}
+  }
