@@ -107,7 +107,6 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
 });
 
 const UNREAD_ASPECT_RATIO: &str = r#"for (element of document.getElementsByClassName("nav-unread-indicator")) {
-    console.log("EL ", element, " h ", element.getBoundingClientRect().width)
     element.style.height = element.getBoundingClientRect().width + "px"
 }"#;
 
