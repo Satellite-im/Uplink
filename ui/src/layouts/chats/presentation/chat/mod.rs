@@ -169,11 +169,13 @@ pub fn Compose(cx: Scope) -> Element {
             is_owner: is_owner,
             is_edit_group: is_edit_group,
         },
-        super::quick_profile::QuickProfileContext{
-            id: quick_profile_uuid,
-            update_script: update_script,
-            did_key: identity_profile,
-        }
+        quickprofile_data.read().is_some().then(|| rsx!(
+            super::quick_profile::QuickProfileContext{
+                id: quick_profile_uuid,
+                update_script: update_script,
+                did_key: identity_profile,
+            }
+        )),
     }
     ))
 }

@@ -320,184 +320,186 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         }
     });
 
-    cx.render(rsx!(div{
-        class: "quick-profile-context",
-        ContextMenu {
-        id: format!("{id}"),
-        items: cx.render(rsx!(
-            IdentityHeader {
-                sender_did: identity.did_key()
-            },
-            div {
-                class: "profile-container",
-                div {
-                    id: "profile-name",
-                    aria_label: "profile-name",
-                    p {
-                        class: "text",
-                        aria_label: "profile-name-value",
-                        format!("{}", identity.username())
-                    }
-                }
-                identity.status_message().and_then(|s|{
-                    cx.render(rsx!(
+    cx.render(rsx!(
+        div {
+            class: "quick-profile-context",
+            ContextMenu {
+                id: format!("{id}"),
+                items: cx.render(rsx!(
+                    IdentityHeader {
+                        sender_did: identity.did_key()
+                    },
+                    div {
+                        class: "profile-container",
                         div {
-                            id: "profile-status",
-                            aria_label: "profile-status",
+                            id: "profile-name",
+                            aria_label: "profile-name",
                             p {
                                 class: "text",
-                                aria_label: "profile-status-value",
-                                s
+                                aria_label: "profile-name-value",
+                                format!("{}", identity.username())
                             }
                         }
-                    ))
-                }),
-            }
-            div {
-                class: "profile-context-items",
-                if is_self {
-                    rsx!(hr{},
-                        ContextItem {
-                        icon: Icon::UserCircle,
-                        aria_label: "quick-profile-self-edit".into(),
-                        text: get_local_text("quickprofile.self-edit"),
-                        onpress: move |_| {
-                            settings_page.write().set(Page::Profile);
-                            router.replace(UplinkRoute::SettingsLayout {});
-                        }
-                    })
-                } else {
-                    rsx!(
-                    if state.read().configuration.developer.experimental_features && in_vc {
-                        rsx!(
-                            div {
-                                class: "range-container",
-                                Label {
-                                    text: get_local_text("quickprofile.volume")
-                                },
-                                Range {
-                                    aria_label: "range-quick-profile-speaker".into(),
-                                    initial_value: volume,
-                                    min: USER_VOL_MIN,
-                                    max: USER_VOL_MAX,
-                                    step: 0.1,
-                                    no_num: true,
-                                    icon_left: Icon::Speaker,
-                                    icon_right: Icon::SpeakerWave,
-                                    onchange: move |val| {
-                                        ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
+                        identity.status_message().and_then(|s|{
+                            cx.render(rsx!(
+                                div {
+                                    id: "profile-status",
+                                    aria_label: "profile-status",
+                                    p {
+                                        class: "text",
+                                        aria_label: "profile-status-value",
+                                        s
                                     }
                                 }
-                            },
-                            hr{}
-                        )
+                            ))
+                        }),
                     }
-                        /*ContextItem {
-                        icon: Icon::UserCircle,
-                        text: get_local_text("quickprofile.profile"),
-                        // TODO: Show a profile popup
-                    },*/
-                    if is_friend {
-                        rsx!(
-                            if !chat_is_current {
+                    div {
+                        class: "profile-context-items",
+                        if is_self {
+                            rsx!(hr{},
+                                ContextItem {
+                                icon: Icon::UserCircle,
+                                aria_label: "quick-profile-self-edit".into(),
+                                text: get_local_text("quickprofile.self-edit"),
+                                onpress: move |_| {
+                                    settings_page.write().set(Page::Profile);
+                                    router.replace(UplinkRoute::SettingsLayout {});
+                                }
+                            })
+                        } else {
+                            rsx!(
+                            if state.read().configuration.developer.experimental_features && in_vc {
+                                rsx!(
+                                    div {
+                                        class: "range-container",
+                                        Label {
+                                            text: get_local_text("quickprofile.volume")
+                                        },
+                                        Range {
+                                            aria_label: "range-quick-profile-speaker".into(),
+                                            initial_value: volume,
+                                            min: USER_VOL_MIN,
+                                            max: USER_VOL_MAX,
+                                            step: 0.1,
+                                            no_num: true,
+                                            icon_left: Icon::Speaker,
+                                            icon_right: Icon::SpeakerWave,
+                                            onchange: move |val| {
+                                                ch.send(QuickProfileCmd::AdjustVolume(did_cloned.clone(), val));
+                                            }
+                                        }
+                                    },
+                                    hr{}
+                                )
+                            }
+                                /*ContextItem {
+                                icon: Icon::UserCircle,
+                                text: get_local_text("quickprofile.profile"),
+                                // TODO: Show a profile popup
+                            },*/
+                            if is_friend {
+                                rsx!(
+                                    if !chat_is_current {
+                                        rsx!(
+                                            ContextItem {
+                                            icon: Icon::ChatBubbleBottomCenterText,
+                                            aria_label: "quick-profile-message".into(),
+                                            text: get_local_text("quickprofile.message"),
+                                            onpress: move |_| {
+                                                ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
+                                            }
+                                        })
+                                    }
+                                    /*ContextItem {
+                                        icon: Icon::PhoneArrowUpRight,
+                                        text: get_local_text("quickprofile.call"),
+                                        // TODO: Impl missing
+                                    }*/
+                                )
+                            } else {
+                                let outgoing = state.read().outgoing_fr_identities();
+                                let disabled = outgoing.contains(&identity);
                                 rsx!(
                                     ContextItem {
-                                    icon: Icon::ChatBubbleBottomCenterText,
-                                    aria_label: "quick-profile-message".into(),
-                                    text: get_local_text("quickprofile.message"),
+                                        icon: Icon::Plus,
+                                        aria_label: "quick-profile-friend-request".into(),
+                                        text: if disabled {get_local_text("quickprofile.pending-friend-request")} else {get_local_text("quickprofile.friend-request")},
+                                        disabled: disabled,
+                                        onpress: move |_| {
+                                            ch.send(QuickProfileCmd::SendFriendRequest(identity.did_key(), outgoing.clone()));
+                                        }
+                                    }
+                                )
+                            }
+                            if is_friend {
+                                rsx!(ContextItem {
+                                    icon: Icon::UserMinus,
+                                    text: get_local_text("quickprofile.friend-remove"),
+                                    aria_label: "quick-profile-friend-remove".into(),
                                     onpress: move |_| {
-                                        ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
+                                        ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
+                                        ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
                                     }
                                 })
                             }
-                            /*ContextItem {
-                                icon: Icon::PhoneArrowUpRight,
-                                text: get_local_text("quickprofile.call"),
-                                // TODO: Impl missing
-                            }*/
-                        )
-                    } else {
-                        let outgoing = state.read().outgoing_fr_identities();
-                        let disabled = outgoing.contains(&identity);
-                        rsx!(
                             ContextItem {
-                                icon: Icon::Plus,
-                                aria_label: "quick-profile-friend-request".into(),
-                                text: if disabled {get_local_text("quickprofile.pending-friend-request")} else {get_local_text("quickprofile.friend-request")},
-                                disabled: disabled,
+                                icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
+                                aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
+                                text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
                                 onpress: move |_| {
-                                    ch.send(QuickProfileCmd::SendFriendRequest(identity.did_key(), outgoing.clone()));
+                                    if blocked {
+                                        ch.send(QuickProfileCmd::UnBlockFriend(block_identity.did_key()));
+                                    } else {
+                                        ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
+                                        ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
+                                    }
                                 }
-                            }
-                        )
-                    }
-                    if is_friend {
-                        rsx!(ContextItem {
-                            icon: Icon::UserMinus,
-                            text: get_local_text("quickprofile.friend-remove"),
-                            aria_label: "quick-profile-friend-remove".into(),
-                            onpress: move |_| {
-                                ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
-                                ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
-                            }
-                        })
-                    }
-                    ContextItem {
-                        icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
-                        aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
-                        text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
-                        onpress: move |_| {
-                            if blocked {
-                                ch.send(QuickProfileCmd::UnBlockFriend(block_identity.did_key()));
-                            } else {
-                                ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
-                                ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
-                            }
+                            },
+                            if is_friend {
+                                rsx!(ContextItem {
+                                    danger: true,
+                                    icon: Icon::Link,
+                                    text: get_local_text("friends.share"),
+                                    aria_label: "friends-share".into(),
+                                    onpress: move |_| {
+                                        share_did.set(Some(did_cloned_2.clone()));
+                                    }
+                                })
+                            },
+                            if is_friend && !chat_is_current {
+                                rsx!(
+                                    hr{},
+                                    Input {
+                                        placeholder: get_local_text("quickprofile.chat-placeholder"),
+                                        disable_onblur: true,
+                                        onreturn: move |(val, _,_): (String,bool,Code)|{
+                                            let ui_id = chat_send.as_ref().and_then(|chat|state
+                                                .write_silent()
+                                                .increment_outgoing_messages_for(vec![val.clone()], &[], chat.id));
+                                            ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                                            let script = format!(r#"document.getElementById("{id}-context-menu").classList.add("hidden")"#);
+                                            let _ = eval(&script);
+                                        }
+                                    }
+                                )
+                            })
                         }
-                    },
-                    if is_friend {
-                        rsx!(ContextItem {
-                            danger: true,
-                            icon: Icon::Link,
-                            text: get_local_text("friends.share"),
-                            aria_label: "friends-share".into(),
-                            onpress: move |_| {
-                                share_did.set(Some(did_cloned_2.clone()));
-                            }
+                    }
+                )),
+                share_did.as_ref().map(|_|{
+                    match state.read().get_active_chat() {
+                        Some(chat) => rsx!(ShareFriendsModal{
+                            did: share_did.clone(),
+                            excluded_chat: chat.id
+                        }),
+                        None => rsx!(ShareFriendsModal{
+                            did: share_did.clone(),
                         })
-                    },
-                    if is_friend && !chat_is_current {
-                        rsx!(
-                            hr{},
-                            Input {
-                                placeholder: get_local_text("quickprofile.chat-placeholder"),
-                                disable_onblur: true,
-                                onreturn: move |(val, _,_): (String,bool,Code)|{
-                                    let ui_id = chat_send.as_ref().and_then(|chat|state
-                                        .write_silent()
-                                        .increment_outgoing_messages_for(vec![val.clone()], &[], chat.id));
-                                    ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
-                                    let script = format!(r#"document.getElementById("{id}-context-menu").classList.add("hidden")"#);
-                                    let _ = eval(&script);
-                                }
-                            }
-                        )
-                    })
-                }
-            }
-        ))
-        ,
-        share_did.as_ref().map(|_|{
-            match state.read().get_active_chat() {
-                Some(chat) => rsx!(ShareFriendsModal{
-                    did: share_did.clone(),
-                    excluded_chat: chat.id
+                    }
                 }),
-                None => rsx!(ShareFriendsModal{
-                    did: share_did.clone(),
-                })
+                &cx.props.children
             }
-        }),
-        &cx.props.children
-    }}))
+        }
+    ))
 }
