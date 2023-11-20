@@ -19,6 +19,7 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
+use warp::crypto::Fingerprint;
 use warp::{error::Error, logging::tracing::log};
 
 use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
@@ -167,10 +168,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let mut did_short = "#".to_string();
-    did_short.push_str(&state.read().get_own_identity().short_id().to_string());
-
-    let short_name = format!("{}{}", username.clone(), did_short.clone());
+    let did_short = &state.read().get_own_identity().short_id().to_string();
+    let did_key = state.read().get_own_identity().did_key().fingerprint();
+    let short_name = format!("{}#{}", username.clone(), did_short.clone());
+    let short_name_context = short_name.clone();
 
     let show_welcome = &state.read().ui.active_welcome;
 
@@ -313,36 +314,91 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                         div {
                             class: "profile-id-btn",
-                            Button {
-                                appearance: Appearance::SecondaryLess,
-                                aria_label: "copy-id-button".into(),
-                                text: did_short.to_string(),
-                                tooltip: cx.render(rsx!(
-                                    Tooltip{
-                                        text: get_local_text("settings-profile.copy-id")
+                            ContextMenu {
+                                id: String::from("copy-id-context-menu"),
+                                items: cx.render(rsx!(
+                                    ContextItem {
+                                        icon: Icon::UserCircle,
+                                        text: get_local_text("settings-profile.copy-id"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(short_name_context.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
+                                    }
+                                    ContextItem {
+                                        icon: Icon::Key,
+                                        text: get_local_text("settings-profile.copy-did"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(did_key.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
                                     }
                                 )),
-                                onpress: move |_| {
-                                    match Clipboard::new() {
-                                        Ok(mut c) => {
-                                            if let Err(e) = c.set_text(short_name.clone()) {
-                                                log::warn!("Unable to set text to clipboard: {e}");
-                                            }
-                                        },
-                                        Err(e) => {
-                                            log::warn!("Unable to create clipboard reference: {e}");
+                                Button {
+                                    appearance: Appearance::SecondaryLess,
+                                    aria_label: "copy-id-button".into(),
+                                    text: did_short.to_string(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip{
+                                            text: get_local_text("settings-profile.copy-id")
                                         }
-                                    };
-                                    state
-                                        .write()
-                                        .mutate(Action::AddToastNotification(ToastNotification::init(
-                                            "".into(),
-                                            get_local_text("friends.copied-did"),
-                                            None,
-                                            2,
-                                        )));
+                                    )),
+                                    onpress: move |_| {
+                                        match Clipboard::new() {
+                                            Ok(mut c) => {
+                                                if let Err(e) = c.set_text(short_name.clone()) {
+                                                    log::warn!("Unable to set text to clipboard: {e}");
+                                                }
+                                            },
+                                            Err(e) => {
+                                                log::warn!("Unable to create clipboard reference: {e}");
+                                            }
+                                        };
+                                        state
+                                            .write()
+                                            .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                "".into(),
+                                                get_local_text("friends.copied-did"),
+                                                None,
+                                                2,
+                                            )));
+                                    }
                                 }
-                            }
+                            },
                         }
                     },
                 },
