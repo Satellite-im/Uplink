@@ -537,6 +537,9 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let pending_uploads = grouped_message.file_progress.as_ref();
     let render_markdown = state.read().ui.should_transform_markdown_text();
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
+    let msg_lines = message.inner.lines().join("\n");
+    //TODO
+    let rendered_lines = msg_lines.clone();
 
     cx.render(rsx!(
         div {
@@ -559,7 +562,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
-                with_text: message.inner.lines().join("\n"),
+                with_text: msg_lines,
+                with_text_to_render: rendered_lines,
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message

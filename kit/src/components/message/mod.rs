@@ -31,6 +31,8 @@ pub static STRIKE_THROUGH_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(~~[^~]+
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
 });
+pub static USER_TAGS_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"(?:^|\s)(@[^@ ]{2,})(?:$|\s)"#).unwrap());
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -67,6 +69,8 @@ pub struct Props<'a> {
 
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
+
+    with_text_to_render: Option<String>,
 
     reactions: Vec<ReactionAdapter>,
 
@@ -131,6 +135,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // omitting the class will display the reactions starting from the bottom right corner
     let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
+    let rendered_text = cx
+        .props
+        .with_text_to_render
+        .as_ref()
+        .or(cx.props.with_text.as_ref());
 
     let has_attachments = cx
         .props
@@ -247,7 +256,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: cx.props.with_text.clone().unwrap_or_default(),
+                    text: rendered_text.cloned().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
@@ -336,6 +345,7 @@ pub struct ChatMessageProps {
     pending: bool,
     markdown: bool,
     ascii_emoji: bool,
+    participants: Option<Vec<String>>,
 }
 
 #[allow(non_snake_case)]
@@ -446,9 +456,9 @@ pub fn replace_emojis(input: &str) -> String {
 
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
-
+    let txt = USER_TAGS_REGEX.replace_all(txt, r#"<div class="user-tag">$1</div>"#);
     if emojis {
-        let r = replace_emojis(txt);
+        let r = replace_emojis(&txt);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
@@ -460,7 +470,7 @@ fn markdown(text: &str, emojis: bool) -> String {
            && is_only_emojis(&r)
         {
             return format!("<span class=\"big-emoji\">{r}</span>");
-        } else if is_only_emojis(txt) || r == "-" {
+        } else if is_only_emojis(&txt) || r == "-" {
             return format!("<p>{txt}</p>");
         }
     }

@@ -129,3 +129,11 @@
 		}
 	}
 }
+
+.user-tag {
+	background-color: var(--text-color-user-tag);
+	cursor: pointer;
+	&:hover {
+		background-color: color-mix(in srgb, var(--text-color-user-tag) 50%, white);
+	}
+}
