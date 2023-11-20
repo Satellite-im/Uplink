@@ -42,6 +42,9 @@ pub struct Props<'a> {
     // The thumbnail for the file. If existent
     thumbnail: Option<String>,
 
+    // Whether the file is coming from attachments or not
+    is_from_attachments: Option<bool>,
+
     big: Option<bool>,
 
     // used to show download button, if nothing is passed, button will render
@@ -67,6 +70,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension_is_empty = file_extension.is_empty();
     let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
+    let is_from_attachments = cx.props.is_from_attachments.unwrap_or(false);
     let btn_icon = if !download_pending {
         cx.props.button_icon.unwrap_or(Icon::ArrowDown)
     } else {
@@ -247,22 +251,24 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 )
                         }
                     }
-                    div {
-                        class: "file-info",
-                        width: "100%",
-                        aria_label: "file-info",
-                        p {
-                            class: "name",
-                            aria_label: "file-name",
-                            color: "var(--text-color)",
-                            "{filename}"
-                        },
-                        p {
-                            class: "meta",
-                            aria_label: "file-meta",
-                            "{file_description}"
-                        }
-                    },
+                    if !has_thumbnail || is_from_attachments {
+                        rsx!( div {
+                            class: "file-info",
+                            width: "100%",
+                            aria_label: "file-info",
+                            p {
+                                class: "name",
+                                aria_label: "file-name",
+                                color: "var(--text-color)",
+                                "{filename}"
+                            },
+                            p {
+                                class: "meta",
+                                aria_label: "file-meta",
+                                "{file_description}"
+                            }
+                        },)
+                    }
                     if with_download_button {
                         rsx!(
                             div {

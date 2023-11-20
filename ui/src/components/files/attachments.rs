@@ -24,7 +24,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
 
     // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(cx.props.files_to_attach.iter().map(|location| {
-        let (filename, filepath, thumbnail) = match &location {
+        let (filename, filepath, thumbnail, is_from_constellation) = match &location {
             Location::Constellation { path } => {
                 let filename = PathBuf::from(&path)
                     .file_name()
@@ -45,7 +45,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                     None => String::new(),
                 };
 
-                (filename, PathBuf::from(&path), thumbnail)
+                (filename, PathBuf::from(&path), thumbnail, true)
             }
             Location::Disk { path } => (
                 path.file_name()
@@ -54,6 +54,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                     .to_string(),
                 path.clone(),
                 String::new(),
+                false,
             ),
         };
 
@@ -61,6 +62,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
             filename: filename,
             filepath: filepath,
             remote: false,
+            is_from_constellation: is_from_constellation,
             thumbnail: thumbnail,
             button_icon: icons::outline::Shape::Minus,
             on_press: move |_| {
