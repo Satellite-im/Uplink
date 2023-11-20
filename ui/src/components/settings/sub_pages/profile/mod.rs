@@ -167,10 +167,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let did_string = state.read().get_own_identity().did_key().to_string();
-
     let mut did_short = "#".to_string();
     did_short.push_str(&state.read().get_own_identity().short_id().to_string());
+
+    let short_name = format!("{}{}", username.clone(), did_short.clone());
+
     let show_welcome = &state.read().ui.active_welcome;
 
     let image_path = get_images_dir()
@@ -324,7 +325,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 onpress: move |_| {
                                     match Clipboard::new() {
                                         Ok(mut c) => {
-                                            if let Err(e) = c.set_text(did_string.clone()) {
+                                            if let Err(e) = c.set_text(short_name.clone()) {
                                                 log::warn!("Unable to set text to clipboard: {e}");
                                             }
                                         },
