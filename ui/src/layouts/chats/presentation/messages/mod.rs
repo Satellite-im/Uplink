@@ -69,6 +69,8 @@ pub enum MessagesCommand {
 }
 
 pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
+const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
+const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 #[component(no_case_check)]
 pub fn get_messages(
@@ -83,8 +85,8 @@ pub fn get_messages(
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let eval = use_eval(cx);
-    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
-    effects::init_msg_scroll(cx, chat_data, eval, ch);
+    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data);
+    effects::init_msg_scroll(cx, chat_data, eval, scroll_btn, ch);
 
     // used by child Elements via use_coroutine_handle
     let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
@@ -121,13 +123,32 @@ pub fn get_messages(
             )
         };
 
+    let scroll_btn_handler = move || {
+        to_owned![eval, scroll_btn, active_chat_id];
+        async move {
+            if let Ok(val) = eval(READ_SCROLL) {
+                if let Ok(result) = val.join().await {
+                    let scroll = result.as_i64().unwrap_or_default();
+                    let show = scroll < SCROLL_BTN_THRESHOLD;
+                    let update = show != scroll_btn.read().get(active_chat_id);
+                    // Only update if the value has changed
+                    if update {
+                        if show {
+                            scroll_btn.write().set(active_chat_id);
+                        } else {
+                            scroll_btn.write().clear(active_chat_id);
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     cx.render(rsx!(
         div {
             id: "messages",
             onscroll: move |_| {
-                // if !chat_data.read().active_chat.get_scrolled() {
-                //     chat_data.write().active_chat.set_scrolled();
-                // }
+                scroll_btn_handler()
             },
             // used by the intersection observer to terminate itself
             div {
