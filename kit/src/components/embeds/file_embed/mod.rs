@@ -173,7 +173,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
                 rsx!(
                     div {
-                        class: "icon",
+                        class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
                         if has_thumbnail {
                             rsx!(
@@ -207,7 +207,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             } else { "" }
                                         ),
                                         src: "{thumbnail}",
-                                    }})
+                                    },
+                                    show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                   }
+                                    )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
                             let thubmnail = get_file_thumbnail_if_is_image(filepath, filename.clone());
                             if thubmnail.is_empty() {
@@ -267,20 +270,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 aria_label: "file-meta",
                                 "{file_description}"
                             }
-                        },)
-                    }
-                    if with_download_button {
-                        rsx!(
-                            div {
-                                id: "file-embed-action-button", 
-                                Button {
-                                    icon: btn_icon,
-                                    appearance: Appearance::Primary,
-                                    aria_label: "attachment-button".into(),
-                                    onpress: move |_| cx.props.on_press.call(()),
-                                }
-                            }
-                        )
+                        },
+                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                    )
                     }
                     if is_pending {
                         rsx!(div {
@@ -330,4 +322,26 @@ fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String
         }
     };
     image
+}
+
+fn show_download_button_if_enabled<'a>(
+    cx: Scope<'a, Props<'a>>,
+    with_download_button: bool,
+    btn_icon: common::icons::outline::Shape,
+) -> Element<'a> {
+    if with_download_button {
+        cx.render(rsx!(
+            div {
+                id: "file-embed-action-button",
+                Button {
+                    icon: btn_icon,
+                    appearance: Appearance::Primary,
+                    aria_label: "attachment-button".into(),
+                    onpress: move |_| cx.props.on_press.call(()),
+                }
+            }
+        ))
+    } else {
+        None
+    }
 }
