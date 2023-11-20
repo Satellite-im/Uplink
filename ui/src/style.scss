@@ -209,7 +209,6 @@ body {
 .nav-unread-indicator {
   color: var(--text-color); 
   background-color: var(--unread-indicator); 
-  aspect-ratio: 1 / 1; 
   min-width: 18px; 
   font-size: var(--text-size-less); 
   border-radius: var(--border-radius-more); 
@@ -218,6 +217,13 @@ body {
   right: -4px; 
   padding: 2px;
   text-align: center;
+  display: flex;
+  .unread-text {
+    align-self: center;
+    margin-left: auto;
+    margin-right: auto;
+    cursor: default;
+  }
 }
 
 h1, h2, h3, h4, h5 {
