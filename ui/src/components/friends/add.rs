@@ -13,7 +13,6 @@ use kit::elements::{
     tooltip::Tooltip,
 };
 
-use warp::crypto::Fingerprint;
 use warp::error::Error;
 use warp::{crypto::DID, logging::tracing::log};
 

@@ -19,7 +19,6 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
-use warp::crypto::Fingerprint;
 use warp::{error::Error, logging::tracing::log};
 
 use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
