@@ -538,8 +538,25 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let render_markdown = state.read().ui.should_transform_markdown_text();
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
     let msg_lines = message.inner.lines().join("\n");
+    let chat_participants: Vec<_> = state
+        .read()
+        .get_active_chat()
+        .map(|chat| {
+            chat.participants
+                .iter()
+                .filter_map(|did| state.read().get_identity(did))
+                .collect()
+        })
+        .unwrap_or_default();
     //TODO
-    let rendered_lines = msg_lines.clone();
+    let is_mention = false;
+    let rendered_lines = message
+        .inner
+        .lines()
+        .iter()
+        .map(|s| replace_mentions(s.to_string(), &chat_participants))
+        .collect::<Vec<_>>()
+        .join("\n");
 
     cx.render(rsx!(
         div {
@@ -564,6 +581,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 remote: cx.props.is_remote,
                 with_text: msg_lines,
                 with_text_to_render: rendered_lines,
+                is_mention: is_mention,
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message
@@ -687,4 +705,15 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
             },)
         }
     )))
+}
+
+fn replace_mentions(mut string: String, participants: &[Identity]) -> String {
+    participants.iter().for_each(|id| {
+        let (first, second) = (
+            format!("@{}", id.did_key()),
+            format!(r#"<div class="user-tag">@{}</div>"#, id.username()),
+        );
+        string = string.replace(&first, &second)
+    });
+    string
 }

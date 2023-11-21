@@ -28,7 +28,10 @@ impl SuggestionType {
         match self {
             SuggestionType::None => (String::new(), String::new()),
             SuggestionType::EMOJI(pattern, v) => (pattern.clone(), v[index].0.clone()),
-            SuggestionType::TAG(pattern, v) => (pattern.clone(), v[index].username()),
+            SuggestionType::TAG(pattern, v) => (
+                pattern.clone(),
+                format!("{}#{}", v[index].username(), v[index].short_id()),
+            ),
         }
     }
 
@@ -305,7 +308,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
         }
         SuggestionType::TAG(pattern, identities) => {
             let component = identities.iter().enumerate().map(|(num, id)| {
-                let username = id.username();
+                let username = format!("{}#{}", id.username(), id.short_id());
                 rsx!(div {
                     class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
                         Some(v) => if *v == num {"chatbar-selected"} else {""},

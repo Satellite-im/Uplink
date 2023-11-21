@@ -176,6 +176,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 .is_empty()
     };
 
+    let chat_participants: Vec<_> = state
+        .read()
+        .get_active_chat()
+        .map(|chat| {
+            chat.participants
+                .iter()
+                .filter_map(|did| state.read().get_identity(did))
+                .collect()
+        })
+        .unwrap_or_default();
+    let chat_participants_2 = chat_participants.clone();
+
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
         let active_chat_id = chat_data.read().active_chat.id();
@@ -194,7 +206,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default()
             .lines()
-            .map(|x| x.trim_end().to_string())
+            .map(|x| replace_mentions(x.trim_end().to_string(), &chat_participants_2))
             .collect::<Vec<String>>();
 
         if !active_chat_id.is_nil() {
@@ -330,10 +342,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             }
                             let tag = tag.replace('@', "");
                             let lower = tag.to_lowercase();
-                            let users: Vec<_> = state.read().get_active_chat().map(|chat|
-                                chat.participants.iter().filter_map(|did|{
-                                    state.read().get_identity(did).filter(|id|id.username().to_lowercase().starts_with(&lower) && !id.username().eq(&tag))
-                                }).collect()).unwrap_or_default();
+                            let users: Vec<_> = chat_participants.iter().filter(|id|id.username().to_lowercase().starts_with(&lower) && !id.username().eq(&tag))
+                                .cloned() .collect();
                             suggestions.set(SuggestionType::TAG(tag, users));
                         }
                         None => {
@@ -573,4 +583,14 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, 
     };
     let user_sender = build_user_from_identity(sender);
     (user_sender.platform, user_sender.status, user_sender.photo)
+}
+pub fn replace_mentions(mut string: String, participants: &[Identity]) -> String {
+    participants.iter().for_each(|id| {
+        let (first, second) = (
+            format!("@{}#{}", id.username(), id.short_id()),
+            format!("@{}", id.did_key()),
+        );
+        string = string.replace(&first, &second)
+    });
+    string
 }

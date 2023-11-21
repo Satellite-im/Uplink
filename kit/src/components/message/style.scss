@@ -34,6 +34,10 @@
 	}
 }
 
+.message.mention {
+	background-color: var(--background-mention);
+}
+
 .message.message-pending {
 	opacity: var(--opacity-modifier);
 }
@@ -132,6 +136,8 @@
 
 .user-tag {
 	background-color: var(--text-color-user-tag);
+	width: fit-content;
+	height: fit-content;
 	cursor: pointer;
 	&:hover {
 		background-color: color-mix(in srgb, var(--text-color-user-tag) 50%, white);

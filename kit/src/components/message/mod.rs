@@ -31,8 +31,6 @@ pub static STRIKE_THROUGH_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(~~[^~]+
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
 });
-pub static USER_TAGS_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"(?:^|\s)(@[^@ ]{2,})(?:$|\s)"#).unwrap());
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -109,6 +107,8 @@ pub struct Props<'a> {
     attachments_pending_uploads: Option<&'a Vec<Progression>>,
 
     pinned: bool,
+
+    is_mention: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -188,6 +188,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
+    let mention_class = cx.props.is_mention.then_some("mention").unwrap_or_default();
     let order_class = order.to_string();
     let msg_pending_class = cx
         .props
@@ -215,8 +216,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "message {} {} {} {}",
-                   loading_class, remote_class, order_class, msg_pending_class
+                    "message {} {} {} {} {}",
+                   loading_class, remote_class, order_class, msg_pending_class, mention_class
                 )
             },
             aria_label: {
@@ -456,9 +457,8 @@ pub fn replace_emojis(input: &str) -> String {
 
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
-    let txt = USER_TAGS_REGEX.replace_all(txt, r#"<div class="user-tag">$1</div>"#);
     if emojis {
-        let r = replace_emojis(&txt);
+        let r = replace_emojis(txt);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
@@ -470,7 +470,7 @@ fn markdown(text: &str, emojis: bool) -> String {
            && is_only_emojis(&r)
         {
             return format!("<span class=\"big-emoji\">{r}</span>");
-        } else if is_only_emojis(&txt) || r == "-" {
+        } else if is_only_emojis(txt) || r == "-" {
             return format!("<p>{txt}</p>");
         }
     }
