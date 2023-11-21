@@ -169,7 +169,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     };
 
     let did_short = &state.read().get_own_identity().short_id().to_string();
-    let did_key = state.read().get_own_identity().did_key().fingerprint();
+    let did_key = state.read().get_own_identity().did_key();
     let short_name = format!("{}#{}", username.clone(), did_short.clone());
     let short_name_context = short_name.clone();
 
