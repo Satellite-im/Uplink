@@ -606,8 +606,8 @@
 .profile-container {
   display: flex;
   flex-direction: column; 
-  left: calc(var(--height-input) * 2); 
-  top: calc(var(--height-input) * 3); 
+  margin-top: -1rem;
+  margin-bottom: var(--gap);
   margin-left: calc(var(--height-input) * 2);
 }
 
