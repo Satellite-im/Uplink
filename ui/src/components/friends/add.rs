@@ -5,7 +5,6 @@ use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::elements::Appearance;
 
 use kit::elements::{
     button::Button,
