@@ -4,12 +4,15 @@ use std::str::FromStr;
 use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::components::context_menu::{ContextItem, ContextMenu};
+
 use kit::elements::{
     button::Button,
     input::{Input, Options, SpecialCharsAction, Validation},
     label::Label,
     tooltip::Tooltip,
 };
+
 use warp::error::Error;
 use warp::{crypto::DID, logging::tracing::log};
 
@@ -146,27 +149,12 @@ pub fn AddFriend(cx: Scope) -> Element {
         }
     });
 
-    let id_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![my_id];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while rx.next().await.is_some() {
-                let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
-                if let Err(e) =
-                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetOwnDid { rsp: tx }))
-                {
-                    log::error!("failed to send warp command: {}", e);
-                    continue;
-                }
-
-                let res = rx.await.expect("failed to get response from warp_runner");
-                match res {
-                    Ok(did) => my_id.set(Some(did.to_string())),
-                    Err(e) => log::error!("get own did failed: {}", e),
-                }
-            }
-        }
-    });
+    let identity = state.read().get_own_identity();
+    let short_id = identity.short_id();
+    let did_key = identity.did_key();
+    let username = identity.username();
+    let short_name = format!("{}#{}", username, short_id);
+    let short_name_context = short_name.clone();
 
     cx.render(rsx!(
         div {
@@ -233,15 +221,89 @@ pub fn AddFriend(cx: Scope) -> Element {
                     },
                     aria_label: "Add Someone Button".into()
                 },
-                Button {
-                    aria_label: "Copy ID".into(),
-                    icon: Icon::ClipboardDocument,
-                    onpress: move |_| {
-                        id_ch.send(());
-                    },
-                    tooltip: cx.render(rsx!(Tooltip{
-                        text: get_local_text("settings-profile.copy-id")
-                    }))
+                div {
+                    ContextMenu {
+                        id: String::from("copy-id-context-menu"),
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                icon: Icon::UserCircle,
+                                text: get_local_text("settings-profile.copy-id"),
+                                aria_label: "copy-id-context".into(),
+                                onpress: move |_| {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            if let Err(e) = c.set_text(short_name_context.clone()) {
+                                                log::warn!("Unable to set text to clipboard: {e}");
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
+                                    state
+                                        .write()
+                                        .mutate(Action::AddToastNotification(ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.copied-did"),
+                                            None,
+                                            2,
+                                        )));
+                                }
+                            }
+                            ContextItem {
+                                icon: Icon::Key,
+                                text: get_local_text("settings-profile.copy-did"),
+                                aria_label: "copy-id-context".into(),
+                                onpress: move |_| {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            if let Err(e) = c.set_text(did_key.to_string()) {
+                                                log::warn!("Unable to set text to clipboard: {e}");
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
+                                    state
+                                        .write()
+                                        .mutate(Action::AddToastNotification(ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.copied-did"),
+                                            None,
+                                            2,
+                                        )));
+                                }
+                            }
+                        )),
+                        Button {
+                            aria_label: "Copy ID".into(),
+                            icon: Icon::ClipboardDocument,
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(short_name.clone()) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                                state
+                                    .write()
+                                    .mutate(Action::AddToastNotification(ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("friends.copied-did"),
+                                        None,
+                                        2,
+                                    )));
+                            },
+                            tooltip: cx.render(rsx!(Tooltip{
+                                text: get_local_text("settings-profile.copy-id")
+                            }))
+                        }
+                    }
                 }
             }
         }
