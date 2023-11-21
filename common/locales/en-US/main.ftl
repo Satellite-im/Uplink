@@ -207,6 +207,7 @@ settings-profile = Profile Settings
     .welcome-desc = Tell the world all about yourself, well.. tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
     .copy-id = Copy ID
+    .copy-did = Copy DID Key
     
 settings-general = General Settings
     .overlay = Uplink Overlay
