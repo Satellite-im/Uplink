@@ -258,7 +258,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 onpress: move |_| {
                                     match Clipboard::new() {
                                         Ok(mut c) => {
-                                            if let Err(e) = c.set_text(did_key.clone()) {
+                                            if let Err(e) = c.set_text(did_key.to_string()) {
                                                 log::warn!("Unable to set text to clipboard: {e}");
                                             }
                                         },
