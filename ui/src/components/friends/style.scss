@@ -49,8 +49,13 @@
     pointer-events: none;
 
     img {
-        max-height: 100%;
-        max-width: unset;
+        max-height: 500px;
+        object-fit: cover;
+        display: block;
+        min-height: 0;
+        min-width: 0;
+        height: 100%;
+        max-width: 100%;
     }
 }
 
