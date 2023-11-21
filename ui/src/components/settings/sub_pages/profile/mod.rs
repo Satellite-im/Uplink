@@ -39,12 +39,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
 
     let state = use_shared_state::<State>(cx)?;
-    let user_status = state.read().status_message().unwrap_or_default();
-    let username = state.read().username();
+    let identity = state.read().get_own_identity();
+    let user_status = identity.status_message().unwrap_or_default();
+    let username = identity.username();
     let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let identity = state.read().get_own_identity();
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
     let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
@@ -167,10 +167,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let did_string = state.read().get_own_identity().did_key().to_string();
+    let did_short = identity.short_id().to_string();
+    let did_key = identity.did_key();
+    let short_name = format!("{}#{}", username, did_short);
+    let short_name_context = short_name.clone();
 
-    let mut did_short = "#".to_string();
-    did_short.push_str(&state.read().get_own_identity().short_id().to_string());
     let show_welcome = &state.read().ui.active_welcome;
 
     let image_path = get_images_dir()
@@ -312,36 +313,91 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                         div {
                             class: "profile-id-btn",
-                            Button {
-                                appearance: Appearance::SecondaryLess,
-                                aria_label: "copy-id-button".into(),
-                                text: did_short.to_string(),
-                                tooltip: cx.render(rsx!(
-                                    Tooltip{
-                                        text: get_local_text("settings-profile.copy-id")
+                            ContextMenu {
+                                id: String::from("copy-id-context-menu"),
+                                items: cx.render(rsx!(
+                                    ContextItem {
+                                        icon: Icon::UserCircle,
+                                        text: get_local_text("settings-profile.copy-id"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(short_name_context.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
+                                    }
+                                    ContextItem {
+                                        icon: Icon::Key,
+                                        text: get_local_text("settings-profile.copy-did"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(did_key.to_string()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
                                     }
                                 )),
-                                onpress: move |_| {
-                                    match Clipboard::new() {
-                                        Ok(mut c) => {
-                                            if let Err(e) = c.set_text(did_string.clone()) {
-                                                log::warn!("Unable to set text to clipboard: {e}");
-                                            }
-                                        },
-                                        Err(e) => {
-                                            log::warn!("Unable to create clipboard reference: {e}");
+                                Button {
+                                    appearance: Appearance::SecondaryLess,
+                                    aria_label: "copy-id-button".into(),
+                                    text: did_short.to_string(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip{
+                                            text: get_local_text("settings-profile.copy-id")
                                         }
-                                    };
-                                    state
-                                        .write()
-                                        .mutate(Action::AddToastNotification(ToastNotification::init(
-                                            "".into(),
-                                            get_local_text("friends.copied-did"),
-                                            None,
-                                            2,
-                                        )));
+                                    )),
+                                    onpress: move |_| {
+                                        match Clipboard::new() {
+                                            Ok(mut c) => {
+                                                if let Err(e) = c.set_text(short_name.clone()) {
+                                                    log::warn!("Unable to set text to clipboard: {e}");
+                                                }
+                                            },
+                                            Err(e) => {
+                                                log::warn!("Unable to create clipboard reference: {e}");
+                                            }
+                                        };
+                                        state
+                                            .write()
+                                            .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                "".into(),
+                                                get_local_text("friends.copied-did"),
+                                                None,
+                                                2,
+                                            )));
+                                    }
                                 }
-                            }
+                            },
                         }
                     },
                 },
