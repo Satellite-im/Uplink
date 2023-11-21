@@ -39,12 +39,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
 
     let state = use_shared_state::<State>(cx)?;
-    let user_status = state.read().status_message().unwrap_or_default();
-    let username = state.read().username();
+    let identity = state.read().get_own_identity();
+    let user_status = identity.status_message().unwrap_or_default();
+    let username = identity.username();
     let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let identity = state.read().get_own_identity();
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
     let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
@@ -167,9 +167,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let did_short = &state.read().get_own_identity().short_id().to_string();
-    let did_key = state.read().get_own_identity().did_key();
-    let short_name = format!("{}#{}", username.clone(), did_short.clone());
+    let did_short = identity.short_id().to_string();
+    let did_key = identity.did_key();
+    let short_name = format!("{}#{}", username, did_short);
     let short_name_context = short_name.clone();
 
     let show_welcome = &state.read().ui.active_welcome;

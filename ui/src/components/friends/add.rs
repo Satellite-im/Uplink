@@ -149,10 +149,11 @@ pub fn AddFriend(cx: Scope) -> Element {
         }
     });
 
-    let did_short = &state.read().get_own_identity().short_id().to_string();
-    let did_key = state.read().get_own_identity().did_key();
-    let username = &state.read().get_own_identity().username().to_string();
-    let short_name = format!("{}#{}", username.clone(), did_short.clone());
+    let identity = state.read().get_own_identity();
+    let short_id = identity.short_id();
+    let did_key = identity.did_key();
+    let username = identity.username();
+    let short_name = format!("{}#{}", username, short_id);
     let short_name_context = short_name.clone();
 
     cx.render(rsx!(
