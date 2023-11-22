@@ -42,6 +42,9 @@ pub struct Props<'a> {
     // The thumbnail for the file. If existent
     thumbnail: Option<String>,
 
+    // Whether the file is coming from attachments or not
+    is_from_attachments: Option<bool>,
+
     big: Option<bool>,
 
     // used to show download button, if nothing is passed, button will render
@@ -67,6 +70,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension_is_empty = file_extension.is_empty();
     let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
+    let is_from_attachments = cx.props.is_from_attachments.unwrap_or(false);
     let btn_icon = if !download_pending {
         cx.props.button_icon.unwrap_or(Icon::ArrowDown)
     } else {
@@ -167,82 +171,47 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" }
                 )
             },
-            if has_thumbnail {
-                rsx!(
-                    fullscreen_preview.then(|| rsx!(
-                        Modal {
-                            open: *fullscreen_preview.clone(),
-                            onclose: move |_| fullscreen_preview.set(false),
-                            transparent: false,
-                            close_on_click_inside_modal: true,
-                            dont_pad: true,
-                            img {
-                                id: "image-preview-modal-file-embed",
-                                aria_label: "image-preview-modal-file-embed",
-                                src: "{large_thumbnail}",
-                                max_height: "80vh",
-                                max_width: "80vw",
-                                onclick: move |e| e.stop_propagation(),
-                            },
-                        }
-                    )),
-                    div {
-                        class: "image-container",
-                        aria_label: "message-image-container",
-                        img {
-                            aria_label: "message-image",
-                            onclick: move |_| fullscreen_preview.set(true),
-                            class: format_args!(
-                                "image {} expandable-image",
-                                if cx.props.big.unwrap_or_default() {
-                                    "big"
-                                } else { "" }
-                            ),
-                            src: "{thumbnail}",
-                        }
-                        // if anyone asks for the file name from constellation, uncomment this. 
-                        // div {
-                        //     class: "file-info",
-                        //     width: "100%",
-                        //     aria_label: "file-info",
-                        //     p {
-                        //         class: "name",
-                        //         aria_label: "file-name",
-                        //         color: "var(--text-color)",
-                        //         "{filename}"
-                        //     },
-                        //     p {
-                        //         class: "meta",
-                        //         aria_label: "file-meta",
-                        //         "{file_description}"
-                        //     }
-                        // },
-                        if with_download_button {
-                            rsx!(Button {
-                                        icon: btn_icon,
-                                        appearance: Appearance::Primary,
-                                        aria_label: "attachment-button".into(),
-                                        onpress: move |_| cx.props.on_press.call(()),
-                            }
-                            )
-                        }
-                        if is_pending {
-                            rsx!(div {
-                                class: "upload-bar",
-                                div {
-                                    class: "upload-progress",
-                                    style: format_args!("width: {}%", perc)
-                                }
-                            })
-                        }
-                    }
-                )
-            } else {
                 rsx!(
                     div {
-                        class: "icon",
+                        class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
-                        if let Some(filepath) = cx.props.filepath.clone() {
+                        if has_thumbnail {
+                            rsx!(
+                                fullscreen_preview.then(|| rsx!(
+                                    Modal {
+                                        open: *fullscreen_preview.clone(),
+                                        onclose: move |_| fullscreen_preview.set(false),
+                                        transparent: false,
+                                        close_on_click_inside_modal: true,
+                                        dont_pad: true,
+                                        img {
+                                            id: "image-preview-modal-file-embed",
+                                            aria_label: "image-preview-modal-file-embed",
+                                            src: "{large_thumbnail}",
+                                            max_height: "80vh",
+                                            max_width: "80vw",
+                                            onclick: move |e| e.stop_propagation(),
+                                        },
+                                    }
+                                )),
+                                div {
+                                    class: "image-container",
+                                    aria_label: "message-image-container",
+                                    img {
+                                        aria_label: "message-image",
+                                        onclick: move |_| fullscreen_preview.set(true),
+                                        class: format_args!(
+                                            "image {} expandable-image",
+                                            if cx.props.big.unwrap_or_default() {
+                                                "big"
+                                            } else { "" }
+                                        ),
+                                        src: "{thumbnail}",
+                                    },
+                                    show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                   }
+                                    )
+                        } else if let Some(filepath) = cx.props.filepath.clone() {
                             let thubmnail = get_file_thumbnail_if_is_image(filepath, filename.clone());
                             if thubmnail.is_empty() {
                                 rsx!(
@@ -285,34 +254,25 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 )
                         }
                     }
-                    div {
-                        class: "file-info",
-                        width: "100%",
-                        aria_label: "file-info",
-                        p {
-                            class: "name",
-                            aria_label: "file-name",
-                            color: "var(--text-color)",
-                            "{filename}"
-                        },
-                        p {
-                            class: "meta",
-                            aria_label: "file-meta",
-                            "{file_description}"
-                        }
-                    },
-                    if with_download_button {
-                        rsx!(
-                            div {
-                                id: "file-embed-action-button", 
-                                Button {
-                                    icon: btn_icon,
-                                    appearance: Appearance::Primary,
-                                    aria_label: "attachment-button".into(),
-                                    onpress: move |_| cx.props.on_press.call(()),
-                                }
+                    if !has_thumbnail || is_from_attachments {
+                        rsx!( div {
+                            class: "file-info",
+                            width: "100%",
+                            aria_label: "file-info",
+                            p {
+                                class: "name",
+                                aria_label: "file-name",
+                                color: "var(--text-color)",
+                                "{filename}"
+                            },
+                            p {
+                                class: "meta",
+                                aria_label: "file-meta",
+                                "{file_description}"
                             }
-                        )
+                        },
+                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                    )
                     }
                     if is_pending {
                         rsx!(div {
@@ -324,8 +284,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         })
                     }
                 )
-            }
-
         }
     ))
 }
@@ -364,4 +322,26 @@ fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String
         }
     };
     image
+}
+
+fn show_download_button_if_enabled<'a>(
+    cx: Scope<'a, Props<'a>>,
+    with_download_button: bool,
+    btn_icon: common::icons::outline::Shape,
+) -> Element<'a> {
+    if with_download_button {
+        cx.render(rsx!(
+            div {
+                id: "file-embed-action-button",
+                Button {
+                    icon: btn_icon,
+                    appearance: Appearance::Primary,
+                    aria_label: "attachment-button".into(),
+                    onpress: move |_| cx.props.on_press.call(()),
+                }
+            }
+        ))
+    } else {
+        None
+    }
 }
