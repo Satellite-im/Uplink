@@ -23,6 +23,7 @@ pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
+use regex::Regex;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
@@ -173,11 +174,11 @@ impl State {
                 }
             }
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => self.ui.notifications.increment(
+            Action::AddNotification(kind, count, forced) => self.ui.notifications.increment(
                 &self.configuration,
                 kind,
                 count,
-                !self.ui.metadata.focused,
+                forced || !self.ui.metadata.focused,
             ),
             Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
@@ -280,6 +281,7 @@ impl State {
                     inner: m,
                     in_reply_to: None,
                     key: Uuid::new_v4().to_string(),
+                    ..Default::default()
                 };
                 self.add_msg_to_chat(id, m);
             }
@@ -355,6 +357,7 @@ impl State {
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::FriendRequest,
                     1,
+                    false,
                 ));
 
                 // TODO: Get state available in this scope.
@@ -435,8 +438,17 @@ impl State {
         match event {
             MessageEvent::Received {
                 conversation_id,
-                message,
+                mut message,
             } => {
+                if message.inner.lines().iter().any(|s| s.contains('@')) {
+                    if let Some(ids) = self
+                        .get_chat_by_id(conversation_id)
+                        .map(|c| self.chat_participants(&c))
+                    {
+                        message.resolve_message(&ids, &self.get_own_identity().did_key());
+                    }
+                }
+                let ping = message.is_mention;
                 self.update_identity_status_hack(&message.inner.sender());
                 let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
@@ -449,6 +461,7 @@ impl State {
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::Message,
                     1,
+                    ping,
                 ));
 
                 // Dispatch notifications only when we're not already focused on the application.
@@ -1881,4 +1894,24 @@ pub fn pending_group_messages<'a>(
         remote: false,
         messages,
     })
+}
+
+pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
+    Regex::new(&format!(
+        "(^| )@{}( |$)",
+        if username {
+            id.username()
+        } else {
+            id.did_key().to_string()
+        }
+    ))
+    .unwrap()
+}
+
+pub fn mention_replacement_pattern(id: &Identity) -> String {
+    format!(
+        r#"<div class="user-tag" value="{}">@{}</div>"#,
+        id.did_key(),
+        id.username()
+    )
 }

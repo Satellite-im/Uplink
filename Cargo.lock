@@ -1433,6 +1433,7 @@ dependencies = [
  "once_cell",
  "plot_icon",
  "rand 0.8.5",
+ "regex",
  "rodio",
  "serde",
  "serde_json",

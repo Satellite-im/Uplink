@@ -138,7 +138,7 @@ pub fn get_messages(
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), chat_data.read().active_chat.messages()),
+                        groups: data::create_message_groups(chat_data.read().active_chat.my_id(), chat_data.read().active_chat.other_participants(), chat_data.read().active_chat.messages()),
                         active_chat_id: chat_data.read().active_chat.id(),
                         on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
@@ -538,25 +538,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let render_markdown = state.read().ui.should_transform_markdown_text();
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
     let msg_lines = message.inner.lines().join("\n");
-    let chat_participants: Vec<_> = state
-        .read()
-        .get_active_chat()
-        .map(|chat| {
-            chat.participants
-                .iter()
-                .filter_map(|did| state.read().get_identity(did))
-                .collect()
-        })
-        .unwrap_or_default();
-    //TODO
-    let is_mention = false;
+
+    let is_mention = message.is_mention;
     let rendered_lines = message
-        .inner
-        .lines()
-        .iter()
-        .map(|s| replace_mentions(s.to_string(), &chat_participants))
-        .collect::<Vec<_>>()
-        .join("\n");
+        .lines_to_render
+        .as_ref()
+        .unwrap_or(&msg_lines)
+        .clone();
 
     cx.render(rsx!(
         div {
@@ -705,15 +693,4 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
             },)
         }
     )))
-}
-
-fn replace_mentions(mut string: String, participants: &[Identity]) -> String {
-    participants.iter().for_each(|id| {
-        let (first, second) = (
-            format!("@{}", id.did_key()),
-            format!(r#"<div class="user-tag">@{}</div>"#, id.username()),
-        );
-        string = string.replace(&first, &second)
-    });
-    string
 }

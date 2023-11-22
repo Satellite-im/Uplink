@@ -29,7 +29,7 @@ use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
-pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@]{2,}$").unwrap());
+pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@ ]{2,} ?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
@@ -61,6 +61,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let show_storage_modal = use_state(cx, || false);
 
     let suggestions = use_state(cx, || SuggestionType::None);
+    let mentions = use_ref(cx, Vec::new);
 
     let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
@@ -206,7 +207,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default()
             .lines()
-            .map(|x| replace_mentions(x.trim_end().to_string(), &chat_participants_2))
+            .map(|x| {
+                let mut s = x.to_string();
+                mentions
+                    .read()
+                    .iter()
+                    .for_each(|(did, name)| s = x.replace(name, &format!("{}", did)));
+                s
+            })
             .collect::<Vec<String>>();
 
         if !active_chat_id.is_nil() {
@@ -216,6 +224,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         }
 
         suggestions.set(SuggestionType::None);
+        mentions.set(vec![]);
 
         if !msg_valid(&msg) || active_chat_id.is_nil() {
             return;
@@ -336,14 +345,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     match tag_capture {
                         Some(tag) => {
                             let tag = &tag[0];
-                            if tag.contains(char::is_whitespace) {
+                            let tag = tag.replace('@', "");
+                            if tag.ends_with(' ') {
+                                let name = tag.replace(' ', "").to_lowercase();
+                                let replacement = chat_participants.iter().find(|id|id.username().to_lowercase().eq(&name));
+                                if let Some(id) = replacement {
+                                    let username = format!("{}#{}", id.username(), id.short_id());
+                                    v = v.replace(&sub, &sub.replace(&tag, &format!("{username} ")));
+                                    state.write().mutate(Action::SetChatDraft(active_chat_id, v));
+                                    mentions.write_silent().push((id.did_key(), username));
+                                }
                                 suggestions.set(SuggestionType::None);
                                 return;
                             }
-                            let tag = tag.replace('@', "");
                             let lower = tag.to_lowercase();
-                            let users: Vec<_> = chat_participants.iter().filter(|id|id.username().to_lowercase().starts_with(&lower) && !id.username().eq(&tag))
-                                .cloned() .collect();
+                            let users: Vec<_> = chat_participants.iter().filter(|id|id.username().to_lowercase().starts_with(&lower))
+                                .cloned().collect();
                             suggestions.set(SuggestionType::TAG(tag, users));
                         }
                         None => {
@@ -365,6 +382,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     state
                         .write()
                         .mutate(Action::SetChatDraft(active_chat_id, draft));
+                    if let SuggestionType::TAG(_, _) = suggestions.get() {
+                        let amount = replacement.chars().count() - 9;
+                        let name: String = replacement.chars().take(amount).collect(); // remove short did
+                        if let Some(participant) = chat_participants_2.iter().find(|id|id.username().eq(&name)) {
+                            mentions.write_silent().push((participant.did_key(), replacement));
+                        }
+                    }
                     suggestions.set(SuggestionType::None);
                 }
             },
@@ -583,14 +607,4 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, 
     };
     let user_sender = build_user_from_identity(sender);
     (user_sender.platform, user_sender.status, user_sender.photo)
-}
-pub fn replace_mentions(mut string: String, participants: &[Identity]) -> String {
-    participants.iter().for_each(|id| {
-        let (first, second) = (
-            format!("@{}#{}", id.username(), id.short_id()),
-            format!("@{}", id.did_key()),
-        );
-        string = string.replace(&first, &second)
-    });
-    string
 }

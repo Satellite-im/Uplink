@@ -12,7 +12,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats, MAX_PINNED_MESSAGES};
+use crate::state::{self, chats, Identity, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -24,7 +24,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    multipass::identity::{Identifier, Identity, Platform},
+    multipass::identity::{Identifier, Platform},
     raygun::{self, Conversation, MessageOptions},
 };
 
@@ -34,14 +34,43 @@ use super::{
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Message {
     pub inner: warp::raygun::Message,
     pub in_reply_to: Option<(String, Vec<File>, DID)>,
+    pub lines_to_render: Option<String>,
+    pub is_mention: bool,
     /// this field exists so that the UI can tell Dioxus when a message has been edited and thus
     /// needs to be re-rendered. Before the addition of this field, the compose view was
     /// using the message Uuid, but this doesn't change when a message is edited.
     pub key: String,
+}
+
+impl Message {
+    pub fn resolve_message(&mut self, c: &[state::Identity], own: &DID) {
+        if self.lines_to_render.is_some() {
+            return;
+        }
+        // Better if warp provides a way of saving mentions in the message
+        // so dont need to loop over all participants
+        let mut lines = self.inner.lines().join("\n");
+        c.iter().for_each(|id| {
+            let reg = state::mention_regex_pattern(id, false);
+            let replaced = reg.replace_all(&lines, state::mention_replacement_pattern(id));
+            if own.eq(&id.did_key()) && !replaced.eq(&lines) {
+                self.is_mention = true;
+            }
+            log::debug!(
+                "replace {} {} {} {}",
+                reg,
+                replaced,
+                lines,
+                state::mention_replacement_pattern(id)
+            );
+            lines = replaced.to_string();
+        });
+        self.lines_to_render = Some(lines);
+    }
 }
 
 #[derive(Clone)]
@@ -70,6 +99,7 @@ pub async fn convert_raygun_message(
             )
         }),
         key: Uuid::new_v4().to_string(),
+        ..Default::default()
     }
 }
 
@@ -91,7 +121,7 @@ pub fn get_uninitialized_identity(did: &DID) -> Result<state::Identity, Error> {
         .try_into()
         .map_err(|_e| warp::error::Error::OtherWithContext("did to short".into()))?;
     default.set_short_id(short);
-    Ok(state::Identity::from(default))
+    Ok(default)
 }
 
 // this function is used in response to warp events. assuming that the DID from these events is valid.

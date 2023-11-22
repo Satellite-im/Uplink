@@ -95,7 +95,7 @@ pub enum Action<'a> {
     ClearAllPopoutWindows(DesktopContext),
     // Notifications
     #[display(fmt = "AddNotification")]
-    AddNotification(NotificationKind, u32),
+    AddNotification(NotificationKind, u32, bool),
     #[display(fmt = "RemoveNotification")]
     RemoveNotification(NotificationKind, u32),
     #[display(fmt = "ClearNotification")]
