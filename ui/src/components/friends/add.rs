@@ -155,7 +155,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                             error_toast.set(Some(get_local_text("friends.request-exist")));
                         }
                         _ => {
-                            if id_to_compare.clone() == short_name {
+                            if id_to_compare == short_name {
                                 log::warn!("cannot add self: {}", e);
                                 error_toast.set(Some(get_local_text("friends.add-yourself")));
                             } else {
