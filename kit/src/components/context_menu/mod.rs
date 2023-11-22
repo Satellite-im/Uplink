@@ -42,9 +42,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
         return None;
     }
 
-    let danger_option = cx.props.danger.unwrap_or_default();
-
-    let class = if danger_option {
+    let class = if cx.props.danger.unwrap_or_default() {
         "context-item danger"
     } else {
         "context-item"
