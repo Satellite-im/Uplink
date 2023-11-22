@@ -257,7 +257,9 @@ async fn drag_and_drop_function(
                 if verify_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
                     *files_ready_to_upload.write_silent() = new_files_to_upload;
-                    *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
+                    if cfg!(target_os = "linux") {
+                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
+                    }
                     break;
                 }
             }
