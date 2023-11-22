@@ -2590,6 +2590,7 @@ dependencies = [
  "futures",
  "kit",
  "once_cell",
+ "regex",
  "uuid",
  "warp",
 ]
