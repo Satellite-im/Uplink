@@ -1,4 +1,4 @@
-use crate::utils::get_drag_event::DRAG_EVENT;
+use crate::utils::get_drag_event::{BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX, DRAG_EVENT};
 use common::STATIC_ARGS;
 use dioxus_desktop::{wry::webview::FileDropEvent, Config};
 use warp::logging::tracing::log;
@@ -28,12 +28,18 @@ pub(crate) fn webview_config() -> Config {
             if cfg!(target_os = "linux") {
                 match drag_event {
                     FileDropEvent::Hovered { .. } => {
+                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
                         *DRAG_EVENT.write() = drag_event;
                     }
                     FileDropEvent::Dropped { .. } => {
+                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = true;
                         *DRAG_EVENT.write() = drag_event;
                     }
-                    _ => {}
+                    _ => {
+                        if !*BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.read() {
+                            *DRAG_EVENT.write() = FileDropEvent::Cancelled;
+                        }
+                    }
                 };
             } else {
                 *DRAG_EVENT.write() = drag_event;
