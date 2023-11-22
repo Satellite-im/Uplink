@@ -96,11 +96,26 @@ pub fn AddFriend(cx: Scope) -> Element {
         my_id.set(None);
     }
 
+    let identity = state.read().get_own_identity();
+    let short_id = identity.short_id();
+    let did_key = identity.did_key();
+    let username = identity.username();
+    let short_name = format!("{}#{}", username, short_id);
+    let short_name_context = short_name.clone();
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
-        to_owned![request_sent, error_toast, add_in_progress, clear_input];
+        to_owned![
+            request_sent,
+            error_toast,
+            add_in_progress,
+            clear_input,
+            short_name
+        ];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((id, outgoing_requests)) = rx.next().await {
+                let id_to_compare = id.clone();
+
                 //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
@@ -140,21 +155,19 @@ pub fn AddFriend(cx: Scope) -> Element {
                             error_toast.set(Some(get_local_text("friends.request-exist")));
                         }
                         _ => {
-                            error_toast.set(Some(get_local_text("friends.add-failed")));
-                            log::error!("add friend failed: {}", e);
+                            if id_to_compare.clone() == short_name {
+                                log::warn!("cannot add self: {}", e);
+                                error_toast.set(Some(get_local_text("friends.add-yourself")));
+                            } else {
+                                error_toast.set(Some(get_local_text("friends.add-failed")));
+                                log::error!("add friend failed: {}", e);
+                            }
                         }
                     },
                 }
             }
         }
     });
-
-    let identity = state.read().get_own_identity();
-    let short_id = identity.short_id();
-    let did_key = identity.did_key();
-    let username = identity.username();
-    let short_name = format!("{}#{}", username, short_id);
-    let short_name_context = short_name.clone();
 
     cx.render(rsx!(
         div {

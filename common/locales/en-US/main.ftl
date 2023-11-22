@@ -125,6 +125,7 @@ friends = Friends
     .blocked-desc = Blocked
     .add-existing-friend = You are already friends!
     .add-failed = No such user was found!
+    .add-yourself = Can't add yourself, silly goose!
     .pending = Pending
     .key-blocked = User Blocked
     .blocked = Blocked
