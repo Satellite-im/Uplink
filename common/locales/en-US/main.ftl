@@ -140,6 +140,7 @@ friends = Friends
     .already-friends = Already Friends
     .nothing-to-see-here = Nothing to see here
     .share = Share DID
+    .copy-did = Copy DID
     .select-chat = Select Chat
     .share-to-chat = Share
     

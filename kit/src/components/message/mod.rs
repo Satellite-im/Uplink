@@ -5,6 +5,7 @@ use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
 use common::{state::pending_message::progress_file, WARP_CMD_CH};
 //use common::icons::outline::Shape as Icon;
+use arboard::Clipboard;
 use derive_more::Display;
 use dioxus::prelude::*;
 use futures::StreamExt;
@@ -713,6 +714,34 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     } else {
                         get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
                     },
+                    appearance: crate::elements::Appearance::Primary
+                }
+                Button {
+                    aria_label: String::from("embed-identity-button-copy-did"),
+                    disabled: false,
+                    with_title: false,
+                    onpress: move |_| {
+                        match Clipboard::new() {
+                            Ok(mut c) => {
+                                if let Err(e) = c.set_text(identity.did_key().to_string().clone()) {
+                                    log::warn!("Unable to set text to clipboard: {e}");
+                                }
+                            },
+                            Err(e) => {
+                                log::warn!("Unable to create clipboard reference: {e}");
+                            }
+                        };
+                        state
+                            .write()
+                            .mutate(Action::AddToastNotification(ToastNotification::init(
+                                "".into(),
+                                get_local_text("friends.copied-did"),
+                                None,
+                                2,
+                            )));
+                    },
+                    icon: Icon::ClipboardDocument,
+                    text: get_local_text("friends.copy-did"),
                     appearance: crate::elements::Appearance::Primary
                 }
             }));

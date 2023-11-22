@@ -2590,6 +2590,7 @@ dependencies = [
  "futures",
  "kit",
  "once_cell",
+ "regex",
  "uuid",
  "warp",
 ]
@@ -4611,6 +4612,7 @@ dependencies = [
 name = "kit"
 version = "0.1.7"
 dependencies = [
+ "arboard",
  "base64 0.20.0",
  "chrono",
  "common",
