@@ -6,6 +6,7 @@ use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
 use kit::elements::{button::Button, Appearance};
 
+use crate::utils::get_drag_event::BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX;
 use crate::utils::{
     get_drag_event,
     verify_valid_paths::{decoded_pathbufs, verify_paths},
@@ -256,6 +257,9 @@ async fn drag_and_drop_function(
                 if verify_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
                     *files_ready_to_upload.write_silent() = new_files_to_upload;
+                    if cfg!(target_os = "linux") {
+                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
+                    }
                     break;
                 }
             }
