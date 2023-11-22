@@ -433,6 +433,18 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                     if is_friend {
                         rsx!(ContextItem {
+                            danger: false,
+                            icon: Icon::Link,
+                            text: get_local_text("friends.share"),
+                            aria_label: "friends-share".into(),
+                            onpress: move |_| {
+                                share_did.set(Some(did_cloned_2.clone()));
+                            }
+                        })
+                    },
+                    if is_friend {
+                        rsx!(ContextItem {
+                            danger: true,
                             icon: Icon::UserMinus,
                             text: get_local_text("quickprofile.friend-remove"),
                             aria_label: "quick-profile-friend-remove".into(),
@@ -443,6 +455,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         })
                     }
                     ContextItem {
+                        danger: true,
                         icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
                         aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
                         text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
@@ -455,17 +468,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     },
-                    if is_friend {
-                        rsx!(ContextItem {
-                            danger: true,
-                            icon: Icon::Link,
-                            text: get_local_text("friends.share"),
-                            aria_label: "friends-share".into(),
-                            onpress: move |_| {
-                                share_did.set(Some(did_cloned_2.clone()));
-                            }
-                        })
-                    },
+                 
                     if is_friend && !chat_is_current {
                         rsx!(
                             hr{},

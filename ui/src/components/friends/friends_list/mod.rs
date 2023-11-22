@@ -240,6 +240,15 @@ pub fn Friends(cx: Scope) -> Element {
                                                 ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
                                         },
+                                        ContextItem {
+                                            danger: false,
+                                            icon: Icon::Link,
+                                            text: get_local_text("friends.share"),
+                                            aria_label: "friends-share".into(),
+                                            onpress: move |_| {
+                                                share_did.set(Some(share_friend.did_key()));
+                                            }
+                                        },
                                         if let Some(f) = favorite {
                                             rsx!(ContextItem {
                                                 icon: if f {Icon::HeartSlash} else {Icon::Heart},
@@ -287,15 +296,6 @@ pub fn Friends(cx: Scope) -> Element {
                                                     ch.send(ChanCmd::BlockFriend(did.clone()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(did));
                                                 }
-                                            }
-                                        },
-                                        ContextItem {
-                                            danger: true,
-                                            icon: Icon::Link,
-                                            text: get_local_text("friends.share"),
-                                            aria_label: "friends-share".into(),
-                                            onpress: move |_| {
-                                                share_did.set(Some(share_friend.did_key()));
                                             }
                                         },
                                     )),
