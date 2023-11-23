@@ -468,7 +468,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             }
                         }
                     },
-                 
                     if is_friend && !chat_is_current {
                         rsx!(
                             hr{},
