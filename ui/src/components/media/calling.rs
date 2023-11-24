@@ -703,10 +703,10 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         }
     });
     let visible_amount = *amount.get() as usize;
-    let (visible, context) = if visible_amount > cx.props.participants.len() {
+    let (visible, context) = if visible_amount >= cx.props.participants.len() {
         (cx.props.participants.clone(), None)
     } else {
-        let (visible, context) = cx.props.participants.split_at(visible_amount - 1);
+        let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
         (visible.to_vec(), Some(context.to_vec()))
     };
     cx.render(rsx!(
