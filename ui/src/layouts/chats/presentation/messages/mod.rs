@@ -667,7 +667,8 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
     cx.render(rsx!(render_pending_messages {
         pending_outgoing_message: data::pending_group_messages(
             &cx.props.msg,
-            data.active_chat.my_id().did_key(),
+            data.active_chat.other_participants(),
+            data.active_chat.my_id(),
         ),
         active: data.active_chat.id(),
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)

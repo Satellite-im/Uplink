@@ -60,13 +60,6 @@ impl Message {
             if own.eq(&id.did_key()) && !replaced.eq(&lines) {
                 self.is_mention = true;
             }
-            log::debug!(
-                "replace {} {} {} {}",
-                reg,
-                replaced,
-                lines,
-                state::mention_replacement_pattern(id)
-            );
             lines = replaced.to_string();
         });
         self.lines_to_render = Some(lines);

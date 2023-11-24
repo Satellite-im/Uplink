@@ -92,16 +92,27 @@ pub fn create_message_groups(
     messages
 }
 
-pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Option<MessageGroup> {
+pub fn pending_group_messages(
+    pending: &Vec<PendingMessage>,
+    other_ids: Vec<Identity>,
+    my_id: Identity,
+) -> Option<MessageGroup> {
     if pending.is_empty() {
         return None;
     };
+    let mut other_ids = other_ids.clone();
+    other_ids.push(my_id.clone());
+
     let mut messages: Vec<MessageGroupMsg> = vec![];
     let size = pending.len();
     for (i, msg) in pending.iter().enumerate() {
+        let mut message = msg.message.clone();
+        if message.inner.lines().iter().any(|s| s.contains('@')) {
+            message.resolve_message(&other_ids, &my_id.did_key());
+        }
         if i == size - 1 {
             let g = MessageGroupMsg {
-                message: msg.message.clone(),
+                message,
                 is_pending: true,
                 is_first: false,
                 is_last: true,
@@ -111,7 +122,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
             continue;
         }
         let g = MessageGroupMsg {
-            message: msg.message.clone(),
+            message,
             is_pending: true,
             is_first: true,
             is_last: true,
@@ -120,7 +131,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
         messages.push(g);
     }
     Some(MessageGroup {
-        sender: own_did,
+        sender: my_id.did_key(),
         remote: false,
         messages,
     })

@@ -21,7 +21,7 @@ use crate::{
             chatbar::get_chatbar,
             messages::get_messages,
         },
-        scripts::SHOW_CONTEXT,
+        scripts::{SHOW_CONTEXT, USER_TAG_SCRIPT},
     },
 };
 
@@ -56,25 +56,22 @@ pub fn Compose(cx: Scope) -> Element {
     let eval_provider = use_eval(cx);
     // Handle user tag click
     // We handle it here since user tags are not dioxus components
-    use_effect(cx, (), |_| {
+    use_effect(cx, chat_data, |_| {
         to_owned![state, eval_provider, quickprofile_data];
         async move {
-            if let Ok(eval) = eval_provider("") {
+            if let Ok(eval) = eval_provider(USER_TAG_SCRIPT) {
                 loop {
                     if let Ok(s) = eval.recv().await {
-                        match serde_json::from_str::<(f64, f64, String, bool)>(
+                        match serde_json::from_str::<(f64, f64, DID)>(
                             s.as_str().unwrap_or_default(),
                         ) {
-                            Ok((x, y, id, b)) => {
-                                if let Ok(did) = DID::try_from(id) {
-                                    if let Some(id) = state.read().get_identity(&did) {
-                                        quickprofile_data.set(Some((x, y, id, b)));
-                                    }
+                            Ok((x, y, did)) => {
+                                if let Some(id) = state.read().get_identity(&did) {
+                                    quickprofile_data.set(Some((x, y, id, false)));
                                 }
                             }
                             Err(e) => {
                                 log::error!("failed to deserialize message: {}: {}", s, e);
-                                break;
                             }
                         }
                     }

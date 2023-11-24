@@ -1910,7 +1910,7 @@ pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
 
 pub fn mention_replacement_pattern(id: &Identity) -> String {
     format!(
-        r#"<div class="user-tag" value="{}">@{}</div>"#,
+        r#"<div class="message-user-tag" value="{}">@{}</div>"#,
         id.did_key(),
         id.username()
     )
