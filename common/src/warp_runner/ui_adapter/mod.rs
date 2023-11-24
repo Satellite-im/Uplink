@@ -47,6 +47,7 @@ pub struct Message {
 }
 
 impl Message {
+    // resolve the message lines to e.g. format user mentions correctly
     pub fn resolve_message(&mut self, c: &[state::Identity], own: &DID) {
         if self.lines_to_render.is_some() {
             return;
