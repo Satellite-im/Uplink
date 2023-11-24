@@ -520,15 +520,24 @@ impl State {
             }
             MessageEvent::Edited {
                 conversation_id,
-                message,
+                mut message,
             } => {
                 self.update_identity_status_hack(&message.inner.sender());
+                let own = self.get_own_identity().did_key();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    if let Some(msg) = chat
-                        .messages
-                        .iter_mut()
-                        .find(|msg| msg.inner.id() == message.inner.id())
-                    {
+                    if message.inner.lines().iter().any(|s| s.contains('@')) {
+                        message.resolve_message(
+                            &chat
+                                .participants
+                                .iter()
+                                .filter_map(|id| self.identities.get(id))
+                                .cloned()
+                                .collect::<Vec<_>>(),
+                            &own,
+                        );
+                    }
+                    let id = message.inner.id();
+                    if let Some(msg) = chat.messages.iter_mut().find(|msg| msg.inner.id() == id) {
                         *msg = message.clone();
                     }
 
@@ -538,12 +547,18 @@ impl State {
                         }
                     }
 
-                    if let Some(msg) = chat
-                        .pinned_messages
-                        .iter_mut()
-                        .find(|m| m.id() == message.inner.id())
-                    {
-                        *msg = message.inner;
+                    if let Some(msg) = chat.pinned_messages.iter_mut().find(|m| m.id() == id) {
+                        *msg = message.inner.clone();
+                    }
+
+                    if message.is_mention {
+                        if let Some(msg) =
+                            chat.message_pings.iter_mut().find(|m| m.inner.id() == id)
+                        {
+                            *msg = message.clone();
+                        }
+                    } else {
+                        chat.message_pings.retain(|m| m.inner.id() != id);
                     }
                 }
             }
@@ -560,6 +575,8 @@ impl State {
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
+                    chat.message_pings
+                        .retain(|msg| msg.inner.id() != message_id);
 
                     if let Some(msg) = most_recent_message {
                         if chat.messages.is_empty() {
@@ -915,7 +932,8 @@ impl State {
         let is_active_scrolled = self.chats.active_chat_is_scrolled();
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
-            chat.messages.push_back(message);
+            chat.messages.push_back(message.clone());
+            chat.message_pings.push_back(message);
             // only care about the most recent message, for the sidebar
             if chat.messages.len() > 1 {
                 chat.messages.pop_front();
