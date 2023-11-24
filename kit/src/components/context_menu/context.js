@@ -31,7 +31,6 @@ let click = (toggle) => function (ev) {
   let topX = Math.max(minX, overFlowX ? offsetX - width : offsetX)
   context_menu.style.top = `${topY}px`
   context_menu.style.left = `${topX}px`
-  return false
 }
 
 document.getElementById("UUID").addEventListener(
