@@ -61,6 +61,7 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
             filename: filename,
             filepath: filepath,
             remote: false,
+            is_from_attachments: true,
             thumbnail: thumbnail,
             button_icon: icons::outline::Shape::Minus,
             on_press: move |_| {
