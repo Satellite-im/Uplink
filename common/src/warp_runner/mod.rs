@@ -24,7 +24,7 @@ use warp_ipfs::{
     WarpIpfsBuilder,
 };
 
-use crate::{STATIC_ARGS, WARP_CMD_CH};
+use crate::{DiscoveryMode, STATIC_ARGS, WARP_CMD_CH};
 
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
@@ -342,6 +342,30 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
     Ok(tesseract)
 }
 
+impl From<&DiscoveryMode> for Discovery {
+    fn from(mode: &DiscoveryMode) -> Self {
+        match mode {
+            DiscoveryMode::Full => Discovery::Namespace {
+                namespace: None,
+                discovery_type: warp_ipfs::config::DiscoveryType::DHT,
+            },
+            DiscoveryMode::RzPoint { address } => Discovery::Namespace {
+                namespace: None,
+                discovery_type: warp_ipfs::config::DiscoveryType::RzPoint {
+                    addresses: vec![address.parse().expect("Valid multiaddr address")],
+                },
+            },
+            DiscoveryMode::Disable => Discovery::None,
+        }
+    }
+}
+
+impl From<DiscoveryMode> for Discovery {
+    fn from(mode: DiscoveryMode) -> Self {
+        Self::from(&mode)
+    }
+}
+
 // tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password
 async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
@@ -351,7 +375,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
 
     // Discovery is disabled by default for now but may offload manual discovery through a separate service
     // in the near future
-    config.store_setting.discovery = Discovery::None;
+    config.store_setting.discovery = Discovery::from(&STATIC_ARGS.discovery);
 
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
