@@ -348,10 +348,11 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
 
     let path = &STATIC_ARGS.warp_path;
     let mut config = Config::production(path);
-    if STATIC_ARGS.no_discovery {
-        config.store_setting.discovery = Discovery::None;
-        config.ipfs_setting.bootstrap = false;
-    }
+
+    // Discovery is disabled by default for now but may offload manual discovery through a separate service
+    // in the near future
+    config.store_setting.discovery = Discovery::None;
+
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
