@@ -57,7 +57,7 @@ pub struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
-    discovery: DiscoveryMode,
+    discovery: Option<DiscoveryMode>,
     #[clap(long)]
     discovery_point: Option<String>,
     #[cfg(debug_assertions)]
@@ -173,7 +173,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
-        discovery: args.discovery,
+        discovery: args.discovery.unwrap_or_default(),
         production_mode: cfg!(feature = "production_mode"),
     }
 });
