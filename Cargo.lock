@@ -7825,9 +7825,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b03c5d668297f6f78de503774d584711908720dc2b36578f61a4e4551e8c5f"
+checksum = "c55418eebadd79b4869207b9c45dcb324bd6f9bec92aa684ddce62c6b5361142"
 dependencies = [
  "anyhow",
  "async-broadcast 0.6.0",
@@ -9788,7 +9788,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=afd9dac77cf002aba605e83713013f0719da0cc4#afd9dac77cf002aba605e83713013f0719da0cc4"
+source = "git+https://github.com/Satellite-im/Warp?rev=697471d229d679bf81f50dfa60b139fa60707c35#697471d229d679bf81f50dfa60b139fa60707c35"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9844,7 +9844,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=afd9dac77cf002aba605e83713013f0719da0cc4#afd9dac77cf002aba605e83713013f0719da0cc4"
+source = "git+https://github.com/Satellite-im/Warp?rev=697471d229d679bf81f50dfa60b139fa60707c35#697471d229d679bf81f50dfa60b139fa60707c35"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9875,7 +9875,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=afd9dac77cf002aba605e83713013f0719da0cc4#afd9dac77cf002aba605e83713013f0719da0cc4"
+source = "git+https://github.com/Satellite-im/Warp?rev=697471d229d679bf81f50dfa60b139fa60707c35#697471d229d679bf81f50dfa60b139fa60707c35"
 dependencies = [
  "paste",
  "quote",
@@ -9885,7 +9885,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=afd9dac77cf002aba605e83713013f0719da0cc4#afd9dac77cf002aba605e83713013f0719da0cc4"
+source = "git+https://github.com/Satellite-im/Warp?rev=697471d229d679bf81f50dfa60b139fa60707c35#697471d229d679bf81f50dfa60b139fa60707c35"
 dependencies = [
  "anyhow",
  "async-stream",
