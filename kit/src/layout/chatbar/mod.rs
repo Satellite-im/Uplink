@@ -266,9 +266,12 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
             icon: icons::outline::Shape::XMark,
             onpress: move |_| cx.props.on_close.call(()),
         },
-        Label {
-            text: get_local_text("messages.suggested-emoji"),
-        },
+        div {
+            class: "emoji-suggestions-header",
+            Label {
+                text: get_local_text("messages.suggested-emoji"),
+            },
+        }
         cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
             cx.render(rsx!(div {
                 class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
