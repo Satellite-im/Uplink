@@ -12,13 +12,6 @@ pub(crate) fn webview_config() -> Config {
             <!doctype html>
             <html>
             <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-            <script type="text/javascript">
-                window.onload = function() {
-                    document.addEventListener('contextmenu', function(event) {
-                        event.preventDefault();
-                    }, false);
-                };
-            </script>
             <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
             </html>"#
                 .to_string(),
