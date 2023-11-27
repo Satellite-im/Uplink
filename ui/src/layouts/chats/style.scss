@@ -760,11 +760,11 @@
     width: 100%;
     
     &.emoji-selected {
-      background-color: var(--secondary); 
+      background-color: var(--secondary-light); 
     }
     &:hover {
       cursor: pointer;
-      background-color: var(--secondary); 
+      background-color: var(--secondary-light); 
     }
   }
 
