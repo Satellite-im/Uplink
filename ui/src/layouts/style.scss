@@ -21,6 +21,7 @@
 }
 
 .slimbar {
+  overflow-y: scroll;
   #favorites {
     display: inline-flex;
     flex-direction: column;
@@ -304,3 +305,4 @@
       }
   }
 }
+
