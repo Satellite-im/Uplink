@@ -784,7 +784,8 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                             appearance: crate::elements::Appearance::Primary
                         }
                     }))
-                }));
+                }
+            ));
         }
         None => {
             return cx.render(rsx!(div {
