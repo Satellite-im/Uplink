@@ -59,6 +59,8 @@ pub struct Args {
     #[clap(long)]
     discovery: Option<DiscoveryMode>,
     #[clap(long)]
+    enable_quic: bool,
+    #[clap(long)]
     discovery_point: Option<String>,
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
@@ -135,6 +137,8 @@ pub struct StaticArgs {
     pub use_mock: bool,
     /// Disable discovery
     pub discovery: DiscoveryMode,
+    /// Enable quic transport
+    pub enable_quic: bool,
     // some features aren't ready for release. This field is used to disable such features.
     pub production_mode: bool,
 }
@@ -174,6 +178,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         discovery: args.discovery.unwrap_or_default(),
+        enable_quic: args.enable_quic,
         production_mode: cfg!(feature = "production_mode"),
     }
 });

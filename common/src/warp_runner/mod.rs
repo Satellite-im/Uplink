@@ -377,6 +377,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     // in the near future
     config.store_setting.discovery = Discovery::from(&STATIC_ARGS.discovery);
 
+    config.ipfs_setting.disable_quic = !STATIC_ARGS.enable_quic;
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
