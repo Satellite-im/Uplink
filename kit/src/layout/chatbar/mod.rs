@@ -255,7 +255,7 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
         aria_label: "emoji-suggestions-container",
         onmouseenter: move |_| {
             *cx.props.selected.write() = None;
-        },	
+        },
         onmouseleave: move |_| {
             *cx.props.selected.write() = None;
         },
@@ -267,7 +267,7 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
             onpress: move |_| cx.props.on_close.call(()),
         },
         Label {
-            text: "Suggested Emoji".into()
+            text: get_local_text("messages.suggested-emoji"),
         },
         cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
             cx.render(rsx!(div {
