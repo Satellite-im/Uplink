@@ -319,9 +319,10 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     }
     let call = &active_call.call;
 
-    let participants = state.read().get_identities(&call.participants);
+    let participants = state.read().get_identities(&call.participants_joined);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
+    let self_id = build_user_from_identity(&state.read().get_own_identity());
 
     use_effect(cx, &other_participants, |in_call| {
         to_owned![ch, state];
@@ -400,7 +401,15 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 class: format_args!("call-time {}", if cx.props.in_chat {"in-chat"} else {""}),
                 aria_label: "call-time",
                 format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
-            }
+            },
+            cx.props.in_chat.then(||rsx!(div {
+                class: "self-identity",
+                UserImage {
+                    platform: self_id.platform,
+                    status: self_id.status,
+                    image: self_id.photo
+                }
+            }))
         },
         div {
             class: "controls",
@@ -564,7 +573,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
-    let mut participants = state.read().get_identities(&call.participants);
+    let mut participants = state.read().get_identities(&call.participants_joined);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
         Some(c) => match c.conversation_name {
@@ -643,7 +652,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
                 )
                 p {
                     "{cx.props.description}",
-                }
+                },
             },
             div {
                 class: "calling",

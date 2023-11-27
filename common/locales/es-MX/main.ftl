@@ -74,7 +74,6 @@ messages = Messages
     .say-something-placeholder = Di algo...
     .user-sent-message = { $user } te envió un mensaje.
     .unknown-sent-message = Alguien te envió un mensaje.
-    .not-friends = Ya no son amigos
     .msg-banner = Los mensajes están asegurados con encriptación de extremo a extremo y enviados a través de una red peer to peer.
     .create-group-chat = Crear Grupo de Chat
     .group-name = Nombre del Grupo
