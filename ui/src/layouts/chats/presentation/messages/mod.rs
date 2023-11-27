@@ -43,7 +43,10 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::data::{self, ChatData, ScrollBtn},
+    layouts::chats::{
+        data::{self, ChatData, ScrollBtn},
+        scripts::READ_SCROLL,
+    },
     utils::format_timestamp::format_timestamp_timeago,
 };
 
@@ -69,7 +72,6 @@ pub enum MessagesCommand {
 }
 
 pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
-const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
 const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 #[component(no_case_check)]
