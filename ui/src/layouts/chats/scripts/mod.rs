@@ -7,3 +7,4 @@ pub const SHOW_CONTEXT: &str = include_str!("./show_context.js");
 pub const SCROLL_TO_TOP: &str = include_str!("./scroll_to_top.js");
 pub const SCROLL_TO_BOTTOM: &str = include_str!("./scroll_to_bottom.js");
 pub const OBSERVER_SCRIPT: &str = include_str!("./observer_script.js");
+pub const READ_SCROLL: &str = include_str!("./read_scroll.js");
