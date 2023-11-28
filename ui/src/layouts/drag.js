@@ -6,28 +6,25 @@ var maxElements = 100;
 var x = $OFFSET_X;
 var y = $OFFSET_Y;
 
-var newX = window.screenX + 100; // Move 100 pixels to the right
-var newY = window.screenY + 2;
+var element = document.elementFromPoint(x, y);
 
-// var element = document.elementFromPoint(x, y);
+while (element && elementsChecked < maxElements) {
+    if (element.tagName === 'DIV' && element.getAttribute('aria-label') === 'favorite-chat-item-on-slimbar') {
+        elementId = element.id;
+        break;
+    }
 
-// while (element && elementsChecked < maxElements) {
-//     if (element.tagName === 'DIV' && element.getAttribute('aria-label') === 'favorite-chat-item-on-slimbar') {
-//         elementId = element.id;
-//         break;
-//     }
+    elementsChecked++;
 
-//     elementsChecked++;
+    var children = element.children;
+    if (children.length > 0) {
+        element = children[0];
+    } else {
+        while (!element.nextElementSibling && element.parentElement) {
+            element = element.parentElement;
+        }
+        element = element.nextElementSibling;
+    }
+}
 
-//     var children = element.children;
-//     if (children.length > 0) {
-//         element = children[0];
-//     } else {
-//         while (!element.nextElementSibling && element.parentElement) {
-//             element = element.parentElement;
-//         }
-//         element = element.nextElementSibling;
-//     }
-// }
-
-// return element.id;
+return element.id;
