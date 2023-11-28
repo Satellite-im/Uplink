@@ -167,6 +167,7 @@ pub struct Props<'a> {
     #[props(optional)]
     devmode: Option<bool>,
     on_mouseenter: Option<EventHandler<'a, MouseEvent>>,
+    left_click_trigger: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -175,13 +176,16 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let window = use_window(cx);
 
     let devmode = cx.props.devmode.unwrap_or(false);
+    let with_click = cx.props.left_click_trigger.unwrap_or_default();
 
     // Handles the hiding and showing of the context menu
     let eval = use_eval(cx);
     use_effect(cx, (id,), |(id,)| {
-        to_owned![eval];
+        to_owned![eval, with_click];
         async move {
-            let script = include_str!("./context.js").replace("UUID", &id);
+            let script = include_str!("./context.js")
+                .replace("UUID", &id)
+                .replace("ON_CLICK", &format!("{}", with_click));
             let _ = eval(&script);
         }
     });
