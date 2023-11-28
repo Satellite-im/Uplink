@@ -4,6 +4,7 @@ use common::warp_runner::{BlinkCmd, WarpCmd};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 
+use kit::elements::button::Button;
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
 use warp::logging::tracing::log;
@@ -21,6 +22,8 @@ enum AudioCmd {
     FetchInputDevices,
     SetInputDevice(String),
     SetEchoCancellation(bool),
+    TestSpeaker,
+    TestMicrophone,
 }
 
 #[allow(non_snake_case)]
@@ -138,6 +141,30 @@ pub fn AudioSettings(cx: Scope) -> Element {
                                 }
                             }
                         }
+                        AudioCmd::TestSpeaker => {
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) =
+                                warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::TestSpeaker { rsp: tx }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
+                            if let Err(_) = rx.await {
+                                log::error!("failed to test speaker");
+                            };
+                        }
+                        AudioCmd::TestMicrophone => {
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) = warp_cmd_tx
+                                .send(WarpCmd::Blink(BlinkCmd::TestMicrophone { rsp: tx }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
+                            if let Err(_) = rx.await {
+                                log::error!("failed to test microphone");
+                            };
+                        }
                     }
                 }
                 break;
@@ -185,6 +212,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //     }
             // }
             SettingSection {
+                section_label: get_local_text("settings-audio.input-device-test"),
+                section_description: get_local_text("settings-audio.input-device-test-description"),
+                no_border: true,
+                Button {
+                    text: get_local_text("settings-audio.check"),
+                    disabled: false,
+                    onpress: move |_| {
+                        ch.send(AudioCmd::TestMicrophone);
+                    },
+                },
+            },
+            SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
                 no_border: true,
@@ -208,6 +247,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //         onchange: move |_| {}
             //     }
             // }
+            SettingSection {
+                section_label: get_local_text("settings-audio.output-device-test"),
+                section_description: get_local_text("settings-audio.output-device-test-description"),
+                no_border: true,
+                Button {
+                    text: get_local_text("settings-audio.check"),
+                    disabled: false,
+                    onpress: move |_| {
+                        ch.send(AudioCmd::TestSpeaker);
+                    },
+                },
+            },
 
             // currently does nothing
             //SettingSection {

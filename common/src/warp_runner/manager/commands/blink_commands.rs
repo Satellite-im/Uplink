@@ -77,6 +77,14 @@ pub enum BlinkCmd {
         flag: bool,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "TestSpeaker")]
+    TestSpeaker {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "TestMicrophone")]
+    TestMicrophone {
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
@@ -137,6 +145,16 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             } else {
                 let _ = rsp.send(blink.disable_automute());
             }
+        }
+        BlinkCmd::TestSpeaker { rsp } => {
+            let config = blink.get_audio_device_config().await;
+            let r = config.test_speaker();
+            let _ = rsp.send(r.map_err(|e| warp::error::Error::Any(e)));
+        }
+        BlinkCmd::TestMicrophone { rsp } => {
+            let config = blink.get_audio_device_config().await;
+            let r = config.test_microphone();
+            let _ = rsp.send(r.map_err(|e| warp::error::Error::Any(e)));
         }
     }
 }
