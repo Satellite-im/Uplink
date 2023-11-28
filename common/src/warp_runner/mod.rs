@@ -369,7 +369,6 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         ))
     }));
     config.thumbnail_size = (500, 500);
-    config.thumbnail_exact_format = false;
 
     let (multipass, raygun, constellation) = WarpIpfsBuilder::default()
         .set_tesseract(tesseract.clone())
