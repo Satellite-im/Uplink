@@ -1,4 +1,3 @@
-use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 use warp::constellation::file::File;
@@ -261,16 +260,18 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
             *cx.props.selected.write() = None;
         },
         Button {
+            small: true,
             aria_label: "emoji-suggestion-close-button".into(),
-            icon: Icon::XMark,
-            appearance: Appearance::Transparent,
-            onpress: move |_| {
-               cx.props.on_close.call(());
-            }
+            appearance: Appearance::Secondary,
+            icon: icons::outline::Shape::XMark,
+            onpress: move |_| cx.props.on_close.call(()),
         },
-        Label {
-            text: "Suggested Emoji".into()
-        },
+        div {
+            class: "emoji-suggestions-header",
+            Label {
+                text: get_local_text("messages.suggested-emoji"),
+            },
+        }
         cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
             cx.render(rsx!(div {
                 class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
