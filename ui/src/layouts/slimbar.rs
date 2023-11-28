@@ -27,14 +27,15 @@ pub struct Props {
 pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_navigator(cx);
-
-    let favorites = if state.read().initialized {
+    let favorites_chats = use_ref(cx, ||  if state.read().initialized {
         state.read().chats_favorites()
     } else {
         vec![]
-    };
+    });
 
-    let favorites_chats = use_ref(cx, || favorites.clone());
+
+    let favorites = favorites_chats.read().clone();
+
 
     let chat_to_move = use_ref(cx, || Option::<Uuid>::None);
     let target_chat_to_drop = use_ref(cx, ||Option::<Uuid>::None);
@@ -70,11 +71,11 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
             },
             top_children: cx.render(rsx!(
                 // Only display favorites if we have some.
-                (!favorites_chats.read().is_empty()).then(|| rsx!(
+                (!favorites.is_empty()).then(|| rsx!(
                     div {
                         id: "favorites",
                         aria_label: "Favorites",
-                        favorites_chats.read().iter().cloned().map(|chat| {
+                        favorites.iter().cloned().map(|chat| {
                             let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key())
                                 && !state.read().chats_sidebar().contains(&chat);
                             let favorites_chat = chat.clone();
@@ -96,24 +97,22 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                                 },
                                 
                                 ondragend: move |event| {
-                                    let script = element_selected_to_drop_script.replace("$OFFSET_X", &event.mouse.client_coordinates().x.to_string()).replace("$OFFSET_Y", &event.mouse.client_coordinates().y.to_string());
-                                    eval(&script);
-                                    
-                                    // cx.spawn({
-                                    //     to_owned![eval, script, target_chat_to_drop, change_favorite_chats_order];
-                                    //     async move {
-                                    //         if let Ok(r) = eval(&script) {
-                                    //             if let Ok(val) = r.join().await {
-                                    //                 let element_id = val.as_str().unwrap_or_default();
-                                    //                 if !element_id.is_empty() {
-                                    //                     println!("element_id: {}", element_id);
-                                    //                     *target_chat_to_drop.write_silent() = Uuid::parse_str(element_id).ok();
-                                    //                     change_favorite_chats_order.set(true);
-                                    //                 }
-                                    //             }
-                                    //     }
-                                    // }
-                                    // });
+                                    let script = element_selected_to_drop_script.replace("$OFFSET_X", &event.mouse.client_coordinates().x.to_string()).replace("$OFFSET_Y", &event.mouse.client_coordinates().y.to_string());                                    
+                                    cx.spawn({
+                                        to_owned![eval, script, target_chat_to_drop, change_favorite_chats_order];
+                                        async move {
+                                            if let Ok(r) = eval(&script) {
+                                                if let Ok(val) = r.join().await {
+                                                    let element_id = val.as_str().unwrap_or_default();
+                                                    if !element_id.is_empty() {
+                                                        println!("element_id: {}", element_id);
+                                                        *target_chat_to_drop.write_silent() = Uuid::parse_str(element_id).ok();
+                                                        change_favorite_chats_order.set(true);
+                                                    }
+                                                }
+                                        }
+                                    }
+                                    });
                                     
                                 },
                                 ondragstart: move |_| {
