@@ -224,6 +224,11 @@ impl Chats {
                 .and_then(|chat| chat.replying_to.as_ref().map(|msg| msg.id()))
         })
     }
+
+    pub fn move_to_top_of_sidebar(&mut self, conv_id: Uuid) {
+        self.in_sidebar.retain(|x| x != &conv_id);
+        self.in_sidebar.push_front(conv_id);
+    }
 }
 
 fn default_conversation_type() -> ConversationType {
