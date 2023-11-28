@@ -294,7 +294,6 @@ impl State {
                 .answer_call(id, Some(self.get_own_identity().did_key())) //Update call with own did immediately
             {
                 Ok(call) => {
-                    self.set_active_media(call.conversation_id);
                     self.send_chat_to_top_of_sidebar(call.conversation_id);
                 }
                 Err(e) => {
