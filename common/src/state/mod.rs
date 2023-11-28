@@ -208,6 +208,7 @@ impl State {
             // ===== UI =====
             // Favorites
             Action::Favorite(chat) => self.favorite(&chat),
+            Action::ReorderFavorites(chats) => self.reorder_favorites(chats),
             Action::ToggleFavorite(chat) => self.toggle_favorite(chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             // Language
@@ -1012,6 +1013,14 @@ impl State {
         if !self.chats.favorites.contains(chat) {
             self.chats.favorites.push(*chat);
         }
+    }
+    fn reorder_favorites(&mut self, chats: Vec<Uuid>) {
+        // if !self.chats.favorites.contains(chat) {
+        //     self.chats.favorites.push(*chat);
+        // }
+        println!("Reorder favorites: {:?}", chats);
+        self.chats.favorites.clear();
+        self.chats.favorites = chats;
     }
     pub fn finished_loading_chat(&mut self, chat_id: Uuid) {
         if let Some(chat) = self.chats.all.get_mut(&chat_id) {

@@ -140,6 +140,8 @@ pub enum Action<'a> {
     /// Handles the display of "favorite" chats
     #[display(fmt = "Favorite")]
     Favorite(Uuid),
+    #[display(fmt = "ReorderFavorites")]
+    ReorderFavorites(Vec<Uuid>),
     #[display(fmt = "UnFavorite")]
     UnFavorite(Uuid),
     /// Sets the active chat to a given chat
