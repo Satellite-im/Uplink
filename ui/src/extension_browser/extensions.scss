@@ -71,4 +71,11 @@
         gap: var(--gap);
 
     }
+
+    .extensions-not-installed {
+        display: inline-flex;
+        flex-direction: column;
+        gap: var(--gap);
+        padding: var(--padding-less);
+    }
 }
