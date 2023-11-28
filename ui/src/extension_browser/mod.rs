@@ -6,7 +6,6 @@ use common::{icons::outline::Shape as Icon, language::get_local_text, state::Sta
 use kit::elements::label::Label;
 
 use crate::components::settings::{ExtensionSetting, SettingSection};
-use crate::logger::get_logs;
 use common::sounds;
 use dioxus::prelude::*;
 use kit::elements::input::{Input, Options};
