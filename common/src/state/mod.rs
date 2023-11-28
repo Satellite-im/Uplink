@@ -295,7 +295,7 @@ impl State {
             {
                 Ok(call) => {
                     self.set_active_media(call.conversation_id);
-                    self.chats.move_to_top_of_sidebar(call.conversation_id);
+                    self.send_chat_to_top_of_sidebar(call.conversation_id);
                 }
                 Err(e) => {
                     log::error!("failed to answer call: {e}");
@@ -309,8 +309,8 @@ impl State {
                     call.participants,
                 );
                 let _ = self.ui.call_info.answer_call(call.id, None);
+                self.set_active_chat(&call.conversation_id, true);
                 self.set_active_media(call.conversation_id);
-                self.chats.move_to_top_of_sidebar(call.conversation_id);
             }
             Action::EndCall => {
                 self.chats.active_media = None;
@@ -651,6 +651,7 @@ impl State {
                         return;
                     }
                 };
+                self.send_chat_to_top_of_sidebar(conversation_id);
                 if let Err(e) =
                     self.ui
                         .call_info
