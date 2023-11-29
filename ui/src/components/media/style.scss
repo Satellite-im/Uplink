@@ -190,19 +190,13 @@
         p {
             font-size: var(--text-size-less);
         }
-        .calling.in-chat {
+        .calling-users.in-chat {
             display: inline-flex;
             justify-content: center;
             align-items: center;
             margin-left: auto;
             margin-right: auto;
-            width: calc(2 * var(--height-input));
-            height: calc(2 * var(--height-input));
-            .user-group-scale{
-                display: flex;
-                transform: scale(2);
-                gap: 2px;
-            }
+            gap: 2px;
             .call-user {
                 display: flex;
                 align-self: center;
@@ -214,6 +208,12 @@
                     .image {
                         border-color: 1px solid var(--success-light);
                     }
+                }
+                div {
+                    max-width: calc(2 * var(--height-input));
+                    max-height: calc(2 * var(--height-input));
+                    width: calc(2 * var(--height-input));
+                    height: calc(2 * var(--height-input));
                 }
             }
         }
@@ -248,6 +248,34 @@
         border-radius: 0;
         border-bottom: 1px solid var(--border-subtle-color);
         background: color-mix(in srgb, var(--secondary) 80%, transparent);
+    }
+}
+
+.additional-participants {
+    button {
+        margin: auto;
+        width: calc(2 * 0.8 * var(--height-input));
+        height: calc(2 * 0.8 * var(--height-input));
+        border-radius: 100%;
+        .btn-text {
+            width: fit-content;
+            height: fit-content;
+            font-size: var(--text-size-more);
+        }
+    }
+    .additional-participant {
+        color: var(--text-color);
+        display: inline-flex;
+        .additional-participant-name {
+            margin-top: auto;
+            margin-bottom: auto;
+            padding-left: var(--padding-less);
+        }
+        &.speaking {
+            .image {
+                border-color: 1px solid var(--success-light);
+            }
+        }
     }
 }
 
@@ -293,16 +321,16 @@
         }
     }
 
-    .calling {
+    .calling-users {
         display: inline-flex;
         justify-content: center;
         align-items: center;
         gap: var(--gap);
-        width: calc(2 * var(--height-input));
-        height: calc(2 * var(--height-input));
-        .user-group-scale{
-            display: flex;
-            transform: scale(2);
+        div {
+            max-width: calc(2 * var(--height-input));
+            max-height: calc(2 * var(--height-input));
+            width: calc(2 * var(--height-input));
+            height: calc(2 * var(--height-input));
         }
     }
 

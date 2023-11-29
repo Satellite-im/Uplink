@@ -731,12 +731,13 @@
   position: absolute; 
   bottom: 100%;
   color: var(--text-color); 
-  background-color: var(--secondary); 
-  padding: var(--gap-less) var(--gap); 
+  background: var(--secondary-dark);
+  padding: var(--gap); 
   border-radius: var(--border-radius);
+	border: 1px solid var(--border-subtle-color);
   max-height: 200px; 
-  width: calc(100% - var(--padding-more)); 
-  overflow: scroll;
+  width: calc(100% - var(--padding)); 
+  overflow-y: auto;
   &::-webkit-scrollbar-track {
     background: transparent;
   }
@@ -749,21 +750,33 @@
     background: var(--secondary-light);
   }
 
-
+  .emoji-suggestions-header {
+    height: var(--height-input);
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+  }
+    
   .emoji-suggestion {
     display: flex;
     align-items: center;
     border-radius: var(--border-radius);
-    padding: var(--gap-less) var(--gap);
-    padding: var(--gap-less) var(--gap);
+    padding: var(--gap);
     width: 100%;
     
     &.emoji-selected {
-      background-color: var(--secondary-dark); 
+      background-color: var(--secondary-light); 
     }
     &:hover {
       cursor: pointer;
-      background-color: var(--secondary-dark); 
+      background-color: var(--secondary-light); 
     }
   }
+
+  .btn-wrap {
+    position: absolute;
+    top: var(--gap);
+    right: var(--gap);
+    z-index: 1;
+}
 }
