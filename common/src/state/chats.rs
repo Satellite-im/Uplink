@@ -53,6 +53,8 @@ pub struct Chat {
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
     unreads: HashSet<Uuid>,
+    // This tracks the messages that mentions the user. For future use
+    // E.g. displaying a list of mentions to the user in a pop up
     #[serde(default, skip)]
     pub mentions: VecDeque<ui_adapter::Message>,
     // If a value exists, we will render the message we're replying to above the chatbar
