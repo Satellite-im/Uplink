@@ -18,17 +18,17 @@ pub type To = &'static str;
 pub enum SuggestionType {
     None,
     // Emoji suggestions. First is the string that was matched. Second is the emojis matched
-    EMOJI(String, Vec<(String, String)>),
+    Emoji(String, Vec<(String, String)>),
     // Username tag suggestions. First is the string that was matched. Second is the users that matched
-    TAG(String, Vec<Identity>),
+    Tag(String, Vec<Identity>),
 }
 
 impl SuggestionType {
     fn get_replacement_for_index(&self, index: usize) -> (String, String) {
         match self {
             SuggestionType::None => (String::new(), String::new()),
-            SuggestionType::EMOJI(pattern, v) => (pattern.clone(), v[index].0.clone()),
-            SuggestionType::TAG(pattern, v) => (
+            SuggestionType::Emoji(pattern, v) => (pattern.clone(), v[index].0.clone()),
+            SuggestionType::Tag(pattern, v) => (
                 pattern.clone(),
                 format!("{}#{}", v[index].username(), v[index].short_id()),
             ),
@@ -38,8 +38,8 @@ impl SuggestionType {
     fn is_empty(&self) -> bool {
         match self {
             SuggestionType::None => true,
-            SuggestionType::EMOJI(_, v) => v.is_empty(),
-            SuggestionType::TAG(_, v) => v.is_empty(),
+            SuggestionType::Emoji(_, v) => v.is_empty(),
+            SuggestionType::Tag(_, v) => v.is_empty(),
         }
     }
 }
@@ -221,8 +221,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         move |code| {
                             let amount = match cx.props.suggestions {
                                 SuggestionType::None => 0,
-                                SuggestionType::EMOJI(_, v) => v.len(),
-                                SuggestionType::TAG(_, v) => v.len(),
+                                SuggestionType::Emoji(_, v) => v.len(),
+                                SuggestionType::Tag(_, v) => v.len(),
                             };
                             if amount == 0 {
                                 *selected_suggestion.write_silent() = None;
@@ -286,7 +286,7 @@ pub struct SuggestionProps<'a> {
 fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
-        SuggestionType::EMOJI(pattern, emojis) => {
+        SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
                     class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
@@ -306,7 +306,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
             }).collect();
             (get_local_text("messages.emoji-suggestion"), component)
         }
-        SuggestionType::TAG(pattern, identities) => {
+        SuggestionType::Tag(pattern, identities) => {
             let component = identities.iter().enumerate().map(|(num, id)| {
                 let username = format!("{}#{}", id.username(), id.short_id());
                 rsx!(div {

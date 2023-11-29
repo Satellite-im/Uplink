@@ -337,7 +337,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             } else {
                                 //Suggest emojis
                                 let alias = emoji.replace(':', "");
-                                suggestions.set(SuggestionType::EMOJI(emoji.to_string(), state.read().ui.emojis.get_matching_emoji(&alias, false)));
+                                suggestions.set(SuggestionType::Emoji(emoji.to_string(), state.read().ui.emojis.get_matching_emoji(&alias, false)));
                             }
                             return;
                     }
@@ -361,7 +361,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             let lower = tag.to_lowercase();
                             let users: Vec<_> = chat_participants.iter().filter(|id|id.username().to_lowercase().starts_with(&lower))
                                 .cloned().collect();
-                            suggestions.set(SuggestionType::TAG(tag, users));
+                            suggestions.set(SuggestionType::Tag(tag, users));
                         }
                         None => {
                             suggestions.set(SuggestionType::None);
@@ -382,7 +382,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     state
                         .write()
                         .mutate(Action::SetChatDraft(active_chat_id, draft));
-                    if let SuggestionType::TAG(_, _) = suggestions.get() {
+                    if let SuggestionType::Tag(_, _) = suggestions.get() {
                         let amount = replacement.chars().count() - 9;
                         let name: String = replacement.chars().take(amount).collect(); // remove short did
                         if let Some(participant) = chat_participants_2.iter().find(|id|id.username().eq(&name)) {
