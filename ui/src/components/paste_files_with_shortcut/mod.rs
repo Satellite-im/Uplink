@@ -10,12 +10,11 @@ use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use dioxus_hooks::{to_owned, use_future, use_ref};
 use once_cell::sync::Lazy;
-use tokio::time::sleep;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 
 static LAST_CALLED: Lazy<Mutex<Instant>> =
-    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(2)));
+    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(1)));
 
 fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
     let mut last_called = LAST_CALLED.lock().unwrap();
@@ -69,6 +68,7 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
 
+    // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
     use_future(cx, (), |_| {
         to_owned![command_pressed, files_local_path_to_upload];
         async move {
@@ -86,21 +86,15 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     });
 
     use_global_shortcut(cx, (key, modifiers), {
-        to_owned![files_local_path_to_upload, command_pressed];
+        to_owned![command_pressed];
         move || {
-            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-            if files_local_path.iter().any(|path| {
-                path.file_name()
-                    .map_or(false, |f| f == "img_from_clipboard.png")
-            }) {
-                command_pressed.with_mut(|i| *i = true);
-                // debounced_callback(
-                //     || command_pressed.with_mut(|i| *i = true),
-                //     Duration::from_secs(1),
-                // );
-            } else if !files_local_path.is_empty() {
-                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
-            }
+            // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
+            debounced_callback(
+                || {
+                    command_pressed.with_mut(|i| *i = true);
+                },
+                Duration::from_millis(250),
+            );
         }
     });
     None
