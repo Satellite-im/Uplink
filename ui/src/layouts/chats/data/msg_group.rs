@@ -54,9 +54,7 @@ pub fn create_message_groups(
     other_ids.push(my_id.clone());
 
     for mut msg in input.drain(..) {
-        if msg.inner.lines().iter().any(|s| s.contains('@')) {
-            msg.resolve_message(&other_ids, &my_id.did_key());
-        }
+        msg.insert_did(&other_ids, &my_id.did_key());
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = MessageGroupMsg {
@@ -107,9 +105,7 @@ pub fn pending_group_messages(
     let size = pending.len();
     for (i, msg) in pending.iter().enumerate() {
         let mut message = msg.message.clone();
-        if message.inner.lines().iter().any(|s| s.contains('@')) {
-            message.resolve_message(&other_ids, &my_id.did_key());
-        }
+        message.insert_did(&other_ids, &my_id.did_key());
         if i == size - 1 {
             let g = MessageGroupMsg {
                 message,

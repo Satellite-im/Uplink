@@ -440,13 +440,11 @@ impl State {
                 conversation_id,
                 mut message,
             } => {
-                if message.inner.lines().iter().any(|s| s.contains('@')) {
-                    if let Some(ids) = self
-                        .get_chat_by_id(conversation_id)
-                        .map(|c| self.chat_participants(&c))
-                    {
-                        message.resolve_message(&ids, &self.get_own_identity().did_key());
-                    }
+                if let Some(ids) = self
+                    .get_chat_by_id(conversation_id)
+                    .map(|c| self.chat_participants(&c))
+                {
+                    message.insert_did(&ids, &self.get_own_identity().did_key());
                 }
                 let ping = message.is_mention;
                 self.update_identity_status_hack(&message.inner.sender());
@@ -525,17 +523,15 @@ impl State {
                 self.update_identity_status_hack(&message.inner.sender());
                 let own = self.get_own_identity().did_key();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    if message.inner.lines().iter().any(|s| s.contains('@')) {
-                        message.resolve_message(
-                            &chat
-                                .participants
-                                .iter()
-                                .filter_map(|id| self.identities.get(id))
-                                .cloned()
-                                .collect::<Vec<_>>(),
-                            &own,
-                        );
-                    }
+                    message.insert_did(
+                        &chat
+                            .participants
+                            .iter()
+                            .filter_map(|id| self.identities.get(id))
+                            .cloned()
+                            .collect::<Vec<_>>(),
+                        &own,
+                    );
                     let id = message.inner.id();
                     if let Some(msg) = chat.messages.iter_mut().find(|msg| msg.inner.id() == id) {
                         *msg = message.clone();

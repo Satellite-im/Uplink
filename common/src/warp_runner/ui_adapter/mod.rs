@@ -48,13 +48,17 @@ pub struct Message {
 
 impl Message {
     // resolve the message lines to e.g. format user mentions correctly
-    pub fn resolve_message(&mut self, c: &[state::Identity], own: &DID) {
+    pub fn insert_did(&mut self, c: &[state::Identity], own: &DID) {
         if self.lines_to_render.is_some() {
             return;
         }
         // Better if warp provides a way of saving mentions in the message
         // so dont need to loop over all participants
         let mut lines = self.inner.lines().join("\n");
+        if !self.inner.lines().iter().any(|s| s.contains('@')) {
+            self.lines_to_render = Some(lines);
+            return;
+        }
         c.iter().for_each(|id| {
             let reg = state::mention_regex_pattern(id, false);
             let replaced = reg.replace_all(&lines, state::mention_replacement_pattern(id));
