@@ -54,7 +54,7 @@ pub struct Chat {
     #[serde(default)]
     unreads: HashSet<Uuid>,
     #[serde(default, skip)]
-    pub message_pings: VecDeque<ui_adapter::Message>,
+    pub mentions: VecDeque<ui_adapter::Message>,
     // If a value exists, we will render the message we're replying to above the chatbar
     #[serde(skip)]
     pub replying_to: Option<raygun::Message>,
@@ -89,7 +89,7 @@ impl Default for Chat {
             creator: Default::default(),
             messages: Default::default(),
             unreads: Default::default(),
-            message_pings: Default::default(),
+            mentions: Default::default(),
             replying_to: Default::default(),
             typing_indicator: Default::default(),
             draft: Default::default(),

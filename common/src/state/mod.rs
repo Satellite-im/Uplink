@@ -552,13 +552,11 @@ impl State {
                     }
 
                     if message.is_mention {
-                        if let Some(msg) =
-                            chat.message_pings.iter_mut().find(|m| m.inner.id() == id)
-                        {
+                        if let Some(msg) = chat.mentions.iter_mut().find(|m| m.inner.id() == id) {
                             *msg = message.clone();
                         }
                     } else {
-                        chat.message_pings.retain(|m| m.inner.id() != id);
+                        chat.mentions.retain(|m| m.inner.id() != id);
                     }
                 }
             }
@@ -575,8 +573,7 @@ impl State {
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
-                    chat.message_pings
-                        .retain(|msg| msg.inner.id() != message_id);
+                    chat.mentions.retain(|msg| msg.inner.id() != message_id);
 
                     if let Some(msg) = most_recent_message {
                         if chat.messages.is_empty() {
@@ -933,7 +930,7 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message.clone());
-            chat.message_pings.push_back(message);
+            chat.mentions.push_back(message);
             // only care about the most recent message, for the sidebar
             if chat.messages.len() > 1 {
                 chat.messages.pop_front();
