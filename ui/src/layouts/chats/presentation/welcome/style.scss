@@ -22,5 +22,13 @@
       pointer-events: all;
       position: absolute;
     }
+    .topbar {
+      border-bottom: 1px solid var(--border-subtle-color);
+    }
+    .welcome-contents {
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      height: 100%;}
   }
   

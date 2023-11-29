@@ -21,6 +21,7 @@ pub fn Welcome(cx: Scope) -> Element {
         div {
             id: "welcome",
             aria_label: "welcome-screen",
+            class: "welcome-screen",
             if state.read().ui.sidebar_hidden && state.read().ui.is_minimal_view() {
                 rsx!(
                     Topbar {
@@ -32,6 +33,8 @@ pub fn Welcome(cx: Scope) -> Element {
                     }
                 )
             }
+            div {
+                class: "welcome-contents",
             img {
                 class: "image",
                 aria_label: "welcome-image",
@@ -50,6 +53,8 @@ pub fn Welcome(cx: Scope) -> Element {
                     router.replace(UplinkRoute::FriendsLayout {  });
                 }
             },
+
+        }
         }
     })
 }
