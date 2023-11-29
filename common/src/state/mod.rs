@@ -698,28 +698,13 @@ impl State {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
             }
-            BlinkEventKind::ParticipantMuted { peer_id } => {
-                if let Err(e) = self.ui.call_info.participant_muted(peer_id) {
-                    log::error!("{e}");
-                }
-            }
-            BlinkEventKind::ParticipantUnmuted { peer_id } => {
-                if let Err(e) = self.ui.call_info.participant_unmuted(peer_id) {
-                    log::error!("{e}");
-                }
-            }
-            BlinkEventKind::ParticipantDeafened { peer_id } => {
-                if let Err(e) = self.ui.call_info.participant_deafened(peer_id) {
-                    log::error!("{e}");
-                }
-            }
-            BlinkEventKind::ParticipantUndeafened { peer_id } => {
-                if let Err(e) = self.ui.call_info.participant_undeafened(peer_id) {
-                    log::error!("{e}");
-                }
-            }
             BlinkEventKind::AudioStreamError => {
                 // todo
+            }
+            BlinkEventKind::ParticipantStateChanged { peer_id, state } => {
+                if let Err(e) = self.ui.call_info.update_partcipant_state(peer_id, state) {
+                    log::error!("{e}");
+                }
             }
         }
     }
