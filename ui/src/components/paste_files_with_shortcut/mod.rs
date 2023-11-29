@@ -8,8 +8,9 @@ use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
-use dioxus_hooks::{to_owned, use_ref};
+use dioxus_hooks::{to_owned, use_future, use_ref};
 use once_cell::sync::Lazy;
+use tokio::time::sleep;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 
@@ -53,6 +54,7 @@ pub struct ShortCutProps<'a> {
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     let files_local_path_to_upload = use_ref(cx, Vec::new);
+    let command_pressed = use_ref(cx, || false);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
@@ -67,18 +69,38 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
 
-    use_global_shortcut(cx, (key, modifiers), {
-        to_owned![files_local_path_to_upload];
-        move || {
-            debounced_callback(
-                || {
+    use_future(cx, (), |_| {
+        to_owned![command_pressed, files_local_path_to_upload];
+        async move {
+            loop {
+                if command_pressed.with(|i| *i) {
+                    *command_pressed.write_silent() = false;
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
                     if !files_local_path.is_empty() {
                         files_local_path_to_upload.with_mut(|i| *i = files_local_path);
                     }
-                },
-                Duration::from_secs(1),
-            );
+                };
+                tokio::time::sleep(Duration::from_millis(250)).await;
+            }
+        }
+    });
+
+    use_global_shortcut(cx, (key, modifiers), {
+        to_owned![files_local_path_to_upload, command_pressed];
+        move || {
+            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+            if files_local_path.iter().any(|path| {
+                path.file_name()
+                    .map_or(false, |f| f == "img_from_clipboard.png")
+            }) {
+                command_pressed.with_mut(|i| *i = true);
+                // debounced_callback(
+                //     || command_pressed.with_mut(|i| *i = true),
+                //     Duration::from_secs(1),
+                // );
+            } else if !files_local_path.is_empty() {
+                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
+            }
         }
     });
     None

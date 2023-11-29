@@ -1,6 +1,6 @@
 mod coroutines;
 
-use std::{path::PathBuf, sync::Once, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use common::{
     icons::{self},
@@ -28,7 +28,6 @@ use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 const MAX_CHARS_LIMIT: usize = 1024;
-static SHORTCUT_REGISTERED: Once = Once::new();
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
@@ -456,7 +455,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            println!("re render");
                 rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                     on_paste: move |files_local_path: Vec<PathBuf>| {
                         if !files_local_path.is_empty() {
