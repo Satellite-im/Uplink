@@ -70,7 +70,7 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    with_text_to_render: Option<String>,
+    tagged_text: Option<String>,
 
     reactions: Vec<ReactionAdapter>,
 
@@ -139,7 +139,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let reactions_class = format!("message-reactions-container {remote_class}");
     let rendered_text = cx
         .props
-        .with_text_to_render
+        .tagged_text
         .as_ref()
         .or(cx.props.with_text.as_ref());
 

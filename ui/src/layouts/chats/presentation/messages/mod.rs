@@ -591,7 +591,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 editing: is_editing,
                 remote: cx.props.is_remote,
                 with_text: msg_lines,
-                with_text_to_render: rendered_lines,
+                tagged_text: rendered_lines,
                 is_mention: is_mention,
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
