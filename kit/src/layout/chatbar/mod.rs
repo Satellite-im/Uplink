@@ -250,6 +250,9 @@ pub struct EmojiSuggestionProps<'a> {
 
 #[allow(non_snake_case)]
 fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
+    if cx.props.selected.read().is_none() {
+        *cx.props.selected.write_silent() = Some(0);
+    }
     cx.render(rsx!(div {
         class: "emoji-suggestions",
         aria_label: "emoji-suggestions-container",
@@ -276,7 +279,7 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
             cx.render(rsx!(div {
                 class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
                     Some(v) => if *v == num {"emoji-selected"} else {""},
-                    None => ""
+                    None => "",
                 }),
                 aria_label: {
                     format_args!(
