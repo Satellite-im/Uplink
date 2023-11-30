@@ -9,7 +9,7 @@ use kit::elements::select::Select;
 use kit::elements::switch::Switch;
 use warp::logging::tracing::log;
 
-use crate::components::settings::SettingSection;
+use crate::components::settings::{SettingSection, SettingSectionSimple};
 use common::state::{action::ConfigAction, Action, State};
 use common::{sounds, WARP_CMD_CH};
 
@@ -211,17 +211,17 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //         onchange: move |_| {}
             //     }
             // }
-            SettingSection {
-                section_label: get_local_text("settings-audio.input-device-test"),
-                section_description: get_local_text("settings-audio.input-device-test-description"),
-                no_border: true,
+            SettingSectionSimple {
                 Button {
-                    text: get_local_text("settings-audio.check"),
+                    text: get_local_text("settings-audio.device-test"),
                     disabled: false,
                     onpress: move |_| {
                         ch.send(AudioCmd::TestMicrophone);
                     },
                 },
+                VolumeIndicator {
+                    input: false,
+                }
             },
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
@@ -247,17 +247,17 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //         onchange: move |_| {}
             //     }
             // }
-            SettingSection {
-                section_label: get_local_text("settings-audio.output-device-test"),
-                section_description: get_local_text("settings-audio.output-device-test-description"),
-                no_border: true,
+            SettingSectionSimple {
                 Button {
-                    text: get_local_text("settings-audio.check"),
+                    text: get_local_text("settings-audio.device-test"),
                     disabled: false,
                     onpress: move |_| {
                         ch.send(AudioCmd::TestSpeaker);
                     },
                 },
+                VolumeIndicator {
+                    input: false,
+                }
             },
 
             // currently does nothing
@@ -348,4 +348,42 @@ pub fn AudioSettings(cx: Scope) -> Element {
             }
         }
     ))
+}
+
+#[derive(Props, PartialEq)]
+pub struct VolumeIndicatorProps {
+    input: bool,
+}
+
+pub fn VolumeIndicator(cx: Scope<VolumeIndicatorProps>) -> Element {
+    let volume = use_ref(cx, || 100);
+    use_effect(cx, (), |_| {
+        //to_owned![volume];
+        async move {
+            let _warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            /*loop {
+                /*let audio_config = {
+                    let (tx, rx) = oneshot::channel();
+                    warp_cmd_tx
+                        .send(WarpCmd::Blink(BlinkCmd::GetAudioDeviceConfig { rsp: tx }))
+                        .expect("failed to send command");
+                    rx.await.expect("warp runner failed to get audio config")
+                };*/
+                //TODO: listen to volume test events. waiting for warp to expose them
+            }*/
+        }
+    });
+
+    cx.render(rsx!(div{
+        class: "volume-indicator-wrap",
+        div {
+            class: "volume-indicator volume-indicator-overlay",
+            z_index: 2,
+            width: format_args!("{}%", volume.read())
+        },
+        div {
+            class: "volume-indicator",
+            z_index: 1,
+        }
+    }))
 }
