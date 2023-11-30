@@ -149,12 +149,12 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::TestSpeaker { rsp } => {
             let config = blink.get_audio_device_config().await;
             let r = config.test_speaker();
-            let _ = rsp.send(r.map_err(|e| warp::error::Error::Any(e)));
+            let _ = rsp.send(r.map_err(warp::error::Error::Any));
         }
         BlinkCmd::TestMicrophone { rsp } => {
             let config = blink.get_audio_device_config().await;
             let r = config.test_microphone();
-            let _ = rsp.send(r.map_err(|e| warp::error::Error::Any(e)));
+            let _ = rsp.send(r.map_err(warp::error::Error::Any));
         }
     }
 }

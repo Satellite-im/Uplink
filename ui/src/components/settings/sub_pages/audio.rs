@@ -149,7 +149,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                                 log::error!("failed to send blink command");
                                 continue;
                             }
-                            if let Err(_) = rx.await {
+                            if rx.await.is_err() {
                                 log::error!("failed to test speaker");
                             };
                         }
@@ -161,7 +161,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                                 log::error!("failed to send blink command");
                                 continue;
                             }
-                            if let Err(_) = rx.await {
+                            if rx.await.is_err() {
                                 log::error!("failed to test microphone");
                             };
                         }
