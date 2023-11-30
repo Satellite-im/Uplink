@@ -162,9 +162,9 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             is_emoji_suggestion_modal_closed.with_mut(|i| *i = true);
                         }
                     },
-                    onkeydown:  move |keyboard_event| {
+                    onkeydown:  move |keyboard_event: Event<KeyboardData>| {
                         if let Some(e) = cx.props.onkeydown.as_ref() {
-                            e.call(keyboard_event)
+                            e.call(keyboard_event);
                         }
                     },
                     onchange: move |(v, _)| {

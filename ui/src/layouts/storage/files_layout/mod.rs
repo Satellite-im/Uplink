@@ -131,6 +131,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             aria_label: "files-layout",
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
+                // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV

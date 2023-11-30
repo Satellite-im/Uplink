@@ -227,7 +227,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     };
 
     let submit_fn2 = submit_fn.clone();
-    let submit_fn3 = submit_fn.clone();
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -285,13 +284,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
+                // HACK: Allow copy and paste files for Linux Wayland
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
                     let keyboard_data = e;
-                    if keyboard_data.code() == Code::Enter
-                    && keyboard_data.modifiers().is_empty()
-                {
-                    submit_fn3();
-                } else  if keyboard_data.code() == Code::KeyV
+                 if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
                     {
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
@@ -325,11 +321,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
-            onreturn: move |_| {
-                if std::env::var("WAYLAND_DISPLAY").is_err() {
-                    submit_fn();
-                }
-            },
+            onreturn: move |_| submit_fn(),
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             emoji_suggestions: emoji_suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {

@@ -101,8 +101,8 @@ pub fn ChatLayout(cx: Scope) -> Element {
             aria_label: "chat-layout",
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
+                // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
-                    println!("On keydown ChatLayout");
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL

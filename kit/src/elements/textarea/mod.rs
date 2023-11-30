@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
@@ -149,11 +150,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onblur: move |_| {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
-                    onkeydown: move |keyboard_event| {
-                        if let Some(e) = onkeydown {
-                            e.call(keyboard_event);
-                        }
-                    },
                     oninput: {
                         to_owned![eval, cursor_script];
                         move |evt| {
@@ -202,6 +198,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeydown: {
                         to_owned![eval, cursor_script];
                         move |evt| {
+                            // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
+                            if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                                if evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
+                                    if let Some(e) = onkeydown {
+                                        e.call(evt.clone());
+                                    }
+                                }
+                            }
+                            
                             // special codepath to handle onreturn
                             let old_enter_pressed = *enter_pressed.read();
                             let old_numpad_enter_pressed = *numpad_enter_pressed.read();
