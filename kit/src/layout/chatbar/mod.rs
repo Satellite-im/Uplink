@@ -38,7 +38,7 @@ pub struct Props<'a> {
     value: Option<String>,
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
-    onkeydown: EventHandler<'a, Event<KeyboardData>>,
+    onkeydown: Option<EventHandler<'a, Event<KeyboardData>>>,
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
@@ -163,7 +163,9 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     onkeydown:  move |keyboard_event| {
-                        cx.props.onkeydown.call(keyboard_event);
+                        if let Some(e) = cx.props.onkeydown.as_ref() {
+                            e.call(keyboard_event)
+                        }
                     },
                     onchange: move |(v, _)| {
                         cx.props.onchange.call(v);

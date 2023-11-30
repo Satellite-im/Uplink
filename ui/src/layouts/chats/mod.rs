@@ -102,7 +102,7 @@ pub fn ChatLayout(cx: Scope) -> Element {
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
-                    println!("On keydown");
+                    println!("On keydown ChatLayout");
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
