@@ -227,6 +227,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     };
 
     let submit_fn2 = submit_fn.clone();
+    let submit_fn3 = submit_fn.clone();
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -287,7 +288,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
                     println!("On keydown chatbar");
                     let keyboard_data = e;
-                    if keyboard_data.code() == Code::KeyV
+                    if keyboard_data.code() == Code::Enter {
+                        println!("On keydown chatbar enter");
+                        submit_fn3();
+                    } else if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
                     {
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
@@ -314,36 +318,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
-                    let mut new_message = v.clone();
-                    if std::env::var("WAYLAND_DISPLAY").is_ok() {
-                        println!("On change");
-                        let attachments = state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default();
-                        let path_bufs: Vec<PathBuf> =  attachments
-                        .iter()
-                        .filter_map(|location| {
-                            if let Location::Disk { path } = location {
-                                Some(path.clone())
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
-                    println!("Path bufs: {:?}", path_bufs);
-                        for path_buf in path_bufs {
-                            let path_str = path_buf.to_string_lossy().to_string(); 
-                            new_message = new_message.replace(&path_str, ""); 
-                        }
-                    println!("new_message: {:?}", new_message);
-
-                    }
-                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, new_message));
+                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
                     validate_max();
                     update_send();
                     local_typing_ch2.send(TypingIndicator::Typing(active_chat_id));
                 }
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
-            onreturn: move |_| submit_fn(),
+            onreturn: move |_| {
+                println!("On return");
+                submit_fn();
+            },
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             emoji_suggestions: emoji_suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
