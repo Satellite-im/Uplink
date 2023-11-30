@@ -10,6 +10,7 @@ use std::{path::PathBuf, rc::Rc};
 use crate::{
     layouts::{chats::presentation::chat::Compose, slimbar::SlimbarLayout},
     utils::{
+        clipboard::clipboard_data::get_files_path_from_clipboard,
         get_drag_event,
         verify_valid_paths::{decoded_pathbufs, verify_paths},
     },
@@ -21,6 +22,8 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use uuid::Uuid;
 use warp::raygun::Location;
 
@@ -96,6 +99,37 @@ pub fn ChatLayout(cx: Scope) -> Element {
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
+            tabindex: "0",
+            onkeydown: move |e: Event<KeyboardData>| {
+                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                    println!("On keydown");
+                    let keyboard_data = e;
+                    if keyboard_data.code() == Code::KeyV
+                        && keyboard_data.modifiers() == Modifiers::CONTROL
+                    {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);
+                        let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or(Uuid::nil());
+                        state
+                            .write()
+                            .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                    }
+                }
+                }
+            },
             div {
                 id: "drag-drop-element",
             }

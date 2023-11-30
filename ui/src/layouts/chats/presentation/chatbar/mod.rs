@@ -284,33 +284,33 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
-                if std::env::var("WAYLAND_DISPLAY").is_ok() {
-                    println!("On keydown");
-                    let keyboard_data = e;
-                    if keyboard_data.code() == Code::KeyV
-                        && keyboard_data.modifiers() == Modifiers::CONTROL
-                    {
-                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-                    if !files_local_path.is_empty() {
-                        let new_files: Vec<Location> = files_local_path
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    let mut current_files: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .drain(..)
-                        .filter(|x| !new_files.contains(x))
-                        .collect();
-                        current_files.extend(new_files);
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
-                }
-                }
+                // if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                //     println!("On keydown");
+                //     let keyboard_data = e;
+                //     if keyboard_data.code() == Code::KeyV
+                //         && keyboard_data.modifiers() == Modifiers::CONTROL
+                //     {
+                //     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                //     if !files_local_path.is_empty() {
+                //         let new_files: Vec<Location> = files_local_path
+                //         .iter()
+                //         .map(|path| Location::Disk { path: path.clone() })
+                //         .collect();
+                //     let mut current_files: Vec<_> = state
+                //         .read()
+                //         .get_active_chat()
+                //         .map(|f| f.files_attached_to_send)
+                //         .unwrap_or_default()
+                //         .drain(..)
+                //         .filter(|x| !new_files.contains(x))
+                //         .collect();
+                //         current_files.extend(new_files);
+                //     state
+                //         .write()
+                //         .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                //     }
+                // }
+                // }
             },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
