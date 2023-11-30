@@ -5,6 +5,7 @@ use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
 use common::{state::pending_message::progress_file, WARP_CMD_CH};
 //use common::icons::outline::Shape as Icon;
+use arboard::Clipboard;
 use derive_more::Display;
 use dioxus::prelude::*;
 use futures::StreamExt;
@@ -12,6 +13,7 @@ use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::Regex;
+use uuid::Uuid;
 use warp::error::Error;
 use warp::{
     constellation::{file::File, Progression},
@@ -21,7 +23,7 @@ use warp::{
 
 use common::icons::outline::Shape as Icon;
 
-use crate::components::context_menu::IdentityHeader;
+use crate::components::context_menu::{ContextItem, ContextMenu, IdentityHeader};
 use crate::elements::button::Button;
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
@@ -665,57 +667,125 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     .friend_identities()
                     .iter()
                     .any(|req| req.did_key().eq(&identity.did_key()));
-            return cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
-                class: "embed-identity",
-                IdentityHeader {
-                    sender_did: identity.did_key(),
-                    with_status: false,
-                },
-                div {
-                    class: "profile-container",
-                    div {
-                        id: "profile-name",
-                        aria_label: "profile-name",
-                        p {
-                            class: "text",
-                            aria_label: "profile-name-value",
-                            format!("{}", identity.username())
+
+            let short_id = identity.short_id();
+            let did_key = identity.did_key();
+            let username = identity.username();
+            let short_name = format!("{}#{}", username, short_id);
+            let random_uuid = Uuid::new_v4().to_string();
+
+            return cx.render(rsx!(
+                ContextMenu {
+                    key: "{short_id}-{random_uuid}",
+                    id: format!("{short_id}-{random_uuid}"),
+                    devmode: state.read().configuration.developer.developer_mode,
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::UserCircle,
+                            aria_label: "copy-user-id-from-user-identity-on-chat".into(),
+                            text: get_local_text("settings-profile.copy-id"),
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(short_name.clone()) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                                state
+                                    .write()
+                                    .mutate(Action::AddToastNotification(ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("friends.copied-did"),
+                                        None,
+                                        2,
+                                    )));
+                            }
+                        },
+                        ContextItem {
+                            icon: Icon::Key,
+                            aria_label: "copy-user-did-key-from-user-identity-on-chat".into(),
+                            disabled: false,
+                            text: get_local_text("settings-profile.copy-did"),
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(did_key.to_string()) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                                state
+                                    .write()
+                                    .mutate(Action::AddToastNotification(ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("friends.copied-did"),
+                                        None,
+                                        2,
+                                    )));
+                            },
+                            tooltip: None,
                         }
-                    }
-                    identity.status_message().and_then(|s|{
-                        cx.render(rsx!(
+                    )),
+                   children: cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
+                        class: "embed-identity",
+                        IdentityHeader {
+                            sender_did: identity.did_key(),
+                            with_status: false,
+                        },
+                        div {
+                            class: "profile-container",
                             div {
-                                id: "profile-status",
-                                aria_label: "profile-status",
+                                id: "profile-name",
+                                aria_label: "profile-name",
                                 p {
                                     class: "text",
-                                    aria_label: "profile-status-value",
-                                    s
+                                    aria_label: "profile-name-value",
+                                    format!("{}", identity.username())
                                 }
                             }
-                        ))
-                    }),
-                },
-                Button {
-                    aria_label: String::from("embed-identity-button"),
-                    disabled: disabled,
-                    with_title: false,
-                    onpress: move |_| {
-                        ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
-                    },
-                    icon: if disabled {
-                        Icon::Check
-                    } else {
-                        Icon::Plus
-                    },
-                    text: if disabled {
-                        get_local_text("friends.already-friends")
-                    } else {
-                        get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
-                    },
-                    appearance: crate::elements::Appearance::Primary
+                            identity.status_message().and_then(|s|{
+                                cx.render(rsx!(
+                                    div {
+                                        id: "profile-status",
+                                        aria_label: "profile-status",
+                                        p {
+                                            class: "text",
+                                            aria_label: "profile-status-value",
+                                            s
+                                        }
+                                    }
+                                ))
+                            }),
+                        },
+                        Button {
+                            aria_label: String::from("embed-identity-button"),
+                            disabled: disabled,
+                            with_title: false,
+                            onpress: move |_| {
+                                ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
+                            },
+                            icon: if disabled {
+                                Icon::Check
+                            } else {
+                                Icon::Plus
+                            },
+                            text: if disabled {
+                                get_local_text("friends.already-friends")
+                            } else {
+                                get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                            },
+                            appearance: crate::elements::Appearance::Primary
+                        }
+                    }))
                 }
-            }));
+            ));
         }
         None => {
             return cx.render(rsx!(div {

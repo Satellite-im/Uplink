@@ -7,7 +7,7 @@ use anyhow::bail;
 use chrono::{DateTime, Local};
 use dioxus_desktop::wry::application::window::WindowId;
 use uuid::Uuid;
-use warp::crypto::DID;
+use warp::{blink::ParticipantState, crypto::DID};
 
 #[derive(Clone, Default)]
 pub struct CallInfo {
@@ -39,8 +39,7 @@ pub struct Call {
     pub participants: Vec<DID>,
     pub participants_joined: Vec<DID>,
     pub participants_speaking: HashMap<DID, Instant>,
-    pub participants_muted: Vec<DID>,
-    pub participants_deafened: Vec<DID>,
+    pub participants_state: HashMap<DID, ParticipantState>,
     pub self_muted: bool,
     pub call_silenced: bool,
 }
@@ -199,39 +198,17 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_muted(&mut self, id: DID) -> anyhow::Result<()> {
+    pub fn update_partcipant_state(
+        &mut self,
+        peer_id: DID,
+        state: ParticipantState,
+    ) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        active_call.call.participant_muted(id);
-        Ok(())
-    }
 
-    pub fn participant_unmuted(&mut self, id: DID) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-        active_call.call.participant_unmuted(&id);
-        Ok(())
-    }
-
-    pub fn participant_deafened(&mut self, id: DID) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-        active_call.call.participant_deafened(id);
-        Ok(())
-    }
-
-    pub fn participant_undeafened(&mut self, id: DID) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-        active_call.call.participant_undeafened(&id);
+        active_call.call.participants_state.insert(peer_id, state);
         Ok(())
     }
 
@@ -259,8 +236,7 @@ impl Call {
             participants_speaking: HashMap::new(),
             self_muted: false,
             call_silenced: false,
-            participants_deafened: vec![],
-            participants_muted: vec![],
+            participants_state: HashMap::new(),
         }
     }
 
@@ -278,6 +254,7 @@ impl Call {
 
     fn participant_left(&mut self, id: &DID) {
         self.participants_joined.retain(|x| x != id);
+        self.participants_state.remove(id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
@@ -310,25 +287,5 @@ impl Call {
 
     fn unsilence_call(&mut self) {
         self.call_silenced = false;
-    }
-
-    fn participant_muted(&mut self, id: DID) {
-        if !self.participants_muted.contains(&id) {
-            self.participants_muted.push(id);
-        }
-    }
-
-    fn participant_unmuted(&mut self, id: &DID) {
-        self.participants_muted.retain(|x| x != id);
-    }
-
-    fn participant_deafened(&mut self, id: DID) {
-        if !self.participants_deafened.contains(&id) {
-            self.participants_deafened.push(id);
-        }
-    }
-
-    fn participant_undeafened(&mut self, id: &DID) {
-        self.participants_deafened.retain(|x| x != id);
     }
 }

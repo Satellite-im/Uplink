@@ -106,7 +106,7 @@ pub fn ChatLayout(cx: Scope) -> Element {
                 p {id: "overlay-text0", class: "overlay-text"},
                 p {id: "overlay-text", class: "overlay-text"}
             },
-            if show_slimbar {
+            if show_slimbar & !is_minimal_view {
                 cx.render(rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
                 ))
