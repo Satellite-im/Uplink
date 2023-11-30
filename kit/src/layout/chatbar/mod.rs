@@ -284,6 +284,9 @@ pub struct SuggestionProps<'a> {
 
 #[allow(non_snake_case)]
 fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
+    if cx.props.selected.read().is_none() {
+        *cx.props.selected.write_silent() = Some(0);
+    }
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {
@@ -291,7 +294,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
                 rsx!(div {
                     class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
                         Some(v) => if *v == num {"chatbar-selected"} else {""},
-                        None => ""
+                        None => "",
                     }),
                     aria_label: {
                         format_args!(
