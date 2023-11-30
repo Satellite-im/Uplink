@@ -42,7 +42,8 @@ use crate::{
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
-            check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
+            check_if_there_is_file_or_string_in_clipboard, get_files_path_from_clipboard,
+            ClipboardDataType,
         },
     },
 };
@@ -284,10 +285,34 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
                 let keyboard_data = e;
+                let modifiers = if cfg!(target_os = "macos") {
+                    Modifiers::SUPER
+                } else {
+                    Modifiers::CONTROL
+                };
                 if keyboard_data.code() == Code::KeyV
-                    && keyboard_data.modifiers() == Modifiers::CONTROL
+                    && keyboard_data.modifiers() == modifiers
                 {
+                  let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
                   println!("Working");
+                  if !files_local_path.is_empty() {
+                    let new_files: Vec<Location> = files_local_path
+                    .iter()
+                    .map(|path| Location::Disk { path: path.clone() })
+                    .collect();
+                let mut current_files: Vec<_> = state
+                    .read()
+                    .get_active_chat()
+                    .map(|f| f.files_attached_to_send)
+                    .unwrap_or_default()
+                    .drain(..)
+                    .filter(|x| !new_files.contains(x))
+                    .collect();
+                    current_files.extend(new_files);
+                state
+                    .write()
+                    .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                }
                 }
             },
             onchange: move |v: String| {
