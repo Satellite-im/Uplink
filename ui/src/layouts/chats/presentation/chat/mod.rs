@@ -6,16 +6,12 @@ mod pinned_messages;
 mod topbar;
 
 use dioxus::prelude::*;
-use dioxus_html::input_data::keyboard_types::Code;
-use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use kit::{
     components::message_group::MessageGroupSkeletal,
     layout::{modal::Modal, topbar::Topbar},
 };
-use warp::raygun::Location;
 
-use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 use crate::{
     components::media::calling::CallControl,
     layouts::chats::{

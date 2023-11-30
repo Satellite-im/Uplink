@@ -328,10 +328,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             }
                         })
                         .collect();
+                    println!("Path bufs: {:?}", path_bufs);
                         for path_buf in path_bufs {
                             let path_str = path_buf.to_string_lossy().to_string(); 
                             new_message = new_message.replace(&path_str, ""); 
                         }
+                    println!("new_message: {:?}", new_message);
+
                     }
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, new_message));
                     validate_max();
