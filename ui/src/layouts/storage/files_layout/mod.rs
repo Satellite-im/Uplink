@@ -37,6 +37,9 @@ use crate::layouts::storage::files_layout::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
+use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -104,7 +107,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         if state.read().ui.metadata.focused  {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
-                    functions::add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
+                    functions::add_files_in_queue_to_upload(&files_in_queue_to_upload.clone(), files_local_path, eval);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                 },
             })
@@ -126,6 +129,21 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         div {
             id: "files-layout",
             aria_label: "files-layout",
+            tabindex: "0",
+            onkeydown: move |e: Event<KeyboardData>| {
+                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                    let keyboard_data = e;
+                    if keyboard_data.code() == Code::KeyV
+                        && keyboard_data.modifiers() == Modifiers::CONTROL
+                    {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
+                        upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
+                    }
+                }
+                }
+            },
             ondragover: move |_| {
                 if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                     upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);

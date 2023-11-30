@@ -286,7 +286,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
-                    println!("On keydown chatbar");
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::Enter
                     && keyboard_data.modifiers().is_empty()
