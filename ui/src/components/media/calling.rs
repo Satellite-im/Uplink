@@ -8,7 +8,9 @@ use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::{user_image::UserImage, user_image_group::UserImageGroup},
+    components::{
+        context_menu::ContextMenu, user_image::UserImage, user_image_group::UserImageGroup,
+    },
     elements::{
         button::Button,
         label::Label,
@@ -319,7 +321,13 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     }
     let call = &active_call.call;
 
-    let participants = state.read().get_identities(&call.participants_joined.keys().cloned().collect::<Vec<DID>>());
+    let participants = state.read().get_identities(
+        &call
+            .participants_joined
+            .keys()
+            .cloned()
+            .collect::<Vec<DID>>(),
+    );
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
     let self_id = build_user_from_identity(&state.read().get_own_identity());
@@ -367,27 +375,24 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             class: "call-info",
             aria_label: "call-info",
             div {
-                class: format_args!("calling {}", if cx.props.in_chat {"in-chat"} else {""}),
-                div {
-                    class: format_args!("user-group-scale {}", if cx.props.in_chat {"in-chat"} else {""}),
-                    if other_participants.is_empty() {
-                        rsx!(div {
-                            class: "lonely-call",
-                            get_local_text("remote-controls.empty")
-                        })
-                    } else if cx.props.in_chat {
-                        let call_participants: Vec<_> = other_participants
-                            .iter()
-                            .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
-                            .collect();
-                        rsx!(CallUserImageGroup {
-                            participants: call_participants,
-                        })
-                    } else  {
-                        rsx!(UserImageGroup {
-                            participants: build_participants(&other_participants),
-                        })
-                    }
+                class: format_args!("calling-users {}", if cx.props.in_chat {"in-chat"} else {""}),
+                if other_participants.is_empty() {
+                    rsx!(div {
+                        class: "lonely-call",
+                        get_local_text("remote-controls.empty")
+                    })
+                } else if cx.props.in_chat {
+                    let call_participants: Vec<_> = other_participants
+                        .iter()
+                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                        .collect();
+                    rsx!(CallUserImageGroup {
+                        participants: call_participants,
+                    })
+                } else  {
+                    rsx!(UserImageGroup {
+                        participants: build_participants(&other_participants),
+                    })
                 }
             }
             (!cx.props.in_chat).then(||rsx!(
@@ -573,7 +578,13 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
-    let mut participants = state.read().get_identities(&call.participants_joined.keys().cloned().collect::<Vec<DID>>());
+    let mut participants = state.read().get_identities(
+        &call
+            .participants_joined
+            .keys()
+            .cloned()
+            .collect::<Vec<DID>>(),
+    );
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
         Some(c) => match c.conversation_name {
@@ -655,11 +666,8 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
                 },
             },
             div {
-                class: "calling",
-                div {
-                    class: "user-group-scale",
-                    &cx.props.caller,
-                }
+                class: "calling-users",
+                &cx.props.caller,
             },
             (!cx.props.in_chat).then(||rsx!(div {
                 class: "users",
@@ -681,8 +689,40 @@ pub struct CallUserImageProps {
 
 #[allow(non_snake_case)]
 pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
-    cx.render(rsx!(cx.props.participants.iter().map(
-        |(speaking, user)| {
+    let eval = use_eval(cx);
+    let amount = use_state(cx, || 3);
+    let id = use_state(cx, Uuid::new_v4);
+    use_effect(cx, (), move |_| {
+        to_owned![eval, amount];
+        async move {
+            let eval = match eval(include_str!("./resize_handler.js")) {
+                Ok(r) => r,
+                Err(e) => {
+                    log::error!("use eval failed: {:?}", e);
+                    return;
+                }
+            };
+            loop {
+                match eval.recv().await {
+                    Ok(value) => {
+                        amount.set(value.as_f64().unwrap_or(3_f64) as i64);
+                    }
+                    Err(e) => {
+                        log::error!("eval receiver failed: {:?}", e);
+                    }
+                }
+            }
+        }
+    });
+    let visible_amount = *amount.get() as usize;
+    let (visible, context) = if visible_amount >= cx.props.participants.len() {
+        (cx.props.participants.clone(), None)
+    } else {
+        let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
+        (visible.to_vec(), Some(context.to_vec()))
+    };
+    cx.render(rsx!(
+        visible.iter().map(|(speaking, user)| {
             rsx!(div {
                 class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
                 UserImage {
@@ -690,6 +730,41 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                     image: user.photo.clone(),
                 }
             })
-        }
-    )))
+        }),
+        context.map(|ctx| {
+            let txt = format!("{}+", ctx.len());
+            rsx!(
+                div {
+                    class: "additional-participants",
+                    ContextMenu {
+                        id: format!("{}", id),
+                        left_click_trigger: true,
+                        items: cx.render(rsx!(
+                            ctx.iter().map(|(speaking,user)|{
+                                rsx!(div {
+                                        class: "additional-participant",
+                                        div {
+                                            class: format_args!("{}", if *speaking {"speaking"} else {""}),
+                                            UserImage {
+                                                platform: user.platform,
+                                                image: user.photo.clone(),
+                                            }
+                                        },
+                                        p {
+                                            class: "additional-participant-name",
+                                            user.username.to_string()
+                                        }
+                                })
+                            })
+                        )),
+                        Button {
+                            aria_label: "additional-participants-button".to_string(),
+                            appearance: Appearance::Secondary,
+                            text: txt,
+                        }
+                    },
+                }
+            )
+        }),
+    ))
 }

@@ -59,7 +59,9 @@ pub struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
-    no_discovery: bool,
+    discovery: Option<DiscoveryMode>,
+    #[clap(long)]
+    enable_quic: bool,
     #[clap(long)]
     discovery_point: Option<String>,
     #[cfg(debug_assertions)]
@@ -72,6 +74,30 @@ pub struct Args {
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq)]
+pub enum DiscoveryMode {
+    /// Enable full discovery
+    Full,
+
+    /// Address to a specific discovery point
+    RzPoint { address: String },
+
+    /// Disable discovery
+    #[default]
+    Disable,
+}
+
+impl std::str::FromStr for DiscoveryMode {
+    type Err = warp::error::Error;
+    fn from_str(mode: &str) -> Result<Self, Self::Err> {
+        match mode {
+            "full" => Ok(DiscoveryMode::Full),
+            "disable" => Ok(DiscoveryMode::Disable),
+            _ => Err(warp::error::Error::Other),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -112,10 +138,13 @@ pub struct StaticArgs {
     /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
     /// Disable discovery
-    pub no_discovery: bool,
+    pub discovery: DiscoveryMode,
+    /// Enable quic transport
+    pub enable_quic: bool,
     // some features aren't ready for release. This field is used to disable such features.
     pub production_mode: bool,
 }
+
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
     #[allow(unused_mut)]
@@ -150,7 +179,8 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
-        no_discovery: args.no_discovery,
+        discovery: args.discovery.unwrap_or_default(),
+        enable_quic: args.enable_quic,
         production_mode: cfg!(feature = "production_mode"),
     }
 });

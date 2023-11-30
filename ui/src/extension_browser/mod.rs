@@ -3,6 +3,7 @@
 use common::state::action::ConfigAction;
 use common::state::Action;
 use common::{icons::outline::Shape as Icon, language::get_local_text, state::State, STATIC_ARGS};
+use kit::elements::label::Label;
 
 use crate::components::settings::{ExtensionSetting, SettingSection};
 use common::sounds;
@@ -89,7 +90,19 @@ pub fn Installed(cx: Scope) -> Element {
         .collect();
 
     cx.render(rsx!(
-            metas.iter().cloned().map(|(enabled, meta)| {
+        if metas.is_empty() {
+            rsx!(
+                div {
+                    class: "extensions-not-installed",
+                    aria_label: "extensions-not-installed",
+                    Label {
+                        text: get_local_text("settings.no-extensions-installed"),
+                        aria_label: String::from("extensions-installed-label"),
+                    }
+                }
+            )
+        } else {
+            rsx!( metas.iter().cloned().map(|(enabled, meta)| {
                 rsx!(
                     ExtensionSetting {
                         title: meta.pretty_name.to_owned(),
@@ -107,7 +120,8 @@ pub fn Installed(cx: Scope) -> Element {
                         }
                     }
                 )
-            })
+            }))
+        }
         ))
 }
 
