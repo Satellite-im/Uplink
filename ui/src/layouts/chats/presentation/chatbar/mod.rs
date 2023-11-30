@@ -9,6 +9,8 @@ use common::{
     MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -280,6 +282,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
+            onkeydown: move |e: Event<KeyboardData>| {
+                let keyboard_data = e;
+                if keyboard_data.code() == Code::KeyV
+                    && keyboard_data.modifiers() == Modifiers::CONTROL
+                {
+                  println!("Working");
+                }
+            },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));

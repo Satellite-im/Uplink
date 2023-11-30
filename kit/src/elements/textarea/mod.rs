@@ -42,6 +42,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
     onkeyup: Option<EventHandler<'a, Code>>,
+    onkeydown: Option<EventHandler<'a, Event<KeyboardData>>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -74,6 +75,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         oncursor_update,
         onkeyup,
+        onkeydown,
         value,
         is_disabled,
         show_char_counter,
@@ -146,6 +148,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
                     onblur: move |_| {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
+                    },
+                    onkeydown: move |keyboard_event| {
+                        if let Some(e) = onkeydown {
+                            e.call(keyboard_event);
+                        }
                     },
                     oninput: {
                         to_owned![eval, cursor_script];

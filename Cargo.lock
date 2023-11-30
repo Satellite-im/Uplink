@@ -9636,6 +9636,7 @@ dependencies = [
  "dioxus-core",
  "dioxus-desktop",
  "dioxus-hooks",
+ "dioxus-html",
  "dioxus-router",
  "dirs",
  "either",
