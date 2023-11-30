@@ -52,34 +52,38 @@ pub struct ShortCutProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
-    // let files_local_path_to_upload = use_ref(cx, Vec::new);
-    // let key = KeyCode::V;
-    // let modifiers = if cfg!(target_os = "macos") {
-    //     ModifiersState::SUPER
-    // } else {
-    //     ModifiersState::CONTROL
-    // };
+    if std::env::var("WAYLAND_DISPLAY").is_ok() {
+        return None;
+    }
 
-    // if !files_local_path_to_upload.read().is_empty() {
-    //     cx.props
-    //         .on_paste
-    //         .call(files_local_path_to_upload.read().clone());
-    //     *files_local_path_to_upload.write_silent() = Vec::new();
-    // }
+    let files_local_path_to_upload = use_ref(cx, Vec::new);
+    let key = KeyCode::V;
+    let modifiers = if cfg!(target_os = "macos") {
+        ModifiersState::SUPER
+    } else {
+        ModifiersState::CONTROL
+    };
 
-    // use_global_shortcut(cx, (key, modifiers), {
-    //     to_owned![files_local_path_to_upload];
-    //     move || {
-    //         debounced_callback(
-    //             || {
-    //                 let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-    //                 if !files_local_path.is_empty() {
-    //                     files_local_path_to_upload.with_mut(|i| *i = files_local_path);
-    //                 }
-    //             },
-    //             Duration::from_secs(1),
-    //         );
-    //     }
-    // });
+    if !files_local_path_to_upload.read().is_empty() {
+        cx.props
+            .on_paste
+            .call(files_local_path_to_upload.read().clone());
+        *files_local_path_to_upload.write_silent() = Vec::new();
+    }
+
+    use_global_shortcut(cx, (key, modifiers), {
+        to_owned![files_local_path_to_upload];
+        move || {
+            debounced_callback(
+                || {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        files_local_path_to_upload.with_mut(|i| *i = files_local_path);
+                    }
+                },
+                Duration::from_secs(1),
+            );
+        }
+    });
     None
 }

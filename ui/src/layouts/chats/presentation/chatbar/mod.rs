@@ -284,39 +284,56 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
-                let keyboard_data = e;
-                let modifiers = if cfg!(target_os = "macos") {
-                    Modifiers::SUPER
-                } else {
-                    Modifiers::CONTROL
-                };
-                if keyboard_data.code() == Code::KeyV
-                    && keyboard_data.modifiers() == modifiers
-                {
-                  let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-                  if !files_local_path.is_empty() {
-                    let new_files: Vec<Location> = files_local_path
-                    .iter()
-                    .map(|path| Location::Disk { path: path.clone() })
-                    .collect();
-                let mut current_files: Vec<_> = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default()
-                    .drain(..)
-                    .filter(|x| !new_files.contains(x))
-                    .collect();
-                    current_files.extend(new_files);
-                state
-                    .write()
-                    .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                    println!("On keydown");
+                    let keyboard_data = e;
+                    if keyboard_data.code() == Code::KeyV
+                        && keyboard_data.modifiers() == Modifiers::CONTROL
+                    {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                    }
                 }
                 }
             },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
-                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
+                    let mut new_message = v.clone();
+                    if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                        println!("On change");
+                        let attachments = state.read().get_active_chat().map(|f| f.files_attached_to_send).unwrap_or_default();
+                        let path_bufs: Vec<PathBuf> =  attachments
+                        .iter()
+                        .filter_map(|location| {
+                            if let Location::Disk { path } = location {
+                                Some(path.clone())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                        for path_buf in path_bufs {
+                            let path_str = path_buf.to_string_lossy().to_string(); 
+                            new_message = new_message.replace(&path_str, ""); 
+                        }
+                    }
+                    state.write_silent().mutate(Action::SetChatDraft(active_chat_id, new_message));
                     validate_max();
                     update_send();
                     local_typing_ch2.send(TypingIndicator::Typing(active_chat_id));
