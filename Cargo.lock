@@ -9789,7 +9789,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=4a51bcfbe97f08a21dca5f50801883c406901b7d#4a51bcfbe97f08a21dca5f50801883c406901b7d"
+source = "git+https://github.com/Satellite-im/Warp?rev=8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe#8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9845,7 +9845,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=4a51bcfbe97f08a21dca5f50801883c406901b7d#4a51bcfbe97f08a21dca5f50801883c406901b7d"
+source = "git+https://github.com/Satellite-im/Warp?rev=8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe#8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9876,7 +9876,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=4a51bcfbe97f08a21dca5f50801883c406901b7d#4a51bcfbe97f08a21dca5f50801883c406901b7d"
+source = "git+https://github.com/Satellite-im/Warp?rev=8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe#8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe"
 dependencies = [
  "paste",
  "quote",
@@ -9886,7 +9886,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=4a51bcfbe97f08a21dca5f50801883c406901b7d#4a51bcfbe97f08a21dca5f50801883c406901b7d"
+source = "git+https://github.com/Satellite-im/Warp?rev=8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe#8cd15e8f7caba1c6db7eb93675ba08ea27e31cbe"
 dependencies = [
  "anyhow",
  "async-stream",
