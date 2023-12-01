@@ -1,4 +1,4 @@
-#[cfg(target_os = "macos")]
+// #[cfg(target_os = "macos")]
 use super::macos_clipboard::MacOSClipboard;
 #[cfg(target_os = "linux")]
 use crate::utils::verify_valid_paths::decoded_pathbufs;
