@@ -54,6 +54,20 @@
       background-color: var(--secondary-light);
     }
   }
+  &.appearance-info {
+    background-color: var(--secondary);
+    color: var(--info-light);
+    &:hover {
+      background-color: var(--info);
+      color: var(--text-color-bright);
+      svg {
+        stroke: var(--text-color-bright);
+      }
+    }
+    svg {
+      stroke: var(--info-light);
+    }
+  }
   &.appearance-secondary-less {
     border-radius: var(--border-radius-less);
     background-color: var(--secondary);

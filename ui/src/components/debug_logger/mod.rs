@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use common::icons::outline::Shape as Icon;
+use common::{icons::outline::Shape as Icon, state::State};
 use kit::elements::{
     button::Button,
     label::Label,
@@ -44,15 +44,9 @@ pub fn DebugLogger(cx: Scope) -> Element {
     let active_tab: &UseState<String> = use_state(cx, || "Logs".into());
     let filter_level: &UseState<LogLevel> = use_state(cx, || LogLevel::Info);
 
-    let sample = r#"
-{
-    "name": "John Doe",
-    "age": 43,
-    "phones": [
-        "+44 1234567",
-        "+44 2345678"
-    ]
-}"#;
+    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
+
+    let state_json = state.read().get_json().unwrap_or_default();
 
     cx.render(rsx!(
         style { STYLE }
@@ -80,16 +74,16 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             class: "section",
                             Label {
                                 text: "Filter:".into(),
-                            }
+                            },
                             Button {
                                 icon: Icon::InformationCircle,
-                                appearance: if filter_level.get() == &LogLevel::Info { Appearance::Success } else { Appearance::Secondary },
+                                appearance: if filter_level.get() == &LogLevel::Info { Appearance::Info } else { Appearance::Secondary },
                                 onpress: |_| {
                                     filter_level.set(LogLevel::Info);
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
-                                        arrow_position: ArrowPosition::Bottom,
+                                        arrow_position: ArrowPosition::Top,
                                         text: "Info".into()
                                     }
                                 )),
@@ -102,7 +96,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
-                                        arrow_position: ArrowPosition::Bottom,
+                                        arrow_position: ArrowPosition::Top,
                                         text: "Error".into()
                                     }
                                 )),
@@ -115,7 +109,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
-                                        arrow_position: ArrowPosition::Bottom,
+                                        arrow_position: ArrowPosition::Top,
                                         text: "Debug".into()
                                     }
                                 )),
@@ -187,7 +181,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         class: "language-js",
 
                         code {
-                            "{sample}"
+                            "{state_json}"
                         }
                     }
                     script {

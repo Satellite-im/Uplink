@@ -742,6 +742,12 @@ impl State {
         fs::write(path, serialized)?;
         Ok(())
     }
+
+    pub fn get_json(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let serialized = serde_json::to_string_pretty(self)?;
+        Ok(serialized)
+    }
+
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Self {
         if STATIC_ARGS.use_mock {

@@ -127,7 +127,7 @@ pub struct IdentityProps {
 
 #[allow(non_snake_case)]
 pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
     let sender = state
         .read()
         .get_identity(&cx.props.sender_did)
