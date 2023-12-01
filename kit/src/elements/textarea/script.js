@@ -27,6 +27,10 @@ sendButton[1].addEventListener("click", (event) => {
     textareas[0].value = "";
 })
 
+if (textareas[0].style.height === "66px") {
+    textareas[0].style.height = "22px";
+}
+
 function inputListener(e) {
     updateHeight(this);
 }

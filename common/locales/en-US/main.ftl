@@ -100,8 +100,9 @@ messages = Messages
     .pinned-max = You reached the maximum amount of pinned messages for this chat
     .missing-emoji-picker = Emoji extension is disabled
     .unknown-identity = User not found:
-    .suggested-emoji = Suggested Emoji
-
+    .emoji-suggestion = Suggested Emoji
+    .username-suggestion = Suggested Users
+    
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
@@ -196,6 +197,7 @@ settings = Settings
     .licenses = Licenses
     .search-placeholder = Search Settings...
     .please-select-area-you-want-to-crop = Please select the area you want to crop
+    .no-extensions-installed = No extensions installed
 
 settings-profile = Profile Settings
     .failed = Failed to update profile

@@ -5,6 +5,7 @@ use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
 use common::{state::pending_message::progress_file, WARP_CMD_CH};
 //use common::icons::outline::Shape as Icon;
+use arboard::Clipboard;
 use derive_more::Display;
 use dioxus::prelude::*;
 use futures::StreamExt;
@@ -12,6 +13,7 @@ use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::Regex;
+use uuid::Uuid;
 use warp::error::Error;
 use warp::{
     constellation::{file::File, Progression},
@@ -21,7 +23,7 @@ use warp::{
 
 use common::icons::outline::Shape as Icon;
 
-use crate::components::context_menu::IdentityHeader;
+use crate::components::context_menu::{ContextItem, ContextMenu, IdentityHeader};
 use crate::elements::button::Button;
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
@@ -68,6 +70,8 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
+    tagged_text: Option<String>,
+
     reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
@@ -105,6 +109,8 @@ pub struct Props<'a> {
     attachments_pending_uploads: Option<&'a Vec<Progression>>,
 
     pinned: bool,
+
+    is_mention: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -131,6 +137,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // omitting the class will display the reactions starting from the bottom right corner
     let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
+    let rendered_text = cx
+        .props
+        .tagged_text
+        .as_ref()
+        .or(cx.props.with_text.as_ref());
 
     let has_attachments = cx
         .props
@@ -179,6 +190,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
+    let mention_class = cx.props.is_mention.then_some("mention").unwrap_or_default();
     let order_class = order.to_string();
     let msg_pending_class = cx
         .props
@@ -206,8 +218,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "message {} {} {} {}",
-                   loading_class, remote_class, order_class, msg_pending_class
+                    "message {} {} {} {} {}",
+                   loading_class, remote_class, order_class, msg_pending_class, mention_class
                 )
             },
             aria_label: {
@@ -247,7 +259,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: cx.props.with_text.clone().unwrap_or_default(),
+                    text: rendered_text.cloned().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
@@ -336,6 +348,7 @@ pub struct ChatMessageProps {
     pending: bool,
     markdown: bool,
     ascii_emoji: bool,
+    participants: Option<Vec<String>>,
 }
 
 #[allow(non_snake_case)]
@@ -446,7 +459,6 @@ pub fn replace_emojis(input: &str) -> String {
 
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
-
     if emojis {
         let r = replace_emojis(txt);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
@@ -665,57 +677,125 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                     .friend_identities()
                     .iter()
                     .any(|req| req.did_key().eq(&identity.did_key()));
-            return cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
-                class: "embed-identity",
-                IdentityHeader {
-                    sender_did: identity.did_key(),
-                    with_status: false,
-                },
-                div {
-                    class: "profile-container",
-                    div {
-                        id: "profile-name",
-                        aria_label: "profile-name",
-                        p {
-                            class: "text",
-                            aria_label: "profile-name-value",
-                            format!("{}", identity.username())
+
+            let short_id = identity.short_id();
+            let did_key = identity.did_key();
+            let username = identity.username();
+            let short_name = format!("{}#{}", username, short_id);
+            let random_uuid = Uuid::new_v4().to_string();
+
+            return cx.render(rsx!(
+                ContextMenu {
+                    key: "{short_id}-{random_uuid}",
+                    id: format!("{short_id}-{random_uuid}"),
+                    devmode: state.read().configuration.developer.developer_mode,
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::UserCircle,
+                            aria_label: "copy-user-id-from-user-identity-on-chat".into(),
+                            text: get_local_text("settings-profile.copy-id"),
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(short_name.clone()) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                                state
+                                    .write()
+                                    .mutate(Action::AddToastNotification(ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("friends.copied-did"),
+                                        None,
+                                        2,
+                                    )));
+                            }
+                        },
+                        ContextItem {
+                            icon: Icon::Key,
+                            aria_label: "copy-user-did-key-from-user-identity-on-chat".into(),
+                            disabled: false,
+                            text: get_local_text("settings-profile.copy-did"),
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(did_key.to_string()) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                                state
+                                    .write()
+                                    .mutate(Action::AddToastNotification(ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("friends.copied-did"),
+                                        None,
+                                        2,
+                                    )));
+                            },
+                            tooltip: None,
                         }
-                    }
-                    identity.status_message().and_then(|s|{
-                        cx.render(rsx!(
+                    )),
+                   children: cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
+                        class: "embed-identity",
+                        IdentityHeader {
+                            sender_did: identity.did_key(),
+                            with_status: false,
+                        },
+                        div {
+                            class: "profile-container",
                             div {
-                                id: "profile-status",
-                                aria_label: "profile-status",
+                                id: "profile-name",
+                                aria_label: "profile-name",
                                 p {
                                     class: "text",
-                                    aria_label: "profile-status-value",
-                                    s
+                                    aria_label: "profile-name-value",
+                                    format!("{}", identity.username())
                                 }
                             }
-                        ))
-                    }),
-                },
-                Button {
-                    aria_label: String::from("embed-identity-button"),
-                    disabled: disabled,
-                    with_title: false,
-                    onpress: move |_| {
-                        ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
-                    },
-                    icon: if disabled {
-                        Icon::Check
-                    } else {
-                        Icon::Plus
-                    },
-                    text: if disabled {
-                        get_local_text("friends.already-friends")
-                    } else {
-                        get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
-                    },
-                    appearance: crate::elements::Appearance::Primary
+                            identity.status_message().and_then(|s|{
+                                cx.render(rsx!(
+                                    div {
+                                        id: "profile-status",
+                                        aria_label: "profile-status",
+                                        p {
+                                            class: "text",
+                                            aria_label: "profile-status-value",
+                                            s
+                                        }
+                                    }
+                                ))
+                            }),
+                        },
+                        Button {
+                            aria_label: String::from("embed-identity-button"),
+                            disabled: disabled,
+                            with_title: false,
+                            onpress: move |_| {
+                                ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
+                            },
+                            icon: if disabled {
+                                Icon::Check
+                            } else {
+                                Icon::Plus
+                            },
+                            text: if disabled {
+                                get_local_text("friends.already-friends")
+                            } else {
+                                get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                            },
+                            appearance: crate::elements::Appearance::Primary
+                        }
+                    }))
                 }
-            }));
+            ));
         }
         None => {
             return cx.render(rsx!(div {

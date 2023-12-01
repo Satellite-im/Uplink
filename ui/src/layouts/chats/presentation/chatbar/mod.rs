@@ -19,7 +19,7 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    layout::chatbar::{Chatbar, Reply},
+    layout::chatbar::{Chatbar, Reply, SuggestionType},
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -29,6 +29,7 @@ use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
+pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@ ]{2,} ?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
@@ -59,7 +60,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let show_storage_modal = use_state(cx, || false);
 
-    let emoji_suggestions = use_state(cx, Vec::new);
+    let suggestions = use_state(cx, || SuggestionType::None);
+    let mentions = use_ref(cx, Vec::new);
 
     let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
@@ -175,6 +177,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 .is_empty()
     };
 
+    let chat_participants: Vec<_> = state
+        .read()
+        .get_active_chat()
+        .map(|chat| {
+            chat.participants
+                .iter()
+                .filter_map(|did| state.read().get_identity(did))
+                .collect()
+        })
+        .unwrap_or_default();
+    let chat_participants_2 = chat_participants.clone();
+
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
         let active_chat_id = chat_data.read().active_chat.id();
@@ -193,7 +207,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default()
             .lines()
-            .map(|x| x.trim_end().to_string())
+            .map(|x| {
+                let mut s = x.to_string();
+                mentions
+                    .read()
+                    .iter()
+                    .for_each(|(did, name)| s = x.replace(name, &format!("{}", did)));
+                s
+            })
             .collect::<Vec<String>>();
 
         if !active_chat_id.is_nil() {
@@ -202,7 +223,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 .mutate(Action::SetChatDraft(active_chat_id, String::new()));
         }
 
-        emoji_suggestions.set(vec![]);
+        suggestions.set(SuggestionType::None);
+        mentions.set(vec![]);
 
         if !msg_valid(&msg) || active_chat_id.is_nil() {
             return;
@@ -291,16 +313,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
-            emoji_suggestions: emoji_suggestions,
+            suggestions: suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if !active_chat_id.is_nil() {
                     let sub: String = v.chars().take(p as usize).collect();
-                    let capture = EMOJI_REGEX.captures(&sub);
-                    match capture {
-                        Some(emoji) => {
+                    let emoji_capture = EMOJI_REGEX.captures(&sub);
+                    if let Some(emoji) = emoji_capture {
                             let emoji = &emoji[0];
                             if emoji.contains(char::is_whitespace) {
-                                emoji_suggestions.set(vec![]);
+                                suggestions.set(SuggestionType::None);
                                 return;
                             }
                             if emoji.ends_with(':') {
@@ -312,19 +333,43 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     v = v.replace(&sub, &sub.replace(&format!(":{alias}:"), emoji));
                                     state.write().mutate(Action::SetChatDraft(active_chat_id, v));
                                 }
-                                emoji_suggestions.set(vec![])
+                                suggestions.set(SuggestionType::None);
                             } else {
                                 //Suggest emojis
                                 let alias = emoji.replace(':', "");
-                                emoji_suggestions
-                                    .set(state.read().ui.emojis.get_matching_emoji(&alias, false))
+                                suggestions.set(SuggestionType::Emoji(emoji.to_string(), state.read().ui.emojis.get_matching_emoji(&alias, false)));
                             }
+                            return;
+                    }
+                    let tag_capture = TAG_REGEX.captures(&sub);
+                    match tag_capture {
+                        Some(tag) => {
+                            let tag = &tag[0];
+                            let tag = tag.replace('@', "");
+                            if tag.ends_with(' ') {
+                                let name = tag.replace(' ', "").to_lowercase();
+                                let replacement = chat_participants.iter().find(|id|id.username().to_lowercase().eq(&name));
+                                if let Some(id) = replacement {
+                                    let username = format!("{}#{}", id.username(), id.short_id());
+                                    v = v.replace(&sub, &sub.replace(&tag, &format!("{username} ")));
+                                    state.write().mutate(Action::SetChatDraft(active_chat_id, v));
+                                    mentions.write_silent().push((id.did_key(), username));
+                                }
+                                suggestions.set(SuggestionType::None);
+                                return;
+                            }
+                            let lower = tag.to_lowercase();
+                            let users: Vec<_> = chat_participants.iter().filter(|id|id.username().to_lowercase().starts_with(&lower))
+                                .cloned().collect();
+                            suggestions.set(SuggestionType::Tag(tag, users));
                         }
-                        None => emoji_suggestions.set(vec![]),
+                        None => {
+                            suggestions.set(SuggestionType::None);
+                        }
                     }
                 }
             },
-            on_emoji_click: move |(emoji, _, p): (String, String, i64)| {
+            on_suggestion_click: move |(replacement, pattern, p): (String, String, i64)| {
                 if !active_chat_id.is_nil() {
                     let mut draft = state
                         .read()
@@ -333,14 +378,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         .and_then(|d| d.draft.clone())
                         .unwrap_or_default();
                     let sub: String = draft.chars().take(p as usize).collect();
-                    let capture = EMOJI_REGEX.captures(&sub);
-                    if let Some(e) = capture {
-                        draft = draft.replace(&sub, &sub.replace(&e[0].to_string(), &emoji));
-                        state
-                            .write()
-                            .mutate(Action::SetChatDraft(active_chat_id, draft));
+                    draft = draft.replace(&sub, &sub.replace(&pattern, &replacement));
+                    state
+                        .write()
+                        .mutate(Action::SetChatDraft(active_chat_id, draft));
+                    if let SuggestionType::Tag(_, _) = suggestions.get() {
+                        let amount = replacement.chars().count() - 9;
+                        let name: String = replacement.chars().take(amount).collect(); // remove short did
+                        if let Some(participant) = chat_participants_2.iter().find(|id|id.username().eq(&name)) {
+                            mentions.write_silent().push((participant.did_key(), replacement));
+                        }
                     }
-                    emoji_suggestions.set(vec![])
+                    suggestions.set(SuggestionType::None);
                 }
             },
             controls: cx.render(
