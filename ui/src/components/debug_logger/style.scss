@@ -6,21 +6,51 @@
     display: inline-flex;
     flex-direction: column;
     overflow: hidden;
+    align-items: center;
+
+    .header {
+        padding: var(--gap-less) var(--gap);
+        .logger-nav {
+            display: inline-flex;
+            gap: var(--gap);
+            justify-content: center;
+            align-items: center;
+
+            .btn {
+                height: var(--height-titlebar);
+                padding: var(--gap);
+            }
+        }
+        .section {
+            display: inline-flex;
+            gap: var(--gap-less);
+            justify-content: center;
+            align-items: center;
+        }
+    }
     .header, .body {
         width: 100%;
-        padding: var(--gap-less) var(--gap);
         font-size: var(--text-size-less);
         background-color: var(--secondary-dark);
     }
     .header {
         border-bottom: 1px solid var(--border-muted-color);
-        background-color: var(--secondary);
+        background-color: var(--secondary-darker);
+        display: inline-flex;
     }
     .body {
         overflow-y: auto;
         display: flex;
         flex-direction: column-reverse;
         flex: 1;
+        .code-toolbar {
+            min-height: 100%;
+            overflow-y: scroll;
+        }
+        pre[class*="language-"] {
+            min-height: 100%;
+            margin: 0;
+        }
         .item {
             display: inline-flex;
             gap: var(--gap);

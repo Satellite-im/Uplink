@@ -1,15 +1,32 @@
 use dioxus::prelude::*;
 
-use kit::elements::label::Label;
+use common::icons::outline::Shape as Icon;
+use kit::elements::{
+    button::Button,
+    label::Label,
+    tooltip::{ArrowPosition, Tooltip},
+    Appearance,
+};
+
+use dioxus_desktop::use_window;
 
 use crate::logger;
 
 const STYLE: &str = include_str!("./style.scss");
 const SCRIPT: &str = include_str!("./script.js");
 
+#[derive(Clone, PartialEq, Eq, Copy)]
+pub enum LogLevel {
+    Info,
+    Error,
+    Debug,
+}
+
 #[component]
 #[allow(non_snake_case)]
 pub fn DebugLogger(cx: Scope) -> Element {
+    let window = use_window(cx);
+
     let logs_to_show = use_state(cx, logger::load_debug_log);
 
     use_future(cx, (), |_| {
@@ -24,6 +41,19 @@ pub fn DebugLogger(cx: Scope) -> Element {
 
     let eval = use_eval(cx);
 
+    let active_tab: &UseState<String> = use_state(cx, || "Logs".into());
+    let filter_level: &UseState<LogLevel> = use_state(cx, || LogLevel::Info);
+
+    let sample = r#"
+{
+    "name": "John Doe",
+    "age": 43,
+    "phones": [
+        "+44 1234567",
+        "+44 2345678"
+    ]
+}"#;
+
     cx.render(rsx!(
         style { STYLE }
         div {
@@ -34,49 +64,141 @@ pub fn DebugLogger(cx: Scope) -> Element {
             div {
                 class: "header",
                 aria_label: "debug-logger-header",
-                Label {
-                    text: "Logger".into(),
-                    aria_label: "logger-label".into()
+                div {
+                    class: "logger-nav",
+                    aria_label: "debug-logger-nav",
+                    Button {
+                        text: "Logs".into(),
+                        icon: Icon::CommandLine,
+                        appearance: if active_tab.get() == "Logs" { Appearance::Primary } else { Appearance::Secondary },
+                        onpress: |_| {
+                            active_tab.set("Logs".into());
+                        }
+                    },
+                    (active_tab.get() == "Logs").then(|| cx.render(rsx!{
+                        div {
+                            class: "section",
+                            Label {
+                                text: "Filter:".into(),
+                            }
+                            Button {
+                                icon: Icon::InformationCircle,
+                                appearance: if filter_level.get() == &LogLevel::Info { Appearance::Success } else { Appearance::Secondary },
+                                onpress: |_| {
+                                    filter_level.set(LogLevel::Info);
+                                },
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Bottom,
+                                        text: "Info".into()
+                                    }
+                                )),
+                            },
+                            Button {
+                                icon: Icon::ExclamationTriangle,
+                                appearance: if filter_level.get() == &LogLevel::Error { Appearance::Danger } else { Appearance::Secondary },
+                                onpress: |_| {
+                                    filter_level.set(LogLevel::Error);
+                                },
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Bottom,
+                                        text: "Error".into()
+                                    }
+                                )),
+                            },
+                            Button {
+                                icon: Icon::BugAnt,
+                                appearance: if filter_level.get() == &LogLevel::Debug { Appearance::Secondary } else { Appearance::Secondary },
+                                onpress: |_| {
+                                    filter_level.set(LogLevel::Debug);
+                                },
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Bottom,
+                                        text: "Debug".into()
+                                    }
+                                )),
+                            },
+                        }
+                    })),
+                    Button {
+                        text: "State".into(),
+                        icon: Icon::Square3Stack3d,
+                        appearance: if active_tab.get() == "State" { Appearance::Primary } else { Appearance::Secondary },
+                        onpress: |_| {
+                            active_tab.set("State".into());
+                        }
+                    },
+                    Button {
+                        text: "Web Inspector".into(),
+                        icon: Icon::ArrowTopRightOnSquare,
+                        appearance: Appearance::Secondary,
+                        onpress: |_| {
+                            window.webview.open_devtools();
+                        }
+                    },
                 }
             },
-            div {
-                aria_label: "debug-logger-body",
-                class: "body",
-                div {
-                    logs_to_show.iter().map(|log| {
-                        let mut fields = log.split('|');
-                        let log_datetime = fields.next().unwrap_or_default();
-                        let log_level = fields.next().unwrap_or_default();
-                        let log_message = fields.next().unwrap_or_default();
-                        let log_level_string = log_level.trim().to_lowercase();
-                        rsx!(
-                            p {
-                                class: "item",
-                                aria_label: "debug-logger-item",
-                                span {
-                                    aria_label: "debug-logger-item-timestamp",
-                                    class: "log-text muted",
-                                    "〇 {log_datetime}"
-                                },
-                                span {
-                                    aria_label: "debug-logger-item-level",
-                                    class: "log-text bold {log_level_string}",
-                                    "{log_level}"
-                                },
-                                span {
-                                    class: "log-text muted",
-                                    "»"
+            match active_tab.get().as_str() {
+                "Logs" => rsx!(div {
+                    aria_label: "debug-logger-body",
+                    class: "body",
+                    div {
+                        logs_to_show.iter().map(|log| {
+                            let mut fields = log.split('|');
+                            let log_datetime = fields.next().unwrap_or_default();
+                            let log_level = fields.next().unwrap_or_default();
+                            let log_message = fields.next().unwrap_or_default();
+                            let log_level_string = log_level.trim().to_lowercase();
+                            rsx!(
+                                p {
+                                    class: "item",
+                                    aria_label: "debug-logger-item",
+                                    span {
+                                        aria_label: "debug-logger-item-timestamp",
+                                        class: "log-text muted",
+                                        "{log_datetime}"
+                                    },
+                                    span {
+                                        aria_label: "debug-logger-item-level",
+                                        class: "log-text bold {log_level_string}",
+                                        "{log_level}"
+                                    },
+                                    span {
+                                        class: "log-text muted",
+                                        "»"
+                                    }
+                                    span {
+                                        aria_label: "debug-logger-item-text",
+                                        id: "log_text",
+                                        class: "log-text",
+                                        " {log_message}"
+                                    }
                                 }
-                                span {
-                                    aria_label: "debug-logger-item-text",
-                                    id: "log_text",
-                                    class: "log-text",
-                                    " {log_message}"
-                                }
-                            }
-                        )
-                    })
-                }
+                            )
+                        })
+                    }
+                }),
+                "State" => rsx!(div {
+                    aria_label: "debug-logger-body",
+                    class: "body",
+                    pre {
+                        class: "language-js",
+
+                        code {
+                            "{sample}"
+                        }
+                    }
+                    script {
+                        r#"
+                        (() => {{
+                            Prism.highlightAll();
+                        }})();
+                        "#
+                    }
+                }),
+                _ => rsx!(div { "Unknown tab" }),
             }
         },
     ))
