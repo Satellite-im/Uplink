@@ -54,6 +54,8 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
+    let files_been_uploaded2 = files_been_uploaded.clone();
     let send_files_from_storage = use_state(cx, || false);
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
@@ -131,17 +133,26 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             aria_label: "files-layout",
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
-                // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
-                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                // HACK(Linux): Allow copy and paste files for Linux
+                if cfg!(target_os = "linux") {
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
                     {
-                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-                    if !files_local_path.is_empty() {
-                        functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
-                        upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
-                    }
+                        cx.spawn({
+                            to_owned![files_been_uploaded2, files_in_queue_to_upload2, eval];
+                            async move {
+                                let files_local_path = tokio::task::spawn_blocking(|| {
+                                    get_files_path_from_clipboard().unwrap_or_default()
+                                })
+                                .await
+                                .expect("Should succeed");
+                            if !files_local_path.is_empty() {
+                                functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path, &eval);
+                                files_been_uploaded2.with_mut(|i| *i = true);
+                            }
+                            }});
+                        
                 }
                 }
             },

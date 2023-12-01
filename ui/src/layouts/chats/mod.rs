@@ -101,32 +101,41 @@ pub fn ChatLayout(cx: Scope) -> Element {
             aria_label: "chat-layout",
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
-                // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
+                // HACK(Linux): Allow copy and paste files for Linux
                 if cfg!(target_os = "linux") {
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
                     {
-                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-                    if !files_local_path.is_empty() {
-                        let new_files: Vec<Location> = files_local_path
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    let mut current_files: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .drain(..)
-                        .filter(|x| !new_files.contains(x))
-                        .collect();
-                        current_files.extend(new_files);
-                        let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or(Uuid::nil());
-                        state
-                            .write()
-                            .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
+                        cx.spawn({
+                            to_owned![state];
+                            async move {
+                                let files_local_path = tokio::task::spawn_blocking(|| {
+                                    get_files_path_from_clipboard().unwrap_or_default()
+                                })
+                                .await
+                                .expect("Should succeed");
+                                if !files_local_path.is_empty() {
+                                    let new_files: Vec<Location> = files_local_path
+                                    .iter()
+                                    .map(|path| Location::Disk { path: path.clone() })
+                                    .collect();
+                                let mut current_files: Vec<_> = state
+                                    .read()
+                                    .get_active_chat()
+                                    .map(|f| f.files_attached_to_send)
+                                    .unwrap_or_default()
+                                    .drain(..)
+                                    .filter(|x| !new_files.contains(x))
+                                    .collect();
+                                    current_files.extend(new_files);
+                                    let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or(Uuid::nil());
+                                    state
+                                        .write()
+                                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                                }
+                            }
+                        });
                 }
                 }
             },
