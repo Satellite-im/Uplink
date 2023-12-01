@@ -53,8 +53,11 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
     #[cfg(target_os = "linux")]
     {
         if let Ok(mut clipboard) = Arboard::new() {
+            println!("clipboard opened");
             let clipboard_text = clipboard.get_text().unwrap_or_default();
+            println!("clipboard text: {:?}", clipboard_text);
             let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+            println!("paths_vec text: {:?}", paths_vec.clone());
             let is_valid_paths = match paths_vec.first() {
                 Some(first_path) => Path::new(first_path).exists(),
                 None => false,
