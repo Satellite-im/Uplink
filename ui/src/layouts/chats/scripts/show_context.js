@@ -1,8 +1,5 @@
 let xPadding = 30
 let yPadding = 10
-if ($SELF) {
-  xPadding *= -1;
-}
 
 var menus = document.getElementsByClassName("context-menu")
 for (var i = 0; i < menus.length; i++) {
@@ -20,10 +17,12 @@ let screenWidth = window.innerWidth || document.documentElement.clientWidth
 let screenHeight = window.innerHeight || document.documentElement.clientHeight
 
 let overFlowY = offsetY + yPadding > screenHeight
+let overFlowX = $SELF || offsetX + width > screenWidth
 context_menu.style = ""
 context_menu.style.position = "absolute"
 context_menu.style.bottom = `${overFlowY ? yPadding : screenHeight - offsetY}px`
-if ($SELF) {
+if (overFlowX) {
+  offsetX -= 2 * xPadding
   context_menu.style.right = `${screenWidth - offsetX}px`
 } else {
   // The context menu should be relative to the parents dimensions

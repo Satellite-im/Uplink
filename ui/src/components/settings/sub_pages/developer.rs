@@ -102,7 +102,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                         );
                         state
                             .write()
-                            .mutate(Action::AddNotification(NotificationKind::Settings, 1));
+                            .mutate(Action::AddNotification(NotificationKind::Settings, 1, false));
                     }
                 }
             },
