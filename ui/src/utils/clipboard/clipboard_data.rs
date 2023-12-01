@@ -1,5 +1,6 @@
 #[cfg(target_os = "macos")]
 use super::macos_clipboard::MacOSClipboard;
+use crate::utils::verify_valid_paths::decoded_pathbufs;
 #[cfg(target_os = "linux")]
 use crate::utils::verify_valid_paths::decoded_pathbufs;
 
@@ -16,6 +17,7 @@ use image::ImageOutputFormat;
 use image::RgbaImage;
 use std::error::Error;
 use std::io::BufWriter;
+use std::path::Path;
 #[cfg(target_os = "linux")]
 use std::path::Path;
 use std::path::PathBuf;
@@ -56,8 +58,7 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
 
     #[cfg(target_os = "linux")]
     {
-        std::thread::spawn(move || {
-            let mut ctx = ClipboardContext::new().unwrap();
+        if let Ok(mut ctx) = ClipboardContext::new() {
             let clipboard_text = ctx.get_contents().unwrap_or_default();
             let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
             println!("paths_vec text: {:?}", paths_vec.clone());
@@ -66,13 +67,12 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
                 None => false,
             };
             if is_valid_paths {
-                ctx.clear().unwrap();
                 let files_path = decoded_pathbufs(paths_vec);
                 if !files_path.is_empty() {
                     return Ok(files_path);
                 }
             }
-        });
+        }
     }
 
     let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or_default();
