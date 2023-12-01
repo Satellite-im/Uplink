@@ -4,7 +4,6 @@ use crate::language::get_id_of;
 use crate::language::US_ENGLISH;
 use serde::{Deserialize, Serialize};
 use warp::crypto::DID;
-use warp::multipass::identity::IdentityStatus;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
@@ -21,7 +20,6 @@ pub struct Settings {
     #[serde(default = "default_font_scale")]
     font_scale: f32,
     pub user_volumes: HashMap<DID, f32>,
-    pub user_status: IdentityStatus,
 }
 
 impl Default for Settings {
@@ -34,7 +32,6 @@ impl Default for Settings {
             output_device: None,
             font_scale: 1.0,
             user_volumes: HashMap::new(),
-            user_status: IdentityStatus::Online,
         }
     }
 }
