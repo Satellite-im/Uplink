@@ -1,12 +1,18 @@
 use dioxus::prelude::*;
 
-use common::{icons::outline::Shape as Icon, state::State};
+use common::{
+    icons::outline::Shape as Icon,
+    state::{utils::get_available_themes, Action, State},
+};
 use kit::elements::{
     button::Button,
     label::Label,
+    switch::Switch,
     tooltip::{ArrowPosition, Tooltip},
     Appearance,
 };
+
+use common::icons::Icon as IconElement;
 
 use dioxus_desktop::use_window;
 
@@ -132,7 +138,31 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             window.webview.open_devtools();
                         }
                     },
-                }
+                },
+                div {
+                    class: "logger-nav-right",
+                    aria_label: "debug-logger-nav-right",
+                    IconElement {
+                        icon: if state.read().ui.theme.clone().unwrap_or_default().name == "Light" {
+                            Icon::Sun
+                        } else {
+                            Icon::Moon
+                        }
+                    },
+                    Switch {
+                        active: state.read().ui.theme.clone().unwrap_or_default().name == "Light",
+                        onflipped: move |_| {
+                            let current_theme = state.read().ui.theme.clone().unwrap_or_default();
+
+                            if current_theme.name != "Light" {
+                                let light_theme = get_available_themes().iter().find(|t| t.name == "Light").unwrap().clone();
+                                state.write().mutate(Action::SetTheme(Some(light_theme)));
+                            } else {
+                                state.write().mutate(Action::SetTheme(None));
+                            }
+                        }
+                    }
+                },
             },
             match active_tab.get().as_str() {
                 "Logs" => rsx!(div {

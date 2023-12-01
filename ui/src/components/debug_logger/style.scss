@@ -21,11 +21,34 @@
                 padding: var(--gap);
             }
         }
+        .logger-nav-right {
+            flex: 1;
+            display: inline-flex;
+            gap: var(--gap);
+            justify-content: flex-end;
+            align-items: center;
+            svg {
+                fill: transparent;
+                stroke: var(--text-color);
+            }
+
+            .btn {
+                height: var(--height-titlebar);
+                padding: var(--gap);
+            }
+        }
         .section {
             display: inline-flex;
             gap: var(--gap-less);
             justify-content: center;
             align-items: center;
+            background: var(--secondary-dark);
+            border-radius: var(--border-radius-more);
+            padding: var(--gap-less);
+
+            .btn {
+                padding: var(--gap-less);
+            }
         }
     }
     .header, .body {
