@@ -43,8 +43,9 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
             return Ok(file_path);
         }
     }
-    #[cfg(target_os = "macos")]
+    // #[cfg(target_os = "macos")]
     {
+        println!("MAcOS clipboard");
         let macos_clipboard = MacOSClipboard::new()?;
         let file_path = macos_clipboard
             .get_files_path_from_clipboard()
@@ -54,24 +55,24 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
         }
     }
 
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(mut ctx) = ClipboardContext::new() {
-            let clipboard_text = ctx.get_contents().unwrap_or_default();
-            let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-            println!("paths_vec text: {:?}", paths_vec.clone());
-            let is_valid_paths = match paths_vec.first() {
-                Some(first_path) => Path::new(first_path).exists(),
-                None => false,
-            };
-            if is_valid_paths {
-                let files_path = decoded_pathbufs(paths_vec);
-                if !files_path.is_empty() {
-                    return Ok(files_path);
-                }
-            }
-        }
-    }
+    // #[cfg(target_os = "linux")]
+    // {
+    //     if let Ok(mut ctx) = ClipboardContext::new() {
+    //         let clipboard_text = ctx.get_contents().unwrap_or_default();
+    //         let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+    //         println!("paths_vec text: {:?}", paths_vec.clone());
+    //         let is_valid_paths = match paths_vec.first() {
+    //             Some(first_path) => Path::new(first_path).exists(),
+    //             None => false,
+    //         };
+    //         if is_valid_paths {
+    //             let files_path = decoded_pathbufs(paths_vec);
+    //             if !files_path.is_empty() {
+    //                 return Ok(files_path);
+    //             }
+    //         }
+    //     }
+    // }
 
     let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or_default();
     if !image_from_clipboard.is_empty() {
