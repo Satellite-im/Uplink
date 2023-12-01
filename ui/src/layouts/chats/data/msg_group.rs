@@ -3,7 +3,10 @@
 
 use std::collections::VecDeque;
 
-use common::{state::pending_message::PendingMessage, warp_runner::ui_adapter};
+use common::{
+    state::{pending_message::PendingMessage, Identity},
+    warp_runner::ui_adapter,
+};
 use warp::{constellation::Progression, crypto::DID};
 
 // Define a struct to represent a group of messages from the same sender.
@@ -42,12 +45,16 @@ impl MessageGroupMsg {
 }
 
 pub fn create_message_groups(
-    my_did: DID,
+    my_id: Identity,
+    other_ids: Vec<Identity>,
     mut input: VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup> {
     let mut messages: Vec<MessageGroup> = vec![];
+    let mut other_ids = other_ids.clone();
+    other_ids.push(my_id.clone());
 
-    for msg in input.drain(..) {
+    for mut msg in input.drain(..) {
+        msg.insert_did(&other_ids, &my_id.did_key());
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = MessageGroupMsg {
@@ -68,7 +75,7 @@ pub fn create_message_groups(
         }
 
         // new group
-        let mut grp = MessageGroup::new(msg.inner.sender(), &my_did);
+        let mut grp = MessageGroup::new(msg.inner.sender(), &my_id.did_key());
         let g = MessageGroupMsg {
             message: msg.clone(),
             is_pending: false,
@@ -83,16 +90,25 @@ pub fn create_message_groups(
     messages
 }
 
-pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Option<MessageGroup> {
+pub fn pending_group_messages(
+    pending: &Vec<PendingMessage>,
+    other_ids: Vec<Identity>,
+    my_id: Identity,
+) -> Option<MessageGroup> {
     if pending.is_empty() {
         return None;
     };
+    let mut other_ids = other_ids.clone();
+    other_ids.push(my_id.clone());
+
     let mut messages: Vec<MessageGroupMsg> = vec![];
     let size = pending.len();
     for (i, msg) in pending.iter().enumerate() {
+        let mut message = msg.message.clone();
+        message.insert_did(&other_ids, &my_id.did_key());
         if i == size - 1 {
             let g = MessageGroupMsg {
-                message: msg.message.clone(),
+                message,
                 is_pending: true,
                 is_first: false,
                 is_last: true,
@@ -102,7 +118,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
             continue;
         }
         let g = MessageGroupMsg {
-            message: msg.message.clone(),
+            message,
             is_pending: true,
             is_first: true,
             is_last: true,
@@ -111,7 +127,7 @@ pub fn pending_group_messages(pending: &Vec<PendingMessage>, own_did: DID) -> Op
         messages.push(g);
     }
     Some(MessageGroup {
-        sender: own_did,
+        sender: my_id.did_key(),
         remote: false,
         messages,
     })

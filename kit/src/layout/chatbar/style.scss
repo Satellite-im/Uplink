@@ -65,3 +65,126 @@
 		padding-top: var(--height-input-less);
 	}
 }
+
+
+.emoji-suggestions {
+	position: absolute; 
+	bottom: 100%;
+	color: var(--text-color); 
+	background: var(--secondary-dark);
+	padding: var(--gap); 
+	border-radius: var(--border-radius);
+	border: 1px solid var(--border-subtle-color);
+	max-height: 200px; 
+	width: calc(100% - var(--padding)); 
+	overflow-y: auto;
+	&::-webkit-scrollbar-track {
+	  background: transparent;
+	}
+  
+	&::-webkit-scrollbar-thumb {
+	  background: var(--secondary-dark);
+	}
+  
+	&::-webkit-scrollbar-thumb:hover {
+	  background: var(--secondary-light);
+	}
+  
+	.emoji-suggestions-header {
+	  height: var(--height-input);
+	  display: inline-flex;
+	  align-items: center;
+	  width: 100%;
+	}
+	  
+	.emoji-suggestion {
+	  display: flex;
+	  align-items: center;
+	  border-radius: var(--border-radius);
+	  padding: var(--gap);
+	  width: 100%;
+	  
+	  &.emoji-selected {
+		background-color: var(--secondary-light); 
+	  }
+	  &:hover {
+		cursor: pointer;
+		background-color: var(--secondary-light); 
+	  }
+	}
+  
+	.btn-wrap {
+	  position: absolute;
+	  top: var(--gap);
+	  right: var(--gap);
+	  z-index: 1;
+  	}
+}
+
+.chatbar-suggestions {
+	position: absolute; 
+	bottom: 100%;
+	color: var(--text-color); 
+	background: var(--secondary-dark);
+	padding: var(--gap); 
+	border-radius: var(--border-radius);
+	border: 1px solid var(--border-subtle-color);
+	max-height: 200px; 
+	width: calc(100% - var(--padding)); 
+	overflow-y: auto;
+	&::-webkit-scrollbar-track {
+	  background: transparent;
+	}
+  
+	&::-webkit-scrollbar-thumb {
+	  background: var(--secondary-dark);
+	}
+  
+	&::-webkit-scrollbar-thumb:hover {
+	  background: var(--secondary-light);
+	}
+  
+	.chatbar-suggestions-header {
+	  height: var(--height-input);
+	  display: inline-flex;
+	  align-items: center;
+	  width: 100%;
+	}
+
+	.chatbar-suggestion {
+	  display: flex;
+	  align-items: center;
+	  border-radius: var(--border-radius);
+	  padding: var(--gap);
+	  width: 100%;
+	  
+	  &.chatbar-selected {
+		background-color: var(--secondary-light); 
+	  }
+	  &:hover {
+		cursor: pointer;
+		background-color: var(--secondary-light); 
+	  }
+	}
+
+	.btn-wrap {
+	  position: absolute;
+	  top: var(--gap);
+	  right: var(--gap);
+	  z-index: 1;
+	}
+
+	.user-suggestion-profile {
+		display: flex; 
+		padding-right: var(--padding-less);
+		div {
+			max-width: calc(0.8 * var(--height-input));
+			max-height: calc(0.8 * var(--height-input));
+			width: calc(0.8 * var(--height-input));
+			height: calc(0.8 * var(--height-input));
+		}
+		.indicator {
+			left: calc(100% - 1.3rem);
+		}
+	}
+}
