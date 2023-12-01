@@ -1,13 +1,12 @@
 #[cfg(target_os = "macos")]
 use super::macos_clipboard::MacOSClipboard;
-use crate::utils::verify_valid_paths::decoded_pathbufs;
 #[cfg(target_os = "linux")]
 use crate::utils::verify_valid_paths::decoded_pathbufs;
 
 use arboard::Clipboard as Arboard;
-// #[cfg(target_os = "linux")]
+#[cfg(target_os = "linux")]
 use cli_clipboard::ClipboardContext;
-// #[cfg(target_os = "linux")]
+#[cfg(target_os = "linux")]
 use cli_clipboard::ClipboardProvider;
 #[cfg(target_os = "windows")]
 use clipboard_win::{formats, get_clipboard};
@@ -17,7 +16,6 @@ use image::ImageOutputFormat;
 use image::RgbaImage;
 use std::error::Error;
 use std::io::BufWriter;
-use std::path::Path;
 #[cfg(target_os = "linux")]
 use std::path::Path;
 use std::path::PathBuf;
