@@ -164,6 +164,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     };
 
     let loading = account_exists.current().is_none();
+    let validation_login_passed = use_state(cx, || false);
 
     let image_path = get_images_dir()
         .unwrap_or_default()
@@ -200,7 +201,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         icon: Icon::Key,
                         disable_onblur: true,
                         aria_label: "pin-input".into(),
-                        disabled: loading,
+                        disabled: loading || *validation_login_passed.get(),
                         placeholder: get_local_text("unlock.enter-pin"),
                         reset: reset_input.clone(),
                         options: Options {
@@ -223,6 +224,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
+                                validation_login_passed.set(true);
                                 let is_maximized = desktop.is_maximized();
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
@@ -234,12 +236,14 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         },
                         onreturn: move |_| {
-                            if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.translation());
-                            } else if let Some(e) = error.get() {
-                                shown_error.set(e.translation());
-                            } else {
-                                page.set(AuthPages::CreateAccount);
+                            if !account_exists.current().unwrap_or_default()  {
+                                if let Some(validation_error) = validation_failure.get() {
+                                    shown_error.set(validation_error.translation());
+                                } else if let Some(e) = error.get() {
+                                    shown_error.set(e.translation());
+                                } else {
+                                    page.set(AuthPages::CreateAccount);
+                                }
                             }
                         }
                     },
