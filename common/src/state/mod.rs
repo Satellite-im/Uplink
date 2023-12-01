@@ -1904,9 +1904,10 @@ pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
     .unwrap()
 }
 
-pub fn mention_replacement_pattern(id: &Identity) -> String {
+pub fn mention_replacement_pattern(id: &Identity, visual: bool) -> String {
     format!(
-        r#"<div class="message-user-tag" value="{}">@{}</div>"#,
+        r#"<div class="message-user-tag {}" value="{}">@{}</div>"#,
+        if visual { "visual-only" } else { "" },
         id.did_key(),
         id.username()
     )

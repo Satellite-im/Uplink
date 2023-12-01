@@ -48,27 +48,39 @@ pub struct Message {
 
 impl Message {
     // resolve the message lines to e.g. format user mentions correctly
-    pub fn insert_did(&mut self, c: &[state::Identity], own: &DID) {
+    pub fn insert_did(&mut self, participants: &[state::Identity], own: &DID) {
         if self.lines_to_render.is_some() {
             return;
         }
         // Better if warp provides a way of saving mentions in the message
         // so dont need to loop over all participants
-        let mut lines = self.inner.lines().join("\n");
-        if !self.inner.lines().iter().any(|s| s.contains('@')) {
-            self.lines_to_render = Some(lines);
-            return;
-        }
-        c.iter().for_each(|id| {
-            let reg = state::mention_regex_pattern(id, false);
-            let replaced = reg.replace_all(&lines, state::mention_replacement_pattern(id));
-            if own.eq(&id.did_key()) && !replaced.eq(&lines) {
-                self.is_mention = true;
-            }
-            lines = replaced.to_string();
-        });
+        let lines = self.inner.lines().join("\n");
+        let (lines, is_mention) = format_mentions(lines, participants, own, false);
+        self.is_mention = is_mention;
         self.lines_to_render = Some(lines);
     }
+}
+
+pub fn format_mentions(
+    message: String,
+    participants: &[state::Identity],
+    own: &DID,
+    visual: bool,
+) -> (String, bool) {
+    if !message.contains('@') {
+        return (message, false);
+    }
+    let mut result = message;
+    let mut is_mention = false;
+    participants.iter().for_each(|id| {
+        let reg = state::mention_regex_pattern(id, false);
+        let replaced = reg.replace_all(&result, state::mention_replacement_pattern(id, visual));
+        if own.eq(&id.did_key()) && !replaced.eq(&result) {
+            is_mention = true;
+        }
+        result = replaced.to_string();
+    });
+    (result, is_mention)
 }
 
 #[derive(Clone)]

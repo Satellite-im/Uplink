@@ -138,8 +138,10 @@
 	background-color: var(--text-color-user-tag);
 	width: fit-content;
 	height: fit-content;
-	cursor: pointer;
-	&:hover {
-		background-color: color-mix(in srgb, var(--text-color-user-tag) 50%, white);
+	&:not(.visual-only) {
+		cursor: pointer;
+		&:hover {
+			background-color: color-mix(in srgb, var(--text-color-user-tag) 50%, white);
+		}
 	}
 }
