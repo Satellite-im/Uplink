@@ -52,7 +52,7 @@ pub struct ShortCutProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
-    if std::env::var("WAYLAND_DISPLAY").is_ok() {
+    if cfg!(target_os = "linux") {
         return None;
     }
 

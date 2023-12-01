@@ -198,7 +198,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeydown: {
                         to_owned![eval, cursor_script];
                         move |evt| {
-                            // HACK(LinuxWayland): Allow copy and paste files for Linux Wayland
+                            // HACK(Linux): Allow copy and paste files for Linux 
                             if cfg!(target_os = "linux") {
                                 if evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
                                     if let Some(e) = onkeydown {

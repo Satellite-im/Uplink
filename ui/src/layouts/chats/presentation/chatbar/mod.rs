@@ -284,13 +284,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onkeydown: move |e: Event<KeyboardData>| {
-                // HACK: Allow copy and paste files for Linux Wayland
-                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                // HACK: Allow copy and paste files for Linux
+                if cfg!(target_os = "linux") {
                     let keyboard_data = e;
                  if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL && *enable_paste_shortcut.read()
                     {
-                    println!("Paste on ChatBar - 1");
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
                     if !files_local_path.is_empty() {
                         let new_files: Vec<Location> = files_local_path
@@ -309,8 +308,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     state
                         .write()
                         .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    println!("Paste on ChatBar - 2");
-
                     }
                 }
                 }

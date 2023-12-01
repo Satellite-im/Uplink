@@ -4,10 +4,6 @@ use super::macos_clipboard::MacOSClipboard;
 use crate::utils::verify_valid_paths::decoded_pathbufs;
 
 use arboard::Clipboard as Arboard;
-#[cfg(target_os = "linux")]
-use cli_clipboard::ClipboardContext;
-#[cfg(target_os = "linux")]
-use cli_clipboard::ClipboardProvider;
 #[cfg(target_os = "windows")]
 use clipboard_win::{formats, get_clipboard};
 use image::DynamicImage;
@@ -56,10 +52,9 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
 
     #[cfg(target_os = "linux")]
     {
-        if let Ok(mut ctx) = ClipboardContext::new() {
-            let clipboard_text = ctx.get_contents().unwrap_or_default();
+        if let Ok(mut clipboard) = Arboard::new() {
+            let clipboard_text = clipboard.get_text().unwrap_or_default();
             let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-            println!("paths_vec text: {:?}", paths_vec.clone());
             let is_valid_paths = match paths_vec.first() {
                 Some(first_path) => Path::new(first_path).exists(),
                 None => false,
