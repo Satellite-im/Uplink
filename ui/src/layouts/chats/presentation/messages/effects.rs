@@ -1,7 +1,6 @@
 use crate::{
     layouts::chats::{
-        data::{ChatData, ScrollBtn, ScrollTo},
-        presentation::messages::{READ_SCROLL, SCROLL_BTN_THRESHOLD},
+        data::{ChatData, ScrollTo},
         scripts::{self, SETUP_CONTEXT_PARENT},
     },
     utils,
@@ -13,12 +12,11 @@ pub fn init_msg_scroll(
     cx: &ScopeState,
     chat_data: &UseSharedState<ChatData>,
     eval_provider: &utils::EvalProvider,
-    scroll_btn: &UseSharedState<ScrollBtn>,
     ch: Coroutine<()>,
 ) {
     let chat_key = chat_data.read().active_chat.key();
     use_effect(cx, &chat_key, |_chat_key| {
-        to_owned![eval_provider, ch, chat_data, scroll_btn];
+        to_owned![eval_provider, ch, chat_data];
         async move {
             // replicate behavior from before refactor
             if let Ok(eval) = eval_provider(SETUP_CONTEXT_PARENT) {
@@ -84,22 +82,6 @@ pub fn init_msg_scroll(
                 }
                 Err(e) => {
                     log::error!("eval failed: {:?}", e);
-                }
-            }
-
-            if let Ok(val) = eval_provider(READ_SCROLL) {
-                if let Ok(result) = val.join().await {
-                    let scroll = result.as_i64().unwrap_or_default();
-                    let show = scroll < SCROLL_BTN_THRESHOLD;
-                    let update = show != scroll_btn.read().get(chat_id);
-                    // Only update if the value has changed
-                    if update {
-                        if show {
-                            scroll_btn.write().set(chat_id);
-                        } else {
-                            scroll_btn.write().clear(chat_id);
-                        }
-                    }
                 }
             }
         }
