@@ -261,12 +261,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     },
                     Button {
                         text: match account_exists.current().unwrap_or(true) {
-                            true => get_local_text("unlock.unlock-account"),
+                            true => if *validation_login_passed.get() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
                             false => get_local_text("unlock.create-account"),
                         },
                         aria_label: "create-account-button".into(),
                         appearance: kit::elements::Appearance::Primary,
-                        icon: Icon::Check,
+                        icon: if *validation_login_passed.get() {Icon::Loader} else {Icon::Check},
                         disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
                         onpress: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
