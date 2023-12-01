@@ -288,7 +288,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                 if std::env::var("WAYLAND_DISPLAY").is_ok() {
                     let keyboard_data = e;
                  if keyboard_data.code() == Code::KeyV
-                        && keyboard_data.modifiers() == Modifiers::CONTROL
+                        && keyboard_data.modifiers() == Modifiers::CONTROL && *enable_paste_shortcut.read()
                     {
                     println!("Paste on ChatBar - 1");
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
