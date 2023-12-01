@@ -3,6 +3,7 @@ mod search;
 
 use common::language::{get_local_text, get_local_text_with_args};
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
+use common::warp_runner::ui_adapter::format_mentions;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::html::input_data::keyboard_types::Code;
@@ -287,7 +288,10 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     };
 
                     let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                        Some(v) => format_text(v, markdown, should_transform_ascii_emojis),
+                        Some(v) => {
+                            let (line, _) = format_mentions(v.to_string(), &participants, &state.read().get_own_identity().did_key(), true);
+                            format_text(&line, markdown, should_transform_ascii_emojis)
+                        }
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
