@@ -21,7 +21,7 @@ use crate::{
             chatbar::get_chatbar,
             messages::get_messages,
         },
-        scripts::SHOW_CONTEXT,
+        scripts::{SHOW_CONTEXT, USER_TAG_SCRIPT},
     },
 };
 
@@ -52,6 +52,33 @@ pub fn Compose(cx: Scope) -> Element {
     let quickprofile_data: &UseRef<Option<(f64, f64, Identity, bool)>> = use_ref(cx, || None);
     let update_script = use_state(cx, String::new);
     let identity_profile = use_state(cx, DID::default);
+
+    let eval_provider = use_eval(cx);
+    // Handle user tag click
+    // We handle it here since user tags are not dioxus components
+    use_effect(cx, chat_data, |_| {
+        to_owned![state, eval_provider, quickprofile_data];
+        async move {
+            if let Ok(eval) = eval_provider(USER_TAG_SCRIPT) {
+                loop {
+                    if let Ok(s) = eval.recv().await {
+                        match serde_json::from_str::<(f64, f64, DID)>(
+                            s.as_str().unwrap_or_default(),
+                        ) {
+                            Ok((x, y, did)) => {
+                                if let Some(id) = state.read().get_identity(&did) {
+                                    quickprofile_data.set(Some((x, y, id, false)));
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("failed to deserialize message: {}: {}", s, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
     use_effect(cx, quickprofile_data, |data| {
         to_owned![quick_profile_uuid, update_script, identity_profile];
         async move {
