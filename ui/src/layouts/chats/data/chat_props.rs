@@ -5,6 +5,7 @@ use uuid::Uuid;
 pub struct ChatProps {
     pub show_edit_group: UseState<Option<Uuid>>,
     pub show_group_users: UseState<Option<Uuid>>,
+    pub js_scroll_btn: Option<UseState<bool>>,
     pub ignore_focus: bool,
     pub is_owner: bool,
     pub is_edit_group: bool,

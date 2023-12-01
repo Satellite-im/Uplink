@@ -39,6 +39,7 @@ pub fn Compose(cx: Scope) -> Element {
     use_shared_state_provider(cx, ScrollBtn::new);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+    let js_scroll_btn = use_state(cx, || false);
 
     let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
@@ -187,11 +188,12 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             )
         } else {
-            rsx!(get_messages{quickprofile_data: quickprofile_data.clone()})
+            rsx!(get_messages{quickprofile_data: quickprofile_data.clone(), js_scroll_btn: js_scroll_btn.clone()})
         },
         get_chatbar {
             show_edit_group: show_edit_group.clone(),
             show_group_users: show_group_users.clone(),
+            js_scroll_btn: js_scroll_btn.clone(),
             ignore_focus: should_ignore_focus,
             is_owner: is_owner,
             is_edit_group: is_edit_group,

@@ -43,9 +43,14 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::data::{self, ChatData, ScrollBtn},
+    layouts::chats::{
+        data::{self, ChatData, ScrollBtn},
+        scripts::READ_SCROLL,
+    },
     utils::format_timestamp::format_timestamp_timeago,
 };
+
+const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 #[allow(clippy::large_enum_variant)]
 pub enum MessagesCommand {
@@ -74,6 +79,7 @@ pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File
 pub fn get_messages(
     cx: Scope,
     quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
+    js_scroll_btn: UseState<bool>,
 ) -> Element {
     log::trace!("get_messages");
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
@@ -125,9 +131,18 @@ pub fn get_messages(
         div {
             id: "messages",
             onscroll: move |_| {
-                // if !chat_data.read().active_chat.get_scrolled() {
-                //     chat_data.write().active_chat.set_scrolled();
-                // }
+                to_owned![eval, js_scroll_btn];
+                async move {
+                    if let Ok(val) = eval(READ_SCROLL) {
+                        if let Ok(result) = val.join().await {
+                            let scroll = result.as_i64().unwrap_or_default();
+                            let show = scroll < SCROLL_BTN_THRESHOLD;
+                            if *js_scroll_btn.current() != show {
+                                js_scroll_btn.set(show);
+                            }
+                        }
+                    }
+                }
             },
             // used by the intersection observer to terminate itself
             div {

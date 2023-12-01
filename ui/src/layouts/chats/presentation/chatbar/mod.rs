@@ -53,6 +53,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
+    let js_scroll_btn = cx
+        .props
+        .js_scroll_btn
+        .as_ref()
+        .map(|x| *x.current())
+        .unwrap_or_default();
+
     let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
@@ -63,7 +70,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id) || js_scroll_btn;
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
