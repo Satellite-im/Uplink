@@ -10,7 +10,7 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, Identifier, IdentityImage, IdentityUpdate},
+        identity::{self, Identifier, IdentityImage, IdentityStatus, IdentityUpdate},
     },
 };
 
@@ -121,6 +121,11 @@ pub enum MultiPassCmd {
     #[display(fmt = "GetIdentity")]
     GetIdentity {
         did: DID,
+        rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "SetOnlineStatus")]
+    SetOnlineStatus {
+        status: IdentityStatus,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
     //#[display(fmt = "GetIdentities")]
@@ -425,6 +430,28 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 Err(err) => Err(err),
             };
             let _ = rsp.send(r);
+        }
+        MultiPassCmd::SetOnlineStatus { status, rsp } => {
+            let r = warp.multipass.set_identity_status(status).await;
+            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
+            if let Ok(id) = id.as_mut() {
+                //Need to set this again or else it gets lost
+                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                    id.set_profile_picture(&identity_image_to_base64(&picture));
+                }
+
+                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                    id.set_profile_banner(&identity_image_to_base64(&banner));
+                }
+                id.set_identity_status(status);
+            }
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to update online status: {e}");
+                    rsp.send(Err(e))
+                }
+            };
         } //MultiPassCmd::GetIdentities { dids, rsp } => {
           //    let r = _multipass_get_identities(dids, &mut warp.multipass).await;
           //    let _ = rsp.send(r);
