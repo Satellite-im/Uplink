@@ -40,7 +40,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
         async move {
             let mut log_ch = logger::subscribe();
             while let Some(log) = log_ch.recv().await {
-                logs_to_show.with_mut(|x| x.push(log.to_string()));
+                logs_to_show.with_mut(|x| x.push(log));
             }
         }
     });
@@ -170,11 +170,10 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     class: "body",
                     div {
                         logs_to_show.iter().map(|log| {
-                            let mut fields = log.split('|');
-                            let log_datetime = fields.next().unwrap_or_default();
-                            let log_level = fields.next().unwrap_or_default();
-                            let log_message = fields.next().unwrap_or_default();
-                            let log_level_string = log_level.trim().to_lowercase();
+                            let log_datetime = log.datetime;
+                            let log_level = log.level;
+                            let log_message = log.message.clone();
+                            let log_level_string = log.level;
                             rsx!(
                                 p {
                                     class: "item",
