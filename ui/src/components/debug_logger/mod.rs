@@ -15,18 +15,12 @@ use kit::elements::{
 use common::icons::Icon as IconElement;
 
 use dioxus_desktop::use_window;
+use log::Level;
 
 use crate::logger;
 
 const STYLE: &str = include_str!("./style.scss");
 const SCRIPT: &str = include_str!("./script.js");
-
-#[derive(Clone, PartialEq, Eq, Copy)]
-pub enum LogLevel {
-    Info,
-    Error,
-    Debug,
-}
 
 #[component]
 #[allow(non_snake_case)]
@@ -48,7 +42,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
     let eval = use_eval(cx);
 
     let active_tab: &UseState<String> = use_state(cx, || "Logs".into());
-    let filter_level: &UseState<LogLevel> = use_state(cx, || LogLevel::Info);
+    let filter_level: &UseState<Level> = use_state(cx, || Level::Error); // If debug is set, we will not filter at all
 
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
 
@@ -82,10 +76,23 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                 text: "Filter:".into(),
                             },
                             Button {
-                                icon: Icon::InformationCircle,
-                                appearance: if filter_level.get() == &LogLevel::Info { Appearance::Info } else { Appearance::Secondary },
+                                icon: Icon::BugAnt,
+                                appearance: Appearance::Secondary,
                                 onpress: |_| {
-                                    filter_level.set(LogLevel::Info);
+                                    filter_level.set(Level::Debug);
+                                },
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Top,
+                                        text: "Debug".into()
+                                    }
+                                )),
+                            },
+                            Button {
+                                icon: Icon::InformationCircle,
+                                appearance: if filter_level.get() == &Level::Info { Appearance::Info } else { Appearance::Secondary },
+                                onpress: |_| {
+                                    filter_level.set(Level::Info);
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
@@ -96,9 +103,9 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             },
                             Button {
                                 icon: Icon::ExclamationTriangle,
-                                appearance: if filter_level.get() == &LogLevel::Error { Appearance::Danger } else { Appearance::Secondary },
+                                appearance: if filter_level.get() == &Level::Error { Appearance::Danger } else { Appearance::Secondary },
                                 onpress: |_| {
-                                    filter_level.set(LogLevel::Error);
+                                    filter_level.set(Level::Error);
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
@@ -108,15 +115,15 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                 )),
                             },
                             Button {
-                                icon: Icon::BugAnt,
-                                appearance: if filter_level.get() == &LogLevel::Debug { Appearance::Secondary } else { Appearance::Secondary },
+                                icon: Icon::Eye,
+                                appearance: Appearance::Secondary,
                                 onpress: |_| {
-                                    filter_level.set(LogLevel::Debug);
+                                    filter_level.set(Level::Trace);
                                 },
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: "Debug".into()
+                                        text: "Trace".into()
                                     }
                                 )),
                             },
@@ -169,7 +176,9 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     aria_label: "debug-logger-body",
                     class: "body",
                     div {
-                        logs_to_show.iter().map(|log| {
+                        logs_to_show.iter().filter(
+                            |&x| &x.level == filter_level.get() || filter_level.get() == &Level::Debug
+                        ).map(|log| {
                             let log_datetime = log.datetime;
                             let log_level = log.level;
                             let log_message = log.message.clone();

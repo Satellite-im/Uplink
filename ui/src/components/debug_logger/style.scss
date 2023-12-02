@@ -66,6 +66,7 @@
         display: flex;
         flex-direction: column-reverse;
         flex: 1;
+        justify-content: flex-start;
         .code-toolbar {
             min-height: 100%;
             overflow-y: scroll;
@@ -83,17 +84,18 @@
                 color: var(--text-color-muted);
             }
             .muted {
-                color: var(--text-color-muted);
+                color: var(--text-color-muted) !important;
                 white-space: nowrap;
             }
             .bold { 
                 font-weight: bold;
                 white-space: nowrap;
             }
-            .error { color: var(--danger); }
-            .warn { color: var(--warning); }
-            .info { color: var(--success); }
-            .debug { color: white; }
+            .ERROR { color: var(--danger); }
+            .WARN { color: var(--warning); }
+            .INFO { color: var(--success); }
+            .DEBUG { color: white; }
+            .TRACE { color: var(--text-color-muted); }
         }
     }
     &.resizing {
