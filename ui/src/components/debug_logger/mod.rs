@@ -22,6 +22,12 @@ use crate::logger;
 const STYLE: &str = include_str!("./style.scss");
 const SCRIPT: &str = include_str!("./script.js");
 
+#[derive(PartialEq, Eq)]
+pub enum Tab {
+    Logs,
+    State,
+}
+
 #[component]
 #[allow(non_snake_case)]
 pub fn DebugLogger(cx: Scope) -> Element {
@@ -41,7 +47,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
 
     let eval = use_eval(cx);
 
-    let active_tab: &UseState<String> = use_state(cx, || "Logs".into());
+    let active_tab: &UseState<Tab> = use_state(cx, || Tab::Logs);
     let filter_level: &UseState<Level> = use_state(cx, || Level::Error); // If debug is set, we will not filter at all
 
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
@@ -64,12 +70,12 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     Button {
                         text: "Logs".into(),
                         icon: Icon::CommandLine,
-                        appearance: if active_tab.get() == "Logs" { Appearance::Primary } else { Appearance::Secondary },
+                        appearance: if active_tab.get() == &Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
-                            active_tab.set("Logs".into());
+                            active_tab.set(Tab::Logs);
                         }
                     },
-                    (active_tab.get() == "Logs").then(|| cx.render(rsx!{
+                    (active_tab.get() == &Tab::Logs).then(|| cx.render(rsx!{
                         div {
                             class: "section",
                             Label {
@@ -132,9 +138,9 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     Button {
                         text: "State".into(),
                         icon: Icon::Square3Stack3d,
-                        appearance: if active_tab.get() == "State" { Appearance::Primary } else { Appearance::Secondary },
+                        appearance: if active_tab.get() == &Tab::State { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
-                            active_tab.set("State".into());
+                            active_tab.set(Tab::State);
                         }
                     },
                     Button {
@@ -171,8 +177,8 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     }
                 },
             },
-            match active_tab.get().as_str() {
-                "Logs" => rsx!(div {
+            match active_tab.get() {
+                Tab::Logs => rsx!(div {
                     aria_label: "debug-logger-body",
                     class: "body",
                     div {
@@ -213,7 +219,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         })
                     }
                 }),
-                "State" => rsx!(div {
+                Tab::State => rsx!(div {
                     aria_label: "debug-logger-body",
                     class: "body",
                     pre {
@@ -230,8 +236,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         }})();
                         "#
                     }
-                }),
-                _ => rsx!(div { "Unknown tab" }),
+                })
             }
         },
     ))
