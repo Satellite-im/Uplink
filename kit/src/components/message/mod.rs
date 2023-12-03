@@ -70,6 +70,8 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
+    tagged_text: Option<String>,
+
     reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
@@ -107,6 +109,8 @@ pub struct Props<'a> {
     attachments_pending_uploads: Option<&'a Vec<Progression>>,
 
     pinned: bool,
+
+    is_mention: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -133,6 +137,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // omitting the class will display the reactions starting from the bottom right corner
     let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
+    let rendered_text = cx
+        .props
+        .tagged_text
+        .as_ref()
+        .or(cx.props.with_text.as_ref());
 
     let has_attachments = cx
         .props
@@ -181,6 +190,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
+    let mention_class = cx.props.is_mention.then_some("mention").unwrap_or_default();
     let order_class = order.to_string();
     let msg_pending_class = cx
         .props
@@ -208,8 +218,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "message {} {} {} {}",
-                   loading_class, remote_class, order_class, msg_pending_class
+                    "message {} {} {} {} {}",
+                   loading_class, remote_class, order_class, msg_pending_class, mention_class
                 )
             },
             aria_label: {
@@ -249,7 +259,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: cx.props.with_text.clone().unwrap_or_default(),
+                    text: rendered_text.cloned().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
@@ -338,6 +348,7 @@ pub struct ChatMessageProps {
     pending: bool,
     markdown: bool,
     ascii_emoji: bool,
+    participants: Option<Vec<String>>,
 }
 
 #[allow(non_snake_case)]
@@ -448,7 +459,6 @@ pub fn replace_emojis(input: &str) -> String {
 
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
-
     if emojis {
         let r = replace_emojis(txt);
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
