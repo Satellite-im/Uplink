@@ -46,7 +46,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
 
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
 
-    let state_json = state.read().get_json().unwrap_or_default();
+    let state_json = state.read().get_json();
 
     cx.render(rsx!(
         style { STYLE }
@@ -176,6 +176,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     aria_label: "debug-logger-body",
                     class: "body",
                     div {
+                        class: "body-scroll",
                         logs_to_show.iter().filter(
                             |&x| &x.level == filter_level.get() || filter_level.get() == &Level::Debug
                         ).map(|log| {

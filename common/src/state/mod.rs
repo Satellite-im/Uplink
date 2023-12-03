@@ -743,9 +743,9 @@ impl State {
         Ok(())
     }
 
-    pub fn get_json(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let serialized = serde_json::to_string_pretty(self)?;
-        Ok(serialized)
+    pub fn get_json(&self) -> String {
+        let serialized = serde_json::to_string_pretty(self).unwrap_or("".into());
+        serialized
     }
 
     /// Loads the state from a file on disk, if it exists.
