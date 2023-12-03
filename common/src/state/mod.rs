@@ -766,7 +766,7 @@ impl State {
     }
 
     pub fn get_json(&self) -> String {
-        let serialized = serde_json::to_string_pretty(self).unwrap_or("".into());
+        let serialized = serde_json::to_string_pretty(self).unwrap_or_default();
         serialized
     }
 
