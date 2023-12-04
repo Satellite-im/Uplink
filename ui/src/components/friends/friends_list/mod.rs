@@ -384,7 +384,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                     convs_id: uuid,
                     msg,
                     attachments: Vec::new(),
-                    ui_msg_id: None,
+                    appended_msg_id: None,
                     rsp: tx,
                 };
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {

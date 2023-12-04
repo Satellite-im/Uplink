@@ -35,7 +35,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn, TypingIndicator},
+        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -122,8 +122,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     // this is used to scroll to the bottom of the chat.
     let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, state);
+    let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(cx, state);
     let local_typing_ch = coroutines::get_typing_ch(cx);
     let local_typing_ch2 = local_typing_ch.clone();
 
@@ -238,10 +237,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(active_chat_id));
             }
-            let ui_id = state
+            let appended_msg_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
+            msg_ch.send(MsgChInput {
+                msg,
+                conv_id: active_chat_id,
+                appended_msg_id,
+                replying_to,
+            });
         }
     };
 
