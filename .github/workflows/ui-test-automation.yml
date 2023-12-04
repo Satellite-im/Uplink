@@ -533,9 +533,6 @@ jobs:
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
-            Uplink-Windows
-            uplink-windows-assets
-            app-macos
             test-report-macos-ci
             test-report-windows-ci
             test-report-macos-chats
@@ -558,6 +555,14 @@ jobs:
     steps:
       - name: Checkout testing directory 🔖
         uses: actions/checkout@v3
+
+      - name: Delete artifacts not required after publishing results
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            Uplink-Windows
+            uplink-windows-assets
+            app-macos
 
       - name: Remove label if all test jobs succeeded
         uses: buildsville/add-remove-label@v2.0.0
