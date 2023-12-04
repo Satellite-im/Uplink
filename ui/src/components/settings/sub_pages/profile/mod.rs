@@ -113,7 +113,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     ChanCmd::Username(username) => {
                         MultiPassCmd::UpdateUsername { username, rsp: tx }
                     }
-                    ChanCmd::StatusMessage(status) => MultiPassCmd::UpdateStatus {
+                    ChanCmd::StatusMessage(status) => MultiPassCmd::UpdateStatusMessage {
                         status: if status.is_empty() {
                             None
                         } else {
@@ -121,7 +121,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                         rsp: tx,
                     },
-                    ChanCmd::Status(status) => MultiPassCmd::SetOnlineStatus { status, rsp: tx },
+                    ChanCmd::Status(status) => MultiPassCmd::SetStatus { status, rsp: tx },
                 };
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(warp_cmd)) {

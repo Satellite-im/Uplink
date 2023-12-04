@@ -108,8 +108,8 @@ pub enum MultiPassCmd {
         banner: Vec<u8>,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
-    #[display(fmt = "UpdateStatus")]
-    UpdateStatus {
+    #[display(fmt = "UpdateStatusMessage")]
+    UpdateStatusMessage {
         status: Option<String>,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
@@ -123,8 +123,8 @@ pub enum MultiPassCmd {
         did: DID,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
-    #[display(fmt = "SetOnlineStatus")]
-    SetOnlineStatus {
+    #[display(fmt = "SetStatus")]
+    SetStatus {
         status: IdentityStatus,
         rsp: oneshot::Sender<Result<Identity, warp::error::Error>>,
     },
@@ -361,7 +361,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 }
             };
         }
-        MultiPassCmd::UpdateStatus { status, rsp } => {
+        MultiPassCmd::UpdateStatusMessage { status, rsp } => {
             let r = warp
                 .multipass
                 .update_identity(IdentityUpdate::StatusMessage(status))
@@ -431,7 +431,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             };
             let _ = rsp.send(r);
         }
-        MultiPassCmd::SetOnlineStatus { status, rsp } => {
+        MultiPassCmd::SetStatus { status, rsp } => {
             let r = warp.multipass.set_identity_status(status).await;
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
             if let Ok(id) = id.as_mut() {
