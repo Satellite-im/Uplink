@@ -25,13 +25,13 @@ To get running fast, ensure you have [Rust](https://www.rust-lang.org/tools/inst
 
 **Standard Run:**
 ```
-cargo run --bin ui
+cargo run --bin uplink
 ```
 
 **Rapid Release Testing:**
 This version will run close to release but without recompiling crates every time.
 ```
-cargo run --bin ui --profile=rapid
+cargo run --bin uplink --profile=rapid
 ```
 
 ---
