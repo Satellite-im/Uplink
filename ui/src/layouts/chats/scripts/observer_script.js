@@ -7,7 +7,7 @@ function observe_list() {
     console.log("send_top_event is " + send_top_event);
     console.log("send_bottom_event is " + send_bottom_event);
     
-    var observer3 = new IntersectionObserver( (entries, observer) => {
+    var observer = new IntersectionObserver( (entries, observer) => {
         const el = document.getElementById(conversation_key);
         if  (!el) {
             observer.disconnect();
@@ -40,7 +40,7 @@ function observe_list() {
     const elements = document.querySelectorAll("#messages div.message-group > div.context-wrap > div.context-inner");
     elements.forEach( (element) => {
         let id = "#" + element.id;
-        observer3.observe(element);
+        observer.observe(element);
     });
 }
 
