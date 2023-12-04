@@ -30,7 +30,7 @@ fn remove_duplicates(values: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn remove_duplicates_fancy<'a>(values: Vec<(String, Element<'a>)>) -> Vec<(String, Element<'a>)> {
+fn remove_duplicates_fancy(values: Vec<(String, Element<'_>)>) -> Vec<(String, Element<'_>)> {
     let mut set = HashSet::new();
     values
         .iter()

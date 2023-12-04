@@ -47,7 +47,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
-    let identitystatus_values = vec![
+    let identitystatus_values = [
         IdentityStatus::Online,
         IdentityStatus::Away,
         IdentityStatus::Busy,
@@ -566,9 +566,9 @@ fn get_input_options(validation_options: Validation) -> Options {
 }
 
 fn get_status_option<'a>(cx: Scope<'a>, status: &IdentityStatus) -> (String, Element<'a>) {
-    let indicator = Status::from(status.clone());
+    let indicator = Status::from(*status);
     (
-        serde_json::to_string::<IdentityStatus>(&status).unwrap_or_default(),
+        serde_json::to_string::<IdentityStatus>(status).unwrap_or_default(),
         cx.render(rsx!(div {
                 class: "settings-online-status",
                 Indicator {
