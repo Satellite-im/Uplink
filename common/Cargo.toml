@@ -33,6 +33,7 @@ humansize = { workspace = true }
 zip = "0.6.4"
 walkdir = { workspace = true }
 extensions = { workspace = true }
+regex = { workspace = true }
 
 futures = { workspace = true }
 # do we really want to pull in all of tokio?
