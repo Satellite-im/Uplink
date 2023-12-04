@@ -38,7 +38,7 @@ pub struct Props<'a> {
     value: Option<String>,
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
-    onkeydown: Option<EventHandler<'a, Event<KeyboardData>>>,
+    on_paste_keydown: Option<EventHandler<'a, Event<KeyboardData>>>,
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
@@ -162,8 +162,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             is_emoji_suggestion_modal_closed.with_mut(|i| *i = true);
                         }
                     },
-                    onkeydown:  move |keyboard_event: Event<KeyboardData>| {
-                        if let Some(e) = cx.props.onkeydown.as_ref() {
+                    on_paste_keydown:  move |keyboard_event: Event<KeyboardData>| {
+                        if let Some(e) = cx.props.on_paste_keydown.as_ref() {
                             e.call(keyboard_event);
                         }
                     },

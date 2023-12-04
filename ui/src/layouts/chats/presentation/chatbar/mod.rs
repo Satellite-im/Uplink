@@ -283,7 +283,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
-            onkeydown: move |e: Event<KeyboardData>| {
+            on_paste_keydown: move |e: Event<KeyboardData>| {
                 // HACK: Allow copy and paste files for Linux
                 if cfg!(target_os = "linux") {
                     let keyboard_data = e;

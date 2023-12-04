@@ -43,7 +43,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
     onkeyup: Option<EventHandler<'a, Code>>,
-    onkeydown: Option<EventHandler<'a, Event<KeyboardData>>>,
+    on_paste_keydown: Option<EventHandler<'a, Event<KeyboardData>>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -76,7 +76,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         oncursor_update,
         onkeyup,
-        onkeydown,
+        on_paste_keydown,
         value,
         is_disabled,
         show_char_counter,
@@ -201,7 +201,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             // HACK(Linux): Allow copy and paste files for Linux 
                             if cfg!(target_os = "linux") {
                                 if evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
-                                    if let Some(e) = onkeydown {
+                                    if let Some(e) = on_paste_keydown {
                                         e.call(evt.clone());
                                     }
                                 }
