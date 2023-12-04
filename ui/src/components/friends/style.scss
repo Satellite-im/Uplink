@@ -11,6 +11,12 @@
         display: inline-flex;
         gap: var(--gap);
         width: 100%;
+
+        .context-wrap, 
+        .context-inner, 
+        .input-group {
+            width: 100%;
+        }
     }
     .btn {
         align-self: flex-start;

@@ -43,6 +43,8 @@ uplink = Uplink
     .open-devtools = Open Console
     .clear-unreads = Clear Unreads
     .copy-text = Copy Text
+    .copy = Copy
+    .paste = Paste
     
 community = Community
     .invited = You're Invited!
