@@ -57,6 +57,7 @@ use warp::{
     raygun::{self},
 };
 
+use self::call::Call;
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -1515,6 +1516,13 @@ impl State {
             .all
             .iter()
             .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+    pub fn get_identities_from_call(&self, call: &Call) -> Vec<Identity> {
+        call.participants_joined
+            .keys()
+            .filter_map(|id| self.identities.get(id))
             .cloned()
             .collect()
     }
