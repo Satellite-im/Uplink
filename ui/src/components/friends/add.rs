@@ -186,6 +186,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         Input {
                             placeholder: get_local_text("friends.placeholder"),
                             icon: Icon::MagnifyingGlass,
+                            value: friend_input.get().clone(),
                             options: Options {
                                 with_validation: Some(friend_validation),
                                 // Do not replace spaces with underscores
