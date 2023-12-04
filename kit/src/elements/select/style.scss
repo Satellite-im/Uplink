@@ -41,7 +41,8 @@
 }
 
 .fancy-select-option {
-    height: var(--height-input-less);
+    height: fit-content;
+    min-height: var(--height-input-less);
     width: 100%;
     display: inline-flex; 
     flex-direction: row; 

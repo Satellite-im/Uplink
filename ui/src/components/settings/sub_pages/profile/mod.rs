@@ -443,7 +443,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     section_description: get_local_text("settings-profile.online-status-description"),
                     FancySelect {
                         initial_value: get_status_option(cx, &online_status),
-                        width: 150,
+                        width: 190,
                         options: identitystatus_values.iter().map(|status| get_status_option(cx, status)).collect(),
                         onselect: move |value: String| {
                             let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
