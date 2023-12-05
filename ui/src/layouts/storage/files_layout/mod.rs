@@ -30,7 +30,6 @@ pub mod controller;
 pub mod file_modal;
 
 use crate::components::files::upload_progress_bar::UploadProgressBar;
-use crate::components::paste_files_with_shortcut;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
@@ -106,14 +105,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused  {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path| {
-                    functions::add_files_in_queue_to_upload(&files_in_queue_to_upload.clone(), files_local_path, eval);
-                    upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
-                },
-            })
-        }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(get_file_modal {
@@ -133,11 +124,9 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             aria_label: "files-layout",
             tabindex: "0",
             onkeydown: move |e: Event<KeyboardData>| {
-                // HACK(Linux): Allow copy and paste files for Linux
-                if cfg!(target_os = "linux") {
                     let keyboard_data = e;
                     if keyboard_data.code() == Code::KeyV
-                        && keyboard_data.modifiers() == Modifiers::CONTROL
+                        && (keyboard_data.modifiers() == Modifiers::CONTROL || keyboard_data.modifiers() == Modifiers::META)
                     {
                         cx.spawn({
                             to_owned![files_been_uploaded2, files_in_queue_to_upload2, eval];
@@ -151,9 +140,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                 functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path, &eval);
                                 files_been_uploaded2.with_mut(|i| *i = true);
                             }
-                            }});
-                        
-                }
+                        }});
                 }
             },
             ondragover: move |_| {
