@@ -161,7 +161,7 @@ pub fn get_messages(
                 rsx!(
                     msg_container_end,
                     loop_over_message_groups {
-                        groups: data::create_message_groups(chat_data.read().active_chat.my_id().did_key(), chat_data.read().active_chat.messages()),
+                        groups: data::create_message_groups(chat_data.read().active_chat.my_id(), chat_data.read().active_chat.other_participants(), chat_data.read().active_chat.messages()),
                         active_chat_id: chat_data.read().active_chat.id(),
                         on_context_menu_action: move |(e, mut id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
@@ -560,6 +560,14 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let pending_uploads = grouped_message.file_progress.as_ref();
     let render_markdown = state.read().ui.should_transform_markdown_text();
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
+    let msg_lines = message.inner.lines().join("\n");
+
+    let is_mention = message.is_mention;
+    let rendered_lines = message
+        .lines_to_render
+        .as_ref()
+        .unwrap_or(&msg_lines)
+        .clone();
 
     cx.render(rsx!(
         div {
@@ -582,7 +590,9 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
-                with_text: message.inner.lines().join("\n"),
+                with_text: msg_lines,
+                tagged_text: rendered_lines,
+                is_mention: is_mention,
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message
@@ -680,7 +690,8 @@ fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
     cx.render(rsx!(render_pending_messages {
         pending_outgoing_message: data::pending_group_messages(
             &cx.props.msg,
-            data.active_chat.my_id().did_key(),
+            data.active_chat.other_participants(),
+            data.active_chat.my_id(),
         ),
         active: data.active_chat.id(),
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)

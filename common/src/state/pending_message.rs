@@ -25,6 +25,7 @@ impl PendingMessage {
             inner,
             in_reply_to: None,
             key: String::new(),
+            ..Default::default()
         };
         PendingMessage {
             attachments: attachments
@@ -63,6 +64,7 @@ impl PendingMessage {
             inner,
             in_reply_to: None,
             key: Uuid::new_v4().to_string(),
+            ..Default::default()
         };
         PendingMessage {
             attachments: attachments

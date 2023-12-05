@@ -22,13 +22,13 @@ To get running fast, ensure you have [Rust](https://www.rust-lang.org/tools/inst
 
 **Standard Run:**
 ```
-cargo run --bin ui
+cargo run --bin uplink
 ```
 
 **Rapid Release Testing:**
 This version will run close to release but without recompiling crates every time.
 ```
-cargo run --bin ui --profile=rapid
+cargo run --bin uplink --profile=rapid
 ```
 
 ---
@@ -69,6 +69,20 @@ And for Windows, I followed the steps on this site here
 | ffmpeg| `sudo apt-get install ffmpeg` |
 | libopus-dev| `sudo apt-get install libopus-dev` |
 | libxdo-dev| `sudo apt install libxdo-dev` |
+
+**Fedora 38**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
+| Build Essentials | `sudo dnf groupinstall "Development Tools" "Development Libraries"` |
+| pkg-config | `sudo dnf install pkg-config` |
+| alsa libs & headers | `sudo dnf install alsa-lib-devel` |
+| libgtk-dev | `sudo dnf install gtk3-devel` |
+| libsoup-dev | `sudo dnf install libsoup3-devel` |
+| Tauri Deps | `sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget librsvg2-devel libindicator-devel` |
+| ffmpeg| `sudo dnf install ffmpeg` |
+| libopus-dev| `sudo dnf install opus-devel` |
+| libxdo-dev| `sudo dnf install libxdo-devel` |
 
 ## How to add the extension settings in Uplink:
 

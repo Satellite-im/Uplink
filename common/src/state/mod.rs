@@ -23,6 +23,7 @@ pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
+use regex::Regex;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
@@ -62,7 +63,6 @@ use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
 pub const MAX_PINNED_MESSAGES: u8 = 100;
-
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
 // the HashSet would be used to determine when to evict an identity. (they are not participating in any conversations and are not a friend)
@@ -174,11 +174,11 @@ impl State {
                 }
             }
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => self.ui.notifications.increment(
+            Action::AddNotification(kind, count, forced) => self.ui.notifications.increment(
                 &self.configuration,
                 kind,
                 count,
-                !self.ui.metadata.focused,
+                forced || !self.ui.metadata.focused,
             ),
             Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
@@ -281,6 +281,7 @@ impl State {
                     inner: m,
                     in_reply_to: None,
                     key: Uuid::new_v4().to_string(),
+                    ..Default::default()
                 };
                 self.add_msg_to_chat(id, m);
             }
@@ -295,6 +296,7 @@ impl State {
             {
                 Ok(call) => {
                     self.set_active_media(call.conversation_id);
+                    self.send_chat_to_top_of_sidebar(call.conversation_id);
                 }
                 Err(e) => {
                     log::error!("failed to answer call: {e}");
@@ -308,6 +310,7 @@ impl State {
                     call.participants,
                 );
                 let _ = self.ui.call_info.answer_call(call.id, None);
+                self.set_active_chat(&call.conversation_id, true);
                 self.set_active_media(call.conversation_id);
             }
             Action::EndCall => {
@@ -356,6 +359,7 @@ impl State {
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::FriendRequest,
                     1,
+                    false,
                 ));
 
                 // TODO: Get state available in this scope.
@@ -436,8 +440,15 @@ impl State {
         match event {
             MessageEvent::Received {
                 conversation_id,
-                message,
+                mut message,
             } => {
+                if let Some(ids) = self
+                    .get_chat_by_id(conversation_id)
+                    .map(|c| self.chat_participants(&c))
+                {
+                    message.insert_did(&ids, &self.get_own_identity().did_key());
+                }
+                let ping = message.is_mention;
                 self.update_identity_status_hack(&message.inner.sender());
                 let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
@@ -450,6 +461,7 @@ impl State {
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::Message,
                     1,
+                    ping,
                 ));
 
                 // Dispatch notifications only when we're not already focused on the application.
@@ -508,15 +520,22 @@ impl State {
             }
             MessageEvent::Edited {
                 conversation_id,
-                message,
+                mut message,
             } => {
                 self.update_identity_status_hack(&message.inner.sender());
+                let own = self.get_own_identity().did_key();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    if let Some(msg) = chat
-                        .messages
-                        .iter_mut()
-                        .find(|msg| msg.inner.id() == message.inner.id())
-                    {
+                    message.insert_did(
+                        &chat
+                            .participants
+                            .iter()
+                            .filter_map(|id| self.identities.get(id))
+                            .cloned()
+                            .collect::<Vec<_>>(),
+                        &own,
+                    );
+                    let id = message.inner.id();
+                    if let Some(msg) = chat.messages.iter_mut().find(|msg| msg.inner.id() == id) {
                         *msg = message.clone();
                     }
 
@@ -526,12 +545,16 @@ impl State {
                         }
                     }
 
-                    if let Some(msg) = chat
-                        .pinned_messages
-                        .iter_mut()
-                        .find(|m| m.id() == message.inner.id())
-                    {
-                        *msg = message.inner;
+                    if let Some(msg) = chat.pinned_messages.iter_mut().find(|m| m.id() == id) {
+                        *msg = message.inner.clone();
+                    }
+
+                    if message.is_mention {
+                        if let Some(msg) = chat.mentions.iter_mut().find(|m| m.inner.id() == id) {
+                            *msg = message.clone();
+                        }
+                    } else {
+                        chat.mentions.retain(|m| m.inner.id() != id);
                     }
                 }
             }
@@ -548,6 +571,7 @@ impl State {
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                     chat.pinned_messages.retain(|msg| msg.id() != message_id);
+                    chat.mentions.retain(|msg| msg.inner.id() != message_id);
 
                     if let Some(msg) = most_recent_message {
                         if chat.messages.is_empty() {
@@ -649,6 +673,7 @@ impl State {
                         return;
                     }
                 };
+                self.send_chat_to_top_of_sidebar(conversation_id);
                 if let Err(e) =
                     self.ui
                         .call_info
@@ -888,7 +913,8 @@ impl State {
         let is_active_scrolled = self.chats.active_chat_is_scrolled();
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
-            chat.messages.push_back(message);
+            chat.messages.push_back(message.clone());
+            chat.mentions.push_back(message);
             // only care about the most recent message, for the sidebar
             if chat.messages.len() > 1 {
                 chat.messages.pop_front();
@@ -1867,4 +1893,25 @@ pub fn pending_group_messages<'a>(
         remote: false,
         messages,
     })
+}
+
+pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
+    Regex::new(&format!(
+        "(^| )@{}( |$)",
+        if username {
+            id.username()
+        } else {
+            id.did_key().to_string()
+        }
+    ))
+    .unwrap()
+}
+
+pub fn mention_replacement_pattern(id: &Identity, visual: bool) -> String {
+    format!(
+        r#"<div class="message-user-tag {}" value="{}">@{}</div>"#,
+        if visual { "visual-only" } else { "" },
+        id.did_key(),
+        id.username()
+    )
 }
