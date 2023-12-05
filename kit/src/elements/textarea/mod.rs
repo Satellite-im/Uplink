@@ -199,11 +199,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         to_owned![eval, cursor_script];
                         move |evt| {
                             // HACK(Linux): Allow copy and paste files for Linux 
-                            if cfg!(target_os = "linux") {
-                                if evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
-                                    if let Some(e) = on_paste_keydown {
-                                        e.call(evt.clone());
-                                    }
+                            if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
+                                if let Some(e) = on_paste_keydown {
+                                    e.call(evt.clone());
                                 }
                             }
                             
