@@ -81,6 +81,12 @@ And for Windows, I followed the steps on this site here
 
 <video src="https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2.mp4"></video>
 
+<video width="320" height="240" controls>
+  <source src="https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+
 ## Contributing
 
 All contributions are welcome! Please keep in mind we're still a relatively small team, and any work done to ensure contributions don't cause bugs or issues in the application is much appreciated.
