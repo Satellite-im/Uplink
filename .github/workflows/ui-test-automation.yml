@@ -23,10 +23,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Rust 💿
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.73.0
-          override: true
           components: rustfmt, clippy
 
       - name: Add Targets for MacOS
@@ -79,10 +78,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Rust 💿
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.73.0
-          override: true
           components: rustfmt, clippy
 
       - name: Build executable 🖥️
