@@ -16,7 +16,8 @@
 		gap: var(--gap);
 		align-items: center;
 		border-radius: var(--border-radius-more);
-		height: var(--height-input);
+		height: fit-content;
+		min-height: var(--height-input);
 		padding: var(--padding-less);
 		width: 100%;
 	
