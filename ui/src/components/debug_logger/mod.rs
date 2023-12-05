@@ -50,7 +50,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
     let active_tab: &UseState<Tab> = use_state(cx, || Tab::Logs);
     let filter_level: &UseState<Level> = use_state(cx, || Level::Error); // If debug is set, we will not filter at all
 
-    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
 
     let state_json = state.read().get_json();
 
