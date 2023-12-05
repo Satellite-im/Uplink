@@ -79,8 +79,7 @@ And for Windows, I followed the steps on this site here
 - Close all open windows.
 - Finally, run cargo run trace2.
 
-<video src='[https://github.com/Satellite-im/Uplink/assets/how_to_add_extension.mp4](https://github.com/Satellite-im/Uplink/assets/how_to_add_extension.mp4)' width=180/>
-
+<video src="https://github.com/Satellite-im/Uplink/assets/how_to_add_extension.mp4"></video>
 
 ## Contributing
 
