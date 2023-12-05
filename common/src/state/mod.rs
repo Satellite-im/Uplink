@@ -769,8 +769,7 @@ impl State {
     }
 
     pub fn get_json(&self) -> String {
-        let serialized = serde_json::to_string_pretty(self).unwrap_or_default();
-        serialized
+        serde_json::to_string_pretty(self).unwrap_or_default()
     }
 
     /// Loads the state from a file on disk, if it exists.
