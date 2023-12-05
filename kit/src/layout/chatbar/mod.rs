@@ -1,3 +1,4 @@
+use common::state::Identity;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 use warp::constellation::file::File;
@@ -5,6 +6,7 @@ use warp::constellation::file::File;
 use crate::{
     components::{
         embeds::file_embed::FileEmbed, message::format_text, message_typing::MessageTyping,
+        user_image::UserImage,
     },
     elements::{button::Button, label::Label, textarea, Appearance},
 };
@@ -13,6 +15,34 @@ use common::{icons, language::get_local_text, warp_runner::thumbnail_to_base64};
 
 pub type To = &'static str;
 
+pub enum SuggestionType {
+    None,
+    // Emoji suggestions. First is the string that was matched. Second is the emojis matched
+    Emoji(String, Vec<(String, String)>),
+    // Username tag suggestions. First is the string that was matched. Second is the users that matched
+    Tag(String, Vec<Identity>),
+}
+
+impl SuggestionType {
+    fn get_replacement_for_index(&self, index: usize) -> (String, String) {
+        match self {
+            SuggestionType::None => (String::new(), String::new()),
+            SuggestionType::Emoji(pattern, v) => (pattern.clone(), v[index].0.clone()),
+            SuggestionType::Tag(pattern, v) => (
+                pattern.clone(),
+                format!("{}#{}", v[index].username(), v[index].short_id()),
+            ),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match self {
+            SuggestionType::None => true,
+            SuggestionType::Emoji(_, v) => v.is_empty(),
+            SuggestionType::Tag(_, v) => v.is_empty(),
+        }
+    }
+}
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
@@ -43,9 +73,9 @@ pub struct Props<'a> {
     #[props(default = false)]
     is_disabled: bool,
     ignore_focus: bool,
-    emoji_suggestions: &'a Vec<(String, String)>,
+    suggestions: &'a SuggestionType,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
-    on_emoji_click: Option<EventHandler<'a, (String, String, i64)>>,
+    on_suggestion_click: Option<EventHandler<'a, (String, String, i64)>>,
 }
 
 #[derive(Props)]
@@ -138,8 +168,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
     let is_typing = !cx.props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
-    let selected_emoji: &UseRef<Option<usize>> = use_ref(cx, || None);
-    let is_emoji_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
+    let selected_suggestion: &UseRef<Option<usize>> = use_ref(cx, || None);
+    let is_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
     let eval = use_eval(cx);
 
     cx.render(rsx!(
@@ -158,8 +188,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     show_char_counter: true,
                     value: if cx.props.is_disabled { get_local_text("messages.loading")} else { cx.props.value.clone().unwrap_or_default()},
                     onkeyup: move |keycode| {
-                        if !*is_emoji_suggestion_modal_closed.read() && keycode == Code::Escape {
-                            is_emoji_suggestion_modal_closed.with_mut(|i| *i = true);
+                        if !*is_suggestion_modal_closed.read() && keycode == Code::Escape {
+                            is_suggestion_modal_closed.with_mut(|i| *i = true);
                         }
                     },
                     on_paste_keydown:  move |keyboard_event: Event<KeyboardData>| {
@@ -169,14 +199,14 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onchange: move |(v, _)| {
                         cx.props.onchange.call(v);
-                        *is_emoji_suggestion_modal_closed.write_silent() = false;
+                        *is_suggestion_modal_closed.write_silent() = false;
                     },
                     onreturn: move |(v, is_valid, _)| {
-                        if let Some(i) = selected_emoji.write_silent().take() {
-                            if let Some(e) = cx.props.on_emoji_click.as_ref() {
+                        if let Some(i) = selected_suggestion.write_silent().take() {
+                            if let Some(e) = cx.props.on_suggestion_click.as_ref() {
                                 if let Some(p) = cursor_position.read().as_ref() {
-                                    let (emoji, alias) = cx.props.emoji_suggestions[i].clone();
-                                    e.call((emoji, alias,*p));
+                                    let (pattern, replacement) = cx.props.suggestions.get_replacement_for_index(i);
+                                    e.call((replacement, pattern,*p));
                                     return;
                                 }
                             }
@@ -192,15 +222,19 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         *cursor_position.write_silent() = Some(p)
                     },
                     is_disabled: cx.props.is_disabled,
-                    prevent_up_down_arrows: !cx.props.emoji_suggestions.is_empty(),
+                    prevent_up_down_arrows: !cx.props.suggestions.is_empty(),
                     onup_down_arrow:
                         move |code| {
-                            if cx.props.emoji_suggestions.is_empty() {
-                                *selected_emoji.write_silent() = None;
+                            let amount = match cx.props.suggestions {
+                                SuggestionType::None => 0,
+                                SuggestionType::Emoji(_, v) => v.len(),
+                                SuggestionType::Tag(_, v) => v.len(),
+                            };
+                            if amount == 0 {
+                                *selected_suggestion.write_silent() = None;
                                 return;
                             }
-                            let current = &mut *selected_emoji.write_silent();
-                            let amount = cx.props.emoji_suggestions.len();
+                            let current = &mut *selected_suggestion.write_silent();
                             let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
                                     Some(v) => (v + 1) % amount,
@@ -227,41 +261,93 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "controls",
                 cx.props.controls.as_ref()
             },
-            (!cx.props.emoji_suggestions.is_empty() && !*is_emoji_suggestion_modal_closed.read()).then(||
-                rsx!(EmojiSuggesions {
-                suggestions: cx.props.emoji_suggestions,
+            (!cx.props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
+                rsx!(SuggestionsMenu {
+                suggestions: cx.props.suggestions,
                 on_close: move |_| {
-                    is_emoji_suggestion_modal_closed.with_mut(|i| *i = true);
+                    is_suggestion_modal_closed.with_mut(|i| *i = true);
                 },
-                on_emoji_click: move |(emoji, alias)| {
-                    if let Some(e) = cx.props.on_emoji_click.as_ref() {
+                on_click: move |(emoji, pattern)| {
+                    if let Some(e) = cx.props.on_suggestion_click.as_ref() {
                         if let Some(p) = cursor_position.read().as_ref() {
-                            e.call((emoji, alias, *p))
+                            e.call((emoji, pattern, *p))
                         }
                     }
                 },
-                selected: selected_emoji.clone(),
+                selected: selected_suggestion.clone(),
             })),
         }
     ))
 }
 
 #[derive(Props)]
-pub struct EmojiSuggestionProps<'a> {
-    suggestions: &'a Vec<(String, String)>,
-    on_emoji_click: EventHandler<'a, (String, String)>,
+pub struct SuggestionProps<'a> {
+    suggestions: &'a SuggestionType,
+    on_click: EventHandler<'a, (String, String)>,
     on_close: EventHandler<'a, ()>,
     selected: UseRef<Option<usize>>,
 }
 
 #[allow(non_snake_case)]
-fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
+fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }
+    let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
+        SuggestionType::None => return cx.render(rsx!(())),
+        SuggestionType::Emoji(pattern, emojis) => {
+            let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
+                rsx!(div {
+                    class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
+                        Some(v) => if *v == num {"chatbar-selected"} else {""},
+                        None => "",
+                    }),
+                    aria_label: {
+                        format_args!(
+                            "emoji-suggested-{emoji}",
+                        )
+                    },
+                    onclick: move |_| {
+                        cx.props.on_click.call((emoji.clone(), pattern.clone()))
+                    },
+                    format_args!("{emoji}  :{alias}:"),
+                })
+            }).collect();
+            (get_local_text("messages.emoji-suggestion"), component)
+        }
+        SuggestionType::Tag(pattern, identities) => {
+            let component = identities.iter().enumerate().map(|(num, id)| {
+                let username = format!("{}#{}", id.username(), id.short_id());
+                rsx!(div {
+                    class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
+                        Some(v) => if *v == num {"chatbar-selected"} else {""},
+                        None => ""
+                    }),
+                    aria_label: {
+                        format_args!(
+                            "username-suggested-{username}",
+                        )
+                    },
+                    onclick: move |_| {
+                        cx.props.on_click.call((username.clone(), pattern.clone()))
+                    },
+                    div {
+                        class: "user-suggestion-profile",
+                        UserImage {
+                            platform: id.platform().into(),
+                            status: id.identity_status().into(),
+                            image: id.profile_picture()
+                        }
+                    }
+                    format_args!("{username}"),
+                })
+            }).collect();
+            (get_local_text("messages.username-suggestion"), component)
+        }
+    };
     cx.render(rsx!(div {
-        class: "emoji-suggestions",
-        aria_label: "emoji-suggestions-container",
+        class: "chatbar-suggestions",
+        aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {
             *cx.props.selected.write() = None;
         },
@@ -270,33 +356,17 @@ fn EmojiSuggesions<'a>(cx: Scope<'a, EmojiSuggestionProps<'a>>) -> Element<'a> {
         },
         Button {
             small: true,
-            aria_label: "emoji-suggestion-close-button".into(),
+            aria_label: "chatbar-suggestion-close-button".into(),
             appearance: Appearance::Secondary,
             icon: icons::outline::Shape::XMark,
             onpress: move |_| cx.props.on_close.call(()),
         },
         div {
-            class: "emoji-suggestions-header",
+            class: "chatbar-suggestions-header",
             Label {
-                text: get_local_text("messages.suggested-emoji"),
+                text: label,
             },
         }
-        cx.props.suggestions.iter().enumerate().map(|(num, (emoji,alias))| {
-            cx.render(rsx!(div {
-                class: format_args!("{} {}", "emoji-suggestion", match cx.props.selected.read().as_ref() {
-                    Some(v) => if *v == num {"emoji-selected"} else {""},
-                    None => "",
-                }),
-                aria_label: {
-                    format_args!(
-                        "emoji-suggested-{emoji}",
-                    )
-                },
-                onclick: move |_| {
-                    cx.props.on_emoji_click.call((emoji.clone(), alias.clone()))
-                },
-                format_args!("{emoji}  :{alias}:"),
-            }))
-        })
+        suggestions.into_iter()
     }))
 }
