@@ -204,7 +204,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     e.call(evt.clone());
                                 }
                             }
-                            
                             // special codepath to handle onreturn
                             let old_enter_pressed = *enter_pressed.read();
                             let old_numpad_enter_pressed = *numpad_enter_pressed.read();
