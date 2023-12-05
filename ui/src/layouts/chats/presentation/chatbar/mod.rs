@@ -488,9 +488,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |command_to_paste_pressed: bool| {
-                    if command_to_paste_pressed  {
-                        let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                on_paste: move |files_local_path: Vec<std::path::PathBuf>| {
                         if !files_local_path.is_empty() {
                             let new_files: Vec<Location> = files_local_path
                             .iter()
@@ -508,7 +506,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         state
                             .write()
                             .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                        }
                     }
                 }})}
                 SendFilesLayoutModal {
