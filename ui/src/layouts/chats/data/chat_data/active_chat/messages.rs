@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use common::warp_runner::ui_adapter;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use uuid::Uuid;
 
 use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
@@ -12,6 +12,7 @@ pub struct Messages {
     // messages should be sorted by time in increasing order. earliest first, latest last.
     pub all: VecDeque<ui_adapter::Message>,
     pub displayed: VecDeque<Uuid>,
+    pub loaded: HashSet<Uuid>,
     // used for displayed_messages
     pub times: HashMap<Uuid, DateTime<Utc>>,
 }
@@ -29,6 +30,7 @@ impl Messages {
         Self {
             all: messages,
             displayed,
+            loaded: HashSet::new(),
             times: message_times,
         }
     }
@@ -103,12 +105,13 @@ impl Messages {
         })
     }
 
-    pub fn add_message_to_view(&mut self, message_id: Uuid) {
+    pub fn add_message_to_view(&mut self, message_id: Uuid) -> bool {
+        let newley_loaded = self.loaded.insert(message_id);
         let date = match self.times.get(&message_id).cloned() {
             Some(time) => time,
             None => {
                 log::error!("tried to add message to view but time lookup failed");
-                return;
+                return false;
             }
         };
 
@@ -136,9 +139,12 @@ impl Messages {
             //     message_id
             // );
         }
+
+        newley_loaded
     }
 
-    pub fn remove_message_from_view(&mut self, message_id: Uuid) {
+    pub fn remove_message_from_view(&mut self, message_id: Uuid) -> bool {
+        let newley_loaded = self.loaded.insert(message_id);
         if self
             .displayed
             .front()
@@ -158,6 +164,8 @@ impl Messages {
             // log::warn!("failed to remove message from view. fixing with retain()");
             // self.displayed.retain(|x| x != &message_id);
         }
+
+        newley_loaded
     }
 
     pub fn top(&self) -> Option<Uuid> {

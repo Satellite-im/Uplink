@@ -43,7 +43,7 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::data::{self, ChatData, ScrollBtn},
+    layouts::chats::{data::{self, ChatData, ScrollBtn}, scripts},
     utils::format_timestamp::format_timestamp_timeago,
 };
 
@@ -84,6 +84,7 @@ pub fn get_messages(
 
     let eval = use_eval(cx);
     let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
+    let fetch_later_ch = coroutines::fetch_later_ch(cx, chat_data, scroll_btn);
     effects::init_msg_scroll(cx, chat_data, eval, ch);
 
     // used by child Elements via use_coroutine_handle
@@ -124,10 +125,28 @@ pub fn get_messages(
     cx.render(rsx!(
         div {
             id: "messages",
+            // this is a hack to deal with the limitations of the message paging. On the first page, if a message comes in while the page
+            // is scrolled up, it won't be displayed when the user scrolls back down. need to trigger a "fetch more" response. 
             onscroll: move |_| {
-                // if !chat_data.read().active_chat.get_scrolled() {
-                //     chat_data.write().active_chat.set_scrolled();
-                // }
+                to_owned![eval, active_chat_id, chat_data, fetch_later_ch];
+                async move {
+                    if !chat_data.read().chat_behaviors.get(&active_chat_id).map(|x| x.override_on_scroll_end).unwrap_or_default() {
+                        return;
+                    }
+                    debug_assert!(chat_data.read().chat_on_most_recent_page(active_chat_id));
+                    if let Ok(val) = eval(scripts::READ_SCROLL) {
+                        if let Ok(result) = val.join().await {
+                            let scroll = result.as_i64().unwrap_or_default();
+                            if scroll == 0 {
+                                if let Some(behavior) = chat_data.write_silent().chat_behaviors.get_mut(&active_chat_id) {
+                                    behavior.override_on_scroll_end = false;
+                                }
+                                fetch_later_ch.send(active_chat_id);
+                            }
+                           
+                        }
+                    }
+                }
             },
             // used by the intersection observer to terminate itself
             div {

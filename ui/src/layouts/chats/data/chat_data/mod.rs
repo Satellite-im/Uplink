@@ -15,6 +15,10 @@ use warp::raygun;
 pub struct ChatData {
     pub active_chat: ActiveChat,
     pub chat_behaviors: HashMap<Uuid, ChatBehavior>,
+    // when TopReached triggers, the page # increases. when BottomReached triggers, the pave # decreases.
+    // need to know if an incoming message should be added to a view and can't use ViewInit to do this because
+    // ViewInit changes as soon as you scroll up. and for the most recent messages, BottomReached doesn't trigger.
+    pub page_tracker: HashMap<Uuid, u32>,
 }
 
 impl PartialEq for ChatData {
@@ -24,13 +28,13 @@ impl PartialEq for ChatData {
 }
 
 impl ChatData {
-    pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+    pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) -> bool {
         if conv_id != self.active_chat.id() {
             log::warn!("add_message_to_view wrong chat id");
-            return;
+            return false;
         }
 
-        self.active_chat.messages.add_message_to_view(message_id);
+        let ret = self.active_chat.messages.add_message_to_view(message_id);
         let len = self.active_chat.messages.all.len();
         // for the first message, want to scroll down, not up.
         if len > 1
@@ -46,6 +50,7 @@ impl ChatData {
         } else {
             self.scroll_down(conv_id);
         }
+        ret
     }
 
     pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
@@ -103,6 +108,8 @@ impl ChatData {
             return false;
         }
 
+        let first_page = self.chat_on_most_recent_page(conv_id);
+
         let behavior = self.chat_behaviors.get_mut(&conv_id);
         let should_append_msg = behavior
             .as_ref()
@@ -116,23 +123,15 @@ impl ChatData {
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
-        } else if let Some(behavior) = behavior {
-            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
-                // this seemingly useless if statement helps detect bugs regarding the caht behavior.
-                if self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE {
-                    // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
-                    behavior.on_scroll_end = ScrollBehavior::FetchMore;
-                } else {
-                    log::warn!(
-                        "unexpected condition in ChatData::new_message. behavior is: {:?}, num messages is: {}", behavior, self.active_chat.messages.all.len()
-                    );
-                }
-                true
-            } else {
-                false
-            }
         } else {
-            unreachable!()
+            if let Some(behavior) = behavior {
+                // if they aren't fetching more but have scrolled up then this message won't be displayed unless it is fetched
+                if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
+                    debug_assert!(first_page);
+                    behavior.override_on_scroll_end = true;
+                }
+            }
+            false
         }
     }
 
@@ -143,14 +142,14 @@ impl ChatData {
         }
     }
 
-    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) -> bool {
         if conv_id != self.active_chat.id() {
             log::warn!("remove_message_from_view wrong chat id");
-            return;
+            return false;
         }
         self.active_chat
             .messages
-            .remove_message_from_view(message_id);
+            .remove_message_from_view(message_id)
     }
 
     // after the messages have been fetched, init the active chat
@@ -168,6 +167,23 @@ impl ChatData {
             self.active_chat = ActiveChat::default();
             log::error!("failed to set active chat to id: {chat_id}");
         }
+    }
+
+    pub fn top_reached(&mut self, chat_id: Uuid) {
+        let entry = self.page_tracker.entry(chat_id).or_insert(0);
+        *entry = entry.saturating_add(1);
+    }
+
+    pub fn bottom_reached(&mut self, chat_id: Uuid) {
+        let entry = self.page_tracker.entry(chat_id).or_insert(0);
+        *entry = entry.saturating_sub(1);
+    }
+
+    pub fn chat_on_most_recent_page(&self, chat_id: Uuid) -> bool {
+        self.page_tracker
+            .get(&chat_id)
+            .map(|x| *x == 0)
+            .unwrap_or(true)
     }
 
     pub fn update_message(&mut self, message: raygun::Message) {

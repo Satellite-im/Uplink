@@ -112,7 +112,7 @@ pub fn hangle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                        //log::trace!("{:?}", msg);
+                                        // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -158,7 +158,9 @@ pub fn hangle_msg_scroll(
                             res = eval_stream.next() => match res {
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
-                                        chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                        if chat_data.write_silent().add_message_to_view(conv_id, msg_id) {
+                                            continue 'HANDLE_EVAL;
+                                        }
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
                                         // need to explicitly compare the bottom of messages.all and messages.displayed
@@ -167,6 +169,7 @@ pub fn hangle_msg_scroll(
                                             if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
                                                 log::trace!("clearing scroll_btn");
+
                                             }
                                         } else if !scroll_btn.read().get(conv_id) {
                                             scroll_btn.write().set(conv_id);
@@ -174,7 +177,7 @@ pub fn hangle_msg_scroll(
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
-                                        chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                        let _ = chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
                                     }
                                     JsMsg::Top { .. } => {
                                         log::debug!("top reached");
@@ -221,6 +224,7 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
+                                                chat_data.write().top_reached(conv_id);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
@@ -283,12 +287,14 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
+                                                chat_data.write().bottom_reached(conv_id);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.new_key();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
                                                     chat_data.write().reset_messages(conv_id);
+                                                    scroll_btn.write().clear(conv_id);
                                                 } else {
                                                     behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
                                                     behavior.on_scroll_end = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
@@ -321,6 +327,91 @@ pub fn hangle_msg_scroll(
     });
 
     ch.clone()
+}
+
+pub fn fetch_later_ch(
+    cx: &ScopeState,
+    chat_data: &UseSharedState<data::ChatData>,
+    scroll_btn: &UseSharedState<ScrollBtn>,
+) -> Coroutine<Uuid> {
+    use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+        to_owned![chat_data, scroll_btn];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(conv_id) = rx.next().await {
+                let opt = chat_data.read().get_bottom_of_view(conv_id);
+                let msg = match opt {
+                    Some(x) => x,
+                    None => {
+                        log::error!("no messages at bottom of view");
+                        chat_data
+                            .write_silent()
+                            .set_chat_behavior(conv_id, ChatBehavior::default());
+                        continue;
+                    }
+                };
+
+                let (tx, rx) = oneshot::channel();
+                let cmd = RayGunCmd::FetchMessages {
+                    conv_id,
+                    config: FetchMessagesConfig::Later {
+                        start_date: msg.date,
+                        limit: DEFAULT_MESSAGES_TO_TAKE / 2,
+                    },
+                    rsp: tx,
+                };
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp cmd: {e}");
+                    continue;
+                }
+
+                let rsp = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("failed to send warp command. channel closed. {e}");
+                        continue;
+                    }
+                };
+
+                match rsp {
+                    Ok(FetchMessagesResponse { messages, has_more }) => {
+                        let new_messages = messages.len();
+                        chat_data.write().bottom_reached(conv_id);
+                        chat_data.write().insert_messages(conv_id, messages);
+                        chat_data.write().active_chat.new_key();
+                        let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                        behavior.override_on_scroll_end = false;
+                        if !has_more {
+                            // remove extra messages from the list and return to ScrollInit::MostRecent
+                            chat_data.write().reset_messages(conv_id);
+                            scroll_btn.write().clear(conv_id);
+                        } else {
+                            behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
+                            behavior.on_scroll_end = if has_more {
+                                data::ScrollBehavior::FetchMore
+                            } else {
+                                data::ScrollBehavior::DoNothing
+                            };
+                            chat_data
+                                .write()
+                                .set_chat_behavior(conv_id, behavior.clone());
+                        }
+                        log::debug!(
+                            "fetched {new_messages} messages. new behavior: {:?}",
+                            behavior
+                        );
+                        continue;
+                    }
+                    Err(e) => {
+                        log::error!("FetchMessages command failed: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    })
+    .clone()
 }
 
 pub fn handle_warp_commands(

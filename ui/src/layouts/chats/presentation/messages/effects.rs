@@ -31,6 +31,7 @@ pub fn init_msg_scroll(
                 chat_behavior
             );
             let unreads = chat_data.read().active_chat.unreads();
+            chat_data.write_silent().active_chat.messages.loaded.clear();
 
             let scroll_script = match chat_behavior.view_init.scroll_to {
                 // if there are unreads, scroll up so first unread is at top of screen
