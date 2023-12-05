@@ -94,6 +94,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             account_exists.set(Some(exists));
         }
     });
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Option<bool>)>| {
         to_owned![error, page, cmd_in_progress];
         async move {
@@ -164,7 +165,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     };
 
     let loading = account_exists.current().is_none();
-    let validation_login_passed = use_state(cx, || false);
 
     let image_path = get_images_dir()
         .unwrap_or_default()
@@ -201,7 +201,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         icon: Icon::Key,
                         disable_onblur: true,
                         aria_label: "pin-input".into(),
-                        disabled: loading || *validation_login_passed.get(),
+                        disabled: loading || *cmd_in_progress.get(),
                         placeholder: get_local_text("unlock.enter-pin"),
                         reset: reset_input.clone(),
                         options: Options {
@@ -224,7 +224,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
-                                validation_login_passed.set(true);
                                 let is_maximized = desktop.is_maximized();
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
@@ -236,15 +235,14 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         },
                         onreturn: move |_| {
-                            if !account_exists.current().unwrap_or_default()  {
                                 if let Some(validation_error) = validation_failure.get() {
                                     shown_error.set(validation_error.translation());
                                 } else if let Some(e) = error.get() {
                                     shown_error.set(e.translation());
-                                } else {
+                                } else if !account_exists.current().unwrap_or_default()  {
                                     page.set(AuthPages::CreateAccount);
                                 }
-                            }
+                                cmd_in_progress.set(false);
                         }
                     },
                     (!shown_error.get().is_empty()).then(|| rsx!(
@@ -261,13 +259,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     },
                     Button {
                         text: match account_exists.current().unwrap_or(true) {
-                            true => if *validation_login_passed.get() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
+                            true => if *cmd_in_progress.get() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
                             false => get_local_text("unlock.create-account"),
                         },
                         aria_label: "create-account-button".into(),
                         appearance: kit::elements::Appearance::Primary,
-                        icon: if *validation_login_passed.get() {Icon::Loader} else {Icon::Check},
-                        disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
+                        icon: if *cmd_in_progress.get() {Icon::Loader} else {Icon::Check},
+                        disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());
@@ -278,6 +276,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             } else {
                                 page.set(AuthPages::CreateAccount);
                             }
+                            cmd_in_progress.set(false);
                         }
                     },
                     ContextMenu {
