@@ -105,7 +105,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let add_friend_lable = if !state.read().ui.is_minimal_view() {
         get_local_text("uplink.add")
     } else {
-        String::from("")
+        String::new()
     };
 
     let add_friend_icon = if !state.read().ui.is_minimal_view() {
