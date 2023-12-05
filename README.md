@@ -79,10 +79,7 @@ And for Windows, I followed the steps on this site here
 - Close all open windows.
 - Finally, run cargo run trace2.
 
-<video width="320" height="240" controls>
-  <source src="https://github.com/Satellite-im/Uplink/assets/how_to_add_extension.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<video src='[your URL here](https://github.com/Satellite-im/Uplink/assets/how_to_add_extension.mp4)' width=180/>
 
 
 ## Contributing
