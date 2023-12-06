@@ -138,6 +138,11 @@
     label {
       margin-left: var(--gap);
     }
+    .settings-section {
+      label {
+        margin-left: 0;
+      }
+    }
   }
 
   .content-item {
@@ -184,4 +189,20 @@
     }
     }
 
+}
+
+.settings-online-status {
+  width: 100%;
+  display: inline-flex;
+  .indicator {
+    display: unset;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+}
+
+.settings-online-status-label {
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-left: var(--gap-less);
 }
