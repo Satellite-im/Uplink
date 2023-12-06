@@ -86,10 +86,11 @@ pub fn set_app_panic_hook() {
 }
 
 pub fn configure_logger(profile: Option<LogProfile>) {
+    const BLINK_CRATE: &str = "warp-blink-wrtc";
     let max_log_level = if let Some(profile) = profile {
         match profile {
             LogProfile::Debug => {
-                logger::allow_other_crates(Level::Debug, Some(&["warp-blink-wrtc"]));
+                logger::allow_other_crates(Level::Debug, Some(&[BLINK_CRATE]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Debug
             }
@@ -103,7 +104,7 @@ pub fn configure_logger(profile: Option<LogProfile>) {
                 LevelFilter::Trace
             }
             LogProfile::TraceWarp => {
-                logger::allow_other_crates(Level::Trace, Some(&["warp", "warp-blink-wrtc"]));
+                logger::allow_other_crates(Level::Trace, Some(&["warp", BLINK_CRATE]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
             }
@@ -118,7 +119,7 @@ pub fn configure_logger(profile: Option<LogProfile>) {
                 LevelFilter::Trace
             }
             LogProfile::TraceBlink => {
-                logger::allow_other_crates(Level::Trace, Some(&["warp-blink-wrtc"]));
+                logger::allow_other_crates(Level::Trace, Some(&[BLINK_CRATE]));
                 logger::set_write_to_stdout(true);
                 LevelFilter::Debug
             }
