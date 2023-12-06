@@ -27,7 +27,8 @@ uplink = Uplink
     .end = End
     .pre-release = Pre-release | Issues/Feedback
     .username = Username
-    .status = Status
+    .status = Status Message
+    .online-status = Status
     .delete = Delete
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
@@ -211,7 +212,13 @@ settings-profile = Profile Settings
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
     .copy-id = Copy ID
     .copy-did = Copy DID Key
-    
+    .online-status = Online Status
+    .online-status-description = Set the appearance of your online status
+    .online = Online
+    .idle = Idle
+    .do-not-disturb = Do not disturb
+    .offline = Offline
+
 settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.

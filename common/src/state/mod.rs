@@ -393,7 +393,7 @@ impl State {
             }
             MultiPassEvent::FriendOnline(identity) => {
                 if let Some(ident) = self.identities.get_mut(&identity.did_key()) {
-                    ident.set_identity_status(IdentityStatus::Online);
+                    ident.set_identity_status(identity.identity_status());
                 }
             }
             MultiPassEvent::FriendOffline(identity) => {
