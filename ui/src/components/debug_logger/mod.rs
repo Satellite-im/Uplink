@@ -96,7 +96,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             },
                             Button {
                                 icon: Icon::InformationCircle,
-                                appearance: if filter_level.get() == &Level::Info { Appearance::Info } else { Appearance::Secondary },
+                                appearance: if *filter_level.get() == Level::Info { Appearance::Info } else { Appearance::Secondary },
                                 onpress: |_| {
                                     filter_level.set(Level::Info);
                                 },
