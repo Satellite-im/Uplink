@@ -152,6 +152,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                         cx.props.show_edit_group.set(Some(chat_data.read().active_chat.id()));
                         cx.props.show_group_users.set(None);
                     }
+                    show_more.set(false);
                 }
             })
         }
@@ -175,7 +176,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                                 cx.props.show_edit_group.set(None);
 
                             }
-
+                            show_more.set(false);
                     }
                 }
             )
@@ -213,22 +214,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 }
             }
         },
-        show_pinned.then(|| rsx!(
-            Modal {
-                open: true,
-                transparent: true,
-                change_horizontal_position: true,
-                with_title: get_local_text("messages.pin-view"),
-                onclose: move |_| {
-                    show_pinned.set(false);
-                },
-                if chat_data.read().active_chat.is_initialized {
-                    rsx!(PinnedMessages{ onclose: move |_| {
-                        show_pinned.set(false);
-                    } })
-                }
-            }
-        )),
         Button {
             icon: Icon::Pin,
             aria_label: "pin-label".into(),
@@ -237,6 +222,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             tooltip: tooltip_builder("messages.pin-view", arrow_top),
             onpress: move |_| {
                 show_pinned.set(true);
+                show_more.set(false);
             }
         }
         Button {
@@ -253,6 +239,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                         conversation_id: chat_data.read().active_chat.id()
                     });
                     call_pending.set(true);
+                    show_more.set(false);
                 }
             }
         },
@@ -265,6 +252,23 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             tooltip: tooltip_builder("uplink.coming-soon", arrow_top_right),
         },
     ));
+
+    let pinned = cx.render(rsx!(show_pinned.then(|| rsx!(
+        Modal {
+            open: true,
+            transparent: true,
+            change_horizontal_position: true,
+            with_title: get_local_text("messages.pin-view"),
+            onclose: move |_| {
+                show_pinned.set(false);
+            },
+            if chat_data.read().active_chat.is_initialized {
+                rsx!(PinnedMessages{ onclose: move |_| {
+                    show_pinned.set(false);
+                } })
+            }
+        }
+    )),));
 
     if minimal {
         return cx.render(rsx!(
@@ -293,8 +297,9 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     class: "minimal-chat-button-group",
                     buttons
                 })
-            })
+            }),
+            pinned
         ));
     }
-    buttons
+    cx.render(rsx!(buttons, pinned))
 }
