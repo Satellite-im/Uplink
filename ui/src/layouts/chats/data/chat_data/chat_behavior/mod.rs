@@ -18,14 +18,6 @@ pub struct ChatBehavior {
     pub on_scroll_top: ScrollBehavior,
     // describes how to behave when the user scrolls to the end of the view
     pub on_scroll_end: ScrollBehavior,
-
-    // if a message is received when the user scrolls up but before they have
-    // fetched more messages, need to fetch the message when they scroll back down.
-    // but the javascript will have been configured to not trigger on "bottom reached"
-    // and reloading everything somehow results in the scroll button staying on the page while
-    // everything, including the new message, is rendered. gonna try using this in the onscroll
-    // event to trigger a reload.
-    pub override_on_scroll_end: bool,
 }
 
 impl ChatBehavior {
@@ -63,7 +55,6 @@ impl Default for ChatBehavior {
             view_init: ViewInit::default(),
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
-            override_on_scroll_end: false,
         }
     }
 }

@@ -91,7 +91,6 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             // these fields will be overwritten by fetch_window
                             on_scroll_end: data::ScrollBehavior::FetchMore,
                             on_scroll_top: data::ScrollBehavior::FetchMore,
-                            override_on_scroll_end: false,
                         };
                         let r = fetch_window(
                             conversation_id,

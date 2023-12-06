@@ -233,7 +233,6 @@ pub async fn fetch_window<'a>(
         } else {
             data::ScrollBehavior::DoNothing
         },
-        override_on_scroll_end: false,
     };
 
     Ok((messages, new_behavior))

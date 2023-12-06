@@ -131,13 +131,6 @@ impl ChatData {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else {
-            if let Some(behavior) = behavior {
-                // if they aren't fetching more but have scrolled up then this message won't be displayed unless it is fetched
-                if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
-                    debug_assert!(first_page);
-                    behavior.override_on_scroll_end = true;
-                }
-            }
             false
         }
     }
@@ -206,12 +199,6 @@ impl ChatData {
 
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
-    }
-
-    pub fn set_override_on_scroll_end(&mut self, conv_id: Uuid, val: bool) {
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.override_on_scroll_end = val;
-        }
     }
 
     pub fn set_view_init(&mut self, conv_id: Uuid, val: ViewInit) {

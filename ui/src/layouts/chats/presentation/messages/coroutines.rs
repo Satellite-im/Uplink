@@ -381,7 +381,6 @@ pub fn fetch_later_ch(
                         chat_data.write().insert_messages(conv_id, messages);
                         chat_data.write().active_chat.new_key();
                         let mut behavior = chat_data.read().get_chat_behavior(conv_id);
-                        behavior.override_on_scroll_end = false;
                         if !has_more {
                             // remove extra messages from the list and return to ScrollInit::MostRecent
                             chat_data.write().reset_messages(conv_id);
