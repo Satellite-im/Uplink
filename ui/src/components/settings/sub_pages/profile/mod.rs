@@ -10,6 +10,8 @@ use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
+use kit::components::indicator::{Indicator, Platform, Status};
+use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
 use kit::elements::{
@@ -19,10 +21,12 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
+use warp::multipass::identity::IdentityStatus;
 use warp::{error::Error, logging::tracing::log};
 
 use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
 use crate::components::crop_image_tool::rectangle_format_tool::CropRectImageModal;
+use crate::components::settings::SettingSection;
 
 #[derive(Clone)]
 enum ChanCmd {
@@ -31,7 +35,8 @@ enum ChanCmd {
     Banner(Vec<u8>),
     ClearBanner,
     Username(String),
-    Status(String),
+    StatusMessage(String),
+    Status(IdentityStatus),
 }
 
 #[allow(non_snake_case)]
@@ -41,6 +46,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
+    let online_status = identity.identity_status();
+    let identitystatus_values = [
+        IdentityStatus::Online,
+        IdentityStatus::Away,
+        IdentityStatus::Busy,
+        IdentityStatus::Offline,
+    ];
     let username = identity.username();
     let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
@@ -101,14 +113,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     ChanCmd::Username(username) => {
                         MultiPassCmd::UpdateUsername { username, rsp: tx }
                     }
-                    ChanCmd::Status(status) if status.is_empty() => MultiPassCmd::UpdateStatus {
-                        status: None,
+                    ChanCmd::StatusMessage(status) => MultiPassCmd::UpdateStatusMessage {
+                        status: if status.is_empty() {
+                            None
+                        } else {
+                            Some(status)
+                        },
                         rsp: tx,
                     },
-                    ChanCmd::Status(status) => MultiPassCmd::UpdateStatus {
-                        status: Some(status),
-                        rsp: tx,
-                    },
+                    ChanCmd::Status(status) => MultiPassCmd::SetStatus { status, rsp: tx },
                 };
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(warp_cmd)) {
@@ -420,10 +433,23 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 return;
                             }
                             if v != user_status {
-                                ch.send(ChanCmd::Status(v));
+                                ch.send(ChanCmd::StatusMessage(v));
                             }
                         },
                     }
+                },
+                SettingSection {
+                    section_label: get_local_text("settings-profile.online-status"),
+                    section_description: get_local_text("settings-profile.online-status-description"),
+                    FancySelect {
+                        initial_value: get_status_option(cx, &online_status),
+                        width: 190,
+                        options: identitystatus_values.iter().map(|status| get_status_option(cx, status)).collect(),
+                        onselect: move |value: String| {
+                            let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
+                            ch.send(ChanCmd::Status(status));
+                        }
+                    },
                 },
                 if open_crop_image_modal_for_banner_picture.get().0 {
                     rsx!(CropRectImageModal {
@@ -537,4 +563,23 @@ fn get_input_options(validation_options: Validation) -> Options {
         // Use the default options for the remaining fields
         ..Options::default()
     }
+}
+
+fn get_status_option<'a>(cx: Scope<'a>, status: &IdentityStatus) -> (String, Element<'a>) {
+    let indicator = Status::from(*status);
+    (
+        serde_json::to_string::<IdentityStatus>(status).unwrap_or_default(),
+        cx.render(rsx!(div {
+                class: "settings-online-status",
+                Indicator {
+                    status: indicator,
+                    platform: Platform::Unknown
+                },
+                div {
+                    class: "settings-online-status-label",
+                    get_local_text(&format!("settings-profile.{}", indicator))
+                }
+            }
+        )),
+    )
 }

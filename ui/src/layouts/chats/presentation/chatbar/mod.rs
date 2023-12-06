@@ -116,8 +116,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         .map(|x| {
             x.typing_indicator
                 .keys()
+                .filter(|did| !my_id.eq(*did))
                 .cloned()
-                .filter(|did| *did != my_id)
                 .collect()
         })
         .unwrap_or_default();
