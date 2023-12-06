@@ -18,6 +18,9 @@ pub struct ChatBehavior {
     pub on_scroll_top: ScrollBehavior,
     // describes how to behave when the user scrolls to the end of the view
     pub on_scroll_end: ScrollBehavior,
+
+    // a message has been received while the chat was active
+    pub message_received: bool,
 }
 
 impl ChatBehavior {
@@ -55,6 +58,7 @@ impl Default for ChatBehavior {
             view_init: ViewInit::default(),
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
+            message_received: false,
         }
     }
 }

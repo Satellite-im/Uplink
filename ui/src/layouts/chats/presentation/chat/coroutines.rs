@@ -233,6 +233,7 @@ pub async fn fetch_window<'a>(
         } else {
             data::ScrollBehavior::DoNothing
         },
+        ..Default::default()
     };
 
     Ok((messages, new_behavior))
