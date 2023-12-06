@@ -94,6 +94,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             account_exists.set(Some(exists));
         }
     });
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Option<bool>)>| {
         to_owned![error, page, cmd_in_progress];
         async move {
@@ -200,7 +201,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         icon: Icon::Key,
                         disable_onblur: true,
                         aria_label: "pin-input".into(),
-                        disabled: loading,
+                        disabled: loading || *cmd_in_progress.get(),
                         placeholder: get_local_text("unlock.enter-pin"),
                         reset: reset_input.clone(),
                         options: Options {
@@ -234,13 +235,14 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         },
                         onreturn: move |_| {
-                            if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.translation());
-                            } else if let Some(e) = error.get() {
-                                shown_error.set(e.translation());
-                            } else {
-                                page.set(AuthPages::CreateAccount);
-                            }
+                                if let Some(validation_error) = validation_failure.get() {
+                                    shown_error.set(validation_error.translation());
+                                } else if let Some(e) = error.get() {
+                                    shown_error.set(e.translation());
+                                } else if !account_exists.current().unwrap_or_default()  {
+                                    page.set(AuthPages::CreateAccount);
+                                }
+                                cmd_in_progress.set(false);
                         }
                     },
                     (!shown_error.get().is_empty()).then(|| rsx!(
@@ -257,13 +259,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     },
                     Button {
                         text: match account_exists.current().unwrap_or(true) {
-                            true => get_local_text("unlock.unlock-account"),
+                            true => if *cmd_in_progress.get() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
                             false => get_local_text("unlock.create-account"),
                         },
                         aria_label: "create-account-button".into(),
                         appearance: kit::elements::Appearance::Primary,
-                        icon: Icon::Check,
-                        disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
+                        icon: if *cmd_in_progress.get() {Icon::Loader} else {Icon::Check},
+                        disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());
@@ -274,6 +276,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             } else {
                                 page.set(AuthPages::CreateAccount);
                             }
+                            cmd_in_progress.set(false);
                         }
                     },
                     ContextMenu {

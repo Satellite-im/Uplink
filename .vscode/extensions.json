@@ -1,7 +1,6 @@
 {
 	"recommendations": [
 		"tamasfe.even-better-toml",
-		"dustypomerleau.rust-syntax",
 		"ms-vscode.makefile-tools",
 		"vadimcn.vscode-lldb",
 		"rust-lang.rust-analyzer",
