@@ -30,7 +30,7 @@ pub mod controller;
 pub mod file_modal;
 
 use crate::components::files::upload_progress_bar::UploadProgressBar;
-use crate::components::paste_files_with_shortcut;
+use crate::components::shortcuts;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
@@ -102,7 +102,8 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused  {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+            rsx!(
+                shortcuts::paste_file_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
                     functions::add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);

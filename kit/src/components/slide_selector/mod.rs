@@ -25,6 +25,9 @@ where
     T: std::fmt::Display + Clone,
 {
     let index = use_state(cx, || cx.props.initial_index);
+    if *index.get() != cx.props.initial_index {
+        index.set(cx.props.initial_index);
+    }
     let buttons_format = cx
         .props
         .buttons_format
