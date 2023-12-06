@@ -345,9 +345,7 @@ impl State {
             event,
             WarpEvent::Message(MessageEvent::TypingIndicator { .. })
         ) {
-            {
-                log::trace!("process_warp_event: {event}");
-            }
+            log::trace!("process_warp_event: {event}");
         }
 
         match event {
@@ -739,6 +737,7 @@ impl State {
                 }
             }
             BlinkEventKind::AudioStreamError => {
+                log::error!("blink audio stream error");
                 // todo
             }
         }
