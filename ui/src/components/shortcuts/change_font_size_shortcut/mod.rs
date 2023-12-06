@@ -44,7 +44,9 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
 pub fn ChangeFontSizeShortCut(cx: Scope<'_>) -> Element<'_> {
     let state = use_shared_state::<State>(cx)?;
 
-    let keyCodePlus = KeyCode::EqualSign;
+    let keyCodeEqual = KeyCode::EqualSign;
+    let keyCodeNumPadAdd = KeyCode::Add;
+
     let keyCodeAndModifierMinus = if cfg!(target_os = "macos") {
         "command + -"
     } else {
@@ -57,7 +59,22 @@ pub fn ChangeFontSizeShortCut(cx: Scope<'_>) -> Element<'_> {
         ModifiersState::CONTROL
     };
 
-    use_global_shortcut(cx, (keyCodePlus, modifiers), {
+    use_global_shortcut(cx, (keyCodeEqual, modifiers), {
+        to_owned![state];
+        move || {
+            debounced_callback(
+                || {
+                    let value = state.read().settings.font_scale();
+                    if value < FONT_SIZE_BIGGEST {
+                        state.write().mutate(Action::SetFontScale(value + 0.25));
+                    }
+                },
+                Duration::from_millis(500),
+            );
+        }
+    });
+
+    use_global_shortcut(cx, (keyCodeNumPadAdd, modifiers), {
         to_owned![state];
         move || {
             debounced_callback(
