@@ -43,7 +43,10 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::{data::{self, ChatData, ScrollBtn}, scripts},
+    layouts::chats::{
+        data::{self, ChatData, ScrollBtn},
+        scripts,
+    },
     utils::format_timestamp::format_timestamp_timeago,
 };
 
@@ -130,20 +133,19 @@ pub fn get_messages(
             onscroll: move |_| {
                 to_owned![eval, active_chat_id, chat_data, fetch_later_ch];
                 async move {
-                    if !chat_data.read().chat_behaviors.get(&active_chat_id).map(|x| x.override_on_scroll_end).unwrap_or_default() {
-                        return;
-                    }
-                    debug_assert!(chat_data.read().chat_on_most_recent_page(active_chat_id));
                     if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             let scroll = result.as_i64().unwrap_or_default();
+                            if !chat_data.read().chat_behaviors.get(&active_chat_id).map(|x| x.override_on_scroll_end).unwrap_or_default() {
+                                return;
+                            }
+                            debug_assert!(chat_data.read().chat_on_most_recent_page(active_chat_id));
                             if scroll == 0 {
                                 if let Some(behavior) = chat_data.write_silent().chat_behaviors.get_mut(&active_chat_id) {
                                     behavior.override_on_scroll_end = false;
                                 }
                                 fetch_later_ch.send(active_chat_id);
                             }
-                           
                         }
                     }
                 }
