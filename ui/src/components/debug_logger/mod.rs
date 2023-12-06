@@ -109,7 +109,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             },
                             Button {
                                 icon: Icon::ExclamationTriangle,
-                                appearance: if filter_level.get() == &Level::Error { Appearance::Danger } else { Appearance::Secondary },
+                                appearance: if *filter_level.get() == Level::Error { Appearance::Danger } else { Appearance::Secondary },
                                 onpress: |_| {
                                     filter_level.set(Level::Error);
                                 },
