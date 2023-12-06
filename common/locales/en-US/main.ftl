@@ -348,6 +348,7 @@ unlock = Unlock
     .invalid-pin = Hmm, that pin didn't work.
     .error-unknown-pin = An unknown error occurred.
     .help = Help (right-click)
+    .logging-in = Logging in...
 
 auth = Create Account 
     .enter-username = Enter Username
