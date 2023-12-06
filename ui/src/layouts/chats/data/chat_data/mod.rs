@@ -53,6 +53,13 @@ impl ChatData {
         ret
     }
 
+    pub fn chat_on_most_recent_page(&self, chat_id: Uuid) -> bool {
+        self.page_tracker
+            .get(&chat_id)
+            .map(|x| *x == 0)
+            .unwrap_or(true)
+    }
+
     pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
         if conversation_id != self.active_chat.id() {
             log::warn!("delete_message wrong chat id");
@@ -179,13 +186,6 @@ impl ChatData {
         *entry = entry.saturating_sub(1);
     }
 
-    pub fn chat_on_most_recent_page(&self, chat_id: Uuid) -> bool {
-        self.page_tracker
-            .get(&chat_id)
-            .map(|x| *x == 0)
-            .unwrap_or(true)
-    }
-
     pub fn update_message(&mut self, message: raygun::Message) {
         if self.active_chat.id() != message.conversation_id() {
             log::warn!("update_message wrong chat id");
@@ -206,6 +206,18 @@ impl ChatData {
 
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
+    }
+
+    pub fn set_override_on_scroll_end(&mut self, conv_id: Uuid, val: bool) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            behavior.override_on_scroll_end = val;
+        }
+    }
+
+    pub fn set_view_init(&mut self, conv_id: Uuid, val: ViewInit) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            behavior.view_init = val;
+        }
     }
 }
 
