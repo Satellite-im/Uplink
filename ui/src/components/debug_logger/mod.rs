@@ -70,7 +70,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     Button {
                         text: "Logs".into(),
                         icon: Icon::CommandLine,
-                        appearance: if active_tab.get() == &Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
+                        appearance: if *active_tab.get() == Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
                             active_tab.set(Tab::Logs);
                         }
