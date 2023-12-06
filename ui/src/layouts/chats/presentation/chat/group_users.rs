@@ -47,7 +47,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
     );
     let _friends_in_group = State::get_friends_by_first_letter(hash_map);
     let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
-    let creator_id = creator_id_vector.get(0).cloned()?;
+    let creator_id = creator_id_vector.first().cloned()?;
 
     let eval = use_eval(cx);
     use_effect(cx, (), |_| {

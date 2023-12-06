@@ -1,4 +1,4 @@
-.select select{
+.select select, .fancy-select{
     --webkit-appearance: none;
     color: var(--text-color-dark);
     appearance: none;
@@ -19,4 +19,49 @@
     /* This is for the arrow */
     padding-right: 2.5rem;
 }
-  
+
+.fancy-select {
+    display: flex;
+    position: relative;
+    z-index: 3;
+}
+
+.fancy-select-options {
+    z-index: 2; 
+    position: absolute; 
+    top: 50%; 
+    left: 0; 
+    width: 100%; 
+    color: var(--text-color-bright);
+    background-color: var(--secondary); 
+    border-bottom-left-radius: var(--border-radius-more); 
+    border-bottom-right-radius: var(--border-radius-more); 
+    padding-top: 20px;
+    cursor: default;
+}
+
+.fancy-select-option {
+    height: fit-content;
+    min-height: var(--height-input-less);
+    width: 100%;
+    display: inline-flex; 
+    flex-direction: row; 
+    justify-content: start;
+    border-radius: var(--border-radius-more); 
+    cursor: pointer;
+    padding-left: var(--padding-less); 
+    padding-right: var(--padding-less);
+    &:hover {
+        background-color: var(--secondary-light); 
+    }
+}
+
+.select-outside {
+    z-index: 1;
+    position: fixed; 
+    left: 0; 
+    top: 0; 
+    right: 0; 
+    bottom: 0;
+    cursor: default;
+}

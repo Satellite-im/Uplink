@@ -216,11 +216,11 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             }
                         )
                     },
-                    participants2.iter().cloned()
+                    participants2.iter()
                     .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
-                    &&
-                    identity.did_key() != state.read().did_key()
-                )
+                        &&
+                        identity.did_key() != state.read().did_key()
+                    ).cloned()
                     .map(|identity| {
                         let typed_chars = search_typed_chars.clone();
                         let username = identity.username();

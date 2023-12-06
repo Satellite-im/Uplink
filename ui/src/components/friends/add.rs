@@ -102,6 +102,17 @@ pub fn AddFriend(cx: Scope) -> Element {
     let username = identity.username();
     let short_name = format!("{}#{}", username, short_id);
     let short_name_context = short_name.clone();
+    let add_friend_lable = if !state.read().ui.is_minimal_view() {
+        get_local_text("uplink.add")
+    } else {
+        String::new()
+    };
+
+    let add_friend_icon = if !state.read().ui.is_minimal_view() {
+        Icon::Plus
+    } else {
+        Icon::UserPlus
+    };
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
         to_owned![
@@ -217,8 +228,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                     aria_label: "Add Someone Input".into()
                 },
                 Button {
-                    icon: Icon::Plus,
-                    text: get_local_text("uplink.add"),
+                    icon: add_friend_icon,
+                    text: add_friend_lable.to_string(),
                     disabled: !friend_input_valid.get(),
                     onpress: move |_| {
                         if STATIC_ARGS.use_mock {
