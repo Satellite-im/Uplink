@@ -86,7 +86,7 @@ pub fn get_messages(
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let eval = use_eval(cx);
-    let ch = coroutines::hangle_msg_scroll(cx, eval, chat_data, scroll_btn);
+    let ch = coroutines::handle_msg_scroll(cx, eval, chat_data, scroll_btn);
     let fetch_later_ch = coroutines::fetch_later_ch(cx, chat_data, scroll_btn);
     effects::init_msg_scroll(cx, chat_data, eval, ch);
 
@@ -141,12 +141,14 @@ pub fn get_messages(
                     if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             let scroll = result.as_i64().unwrap_or_default();
-                            if scroll < -100 {
-                                chat_data.write_silent().scroll_down(active_chat_id);
+                            if scroll < -200  && behavior.view_init.scroll_to == data::ScrollTo::MostRecent {
+                                chat_data.write_silent().scroll_to_end_of_page(active_chat_id);
+                                let behavior = chat_data.read().get_chat_behavior(active_chat_id);
+                                log::debug!("triggering scroll button early. behavior is {:?}", behavior);
                                 if !scroll_btn.read().get(active_chat_id) {
                                     scroll_btn.write().set(active_chat_id);
                                 }
-                            } else if scroll == 0 {
+                            } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
                                 fetch_later_ch.send(active_chat_id);
                             }
                         }

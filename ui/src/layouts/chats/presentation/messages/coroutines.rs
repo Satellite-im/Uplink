@@ -24,7 +24,7 @@ use crate::{
 
 use super::{DownloadTracker, MessagesCommand};
 
-pub fn hangle_msg_scroll(
+pub fn handle_msg_scroll(
     cx: &ScopeState,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
@@ -164,7 +164,7 @@ pub fn hangle_msg_scroll(
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
                                         // need to explicitly compare the bottom of messages.all and messages.displayed
-                                        if chat_data.read().get_bottom_of_view(conv_id).map(|pm|  pm.message_id) == chat_data.read().active_chat.messages.bottom(){
+                                        if chat_data.read().get_bottom_of_view(conv_id) == chat_data.read().get_bottom_of_page(conv_id) {
                                             // have to check on_scroll_end in case the user scrolled up and switched chats.
                                             if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
                                                 scroll_btn.write().clear(conv_id);
@@ -177,7 +177,18 @@ pub fn hangle_msg_scroll(
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
-                                        let _ = chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                        if chat_data.write_silent().remove_message_from_view(conv_id, msg_id) {
+                                            continue 'HANDLE_EVAL;
+                                        }
+
+                                        // if a message is removed from the view but another one hasn't been added to the view, this may help
+                                        // the scroll button appear in time.
+                                        if chat_data.read().get_bottom_of_view(conv_id) != chat_data.read().get_bottom_of_page(conv_id)
+                                            && !scroll_btn.read().get(conv_id)
+                                        {
+                                            scroll_btn.write().set(conv_id);
+                                            log::trace!("setting scroll_btn");
+                                        }
                                     }
                                     JsMsg::Top { .. } => {
                                         log::debug!("top reached");

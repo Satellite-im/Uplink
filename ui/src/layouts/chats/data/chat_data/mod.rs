@@ -80,7 +80,22 @@ impl ChatData {
             return None;
         }
 
-        self.active_chat.messages.get_latest_displayed()
+        let r = self.active_chat.messages.get_latest_displayed();
+        if r.is_none() {
+            log::debug!("couldn't get latest displayed. trying bottom of page instead");
+            self.get_bottom_of_page(conv_id)
+        } else {
+            r
+        }
+    }
+
+    pub fn get_bottom_of_page(&self, conv_id: Uuid) -> Option<PartialMessage> {
+        if self.active_chat.id() != conv_id {
+            log::warn!("get_bottom_of_page wrong chat id");
+            return None;
+        }
+
+        self.active_chat.messages.get_bottom_of_page()
     }
 
     // call this first to fetch the messages
@@ -195,7 +210,7 @@ impl ChatData {
         }
     }
 
-    pub fn scroll_down(&mut self, conv_id: Uuid) {
+    fn scroll_down(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             if let Some(scroll_bottom) = self.active_chat.messages.get_latest_displayed() {
                 let end_msg = self
@@ -221,6 +236,25 @@ impl ChatData {
                 behavior.view_init.scroll_to = ScrollTo::MostRecent;
                 behavior.view_init.msg_time.take();
             }
+        }
+    }
+
+    pub fn scroll_to_end_of_page(&mut self, conv_id: Uuid) {
+        let opt = self.get_bottom_of_page(conv_id);
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            if let Some(scroll_bottom) = opt {
+                behavior.view_init.scroll_to = ScrollTo::ScrollDown {
+                    view_bottom: scroll_bottom.message_id,
+                };
+                behavior.view_init.msg_time.replace(scroll_bottom.date);
+            } else {
+                log::warn!("failed to get bottom of page in scroll_to_end_of_page");
+                // no messages are displayed. set to MostRecent
+                behavior.view_init.scroll_to = ScrollTo::MostRecent;
+                behavior.view_init.msg_time.take();
+            }
+        } else {
+            log::warn!("failed to get chat behavior in scroll_to_end_of_page");
         }
     }
 }

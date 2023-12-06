@@ -105,6 +105,16 @@ impl Messages {
         })
     }
 
+    pub fn get_bottom_of_page(&self) -> Option<PartialMessage> {
+        self.all.back().and_then(|msg| {
+            let id = msg.inner.id();
+            self.times.get(&id).map(|date| PartialMessage {
+                message_id: id,
+                date: *date,
+            })
+        })
+    }
+
     pub fn add_message_to_view(&mut self, message_id: Uuid) -> bool {
         let newley_loaded = self.loaded.insert(message_id);
         let date = match self.times.get(&message_id).cloned() {
