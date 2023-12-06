@@ -260,7 +260,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                             onpress: move |_| {
                                 match Clipboard::new() {
                                     Ok(mut c) => {
-                                        let text = c.get_text().unwrap_or_default();
+                                        let text = c.get_text().map_err(|e| {
+                                             log::error!("Unable to get clipboard content: {e}");
+                                             e
+                                        }).unwrap_or_default();
                                         friend_input.set(text);
                                     }
                                     Err(e) => {
