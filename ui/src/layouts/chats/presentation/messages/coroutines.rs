@@ -224,7 +224,6 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                chat_data.write().top_reached(conv_id);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
                                                 behavior.on_scroll_top = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
@@ -287,7 +286,6 @@ pub fn hangle_msg_scroll(
                                         match rsp {
                                             Ok(FetchMessagesResponse{ messages, has_more }) => {
                                                 let new_messages = messages.len();
-                                                chat_data.write().bottom_reached(conv_id);
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.new_key();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
@@ -377,7 +375,6 @@ pub fn fetch_later_ch(
                 match rsp {
                     Ok(FetchMessagesResponse { messages, has_more }) => {
                         let new_messages = messages.len();
-                        chat_data.write().bottom_reached(conv_id);
                         chat_data.write().insert_messages(conv_id, messages);
                         chat_data.write().active_chat.new_key();
                         let mut behavior = chat_data.read().get_chat_behavior(conv_id);

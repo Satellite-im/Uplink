@@ -131,15 +131,22 @@ pub fn get_messages(
             // this is a hack to deal with the limitations of the message paging. On the first page, if a message comes in while the page
             // is scrolled up, it won't be displayed when the user scrolls back down. need to trigger a "fetch more" response. 
             onscroll: move |_| {
-                to_owned![eval, active_chat_id, chat_data, fetch_later_ch];
+                to_owned![eval, active_chat_id, chat_data, fetch_later_ch, scroll_btn];
                 async move {
+                    let behavior = chat_data.read().get_chat_behavior(active_chat_id);
+                    if behavior.on_scroll_end != data::ScrollBehavior::DoNothing {
+                        return;
+                    }
+
                     if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             let scroll = result.as_i64().unwrap_or_default();
-                            return;
-                            debug_assert!(chat_data.read().chat_on_most_recent_page(active_chat_id));
-                            if scroll == 0 {
-                                
+                            if scroll < -100 {
+                                chat_data.write_silent().scroll_up(active_chat_id);
+                                if !scroll_btn.read().get(active_chat_id) {
+                                    scroll_btn.write().set(active_chat_id);
+                                }
+                            } else if scroll == 0 {
                                 fetch_later_ch.send(active_chat_id);
                             }
                         }

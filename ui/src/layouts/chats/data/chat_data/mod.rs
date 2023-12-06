@@ -15,10 +15,6 @@ use warp::raygun;
 pub struct ChatData {
     pub active_chat: ActiveChat,
     pub chat_behaviors: HashMap<Uuid, ChatBehavior>,
-    // when TopReached triggers, the page # increases. when BottomReached triggers, the pave # decreases.
-    // need to know if an incoming message should be added to a view and can't use ViewInit to do this because
-    // ViewInit changes as soon as you scroll up. and for the most recent messages, BottomReached doesn't trigger.
-    pub page_tracker: HashMap<Uuid, u32>,
 }
 
 impl PartialEq for ChatData {
@@ -51,13 +47,6 @@ impl ChatData {
             self.scroll_down(conv_id);
         }
         ret
-    }
-
-    pub fn chat_on_most_recent_page(&self, chat_id: Uuid) -> bool {
-        self.page_tracker
-            .get(&chat_id)
-            .map(|x| *x == 0)
-            .unwrap_or(true)
     }
 
     pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
@@ -115,8 +104,6 @@ impl ChatData {
             return false;
         }
 
-        let first_page = self.chat_on_most_recent_page(conv_id);
-
         let behavior = self.chat_behaviors.get_mut(&conv_id);
         let should_append_msg = behavior
             .as_ref()
@@ -169,16 +156,6 @@ impl ChatData {
         }
     }
 
-    pub fn top_reached(&mut self, chat_id: Uuid) {
-        let entry = self.page_tracker.entry(chat_id).or_insert(0);
-        *entry = entry.saturating_add(1);
-    }
-
-    pub fn bottom_reached(&mut self, chat_id: Uuid) {
-        let entry = self.page_tracker.entry(chat_id).or_insert(0);
-        *entry = entry.saturating_sub(1);
-    }
-
     pub fn update_message(&mut self, message: raygun::Message) {
         if self.active_chat.id() != message.conversation_id() {
             log::warn!("update_message wrong chat id");
@@ -199,12 +176,6 @@ impl ChatData {
 
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
-    }
-
-    pub fn set_view_init(&mut self, conv_id: Uuid, val: ViewInit) {
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.view_init = val;
-        }
     }
 }
 
