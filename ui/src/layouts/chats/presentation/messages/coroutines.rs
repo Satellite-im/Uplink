@@ -183,7 +183,7 @@ pub fn handle_msg_scroll(
 
                                         // if a message is removed from the view but another one hasn't been added to the view, this may help
                                         // the scroll button appear in time.
-                                        if chat_data.read().get_bottom_of_view(conv_id) != chat_data.read().get_bottom_of_page(conv_id)
+                                        if chat_data.read().get_bottom_of_view2(conv_id) != chat_data.read().get_bottom_of_page(conv_id)
                                             && !scroll_btn.read().get(conv_id)
                                         {
                                             scroll_btn.write().set(conv_id);

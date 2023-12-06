@@ -89,6 +89,14 @@ impl ChatData {
         }
     }
 
+    pub fn get_bottom_of_view2(&self, conv_id: Uuid) -> Option<PartialMessage> {
+        if self.active_chat.id() != conv_id {
+            log::warn!("get_bottom_of_view wrong chat id");
+            return None;
+        }
+        self.active_chat.messages.get_latest_displayed()
+    }
+
     pub fn get_bottom_of_page(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             log::warn!("get_bottom_of_page wrong chat id");
