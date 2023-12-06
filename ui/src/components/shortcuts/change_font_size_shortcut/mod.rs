@@ -5,7 +5,7 @@ use std::{
 
 use common::state::{Action, State};
 use dioxus::prelude::KeyCode;
-use dioxus_core::prelude::*;
+use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use dioxus_hooks::{to_owned, use_shared_state};
@@ -82,6 +82,22 @@ pub fn ChangeFontSizeShortCut(cx: Scope<'_>) -> Element<'_> {
                     let value = state.read().settings.font_scale();
                     if value < FONT_SIZE_BIGGEST {
                         state.write().mutate(Action::SetFontScale(value + 0.25));
+                    }
+                },
+                Duration::from_millis(500),
+            );
+        }
+    });
+    let keyCodeSubtract = KeyCode::Subtract;
+
+    use_global_shortcut(cx, (keyCodeSubtract, modifiers), {
+        to_owned![state];
+        move || {
+            debounced_callback(
+                || {
+                    let value = state.read().settings.font_scale();
+                    if value > FONT_SIZE_SMALLEST {
+                        state.write().mutate(Action::SetFontScale(value - 0.25));
                     }
                 },
                 Duration::from_millis(500),
