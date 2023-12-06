@@ -184,7 +184,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     div {
                         class: "body-scroll",
                         logs_to_show.iter().filter(
-                            |&x| &x.level == filter_level.get() || filter_level.get() == &Level::Debug
+                            |&x| x.level == *filter_level.get() || *filter_level.get() == Level::Debug
                         ).map(|log| {
                             let log_datetime = log.datetime;
                             let log_level = log.level;
