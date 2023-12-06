@@ -148,8 +148,12 @@ pub fn get_messages(
                                 if !scroll_btn.read().get(active_chat_id) {
                                     scroll_btn.write().set(active_chat_id);
                                 }
-                            } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
-                                fetch_later_ch.send(active_chat_id);
+                            } else if scroll == 0  {
+                                if !behavior.message_received {
+                                    scroll_btn.write().clear(active_chat_id);
+                                } else {
+                                     fetch_later_ch.send(active_chat_id);
+                                }
                             }
                         }
                     }

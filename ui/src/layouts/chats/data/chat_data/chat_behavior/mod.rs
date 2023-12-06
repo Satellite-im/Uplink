@@ -21,6 +21,8 @@ pub struct ChatBehavior {
 
     // a message has been received while the chat was active
     pub message_received: bool,
+
+    pub dont_set_scroll_button: bool,
 }
 
 impl ChatBehavior {
@@ -59,6 +61,7 @@ impl Default for ChatBehavior {
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
             message_received: false,
+            dont_set_scroll_button: false,
         }
     }
 }

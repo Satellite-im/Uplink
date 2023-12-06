@@ -186,8 +186,13 @@ pub fn handle_msg_scroll(
                                         if chat_data.read().get_bottom_of_view2(conv_id) != chat_data.read().get_bottom_of_page(conv_id)
                                             && !scroll_btn.read().get(conv_id)
                                         {
-                                            scroll_btn.write().set(conv_id);
-                                            log::trace!("setting scroll_btn");
+                                            // if someone deletes a message, it gets removed. but that isn't a scroll.
+                                            if chat_data.read().is_scroll_button_override(conv_id) {
+                                                chat_data.write_silent().clear_scroll_button_override(conv_id);
+                                            } else {
+                                                scroll_btn.write().set(conv_id);
+                                                log::trace!("setting scroll_btn");
+                                            }
                                         }
                                     }
                                     JsMsg::Top { .. } => {
