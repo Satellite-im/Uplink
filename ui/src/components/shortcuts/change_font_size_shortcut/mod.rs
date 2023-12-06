@@ -41,7 +41,7 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn ChangeFontSizeShortCut<'a>(cx: Scope<'a>) -> Element<'a> {
+pub fn ChangeFontSizeShortCut(cx: Scope<'_>) -> Element<'_> {
     let state = use_shared_state::<State>(cx)?;
 
     let keyCodePlus = KeyCode::EqualSign;
