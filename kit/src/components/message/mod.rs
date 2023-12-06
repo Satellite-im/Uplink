@@ -353,9 +353,13 @@ pub struct ChatMessageProps {
 
 #[allow(non_snake_case)]
 pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
-    if let Ok(id) = DID::from_str(&cx.props.text) {
-        return cx.render(rsx!(IdentityMessage { id: id }));
+    // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
+    if cx.props.text.len() > 2 {
+        if let Ok(id) = DID::from_str(&cx.props.text) {
+            return cx.render(rsx!(IdentityMessage { id: id }));
+        }
     }
+
     let mut formatted_text = format_text(&cx.props.text, cx.props.markdown, cx.props.ascii_emoji);
     formatted_text = wrap_links_with_a_tags(&formatted_text);
 
