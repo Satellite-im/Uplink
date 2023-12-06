@@ -69,3 +69,18 @@
         width: 60vw;
     }
 }
+
+.minimal-chat-button-group {
+    display: flex;
+    flex-direction: column; 
+    position: absolute; 
+    top: calc(100% + var(--gap)); 
+    gap: var(--gap);
+    z-index: 5;
+}
+
+.topbar {
+    .controls {
+        position: relative;
+    }
+}

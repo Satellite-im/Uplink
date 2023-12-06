@@ -36,6 +36,7 @@ enum ControlsCmd {
 
 pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let minimal = state.read().ui.metadata.minimal_view;
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let favorite = chat_data.read().active_chat.is_favorite();
     let conversation_type = chat_data.read().active_chat.conversation_type();
@@ -53,11 +54,18 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
         .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
+    let show_more = use_state(cx, || false);
     let active_call = state.read().ui.call_info.active_call();
     let call_in_progress = active_call.is_some(); // active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
 
     let show_pinned = use_state(cx, || false);
 
+    use_effect(cx, &minimal, |_| {
+        to_owned![show_more];
+        async move {
+            show_more.set(false);
+        }
+    });
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
         to_owned![call_pending, state];
         async move {
@@ -99,7 +107,13 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
         }
     });
 
-    cx.render(rsx!(
+    let (arrow_top, arrow_top_right) = if minimal {
+        (ArrowPosition::Right, ArrowPosition::Right)
+    } else {
+        (ArrowPosition::Top, ArrowPosition::TopRight)
+    };
+
+    let buttons = cx.render(rsx!(
         if cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
@@ -110,7 +124,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     Appearance::Secondary
                 },
                 tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Top,
+                    arrow_position: arrow_top,
                     text: get_local_text("friends.edit-group")
                 })),
                 onpress: move |_| {
@@ -134,7 +148,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                         Appearance::Secondary
                     },
                     tooltip: cx.render(rsx!(Tooltip {
-                        arrow_position: ArrowPosition::Top,
+                        arrow_position: arrow_top,
                         text: get_local_text("friends.view-group")
                     })),
                     onpress: move |_| {
@@ -168,7 +182,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 Appearance::Secondary
             },
             tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Top,
+                arrow_position: arrow_top,
                 text: if favorite {
                     get_local_text("favorites.remove")
                 } else {
@@ -202,7 +216,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             aria_label: "pin-label".into(),
             appearance: if *show_pinned.clone() { Appearance::Primary } else { Appearance::Secondary },
             tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Top,
+                arrow_position: arrow_top,
                 text: get_local_text("messages.pin-view"),
             })),
             onpress: move |_| {
@@ -215,7 +229,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Top,
+                arrow_position: arrow_top,
                 text: if !state.read().configuration.developer.experimental_features { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
@@ -234,9 +248,38 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::TopRight,
+                arrow_position: arrow_top_right,
                 text: get_local_text("uplink.coming-soon"),
             })),
         },
-    ))
+    ));
+
+    if minimal {
+        return cx.render(rsx!(
+            Button {
+                icon: Icon::EllipsisVertical,
+                aria_label: "control-group".into(),
+                appearance: Appearance::Primary,
+                tooltip: if *show_more.get() {
+                    cx.render(rsx!(()))
+                } else {
+                    cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::TopRight,
+                        text: get_local_text("messages.control-group")
+                    }))
+                },
+                onpress: move |_| {
+                    let current = show_more.get();
+                    show_more.set(!current);
+                }
+            },
+            show_more.then(|| {
+                rsx!(div {
+                    class: "minimal-chat-button-group",
+                    buttons
+                })
+            })
+        ));
+    }
+    buttons
 }
