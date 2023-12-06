@@ -22,7 +22,7 @@ use crate::logger;
 const STYLE: &str = include_str!("./style.scss");
 const SCRIPT: &str = include_str!("./script.js");
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum Tab {
     Logs,
     State,
