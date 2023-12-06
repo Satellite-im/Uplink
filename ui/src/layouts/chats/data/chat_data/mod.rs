@@ -141,6 +141,9 @@ impl ChatData {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else {
+            if let Some(behavior) = behavior {
+                behavior.message_received = true;
+            }
             false
         }
     }
