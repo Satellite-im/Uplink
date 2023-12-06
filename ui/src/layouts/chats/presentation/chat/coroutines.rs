@@ -71,21 +71,9 @@ pub fn handle_warp_events(
                         if chat_data.read().active_chat.id() != conversation_id {
                             continue;
                         }
-                        let empty_before = chat_data.read().is_view_empty(conversation_id);
                         chat_data
                             .write()
                             .delete_message(conversation_id, message_id);
-                        let empty_after = chat_data.read().is_view_empty(conversation_id);
-                        log::debug!(
-                            "chats page MessageEvent::Deleted. empty_before: {}, empty_after: {}",
-                            empty_before,
-                            empty_after
-                        );
-                        if !empty_before && empty_after {
-                            chat_data
-                                .write()
-                                .set_scroll_button_override(conversation_id);
-                        }
                     }
                     MessageEvent::MessageReactionAdded { message }
                     | MessageEvent::MessageReactionRemoved { message } => {

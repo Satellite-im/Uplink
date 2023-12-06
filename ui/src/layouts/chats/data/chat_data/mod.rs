@@ -89,48 +89,6 @@ impl ChatData {
         }
     }
 
-    pub fn is_view_empty(&self, conv_id: Uuid) -> bool {
-        if self.active_chat.id() != conv_id {
-            log::warn!("is_view_empty wrong chat id");
-            return true;
-        }
-
-        self.active_chat.messages.displayed.is_empty()
-    }
-
-    pub fn set_scroll_button_override(&mut self, conv_id: Uuid) {
-        if self.active_chat.id() != conv_id {
-            log::warn!("override_scroll_button wrong chat id");
-            return;
-        }
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.dont_set_scroll_button = true;
-        }
-    }
-
-    pub fn clear_scroll_button_override(&mut self, conv_id: Uuid) {
-        if self.active_chat.id() != conv_id {
-            log::warn!("clear_scroll_button_override wrong chat id");
-            return;
-        }
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.dont_set_scroll_button = false;
-        }
-    }
-
-    pub fn is_scroll_button_override(&self, conv_id: Uuid) -> bool {
-        if self.active_chat.id() != conv_id {
-            log::warn!("is_scroll_button_override wrong chat id");
-            return false;
-        }
-
-        self.chat_behaviors
-            .get(&conv_id)
-            .as_ref()
-            .map(|x| x.dont_set_scroll_button)
-            .unwrap_or_default()
-    }
-
     pub fn get_bottom_of_view2(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             log::warn!("get_bottom_of_view wrong chat id");
@@ -183,9 +141,6 @@ impl ChatData {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
         } else {
-            if let Some(behavior) = behavior {
-                behavior.message_received = true;
-            }
             false
         }
     }
