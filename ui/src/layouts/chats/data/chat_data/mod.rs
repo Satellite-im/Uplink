@@ -180,7 +180,7 @@ impl ChatData {
 }
 
 impl ChatData {
-    pub fn scroll_up(&mut self, conv_id: Uuid) {
+    fn scroll_up(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             if let Some(scroll_top) = self.active_chat.messages.get_earliest_displayed() {
                 behavior.view_init.scroll_to = ScrollTo::ScrollUp {
@@ -195,7 +195,7 @@ impl ChatData {
         }
     }
 
-    fn scroll_down(&mut self, conv_id: Uuid) {
+    pub fn scroll_down(&mut self, conv_id: Uuid) {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             if let Some(scroll_bottom) = self.active_chat.messages.get_latest_displayed() {
                 let end_msg = self

@@ -142,7 +142,7 @@ pub fn get_messages(
                         if let Ok(result) = val.join().await {
                             let scroll = result.as_i64().unwrap_or_default();
                             if scroll < -100 {
-                                chat_data.write_silent().scroll_up(active_chat_id);
+                                chat_data.write_silent().scroll_down(active_chat_id);
                                 if !scroll_btn.read().get(active_chat_id) {
                                     scroll_btn.write().set(active_chat_id);
                                 }
