@@ -10,7 +10,7 @@ use crate::{
         conv_stream,
         manager::commands::handle_blink_cmd,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
-        WarpCmd, WarpEvent,
+        RayGunCmd, WarpCmd, WarpEvent,
     },
     WARP_EVENT_CH,
 };
@@ -124,7 +124,13 @@ pub async fn handle_warp_command(
         Some(e) => e,
         None => return Ok(()),
     };
-    log::debug!("WARP CMD: {}", &cmd);
+    if !matches!(cmd, WarpCmd::RayGun(RayGunCmd::SendEvent { .. })) {
+        log::debug!("WARP CMD: {}", &cmd);
+    } else {
+        // the SendEvent is mostly just the typing indicator
+        log::trace!("WARP CMD: {}", &cmd);
+    }
+
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
         WarpCmd::Other(cmd) => {

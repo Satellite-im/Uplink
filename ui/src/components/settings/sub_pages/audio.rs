@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::warp_runner::{BlinkCmd, WarpCmd};
@@ -41,7 +43,14 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     warp_cmd_tx
                         .send(WarpCmd::Blink(BlinkCmd::GetAudioDeviceConfig { rsp: tx }))
                         .expect("failed to send command");
-                    rx.await.expect("warp runner failed to get audio config")
+                    match rx.await.expect("warp runner failed to get audio config") {
+                        Ok(r) => r,
+                        Err(e) => {
+                            log::debug!("failed to get audio config: {e}");
+                            tokio::time::sleep(Duration::from_secs(2)).await;
+                            continue;
+                        }
+                    }
                 };
 
                 while let Some(cmd) = rx.next().await {
@@ -163,7 +172,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-audio.input-device"),
                 section_description: get_local_text("settings-audio.input-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.input_device.as_ref().cloned().unwrap_or("default".into()),
                     options: input_devices.read().clone(),
@@ -187,7 +195,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("default".into()),
                     options: output_devices.read().clone(),
