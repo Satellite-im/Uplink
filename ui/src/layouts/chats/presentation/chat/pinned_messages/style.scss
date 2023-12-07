@@ -2,6 +2,11 @@
     max-width: 400px; 
     max-height: 500px;
     overflow: hidden;
+    &.pinned-minimal {
+        .pinned-button-container {
+            flex-direction: column;
+        }
+    }
 }
 
 .pinned-messages {
@@ -11,13 +16,12 @@
     overflow-y: auto;
     flex: 1;
     gap: var(--gap);
-    min-width: var(--width-sidebar);
 }
 
 .full-flex {
     width: 100%;
     display: inline-flex;
-    align-items: center;
+    flex-direction: column;
     gap: var(--gap);
 }
 .pinned-empty {
@@ -42,6 +46,7 @@
 .pinned-button-container {
     display: flex; 
     gap: var(--gap-less);
+    margin-left: auto;
 }
 
 .pinned-buttons {
@@ -72,6 +77,9 @@
 
 .pinned-sender-container {
     width: 100%;
+    margin-bottom: var(--padding-less);
+    display: grid;
+    grid-template-columns: auto 1fr;
 }
 
 .pinned-sender-time {
@@ -80,8 +88,9 @@
 }
 
 .pinned-sender {
-    flex: 1;
-    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .background-highlight {

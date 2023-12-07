@@ -39,6 +39,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering pinned_messages");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+    let minimal = state.read().ui.metadata.minimal_view;
 
     let close_triggered = use_state(cx, || false);
 
@@ -123,6 +124,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx!(div {
         id: "pinned-messages-container",
+        class: format_args!("{}", if minimal {"pinned-minimal"} else {""}),
         aria_label: "pinned-messages-label",
         div {
             class: "pinned-messages",
@@ -210,40 +212,42 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                     class: "pinned-content-container",
                     div {
                         class: "pinned-sender-container",
-                        cx.props.sender.as_ref().map(|sender| {
-                            rsx!(div {
-                                class: "full-flex",
-                                p {
-                                    class: "pinned-sender",
-                                    aria_label: "pinned-sender",
-                                    sender.username()
-                                },
-                                div {
-                                    class: "pinned-button-container",
-                                    aria_label: "pinned-button-container",
-                                    button {
-                                        class: "pinned-buttons",
-                                        aria_label: "pin-button-go-to",
-                                        onclick: move |_| {
-                                            cx.props.onclick.call(());
-                                        },
-                                        get_local_text("messages.pin-button-goto")
+                        div {
+                            class: "full-flex",
+                            cx.props.sender.as_ref().map(|sender| {
+                                rsx!(
+                                    p {
+                                        class: "pinned-sender",
+                                        aria_label: "pinned-sender",
+                                        sender.username()
                                     },
-                                    button {
-                                        class: "pinned-buttons",
-                                        aria_label: "pin-button-unpin",
-                                        onclick: move |e| {
-                                            cx.props.onremove.call((e, cx.props.message.clone()));
-                                        },
-                                        get_local_text("messages.pin-button-unpin"),
-                                    }
-                                }
-                            })
-                        }),
-                        p {
-                            class: "pinned-sender-time",
-                            aria_label: "pinned-time",
-                            "{cx.props.time}"
+                                )
+                            }),
+                            p {
+                                class: "pinned-sender-time",
+                                aria_label: "pinned-time",
+                                "{cx.props.time}"
+                            }
+                        }
+                        div {
+                            class: "pinned-button-container",
+                            aria_label: "pinned-button-container",
+                            button {
+                                class: "pinned-buttons",
+                                aria_label: "pin-button-go-to",
+                                onclick: move |_| {
+                                    cx.props.onclick.call(());
+                                },
+                                get_local_text("messages.pin-button-goto")
+                            },
+                            button {
+                                class: "pinned-buttons",
+                                aria_label: "pin-button-unpin",
+                                onclick: move |e| {
+                                    cx.props.onremove.call((e, cx.props.message.clone()));
+                                },
+                                get_local_text("messages.pin-button-unpin"),
+                            }
                         }
                     }
                     ChatText {
