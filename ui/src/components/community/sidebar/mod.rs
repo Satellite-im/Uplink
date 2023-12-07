@@ -54,7 +54,7 @@ pub fn SidebarInner(cx: Scope) -> Element {
             Channel {
                 id: "6".into(),
                 name: "Pic Dump".into(),
-                kind: ChannelType::Text,
+                kind: ChannelType::Photo,
             },
         ],
     });

@@ -776,6 +776,11 @@ impl State {
         fs::write(path, serialized)?;
         Ok(())
     }
+
+    pub fn get_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Self {
         if STATIC_ARGS.use_mock {
