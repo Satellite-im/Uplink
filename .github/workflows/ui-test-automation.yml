@@ -527,17 +527,6 @@ jobs:
           message: |
             UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/Uplink/${{ github.run_number }})
 
-      - name: Delete artifacts not required after publishing results
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: |
-            test-report-macos-ci
-            test-report-windows-ci
-            test-report-macos-chats
-            test-allure-macos-ci
-            test-allure-windows-ci
-            test-allure-macos-chats
-
   remove-label:
     needs:
       [
@@ -554,13 +543,19 @@ jobs:
       - name: Checkout testing directory 🔖
         uses: actions/checkout@v3
 
-      - name: Delete artifacts not required after publishing results
+      - name: Delete all artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
             Uplink-Windows
             uplink-windows-assets
             app-macos
+            test-report-macos-ci
+            test-report-windows-ci
+            test-report-macos-chats
+            test-allure-macos-ci
+            test-allure-windows-ci
+            test-allure-macos-chats
 
       - name: Remove label if all test jobs succeeded
         uses: buildsville/add-remove-label@v2.0.0
