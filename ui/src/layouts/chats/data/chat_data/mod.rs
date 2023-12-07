@@ -204,6 +204,27 @@ impl ChatData {
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
     }
+
+    // this is used for pinned messages. also, note that the only way for the most recent message
+    // to not be displayed is if the user scrolls up or if the message is too large to fit in the view.
+    pub fn should_override_scroll_btn(&self, chat_id: Uuid) -> bool {
+        if self.active_chat.id() != chat_id {
+            return false;
+        }
+
+        self.chat_behaviors
+            .get(&chat_id)
+            .map(|behavior| {
+                self.active_chat.messages.loaded.len() == self.active_chat.messages.all.len()
+                    && (!self
+                        .active_chat
+                        .messages
+                        .displayed
+                        .contains(&behavior.most_recent_msg_id.unwrap_or_default())
+                        && !self.active_chat.messages.displayed.is_empty())
+            })
+            .unwrap_or_default()
+    }
 }
 
 impl ChatData {

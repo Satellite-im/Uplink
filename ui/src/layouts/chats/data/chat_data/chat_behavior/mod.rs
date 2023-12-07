@@ -6,6 +6,7 @@ mod scroll_to;
 mod view_init;
 pub use scroll_behavior::*;
 pub use scroll_to::*;
+use uuid::Uuid;
 pub use view_init::*;
 
 // for a given Chat, the UI will load X messages, Y of which are displayed at any given time. Scrolling changes the set of messages displayed.
@@ -22,8 +23,8 @@ pub struct ChatBehavior {
     // a message has been received while the chat was active
     pub message_received: bool,
 
-    // contains the most recent message (at least it did when the chat was fetched from warp)
-    pub first_page: bool,
+    // the most recent message (when the chat was fetched from warp)
+    pub most_recent_msg_id: Option<Uuid>,
 }
 
 impl ChatBehavior {
@@ -62,7 +63,7 @@ impl Default for ChatBehavior {
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
             message_received: false,
-            first_page: false,
+            most_recent_msg_id: None,
         }
     }
 }

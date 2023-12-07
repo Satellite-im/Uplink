@@ -1,6 +1,7 @@
 use crate::{
     layouts::chats::{
         data::{ChatData, ScrollTo},
+        presentation::chat::coroutines::fetch_most_recent,
         scripts::{self, SETUP_CONTEXT_PARENT},
     },
     utils,
@@ -25,13 +26,18 @@ pub fn init_msg_scroll(
 
             let chat_id = chat_data.read().active_chat.id();
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
-            log::trace!(
-                "use_effect for init_msg_scroll {}. behavior: {:?}",
-                chat_id,
-                chat_behavior
-            );
+            log::debug!("use_effect for init_msg_scroll {}", chat_id,);
             let unreads = chat_data.read().active_chat.unreads();
             chat_data.write_silent().active_chat.messages.loaded.clear();
+
+            let most_recent_msg_id = fetch_most_recent(chat_id, 1)
+                .await
+                .ok()
+                .and_then(|x| x.0.first().map(|y| y.inner.id()));
+
+            if let Some(behavior) = chat_data.write_silent().chat_behaviors.get_mut(&chat_id) {
+                behavior.most_recent_msg_id = most_recent_msg_id;
+            }
 
             let scroll_script = match chat_behavior.view_init.scroll_to {
                 // if there are unreads, scroll up so first unread is at top of screen

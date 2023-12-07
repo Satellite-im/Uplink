@@ -35,7 +35,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{self, ChatData, MsgChInput, ScrollBtn, TypingIndicator},
+        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -62,6 +62,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
+
+    if !scroll_btn.read().get(active_chat_id)
+        && chat_data.read().should_override_scroll_btn(active_chat_id)
+    {
+        log::debug!("chatbar is overriding scroll button");
+        scroll_btn.write_silent().set(active_chat_id);
+    }
 
     let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
