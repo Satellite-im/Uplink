@@ -73,7 +73,7 @@ pub fn handle_msg_scroll(
                         .top()
                         .unwrap_or(Uuid::nil());
 
-                    log::debug!(
+                    log::trace!(
                         "top msg is: {}, bottom msg is: {}",
                         top_msg_id,
                         bottom_msg_id
@@ -145,7 +145,7 @@ pub fn handle_msg_scroll(
                             opt = rx.next() => {
                                 match opt {
                                     Some(_) => {
-                                        log::debug!("coroutine restart triggered");
+                                        log::trace!("coroutine restart triggered");
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {
@@ -191,7 +191,7 @@ pub fn handle_msg_scroll(
                                         }
                                     }
                                     JsMsg::Top { .. } => {
-                                        log::debug!("top reached");
+                                        log::trace!("top reached");
                                         // send uuid/timestamp of oldest message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_top_evt {
@@ -242,7 +242,7 @@ pub fn handle_msg_scroll(
                                                     behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
                                                 }
 
-                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                log::trace!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
                                                 break 'HANDLE_EVAL;
@@ -255,7 +255,7 @@ pub fn handle_msg_scroll(
                                         }
                                     }
                                     JsMsg::Bottom { .. } => {
-                                        log::debug!("bottom reached");
+                                        log::trace!("bottom reached");
                                         // send uuid/timestamp of most recent message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_bottom_evt {
@@ -310,7 +310,7 @@ pub fn handle_msg_scroll(
                                                     chat_data.write().set_chat_behavior(conv_id, behavior.clone());
                                                 }
 
-                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                log::trace!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {

@@ -57,6 +57,7 @@ use warp::{
     raygun::{self},
 };
 
+use self::call::Call;
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -337,9 +338,16 @@ impl State {
             event,
             WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
                 | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
+                | WarpEvent::Message(MessageEvent::TypingIndicator { .. })
         ) {
             log::debug!("process_warp_event: {event}");
+        } else if matches!(
+            event,
+            WarpEvent::Message(MessageEvent::TypingIndicator { .. })
+        ) {
+            log::trace!("process_warp_event: {event}");
         }
+
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
@@ -723,13 +731,14 @@ impl State {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
             }
-            BlinkEventKind::AudioStreamError => {
-                // todo
-            }
             BlinkEventKind::ParticipantStateChanged { peer_id, state } => {
-                if let Err(e) = self.ui.call_info.update_partcipant_state(peer_id, state) {
-                    log::error!("{e}");
+                if let Err(e) = self.ui.call_info.update_participant_state(peer_id, state) {
+                    log::error!("failed to process ParticipantStateChanged event : {e}");
                 }
+            }
+            BlinkEventKind::AudioStreamError => {
+                log::error!("blink audio stream error");
+                // todo
             }
         }
     }
@@ -1509,6 +1518,13 @@ impl State {
             .all
             .iter()
             .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+    pub fn get_identities_from_call(&self, call: &Call) -> Vec<Identity> {
+        call.participants_joined
+            .keys()
+            .filter_map(|id| self.identities.get(id))
             .cloned()
             .collect()
     }
