@@ -44,6 +44,8 @@ uplink = Uplink
     .open-devtools = Open Console
     .clear-unreads = Clear Unreads
     .copy-text = Copy Text
+    .copy = Copy
+    .paste = Paste
     
 community = Community
     .invited = You're Invited!
@@ -176,7 +178,7 @@ files = Files
     .attach-files-from-local-disk = Add File
     .attach-files-from-storage = Browse Files
     .upload-in-progress-please-wait = Upload in progress. Please wait.
-    .no-files-available = No files available.
+    .no-files-available = No files added yet
     .share-files = Share Files
     .go-to-files = Go to Files
     .download-failed = Failed to download file { $file }
