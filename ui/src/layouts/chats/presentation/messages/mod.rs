@@ -151,7 +151,9 @@ pub fn get_messages(
                             } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
                                 if !behavior.message_received  {
                                     scroll_btn.write().clear(active_chat_id);
-                                    // todo: need to make behavior.view_init.scroll_to == data::ScrollTo::MostRecent again
+                                    // if view_init.scroll_to doesn't get set back to MostRecent, the view
+                                    // won't update correctly
+                                    chat_data.write_silent().scroll_to_most_recent(active_chat_id);
                                 } else {
                                      fetch_later_ch.send(active_chat_id);
                                 }

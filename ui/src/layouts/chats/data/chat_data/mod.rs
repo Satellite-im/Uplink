@@ -268,4 +268,11 @@ impl ChatData {
             log::warn!("failed to get chat behavior in scroll_to_end_of_page");
         }
     }
+
+    pub fn scroll_to_most_recent(&mut self, conv_id: Uuid) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
+            behavior.view_init.scroll_to = ScrollTo::MostRecent;
+            behavior.view_init.msg_time.take();
+        }
+    }
 }
