@@ -24,6 +24,7 @@ pub enum Page {
     Messages,
     //Files,
     //Privacy,
+    Keybinds,
     Profile,
     Notifications,
     Accessibility,
@@ -56,6 +57,7 @@ impl FromStr for Page {
             //"files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             "messages" => Ok(Page::Messages),
+            "keybinds" => Ok(Page::Keybinds),
             //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
@@ -162,6 +164,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::DocumentText,
         ..UIRoute::default()
     };
+    let keybinds = UIRoute {
+        to: "keybinds",
+        name: get_local_text("settings.keybinds"),
+        icon: Icon::Cog, // TODO: Pending Icon
+        ..UIRoute::default()
+    };
 
     let mut routes = vec![
         profile,
@@ -176,6 +184,11 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         about,
         licenses,
     ];
+
+    if state.read().configuration.developer.experimental_features {
+        // TODO: Move this out when feature is complete
+        routes.push(keybinds);
+    }
 
     if state.read().ui.show_dev_settings {
         routes.push(developer);

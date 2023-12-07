@@ -193,6 +193,7 @@ settings = Settings
     .audio = Sounds & Audio
     .files = Files
     .extensions = Extensions
+    .keybinds = Keyboard Shortcuts
     .accessibility = Accessibility
     .notifications = Notifications
     .developer = Developer
