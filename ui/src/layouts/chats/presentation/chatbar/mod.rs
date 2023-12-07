@@ -35,7 +35,7 @@ use crate::{
     components::{files::attachments::Attachments, paste_files_with_shortcut},
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
+        chats::data::{self, ChatData, MsgChInput, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
