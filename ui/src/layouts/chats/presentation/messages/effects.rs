@@ -55,9 +55,7 @@ pub fn init_msg_scroll(
                         .get(msg_idx)
                         .map(|x| x.inner.id());
                     match msg_id {
-                        Some(id) => {
-                            scripts::SCROLL_TO_BOTTOM.replace("$MESSAGE_ID", &format!("{id}"))
-                        }
+                        Some(id) => scripts::SCROLL_TO_END.replace("$MESSAGE_ID", &format!("{id}")),
                         None => {
                             log::error!("failed to init message scroll");
                             //scripts::SCROLL_TO_END.to_string()
