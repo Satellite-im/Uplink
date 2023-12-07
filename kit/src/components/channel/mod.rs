@@ -17,6 +17,7 @@ pub struct VoiceChannelUser {
 #[derive(Clone)]
 pub enum ChannelType {
     Text,
+    Photo,
     Announcements,
     Robot,
     SharedFolder,
@@ -71,6 +72,9 @@ pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 match &cx.props.channel.kind {
                     ChannelType::Text => rsx!(IconElement {
                         icon: Icon::ChatBubbleBottomCenterText
+                    }),
+                    ChannelType::Photo => rsx!(IconElement {
+                        icon: Icon::Photo
                     }),
                     ChannelType::SharedFolder => rsx!(IconElement {
                         icon: Icon::Folder

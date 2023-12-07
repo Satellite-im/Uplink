@@ -273,15 +273,10 @@ pub fn set_write_to_stdout(b: bool) {
     LOGGER.write().write_to_stdout = b;
 }
 
-pub fn load_debug_log() -> Vec<String> {
+pub fn load_debug_log() -> Vec<Log> {
     //Note: We shouldnt read from the file since it may be too big or contain irrelevant information related to uplink
     //      unless we have a specific file related to uplink/dioxus logging, in which case we should read only the last few lines
-    LOGGER
-        .read()
-        .log_entries
-        .iter()
-        .map(|x| x.to_string())
-        .collect()
+    LOGGER.read().log_entries.iter().cloned().collect()
 }
 
 // this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.
