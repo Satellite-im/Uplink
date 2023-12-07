@@ -115,7 +115,7 @@ pub fn get_scroll_ch(
                 .await
                 {
                     Ok((messages, behavior)) => {
-                        log::debug!("re-init messages with most recent");
+                        log::trace!("re-init messages with most recent");
                         chat_data.write().set_active_chat(
                             &state.read(),
                             &conv_id,
