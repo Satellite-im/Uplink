@@ -34,7 +34,7 @@ use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
     components::{
         files::attachments::Attachments,
-        shortcuts::{self, paste_file_shortcut},
+        shortcuts::{self},
     },
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
@@ -507,27 +507,28 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path: Vec<PathBuf>| {
-                    if !files_local_path.is_empty() {
-                        let new_files: Vec<Location> = files_local_path
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    let mut current_files: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .drain(..)
-                        .filter(|x| !new_files.contains(x))
-                        .collect();
-                        current_files.extend(new_files);
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
-                }})}
+                rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
+                    on_paste: move |files_local_path: Vec<PathBuf>| {
+                        if !files_local_path.is_empty() {
+                            let new_files: Vec<Location> = files_local_path
+                            .iter()
+                            .map(|path| Location::Disk { path: path.clone() })
+                            .collect();
+                        let mut current_files: Vec<_> = state
+                            .read()
+                            .get_active_chat()
+                            .map(|f| f.files_attached_to_send)
+                            .unwrap_or_default()
+                            .drain(..)
+                            .filter(|x| !new_files.contains(x))
+                            .collect();
+                            current_files.extend(new_files);
+                        state
+                            .write()
+                            .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                        }
+                    }})
+            }
                 SendFilesLayoutModal {
                     send_files_from_storage: show_storage_modal,
                     send_files_start_location: SendFilesStartLocation::Chats,
@@ -561,35 +562,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     get_local_text("messages.scroll-bottom"),
                 })
             })
-            if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-                rsx!(paste_file_shortcut::PasteFilesShortcut {
-                    on_paste: move |files_local_path: Vec<PathBuf>| {
-                        if !files_local_path.is_empty() {
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                .unwrap_or_default()
-                                .iter()
-                                .filter(|file_location| {
-                                    match file_location {
-                                        Location::Disk { path } => {
-                                            !files_local_path.contains(path)
-                                        },
-                                        Location::Constellation { .. } => {
-                                            true
-                                        }
-                                    }
-                                })
-                                .cloned()
-                                .collect();
-                            let local_disk_files: Vec<Location> = files_local_path
-                                .iter()
-                                .map(|path| Location::Disk { path: path.clone() })
-                                .collect();
-                            new_files_to_upload.extend(local_disk_files);
-                            state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
-                        }
-                    },
-                })
-            }
         },
         Attachments {
             chat_id: active_chat_id,
