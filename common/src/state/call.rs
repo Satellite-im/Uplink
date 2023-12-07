@@ -37,9 +37,8 @@ pub struct Call {
     pub id: Uuid,
     pub conversation_id: Uuid,
     pub participants: Vec<DID>,
-    pub participants_joined: Vec<DID>,
+    pub participants_joined: HashMap<DID, ParticipantState>,
     pub participants_speaking: HashMap<DID, Instant>,
-    pub participants_state: HashMap<DID, ParticipantState>,
     pub self_muted: bool,
     pub call_silenced: bool,
 }
@@ -113,6 +112,15 @@ impl CallInfo {
         Ok(())
     }
 
+    pub fn participant_speaking(&mut self, id: DID) -> anyhow::Result<()> {
+        let active_call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        active_call.call.participant_speaking(id);
+        Ok(())
+    }
+
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
@@ -137,15 +145,6 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn participant_speaking(&mut self, id: DID) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-        active_call.call.participant_speaking(id);
-        Ok(())
-    }
-
     pub fn update_active_call(&mut self) -> bool {
         if let Some(active_call) = self.active_call.as_mut() {
             return active_call.call.update_speaking_participants();
@@ -153,12 +152,16 @@ impl CallInfo {
         false
     }
 
-    pub fn participant_not_speaking(&mut self, id: &DID) -> anyhow::Result<()> {
+    pub fn update_participant_state(
+        &mut self,
+        id: DID,
+        state: ParticipantState,
+    ) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        active_call.call.participant_not_speaking(id);
+        active_call.call.update_participant_state(id, state);
         Ok(())
     }
 
@@ -198,20 +201,6 @@ impl CallInfo {
         Ok(())
     }
 
-    pub fn update_partcipant_state(
-        &mut self,
-        peer_id: DID,
-        state: ParticipantState,
-    ) -> anyhow::Result<()> {
-        let active_call = match self.active_call.as_mut() {
-            Some(c) => c,
-            None => bail!("call not in progress"),
-        };
-
-        active_call.call.participants_state.insert(peer_id, state);
-        Ok(())
-    }
-
     pub fn set_popout_window_id(&mut self, popout_window_id: WindowId) {
         if let Some(ac) = self.active_call.as_mut() {
             ac.popout_window_id = Some(popout_window_id);
@@ -232,11 +221,10 @@ impl Call {
             id,
             conversation_id,
             participants,
-            participants_joined: vec![],
+            participants_joined: HashMap::new(),
             participants_speaking: HashMap::new(),
             self_muted: false,
             call_silenced: false,
-            participants_state: HashMap::new(),
         }
     }
 
@@ -247,18 +235,20 @@ impl Call {
     }
 
     fn participant_joined(&mut self, id: DID) {
-        if !self.participants_joined.iter().any(|x| x == &id) {
-            self.participants_joined.push(id);
+        if self.participants.contains(&id) && !self.participants_joined.contains_key(&id) {
+            self.participants_joined
+                .insert(id, ParticipantState::default());
         }
     }
 
     fn participant_left(&mut self, id: &DID) {
-        self.participants_joined.retain(|x| x != id);
-        self.participants_state.remove(id);
+        self.participants_joined.remove(id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
-        self.participants_speaking.insert(id, Instant::now());
+        if self.participants.contains(&id) {
+            self.participants_speaking.insert(id, Instant::now());
+        }
     }
 
     fn update_speaking_participants(&mut self) -> bool {
@@ -279,6 +269,12 @@ impl Call {
 
     fn unmute_self(&mut self) {
         self.self_muted = false;
+    }
+
+    fn update_participant_state(&mut self, id: DID, state: ParticipantState) {
+        if self.participants.contains(&id) {
+            self.participants_joined.insert(id, state);
+        }
     }
 
     fn silence_call(&mut self) {

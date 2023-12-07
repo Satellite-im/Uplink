@@ -66,23 +66,23 @@ impl Messages {
         }
 
         if self.all.is_empty() {
-            log::debug!("appending messages");
+            log::trace!("appending messages");
             return self.append_messages(m);
         }
 
         // latest last
         if m.last().unwrap().inner.date() <= self.all.front().unwrap().inner.date() {
-            log::debug!("prepending messages");
+            log::trace!("appending messages");
             return self.prepend_messages(m);
         }
 
         // earliest first
         if m.first().unwrap().inner.date() >= self.all.back().unwrap().inner.date() {
-            log::debug!("appending messages");
+            log::trace!("appending messages");
             return self.append_messages(m);
         }
 
-        log::error!("invalid insert");
+        log::warn!("insert_messages: invalid insert");
     }
 
     pub fn get_earliest_displayed(&self) -> Option<PartialMessage> {
