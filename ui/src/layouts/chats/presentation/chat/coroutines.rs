@@ -129,9 +129,17 @@ pub fn init_chat_data<'a>(
                 _ => unreachable!(),
             };
 
+            let most_recent_msg_id = fetch_most_recent(conv_id, 1)
+                .await
+                .ok()
+                .and_then(|x| x.0.first().map(|y| y.inner.id()))
+                .unwrap_or_default();
+
             match r {
-                Ok((messages, behavior)) => {
+                Ok((messages, mut behavior)) => {
                     log::debug!("init_chat_data");
+                    behavior.first_page =
+                        messages.iter().any(|x| x.inner.id() == most_recent_msg_id);
                     chat_data
                         .write()
                         .set_active_chat(&state.read(), &conv_id, behavior, messages);

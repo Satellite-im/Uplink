@@ -21,6 +21,9 @@ pub struct ChatBehavior {
 
     // a message has been received while the chat was active
     pub message_received: bool,
+
+    // contains the most recent message (at least it did when the chat was fetched from warp)
+    pub first_page: bool,
 }
 
 impl ChatBehavior {
@@ -59,6 +62,7 @@ impl Default for ChatBehavior {
             on_scroll_top: ScrollBehavior::FetchMore,
             on_scroll_end: ScrollBehavior::DoNothing,
             message_received: false,
+            first_page: false,
         }
     }
 }

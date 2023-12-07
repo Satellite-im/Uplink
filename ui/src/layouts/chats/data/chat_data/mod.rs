@@ -288,6 +288,11 @@ impl ChatData {
             return;
         }
 
+        if self.active_chat.messages.displayed.contains(&msg_id) {
+            log::debug!("going to pinned message that is already displayed");
+            return;
+        }
+
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             behavior.view_init.scroll_to = ScrollTo::ScrollUp { view_top: msg_id };
             behavior.view_init.msg_time.replace(message_date);
