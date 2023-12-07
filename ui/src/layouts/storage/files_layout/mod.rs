@@ -154,7 +154,24 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
                         controls: cx.render(
-                            rsx! (Button {
+                            rsx! (
+                                Button {
+                                    icon: Icon::ComputerDesktop,
+                                    disabled: false,
+                                    text: "Sync local folder".to_string(),
+                                    appearance: Appearance::Secondary,
+                                    aria_label: "desktop-sync-folder".into(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.new-folder"),
+                                        }
+                                    )),
+                                    onpress: move |_| {
+                                       println!("desktop-sync-folder");
+                                    },
+                                },
+                                Button {
                                     icon: Icon::FolderPlus,
                                     disabled: *upload_file_controller.files_been_uploaded.read(),
                                     appearance: Appearance::Secondary,
