@@ -125,26 +125,25 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::AdjustVolume { user, volume, rsp } => {
             let _ = rsp.send(blink.set_peer_audio_gain(user, volume).await);
         }
-        BlinkCmd::SetMicrophone { device_name, rsp } => {
-            let result = match blink.get_audio_device_config().await {
-                Ok(mut audio_config) => {
-                    audio_config.set_microphone(&device_name);
-                    blink.set_audio_device_config(audio_config).await
-                }
-                Err(e) => Err(e),
-            };
-            let _ = rsp.send(result);
-        }
-        BlinkCmd::SetSpeaker { device_name, rsp } => {
-            let result = match blink.get_audio_device_config().await {
-                Ok(mut audio_config) => {
-                    audio_config.set_speaker(&device_name);
-                    blink.set_audio_device_config(audio_config).await
-                }
-                Err(e) => Err(e),
-            };
-            let _ = rsp.send(result);
-        }
+        BlinkCmd::SetMicrophone { device_name, rsp } => match blink.get_audio_device_config().await
+        {
+            Ok(mut audio_config) => {
+                audio_config.set_microphone(&device_name);
+                let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+            }
+            Err(e) => {
+                let _ = rsp.send(Err(e));
+            }
+        },
+        BlinkCmd::SetSpeaker { device_name, rsp } => match blink.get_audio_device_config().await {
+            Ok(mut audio_config) => {
+                audio_config.set_speaker(&device_name);
+                let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+            }
+            Err(e) => {
+                let _ = rsp.send(Err(e));
+            }
+        },
         BlinkCmd::StartRecording { output_dir, rsp } => {
             let _ = rsp.send(blink.record_call(&output_dir).await);
         }

@@ -56,10 +56,8 @@ pub struct Logger {
     max_logs: usize,
     write_to_stdout: bool,
 
-    // display trace logs from uplink
-    uplink_trace: bool,
     // minimum log level for 3rd party crates (warp, dioxus, etc)
-    min_log_level: Option<Level>,
+    max_level_3rd_party: Option<Level>,
     whitelist: Option<HashSet<String>>,
 }
 
@@ -72,6 +70,31 @@ impl LogGlue {
     pub fn new(max_level: LevelFilter) -> Self {
         Self { max_level }
     }
+
+    fn log_external(&self, record: &log::Record) {
+        if LOGGER
+            .read()
+            .max_level_3rd_party
+            .as_ref()
+            .map(|max_level| &record.level() > max_level)
+            .unwrap_or(true)
+        {
+            return;
+        }
+
+        if let Some(whitelist) = LOGGER.read().whitelist.as_ref() {
+            let file_name = record.file();
+            let any_allowed = whitelist
+                .iter()
+                .any(|x| file_name.as_ref().map(|y| y.contains(x)).unwrap_or(false));
+            if !any_allowed {
+                return;
+            }
+        }
+
+        let msg = record.args();
+        LOGGER.write().log(record.level(), &msg.to_string());
+    }
 }
 
 impl crate::log::Log for LogGlue {
@@ -80,37 +103,15 @@ impl crate::log::Log for LogGlue {
     }
 
     fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
-        }
-
         // special path for other libraries
         if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
-            if LOGGER
-                .read()
-                .min_log_level
-                .as_ref()
-                .map(|min_log_level| &record.level() < min_log_level)
-                .unwrap_or(true)
-            {
-                return;
-            }
-
-            if let Some(whitelist) = LOGGER.read().whitelist.as_ref() {
-                let file_name = record.file();
-                let any_allowed = whitelist
-                    .iter()
-                    .any(|x| file_name.as_ref().map(|y| y.contains(x)).unwrap_or(false));
-                if !any_allowed {
-                    return;
-                }
-            }
-        } else if record.level() == Level::Trace && !LOGGER.read().uplink_trace {
-            return;
+            return self.log_external(record);
         }
 
-        let msg = record.args();
-        LOGGER.write().log(record.level(), &msg.to_string());
+        if self.enabled(record.metadata()) {
+            let msg = record.args();
+            LOGGER.write().log(record.level(), &msg.to_string());
+        }
     }
 
     fn flush(&self) {}
@@ -127,8 +128,7 @@ impl Logger {
             subscribers: vec![],
             log_entries: VecDeque::new(),
             max_logs: 128,
-            uplink_trace: false,
-            min_log_level: None,
+            max_level_3rd_party: None,
             whitelist: None,
         }
     }
@@ -255,12 +255,8 @@ pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {
     LOGGER.write().subscribe()
 }
 
-pub fn allow_uplink_trace(b: bool) {
-    LOGGER.write().uplink_trace = b;
-}
-
 pub fn allow_other_crates(min_level: Level, whitelist: Option<&[&str]>) {
-    LOGGER.write().min_log_level.replace(min_level);
+    LOGGER.write().max_level_3rd_party.replace(min_level);
     LOGGER.write().whitelist =
         whitelist.map(|x| HashSet::from_iter(x.iter().map(|y| y.to_string())));
 }
