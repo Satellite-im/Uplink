@@ -168,7 +168,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                             let current_theme = state.read().ui.theme.clone().unwrap_or_default();
 
                             if current_theme.name != "Light" {
-                                let light_theme = get_available_themes().iter().find(|t| t.name == "Light").cloned().expect("theme is available");;
+                                let light_theme = get_available_themes().iter().find(|t| t.name == "Light").cloned().expect("theme is available");
                                 state.write().mutate(Action::SetTheme(Some(light_theme)));
                             } else {
                                 state.write().mutate(Action::SetTheme(None));

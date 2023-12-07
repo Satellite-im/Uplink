@@ -30,6 +30,11 @@ pub fn SidebarInner(cx: Scope) -> Element {
                 name: "Shared Folder".into(),
                 kind: ChannelType::SharedFolder,
             },
+            Channel {
+                id: "8".into(),
+                name: "Wiki / Docs".into(),
+                kind: ChannelType::Docs,
+            },
         ],
     });
 

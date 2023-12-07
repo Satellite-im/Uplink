@@ -21,6 +21,7 @@ pub enum ChannelType {
     Announcements,
     Robot,
     SharedFolder,
+    Docs,
     Voice(Vec<VoiceChannelUser>),
 }
 
@@ -87,6 +88,9 @@ pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }),
                     ChannelType::Voice(_) => rsx!(IconElement {
                         icon: Icon::Speaker
+                    }),
+                    ChannelType::Docs => rsx!(IconElement {
+                        icon: Icon::BookOpen
                     }),
                 },
                 div {
