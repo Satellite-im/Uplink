@@ -2,13 +2,14 @@
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::{fs, io};
 
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::{RayGunCmd, WarpCmd};
-use common::WARP_CMD_CH;
+use common::{STATIC_ARGS, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
@@ -168,7 +169,17 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                         }
                                     )),
                                     onpress: move |_| {
-                                       println!("desktop-sync-folder");
+                                        println!("Files List Constellation: {:?}", storage_controller.read().files_list.clone());
+                                        let storage_local_folder = STATIC_ARGS.uplink_path.join("storage_local_folder");
+
+                                       let files_from_storage_local_folder = match list_files(storage_local_folder.to_string_lossy().to_string(), &mut vec![]) {
+                                             Ok(vec) => vec,
+                                             Err(e) => {
+                                                println!("err: {:?}", e);
+                                                Vec::new()
+                                            },
+                                       };
+                                       println!("files_from_storage_local_folder: {:?}", files_from_storage_local_folder.clone());
                                     },
                                 },
                                 Button {
@@ -327,4 +338,28 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             }
         }
     ))
+}
+
+fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
+    if path.as_ref().is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                list_files(&path, files)?;
+            } else {
+                if let Some(parent) = path.parent() {
+                    if parent.ends_with("storage_local_folder") {
+                        let new_path = Path::new("/").join(path.file_name().unwrap());
+                        files.push(new_path);
+                    } else {
+                        files.push(path);
+                    }
+                } else {
+                    files.push(path);
+                }
+            }
+        }
+    }
+    Ok(files.clone())
 }
