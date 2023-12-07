@@ -1,6 +1,6 @@
 mod coroutines;
 
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use common::{
     icons::{self},
@@ -536,8 +536,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path: Vec<std::path::PathBuf>| {
+                rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                    on_paste: move |files_local_path: Vec<PathBuf>| {
                         if !files_local_path.is_empty() {
                             let new_files: Vec<Location> = files_local_path
                             .iter()
@@ -555,8 +555,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         state
                             .write()
                             .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
-                }})}
+                        }
+                    }})
+            }
                 SendFilesLayoutModal {
                     send_files_from_storage: show_storage_modal,
                     send_files_start_location: SendFilesStartLocation::Chats,
