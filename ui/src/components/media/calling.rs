@@ -19,7 +19,7 @@ use kit::{
     },
     User,
 };
-use warp::crypto::DID;
+use warp::{blink::ParticipantState, crypto::DID};
 
 use crate::utils::{
     build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -378,7 +378,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 } else if cx.props.in_chat {
                     let call_participants: Vec<_> = other_participants
                         .iter()
-                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), call.participants_joined.get(&x.did_key()).cloned(), build_user_from_identity(x)))
                         .collect();
                     rsx!(CallUserImageGroup {
                         participants: call_participants,
@@ -672,7 +672,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
 
 #[derive(Props, PartialEq)]
 pub struct CallUserImageProps {
-    participants: Vec<(bool, User)>,
+    participants: Vec<(bool, Option<ParticipantState>, User)>,
 }
 
 #[allow(non_snake_case)]
@@ -710,7 +710,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         (visible.to_vec(), Some(context.to_vec()))
     };
     cx.render(rsx!(
-        visible.iter().map(|(speaking, user)| {
+        visible.iter().map(|(speaking, user_state, user)| {
             rsx!(div {
                 class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
                 UserImage {
@@ -728,7 +728,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                         id: format!("{}", id),
                         left_click_trigger: true,
                         items: cx.render(rsx!(
-                            ctx.iter().map(|(speaking,user)|{
+                            ctx.iter().map(|(speaking, user_state, user)|{
                                 rsx!(div {
                                         class: "additional-participant",
                                         div {
