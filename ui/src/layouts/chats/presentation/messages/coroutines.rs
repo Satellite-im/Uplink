@@ -163,24 +163,13 @@ pub fn handle_msg_scroll(
                                             continue 'HANDLE_EVAL;
                                         }
 
-                                        let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
-                                        // a message can be added to the top of the view without removing a message from the bottom of the view.
-                                        // need to explicitly compare the bottom of messages.all and messages.displayed
-                                        if chat_data.read().get_bottom_of_view(conv_id) == chat_data.read().get_bottom_of_page(conv_id) {
-                                            // have to check on_scroll_end in case the user scrolled up and switched chats.
-                                            if chat_behavior.on_scroll_end == data::ScrollBehavior::DoNothing && scroll_btn.read().get(conv_id) {
-                                                scroll_btn.write().clear(conv_id);
-                                                log::trace!("clearing scroll_btn");
+                                        log::debug!("JsMsg::Add");
 
-                                            }
-                                        } else if !scroll_btn.read().get(conv_id) {
-                                            scroll_btn.write().set(conv_id);
-                                            log::trace!("setting scroll_btn");
-                                        }
-
-                                        if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
-                                            log::trace!("overriding scroll button");
-                                            scroll_btn.write().set(conv_id);
+                                        if !chat_data.read().should_set_scroll_btn(conv_id)
+                                            && scroll_btn.read().get(conv_id)
+                                        {
+                                            log::debug!("clearing scroll button");
+                                            scroll_btn.write().clear(conv_id);
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
@@ -188,17 +177,12 @@ pub fn handle_msg_scroll(
                                             continue 'HANDLE_EVAL;
                                         }
 
-                                        // if a message is removed from the view but another one hasn't been added to the view, this may help
-                                        // the scroll button appear in time.
-                                        if chat_data.read().get_latest_displayed(conv_id) != chat_data.read().get_bottom_of_page(conv_id)
+                                        log::debug!("JsMsg::Remove");
+
+                                        if chat_data.read().should_set_scroll_btn2(conv_id)
                                             && !scroll_btn.read().get(conv_id)
                                         {
-                                            scroll_btn.write().set(conv_id);
-                                            log::trace!("setting scroll_btn");
-                                        }
-
-                                        if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
-                                            log::trace!("overriding scroll button");
+                                            log::debug!("setting scroll button");
                                             scroll_btn.write().set(conv_id);
                                         }
                                     }
