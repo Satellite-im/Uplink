@@ -12,7 +12,10 @@ use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_ima
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
-use crate::layouts::chats::data::ChatData;
+use crate::layouts::chats::{
+    data::{self, ChatData},
+    presentation::chat::coroutines::fetch_window,
+};
 
 pub enum ChannelCommand {
     RemovePinnedMessage {
@@ -45,7 +48,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
-        to_owned![chat_data, close_triggered];
+        to_owned![chat_data, state, close_triggered];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -76,11 +79,41 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         message_date,
                     } => {
                         log::debug!("fetching pinned message");
-                        chat_data.write().go_to_pinned_message(
+                        let view_init = data::ViewInit {
+                            scroll_to: data::ScrollTo::ScrollUp {
+                                view_top: message_id,
+                            },
+                            msg_time: Some(message_date),
+                            limit: data::DEFAULT_MESSAGES_TO_TAKE,
+                        };
+                        let behavior = data::ChatBehavior {
+                            view_init,
+                            // these fields will be overwritten by fetch_window
+                            on_scroll_end: data::ScrollBehavior::FetchMore,
+                            on_scroll_top: data::ScrollBehavior::FetchMore,
+                            ..Default::default()
+                        };
+                        let r = fetch_window(
                             conversation_id,
-                            message_id,
+                            behavior,
                             message_date,
-                        );
+                            data::DEFAULT_MESSAGES_TO_TAKE / 2,
+                        )
+                        .await;
+
+                        match r {
+                            Ok((messages, behavior)) => {
+                                log::debug!("re-init messages with pinned message");
+                                chat_data.write().set_active_chat(
+                                    &state.read(),
+                                    &conversation_id,
+                                    behavior,
+                                    messages,
+                                );
+                            }
+                            Err(e) => log::error!("{e}"),
+                        }
+
                         close_triggered.set(true);
                     }
                 }

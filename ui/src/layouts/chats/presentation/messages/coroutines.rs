@@ -74,7 +74,7 @@ pub fn handle_msg_scroll(
                         .top()
                         .unwrap_or(Uuid::nil());
 
-                    log::debug!(
+                    log::trace!(
                         "top msg is: {}, bottom msg is: {}",
                         top_msg_id,
                         bottom_msg_id
@@ -162,7 +162,6 @@ pub fn handle_msg_scroll(
                                         if chat_data.write_silent().add_message_to_view(conv_id, msg_id) {
                                             continue 'HANDLE_EVAL;
                                         }
-                                        log::debug!("JsMsg::Add");
 
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
@@ -180,7 +179,7 @@ pub fn handle_msg_scroll(
                                         }
 
                                         if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
-                                            log::debug!("overriding scroll button");
+                                            log::trace!("overriding scroll button");
                                             scroll_btn.write().set(conv_id);
                                         }
                                     },
@@ -188,7 +187,6 @@ pub fn handle_msg_scroll(
                                         if chat_data.write_silent().remove_message_from_view(conv_id, msg_id) {
                                             continue 'HANDLE_EVAL;
                                         }
-                                        log::debug!("JsMsg::Remove");
 
                                         // if a message is removed from the view but another one hasn't been added to the view, this may help
                                         // the scroll button appear in time.
@@ -200,7 +198,7 @@ pub fn handle_msg_scroll(
                                         }
 
                                         if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
-                                            log::debug!("overriding scroll button");
+                                            log::trace!("overriding scroll button");
                                             scroll_btn.write().set(conv_id);
                                         }
                                     }

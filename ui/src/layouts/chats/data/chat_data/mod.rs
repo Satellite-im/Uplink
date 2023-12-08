@@ -1,8 +1,5 @@
-use std::collections::{HashMap, VecDeque};
-
-use chrono::{DateTime, Utc};
 use common::{state::State, warp_runner::ui_adapter};
-
+use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
 mod active_chat;
@@ -288,31 +285,6 @@ impl ChatData {
         if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
             behavior.view_init.scroll_to = ScrollTo::MostRecent;
             behavior.view_init.msg_time.take();
-        }
-    }
-
-    pub fn go_to_pinned_message(
-        &mut self,
-        conv_id: Uuid,
-        msg_id: Uuid,
-        message_date: DateTime<Utc>,
-    ) {
-        if self.active_chat.id() != conv_id {
-            log::warn!("wrong conv_id in set_top_of_view");
-            return;
-        }
-
-        if self.active_chat.messages.displayed.contains(&msg_id) {
-            log::debug!("going to pinned message that is already displayed");
-            return;
-        }
-
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.view_init.scroll_to = ScrollTo::ScrollUp { view_top: msg_id };
-            behavior.view_init.msg_time.replace(message_date);
-            self.active_chat.new_key();
-        } else {
-            log::warn!("failed to get chat behavior in ChatData::set_top_of_view");
         }
     }
 }
