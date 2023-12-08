@@ -276,7 +276,9 @@ settings-files = Files Settings
 settings-keybinds = Keybind Settings
     .increase-font-size = Increase font size within Uplink.
     .decrease-font-size = Decrease font size within Uplink.
-    .change-keybind = Record New Keybind
+    .change-keybind = Record New keybind
+    .cancel-change-keybind = Cancel Recording
+
 settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically

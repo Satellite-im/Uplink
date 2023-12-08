@@ -124,6 +124,13 @@
     display: inline-flex;
     align-items: center;
   }
+
+  .keybind-section-controls.is-red {
+    svg {
+      fill: var(--danger);
+      stroke: none;
+    }
+  }
   
   .keybind-section-keys {
     height: var(--height-input);

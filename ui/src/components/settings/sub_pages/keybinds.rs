@@ -2,7 +2,7 @@
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use dioxus::prelude::*;
+use dioxus::{html::GlobalAttributes, prelude::*};
 
 use kit::elements::Appearance;
 #[allow(unused_imports)]
@@ -47,6 +47,8 @@ pub struct KeybindSectionProps {
 }
 
 pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
+    let is_recording = use_state(cx, || false);
+
     cx.render(rsx!(
         div {
             class: "keybind-section",
@@ -61,16 +63,17 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 }
             },
             div {
-                class: "keybind-section-description",
+                class: if **is_recording { "keybind-section-controls" } else { "keybind-section-controls is-red" },
                 Button {
-                    icon: Icon::RecordCircle,
-                    disabled: true,
+                    icon: if **is_recording { Icon::XMark } else { Icon::Radio },
                     appearance: Appearance::Secondary,
-                    onpress: |_| {},
+                    onpress: |_| {
+                        is_recording.set(!**is_recording);
+                    },
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: get_local_text("settings-keybinds.change-keybind")
+                            text: if **is_recording {  get_local_text("settings-keybinds.cancel-change-keybind") } else {  get_local_text("settings-keybinds.change-keybind") }
                         }
                     )),
                 }
