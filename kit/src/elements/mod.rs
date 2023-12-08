@@ -36,6 +36,9 @@ pub enum Appearance {
     #[display(fmt = "success")]
     Success,
 
+    #[display(fmt = "info")]
+    Info,
+
     #[display(fmt = "danger")]
     Danger,
 
