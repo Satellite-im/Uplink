@@ -17,9 +17,11 @@ pub struct VoiceChannelUser {
 #[derive(Clone)]
 pub enum ChannelType {
     Text,
+    Photo,
     Announcements,
     Robot,
     SharedFolder,
+    Docs,
     Voice(Vec<VoiceChannelUser>),
 }
 
@@ -72,6 +74,9 @@ pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ChannelType::Text => rsx!(IconElement {
                         icon: Icon::ChatBubbleBottomCenterText
                     }),
+                    ChannelType::Photo => rsx!(IconElement {
+                        icon: Icon::Photo
+                    }),
                     ChannelType::SharedFolder => rsx!(IconElement {
                         icon: Icon::Folder
                     }),
@@ -83,6 +88,9 @@ pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }),
                     ChannelType::Voice(_) => rsx!(IconElement {
                         icon: Icon::Speaker
+                    }),
+                    ChannelType::Docs => rsx!(IconElement {
+                        icon: Icon::BookOpen
                     }),
                 },
                 div {

@@ -1,7 +1,7 @@
 #emoji_selector {
   position: absolute;
   z-index: 2;
-  background-color: var(--background);
+  background-color: var(--secondary-darker);
   height: 20rem;
   width: 20rem;
   border-radius: var(--border-radius);
@@ -50,6 +50,7 @@
   width: 100%;
   gap: var(--gap);
   padding: var(--gap-less);
+  margin-bottom: var(--gap);
 }
 
 #emoji_selector .label {

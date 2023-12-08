@@ -172,7 +172,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-audio.input-device"),
                 section_description: get_local_text("settings-audio.input-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.input_device.as_ref().cloned().unwrap_or("default".into()),
                     options: input_devices.read().clone(),
@@ -196,7 +195,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("default".into()),
                     options: output_devices.read().clone(),

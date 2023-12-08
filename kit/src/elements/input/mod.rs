@@ -320,7 +320,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         false => "",
     };
     if let Some(value) = &cx.props.value {
-        val.set(value.clone());
+        if value.clone() != *val.read() {
+            val.set(value.clone());
+        }
     }
 
     let reset_fn = || {

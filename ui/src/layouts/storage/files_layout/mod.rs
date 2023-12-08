@@ -284,12 +284,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     rsx!(
                         div {
                             class: "no-files-div",
-                            padding: "48px",
                             Label {
                                 text: get_local_text("files.no-files-available"),
                             }
                         }
-                        )
+                    )
                } else {
                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller,
