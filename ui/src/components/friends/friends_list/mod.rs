@@ -201,19 +201,6 @@ pub fn Friends(cx: Scope) -> Element {
                 text: get_local_text("friends.friends"),
                 aria_label: "friends-list-label".into(),
             },
-            (friends.is_empty()).then(|| rsx! (
-                div {
-                    class: "empty-friends-list",
-                    img {
-                        src: "{image_path}"
-                    },
-                }
-            )),
-            share_did.is_some().then(||{
-                rsx!(ShareFriendsModal{
-                    did: share_did.clone()
-                })
-            }),
             (!friends_all.is_empty()).then(||{
                 rsx!(Input {
                     placeholder: get_local_text("friends.search-placeholder"),
@@ -231,7 +218,20 @@ pub fn Friends(cx: Scope) -> Element {
                     },
                     aria_label: "Search Friend".into()
                 })
-            })
+            }),
+            (friends.is_empty()).then(|| rsx! (
+                div {
+                    class: "empty-friends-list",
+                    img {
+                        src: "{image_path}"
+                    },
+                }
+            )),
+            share_did.is_some().then(||{
+                rsx!(ShareFriendsModal{
+                    did: share_did.clone()
+                })
+            }),
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
                 rsx!(
