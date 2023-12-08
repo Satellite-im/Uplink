@@ -283,13 +283,13 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                 } else {
                     Icon::UserMinus
                 },
-                text: if cx.props.minimal { String::new() } else {
-                    if cx.props.add_or_remove == "add" {
+                text: if cx.props.minimal { String::new() }
+                    else if cx.props.add_or_remove == "add" {
                         get_local_text("uplink.add")
                     } else {
                         get_local_text("uplink.remove")
                     }
-                },
+                ,
                 onpress: move |_| {
                     let mut friends = selected_friends.get().clone();
                     friends.clear();
