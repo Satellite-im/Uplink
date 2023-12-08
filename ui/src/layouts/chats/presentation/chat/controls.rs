@@ -230,8 +230,8 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
-            text: text_builder("uplink.coming-soon"),
-            tooltip: tooltip_builder("uplink.coming-soon", arrow_top),
+            text: text_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}),
+            tooltip: tooltip_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}, arrow_top),
             onpress: move |_| {
                 if chat_data.read().active_chat.is_initialized {
                     ch.send(ControlsCmd::VoiceCall{
