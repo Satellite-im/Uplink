@@ -167,28 +167,26 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let keybinds = UIRoute {
         to: "keybinds",
         name: get_local_text("settings.keybinds"),
-        icon: Icon::Cog, // TODO: Pending Icon
+        icon: Icon::Keybind,
         ..UIRoute::default()
     };
 
-    let mut routes = vec![
-        profile,
-        general,
-        messages,
-        //privacy,
-        audio,
-        // files,
-        extensions,
-        accessibility,
-        notifications,
-        about,
-        licenses,
-    ];
-
+    let mut routes = vec![];
+    // To control order of routes, add them here.
+    routes.push(profile);
+    routes.push(general);
+    routes.push(messages);
+    // routes.push(privacy);
+    routes.push(audio);
+    // routes.push(files);
+    routes.push(extensions);
     if state.read().configuration.developer.experimental_features {
-        // TODO: Move this out when feature is complete
         routes.push(keybinds);
     }
+    routes.push(accessibility);
+    routes.push(notifications);
+    routes.push(about);
+    routes.push(licenses);
 
     if state.read().ui.show_dev_settings {
         routes.push(developer);

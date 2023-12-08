@@ -273,6 +273,10 @@ settings-files = Files Settings
     .open-sync-folder = Open Sync Folder
     .open-sync-folder-description = Open the folder where your files are synced to.
 
+settings-keybinds = Keybind Settings
+    .increase-font-size = Increase font size within Uplink.
+    .decrease-font-size = Decrease font size within Uplink.
+    .change-keybind = Record New Keybind
 settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically
