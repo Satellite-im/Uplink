@@ -112,7 +112,7 @@ pub fn handle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                        // log::debug!("{:?}", msg);
+                                         log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -161,6 +161,7 @@ pub fn handle_msg_scroll(
                                         if chat_data.write_silent().add_message_to_view(conv_id, msg_id) {
                                             continue 'HANDLE_EVAL;
                                         }
+
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
                                         // need to explicitly compare the bottom of messages.all and messages.displayed
@@ -175,6 +176,11 @@ pub fn handle_msg_scroll(
                                             scroll_btn.write().set(conv_id);
                                             log::trace!("setting scroll_btn");
                                         }
+
+                                        if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
+                                            log::debug!("overriding scroll button");
+                                            scroll_btn.write().set(conv_id);
+                                        }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
                                         if chat_data.write_silent().remove_message_from_view(conv_id, msg_id) {
@@ -188,6 +194,11 @@ pub fn handle_msg_scroll(
                                         {
                                             scroll_btn.write().set(conv_id);
                                             log::trace!("setting scroll_btn");
+                                        }
+
+                                        if chat_data.read().should_override_scroll_btn(conv_id) && !scroll_btn.read().get(conv_id) {
+                                            log::debug!("overriding scroll button");
+                                            scroll_btn.write().set(conv_id);
                                         }
                                     }
                                     JsMsg::Top { .. } => {
@@ -233,7 +244,7 @@ pub fn handle_msg_scroll(
                                         };
 
                                         match rsp {
-                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                            Ok(FetchMessagesResponse{ messages, has_more, most_recent }) => {
                                                 let new_messages = messages.len();
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
@@ -241,6 +252,7 @@ pub fn handle_msg_scroll(
                                                 if new_messages > 0 {
                                                     behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
                                                 }
+                                                behavior.most_recent_msg_id = most_recent;
 
                                                 log::trace!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
@@ -295,11 +307,12 @@ pub fn handle_msg_scroll(
                                         };
 
                                         match rsp {
-                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                            Ok(FetchMessagesResponse{ messages, has_more, most_recent }) => {
                                                 let new_messages = messages.len();
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.new_key();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.most_recent_msg_id = most_recent;
                                                 if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
                                                     chat_data.write().reset_messages(conv_id);
@@ -384,11 +397,16 @@ pub fn fetch_later_ch(
                 };
 
                 match rsp {
-                    Ok(FetchMessagesResponse { messages, has_more }) => {
+                    Ok(FetchMessagesResponse {
+                        messages,
+                        has_more,
+                        most_recent,
+                    }) => {
                         let new_messages = messages.len();
                         chat_data.write().insert_messages(conv_id, messages);
                         chat_data.write().active_chat.new_key();
                         let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                        behavior.most_recent_msg_id = most_recent;
                         if !has_more {
                             // remove extra messages from the list and return to ScrollInit::MostRecent
                             chat_data.write().reset_messages(conv_id);

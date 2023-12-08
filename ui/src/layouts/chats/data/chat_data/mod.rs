@@ -212,18 +212,11 @@ impl ChatData {
             return false;
         }
 
-        self.chat_behaviors
-            .get(&chat_id)
-            .map(|behavior| {
-                self.active_chat.messages.loaded.len() == self.active_chat.messages.all.len()
-                    && (!self
-                        .active_chat
-                        .messages
-                        .displayed
-                        .contains(&behavior.most_recent_msg_id.unwrap_or_default())
-                        && !self.active_chat.messages.displayed.is_empty())
-            })
-            .unwrap_or_default()
+        let latest_displayed = self.get_latest_displayed(chat_id).map(|x| x.message_id);
+        let behavior = self.get_chat_behavior(chat_id);
+
+        latest_displayed != behavior.most_recent_msg_id
+            && !self.active_chat.messages.displayed.is_empty()
     }
 }
 

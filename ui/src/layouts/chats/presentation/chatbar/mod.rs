@@ -63,13 +63,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
 
-    if !scroll_btn.read().get(active_chat_id)
-        && chat_data.read().should_override_scroll_btn(active_chat_id)
-    {
-        log::debug!("chatbar is overriding scroll button");
-        scroll_btn.write_silent().set(active_chat_id);
-    }
-
     let with_scroll_btn = scroll_btn.read().get(active_chat_id);
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
