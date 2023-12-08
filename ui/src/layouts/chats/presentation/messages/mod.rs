@@ -88,7 +88,7 @@ pub fn get_messages(
     let eval = use_eval(cx);
     let ch = coroutines::handle_msg_scroll(cx, eval, chat_data, scroll_btn);
     let fetch_later_ch = coroutines::fetch_later_ch(cx, chat_data, scroll_btn);
-    effects::init_msg_scroll(cx, chat_data, eval, ch);
+    effects::init_msg_scroll(cx, chat_data, scroll_btn, eval, ch);
 
     // used by child Elements via use_coroutine_handle
     let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
@@ -141,19 +141,14 @@ pub fn get_messages(
                     if let Ok(val) = eval(scripts::READ_SCROLL) {
                         if let Ok(result) = val.join().await {
                             let scroll = result.as_i64().unwrap_or_default();
-                            if scroll < -200  && behavior.view_init.scroll_to == data::ScrollTo::MostRecent {
-                                chat_data.write_silent().scroll_to_end_of_page(active_chat_id);
-                                let behavior = chat_data.read().get_chat_behavior(active_chat_id);
-                                log::debug!("triggering scroll button early. behavior is {:?}", behavior);
-                                if !scroll_btn.read().get(active_chat_id) {
-                                    scroll_btn.write().set(active_chat_id);
-                                }
+                            chat_data.write_silent().set_scroll_value(active_chat_id, scroll);
+
+                            if scroll < -100  && !scroll_btn.read().get(active_chat_id) {
+                                log::debug!("triggering scroll button");
+                                scroll_btn.write().set(active_chat_id);
                             } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
                                 if !behavior.message_received  {
                                     scroll_btn.write().clear(active_chat_id);
-                                    // if view_init.scroll_to doesn't get set back to MostRecent, the view
-                                    // won't update correctly
-                                    chat_data.write_silent().scroll_to_most_recent(active_chat_id);
                                 } else {
                                      fetch_later_ch.send(active_chat_id);
                                 }

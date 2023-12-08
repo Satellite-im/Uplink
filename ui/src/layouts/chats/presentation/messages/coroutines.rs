@@ -159,31 +159,21 @@ pub fn handle_msg_scroll(
                             res = eval_stream.next() => match res {
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
-                                        if chat_data.write_silent().add_message_to_view(conv_id, msg_id) {
-                                            continue 'HANDLE_EVAL;
-                                        }
+                                        let loaded1 = chat_data.read().is_loaded(conv_id);
+                                        chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                        let loaded2 = chat_data.read().is_loaded(conv_id);
 
-                                        log::debug!("JsMsg::Add");
-
-                                        if !chat_data.read().should_set_scroll_btn(conv_id)
-                                            && scroll_btn.read().get(conv_id)
-                                        {
-                                            log::debug!("clearing scroll button");
-                                            scroll_btn.write().clear(conv_id);
+                                        if !loaded1 && loaded2 {
+                                            chat_data.write().active_chat.is_initialized = true;
                                         }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
-                                        if chat_data.write_silent().remove_message_from_view(conv_id, msg_id) {
-                                            continue 'HANDLE_EVAL;
-                                        }
+                                        let loaded1 = chat_data.read().is_loaded(conv_id);
+                                        chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                        let loaded2 = chat_data.read().is_loaded(conv_id);
 
-                                        log::debug!("JsMsg::Remove");
-
-                                        if chat_data.read().should_set_scroll_btn2(conv_id)
-                                            && !scroll_btn.read().get(conv_id)
-                                        {
-                                            log::debug!("setting scroll button");
-                                            scroll_btn.write().set(conv_id);
+                                        if !loaded1 && loaded2 {
+                                            chat_data.write().active_chat.is_initialized = true;
                                         }
                                     }
                                     JsMsg::Top { .. } => {

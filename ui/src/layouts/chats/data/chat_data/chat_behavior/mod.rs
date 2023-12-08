@@ -25,6 +25,8 @@ pub struct ChatBehavior {
 
     // the most recent message (when the chat was fetched from warp)
     pub most_recent_msg_id: Option<Uuid>,
+
+    pub scroll_value: Option<i64>,
 }
 
 impl ChatBehavior {
@@ -64,6 +66,7 @@ impl Default for ChatBehavior {
             on_scroll_end: ScrollBehavior::DoNothing,
             message_received: false,
             most_recent_msg_id: None,
+            scroll_value: None,
         }
     }
 }

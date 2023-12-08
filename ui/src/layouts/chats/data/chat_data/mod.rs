@@ -87,14 +87,6 @@ impl ChatData {
         }
     }
 
-    pub fn get_latest_displayed(&self, conv_id: Uuid) -> Option<PartialMessage> {
-        if self.active_chat.id() != conv_id {
-            log::warn!("get_latest_displayed wrong chat id");
-            return None;
-        }
-        self.active_chat.messages.get_latest_displayed()
-    }
-
     pub fn get_bottom_of_page(&self, conv_id: Uuid) -> Option<PartialMessage> {
         if self.active_chat.id() != conv_id {
             log::warn!("get_bottom_of_page wrong chat id");
@@ -116,6 +108,14 @@ impl ChatData {
         }
 
         self.active_chat.messages.insert_messages(messages);
+    }
+
+    pub fn is_loaded(&self, conv_id: Uuid) -> bool {
+        if self.active_chat.id() != conv_id {
+            return false;
+        }
+
+        self.active_chat.messages.loaded.len() == self.active_chat.messages.all.len()
     }
 
     // returns true if the view (or javascript) needs to be updated
@@ -202,29 +202,10 @@ impl ChatData {
         self.chat_behaviors.insert(id, behavior);
     }
 
-    // this is used for pinned messages. also, note that the only way for the most recent message
-    // to not be displayed is if the user scrolls up or if the message is too large to fit in the view.
-    pub fn should_set_scroll_btn(&self, chat_id: Uuid) -> bool {
-        if self.active_chat.id() != chat_id {
-            return false;
+    pub fn set_scroll_value(&mut self, chat_id: Uuid, val: i64) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&chat_id) {
+            behavior.scroll_value.replace(val);
         }
-
-        let latest_displayed = self.get_latest_displayed(chat_id).map(|x| x.message_id);
-        let behavior = self.get_chat_behavior(chat_id);
-
-        latest_displayed != behavior.most_recent_msg_id
-            && !self.active_chat.messages.displayed.is_empty()
-    }
-
-    pub fn should_set_scroll_btn2(&self, chat_id: Uuid) -> bool {
-        if self.active_chat.id() != chat_id {
-            return false;
-        }
-
-        let latest_displayed = self.get_latest_displayed(chat_id).map(|x| x.message_id);
-        let behavior = self.get_chat_behavior(chat_id);
-
-        latest_displayed != behavior.most_recent_msg_id
     }
 }
 
@@ -270,32 +251,6 @@ impl ChatData {
                 behavior.view_init.scroll_to = ScrollTo::MostRecent;
                 behavior.view_init.msg_time.take();
             }
-        }
-    }
-
-    pub fn scroll_to_end_of_page(&mut self, conv_id: Uuid) {
-        let opt = self.get_bottom_of_page(conv_id);
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            if let Some(scroll_bottom) = opt {
-                behavior.view_init.scroll_to = ScrollTo::ScrollDown {
-                    view_bottom: scroll_bottom.message_id,
-                };
-                behavior.view_init.msg_time.replace(scroll_bottom.date);
-            } else {
-                log::warn!("failed to get bottom of page in scroll_to_end_of_page");
-                // no messages are displayed. set to MostRecent
-                behavior.view_init.scroll_to = ScrollTo::MostRecent;
-                behavior.view_init.msg_time.take();
-            }
-        } else {
-            log::warn!("failed to get chat behavior in scroll_to_end_of_page");
-        }
-    }
-
-    pub fn scroll_to_most_recent(&mut self, conv_id: Uuid) {
-        if let Some(behavior) = self.chat_behaviors.get_mut(&conv_id) {
-            behavior.view_init.scroll_to = ScrollTo::MostRecent;
-            behavior.view_init.msg_time.take();
         }
     }
 }

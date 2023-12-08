@@ -53,8 +53,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
+    let is_loading = !chat_data.read().is_loaded(active_chat_id);
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -63,19 +63,21 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id) && !is_loading;
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
     // and is set here in the chatbar. This was done here instead of in messages.rs as
     // an attempted optimization - don't want to re-render messages whenever scroll_btn
     // is written to, which could be a lot.
-    state
-        .write_silent()
-        .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    if !is_loading {
+        state
+            .write_silent()
+            .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    }
 
     // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
-    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
+    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() && !is_loading {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
