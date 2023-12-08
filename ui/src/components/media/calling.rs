@@ -4,6 +4,7 @@ use std::{
 };
 
 use chrono::Local;
+use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
@@ -717,6 +718,38 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                     platform: user.platform,
                     image: user.photo.clone(),
                 }
+                user_state.as_ref().map(|s|{
+                    rsx!(div {
+                        class: "call-status",
+                        s.muted.then(||{
+                            rsx!(div {
+                                class: "call-status-icon",
+                                IconElement {
+                                    icon: Icon::MicrophoneSlash,
+                                    fill:"currentColor",
+                                }
+                            })
+                        }),
+                        s.deafened.then(||{
+                            rsx!(div {
+                                class: "call-status-icon",
+                                IconElement {
+                                    icon: Icon::SignalSlash,
+                                    fill:"currentColor",
+                                }
+                            })
+                        }),
+                        s.recording.then(||{
+                            rsx!(div {
+                                class: "call-status-icon",
+                                IconElement {
+                                    icon: Icon::VideoCamera,
+                                    fill:"currentColor",
+                                }
+                            })
+                        })
+                    })
+                })
             })
         }),
         context.map(|ctx| {
@@ -741,7 +774,39 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                                         p {
                                             class: "additional-participant-name",
                                             user.username.to_string()
-                                        }
+                                        },
+                                        user_state.as_ref().map(|s|{
+                                            rsx!(div {
+                                                class: "additional-call-status",
+                                                s.muted.then(||{
+                                                    rsx!(div {
+                                                        class: "call-status-icon",
+                                                        IconElement {
+                                                            icon: Icon::MicrophoneSlash,
+                                                            fill:"currentColor",
+                                                        }
+                                                    })
+                                                }),
+                                                s.deafened.then(||{
+                                                    rsx!(div {
+                                                        class: "call-status-icon",
+                                                        IconElement {
+                                                            icon: Icon::SignalSlash,
+                                                            fill:"currentColor",
+                                                        }
+                                                    })
+                                                }),
+                                                s.recording.then(||{
+                                                    rsx!(div {
+                                                        class: "call-status-icon",
+                                                        IconElement {
+                                                            icon: Icon::VideoCamera,
+                                                            fill:"currentColor",
+                                                        }
+                                                    })
+                                                })
+                                            })
+                                        })
                                 })
                             })
                         )),
