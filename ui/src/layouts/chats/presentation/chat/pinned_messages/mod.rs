@@ -217,7 +217,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                             cx.props.sender.as_ref().map(|sender| {
                                 rsx!(
                                     p {
-                                        class: "pinned-sender",
+                                        class: "ellipsis-overflow",
                                         aria_label: "pinned-sender",
                                         sender.username()
                                     },

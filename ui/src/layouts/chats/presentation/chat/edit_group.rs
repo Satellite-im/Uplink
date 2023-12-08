@@ -37,6 +37,7 @@ enum ChanCmd {
 pub fn EditGroup(cx: Scope) -> Element {
     log::trace!("rendering edit_group");
     let state = use_shared_state::<State>(cx)?;
+    let minimal = state.read().ui.metadata.minimal_view;
     // Search Input
     let friend_prefix = use_state(cx, String::new);
 
@@ -86,7 +87,11 @@ pub fn EditGroup(cx: Scope) -> Element {
         aria_label: "edit-group-add-members".into(),
         icon: Icon::UserPlus,
         appearance: Appearance::Secondary,
-        text: get_local_text("uplink.add-members"),
+        text: if minimal {
+            String::new()
+        } else {
+            get_local_text("uplink.add-members")
+        },
         onpress: move |_| {
             edit_group_action.set(EditGroupAction::Add);
         }
@@ -96,7 +101,11 @@ pub fn EditGroup(cx: Scope) -> Element {
         aria_label: "edit-group-remove-members".into(),
         icon: Icon::UserMinus,
         appearance: Appearance::Secondary,
-        text: get_local_text("uplink.current-members"),
+        text: if minimal {
+            String::new()
+        } else {
+            get_local_text("uplink.current-members")
+        },
         onpress: move |_| {
             edit_group_action.set(EditGroupAction::Remove);
         }
@@ -161,6 +170,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                         "remove".into()
                                                     },
                                                     friend: _friend.clone(),
+                                                    minimal: minimal,
                                                     conv_id: conv_id,
                                                 }
                                             )
@@ -186,6 +196,7 @@ pub fn EditGroup(cx: Scope) -> Element {
 #[derive(Props, Eq, PartialEq)]
 pub struct FriendRowProps {
     add_or_remove: String,
+    minimal: bool,
     friend: Identity,
     conv_id: Uuid,
 }
@@ -256,6 +267,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
             div {
                 class: "flex-1",
                 p {
+                    class: "ellipsis-overflow",
                     aria_label: "friend-username",
                     _friend.username(),
                 },
@@ -271,10 +283,12 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                 } else {
                     Icon::UserMinus
                 },
-                text: if cx.props.add_or_remove == "add" {
-                    get_local_text("uplink.add")
-                } else {
-                    get_local_text("uplink.remove")
+                text: if cx.props.minimal { String::new() } else {
+                    if cx.props.add_or_remove == "add" {
+                        get_local_text("uplink.add")
+                    } else {
+                        get_local_text("uplink.remove")
+                    }
                 },
                 onpress: move |_| {
                     let mut friends = selected_friends.get().clone();
