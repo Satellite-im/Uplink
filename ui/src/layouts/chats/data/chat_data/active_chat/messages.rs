@@ -116,7 +116,7 @@ impl Messages {
     }
 
     pub fn add_message_to_view(&mut self, message_id: Uuid) -> bool {
-        let newly_loaded = self.loaded.insert(message_id);
+        self.loaded.insert(message_id);
         let date = match self.times.get(&message_id).cloned() {
             Some(time) => time,
             None => {
@@ -150,11 +150,11 @@ impl Messages {
             // );
         }
 
-        newly_loaded
+        self.loaded.len() != self.all.len()
     }
 
     pub fn remove_message_from_view(&mut self, message_id: Uuid) -> bool {
-        let newly_loaded = self.loaded.insert(message_id);
+        self.loaded.insert(message_id);
         if self
             .displayed
             .front()
@@ -175,7 +175,7 @@ impl Messages {
             // self.displayed.retain(|x| x != &message_id);
         }
 
-        newly_loaded
+        self.loaded.len() != self.all.len()
     }
 
     pub fn top(&self) -> Option<Uuid> {

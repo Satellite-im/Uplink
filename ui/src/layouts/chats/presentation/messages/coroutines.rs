@@ -50,6 +50,7 @@ pub fn handle_msg_scroll(
                         .messages
                         .displayed
                         .clear();
+                    chat_data.write_silent().active_chat.messages.loaded.clear();
 
                     let conv_id = chat_data.read().active_chat.id();
                     let conv_key = chat_data.read().active_chat.key();
@@ -73,7 +74,7 @@ pub fn handle_msg_scroll(
                         .top()
                         .unwrap_or(Uuid::nil());
 
-                    log::trace!(
+                    log::debug!(
                         "top msg is: {}, bottom msg is: {}",
                         top_msg_id,
                         bottom_msg_id
@@ -112,7 +113,7 @@ pub fn handle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                         log::debug!("{:?}", msg);
+                                        // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -161,6 +162,7 @@ pub fn handle_msg_scroll(
                                         if chat_data.write_silent().add_message_to_view(conv_id, msg_id) {
                                             continue 'HANDLE_EVAL;
                                         }
+                                        log::debug!("JsMsg::Add");
 
                                         let chat_behavior = chat_data.read().get_chat_behavior(conv_id);
                                         // a message can be added to the top of the view without removing a message from the bottom of the view.
@@ -186,6 +188,7 @@ pub fn handle_msg_scroll(
                                         if chat_data.write_silent().remove_message_from_view(conv_id, msg_id) {
                                             continue 'HANDLE_EVAL;
                                         }
+                                        log::debug!("JsMsg::Remove");
 
                                         // if a message is removed from the view but another one hasn't been added to the view, this may help
                                         // the scroll button appear in time.
