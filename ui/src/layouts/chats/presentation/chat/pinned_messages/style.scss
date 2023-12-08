@@ -23,6 +23,7 @@
     display: inline-flex;
     flex-direction: column;
     gap: var(--gap);
+    min-width: 0;
 }
 .pinned-empty {
     width: 100%; 
@@ -80,17 +81,12 @@
     margin-bottom: var(--padding-less);
     display: grid;
     grid-template-columns: auto 1fr;
+    gap: var(--gap);
 }
 
 .pinned-sender-time {
     font-size: var(--text-size-less);
     color: var(--text-color-muted);
-}
-
-.pinned-sender {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
 }
 
 .background-highlight {
