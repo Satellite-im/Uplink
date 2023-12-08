@@ -63,7 +63,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             div {
                 class: "keybind-section-description",
                 Button {
-                    icon: Icon::Keybind,
+                    icon: Icon::RecordCircle,
                     disabled: true,
                     appearance: Appearance::Secondary,
                     onpress: |_| {},
