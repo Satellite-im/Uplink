@@ -99,7 +99,7 @@ pub fn init_msg_scroll(
                 log::error!("failed to init scroll button");
             }
 
-            let _ = ch.send(());
+            ch.send(());
         }
     });
 }
