@@ -17,7 +17,7 @@ use warp::raygun::{PinState, ReactionState};
 use crate::{
     layouts::chats::{
         data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
-        scripts::OBSERVER_SCRIPT,
+        scripts,
     },
     utils::download::get_download_path,
 };
@@ -44,6 +44,30 @@ pub fn handle_msg_scroll(
                         break 'CONFIGURE_EVAL;
                     }
 
+                    let conv_id = chat_data.read().active_chat.id();
+                    let conv_key = chat_data.read().active_chat.key();
+                    let behavior = chat_data.read().get_chat_behavior(conv_id);
+
+                    // init the scroll button
+                    if let Ok(eval) = eval_provider(scripts::READ_SCROLL) {
+                        if let Ok(result) = eval.join().await {
+                            let scroll = result.as_i64().unwrap_or_default();
+                            chat_data.write_silent().set_scroll_value(conv_id, scroll);
+
+                            if (scroll < -100
+                                || behavior.on_scroll_end != data::ScrollBehavior::DoNothing)
+                                && !scroll_btn.read().get(conv_id)
+                            {
+                                log::debug!("triggering scroll button");
+                                scroll_btn.write().set(conv_id);
+                            } else if scroll >= -100 && scroll_btn.read().get(conv_id) {
+                                scroll_btn.write().clear(conv_id);
+                            }
+                        }
+                    } else {
+                        log::error!("failed to init scroll button");
+                    }
+
                     chat_data
                         .write_silent()
                         .active_chat
@@ -51,10 +75,6 @@ pub fn handle_msg_scroll(
                         .displayed
                         .clear();
                     chat_data.write_silent().active_chat.messages.loaded.clear();
-
-                    let conv_id = chat_data.read().active_chat.id();
-                    let conv_key = chat_data.read().active_chat.key();
-                    let behavior = chat_data.read().get_chat_behavior(conv_id);
 
                     let should_send_top_evt =
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
@@ -80,7 +100,7 @@ pub fn handle_msg_scroll(
                         bottom_msg_id
                     );
 
-                    let mut observer_script = OBSERVER_SCRIPT.replace(
+                    let mut observer_script = scripts::OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
                         if should_send_top_evt { "1" } else { "0" },
                     );

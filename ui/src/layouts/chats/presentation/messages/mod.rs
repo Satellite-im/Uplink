@@ -88,7 +88,7 @@ pub fn get_messages(
     let eval = use_eval(cx);
     let ch = coroutines::handle_msg_scroll(cx, eval, chat_data, scroll_btn);
     let fetch_later_ch = coroutines::fetch_later_ch(cx, chat_data, scroll_btn);
-    effects::init_msg_scroll(cx, chat_data, scroll_btn, eval, ch);
+    effects::init_msg_scroll(cx, chat_data, eval, ch);
 
     // used by child Elements via use_coroutine_handle
     let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
