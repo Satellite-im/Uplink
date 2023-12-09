@@ -1,5 +1,5 @@
 .message {
-	background: var(--secondary);
+	background: var(--primary);
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
 	min-height: var(--height-input);
@@ -18,7 +18,7 @@
 		align-self: flex-end;
 	}
 	.text {
-		color: var(--text-color);
+		color: var(--text-color-dark);
 		display: inline-flex;
 		flex-direction: column;
 		white-space:pre-wrap;
@@ -62,8 +62,12 @@
 	align-self: flex-start;
 	align-items: flex-start;
 	background: var(--secondary-darker);
+	color: var(--text-color);
 	border-radius: var(--border-radius-more);
 	border-bottom-left-radius: var(--border-radius);
+	.text {
+		color: var(--text-color);
+	}
 }
 .message.remote.message-first {
 	border-radius: var(--border-radius-more);
