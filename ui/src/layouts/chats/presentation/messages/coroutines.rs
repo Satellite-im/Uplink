@@ -147,6 +147,9 @@ pub fn handle_msg_scroll(
                                 match opt {
                                     Some(_) => {
                                         log::trace!("coroutine restart triggered");
+                                        // Actions::ChatWith will cause the chatbar to render before the stuff in messages.rs initializes
+                                        // the view with the new chat id. when this happens, the scroll button could be displayed erroneously.
+                                        scroll_btn.write_silent().clear(conv_id);
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {

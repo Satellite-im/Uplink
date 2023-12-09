@@ -54,7 +54,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
-    let is_loading = !chat_data.read().is_loaded(active_chat_id);
+
+    // this may just be paranoia
+    let state_matches_active_chat = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.id == active_chat_id)
+        .unwrap_or_default();
+
+    let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
