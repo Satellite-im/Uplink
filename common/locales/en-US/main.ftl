@@ -194,6 +194,7 @@ settings = Settings
     .audio = Sounds & Audio
     .files = Files
     .extensions = Extensions
+    .keybinds = Keyboard Shortcuts
     .accessibility = Accessibility
     .notifications = Notifications
     .developer = Developer
@@ -272,6 +273,12 @@ settings-files = Files Settings
     .local-sync-description = When enabled, files will be synced to your local machine.
     .open-sync-folder = Open Sync Folder
     .open-sync-folder-description = Open the folder where your files are synced to.
+
+settings-keybinds = Keybind Settings
+    .increase-font-size = Increase font size within Uplink.
+    .decrease-font-size = Decrease font size within Uplink.
+    .change-keybind = Record New keybind
+    .cancel-change-keybind = Cancel Recording
 
 settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
