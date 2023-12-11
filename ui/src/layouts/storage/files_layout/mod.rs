@@ -161,7 +161,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                 Button {
                                     icon: Icon::ComputerDesktop,
                                     disabled: false,
-                                    text: "Sync local folder".to_string(),
+                                    text: "Sync".to_string(),
                                     appearance: Appearance::Secondary,
                                     aria_label: "desktop-sync-folder".into(),
                                     tooltip: cx.render(rsx!(
@@ -176,6 +176,23 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                             &state,
                                             &eval,
                                             &ch)
+                                    },
+                                },
+                                Button {
+                                    icon: Icon::Folder,
+                                    disabled: false,
+                                    text: "Open Local Folder Sync".to_string(),
+                                    appearance: Appearance::Secondary,
+                                    aria_label: "desktop-sync-folder".into(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.new-folder"),
+                                        }
+                                    )),
+                                    onpress: move |_| {
+                                        let storage_local_folder = STATIC_ARGS.uplink_path.join("storage_local_folder");
+                                        let _ = opener::open(&storage_local_folder);
                                     },
                                 },
                                 Button {
