@@ -53,9 +53,9 @@ pub fn init_msg_scroll(
                     match msg_id {
                         Some(id) => scripts::SCROLL_TO_END.replace("$MESSAGE_ID", &format!("{id}")),
                         None => {
-                            log::error!("failed to init message scroll");
-                            //scripts::SCROLL_TO_END.to_string()
-                            "return done;".to_string()
+                            log::debug!("failed to init message scroll - empty chat");
+                            chat_data.write().active_chat.is_initialized = true;
+                            return;
                         }
                     }
                 }

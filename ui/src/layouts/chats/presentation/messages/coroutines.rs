@@ -76,10 +76,6 @@ pub fn handle_msg_scroll(
                         .clear();
                     chat_data.write_silent().active_chat.messages.loaded.clear();
 
-                    if chat_data.read().active_chat.messages.all.is_empty() {
-                        chat_data.write().active_chat.is_initialized = true;
-                    }
-
                     let should_send_top_evt =
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
                     let should_send_bottom_evt =
