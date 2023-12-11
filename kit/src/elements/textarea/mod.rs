@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
@@ -42,6 +43,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     oncursor_update: Option<EventHandler<'a, (String, i64)>>,
     onkeyup: Option<EventHandler<'a, Code>>,
+    on_paste_keydown: Option<EventHandler<'a, Event<KeyboardData>>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -74,6 +76,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         oncursor_update,
         onkeyup,
+        on_paste_keydown,
         value,
         is_disabled,
         show_char_counter,
@@ -195,6 +198,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeydown: {
                         to_owned![eval, cursor_script];
                         move |evt| {
+                            // HACK(Linux): Allow copy and paste files for Linux 
+                            if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
+                                if let Some(e) = on_paste_keydown {
+                                    e.call(evt.clone());
+                                }
+                            }
                             // special codepath to handle onreturn
                             let old_enter_pressed = *enter_pressed.read();
                             let old_numpad_enter_pressed = *numpad_enter_pressed.read();

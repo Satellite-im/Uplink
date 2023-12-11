@@ -48,6 +48,18 @@
   width: 100%;
 }
 
+.settings-header {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  width: 100%;
+  padding: var(--padding-less);
+  border-bottom: 1px solid var(--border-subtle-color);
+  color: var(--text-color);
+}
+
 .settings-section {
   display: inline-flex;
   gap: var(--gap);
@@ -82,6 +94,76 @@
   .settings-control {
     width: 100%;
     justify-content: flex-start;
+  }
+}
+
+.keybind-section {
+  display: inline-flex;
+  flex-direction: row;
+  width: 100%;
+  border-bottom: 1px solid var(--border-subtle-color);
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  padding: 0 var(--gap);
+
+  .keybind-separator {
+    fill: transparent;
+    stroke: var(--text-color-muted);
+    display: inline-flex;
+    height: 100%;
+    align-content: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .keybind-section-label {
+    color: var(--text-color);
+    flex: 1;
+    padding: var(--gap);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .keybind-section-controls.is-red {
+    svg {
+      fill: var(--danger);
+      stroke: none;
+    }
+  }
+  
+  .keybind-section-keys {
+    height: var(--height-input);
+    display: inline-flex;
+    gap: var(--gap-less);
+    padding: var(--gap-less);
+    background: var(--secondary-darker);
+    border-radius: var(--border-radius);
+    margin: var(--padding-less);
+    border: 1px solid var(--border-subtle-color);
+
+
+    .keybind-key {
+      width: fit-content;
+      min-width: var(--height-input);
+      height: var(--height-input-less);
+      border: 2px solid var(--secondary-dark);
+      border-radius: var(--border-radius);
+      background-color: var(--secondary-dark);
+      color: var(--text-color-muted);
+      .keybind-key-inner {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--placeholder);
+        font-size: var(--text-size-less);
+        border-radius: var(--border-radius);
+        background-color: var(--secondary);
+        padding: 0 var(--gap-less);
+      }
+    }
   }
 }
 
