@@ -201,7 +201,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     img {
                                         aria_label: "message-image",
                                         onclick: move |mouse_event_data: Event<MouseData>| 
-                                        if !(mouse_event_data.modifiers() == Modifiers::CONTROL || mouse_event_data.modifiers() == Modifiers::META) {
+                                        if !(mouse_event_data.modifiers() == Modifiers::CONTROL) {
                                             fullscreen_preview.set(true)
                                         },
                                         class: format_args!(

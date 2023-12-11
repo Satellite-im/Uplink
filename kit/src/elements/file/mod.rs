@@ -91,7 +91,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 aria_label: "{aria_label}",
                 onclick: move |mouse_event_data| {
-                    if !(mouse_event_data.modifiers() == Modifiers::CONTROL || mouse_event_data.modifiers() == Modifiers::META) {
+                    if !(mouse_event_data.modifiers() == Modifiers::CONTROL) {
                         emit_press(&cx);
                     } 
                 },
