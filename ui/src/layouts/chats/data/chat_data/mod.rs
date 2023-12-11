@@ -53,6 +53,53 @@ impl ChatData {
             return;
         }
 
+        let behavior = self.chat_behaviors.get(&conversation_id).cloned();
+
+        if (self.active_chat.messages.displayed.len() == 1
+            && self.active_chat.messages.displayed.contains(&message_id))
+            || behavior
+                .map(|x| {
+                    matches!(
+                        x.view_init.scroll_to,
+                        ScrollTo::ScrollDown { view_bottom: x }
+                            | ScrollTo::ScrollUp { view_top: x }  if x == message_id
+                    )
+                })
+                .unwrap_or_default()
+        {
+            let idx = self
+                .active_chat
+                .messages
+                .all
+                .iter()
+                .enumerate()
+                .find(|(_idx, val)| val.inner.id() == message_id)
+                .map(|x| x.0);
+            if idx.map(|x| x == 0).unwrap_or(true) {
+                if let Some(behavior) = self.chat_behaviors.get_mut(&conversation_id) {
+                    behavior.view_init = ViewInit::default();
+                }
+            } else if let Some(idx) = idx {
+                if let Some(prev_msg) = self.active_chat.messages.all.get(idx.saturating_sub(1)) {
+                    if let Some(behavior) = self.chat_behaviors.get_mut(&conversation_id) {
+                        behavior.view_init = ViewInit {
+                            scroll_to: ScrollTo::ScrollDown {
+                                view_bottom: prev_msg.inner.id(),
+                            },
+                            msg_time: Some(prev_msg.inner.date()),
+                            ..Default::default()
+                        };
+                    } else {
+                        log::warn!("delete_message failed to get behavior");
+                    }
+                } else {
+                    // should never happen because idx must be greater than zero
+                }
+            } else {
+                unreachable!();
+            }
+        }
+
         self.active_chat
             .messages
             .displayed
@@ -158,6 +205,7 @@ impl ChatData {
             log::warn!("remove_message_from_view wrong chat id");
             return false;
         }
+
         self.active_chat
             .messages
             .remove_message_from_view(message_id)
@@ -218,7 +266,8 @@ impl ChatData {
                 };
                 behavior.view_init.msg_time.replace(scroll_top.date);
             } else {
-                log::warn!("failed to get earliest_displayed in ChatData::scroll_up");
+                behavior.view_init.scroll_to = ScrollTo::MostRecent;
+                behavior.view_init.msg_time.take();
             }
         } else {
             log::warn!("failed to get chat behavior in ChatData::scroll_up");

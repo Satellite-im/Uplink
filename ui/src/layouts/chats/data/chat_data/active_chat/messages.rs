@@ -155,6 +155,7 @@ impl Messages {
 
     pub fn remove_message_from_view(&mut self, message_id: Uuid) -> bool {
         self.loaded.insert(message_id);
+
         if self
             .displayed
             .front()
@@ -169,10 +170,10 @@ impl Messages {
             .unwrap_or(false)
         {
             self.displayed.pop_back();
-        } else {
+        } else if self.loaded.len() == self.all.len() {
             // during initialization this triggers when removing a nonexistent item.
-            // log::warn!("failed to remove message from view. fixing with retain()");
-            // self.displayed.retain(|x| x != &message_id);
+            // could also be triggerd by a delete operation
+            self.displayed.retain(|x| x != &message_id);
         }
 
         self.loaded.len() != self.all.len()
