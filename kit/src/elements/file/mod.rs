@@ -8,6 +8,8 @@ use crate::elements::{
     input::{Input, Options, Size, SpecialCharsAction, Validation},
     Appearance,
 };
+use dioxus_html::input_data::keyboard_types::Modifiers;
+
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
@@ -88,7 +90,11 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     format_args!("file {}", if disabled { "disabled" } else { "" })
                 },
                 aria_label: "{aria_label}",
-                onclick: move |_| emit_press(&cx),
+                onclick: move |mouse_event_data| {
+                    if !(mouse_event_data.modifiers() == Modifiers::CONTROL || mouse_event_data.modifiers() == Modifiers::META) {
+                        emit_press(&cx);
+                    } 
+                },
                 div {
                     class: "icon alignment",
                     if thumbnail.is_empty() {
