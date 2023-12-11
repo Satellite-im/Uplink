@@ -192,6 +192,10 @@
   top: calc(var(--height-topbar) + var(--gap) * 2) !important;
 }
 
+.create-group-modal.minimal {
+  position: static !important;
+}
+
 #group-users {
   color: var(--text-color);
   display: inline-flex;
