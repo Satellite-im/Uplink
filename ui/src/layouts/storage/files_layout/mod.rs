@@ -50,6 +50,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
+    let upload_file_controller2 = upload_file_controller.clone();
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
@@ -170,80 +171,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                         }
                                     )),
                                     onpress: move |_| {
-                                        let storage_local_folder = STATIC_ARGS.uplink_path.join("storage_local_folder");
-                                       let files_from_storage_local_folder = match list_files(storage_local_folder.to_string_lossy().to_string(), &mut vec![]) {
-                                             Ok(vec) => vec,
-                                             Err(e) => {
-                                                println!("err: {:?}", e);
-                                                Vec::new()
-                                            },
-                                       };
-                                       let files_from_current_folder_in_constellation = state.read().storage.files.clone();
-                                       let files_from_constellation_in_root_folder: Vec<String> = files_from_current_folder_in_constellation.iter().map(|file| {
-                                        let file_path: String = file.path().to_string();
-                                        let file_name: String = file.name();
-                                        if file_path.contains(&file_name) {
-                                            file_path
-                                        } else {
-                                            let correct_file_path = format!("{}{}", file_path, file_name);
-                                            correct_file_path
-                                        }
-                                       }).collect();
-                                       println!("files_from_storage_local_folder: {:?}\n\n\n", files_from_storage_local_folder.clone());
-                                       
-                                       println!("files_from_constellation_in_root_folder: {:?}\n\n\n", files_from_constellation_in_root_folder.clone());
-
-                                       let unique_local_files: Vec<PathBuf> = files_from_storage_local_folder.clone()
-                                        .into_iter()
-                                        .filter(|local_file| {
-                                            let local_file_str = local_file.to_str().unwrap_or("");
-                                            !files_from_constellation_in_root_folder.contains(&local_file_str.to_string())
-                                        })
-                                        .map(|file| {
-                                           let correct_local_file_path = format!("{}/{}", storage_local_folder.clone().to_string_lossy(), file.to_str().unwrap_or(""));
-                                           PathBuf::from(correct_local_file_path)
-                                        })
-                                        .collect();
-
-                                        println!("unique_local_files: {:?}", unique_local_files.clone());
-                                        if unique_local_files.is_empty() {
-                                         state.write().mutate(Action::AddToastNotification(
-                                             ToastNotification::init(
-                                                 "".into(),
-                                                 "No files to sync".to_string(),
-                                                 None,
-                                                 2,
-                                             ),
-                                         ));
-                                        } else {
-                                         functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, unique_local_files, eval);
-                                         upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
-                                        }
- 
-                                         // Files that are in the constellation but not in  the local folder
-                                         let unique_constellation_files: Vec<File> = files_from_current_folder_in_constellation
-                                         .into_iter()
-                                         .filter(|constellation_file| {
-                                             !files_from_storage_local_folder.clone()
-                                                 .iter()
-                                                 .any(|local_file| local_file.to_str().unwrap_or("") == format!("/{}", &constellation_file.name()))
-                                         })
-                                         .map(|file| {
-                                             file
-                                         })
-                                         .collect();
-                                         println!("unique_constellation_files: {:?}", unique_constellation_files.iter().map(|file| file.name()).collect::<Vec<String>>());
-                                       
-                                        for file in unique_constellation_files {
-                                            let file_name = file.name();
-                                            let dir_to_save_files = storage_local_folder.to_string_lossy().to_string().clone();
-                                            let path_to_save = PathBuf::from(format!("{}/{}", dir_to_save_files, file_name));
-                                            ch.send(ChanCmd::DownloadFile {
-                                                file_name: file_name.to_string(),
-                                                local_path_to_save_file: path_to_save,
-                                            });
-                                     }
- 
+                                        sync_local_files(
+                                            upload_file_controller2.clone(),
+                                            &state,
+                                            &eval,
+                                            &ch)
                                     },
                                 },
                                 Button {
@@ -426,4 +358,122 @@ fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Result<V
         }
     }
     Ok(files.clone())
+}
+
+fn sync_local_files<'a>(
+    upload_file_controller: UploadFileController,
+    state: &'a UseSharedState<State>,
+    eval: &UseEvalFn,
+    ch: &Coroutine<ChanCmd>,
+) {
+    let storage_local_folder = STATIC_ARGS.uplink_path.join("storage_local_folder");
+    if fs::metadata(storage_local_folder.clone()).is_err() {
+        if let Err(e) = fs::create_dir(storage_local_folder.clone()) {
+            log::error!("Error to create storage local folder: {:?}", e);
+            return;
+        }
+    }
+    let files_from_storage_local_folder = match list_files(
+        storage_local_folder.to_string_lossy().to_string(),
+        &mut vec![],
+    ) {
+        Ok(vec) => vec,
+        Err(e) => {
+            println!("err: {:?}", e);
+            Vec::new()
+        }
+    };
+
+    let files_from_current_folder_in_constellation = state.read().storage.files.clone();
+    let files_from_constellation_in_root_folder: Vec<String> =
+        files_from_current_folder_in_constellation
+            .iter()
+            .map(|file| {
+                let file_path: String = file.path().to_string();
+                let file_name: String = file.name();
+                if file_path.contains(&file_name) {
+                    file_path
+                } else {
+                    let correct_file_path = format!("{}{}", file_path, file_name);
+                    correct_file_path
+                }
+            })
+            .collect();
+
+    println!(
+        "files_from_storage_local_folder: {:?}\n\n\n",
+        files_from_storage_local_folder.clone()
+    );
+    println!(
+        "files_from_constellation_in_root_folder: {:?}\n\n\n",
+        files_from_constellation_in_root_folder.clone()
+    );
+
+    let unique_local_files: Vec<PathBuf> = files_from_storage_local_folder
+        .clone()
+        .into_iter()
+        .filter(|local_file| {
+            let local_file_str = local_file.to_str().unwrap_or("");
+            !files_from_constellation_in_root_folder.contains(&local_file_str.to_string())
+        })
+        .map(|file| {
+            let correct_local_file_path = format!(
+                "{}/{}",
+                storage_local_folder.clone().to_string_lossy(),
+                file.to_str().unwrap_or("")
+            );
+            PathBuf::from(correct_local_file_path)
+        })
+        .collect();
+
+    println!("unique_local_files: {:?}", unique_local_files.clone());
+    if unique_local_files.is_empty() {
+        state
+            .write()
+            .mutate(Action::AddToastNotification(ToastNotification::init(
+                "".into(),
+                "No files to sync".to_string(),
+                None,
+                2,
+            )));
+    } else {
+        functions::add_files_in_queue_to_upload(
+            upload_file_controller.files_in_queue_to_upload,
+            unique_local_files,
+            eval,
+        );
+        upload_file_controller
+            .files_been_uploaded
+            .with_mut(|i| *i = true);
+    }
+
+    let unique_constellation_files: Vec<File> = files_from_current_folder_in_constellation
+        .into_iter()
+        .filter(|constellation_file| {
+            !files_from_storage_local_folder
+                .clone()
+                .iter()
+                .any(|local_file| {
+                    local_file.to_str().unwrap_or("") == format!("/{}", &constellation_file.name())
+                })
+        })
+        .map(|file| file)
+        .collect();
+    println!(
+        "unique_constellation_files: {:?}",
+        unique_constellation_files
+            .iter()
+            .map(|file| file.name())
+            .collect::<Vec<String>>()
+    );
+
+    for file in unique_constellation_files {
+        let file_name = file.name();
+        let dir_to_save_files = storage_local_folder.to_string_lossy().to_string().clone();
+        let path_to_save = PathBuf::from(format!("{}/{}", dir_to_save_files, file_name));
+        ch.send(ChanCmd::DownloadFile {
+            file_name: file_name.to_string(),
+            local_path_to_save_file: path_to_save,
+        });
+    }
 }
