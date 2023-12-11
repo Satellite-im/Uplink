@@ -63,7 +63,9 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     use_effect(cx, &minimal, |_| {
         to_owned![show_more];
         async move {
-            show_more.set(false);
+            if *show_more.get() {
+                show_more.set(false);
+            }
         }
     });
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
