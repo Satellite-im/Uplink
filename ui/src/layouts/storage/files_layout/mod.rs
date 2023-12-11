@@ -426,6 +426,32 @@ fn sync_local_files<'a>(
         files_from_constellation_in_root_folder.clone()
     );
 
+    sync_files_from_local_to_constellation(
+        &files_from_storage_local_folder,
+        files_from_constellation_in_root_folder,
+        state,
+        storage_local_folder.clone(),
+        upload_file_controller,
+        eval,
+    );
+
+    sync_files_from_constellation_to_local(
+        files_from_current_folder_in_constellation,
+        files_from_storage_local_folder,
+        storage_local_folder.clone(),
+        ch,
+    );
+}
+
+fn sync_files_from_local_to_constellation(
+    files_from_storage_local_folder: &Vec<PathBuf>,
+    files_from_constellation_in_root_folder: Vec<String>,
+    state: &UseSharedState<State>,
+    storage_local_folder: PathBuf,
+
+    upload_file_controller: UploadFileController<'_>,
+    eval: &std::rc::Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>,
+) {
     let unique_local_files: Vec<PathBuf> = files_from_storage_local_folder
         .clone()
         .into_iter()
@@ -463,7 +489,14 @@ fn sync_local_files<'a>(
             .files_been_uploaded
             .with_mut(|i| *i = true);
     }
+}
 
+fn sync_files_from_constellation_to_local(
+    files_from_current_folder_in_constellation: Vec<File>,
+    files_from_storage_local_folder: Vec<PathBuf>,
+    storage_local_folder: PathBuf,
+    ch: &Coroutine<ChanCmd>,
+) {
     let unique_constellation_files: Vec<File> = files_from_current_folder_in_constellation
         .into_iter()
         .filter(|constellation_file| {
