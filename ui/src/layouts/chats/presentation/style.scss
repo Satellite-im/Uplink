@@ -69,3 +69,9 @@
         width: 60vw;
     }
 }
+@media (max-width: 599px) {
+    .context-menu {
+        left: 1 !important;
+        right: 1 !important;
+    }
+}
