@@ -25,6 +25,7 @@ use kit::{
 };
 use rfd::FileDialog;
 use uuid::Uuid;
+use warp::constellation::file::File;
 use warp::raygun::Location;
 
 pub mod controller;
@@ -214,33 +215,34 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                                  2,
                                              ),
                                          ));
-                                         return;
                                         } else {
                                          functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, unique_local_files, eval);
                                          upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                         }
  
-                                    //      // Files that are in the constellation but not in the local folder
-                                    //      let unique_constellation_files: Vec<File> = files_from_current_folder_in_constellation
-                                    //      .into_iter()
-                                    //      .filter(|constellation_file| {
-                                    //          !files_from_storage_local_folder.clone()
-                                    //              .iter()
-                                    //              .any(|local_file| local_file.to_str().unwrap_or("") == &constellation_file.name())
-                                    //      })
-                                    //      .map(|file| {
-                                    //          file
-                                    //      })
-                                    //      .collect();
-                                    //      println!("unique_constellation_files: {:?}", unique_constellation_files.clone());
- 
-                                    //     for file in unique_constellation_files {
-                                    //      let file_name = file.name();
-                                    //      ch.send(ChanCmd::DownloadFile {
-                                    //         file_name: file_name.to_string(),
-                                    //         local_path_to_save_file: storage_local_folder.clone(),
-                                    //     });
-                                    //  }
+                                         // Files that are in the constellation but not in  the local folder
+                                         let unique_constellation_files: Vec<File> = files_from_current_folder_in_constellation
+                                         .into_iter()
+                                         .filter(|constellation_file| {
+                                             !files_from_storage_local_folder.clone()
+                                                 .iter()
+                                                 .any(|local_file| local_file.to_str().unwrap_or("") == &constellation_file.name())
+                                         })
+                                         .map(|file| {
+                                             file
+                                         })
+                                         .collect();
+                                         println!("unique_constellation_files: {:?}", unique_constellation_files.iter().map(|file| file.name()).collect::<Vec<String>>());
+                                       
+                                        for file in unique_constellation_files {
+                                            let file_name = file.name();
+                                            let dir_to_save_files = storage_local_folder.to_string_lossy().to_string().clone();
+                                            let path_to_save = PathBuf::from(format!("{}/{}", dir_to_save_files, file_name));
+                                            ch.send(ChanCmd::DownloadFile {
+                                                file_name: file_name.to_string(),
+                                                local_path_to_save_file: path_to_save,
+                                            });
+                                     }
  
                                     },
                                 },
