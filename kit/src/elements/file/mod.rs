@@ -93,7 +93,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |mouse_event_data| {
                     if mouse_event_data.modifiers() != Modifiers::CONTROL {
                         emit_press(&cx);
-                    } 
+                    }
                 },
                 div {
                     class: "icon alignment",
