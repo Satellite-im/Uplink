@@ -171,11 +171,8 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ..UIRoute::default()
     };
 
-    let mut routes = vec![];
+    let mut routes = vec![profile, general, messages];
     // To control order of routes, add them here.
-    routes.push(profile);
-    routes.push(general);
-    routes.push(messages);
     // routes.push(privacy);
     routes.push(audio);
     // routes.push(files);
