@@ -52,6 +52,10 @@ pub struct ShortCutProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
+    if cfg!(target_os = "linux") {
+        return None;
+    }
+
     let files_local_path_to_upload = use_ref(cx, Vec::new);
     let command_pressed = use_ref(cx, || false);
     let key = KeyCode::V;
