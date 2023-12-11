@@ -148,7 +148,9 @@ friends = Friends
     .share = Share DID
     .select-chat = Select Chat
     .share-to-chat = Share
-    
+    .search = Search Friends
+    .search-placeholder = Search Friend
+
 files = Files
     .file = File
     .files = Files
