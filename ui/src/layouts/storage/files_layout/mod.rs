@@ -226,7 +226,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                          .filter(|constellation_file| {
                                              !files_from_storage_local_folder.clone()
                                                  .iter()
-                                                 .any(|local_file| local_file.to_str().unwrap_or("") == &constellation_file.name())
+                                                 .any(|local_file| local_file.to_str().unwrap_or("") == format!("/{}", &constellation_file.name()))
                                          })
                                          .map(|file| {
                                              file
