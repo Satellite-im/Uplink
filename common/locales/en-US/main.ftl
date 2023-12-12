@@ -28,7 +28,6 @@ uplink = Uplink
     .pre-release = Pre-release | Issues/Feedback
     .username = Username
     .status = Status Message
-    .online-status = Status
     .delete = Delete
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
