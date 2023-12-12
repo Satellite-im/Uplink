@@ -36,13 +36,20 @@ pub struct Props<'a> {
 }
 
 pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
+    let control_or_command = if cfg!(target_os = "macos") {
+        ModifiersState::SUPER
+    } else {
+        ModifiersState::CONTROL
+    };
     HashMap::from([
         // To avoid multi-key conflicts, when using a shortcut that uses multiple `KeyCode` values, it's best to use the `ALT` modifier by default.
         (
             GlobalShortcut::IncreaseFontSize,
             Shortcut::from((
-                vec![KeyCode::Add],
-                vec![ModifiersState::CONTROL, ModifiersState::SHIFT],
+                // TODO(KeyCode::Add):We need to treat this carefully, keyboard doesn't identify Add as + properly
+                // And as EqualSign, not works + from Numpad
+                vec![KeyCode::EqualSign],
+                vec![control_or_command, ModifiersState::SHIFT],
                 false,
             )),
         ),
@@ -50,7 +57,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
             GlobalShortcut::DecreaseFontSize,
             Shortcut::from((
                 vec![KeyCode::Subtract],
-                vec![ModifiersState::CONTROL, ModifiersState::SHIFT],
+                vec![control_or_command, ModifiersState::SHIFT],
                 false,
             )),
         ),
@@ -107,6 +114,7 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
     let command_pressed = use_ref(cx, || false);
 
     if *command_pressed.read() {
+        println!("Arriving here - 3");
         *command_pressed.write_silent() = false;
         cx.props
             .on_global_shortcut
@@ -121,6 +129,10 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
             match key_code {
                 KeyCode::V => "v",
                 KeyCode::A => "a",
+                KeyCode::M => "d",
+                KeyCode::D => "m",
+                KeyCode::EqualSign => "=",
+                KeyCode::Subtract => "-",
                 _ => "unknown",
                 // ... Add other KeyCodes here
             }
@@ -137,6 +149,7 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
                 ModifiersState::SUPER => "command",
                 ModifiersState::SHIFT => "shift",
                 ModifiersState::CONTROL => "control",
+                ModifiersState::ALT => "alt",
                 _ => "unknown",
                 // ... Add other modifiers here
             }
@@ -146,9 +159,15 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
 
     let modifiers_and_keys = [modifier_strs.join(" + "), key_code_strs.join(" + ")].join(" + ");
 
+    if modifiers_and_keys.contains("unknown") {
+        println!("Error: Unknown keybind found: {}", modifiers_and_keys);
+        return None;
+    }
+
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
-        to_owned![command_pressed];
+        to_owned![command_pressed, modifiers_and_keys];
         move || {
+            println!("modifiers_and_keys pressed: {:?}", modifiers_and_keys);
             command_pressed.with_mut(|i| *i = true);
         }
     });
