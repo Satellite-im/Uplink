@@ -105,6 +105,7 @@ messages = Messages
     .unknown-identity = User not found:
     .emoji-suggestion = Suggested Emoji
     .username-suggestion = Suggested Users
+    .control-group = More
     
 favorites = Favorites
     .favorites = Favorites
@@ -147,7 +148,9 @@ friends = Friends
     .share = Share DID
     .select-chat = Select Chat
     .share-to-chat = Share
-    
+    .search = Search Friends
+    .search-placeholder = Search Friend
+
 files = Files
     .file = File
     .files = Files
