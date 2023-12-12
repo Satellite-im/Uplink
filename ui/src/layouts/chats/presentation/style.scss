@@ -69,3 +69,26 @@
         width: 60vw;
     }
 }
+
+.minimal-chat-button-group {
+    display: flex;
+    flex-direction: column; 
+    position: absolute; 
+    right: calc(var(--gap) * -1);
+    top: calc(var(--gap) * -1); 
+    gap: var(--gap);
+    z-index: 5;
+    background: var(--secondary-dark);
+    border-radius: var(--border-radius-more) 0 0 var(--border-radius-more);
+    padding: var(--gap);
+    padding-top: calc(100% + 2 * var(--gap));
+    .btn {
+        width: 100%;
+    }
+}
+
+.topbar {
+    .controls {
+        position: relative;
+    }
+}
