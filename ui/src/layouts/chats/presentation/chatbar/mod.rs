@@ -34,7 +34,10 @@ pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").un
 pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@ ]{2,} ?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
-    components::{files::attachments::Attachments, paste_files_with_shortcut},
+    components::{
+        files::attachments::Attachments,
+        shortcuts::{self},
+    },
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
         chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
@@ -550,7 +553,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-                rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
                     on_paste: move |files_local_path: Vec<PathBuf>| {
                         if !files_local_path.is_empty() {
                             let new_files: Vec<Location> = files_local_path
