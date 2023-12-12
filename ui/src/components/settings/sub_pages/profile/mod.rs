@@ -577,7 +577,7 @@ fn get_status_option<'a>(cx: Scope<'a>, status: &IdentityStatus) -> (String, Ele
                 },
                 div {
                     class: "settings-online-status-label",
-                    get_local_text(&format!("settings-profile.{}", indicator))
+                    get_local_text(&format!("settings-profile.status-{}", indicator))
                 }
             }
         )),
