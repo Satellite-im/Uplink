@@ -36,10 +36,11 @@ pub struct Props<'a> {
 }
 
 pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
-    let control_or_command = if cfg!(target_os = "macos") {
+    let alt_or_command = if cfg!(target_os = "macos") {
+        // Let as control for now
         ModifiersState::SUPER
     } else {
-        ModifiersState::CONTROL
+        ModifiersState::ALT
     };
     HashMap::from([
         // To avoid multi-key conflicts, when using a shortcut that uses multiple `KeyCode` values, it's best to use the `ALT` modifier by default.
@@ -49,7 +50,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
                 // TODO(KeyCode::Add):We need to treat this carefully, keyboard doesn't identify Add as + properly
                 // And as EqualSign, not works + from Numpad
                 vec![KeyCode::EqualSign],
-                vec![control_or_command, ModifiersState::SHIFT],
+                vec![ModifiersState::CONTROL, ModifiersState::SHIFT],
                 false,
             )),
         ),
@@ -57,7 +58,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
             GlobalShortcut::DecreaseFontSize,
             Shortcut::from((
                 vec![KeyCode::Subtract],
-                vec![control_or_command, ModifiersState::SHIFT],
+                vec![ModifiersState::CONTROL, ModifiersState::SHIFT],
                 false,
             )),
         ),
@@ -65,7 +66,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
             GlobalShortcut::ToggleMute,
             Shortcut::from((
                 vec![KeyCode::M],
-                vec![ModifiersState::ALT, ModifiersState::SHIFT],
+                vec![alt_or_command, ModifiersState::SHIFT],
                 true,
             )),
         ),
@@ -73,7 +74,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
             GlobalShortcut::ToggleDeafen,
             Shortcut::from((
                 vec![KeyCode::D],
-                vec![ModifiersState::ALT, ModifiersState::SHIFT],
+                vec![alt_or_command, ModifiersState::SHIFT],
                 true,
             )),
         ),
@@ -87,6 +88,7 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     }
 
     let keybinds = get_default_keybinds();
+    println!("keybinds: {:?}", keybinds);
 
     cx.render(rsx! {
         for (global_shortcut, shortcut) in keybinds {
@@ -114,7 +116,6 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
     let command_pressed = use_ref(cx, || false);
 
     if *command_pressed.read() {
-        println!("Arriving here - 3");
         *command_pressed.write_silent() = false;
         cx.props
             .on_global_shortcut
