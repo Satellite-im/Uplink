@@ -158,12 +158,15 @@
       gap: var(--gap);
 
       .friend-container {
-        display: inline-flex;
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: auto auto 1fr;
         justify-content: space-between;
         gap: var(--gap);
         align-content: center;
         align-items: center;
+        :nth-child(3n) {
+          margin-left: auto;
+        }
       }
     }
   }
