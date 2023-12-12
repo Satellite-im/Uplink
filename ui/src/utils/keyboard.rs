@@ -4,8 +4,9 @@ use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
+use dioxus_html::g;
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Debug)]
 pub enum GlobalShortcut {
     ToggleMute,
     ToggleDeafen,
@@ -13,7 +14,7 @@ pub enum GlobalShortcut {
     DecreaseFontSize,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Debug)]
 pub struct Shortcut {
     keys: Vec<KeyCode>,             // Keys required
     modifiers: Vec<ModifiersState>, // Modifier keys required
@@ -80,19 +81,15 @@ pub fn KeyboardShortcut<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         return None;
     }
 
-    let key = KeyCode::V;
-    let modifiers = if cfg!(target_os = "macos") {
-        ModifiersState::SUPER
-    } else {
-        ModifiersState::CONTROL
-    };
+    let keybinds = get_default_keybinds();
 
-    use_global_shortcut(cx, (key, modifiers), {
-        move || {
+    for (global_shortcut, shortcut) in keybinds {
+        use_global_shortcut(cx, (shortcut.keys, shortcut.modifiers), move || {
             // TODO: Call on_command event handler and pass the called global shortcut: cx.props.on_command.call(GlobalShortcut::IncreaseFontSize);
-            println!("Key pressed: {:?}", key);
-            println!("Modifiers: {:?}", modifiers);
-        }
-    });
+            println!("Global action fired: {:?}", global_shortcut);
+            cx.props.on_global_shortcut.call(global_shortcut);
+        });
+    }
+
     None
 }
