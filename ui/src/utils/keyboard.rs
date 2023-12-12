@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
-use dioxus::prelude::{KeyCode, Props};
-use dioxus_core::prelude::*;
+use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
-use dioxus_html::g;
 
-#[derive(Eq, PartialEq, Hash, Debug)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone)]
 pub enum GlobalShortcut {
     ToggleMute,
     ToggleDeafen,
@@ -83,14 +81,77 @@ pub fn KeyboardShortcut<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
     let keybinds = get_default_keybinds();
 
-    for (global_shortcut, shortcut) in keybinds {
-        // TODO: How do I properly accept multiple possible keys, or more commonly, multiple modifiers: e.g. SHIFT + ALT + M
-        use_global_shortcut(cx, (shortcut.keys, shortcut.modifiers), move || {
-            // TODO: Call on_command event handler and pass the called global shortcut: cx.props.on_command.call(GlobalShortcut::IncreaseFontSize);
-            println!("Global action fired: {:?}", global_shortcut);
-            cx.props.on_global_shortcut.call(global_shortcut);
-        });
+    cx.render(rsx! {
+        for (global_shortcut, shortcut) in keybinds {
+           rsx!(RenderGlobalShortCuts {
+                keys: shortcut.keys,
+                modifiers: shortcut.modifiers,
+                on_global_shortcut: move |global_shortcut| {
+                    cx.props.on_global_shortcut.call(global_shortcut);
+                },
+                global_shortcut: global_shortcut.clone(),
+            })
+        }
+    })
+}
+
+#[derive(Props)]
+struct GlobalShortcutProps<'a> {
+    keys: Vec<KeyCode>,
+    modifiers: Vec<ModifiersState>,
+    on_global_shortcut: EventHandler<'a, GlobalShortcut>,
+    global_shortcut: GlobalShortcut,
+}
+
+fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> {
+    let command_pressed = use_ref(cx, || false);
+
+    if *command_pressed.read() {
+        *command_pressed.write_silent() = false;
+        cx.props
+            .on_global_shortcut
+            .call(cx.props.global_shortcut.clone());
     }
+
+    let key_code_strs: Vec<String> = cx
+        .props
+        .keys
+        .iter()
+        .map(|key_code| {
+            match key_code {
+                KeyCode::V => "v",
+                KeyCode::A => "a",
+                _ => "unknown",
+                // ... Add other KeyCodes here
+            }
+            .to_string()
+        })
+        .collect();
+
+    let modifier_strs: Vec<String> = cx
+        .props
+        .modifiers
+        .iter()
+        .map(|modifier| {
+            match modifier.clone() {
+                ModifiersState::SUPER => "command",
+                ModifiersState::SHIFT => "shift",
+                ModifiersState::CONTROL => "control",
+                _ => "unknown",
+                // ... Add other modifiers here
+            }
+            .to_string()
+        })
+        .collect();
+
+    let modifiers_and_keys = [modifier_strs.join(" + "), key_code_strs.join(" + ")].join(" + ");
+
+    use_global_shortcut(cx, modifiers_and_keys.as_str(), {
+        to_owned![command_pressed];
+        move || {
+            command_pressed.with_mut(|i| *i = true);
+        }
+    });
 
     None
 }
