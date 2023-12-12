@@ -55,6 +55,7 @@ use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
+use crate::utils::keyboard::KeyboardShortcuts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
@@ -232,6 +233,11 @@ fn app_layout(cx: Scope) -> Element {
         AppStyle {}
         div { id: "app-wrap",
             Titlebar {},
+            KeyboardShortcuts {
+                on_global_shortcut: move |shortcut| {
+                    println!("shortcut called {:?}", shortcut);
+                }
+            },
             Toasts {
             },
             Outlet::<UplinkRoute>{},

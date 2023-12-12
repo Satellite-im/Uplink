@@ -74,7 +74,7 @@ pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
 }
 
 #[allow(non_snake_case)]
-pub fn KeyboardShortcut<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     if cfg!(target_os = "linux") {
         return None;
     }
