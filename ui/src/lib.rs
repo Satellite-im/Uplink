@@ -47,6 +47,7 @@ use std::sync::Arc;
 
 use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
+use crate::components::shortcuts::change_font_size_shortcut::ChangeFontSizeShortCut;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
@@ -1162,32 +1163,37 @@ fn AppNav<'a>(
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
 
-    render!(kit::components::nav::Nav {
-        routes: _routes,
-        active: match active {
-            UplinkRoute::ChatLayout {} => "/chat",
-            UplinkRoute::SettingsLayout {} => "/settings",
-            UplinkRoute::FriendsLayout {} => "/friends",
-            UplinkRoute::FilesLayout {} => "/files",
-            _ => "",
-        },
-        onnavigate: move |r| {
-            if let Some(f) = onnavigate {
-                f.call(());
-            }
+    render!(
+        if state.read().ui.metadata.focused {
+            rsx!(ChangeFontSizeShortCut {})
+        }
+        kit::components::nav::Nav {
+            routes: _routes,
+            active: match active {
+                UplinkRoute::ChatLayout {} => "/chat",
+                UplinkRoute::SettingsLayout {} => "/settings",
+                UplinkRoute::FriendsLayout {} => "/friends",
+                UplinkRoute::FilesLayout {} => "/files",
+                _ => "",
+            },
+            onnavigate: move |r| {
+                if let Some(f) = onnavigate {
+                    f.call(());
+                }
 
-            let new_layout = match r {
-                "/chat" => UplinkRoute::ChatLayout {},
-                "/settings" => UplinkRoute::SettingsLayout {},
-                "/friends" => UplinkRoute::FriendsLayout {},
-                "/files" => UplinkRoute::FilesLayout {},
-                _ => UplinkRoute::ChatLayout {},
-            };
+                let new_layout = match r {
+                    "/chat" => UplinkRoute::ChatLayout {},
+                    "/settings" => UplinkRoute::SettingsLayout {},
+                    "/friends" => UplinkRoute::FriendsLayout {},
+                    "/files" => UplinkRoute::FilesLayout {},
+                    _ => UplinkRoute::ChatLayout {},
+                };
 
-            navigator.replace(new_layout);
-        },
-        tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
-    })
+                navigator.replace(new_layout);
+            },
+            tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
+        }
+    )
 }
 
 struct LogDropper {}
