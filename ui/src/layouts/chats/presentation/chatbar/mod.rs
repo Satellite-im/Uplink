@@ -9,6 +9,8 @@ use common::{
     MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -44,7 +46,8 @@ use crate::{
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
-            check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
+            check_if_there_is_file_or_string_in_clipboard, get_files_path_from_clipboard,
+            ClipboardDataType,
         },
     },
 };
@@ -305,6 +308,35 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
+            on_paste_keydown: move |e: Event<KeyboardData>| {
+                // HACK: Allow copy and paste files for Linux
+                if cfg!(target_os = "linux") {
+                    let keyboard_data = e;
+                 if keyboard_data.code() == Code::KeyV
+                        && keyboard_data.modifiers() == Modifiers::CONTROL && *enable_paste_shortcut.read()
+                    {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                    }
+                }
+                }
+            },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));

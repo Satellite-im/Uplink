@@ -5,6 +5,7 @@ pub mod developer;
 pub mod extensions;
 pub mod files;
 pub mod general;
+pub mod keybinds;
 pub mod licenses;
 pub mod messages;
 pub mod notifications;

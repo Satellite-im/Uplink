@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Checkout Repo 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -72,7 +72,7 @@ jobs:
 
     steps:
       - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -129,10 +129,10 @@ jobs:
 
     steps:
       - name: Checkout working directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
@@ -232,10 +232,10 @@ jobs:
 
     steps:
       - name: Checkout working directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
@@ -334,10 +334,10 @@ jobs:
 
     steps:
       - name: Checkout working directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
@@ -494,7 +494,7 @@ jobs:
           check_name: "UI Automated Test Results Summary for MacOS/Windows"
 
       - name: Get Allure history
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: success()
         continue-on-error: true
         with:
@@ -541,7 +541,7 @@ jobs:
 
     steps:
       - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Delete all artifacts
         uses: geekyeggo/delete-artifact@v2
