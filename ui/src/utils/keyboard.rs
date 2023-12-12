@@ -84,6 +84,7 @@ pub fn KeyboardShortcut<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let keybinds = get_default_keybinds();
 
     for (global_shortcut, shortcut) in keybinds {
+        // TODO: How do I properly accept multiple possible keys, or more commonly, multiple modifiers: e.g. SHIFT + ALT + M
         use_global_shortcut(cx, (shortcut.keys, shortcut.modifiers), move || {
             // TODO: Call on_command event handler and pass the called global shortcut: cx.props.on_command.call(GlobalShortcut::IncreaseFontSize);
             println!("Global action fired: {:?}", global_shortcut);
