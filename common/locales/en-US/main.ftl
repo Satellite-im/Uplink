@@ -220,10 +220,10 @@ settings-profile = Profile Settings
     .copy-did = Copy DID Key
     .online-status = Online Status
     .online-status-description = Set the appearance of your online status
-    .online = Online
-    .idle = Idle
-    .do-not-disturb = Do not disturb
-    .offline = Offline
+    .status-online = Online
+    .status-idle = Idle
+    .status-do-not-disturb = Do not disturb
+    .status-offline = Offline
 
 settings-general = General Settings
     .overlay = Uplink Overlay
