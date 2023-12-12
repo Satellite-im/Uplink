@@ -21,35 +21,30 @@ pub enum ChannelCommand {
     RemovePinnedMessage {
         conversation_id: Uuid,
         message_id: Uuid,
+        show_pinned: UseState<bool>,
     },
     GoToPinnedMessage {
         conversation_id: Uuid,
         message_id: Uuid,
         message_date: DateTime<Utc>,
+        show_pinned: UseState<bool>,
     },
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
-    onclose: EventHandler<'a, ()>,
+#[derive(Props, PartialEq)]
+pub struct Props {
+    show_pinned: UseState<bool>,
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
     log::trace!("rendering pinned_messages");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let minimal = state.read().ui.metadata.minimal_view;
 
-    let close_triggered = use_state(cx, || false);
-
-    if *close_triggered.current() {
-        close_triggered.set(false);
-        cx.props.onclose.call(());
-    }
-
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
-        to_owned![chat_data, state, close_triggered];
+        to_owned![chat_data, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -57,6 +52,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ChannelCommand::RemovePinnedMessage {
                         conversation_id,
                         message_id,
+                        show_pinned: _,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
@@ -78,6 +74,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         conversation_id,
                         message_id,
                         message_date,
+                        show_pinned,
                     } => {
                         log::debug!("fetching pinned message");
                         let view_init = data::ViewInit {
@@ -115,7 +112,7 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             Err(e) => log::error!("{e}"),
                         }
 
-                        close_triggered.set(true);
+                        show_pinned.set(false);
                     }
                 }
             }
@@ -150,11 +147,11 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
-                            ch.send(ChannelCommand::RemovePinnedMessage{ conversation_id: *conv, message_id: msg.id() })
+                            ch.send(ChannelCommand::RemovePinnedMessage{ conversation_id: *conv, message_id: msg.id(), show_pinned: cx.props.show_pinned.clone() })
                         },
                         time: time,
                         onclick: move |_| {
-                            ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date});
+                            ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date, show_pinned: cx.props.show_pinned.clone()});
                         }
                     })
                 }))
