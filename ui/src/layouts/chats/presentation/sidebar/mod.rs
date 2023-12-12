@@ -234,9 +234,18 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                             }
                         }
                     }
-                    show_create_group.then(|| rsx!(
+                    show_create_group.then(|| {
+                        let clss = format!(
+                            "create-group-modal {}",
+                            if state.read().ui.is_minimal_view() {
+                                "minimal"
+                            } else {
+                                ""
+                            }
+                        );
+                        rsx!(
                         Modal {
-                            class: "create-group-modal",
+                            class: "{clss}",
                             open: *show_create_group.clone(),
                             with_title: get_local_text("messages.create-group-chat"),
                             transparent: true,
@@ -249,7 +258,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                                 }
                             }
                         }
-                    )),
+                    )}),
                 )),
                 sidebar_chats.iter().cloned().map(|chat| {
                     let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());

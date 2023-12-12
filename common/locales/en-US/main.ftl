@@ -105,6 +105,7 @@ messages = Messages
     .unknown-identity = User not found:
     .emoji-suggestion = Suggested Emoji
     .username-suggestion = Suggested Users
+    .control-group = More
     
 favorites = Favorites
     .favorites = Favorites
