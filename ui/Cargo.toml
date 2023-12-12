@@ -65,6 +65,7 @@ reqwest = { workspace = true, default-features = false, features = [
     "stream",
 ] }
 log = { workspace = true }
+env_logger = "0.10"
 
 [features]
 default = ["dioxus-desktop/devtools"]
