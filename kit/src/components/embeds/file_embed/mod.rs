@@ -6,6 +6,7 @@ use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use dioxus::prelude::*;
 
@@ -199,7 +200,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     aria_label: "message-image-container",
                                     img {
                                         aria_label: "message-image",
-                                        onclick: move |_| fullscreen_preview.set(true),
+                                        onclick: move |mouse_event_data: Event<MouseData>|
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                            fullscreen_preview.set(true)
+                                        },
                                         class: format_args!(
                                             "image {} expandable-image",
                                             if cx.props.big.unwrap_or_default() {
