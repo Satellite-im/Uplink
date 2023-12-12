@@ -258,3 +258,9 @@ strong {
 em {
   font-style: italic;
 }
+
+.ellipsis-overflow {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}

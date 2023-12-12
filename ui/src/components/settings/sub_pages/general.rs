@@ -13,6 +13,7 @@ use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
 use crate::components::settings::{SettingSection, SettingSectionSimple};
+use crate::utils::get_font_sizes::FONT_SIZE_OPTIONS;
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
@@ -25,7 +26,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     log::trace!("General settings page rendered.");
 
     let font_scale = state.read().settings.font_scale();
-    let font_options = vec![0.5, 0.75, 1.0, 1.25, 1.5, 1.75];
+    let font_options = FONT_SIZE_OPTIONS.to_vec();
     let initial_font_idx = match font_options.iter().position(|r| r == &font_scale) {
         Some(idx) => idx,
         None => {
