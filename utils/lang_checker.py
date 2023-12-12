@@ -45,7 +45,7 @@ files = [f for f in files if not f.startswith("./target/")]
 
 # Remove dynamic created keys
 # E.g. toast action keys
-keys = [x for x in keys if not x.startswith('toast_actions')]
+keys = [x for x in keys if not (x.startswith('toast_actions') or x.startswith('settings-profile.status-'))]
 
 # Check rust files if the language key is used
 for file in files:
