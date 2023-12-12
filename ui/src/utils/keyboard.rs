@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
@@ -35,14 +33,14 @@ pub struct Props<'a> {
     // TODO: overrides: Vec<(String, String)> allow for overriding the default bindings
 }
 
-pub fn get_default_keybinds() -> HashMap<GlobalShortcut, Shortcut> {
+pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
     let alt_or_command = if cfg!(target_os = "macos") {
-        // Let as control for now
+        // SUPER is command on mac
         ModifiersState::SUPER
     } else {
         ModifiersState::ALT
     };
-    HashMap::from([
+    Vec::from([
         // To avoid multi-key conflicts, when using a shortcut that uses multiple `KeyCode` values, it's best to use the `ALT` modifier by default.
         (
             GlobalShortcut::IncreaseFontSize,
@@ -88,18 +86,18 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     }
 
     let keybinds = get_default_keybinds();
-    println!("keybinds: {:?}", keybinds);
 
     cx.render(rsx! {
         for (global_shortcut, shortcut) in keybinds {
-           rsx!(RenderGlobalShortCuts {
-                keys: shortcut.keys,
-                modifiers: shortcut.modifiers,
-                on_global_shortcut: move |global_shortcut| {
-                    cx.props.on_global_shortcut.call(global_shortcut);
-                },
-                global_shortcut: global_shortcut.clone(),
-            })
+                rsx!{
+                    RenderGlobalShortCuts {
+                    keys: shortcut.keys,
+                    modifiers: shortcut.modifiers,
+                    on_global_shortcut: move |global_shortcut| {
+                        cx.props.on_global_shortcut.call(global_shortcut);
+                    },
+                    global_shortcut: global_shortcut.clone(),
+                }}
         }
     })
 }
@@ -130,8 +128,8 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
             match key_code {
                 KeyCode::V => "v",
                 KeyCode::A => "a",
-                KeyCode::M => "d",
-                KeyCode::D => "m",
+                KeyCode::M => "m",
+                KeyCode::D => "d",
                 KeyCode::EqualSign => "=",
                 KeyCode::Subtract => "-",
                 _ => "unknown",
@@ -164,7 +162,6 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
         println!("Error: Unknown keybind found: {}", modifiers_and_keys);
         return None;
     }
-
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
         to_owned![command_pressed, modifiers_and_keys];
         move || {
