@@ -16,10 +16,10 @@ use colored::Colorize;
 use env_logger::Builder;
 use log::{self, Level, SetLoggerError};
 use once_cell::sync::Lazy;
-use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::{collections::VecDeque, env};
 use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
@@ -64,6 +64,18 @@ struct LogGlue {
 
 impl LogGlue {
     pub fn new() -> Self {
+        let should_set_env = match env::var("RUST_LOG") {
+            Ok(s) => !s.contains("uplink"),
+            Err(_) => true,
+        };
+
+        if should_set_env {
+            env::set_var(
+                "RUST_LOG",
+                "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
+            );
+        }
+
         let mut builder = Builder::from_env("RUST_LOG");
         let logger = builder.build();
         log::set_max_level(logger.filter());
