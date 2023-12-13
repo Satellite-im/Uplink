@@ -163,9 +163,11 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::TestSpeaker { rsp } => {
             match blink.get_audio_device_config().await {
                 Ok(audio_config) => {
-                    let _ = audio_config
-                        .test_speaker(rsp)
-                        .map_err(warp::error::Error::Any);
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_speaker(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
                 }
                 Err(e) => {
                     log::debug!("speaker testing fail {:}", e);
@@ -175,9 +177,11 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::TestMicrophone { rsp } => {
             match blink.get_audio_device_config().await {
                 Ok(audio_config) => {
-                    let _ = audio_config
-                        .test_microphone(rsp)
-                        .map_err(warp::error::Error::Any);
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_microphone(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
                 }
                 Err(e) => {
                     log::debug!("microphone testing fail {:}", e);
