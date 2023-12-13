@@ -5,7 +5,6 @@ use common::state::settings::GlobalShortcut;
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
-use dioxus_elements::b;
 use kit::elements::Appearance;
 #[allow(unused_imports)]
 use kit::elements::{
@@ -104,7 +103,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             },
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
-                keys: bindings.get(GlobalShortcut::IncreaseFontSize).unwrap()
+                keys: bindings.get(GlobalShortcut::IncreaseFontSize).unwrap().get_keys_and_modifiers_as_string()
             }
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
