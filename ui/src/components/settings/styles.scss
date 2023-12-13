@@ -97,6 +97,22 @@
   }
 }
 
+.settings-keybinds-info {
+  background-color: var(--secondary);
+  border-radius: var(--border-radius);
+  margin: var(--gap);
+  display: inline-flex;
+  width: calc(100% - (var(--gap) * 2));
+  padding: var(--padding-less);
+  color: var(--text-color-bright);
+  gap: var(--gap);
+
+  svg {
+    fill: transparent;
+    stroke: var(--text-color-bright);
+  }
+}
+
 .keybind-section {
   display: inline-flex;
   flex-direction: row;

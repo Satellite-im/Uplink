@@ -96,7 +96,6 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
                         on_global_shortcut: move |global_shortcut| {
-                            println!("state pause keybinds {:?}", state.read().settings.pause_global_keybinds);
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
                             if !state.read().settings.pause_global_keybinds {
                                 cx.props.on_global_shortcut.call(global_shortcut);

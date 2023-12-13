@@ -88,6 +88,15 @@ pub fn KeybindSettings(cx: Scope) -> Element {
         div {
             id: "settings-keybinds",
             aria_label: "settings-keybinds",
+            div {
+                class: "settings-keybinds-info",
+                IconElement {
+                    icon: Icon::Keybind
+                },
+                p {
+                    "Keyboard shortcuts are paused while you're on this page."
+                }
+            },
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
                 keys: vec!["Ctrl".into(), "Shift".into(), "+".into()]
