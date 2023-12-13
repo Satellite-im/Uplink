@@ -1,9 +1,11 @@
 #[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
-use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::state::settings::GlobalShortcut;
+use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
+use dioxus_elements::b;
 use kit::elements::Appearance;
 #[allow(unused_imports)]
 use kit::elements::{
@@ -84,6 +86,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
 
 #[allow(non_snake_case)]
 pub fn KeybindSettings(cx: Scope) -> Element {
+    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
+    let bindings = state.read().settings.keybinds.clone();
+
     cx.render(rsx!(
         div {
             id: "settings-keybinds",
@@ -99,8 +104,8 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             },
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
-                keys: vec!["Ctrl".into(), "Shift".into(), "+".into()]
-            },
+                keys: bindings.get(GlobalShortcut::IncreaseFontSize).unwrap()
+            }
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
                 keys: vec!["Ctrl".into(), "Shift".into(), "-".into()]

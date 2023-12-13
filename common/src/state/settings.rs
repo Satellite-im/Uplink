@@ -22,6 +22,48 @@ pub struct Shortcut {
     pub system_shortcut: bool, // Determines if the shortcut should work system-wide i.e. even when uplink is not in focus
 }
 
+impl Shortcut {
+    pub fn get_keys_and_modifiers_as_string(&self) -> Vec<String> {
+        let key_code_strs: Vec<String> = self
+            .keys
+            .iter()
+            .map(|key_code| {
+                match key_code {
+                    KeyCode::V => "v",
+                    KeyCode::A => "a",
+                    KeyCode::M => "m",
+                    KeyCode::D => "d",
+                    KeyCode::EqualSign => "=",
+                    KeyCode::Subtract => "-",
+                    _ => "unknown",
+                    // ... Add other KeyCodes here
+                }
+                .to_string()
+            })
+            .collect();
+
+        let mut modifier_strs: Vec<String> = self
+            .modifiers
+            .iter()
+            .map(|modifier| {
+                match modifier.clone() {
+                    ModifiersState::SUPER => "command",
+                    ModifiersState::SHIFT => "shift",
+                    ModifiersState::CONTROL => "control",
+                    ModifiersState::ALT => "alt",
+                    _ => "unknown",
+                    // ... Add other modifiers here
+                }
+                .to_string()
+            })
+            .collect();
+
+        modifier_strs.extend(key_code_strs);
+
+        modifier_strs
+    }
+}
+
 impl From<(Vec<KeyCode>, Vec<ModifiersState>, bool)> for Shortcut {
     fn from(shortcut_tup: (Vec<KeyCode>, Vec<ModifiersState>, bool)) -> Self {
         Shortcut {
