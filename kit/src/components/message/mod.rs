@@ -410,11 +410,11 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     // warning: this will probably break markdown regarding block quotes. still seems like an improvement.
     let safe_text = text
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&#x27;");
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('\"', "&quot;")
+        .replace('\'', "&#x27;");
     let text = &safe_text;
     if should_markdown {
         markdown(text, emojis)
