@@ -1,3 +1,4 @@
+use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
@@ -85,19 +86,25 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         return None;
     }
 
+    let state = use_shared_state::<State>(cx)?;
     let keybinds = get_default_keybinds();
 
     cx.render(rsx! {
         for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {
-                    keys: shortcut.keys,
-                    modifiers: shortcut.modifiers,
-                    on_global_shortcut: move |global_shortcut| {
-                        cx.props.on_global_shortcut.call(global_shortcut);
-                    },
-                    global_shortcut: global_shortcut.clone(),
-                }}
+                        keys: shortcut.keys,
+                        modifiers: shortcut.modifiers,
+                        on_global_shortcut: move |global_shortcut| {
+                            println!("state pause keybinds {:?}", state.read().settings.pause_global_keybinds);
+                            // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
+                            if !state.read().settings.pause_global_keybinds {
+                                cx.props.on_global_shortcut.call(global_shortcut);
+                            }
+                        },
+                        global_shortcut: global_shortcut.clone(),
+                    }
+                }
         }
     })
 }
@@ -159,13 +166,11 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
     let modifiers_and_keys = [modifier_strs.join(" + "), key_code_strs.join(" + ")].join(" + ");
 
     if modifiers_and_keys.contains("unknown") {
-        println!("Error: Unknown keybind found: {}", modifiers_and_keys);
         return None;
     }
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
-        to_owned![command_pressed, modifiers_and_keys];
+        to_owned![command_pressed];
         move || {
-            println!("modifiers_and_keys pressed: {:?}", modifiers_and_keys);
             command_pressed.with_mut(|i| *i = true);
         }
     });

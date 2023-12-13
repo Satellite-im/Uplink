@@ -20,6 +20,7 @@ pub struct Settings {
     #[serde(default = "default_font_scale")]
     font_scale: f32,
     pub user_volumes: HashMap<DID, f32>,
+    pub pause_global_keybinds: bool,
 }
 
 impl Default for Settings {
@@ -32,6 +33,7 @@ impl Default for Settings {
             output_device: None,
             font_scale: 1.0,
             user_volumes: HashMap::new(),
+            pause_global_keybinds: false,
         }
     }
 }

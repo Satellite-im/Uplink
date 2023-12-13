@@ -235,7 +235,7 @@ fn app_layout(cx: Scope) -> Element {
             Titlebar {},
             KeyboardShortcuts {
                 on_global_shortcut: move |shortcut| {
-                    println!("shortcut called {:?}", shortcut);
+                    log::debug!("shortcut called {:?}", shortcut);
                 }
             },
             Toasts {
