@@ -28,7 +28,6 @@ uplink = Uplink
     .pre-release = Pre-release | Issues/Feedback
     .username = Username
     .status = Status Message
-    .online-status = Status
     .delete = Delete
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
@@ -105,6 +104,7 @@ messages = Messages
     .unknown-identity = User not found:
     .emoji-suggestion = Suggested Emoji
     .username-suggestion = Suggested Users
+    .control-group = More
     
 favorites = Favorites
     .favorites = Favorites
@@ -147,7 +147,9 @@ friends = Friends
     .share = Share DID
     .select-chat = Select Chat
     .share-to-chat = Share
-    
+    .search = Search Friends
+    .search-placeholder = Search Friend
+
 files = Files
     .file = File
     .files = Files
@@ -217,10 +219,10 @@ settings-profile = Profile Settings
     .copy-did = Copy DID Key
     .online-status = Online Status
     .online-status-description = Set the appearance of your online status
-    .online = Online
-    .idle = Idle
-    .do-not-disturb = Do not disturb
-    .offline = Offline
+    .status-online = Online
+    .status-idle = Idle
+    .status-do-not-disturb = Do not disturb
+    .status-offline = Offline
 
 settings-general = General Settings
     .overlay = Uplink Overlay
