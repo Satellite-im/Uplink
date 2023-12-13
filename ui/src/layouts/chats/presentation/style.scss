@@ -69,7 +69,6 @@
         width: 60vw;
     }
 }
-
 .minimal-chat-button-group {
     display: flex;
     flex-direction: column; 
@@ -91,4 +90,10 @@
     .controls {
         position: relative;
     }
+}
+@media (max-width: 600px) {
+    .context-menu {
+        left: 1 !important;
+        right: 1 !important;
+  }
 }
