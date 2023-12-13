@@ -1,9 +1,36 @@
+use dioxus::prelude::*;
+use dioxus_desktop::tao::keyboard::ModifiersState;
 use std::collections::HashMap;
 
 use crate::language::get_id_of;
 use crate::language::US_ENGLISH;
 use serde::{Deserialize, Serialize};
 use warp::crypto::DID;
+
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Deserialize, Serialize)]
+pub enum GlobalShortcut {
+    ToggleMute,
+    ToggleDeafen,
+    IncreaseFontSize,
+    DecreaseFontSize,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize)]
+pub struct Shortcut {
+    pub keys: Vec<KeyCode>,             // Keys required
+    pub modifiers: Vec<ModifiersState>, // Modifier keys required
+    pub system_shortcut: bool, // Determines if the shortcut should work system-wide i.e. even when uplink is not in focus
+}
+
+impl From<(Vec<KeyCode>, Vec<ModifiersState>, bool)> for Shortcut {
+    fn from(shortcut_tup: (Vec<KeyCode>, Vec<ModifiersState>, bool)) -> Self {
+        Shortcut {
+            keys: shortcut_tup.0,
+            modifiers: shortcut_tup.1,
+            system_shortcut: shortcut_tup.2,
+        }
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
@@ -21,6 +48,7 @@ pub struct Settings {
     font_scale: f32,
     pub user_volumes: HashMap<DID, f32>,
     pub pause_global_keybinds: bool,
+    pub keybinds: Vec<(GlobalShortcut, Shortcut)>,
 }
 
 impl Default for Settings {
@@ -34,6 +62,7 @@ impl Default for Settings {
             font_scale: 1.0,
             user_volumes: HashMap::new(),
             pause_global_keybinds: false,
+            keybinds: super::default_keybinds::get_default_keybinds(),
         }
     }
 }
