@@ -24,8 +24,8 @@ use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
 use chrono::{DateTime, Local};
-
 use common::STATIC_ARGS;
+use dotenv;
 
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 
@@ -64,16 +64,24 @@ struct LogGlue {
 
 impl LogGlue {
     pub fn new() -> Self {
+        if !STATIC_ARGS.production_mode {
+            dotenv::dotenv().ok();
+        }
+
         let should_set_env = match env::var("RUST_LOG") {
             Ok(s) => !s.contains("uplink"),
             Err(_) => true,
         };
 
         if should_set_env {
-            env::set_var(
-                "RUST_LOG",
-                "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
-            );
+            if STATIC_ARGS.production_mode {
+                env::set_var("RUST_LOG", "warn");
+            } else {
+                env::set_var(
+                    "RUST_LOG",
+                    "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
+                );
+            }
         }
 
         let mut builder = Builder::from_env("RUST_LOG");
