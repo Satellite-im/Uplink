@@ -103,7 +103,11 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             },
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
-                keys: bindings.get(GlobalShortcut::IncreaseFontSize).unwrap().get_keys_and_modifiers_as_string()
+                keys: bindings
+                        .iter()
+                        .find(|(gs, _)| *gs == GlobalShortcut::IncreaseFontSize)
+                        .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
+                        .unwrap_or_default(),
             }
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
