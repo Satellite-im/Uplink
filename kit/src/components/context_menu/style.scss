@@ -123,3 +123,8 @@
 		}
 	}
 }
+@media (max-width: 600px) {
+    .identity-header {
+	min-width: var(--width-sidebar) - 50px;
+    }
+}
