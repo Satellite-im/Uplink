@@ -37,7 +37,7 @@ impl ActiveChat {
         Self {
             metadata: Metadata::new(s, chat),
             messages: Messages::new(messages),
-            is_initialized: true,
+            is_initialized: false,
             key: Uuid::new_v4(),
         }
     }

@@ -40,7 +40,7 @@ use crate::{
     },
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn, TypingIndicator},
+        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -59,8 +59,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
+
+    // this may just be paranoia
+    let state_matches_active_chat = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.id == active_chat_id)
+        .unwrap_or_default();
+
+    let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -69,19 +77,21 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id) && !is_loading;
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
     // and is set here in the chatbar. This was done here instead of in messages.rs as
     // an attempted optimization - don't want to re-render messages whenever scroll_btn
     // is written to, which could be a lot.
-    state
-        .write_silent()
-        .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    if !is_loading {
+        state
+            .write_silent()
+            .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    }
 
     // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
-    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
+    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() && !is_loading {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
@@ -128,8 +138,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     // this is used to scroll to the bottom of the chat.
     let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, state);
+    let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(cx, state);
     let local_typing_ch = coroutines::get_typing_ch(cx);
     let local_typing_ch2 = local_typing_ch.clone();
 
@@ -244,10 +253,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(active_chat_id));
             }
-            let ui_id = state
+            let appended_msg_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
+            msg_ch.send(MsgChInput {
+                msg,
+                conv_id: active_chat_id,
+                appended_msg_id,
+                replying_to,
+            });
         }
     };
 

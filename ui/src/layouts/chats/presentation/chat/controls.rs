@@ -265,9 +265,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 show_pinned.set(false);
             },
             if chat_data.read().active_chat.is_initialized {
-                rsx!(PinnedMessages{ onclose: move |_| {
-                    show_pinned.set(false);
-                } })
+                rsx!(PinnedMessages{ show_pinned: show_pinned.clone()})
             }
         }
     )),));
