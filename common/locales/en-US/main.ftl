@@ -163,7 +163,7 @@ files = Files
     .no-thumbnail = No Thumbnail
     .one-file-to-upload = File to Upload 1!
     .files-to-upload = Files to Upload { $num }!
-
+    .no-thumbnail-preview = No Thumbnail available for preview
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .no-size-available = No size available for file: { $file }
@@ -253,6 +253,7 @@ settings-audio = Audio & Sound Settings
     .input-device-description = Select your input device (microphone, usually).
     .output-device = Output Device
     .output-device-description = This is where all sounds will be played. (Usually your headphones).
+    .device-test = Test
     .sample-rate = Sample rate
     .sample-rate-description = Higher sample rates will capture more "frames" of your audio and sound "clearer".
     .noise-suppression = Noise suppression
