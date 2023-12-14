@@ -1,7 +1,5 @@
-use std::collections::{HashMap, VecDeque};
-
 use common::{state::State, warp_runner::ui_adapter};
-
+use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
 mod active_chat;
@@ -24,13 +22,13 @@ impl PartialEq for ChatData {
 }
 
 impl ChatData {
-    pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+    pub fn add_message_to_view(&mut self, conv_id: Uuid, message_id: Uuid) -> bool {
         if conv_id != self.active_chat.id() {
             log::warn!("add_message_to_view wrong chat id");
-            return;
+            return false;
         }
 
-        self.active_chat.messages.add_message_to_view(message_id);
+        let ret = self.active_chat.messages.add_message_to_view(message_id);
         let len = self.active_chat.messages.all.len();
         // for the first message, want to scroll down, not up.
         if len > 1
@@ -46,12 +44,60 @@ impl ChatData {
         } else {
             self.scroll_down(conv_id);
         }
+        ret
     }
 
     pub fn delete_message(&mut self, conversation_id: Uuid, message_id: Uuid) {
         if conversation_id != self.active_chat.id() {
             log::warn!("delete_message wrong chat id");
             return;
+        }
+
+        let behavior = self.chat_behaviors.get(&conversation_id).cloned();
+
+        if (self.active_chat.messages.displayed.len() == 1
+            && self.active_chat.messages.displayed.contains(&message_id))
+            || behavior
+                .map(|x| {
+                    matches!(
+                        x.view_init.scroll_to,
+                        ScrollTo::ScrollDown { view_bottom: x }
+                            | ScrollTo::ScrollUp { view_top: x }  if x == message_id
+                    )
+                })
+                .unwrap_or_default()
+        {
+            let idx = self
+                .active_chat
+                .messages
+                .all
+                .iter()
+                .enumerate()
+                .find(|(_idx, val)| val.inner.id() == message_id)
+                .map(|x| x.0);
+            if idx.map(|x| x == 0).unwrap_or(true) {
+                if let Some(behavior) = self.chat_behaviors.get_mut(&conversation_id) {
+                    behavior.view_init = ViewInit::default();
+                }
+            } else if let Some(idx) = idx {
+                if let Some(prev_msg) = self.active_chat.messages.all.get(idx.saturating_sub(1)) {
+                    if let Some(behavior) = self.chat_behaviors.get_mut(&conversation_id) {
+                        behavior.view_init = ViewInit {
+                            scroll_to: ScrollTo::ScrollDown {
+                                view_bottom: prev_msg.inner.id(),
+                            },
+                            msg_time: Some(prev_msg.inner.date()),
+                            ..Default::default()
+                        };
+                    } else {
+                        log::warn!("delete_message failed to get behavior");
+                    }
+                } else {
+                    // should never happen because idx must be greater than zero
+                }
+            } else {
+                unreachable!();
+            }
         }
 
         self.active_chat
@@ -79,7 +125,22 @@ impl ChatData {
             return None;
         }
 
-        self.active_chat.messages.get_latest_displayed()
+        let r = self.active_chat.messages.get_latest_displayed();
+        if r.is_none() {
+            log::trace!("couldn't get latest displayed. trying bottom of page instead");
+            self.get_bottom_of_page(conv_id)
+        } else {
+            r
+        }
+    }
+
+    pub fn get_bottom_of_page(&self, conv_id: Uuid) -> Option<PartialMessage> {
+        if self.active_chat.id() != conv_id {
+            log::warn!("get_bottom_of_page wrong chat id");
+            return None;
+        }
+
+        self.active_chat.messages.get_bottom_of_page()
     }
 
     // call this first to fetch the messages
@@ -94,6 +155,14 @@ impl ChatData {
         }
 
         self.active_chat.messages.insert_messages(messages);
+    }
+
+    pub fn is_loaded(&self, conv_id: Uuid) -> bool {
+        if self.active_chat.id() != conv_id {
+            return false;
+        }
+
+        self.active_chat.messages.loaded.len() == self.active_chat.messages.all.len()
     }
 
     // returns true if the view (or javascript) needs to be updated
@@ -116,23 +185,11 @@ impl ChatData {
         if should_append_msg {
             self.active_chat.messages.insert_messages(vec![msg]);
             true
-        } else if let Some(behavior) = behavior {
-            if !matches!(behavior.on_scroll_end, ScrollBehavior::FetchMore) {
-                // this seemingly useless if statement helps detect bugs regarding the caht behavior.
-                if self.active_chat.messages.all.len() >= DEFAULT_MESSAGES_TO_TAKE {
-                    // if the user scrolls up and then receives new messages, need to fetch them when the user scrolls back down.
-                    behavior.on_scroll_end = ScrollBehavior::FetchMore;
-                } else {
-                    log::warn!(
-                        "unexpected condition in ChatData::new_message. behavior is: {:?}, num messages is: {}", behavior, self.active_chat.messages.all.len()
-                    );
-                }
-                true
-            } else {
-                false
-            }
         } else {
-            unreachable!()
+            if let Some(behavior) = behavior {
+                behavior.message_received = true;
+            }
+            false
         }
     }
 
@@ -143,14 +200,15 @@ impl ChatData {
         }
     }
 
-    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) {
+    pub fn remove_message_from_view(&mut self, conv_id: Uuid, message_id: Uuid) -> bool {
         if conv_id != self.active_chat.id() {
             log::warn!("remove_message_from_view wrong chat id");
-            return;
+            return false;
         }
+
         self.active_chat
             .messages
-            .remove_message_from_view(message_id);
+            .remove_message_from_view(message_id)
     }
 
     // after the messages have been fetched, init the active chat
@@ -191,6 +249,12 @@ impl ChatData {
     pub fn set_chat_behavior(&mut self, id: Uuid, behavior: ChatBehavior) {
         self.chat_behaviors.insert(id, behavior);
     }
+
+    pub fn set_scroll_value(&mut self, chat_id: Uuid, val: i64) {
+        if let Some(behavior) = self.chat_behaviors.get_mut(&chat_id) {
+            behavior.scroll_value.replace(val);
+        }
+    }
 }
 
 impl ChatData {
@@ -202,7 +266,8 @@ impl ChatData {
                 };
                 behavior.view_init.msg_time.replace(scroll_top.date);
             } else {
-                log::warn!("failed to get earliest_displayed in ChatData::scroll_up");
+                behavior.view_init.scroll_to = ScrollTo::MostRecent;
+                behavior.view_init.msg_time.take();
             }
         } else {
             log::warn!("failed to get chat behavior in ChatData::scroll_up");
