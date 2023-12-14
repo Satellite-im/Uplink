@@ -65,23 +65,16 @@ impl LogGlue {
     pub fn new() -> Self {
         if !STATIC_ARGS.production_mode {
             dotenv::dotenv().ok();
-        }
 
-        let should_set_env = match env::var("RUST_LOG") {
-            Ok(s) => !s.contains("uplink"),
-            Err(_) => true,
-        };
-
-        if should_set_env {
-            if STATIC_ARGS.production_mode {
-                env::set_var("RUST_LOG", "warn");
-            } else {
+            if env::var("RUST_LOG").is_err() {
                 env::set_var(
                     "RUST_LOG",
                     "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
                 );
             }
         }
+
+        // if in production mode, if RUST_LOG isn't set, the default should automatically get set to INFO.
 
         let mut builder = Builder::from_env("RUST_LOG");
         let logger = builder.build();
