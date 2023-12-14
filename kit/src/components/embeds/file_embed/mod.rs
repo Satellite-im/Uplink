@@ -66,7 +66,13 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
         .and_then(OsStr::to_str)
-        .map(|s| format!(".{s}"))
+        .map(|s| {
+            if s.len() > 6 {
+                format!(".{}...", &s[0..4])
+            } else {
+                format!(".{}", s)
+            }
+        })
         .unwrap_or_default();
     let file_extension_is_empty = file_extension.is_empty();
     let filename = &cx.props.filename;
