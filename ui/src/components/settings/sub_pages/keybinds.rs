@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
-use common::state::settings::GlobalShortcut;
+use common::state::settings::{GlobalShortcut, Shortcut};
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
@@ -43,12 +43,20 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
 
 #[derive(PartialEq, Props)]
 pub struct KeybindSectionProps {
-    pub keys: Vec<String>, // TODO: This should be a Vec<Key>
+    pub bindings: Vec<(GlobalShortcut, Shortcut)>,
+    pub shortcut: GlobalShortcut,
     pub section_label: String,
 }
 
 pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let is_recording = use_state(cx, || false);
+    let bindings = cx
+        .props
+        .bindings
+        .iter()
+        .find(|(gs, _)| *gs == cx.props.shortcut)
+        .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
+        .unwrap_or_default();
 
     cx.render(rsx!(
         div {
@@ -60,7 +68,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             div {
                 class: "keybind-section-keys",
                 Keybind {
-                    keys: cx.props.keys.clone()
+                    keys: bindings
                 }
             },
             div {
@@ -103,15 +111,13 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             },
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
-                keys: bindings
-                        .iter()
-                        .find(|(gs, _)| *gs == GlobalShortcut::IncreaseFontSize)
-                        .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
-                        .unwrap_or_default(),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::IncreaseFontSize
             }
             KeybindSection {
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
-                keys: vec!["Ctrl".into(), "Shift".into(), "-".into()]
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::DecreaseFontSize
             }
         }
     ))
