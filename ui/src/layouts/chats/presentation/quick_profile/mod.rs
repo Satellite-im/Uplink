@@ -234,7 +234,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             conv_id: c,
                             msg,
                             attachments: Vec::new(),
-                            ui_msg_id: uuid,
+                            appended_msg_id: uuid,
                             rsp: tx,
                         };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
