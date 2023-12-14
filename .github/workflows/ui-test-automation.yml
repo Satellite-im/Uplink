@@ -527,7 +527,7 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/test-reports/testing-uplink/${{ github.run_number }})
+            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/test-reports/${{ github.run_number }})
 
   remove-label:
     needs:
