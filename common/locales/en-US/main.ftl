@@ -253,6 +253,7 @@ settings-audio = Audio & Sound Settings
     .input-device-description = Select your input device (microphone, usually).
     .output-device = Output Device
     .output-device-description = This is where all sounds will be played. (Usually your headphones).
+    .device-test = Test
     .sample-rate = Sample rate
     .sample-rate-description = Higher sample rates will capture more "frames" of your audio and sound "clearer".
     .noise-suppression = Noise suppression
