@@ -33,11 +33,32 @@ button {
   cursor: pointer;
 }
 
+ul {
+  list-style: unset;
+  li > ul {
+    list-style: circle;
+    padding-left: 2rem;
+    li > ul {
+      list-style: square;
+      padding-left: 2rem;
+    }
+  }
+  li > ol {
+    list-style: lower-alpha;
+  }
+}
+
+ol {
+  list-style: decimal;
+}
+
 /* Remove list styles (bullets/numbers) */
-ol,
-ul,
 menu {
   list-style: none;
+}
+
+ul, ol, menu {
+  list-style-position: inside;
 }
 
 /* For images to not be able to exceed their container */

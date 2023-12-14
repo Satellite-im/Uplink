@@ -406,7 +406,7 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
 pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     if should_markdown {
-        markdown(text, emojis)
+        markdown_whole(text, emojis)
     } else if emojis {
         let s = replace_emojis(text.trim());
         if is_only_emojis(&s) {
@@ -577,6 +577,127 @@ fn markdown(text: &str, emojis: bool) -> String {
 
         html_output.push('\n');
     }
+    html_output
+}
+
+/// Applies markdown to whole text instead of by line
+fn markdown_whole(text: &str, emojis: bool) -> String {
+    log::debug!("start====== {}", text);
+    let txt = text.trim();
+    if emojis {
+        let r = replace_emojis(txt);
+        // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
+        // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
+        if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
+           && r != "#"
+           && r != "*"
+           && r != "##"
+           && r != "**"
+           && r != "-"
+           && is_only_emojis(&r)
+        {
+            return format!("<span class=\"big-emoji\">{r}</span>");
+        } else if is_only_emojis(txt) || r == "-" {
+            return format!("<p>{txt}</p>");
+        }
+    }
+
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+
+    let modified_lines: Vec<String> = txt
+        .split('\n')
+        .map(|line| {
+            // For strikethrough to be fully detected they need leading and trailing whitespaces
+            let line = STRIKE_THROUGH_REGEX.replace_all(line, " $1 ");
+            if line.starts_with('>') {
+                format!("\\{}", line)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
+
+    let line = modified_lines.join("\n");
+
+    let mut html_output = String::new();
+    let mut in_paragraph = false;
+    let mut in_code_block = false;
+    //let mut add_text_language = true;
+
+    //for line in &mut modified_lines_refs {
+    let parser = pulldown_cmark::Parser::new_ext(&line, options);
+    let line_trim = line.trim();
+    /*if line_trim == "```" && add_text_language {
+        *line = "```text";
+        add_text_language = false;
+    }*/
+    let mut it = parser.into_iter().peekable();
+    let mut previous_event = None;
+    while let Some(event) = it.next() {
+        let prev = event.clone();
+        match event {
+            pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                in_paragraph = true;
+                html_output.push_str("<p>");
+            }
+            pulldown_cmark::Event::End(Tag::Paragraph) => {
+                in_paragraph = false;
+            }
+            pulldown_cmark::Event::Text(t) => {
+                // Remove the one leading/trailing whitespace from strikethrough processing
+                let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
+                    previous_event
+                {
+                    t.strip_prefix(' ').unwrap_or(&t).into()
+                } else if let Some(&pulldown_cmark::Event::Start(Tag::Strikethrough)) = it.peek() {
+                    t.strip_suffix(' ').unwrap_or(&t).into()
+                } else {
+                    t.to_string()
+                };
+                let text = if emojis { replace_emojis(&text) } else { text };
+                let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                    text.replace("\n\n", "<br/>").into()
+                } else {
+                    text.into()
+                };
+                pulldown_cmark::html::push_html(
+                    &mut html_output,
+                    std::iter::once(pulldown_cmark::Event::Text(txt)),
+                );
+            }
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
+                //add_text_language = false;
+                in_code_block = true;
+                match code_block_kind {
+                    CodeBlockKind::Fenced(language) => {
+                        let language = if language.is_empty() {
+                            "text"
+                        } else {
+                            &language
+                        };
+
+                        html_output
+                            .push_str(&format!("<pre><code class=\"language-{}\">", language))
+                    }
+                    _ => html_output.push_str("<pre><code class=\"language-text\">"),
+                }
+            }
+            pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                if in_code_block && line_trim == "```" {
+                    in_code_block = false;
+                    //add_text_language = true;
+                    // HACK: To close block code is necessary to push tags 2 times
+                    html_output.push_str("</code></pre>");
+                    html_output.push_str("</code></pre>");
+                }
+            }
+            _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
+        }
+        previous_event = Some(prev);
+    }
+    html_output.push('\n');
+    //}
     html_output
 }
 
