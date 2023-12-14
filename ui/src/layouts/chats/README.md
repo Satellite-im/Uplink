@@ -51,4 +51,13 @@ The Chats layout has its own `UseSharedState` - `ChatData`. `State.chats` still 
     - wait until `presentation/messages/mod.rs` renders the messages in `active_chat.messages.all`
     - next create the `IntersectionObserver`. 
     - receive events from the `IntersectionObserver` but also receive events from the coroutine channel (in case the active chat key changes, due to switching conversations or loading new messages into `active_chat.messages.all`).
-- To accomidate this, there is a nested loop in `presentation/messages/coroutine.rs`. The innermost loop uses a `tokio::select!` statement to poll the javascript evaluator and the coroutine channel. 
+- To accommodate this, there is a nested loop in `presentation/messages/coroutine.rs`. The innermost loop uses a `tokio::select!` statement to poll the javascript evaluator and the coroutine channel. 
+
+## more scrolling behavior
+- if the user scrolls up before more messages have been fetched, the `onscroll` event handler must be used to ensure correct behavior. 
+    - `ChatBehavior.on_scroll_end` won't help in this case because there are no more messages to fetch. the JS event handler is used
+    to detect when the bottom of the page is reached and if needed, fetches more messages, which may have been received while the user was
+    scrolled up. 
+- a funny edge case occurs when the user receives a message with multiple images. When this happens, the message can take up so much space
+on the screen that the message never actually scrolls into view (as far as the IntersectionObserver is concerned). The JS `onscroll` event 
+handler is used here to make the "scroll to bottom" button appear early, since it usually doesn't appear until the user scrolls past a message. 

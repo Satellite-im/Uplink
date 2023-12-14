@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 use super::ui_adapter;
 
@@ -6,6 +7,7 @@ use super::ui_adapter;
 pub struct FetchMessagesResponse {
     pub messages: Vec<ui_adapter::Message>,
     pub has_more: bool,
+    pub most_recent: Option<Uuid>,
 }
 
 pub enum FetchMessagesConfig {
