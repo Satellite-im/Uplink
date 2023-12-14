@@ -224,13 +224,10 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             aria_label: {
                 format_args!(
-                    "message-{}-{}",
+                    "message-{}",
                     if is_remote {
                         "remote"
                     } else { "local" },
-                    if cx.props.order.is_some() {
-                        order.to_string()
-                    } else { "".into() }
                 )
             },
             white_space: "pre-wrap",
