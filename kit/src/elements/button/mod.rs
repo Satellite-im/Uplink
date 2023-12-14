@@ -13,6 +13,7 @@ pub struct Props<'a> {
     aria_label: Option<String>,
     icon: Option<Icon>,
     disabled: Option<bool>,
+    disabled_appearance: Option<Appearance>,
     appearance: Option<Appearance>,
     with_badge: Option<String>,
     small: Option<bool>,
@@ -25,7 +26,7 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
     // If the button is disabled, we can short circuit this and just provide the disabled appearance.
     if let Some(is_disabled) = cx.props.disabled {
         if is_disabled {
-            return Appearance::Disabled;
+            return cx.props.disabled_appearance.unwrap_or(Appearance::Disabled);
         }
     }
     cx.props.appearance.unwrap_or(Appearance::Default)

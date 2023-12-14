@@ -231,6 +231,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
             aria_label: "Call".into(),
+            disabled_appearance: Appearance::Transparent,
             appearance: Appearance::Secondary,
             text: text_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}),
             tooltip: tooltip_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}, arrow_top),
@@ -248,6 +249,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
         Button {
             icon: Icon::VideoCamera,
             disabled: true,
+            disabled_appearance: Appearance::Transparent,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             text: text_builder("uplink.coming-soon"),
