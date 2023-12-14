@@ -34,31 +34,34 @@ button {
 }
 
 ul {
-  list-style: unset;
+  list-style-type: unset;
   li > ul {
-    list-style: circle;
     padding-left: 2rem;
+    list-style-type: circle;
     li > ul {
-      list-style: square;
       padding-left: 2rem;
+      list-style-type: square;
     }
   }
   li > ol {
-    list-style: lower-alpha;
+    list-style-type: lower-alpha;
   }
 }
 
 ol {
-  list-style: decimal;
+  list-style-type: decimal;
+  li::marker {
+    text-align: right;
+  }
 }
 
-/* Remove list styles (bullets/numbers) */
 menu {
-  list-style: none;
+  list-style-type: none;
 }
 
 ul, ol, menu {
-  list-style-position: inside;
+  white-space: normal;
+  padding-left: 2em;
 }
 
 /* For images to not be able to exceed their container */
