@@ -623,15 +623,9 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
-    //let mut add_text_language = true;
 
-    //for line in &mut modified_lines_refs {
     let parser = pulldown_cmark::Parser::new_ext(&line, options);
     let line_trim = line.trim();
-    /*if line_trim == "```" && add_text_language {
-        *line = "```text";
-        add_text_language = false;
-    }*/
     let mut it = parser.into_iter().peekable();
     let mut previous_event = None;
     while let Some(event) = it.next() {
@@ -686,7 +680,6 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
             pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
                 if in_code_block && line_trim == "```" {
                     in_code_block = false;
-                    //add_text_language = true;
                     // HACK: To close block code is necessary to push tags 2 times
                     html_output.push_str("</code></pre>");
                     html_output.push_str("</code></pre>");
@@ -697,7 +690,6 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
         previous_event = Some(prev);
     }
     html_output.push('\n');
-    //}
     html_output
 }
 
