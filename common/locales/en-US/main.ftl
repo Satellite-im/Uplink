@@ -278,6 +278,8 @@ settings-files = Files Settings
 settings-keybinds = Keybind Settings
     .increase-font-size = Increase font size within Uplink.
     .decrease-font-size = Decrease font size within Uplink.
+    .toggle-mute = Mute & un-mute your microphone.
+    .toggle-deafen = Toggle turning off all sounds including your microphone and headphones.
     .change-keybind = Record New keybind
     .cancel-change-keybind = Cancel Recording
 

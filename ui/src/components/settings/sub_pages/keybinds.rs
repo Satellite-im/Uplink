@@ -119,6 +119,16 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::DecreaseFontSize
             }
+            KeybindSection {
+                section_label: get_local_text("settings-keybinds.toggle-mute"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::ToggleMute
+            }
+            KeybindSection {
+                section_label: get_local_text("settings-keybinds.toggle-deafen"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::ToggleDeafen
+            }
         }
     ))
 }

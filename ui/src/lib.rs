@@ -10,6 +10,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
+use common::state::settings::GlobalShortcut;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -236,11 +237,16 @@ fn app_layout(cx: Scope) -> Element {
             Titlebar {},
             KeyboardShortcuts {
                 on_global_shortcut: move |shortcut| {
+                    match shortcut {
+                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(),
+                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
+                        GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(),
+                        GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(),
+                    }
                     log::debug!("shortcut called {:?}", shortcut);
                 }
             },
-            Toasts {
-            },
+            Toasts {},
             Outlet::<UplinkRoute>{},
             AppLogger {},
             PrismScripts {},

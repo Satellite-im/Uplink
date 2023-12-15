@@ -4,6 +4,8 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 
+pub mod shortcut_handlers;
+
 #[derive(Props)]
 pub struct Props<'a> {
     on_global_shortcut: EventHandler<'a, GlobalShortcut>,
