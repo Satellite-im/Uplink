@@ -25,7 +25,7 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
             class: "keybind-key",
             div {
                 class: "keybind-key-inner",
-                "{key}",
+                "{key.to_uppercase()}",
             }
         },
         if idx != cx.props.keys.len() - 1 {
