@@ -12,7 +12,7 @@ use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
-use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
@@ -60,7 +60,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log::{self, LevelFilter};
+use warp::logging::tracing::log::{self};
 
 use muda::AboutMetadata;
 use muda::Menu;
@@ -112,7 +112,8 @@ pub fn main_lib() {
     bootstrap::platform_quirks();
 
     // 2. configure logging via the cli
-    bootstrap::configure_logger(common::Args::parse().profile);
+    let args = common::Args::parse();
+    bootstrap::configure_logger(args.production_mode, args.log_to_file);
 
     // 3. Make sure that if the app panics we can catch it
     bootstrap::set_app_panic_hook();
