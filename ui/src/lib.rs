@@ -107,10 +107,6 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
-const UNREAD_ASPECT_RATIO: &str = r#"for (element of document.getElementsByClassName("nav-unread-indicator")) {
-    element.style.height = element.getBoundingClientRect().width + "px"
-}"#;
-
 pub fn main_lib() {
     // 1. fix random system quirks
     bootstrap::platform_quirks();
@@ -1114,18 +1110,11 @@ fn AppNav<'a>(
         to: "/chat",
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
-        child: (unreads > 0).then(|| {
-            cx.render(rsx!(div {
-                class: "nav-unread-indicator",
-                span {
-                    class: "unread-text",
-                    unreads.to_string(),
-                },
-                script {
-                    UNREAD_ASPECT_RATIO
-                }
-            }))
-        }),
+        with_badge: if unreads > 0 {
+            Some(unreads.to_string())
+        } else {
+            None
+        },
         context_items: (unreads > 0).then(|| {
             cx.render(rsx!(ContextItem {
                 aria_label: "clear-unreads".into(),
