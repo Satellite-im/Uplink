@@ -85,7 +85,11 @@
         width: 100%;
     }
     .appearance-disabled {
+        opacity: calc(var(--opacity-modifier) * 0.5);
         background-color: var(--secondary-darker);
+        &:hover {
+            background-color: var(--secondary-darker);
+        }
     }
 }
 
