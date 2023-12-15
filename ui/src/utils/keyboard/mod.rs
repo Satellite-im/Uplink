@@ -3,8 +3,27 @@ use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
+use once_cell::sync::Lazy;
+use std::{
+    sync::Mutex,
+    time::{Duration, Instant},
+};
 
 pub mod shortcut_handlers;
+
+// TODO: This fires once on key-down as well as key-up we should fix this in the future.
+static LAST_CALLED: Lazy<Mutex<Instant>> =
+    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(1)));
+
+fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
+    let mut last_called = LAST_CALLED.lock().unwrap();
+    let now = Instant::now();
+
+    if now.duration_since(*last_called) > debounce_duration {
+        callback();
+        *last_called = now;
+    }
+}
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -102,7 +121,12 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
         to_owned![command_pressed];
         move || {
-            command_pressed.with_mut(|i| *i = true);
+            debounced_callback(
+                || {
+                    command_pressed.with_mut(|i| *i = true);
+                },
+                Duration::from_millis(500),
+            );
         }
     });
 
