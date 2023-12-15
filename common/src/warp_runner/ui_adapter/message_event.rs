@@ -18,6 +18,7 @@ use crate::{
 };
 
 #[derive(Display, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum MessageEvent {
     #[display(fmt = "Received")]
     Received {
