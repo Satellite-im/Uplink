@@ -148,10 +148,12 @@
     bottom: calc(100% - 0.75rem);
     left: calc(100% - 0.75rem);
     background-color: var(--danger-light);
-    border-radius: var(--border-radius-less);
+    border-radius: var(--border-radius-more);
     font-size: var(--text-size-less);
-    padding: 0 var(--gap-less);
+    padding: 2px var(--gap-less);
     color: var(--text-color-bright);
+    min-width: calc(var(--text-size-less) + 4px + 2px); //4px for padding, 2px for min width with font-size
+    text-align: center;
   }
   &.disabled {
     .btn {
