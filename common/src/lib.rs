@@ -30,28 +30,6 @@ static_loader! {
     };
 }
 
-// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
-// enable tracing from modules besides Uplink
-#[derive(clap::Subcommand, Debug)]
-pub enum LogProfile {
-    /// normal operation
-    Normal,
-    /// print everything but tracing logs to the terminal
-    Debug,
-    /// print everything including tracing logs to the terminal
-    Trace,
-    /// like trace but include warp logs
-    TraceWarp,
-    /// trace dioxus
-    TraceDioxus,
-    /// Logs debug level from all crates to a file
-    DebugAll,
-    /// Logs trace level from all crates to a file
-    TraceAll,
-    /// maximum logging for blink
-    TraceBlink,
-}
-
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 pub struct Args {
@@ -70,10 +48,10 @@ pub struct Args {
     /// tells the app that it was installed via an installer, not built locally. Uplink will look for an `extra.zip` file based on
     /// the platform-specific installer.
     #[clap(long, default_value_t = false)]
-    production_mode: bool,
+    pub production_mode: bool,
     /// configures log output
-    #[command(subcommand)]
-    pub profile: Option<LogProfile>,
+    #[clap(long, default_value_t = false)]
+    pub log_to_file: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
