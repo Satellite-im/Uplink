@@ -1114,6 +1114,15 @@ fn AppNav<'a>(
         } else {
             None
         },
+        context_items: (unreads > 0).then(|| {
+            cx.render(rsx!(ContextItem {
+                aria_label: "clear-unreads".into(),
+                text: get_local_text("uplink.clear-unreads"),
+                onpress: move |_| {
+                    state.write().mutate(Action::ClearAllUnreads);
+                }
+            },))
+        }),
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
