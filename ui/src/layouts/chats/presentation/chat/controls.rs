@@ -46,12 +46,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
         .get()
         .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
         .unwrap_or(false);
-    let show_group_list = cx
-        .props
-        .show_group_users
-        .get()
-        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
-        .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
     let show_more = use_state(cx, || false);
@@ -157,31 +151,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     show_more.set(false);
                 }
             })
-        }
-        if !cx.props.is_owner && conversation_type == ConversationType::Group {
-            rsx!(
-                Button {
-                    icon: Icon::ListBullet,
-                    aria_label: "edit-group".into(),
-                    appearance: if show_group_list {
-                        Appearance::Primary
-                    } else {
-                        Appearance::Secondary
-                    },
-                    text: text_builder("friends.view-group"),
-                    tooltip: tooltip_builder("friends.view-group", arrow_top),
-                    onpress: move |_| {
-                            if show_group_list {
-                                cx.props.show_group_users.set(None);
-                            } else if chat_data.read().active_chat.is_initialized {
-                                cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
-                                cx.props.show_edit_group.set(None);
-
-                            }
-                            show_more.set(false);
-                    }
-                }
-            )
         }
         Button {
             icon: if favorite {
