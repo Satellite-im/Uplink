@@ -7,6 +7,7 @@ use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
@@ -260,8 +261,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         class: "profile-banner",
                         aria_label: "profile-banner",
                         style: "background-image: url({banner});",
-                        onclick: move |_| {
-                            set_banner(open_crop_image_modal_for_banner_picture.clone());
+                        onclick: move |mouse_event_data| {
+                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                set_banner(open_crop_image_modal_for_banner_picture.clone());
+                            }
                         },
                         p {class: "change-banner-text", "{change_banner_text}" },
                     },
@@ -283,8 +286,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         class: "profile-picture",
                         aria_label: "profile-picture",
                         style: "background-image: url({image});",
-                        onclick: move |_| {
-                            set_profile_picture(open_crop_image_modal.clone());
+                        onclick: move |mouse_event_data: Event<MouseData>| {
+                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                set_profile_picture(open_crop_image_modal.clone());
+                            }
                         },
                         Button {
                             icon: Icon::Plus,
@@ -389,25 +394,27 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                             text: get_local_text("settings-profile.copy-id")
                                         }
                                     )),
-                                    onpress: move |_| {
-                                        match Clipboard::new() {
-                                            Ok(mut c) => {
-                                                if let Err(e) = c.set_text(short_name.clone()) {
-                                                    log::warn!("Unable to set text to clipboard: {e}");
+                                    onpress: move |mouse_event: MouseEvent| {
+                                        if mouse_event.modifiers() != Modifiers::CONTROL {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(short_name.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
                                                 }
-                                            },
-                                            Err(e) => {
-                                                log::warn!("Unable to create clipboard reference: {e}");
-                                            }
-                                        };
-                                        state
-                                            .write()
-                                            .mutate(Action::AddToastNotification(ToastNotification::init(
-                                                "".into(),
-                                                get_local_text("friends.copied-did"),
-                                                None,
-                                                2,
-                                            )));
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
                                     }
                                 }
                             },
