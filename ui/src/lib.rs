@@ -241,9 +241,14 @@ fn app_layout(cx: Scope) -> Element {
 
 fn AppStyle(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    render! {
+        style { get_app_style(&state.read()) },
+    }
+}
 
+pub fn get_app_style(state: &State) -> String {
     let mut font_style = String::new();
-    if let Some(font) = state.read().ui.font.clone() {
+    if let Some(font) = state.ui.font.clone() {
         font_style = format!(
             "
         @font-face {{
@@ -262,26 +267,22 @@ fn AppStyle(cx: Scope) -> Element {
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
 
     // render the Uplink app
-    let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+    let open_dyslexic = if state.configuration.general.dyslexia_support {
         OPEN_DYSLEXIC
     } else {
         ""
     };
 
-    let font_scale = format!(
-        "html {{ font-size: {}rem; }}",
-        state.read().settings.font_scale()
-    );
+    let font_scale = format!("html {{ font-size: {}rem; }}", state.settings.font_scale());
 
     let theme = state
-        .read()
         .ui
         .theme
         .as_ref()
         .map(|theme| theme.styles.clone())
         .unwrap_or_default();
 
-    let accent_color = state.read().ui.accent_color;
+    let accent_color = state.ui.accent_color;
     let accent_color = if let Some(color) = accent_color {
         format!(
             ":root {{
@@ -293,9 +294,7 @@ fn AppStyle(cx: Scope) -> Element {
         "".into()
     };
 
-    render! {
-        style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
-    }
+    format!("{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}")
 }
 
 fn use_auto_updater(cx: &ScopeState) -> Option<()> {
