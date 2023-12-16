@@ -12,7 +12,7 @@ jobs:
       - uses: delivery-much/actions-assigner@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: christianvuerings/add-labels@v1
+      - uses: christianvuerings/add-labels@v1.1
         with:
           labels: |
             Missing dev review
