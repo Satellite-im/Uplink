@@ -261,7 +261,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                             log::error!("failed to get own identity: {e}");
                             e
                         });
-                    update_identity_with_correct_values(&mut id, warp).await;
+                    update_identity(&mut id, warp).await;
                     rsp.send(id)
                 }
                 Err(e) => {
@@ -282,7 +282,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 {
                     Ok(_) => {
                         let mut id = Ok(my_id.clone());
-                        update_identity_with_correct_values(&mut id, warp).await;
+                        update_identity(&mut id, warp).await;
                         rsp.send(id)
                     }
                     Err(e) => {
@@ -304,7 +304,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = match r {
                 Ok(_) => {
                     let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-                    update_identity_with_correct_values(&mut id, warp).await;
+                    update_identity(&mut id, warp).await;
                     rsp.send(id)
                 }
                 Err(e) => {
@@ -321,7 +321,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = match r {
                 Ok(_) => {
                     let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-                    update_identity_with_correct_values(&mut id, warp).await;
+                    update_identity(&mut id, warp).await;
                     rsp.send(id)
                 }
                 Err(e) => {
@@ -336,7 +336,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .update_identity(IdentityUpdate::StatusMessage(status))
                 .await;
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            update_identity_with_correct_values(&mut id, warp).await;
+            update_identity(&mut id, warp).await;
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
@@ -351,7 +351,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .update_identity(IdentityUpdate::Username(username))
                 .await;
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            update_identity_with_correct_values(&mut id, warp).await;
+            update_identity(&mut id, warp).await;
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
@@ -371,11 +371,8 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                         Err(Error::IdentityDoesntExist)
                     } else {
                         let mut id = Ok(Identity::from(ids[0].clone()));
-                        update_identity_with_correct_values(&mut id, warp).await;
-                        match id {
-                            Ok(id) => Ok(id),
-                            Err(e) => Err(e),
-                        }
+                        update_identity(&mut id, warp).await;
+                        id
                     }
                 }
                 Err(err) => Err(err),
@@ -385,7 +382,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::SetStatus { status, rsp } => {
             let r = warp.multipass.set_identity_status(status).await;
             let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            update_identity_with_correct_values(&mut id, warp).await;
+            update_identity(&mut id, warp).await;
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
