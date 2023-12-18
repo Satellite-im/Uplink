@@ -59,6 +59,9 @@ pub enum DiscoveryMode {
     /// Enable full discovery
     Full,
 
+    /// Use warp specific discovery
+    Shuttle,
+
     /// Address to a specific discovery point
     RzPoint { address: String },
 
@@ -70,8 +73,9 @@ pub enum DiscoveryMode {
 impl std::str::FromStr for DiscoveryMode {
     type Err = warp::error::Error;
     fn from_str(mode: &str) -> Result<Self, Self::Err> {
-        match mode {
+        match mode.to_lowercase().as_str() {
             "full" => Ok(DiscoveryMode::Full),
+            "shuttle" => Ok(DiscoveryMode::Shuttle),
             "disable" => Ok(DiscoveryMode::Disable),
             _ => Err(warp::error::Error::Other),
         }
