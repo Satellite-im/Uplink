@@ -275,22 +275,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             // idk why this happened but this code will get the current identity, update it, and return it
             // without attempting to fetch the "updated" identity from warp.
             let _ = match warp.multipass.get_own_identity().await.map(Identity::from) {
-                Ok(mut my_id) => match warp
+                Ok(my_id) => match warp
                     .multipass
                     .update_identity(IdentityUpdate::Picture(pfp.clone()))
                     .await
                 {
                     Ok(_) => {
-                        if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await
-                        {
-                            my_id.set_profile_picture(&identity_image_to_base64(&picture));
-                        }
-
-                        if let Ok(banner) = warp.multipass.identity_banner(&my_id.did_key()).await {
-                            my_id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
-
-                        rsp.send(Ok(my_id))
+                        let mut id = Ok(my_id.clone());
+                        update_identity_with_correct_values(&mut id, warp).await;
+                        rsp.send(id)
                     }
                     Err(e) => {
                         log::error!("failed to get own identity: {e}");
