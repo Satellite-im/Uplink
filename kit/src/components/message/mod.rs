@@ -590,7 +590,6 @@ fn markdown(text: &str, emojis: bool) -> String {
 
 /// Applies markdown to whole text instead of by line
 fn markdown_whole(text: &str, emojis: bool) -> String {
-    log::debug!("start====== {}", text);
     let txt = text.trim();
     if emojis {
         let r = replace_emojis(txt);
