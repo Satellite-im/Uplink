@@ -7,6 +7,7 @@ use chrono::Local;
 use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
+use dioxus_core::Element;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -710,6 +711,42 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
         (visible.to_vec(), Some(context.to_vec()))
     };
+
+    let user_state_icons = move |user_state: Option<ParticipantState>| {
+        user_state.map(move |s| {
+            rsx!(div {
+                class: "call-status",
+                s.muted.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::MicrophoneSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.deafened.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::SignalSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.recording.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::VideoCamera,
+                            fill:"currentColor",
+                        }
+                    })
+                })
+            })
+        })
+    };
+
     cx.render(rsx!(
         visible.iter().map(|(speaking, user_state, user)| {
             rsx!(div {
@@ -718,38 +755,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                     platform: user.platform,
                     image: user.photo.clone(),
                 }
-                user_state.as_ref().map(|s|{
-                    rsx!(div {
-                        class: "call-status",
-                        s.muted.then(||{
-                            rsx!(div {
-                                class: "call-status-icon",
-                                IconElement {
-                                    icon: Icon::MicrophoneSlash,
-                                    fill:"currentColor",
-                                }
-                            })
-                        }),
-                        s.deafened.then(||{
-                            rsx!(div {
-                                class: "call-status-icon",
-                                IconElement {
-                                    icon: Icon::SignalSlash,
-                                    fill:"currentColor",
-                                }
-                            })
-                        }),
-                        s.recording.then(||{
-                            rsx!(div {
-                                class: "call-status-icon",
-                                IconElement {
-                                    icon: Icon::VideoCamera,
-                                    fill:"currentColor",
-                                }
-                            })
-                        })
-                    })
-                })
+                user_state_icons(user_state.clone())
             })
         }),
         context.map(|ctx| {
@@ -775,38 +781,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                                             class: "additional-participant-name",
                                             user.username.to_string()
                                         },
-                                        user_state.as_ref().map(|s|{
-                                            rsx!(div {
-                                                class: "additional-call-status",
-                                                s.muted.then(||{
-                                                    rsx!(div {
-                                                        class: "call-status-icon",
-                                                        IconElement {
-                                                            icon: Icon::MicrophoneSlash,
-                                                            fill:"currentColor",
-                                                        }
-                                                    })
-                                                }),
-                                                s.deafened.then(||{
-                                                    rsx!(div {
-                                                        class: "call-status-icon",
-                                                        IconElement {
-                                                            icon: Icon::SignalSlash,
-                                                            fill:"currentColor",
-                                                        }
-                                                    })
-                                                }),
-                                                s.recording.then(||{
-                                                    rsx!(div {
-                                                        class: "call-status-icon",
-                                                        IconElement {
-                                                            icon: Icon::VideoCamera,
-                                                            fill:"currentColor",
-                                                        }
-                                                    })
-                                                })
-                                            })
-                                        })
+                                        user_state_icons(user_state.clone())
                                 })
                             })
                         )),
