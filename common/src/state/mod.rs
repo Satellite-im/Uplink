@@ -1571,7 +1571,6 @@ impl State {
             .collect()
     }
     pub fn set_own_identity(&mut self, identity: Identity) {
-        println!("setting own identity: {:?}", identity.identity_status());
         self.id = identity.did_key();
         self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
