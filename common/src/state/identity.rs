@@ -117,6 +117,7 @@ impl Identity {
 
 impl Identity {
     pub fn set_identity_status(&mut self, status: IdentityStatus) {
+        println!("Setting status to {:?}", status);
         self.status = status;
     }
 

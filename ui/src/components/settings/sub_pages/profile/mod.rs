@@ -47,7 +47,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
-    let identitystatus_values = [
+    let identitystatus_values = vec![
         IdentityStatus::Online,
         IdentityStatus::Away,
         IdentityStatus::Busy,
