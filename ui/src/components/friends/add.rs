@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use futures::{channel::oneshot, StreamExt};
 use kit::components::context_menu::{ContextItem, ContextMenu};
 
@@ -350,25 +351,27 @@ pub fn AddFriend(cx: Scope) -> Element {
                         Button {
                             aria_label: "Copy ID".into(),
                             icon: Icon::ClipboardDocument,
-                            onpress: move |_| {
-                                match Clipboard::new() {
-                                    Ok(mut c) => {
-                                        if let Err(e) = c.set_text(short_name.clone()) {
-                                            log::warn!("Unable to set text to clipboard: {e}");
+                            onpress: move |mouse_event: MouseEvent| {
+                                if mouse_event.modifiers() != Modifiers::CONTROL {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            if let Err(e) = c.set_text(short_name.clone()) {
+                                                log::warn!("Unable to set text to clipboard: {e}");
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
                                         }
-                                    },
-                                    Err(e) => {
-                                        log::warn!("Unable to create clipboard reference: {e}");
-                                    }
-                                };
-                                state
-                                    .write()
-                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                        "".into(),
-                                        get_local_text("friends.copied-did"),
-                                        None,
-                                        2,
-                                    )));
+                                    };
+                                    state
+                                        .write()
+                                        .mutate(Action::AddToastNotification(ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.copied-did"),
+                                            None,
+                                            2,
+                                        )));
+                                }
                             },
                             tooltip: cx.render(rsx!(Tooltip{
                                 text: get_local_text("settings-profile.copy-id")
