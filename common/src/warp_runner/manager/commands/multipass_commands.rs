@@ -400,7 +400,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
     }
 }
 
-async fn update_identity_with_correct_values(
+async fn update_identity(
     id: &mut Result<Identity, Error>,
     warp: &mut crate::warp_runner::manager::Warp,
 ) {
