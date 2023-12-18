@@ -58,33 +58,29 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
         .unwrap_or_default();
 
+    let mut recorded_bindings: Vec<String> = vec![];
+
     cx.render(rsx!(
         div {
             class: "keybind-section",
+            (**is_recording).then(|| rsx!(div {
+                class: "keybind-section-mask",
+                onclick: move |_| {
+                    is_recording.set(false);
+                }
+            })),
             div {
                 class: "keybind-section-label",
                 "{cx.props.section_label}"
             },
             div {
-                class: "keybind-section-keys",
+                class: if **is_recording { "keybind-section-keys recording" } else { "keybind-section-keys" },
+                contenteditable: true,
+                onfocus: move |_| {
+                    is_recording.set(true);
+                },
                 Keybind {
-                    keys: bindings
-                }
-            },
-            div {
-                class: if **is_recording { "keybind-section-controls" } else { "keybind-section-controls is-red" },
-                Button {
-                    icon: if **is_recording { Icon::XMark } else { Icon::Radio },
-                    appearance: Appearance::Secondary,
-                    onpress: |_| {
-                        is_recording.set(!**is_recording);
-                    },
-                    tooltip: cx.render(rsx!(
-                        Tooltip {
-                            arrow_position: ArrowPosition::Right,
-                            text: if **is_recording {  get_local_text("settings-keybinds.cancel-change-keybind") } else {  get_local_text("settings-keybinds.change-keybind") }
-                        }
-                    )),
+                    keys: if **is_recording { recorded_bindings } else { bindings },
                 }
             }
         }

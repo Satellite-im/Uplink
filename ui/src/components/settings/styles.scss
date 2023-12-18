@@ -123,6 +123,16 @@
   align-items: center;
   padding: 0 var(--gap);
 
+  .keybind-section-mask {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: fixed;
+    z-index: 2;
+    background-color: rgba(0,0,0, 0.75);
+  }
+
   .keybind-separator {
     fill: transparent;
     stroke: var(--text-color-muted);
@@ -152,11 +162,17 @@
     height: var(--height-input);
     display: inline-flex;
     gap: var(--gap-less);
-    padding: var(--gap-less);
+    padding: calc(var(--gap-less) - 1px);
     background: var(--secondary-darker);
     border-radius: var(--border-radius);
     margin: var(--padding-less);
-    border: 1px solid var(--border-subtle-color);
+    border: 2px solid var(--border-subtle-color);
+    min-width: calc(var(--height-input) * 2);
+    z-index: 3;
+
+    &.recording {
+      border: 2px solid var(--info);
+    }
 
 
     .keybind-key {

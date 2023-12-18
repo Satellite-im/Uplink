@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_desktop::tao::keyboard::ModifiersState;
 use std::collections::HashMap;
+use std::fmt;
 
 use crate::language::get_id_of;
 use crate::language::US_ENGLISH;
@@ -13,6 +14,17 @@ pub enum GlobalShortcut {
     ToggleDeafen,
     IncreaseFontSize,
     DecreaseFontSize,
+}
+
+impl fmt::Display for GlobalShortcut {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            GlobalShortcut::ToggleMute => write!(f, "ToggleMute"),
+            GlobalShortcut::ToggleDeafen => write!(f, "ToggleDeafen"),
+            GlobalShortcut::IncreaseFontSize => write!(f, "IncreaseFontSize"),
+            GlobalShortcut::DecreaseFontSize => write!(f, "DecreaseFontSize"),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize)]
