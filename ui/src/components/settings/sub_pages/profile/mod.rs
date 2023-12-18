@@ -47,12 +47,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
-    let identitystatus_values = vec![
-        IdentityStatus::Online,
+    let identitystatus_values = [IdentityStatus::Online,
         IdentityStatus::Away,
         IdentityStatus::Busy,
-        IdentityStatus::Offline,
-    ];
+        IdentityStatus::Offline];
     let username = identity.username();
     let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
