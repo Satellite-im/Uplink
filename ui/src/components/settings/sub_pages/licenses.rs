@@ -9,20 +9,23 @@ use crate::components::settings::SettingSection;
 #[allow(non_snake_case)]
 pub fn Licenses(cx: Scope) -> Element {
     log::trace!("Licenses settings page rendered.");
+    const MIT_URL: &str = "https://github.com/Satellite-im/Uplink/blob/dev/LICENSE";
 
     cx.render(rsx!(
         div {
             id: "settings-licenses",
             aria_label: "settings-licenses",
             SettingSection {
-                section_label: "heroicons".into(),
-                section_description: "We have expanded upon the heroicons library we offer any additional icons under the same license as the original author.".into(),
+                section_label: "Uplink".into(),
+                section_description: "Both code and icons are under the MIT license.".into(),
                 Button {
-                    text: "MIT".into(),
+                    text: "License Description".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentText,
                     onpress: move |_| {
-                        let _ = open::that("https://github.com/tailwindlabs/heroicons/blob/master/LICENSE");
+                        if let Err(e) = open::that(MIT_URL) {
+                            log::error!("Failed to open URL {MIT_URL}: {e}");
+                        }
                     }
                 }
             },
