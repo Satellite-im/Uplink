@@ -91,7 +91,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     for modifier in evt.data.modifiers().iter() {
                         binding.push(return_string_from_modifier(modifier));
                     }
-                    binding.push(evt.data.code().to_string());
+                    if evt.data.code().to_string().contains("Character") {
+                        binding.push(evt.data.code().to_string());
+                    }
 
                     recorded_bindings.set(binding);
                     evt.stop_propagation();
