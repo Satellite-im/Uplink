@@ -5,7 +5,6 @@ use common::state::settings::{GlobalShortcut, Shortcut};
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
-use kit::elements::Appearance;
 #[allow(unused_imports)]
 use kit::elements::{
     button::Button,
@@ -13,7 +12,6 @@ use kit::elements::{
     tooltip::{ArrowPosition, Tooltip},
 };
 use muda::accelerator::Modifiers;
-use warp::crypto::digest::typenum::Mod;
 
 #[derive(PartialEq, Props)]
 pub struct KeybindProps {
@@ -124,7 +122,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                     icon: Icon::Keybind
                 },
                 p {
-                    "Keyboard shortcuts are paused while you're on this page."
+                    get_local_text("settings-keybinds.info")
                 }
             },
             KeybindSection {
