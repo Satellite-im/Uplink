@@ -82,13 +82,14 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 prevent_default: "oninput",
                 onkeydown: move |evt| {
                     println!("evt: {:?}", evt); 
-                    // let mut binding = vec![];
-                    // for modifier in evt.data.modifiers().iter() {
-                    //     binding.push(modifier.to_string());
-                    // }
-                    // binding.push(evt.data.code().to_string());
+                    let mut binding = vec![];
+                    for modifier in evt.data.modifiers().iter() {
+                        let modifier_string = format!("{:?}", modifier);
+                        binding.push(modifier_string);
+                    }
+                    binding.push(evt.data.code().to_string());
 
-                    // recorded_bindings.set(binding);
+                    recorded_bindings.set(binding);
                     evt.stop_propagation();
                 },
                 onkeyup: move |_| {
