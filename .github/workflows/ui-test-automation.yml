@@ -469,19 +469,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-allure-macos-ci
-          path: allure
+          path: testing-uplink/allure
 
       - name: Download Allure Results for Windows CI
         uses: actions/download-artifact@v3
         with:
           name: test-allure-windows-ci
-          path: allure
+          path: testing-uplink/allure
 
       - name: Download Allure Results for MacOS Chats
         uses: actions/download-artifact@v3
         with:
           name: test-allure-macos-chats
-          path: allure
+          path: testing-uplink/allure
 
       - name: Publish Test Results Summary
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
@@ -498,6 +498,7 @@ jobs:
         if: success()
         continue-on-error: true
         with:
+          repository: Satellite-im/test-reports
           ref: gh-pages
           path: gh-pages
 
@@ -507,16 +508,17 @@ jobs:
         id: allure-report
         with:
           gh_pages: gh-pages
-          allure_results: allure
+          allure_results: testing-uplink/allure
           allure_report: allure-report
           allure_history: allure-history
           keep_reports: 20
 
-      - name: Publish test report to Github Pages
+      - name: Deploy report to Github Pages
         if: success()
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          external_repository: Satellite-im/test-reports
           publish_branch: gh-pages
           publish_dir: allure-history
 
@@ -525,7 +527,7 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/Uplink/${{ github.run_number }})
+            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/test-reports/${{ github.run_number }})
 
   remove-label:
     needs:
