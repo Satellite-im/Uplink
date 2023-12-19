@@ -58,7 +58,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
         .unwrap_or_default();
 
-    let mut recorded_bindings: Vec<String> = vec![];
+    let recorded_bindings = use_state(cx, || vec![]);
 
     cx.render(rsx!(
         div {
@@ -85,10 +85,12 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                         binding.push(modifier.to_string());
                     }
                     binding.push(evt.data.code().to_string());
+
+                    recorded_bindings.set(binding);
                     evt.stop_propagation();
                 },
                 Keybind {
-                    keys: if **is_recording { recorded_bindings } else { bindings },
+                    keys: if **is_recording { *recorded_bindings.get() } else { bindings },
                 }
             }
         }
