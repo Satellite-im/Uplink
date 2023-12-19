@@ -40,16 +40,25 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let keybinds = common::state::default_keybinds::get_default_keybinds();
 
+    let scroll_script_on_keybing_page = r#"
+        const settings_keybind = document.getElementById('$SHORTCUT_PRESSED');
+        settings_keybind.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    "#;
+    let eval = use_eval(cx);
+
     cx.render(rsx! {
         for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
-                        on_global_shortcut: move |global_shortcut| {
+                        on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
                             if !state.read().settings.pause_global_keybinds {
                                 cx.props.on_global_shortcut.call(global_shortcut);
+                            } else {
+                                let scroll_script = scroll_script_on_keybing_page.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
+                                let _ = eval(&scroll_script);
                             }
                         },
                         global_shortcut: global_shortcut.clone(),

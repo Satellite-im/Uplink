@@ -12,6 +12,8 @@ use kit::elements::{
     switch::Switch,
     tooltip::{ArrowPosition, Tooltip},
 };
+use muda::accelerator::Modifiers;
+use warp::crypto::digest::typenum::Mod;
 
 #[derive(PartialEq, Props)]
 pub struct KeybindProps {
@@ -43,12 +45,14 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
 
 #[derive(PartialEq, Props)]
 pub struct KeybindSectionProps {
+    pub id: String,
     pub bindings: Vec<(GlobalShortcut, Shortcut)>,
     pub shortcut: GlobalShortcut,
     pub section_label: String,
 }
 
 pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
+    let keybind_section_id = cx.props.id.clone();
     let is_recording = use_state(cx, || false);
     let bindings = cx
         .props
@@ -62,6 +66,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
 
     cx.render(rsx!(
         div {
+            id: format_args!("{}", keybind_section_id),
             class: "keybind-section",
             (**is_recording).then(|| rsx!(div {
                 class: "keybind-section-mask",
@@ -84,8 +89,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     println!("evt: {:?}", evt); 
                     let mut binding = vec![];
                     for modifier in evt.data.modifiers().iter() {
-                        let modifier_string = format!("{:?}", modifier);
-                        binding.push(modifier_string);
+                        binding.push(return_string_from_modifier(modifier));
                     }
                     binding.push(evt.data.code().to_string());
 
@@ -122,25 +126,49 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 }
             },
             KeybindSection {
+                id: format!("{:?}", GlobalShortcut::IncreaseFontSize),
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::IncreaseFontSize
             }
             KeybindSection {
+                id: format!("{:?}", GlobalShortcut::DecreaseFontSize),
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::DecreaseFontSize
             }
             KeybindSection {
+                id: format!("{:?}", GlobalShortcut::ToggleMute),
                 section_label: get_local_text("settings-keybinds.toggle-mute"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleMute
             }
             KeybindSection {
+                id: format!("{:?}", GlobalShortcut::ToggleDeafen),
                 section_label: get_local_text("settings-keybinds.toggle-deafen"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDeafen
             }
         }
     ))
+}
+
+fn return_string_from_modifier(modifier: Modifiers) -> String {
+    match modifier {
+        Modifiers::ALT => "Alt".to_string(),
+        Modifiers::CONTROL => "Ctrl".to_string(),
+        Modifiers::SHIFT => "Shift".to_string(),
+        Modifiers::META => "Meta".to_string(),
+        Modifiers::ALT_GRAPH => "AltGr".to_string(),
+        Modifiers::CAPS_LOCK => "CapsLock".to_string(),
+        Modifiers::FN => "Fn".to_string(),
+        Modifiers::FN_LOCK => "FnLock".to_string(),
+        Modifiers::NUM_LOCK => "NumLock".to_string(),
+        Modifiers::SCROLL_LOCK => "ScrollLock".to_string(),
+        Modifiers::SYMBOL => "Symbol".to_string(),
+        Modifiers::SYMBOL_LOCK => "SymbolLock".to_string(),
+        Modifiers::HYPER => "Hyper".to_string(),
+        Modifiers::SUPER => "Super".to_string(),
+        _ => "".to_string(),
+    }
 }
