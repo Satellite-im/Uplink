@@ -91,6 +91,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     // recorded_bindings.set(binding);
                     evt.stop_propagation();
                 },
+                onkeyup: move |_| {
+                    is_recording.set(false);
+                },
                 Keybind {
                     keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
                 }
