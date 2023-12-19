@@ -469,19 +469,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-allure-macos-ci
-          path: allure
+          path: testing-uplink/allure
 
       - name: Download Allure Results for Windows CI
         uses: actions/download-artifact@v3
         with:
           name: test-allure-windows-ci
-          path: allure
+          path: testing-uplink/allure
 
       - name: Download Allure Results for MacOS Chats
         uses: actions/download-artifact@v3
         with:
           name: test-allure-macos-chats
-          path: allure
+          path: testing-uplink/allure
 
       - name: Publish Test Results Summary
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
@@ -508,7 +508,7 @@ jobs:
         id: allure-report
         with:
           gh_pages: gh-pages
-          allure_results: Uplink/allure
+          allure_results: testing-uplink/allure
           allure_report: allure-report
           allure_history: allure-history
           keep_reports: 20
