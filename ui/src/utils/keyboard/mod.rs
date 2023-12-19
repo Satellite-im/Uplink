@@ -11,6 +11,8 @@ use std::{
 
 pub mod shortcut_handlers;
 
+const NAVIGATE_AND_HIGHLIGHT_KEYBINDS: &str = include_str!("./navigate_and_highlight_keybinds.js");
+
 // TODO: This fires once on key-down as well as key-up we should fix this in the future.
 static LAST_CALLED: Lazy<Mutex<Instant>> =
     Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(1)));
@@ -39,11 +41,6 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
     let state = use_shared_state::<State>(cx)?;
     let keybinds = common::state::default_keybinds::get_default_keybinds();
-
-    let scroll_script_on_keybing_page = r#"
-        const settings_keybind = document.getElementById('$SHORTCUT_PRESSED');
-        settings_keybind.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    "#;
     let eval = use_eval(cx);
 
     cx.render(rsx! {
@@ -57,7 +54,7 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             if !state.read().settings.pause_global_keybinds {
                                 cx.props.on_global_shortcut.call(global_shortcut);
                             } else {
-                                let scroll_script = scroll_script_on_keybing_page.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
+                                let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
                                 let _ = eval(&scroll_script);
                             }
                         },
