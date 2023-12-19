@@ -48,7 +48,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
-    let identitystatus_values = [
+    let identity_status_values = [
         IdentityStatus::Online,
         IdentityStatus::Away,
         IdentityStatus::Busy,
@@ -451,7 +451,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     FancySelect {
                         initial_value: get_status_option(cx, &online_status),
                         width: 190,
-                        options: identitystatus_values.iter().map(|status| get_status_option(cx, status)).collect(),
+                        options: identity_status_values.iter().map(|status| get_status_option(cx, status)).collect(),
                         onselect: move |value: String| {
                             let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
                             ch.send(ChanCmd::Status(status));
