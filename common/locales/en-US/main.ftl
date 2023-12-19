@@ -115,6 +115,7 @@ friends = Friends
     .friends = Friends
     .cta-text = Things are better with friends.
     .add = Add Someone
+    .go-to-friends = Go to Friends
     .placeholder = Username#0000...
     .block = Block
     .all = All Friends
