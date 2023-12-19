@@ -79,6 +79,14 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 onfocus: move |_| {
                     is_recording.set(true);
                 },
+                onkeydown: move |evt| {
+                    let mut binding = vec![];
+                    for modifier in evt.data.modifiers().iter() {
+                        binding.push(modifier.to_string());
+                    }
+                    binding.push(evt.data.code().to_string());
+                    evt.stop_propagation();
+                },
                 Keybind {
                     keys: if **is_recording { recorded_bindings } else { bindings },
                 }
