@@ -625,26 +625,18 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
         })
         .collect();
 
-    let line = modified_lines.join("\n");
+    let line = txt;
 
     let mut html_output = String::new();
-    let mut in_paragraph = false;
     let mut in_code_block = false;
 
     let parser = pulldown_cmark::Parser::new_ext(&line, options);
-    let line_trim = line.trim();
     let mut it = parser.into_iter().peekable();
     let mut previous_event = None;
     while let Some(event) = it.next() {
         let prev = event.clone();
+        log::debug!("evt {:?}", event);
         match event {
-            pulldown_cmark::Event::Start(Tag::Paragraph) => {
-                in_paragraph = true;
-                html_output.push_str("<p>");
-            }
-            pulldown_cmark::Event::End(Tag::Paragraph) => {
-                in_paragraph = false;
-            }
             pulldown_cmark::Event::Text(t) => {
                 // Remove the one leading/trailing whitespace from strikethrough processing
                 let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
@@ -657,14 +649,9 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
                     t.to_string()
                 };
                 let text = if emojis { replace_emojis(&text) } else { text };
-                let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
-                    text.replace("\n\n", "<br/>").into()
-                } else {
-                    text.into()
-                };
                 pulldown_cmark::html::push_html(
                     &mut html_output,
-                    std::iter::once(pulldown_cmark::Event::Text(txt)),
+                    std::iter::once(pulldown_cmark::Event::Text(text.into())),
                 );
             }
             pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
@@ -685,7 +672,7 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
                 }
             }
             pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                if in_code_block && line_trim == "```" {
+                if in_code_block {
                     in_code_block = false;
                     // HACK: To close block code is necessary to push tags 2 times
                     html_output.push_str("</code></pre>");
