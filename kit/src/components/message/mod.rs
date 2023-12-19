@@ -427,34 +427,49 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     }
 }
 
-pub fn replace_emojis(input: &str) -> String {
-    fn process_stack(stack: &str) -> &str {
+fn stack_processor(stack: &str, unescape_html: bool, emojis: bool) -> &str {
+    if unescape_html {
         match stack {
-            "<3" => "❤️",
-            ">:)" => "😈",
-            ">:(" => "😠",
-            ":)" => "🙂",
-            ":(" => " 🙁",
-            ":/" => "🫤",
-            ";)" => "😉",
-            ":D" => "😁",
-            "xD" => "😆",
-            ":p" | ":P" => "😛",
-            ";p" | ";P" => "😜",
-            "xP" => "😝",
-            ":|" => "😐",
-            ":O" => "😮",
-            _ => stack,
+            "&quot;" => return "\"",
+            "&amp;" => return "&",
+            "&lt;" => return "<",
+            "&gt;" => return ">",
+            _ => {}
         }
     }
+    if !emojis {
+        return stack;
+    }
+    match stack {
+        "<3" => "❤️",
+        ">:)" => "😈",
+        ">:(" => "😠",
+        ":)" => "🙂",
+        ":(" => " 🙁",
+        ":/" => "🫤",
+        ";)" => "😉",
+        ":D" => "😁",
+        "xD" => "😆",
+        ":p" | ":P" => "😛",
+        ";p" | ";P" => "😜",
+        "xP" => "😝",
+        ":|" => "😐",
+        ":O" => "😮",
+        _ => stack,
+    }
+}
 
+pub fn process_string<F>(input: &str, processor: F) -> String
+where
+    F: Fn(&str) -> &str,
+{
     let mut builder = String::new();
     let mut stack = String::new();
 
     for char in input.chars() {
         match char {
             ' ' => {
-                builder += process_stack(&stack);
+                builder += processor(&stack);
                 stack.clear();
                 builder.push(char);
             }
@@ -462,8 +477,12 @@ pub fn replace_emojis(input: &str) -> String {
         }
     }
 
-    builder += process_stack(&stack);
+    builder += processor(&stack);
     builder
+}
+
+pub fn replace_emojis(input: &str) -> String {
+    process_string(input, |s| stack_processor(s, false, true))
 }
 
 fn markdown(text: &str, emojis: bool) -> String {
@@ -519,6 +538,7 @@ fn markdown(text: &str, emojis: bool) -> String {
         let mut it = parser.into_iter().peekable();
         let mut previous_event = None;
         while let Some(event) = it.next() {
+            log::debug!("evt {:?}", event);
             let prev = event.clone();
             match event {
                 pulldown_cmark::Event::Start(Tag::Paragraph) => {
@@ -590,6 +610,7 @@ fn markdown(text: &str, emojis: bool) -> String {
 
 /// Applies markdown to whole text instead of by line
 fn markdown_whole(text: &str, emojis: bool) -> String {
+    log::debug!("====================");
     let txt = text.trim();
     if emojis {
         let r = replace_emojis(txt);
@@ -628,6 +649,7 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
     let line = txt;
 
     let mut html_output = String::new();
+    let mut in_paragraph = false;
     let mut in_code_block = false;
 
     let parser = pulldown_cmark::Parser::new_ext(&line, options);
@@ -637,9 +659,28 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
         let prev = event.clone();
         log::debug!("evt {:?}", event);
         match event {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(
+                CodeBlockKind::Indented,
+            ))
+            | pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(CodeBlockKind::Indented)) =>
+            {
+                continue;
+            }
+            pulldown_cmark::Event::SoftBreak => {
+                if in_paragraph {
+                    html_output.push_str("</p>\n<p>");
+                }
+            }
+            pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                in_paragraph = true;
+                html_output.push_str("<p>");
+            }
+            pulldown_cmark::Event::End(Tag::Paragraph) => {
+                in_paragraph = false;
+            }
             pulldown_cmark::Event::Text(t) => {
                 // Remove the one leading/trailing whitespace from strikethrough processing
-                let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
+                /*let text = if let Some(pulldown_cmark::Event::End(Tag::Strikethrough)) =
                     previous_event
                 {
                     t.strip_prefix(' ').unwrap_or(&t).into()
@@ -647,12 +688,25 @@ fn markdown_whole(text: &str, emojis: bool) -> String {
                     t.strip_suffix(' ').unwrap_or(&t).into()
                 } else {
                     t.to_string()
+                };*/
+                let text = if emojis || in_code_block {
+                    process_string(&t, |s| stack_processor(s, in_code_block, emojis))
+                } else {
+                    t.to_string()
                 };
-                let text = if emojis { replace_emojis(&text) } else { text };
-                pulldown_cmark::html::push_html(
-                    &mut html_output,
-                    std::iter::once(pulldown_cmark::Event::Text(text.into())),
-                );
+                let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                    text.replace("\n\n", "<br/>").into()
+                } else {
+                    text.into()
+                };
+                if in_code_block {
+                    html_output.push_str(&txt);
+                } else {
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Text(txt)),
+                    );
+                }
             }
             pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
                 //add_text_language = false;
