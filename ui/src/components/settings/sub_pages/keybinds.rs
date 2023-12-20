@@ -58,6 +58,8 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let is_recording = use_state(cx, || false);
     let update_keybind = use_ref(cx, || None);
     let system_shortcut = Shortcut::get_system_shortcut(state, cx.props.shortcut.clone());
+    let new_keybind_has_one_key = use_ref(cx, || false);
+    let new_keybind_has_at_least_one_modifier = use_ref(cx, || false);
 
     if update_keybind.read().is_some() && !is_recording.get()  {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
@@ -112,10 +114,15 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
 
                     let mut binding = vec![];
                     for modifier in evt.data.modifiers().iter() {
-                        binding.push(return_string_from_modifier(modifier));
+                        let modifier_string = return_string_from_modifier(modifier);
+                        if !modifier_string.is_empty() {
+                            *new_keybind_has_at_least_one_modifier.write_silent() = true;
+                            binding.push(return_string_from_modifier(modifier));
+                        }
                     }
                     
-                    if is_it_a_key_code(evt.data.key()) {
+                    if is_it_a_key_code(evt.data.key()) && !*new_keybind_has_one_key.read() {
+                        *new_keybind_has_one_key.write_silent() = true;
                         binding.push(evt.data.code().to_string());
                     }
 
@@ -123,10 +130,12 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     evt.stop_propagation();
                 },
                 onkeyup: move |_| {
-                    if *is_recording.get() {
+                    if *is_recording.get() && *new_keybind_has_one_key.read() && *new_keybind_has_at_least_one_modifier.read() {
                         let (keys, modifiers) = Shortcut::string_to_keycode_and_modifiers_state(recorded_bindings.get().clone());
                         *update_keybind.write_silent() = Some((keys, modifiers));
                     }
+                    *new_keybind_has_one_key.write_silent() = false;
+                    *new_keybind_has_at_least_one_modifier.write_silent() = false;
                     is_recording.set(false);
                 },
                 Keybind {
@@ -193,9 +202,9 @@ fn return_string_from_modifier(modifier: Modifiers) -> String {
         Modifiers::ALT => "Alt".to_string(),
         Modifiers::CONTROL => "Ctrl".to_string(),
         Modifiers::SHIFT => "Shift".to_string(),
-        Modifiers::META => "Meta".to_string(),
-        Modifiers::SUPER => "Super".to_string(),
-        _ => "Not Valid".to_string(),
+        // Modifiers::META => "Meta".to_string(),
+        // Modifiers::SUPER => "Super".to_string(),
+        _ => "".to_string(),
     }
 }
 
