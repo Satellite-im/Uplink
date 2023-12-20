@@ -77,8 +77,8 @@ impl Shortcut {
 
         for modifier_string in keys_and_modifiers.clone() {
             match modifier_string.as_str() {
-                // "Command" => modifiers_state_vec.push(ModifiersState::SUPER),
-                // "Meta" => modifiers_state_vec.push(ModifiersState::SUPER),
+                "Command" => modifiers_state_vec.push(ModifiersState::SUPER),
+                "Meta" => modifiers_state_vec.push(ModifiersState::SUPER),
                 "Shift" => modifiers_state_vec.push(ModifiersState::SHIFT),
                 "Ctrl" => modifiers_state_vec.push(ModifiersState::CONTROL),
                 "Alt" => modifiers_state_vec.push(ModifiersState::ALT),
@@ -87,6 +87,9 @@ impl Shortcut {
         }
 
         for key_string in keys_and_modifiers {
+            if key_code_vec.len() > 0 {
+                break;
+            }
             match key_string.as_str() {
                 "KeyA" => key_code_vec.push(KeyCode::A),
                 "KeyB" => key_code_vec.push(KeyCode::B),

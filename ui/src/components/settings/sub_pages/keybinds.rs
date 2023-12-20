@@ -16,6 +16,11 @@ use kit::elements::{
 };
 use muda::accelerator::Modifiers;
 
+const AVOID_INPUT_ON_DIV: &str = r#"
+    document.getElementById("$UUID").addEventListener("keypress", function (event) {
+        event.preventDefault(); 
+    });"#;
+
 #[derive(PartialEq, Props)]
 pub struct KeybindProps {
     pub keys: Vec<String>, // TODO: This should be a Vec<Key>
@@ -81,6 +86,10 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .unwrap_or_default();
 
     let recorded_bindings = use_state(cx, || vec![]);
+    
+    let eval = use_eval(cx);
+    let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
+    let _ = eval(&script);
 
     cx.render(rsx!(
         div {
@@ -102,7 +111,6 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 onfocus: move |_| {
                     is_recording.set(true);
                 },
-                prevent_default: "oninput",
                 onkeydown: move |evt| {
                     // println!("evt: {:?}", evt); 
 
@@ -121,7 +129,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                         }
                     }
                     
-                    if is_it_a_key_code(evt.data.key()) && !*new_keybind_has_one_key.read() {
+                    if is_it_a_key_code(evt.data.key())  {
                         *new_keybind_has_one_key.write_silent() = true;
                         binding.push(evt.data.code().to_string());
                     }
@@ -202,8 +210,8 @@ fn return_string_from_modifier(modifier: Modifiers) -> String {
         Modifiers::ALT => "Alt".to_string(),
         Modifiers::CONTROL => "Ctrl".to_string(),
         Modifiers::SHIFT => "Shift".to_string(),
-        // Modifiers::META => "Meta".to_string(),
-        // Modifiers::SUPER => "Super".to_string(),
+        Modifiers::META => "Meta".to_string(),
+        Modifiers::SUPER => "Super".to_string(),
         _ => "".to_string(),
     }
 }
