@@ -139,7 +139,6 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     text: "Users".into(),
                 },
                 Input {
-                    // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
                     aria_label: "friend-search-input".into(),
