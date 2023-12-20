@@ -29,7 +29,6 @@ use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
 
-pub static STRIKE_THROUGH_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(~~[^~]+~~)").unwrap());
 pub static LEADING_WHITESPACE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(^|\n)[ ]").unwrap());
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
@@ -488,7 +487,6 @@ pub fn replace_emojis(input: &str) -> String {
     process_string(input, |s| stack_processor(s, false, true))
 }
 
-/// Applies markdown to whole text instead of by line
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
     if emojis {
