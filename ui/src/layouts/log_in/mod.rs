@@ -1,11 +1,13 @@
+mod create_account;
+mod existing_account;
+mod recover_account;
+
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use kit::components::topbar_controls::TopbarControls;
 use kit::STYLE as UIKIT_STYLES;
 use warp::multipass;
-pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-
-use crate::layouts::{create_account::CreateAccountLayout, unlock::UnlockLayout};
+pub const APP_STYLE: &str = include_str!("../../compiled_styles.css");
 
 // serve as a sort of router while the user logs in]
 #[allow(clippy::large_enum_variant)]
@@ -50,8 +52,8 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
             },
 
             match *page.current() {
-                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
-                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::Unlock => rsx!(existing_account::UnlockLayout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::CreateAccount => rsx!(create_account::CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
                 _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }
         }
