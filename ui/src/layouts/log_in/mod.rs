@@ -1,4 +1,5 @@
 mod create_account;
+mod create_or_recover;
 mod entry_point;
 mod recover_account;
 
@@ -57,6 +58,7 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
             match *page.current() {
                 AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
                 AuthPages::CreateAccount => rsx!(create_account::Layout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::CreateOrRecover => rsx!(create_or_recover::Layout { page: page.clone() }),
                 _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }
         }

@@ -240,7 +240,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                                 } else if let Some(e) = error.get() {
                                     shown_error.set(e.translation());
                                 } else if !account_exists.current().unwrap_or_default()  {
-                                    page.set(AuthPages::CreateAccount);
+                                    page.set(AuthPages::CreateOrRecover);
                                 }
                                 cmd_in_progress.set(false);
                         }
@@ -274,7 +274,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                                 shown_error.set(e.translation());
                                 reset_input.set(true);
                             } else {
-                                page.set(AuthPages::CreateAccount);
+                                page.set(AuthPages::CreateOrRecover);
                             }
                             cmd_in_progress.set(false);
                         }

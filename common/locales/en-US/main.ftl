@@ -370,6 +370,11 @@ unlock = Unlock
     .help = Help (right-click)
     .logging-in = Logging in...
 
+create-or-recover = Account Creation
+    .create = Create New Account
+    .instructions = We're going to create an account for you. On the next screen, you'll see a set of words. Screenshot this or write it down. This is the only way to backup your account.
+    .recover = Import an Account
+
 auth = Create Account 
     .enter-username = Enter Username
 

@@ -2,6 +2,7 @@
 #settings-layout,
 #files-layout,
 #unlock-layout,
+#create-or-recover-layout,
 #friends-layout {
   display: inline-flex;
   min-height: 0;
@@ -238,6 +239,13 @@
 
 .thumb-text {
   color: var(--text-color);
+}
+
+#create-or-recover-layout {
+  color: var(--text-color);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #unlock-layout {
