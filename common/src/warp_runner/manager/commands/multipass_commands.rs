@@ -22,6 +22,11 @@ use crate::{
 #[derive(Display)]
 pub enum MultiPassCmd {
     #[display(fmt = "CreateIdentity")]
+    RecoverIdentity {
+        passphrase: String,
+        rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "CreateIdentity")]
     CreateIdentity {
         username: String,
         passphrase: String,
@@ -145,7 +150,9 @@ impl std::fmt::Debug for MultiPassCmd {
 
 pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Warp) {
     match cmd {
-        MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
+        MultiPassCmd::CreateIdentity { .. }
+        | MultiPassCmd::TryLogIn { .. }
+        | MultiPassCmd::RecoverIdentity { .. } => {
             // do nothing and drop the rsp channel
         }
         MultiPassCmd::RequestFriend {

@@ -18,7 +18,7 @@ use warp::{
     constellation::{file::FileType, Constellation},
     error::Error,
     logging::tracing::log,
-    multipass::{self, MultiPass},
+    multipass::{self, IdentityImportOption, MultiPass},
     raygun::RayGun,
     tesseract::Tesseract,
 };
@@ -164,6 +164,47 @@ async fn handle_login(notify: Arc<Notify>) {
                 }
 
                 match opt {
+                    Some(WarpCmd::MultiPass(MultiPassCmd::RecoverIdentity{
+                        passphrase,
+                        rsp
+                    })) => {
+                        let tesseract = init_tesseract(true)
+                                .await
+                                .expect("failed to initialize tesseract");
+                        warp = match warp_initialization(tesseract).await {
+                            Ok(w) => w,
+                            Err(e) => {
+                                log::error!("warp init failed: {}", e);
+                                let _ = rsp.send(Err(e));
+                                return;
+                            }
+                        };
+                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                            log::info!("unlock failed: {:?}", e);
+                            let _ = rsp.send(Err(e));
+                            continue;
+                        };
+                        match warp.multipass.import_identity(IdentityImportOption::Locate {
+                            location: multipass::ImportLocation::Remote,
+                            passphrase
+                        }).await {
+                            Ok(ident) => match save_tesseract(&warp.tesseract) {
+                                Ok(_) => {
+                                    let _ = rsp.send(Ok(ident));
+                                    break Some(warp);
+                                }
+                                Err(e) => {
+                                    let _ = rsp.send(Err(e));
+                                    continue;
+                                }
+                            },
+                            Err(e) => {
+                                warp.tesseract.lock();
+                                let _ = rsp.send(Err(e));
+                                continue;
+                            }
+                        }
+                    },
                     Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                         username,
                         passphrase,
