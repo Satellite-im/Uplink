@@ -198,6 +198,13 @@
       }
     }
   }
+
+
+  &.highlight {
+    .keybind-section-keys {
+      border: 2px solid var(--info);
+    }
+  }
 }
 
 .color-swatches {

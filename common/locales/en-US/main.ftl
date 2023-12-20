@@ -276,6 +276,7 @@ settings-files = Files Settings
     .open-sync-folder-description = Open the folder where your files are synced to.
 
 settings-keybinds = Keybind Settings
+    .info = Global keybinds are disabled while on this page. Click to edit a keybind, press the keybind to highlight and find a specific shortcut.
     .increase-font-size = Increase font size within Uplink.
     .decrease-font-size = Decrease font size within Uplink.
     .toggle-mute = Mute & un-mute your microphone.
