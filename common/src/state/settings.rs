@@ -75,8 +75,6 @@ impl Shortcut {
         let mut key_code_vec: Vec<KeyCode> = vec![];
         let mut modifiers_state_vec: Vec<ModifiersState> = vec![];
 
-        println!("key_string_vec: {:?}", keys_and_modifiers);
-
         for modifier_string in keys_and_modifiers.clone() {
             match modifier_string.as_str() {
                 "Command" => modifiers_state_vec.push(ModifiersState::SUPER),

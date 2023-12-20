@@ -44,7 +44,6 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
     if !state.read().settings.pause_global_keybinds {
         let keybinds = state.read().settings.keybinds.clone();
-        println!("Here - 1");
         return cx.render(rsx! {
             for (global_shortcut, shortcut) in keybinds {
                 rsx!{
@@ -62,7 +61,6 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         });
     } else {
         let keybinds = state.read().settings.keybinds.clone();
-        println!("Here -2");
         return cx.render(rsx! {
             for (global_shortcut, shortcut) in keybinds {
                 rsx!{

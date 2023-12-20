@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::Action;
 use common::state::settings::{GlobalShortcut, Shortcut};
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
@@ -139,6 +140,11 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
 #[allow(non_snake_case)]
 pub fn KeybindSettings(cx: Scope) -> Element {
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
+    if !state.read().settings.pause_global_keybinds {
+        state.write().mutate(Action::PauseGlobalKeybinds(true));
+    }
+
+
     let bindings = state.read().settings.keybinds.clone();
 
     cx.render(rsx!(
