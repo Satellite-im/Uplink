@@ -29,7 +29,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::{bootstrap::create_uplink_dirs, AuthPages};
+use crate::{bootstrap::create_uplink_dirs, get_app_style, AuthPages};
 
 enum UnlockError {
     ValidationError,
@@ -175,7 +175,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors(&state.read())},
+        style {get_app_style(&state.read())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -317,13 +317,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             }
         }
     ))
-}
-
-fn update_theme_colors(state: &State) -> String {
-    match state.ui.theme.as_ref() {
-        Some(theme) => theme.styles.clone(),
-        None => String::new(),
-    }
 }
 
 fn get_welcome_message(state: &State) -> String {

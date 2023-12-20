@@ -180,6 +180,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             div {
                 class: "flex-1",
                 p {
+                    class: "ellipsis-overflow",
                     aria_label: "friend-username",
                     cx.props.friend.username(),
                 },

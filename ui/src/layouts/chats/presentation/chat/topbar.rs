@@ -82,6 +82,12 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         .active_chat
         .conversation_name()
         .unwrap_or(data.active_chat.other_participants_names());
+    let show_group_list = cx
+        .props
+        .show_group_users
+        .get()
+        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
+        .unwrap_or(false);
 
     let direct_message = data.active_chat.conversation_type() == ConversationType::Direct;
 
@@ -114,6 +120,17 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         div {
             class: "user-info",
             aria_label: "user-info",
+            onclick: move |_| {
+                if cx.props.is_owner {
+                    return;
+                }
+                if show_group_list {
+                    cx.props.show_group_users.set(None);
+                } else {
+                    cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
+                    cx.props.show_edit_group.set(None);
+                }
+            },
             if cx.props.is_edit_group {rsx! (
                 div {
                     id: "edit-group-name",
