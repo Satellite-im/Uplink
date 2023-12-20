@@ -1,4 +1,4 @@
-use common::state::settings::GlobalShortcut;
+use common::state::settings::{key_code_to_str, modifier_state_to_string, GlobalShortcut};
 use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
@@ -40,29 +40,45 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     }
 
     let state = use_shared_state::<State>(cx)?;
-    let keybinds = common::state::default_keybinds::get_default_keybinds();
     let eval = use_eval(cx);
 
-    cx.render(rsx! {
-        for (global_shortcut, shortcut) in keybinds {
+    if !state.read().settings.pause_global_keybinds {
+        let keybinds = state.read().settings.keybinds.clone();
+        println!("Here - 1");
+        return cx.render(rsx! {
+            for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
-                            if !state.read().settings.pause_global_keybinds {
-                                cx.props.on_global_shortcut.call(global_shortcut);
-                            } else {
-                                let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
-                                let _ = eval(&scroll_script);
-                            }
+                            cx.props.on_global_shortcut.call(global_shortcut);
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
                 }
-        }
-    })
+            }
+        });
+    } else {
+        let keybinds = state.read().settings.keybinds.clone();
+        println!("Here -2");
+        return cx.render(rsx! {
+            for (global_shortcut, shortcut) in keybinds {
+                rsx!{
+                    RenderGlobalShortCuts {
+                        keys: shortcut.keys,
+                        modifiers: shortcut.modifiers,
+                        on_global_shortcut: move |global_shortcut: GlobalShortcut| {
+                            let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
+                            let _ = eval(&scroll_script);
+                        },
+                        global_shortcut: global_shortcut.clone(),
+                    }
+                }
+            }
+        });
+    }
 }
 
 #[derive(Props)]
@@ -87,36 +103,14 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
         .props
         .keys
         .iter()
-        .map(|key_code| {
-            match key_code {
-                KeyCode::V => "v",
-                KeyCode::A => "a",
-                KeyCode::M => "m",
-                KeyCode::D => "d",
-                KeyCode::EqualSign => "=",
-                KeyCode::Subtract => "-",
-                _ => "unknown",
-                // ... Add other KeyCodes here
-            }
-            .to_string()
-        })
+        .map(|key_code| key_code_to_str(key_code).to_string())
         .collect();
 
     let modifier_strs: Vec<String> = cx
         .props
         .modifiers
         .iter()
-        .map(|modifier| {
-            match modifier.clone() {
-                ModifiersState::SUPER => "command",
-                ModifiersState::SHIFT => "shift",
-                ModifiersState::CONTROL => "control",
-                ModifiersState::ALT => "alt",
-                _ => "unknown",
-                // ... Add other modifiers here
-            }
-            .to_string()
-        })
+        .map(|modifier| modifier_state_to_string(modifier.clone()))
         .collect();
 
     let modifiers_and_keys = [modifier_strs.join(" + "), key_code_strs.join(" + ")].join(" + ");

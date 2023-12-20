@@ -5,6 +5,7 @@ use common::state::settings::{GlobalShortcut, Shortcut};
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
+use dioxus_elements::input_data::keyboard_types::Code;
 use dioxus_elements::input_data::keyboard_types::Key;
 #[allow(unused_imports)]
 use kit::elements::{
@@ -51,8 +52,23 @@ pub struct KeybindSectionProps {
 }
 
 pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
     let keybind_section_id = cx.props.id.clone();
     let is_recording = use_state(cx, || false);
+    let update_keybind = use_ref(cx, || None);
+    let system_shortcut = Shortcut::get_system_shortcut(state, cx.props.shortcut.clone());
+
+    if update_keybind.read().is_some() && !is_recording.get()  {
+        let (keys, modifiers) = update_keybind.read().clone().unwrap();
+        state.write_silent().settings.keybinds.retain(|(gs, _)| *gs != cx.props.shortcut);
+        state.write().settings.keybinds.push((cx.props.shortcut.clone(), Shortcut {
+            keys: keys,
+            modifiers: modifiers,
+            system_shortcut: system_shortcut,
+        }));
+        *update_keybind.write_silent() = None;
+    }
+
     let bindings = cx
         .props
         .bindings
@@ -85,19 +101,31 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 },
                 prevent_default: "oninput",
                 onkeydown: move |evt| {
-                    println!("evt: {:?}", evt); 
+                    // println!("evt: {:?}", evt); 
+
+                    if evt.data.code() == Code::Escape {
+                        is_recording.set(false);
+                        evt.stop_propagation();
+                        return;
+                    }
+
                     let mut binding = vec![];
                     for modifier in evt.data.modifiers().iter() {
                         binding.push(return_string_from_modifier(modifier));
                     }
                     
                     if is_it_a_key_code(evt.data.key()) {
-                        binding.push(evt.data.key().to_string());
+                        binding.push(evt.data.code().to_string());
                     }
+
                     recorded_bindings.set(binding);
                     evt.stop_propagation();
                 },
                 onkeyup: move |_| {
+                    if *is_recording.get() {
+                        let (keys, modifiers) = Shortcut::string_to_keycode_and_modifiers_state(recorded_bindings.get().clone());
+                        *update_keybind.write_silent() = Some((keys, modifiers));
+                    }
                     is_recording.set(false);
                 },
                 Keybind {
@@ -160,17 +188,8 @@ fn return_string_from_modifier(modifier: Modifiers) -> String {
         Modifiers::CONTROL => "Ctrl".to_string(),
         Modifiers::SHIFT => "Shift".to_string(),
         Modifiers::META => "Meta".to_string(),
-        Modifiers::ALT_GRAPH => "AltGr".to_string(),
-        Modifiers::CAPS_LOCK => "CapsLock".to_string(),
-        Modifiers::FN => "Fn".to_string(),
-        Modifiers::FN_LOCK => "FnLock".to_string(),
-        Modifiers::NUM_LOCK => "NumLock".to_string(),
-        Modifiers::SCROLL_LOCK => "ScrollLock".to_string(),
-        Modifiers::SYMBOL => "Symbol".to_string(),
-        Modifiers::SYMBOL_LOCK => "SymbolLock".to_string(),
-        Modifiers::HYPER => "Hyper".to_string(),
         Modifiers::SUPER => "Super".to_string(),
-        _ => "".to_string(),
+        _ => "Not Valid".to_string(),
     }
 }
 
