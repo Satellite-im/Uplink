@@ -5,6 +5,7 @@ use common::state::settings::{GlobalShortcut, Shortcut};
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
+use dioxus_elements::input_data::keyboard_types::Key;
 use kit::elements::Appearance;
 #[allow(unused_imports)]
 use kit::elements::{
@@ -91,10 +92,10 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     for modifier in evt.data.modifiers().iter() {
                         binding.push(return_string_from_modifier(modifier));
                     }
-                    if evt.data.code().to_string().contains("Character") {
-                        binding.push(evt.data.code().to_string());
+                    
+                    if is_it_a_key_code(evt.data.key()) {
+                        binding.push(evt.data.key().to_string());
                     }
-
                     recorded_bindings.set(binding);
                     evt.stop_propagation();
                 },
@@ -172,5 +173,25 @@ fn return_string_from_modifier(modifier: Modifiers) -> String {
         Modifiers::HYPER => "Hyper".to_string(),
         Modifiers::SUPER => "Super".to_string(),
         _ => "".to_string(),
+    }
+}
+
+fn is_it_a_key_code(key: Key) -> bool {
+    match key {
+        Key::Alt => false,
+        Key::Control => false,
+        Key::Shift => false,
+        Key::Meta => false,
+        Key::AltGraph => false,
+        Key::CapsLock => false,
+        Key::Fn => false,
+        Key::FnLock => false,
+        Key::NumLock => false,
+        Key::ScrollLock => false,
+        Key::Symbol => false,
+        Key::SymbolLock => false,
+        Key::Hyper => false,
+        Key::Super => false,
+        _ => true,
     }
 }
