@@ -252,25 +252,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await
             {
                 Ok(_) => {
-                    let mut id = warp
-                        .multipass
-                        .get_own_identity()
-                        .await
-                        .map(Identity::from)
-                        .map_err(|e| {
-                            log::error!("failed to get own identity: {e}");
-                            e
-                        });
-                    if let Ok(id) = id.as_mut() {
-                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&identity_image_to_base64(&picture));
+                    let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                        Ok(id) => id,
+                        Err(e) => {
+                            let _ = rsp.send(Err(e));
+                            return;
                         }
-
-                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
-                    }
-                    rsp.send(id)
+                    };
+                    update_identity(&mut id, warp).await;
+                    rsp.send(Ok(id))
                 }
                 Err(e) => {
                     log::error!("failed to update profile picture: {e}");
@@ -283,22 +273,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             // idk why this happened but this code will get the current identity, update it, and return it
             // without attempting to fetch the "updated" identity from warp.
             let _ = match warp.multipass.get_own_identity().await.map(Identity::from) {
-                Ok(mut my_id) => match warp
+                Ok(my_id) => match warp
                     .multipass
                     .update_identity(IdentityUpdate::Picture(pfp.clone()))
                     .await
                 {
                     Ok(_) => {
-                        if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await
-                        {
-                            my_id.set_profile_picture(&identity_image_to_base64(&picture));
-                        }
-
-                        if let Ok(banner) = warp.multipass.identity_banner(&my_id.did_key()).await {
-                            my_id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
-
-                        rsp.send(Ok(my_id))
+                        let mut id = my_id.clone();
+                        update_identity(&mut id, warp).await;
+                        rsp.send(Ok(id))
                     }
                     Err(e) => {
                         log::error!("failed to get own identity: {e}");
@@ -318,17 +301,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await;
             let _ = match r {
                 Ok(_) => {
-                    let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-                    if let Ok(id) = id.as_mut() {
-                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&identity_image_to_base64(&picture));
+                    let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                        Ok(id) => id,
+                        Err(e) => {
+                            let _ = rsp.send(Err(e));
+                            return;
                         }
-
-                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
-                    }
-                    rsp.send(id)
+                    };
+                    update_identity(&mut id, warp).await;
+                    rsp.send(Ok(id))
                 }
                 Err(e) => {
                     log::error!("failed to update banner: {e}");
@@ -343,17 +324,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await;
             let _ = match r {
                 Ok(_) => {
-                    let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-                    if let Ok(id) = id.as_mut() {
-                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                            id.set_profile_picture(&identity_image_to_base64(&picture));
+                    let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                        Ok(id) => id,
+                        Err(e) => {
+                            let _ = rsp.send(Err(e));
+                            return;
                         }
-
-                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                            id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
-                    }
-                    rsp.send(id)
+                    };
+                    update_identity(&mut id, warp).await;
+                    rsp.send(Ok(id))
                 }
                 Err(e) => {
                     log::error!("failed to update banner: {e}");
@@ -366,18 +345,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::StatusMessage(status))
                 .await;
-            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            if let Ok(id) = id.as_mut() {
-                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                    id.set_profile_picture(&identity_image_to_base64(&picture));
+            let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                Ok(id) => id,
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
                 }
-
-                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                    id.set_profile_banner(&identity_image_to_base64(&banner));
-                }
-            }
+            };
+            update_identity(&mut id, warp).await;
             let _ = match r {
-                Ok(_) => rsp.send(id),
+                Ok(_) => rsp.send(Ok(id)),
                 Err(e) => {
                     log::error!("failed to update status: {e}");
                     rsp.send(Err(e))
@@ -389,18 +366,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::Username(username))
                 .await;
-            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            if let Ok(id) = id.as_mut() {
-                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                    id.set_profile_picture(&identity_image_to_base64(&picture));
+            let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                Ok(id) => id,
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
                 }
-
-                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                    id.set_profile_banner(&identity_image_to_base64(&banner));
-                }
-            }
+            };
+            update_identity(&mut id, warp).await;
             let _ = match r {
-                Ok(_) => rsp.send(id),
+                Ok(_) => rsp.send(Ok(id)),
                 Err(e) => {
                     log::error!("failed to update username: {e}");
                     rsp.send(Err(e))
@@ -418,12 +393,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                         Err(Error::IdentityDoesntExist)
                     } else {
                         let mut id = Identity::from(ids[0].clone());
-                        if let Ok(pic) = warp.multipass.identity_picture(&did).await {
-                            id.set_profile_picture(&identity_image_to_base64(&pic));
-                        }
-                        if let Ok(banner) = warp.multipass.identity_banner(&did).await {
-                            id.set_profile_banner(&identity_image_to_base64(&banner));
-                        }
+                        update_identity(&mut id, warp).await;
                         Ok(id)
                     }
                 }
@@ -433,20 +403,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         }
         MultiPassCmd::SetStatus { status, rsp } => {
             let r = warp.multipass.set_identity_status(status).await;
-            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
-            if let Ok(id) = id.as_mut() {
-                //Need to set this again or else it gets lost
-                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-                    id.set_profile_picture(&identity_image_to_base64(&picture));
+            let mut id = match warp.multipass.get_own_identity().await.map(Identity::from) {
+                Ok(id) => id,
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
                 }
-
-                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-                    id.set_profile_banner(&identity_image_to_base64(&banner));
-                }
-                id.set_identity_status(status);
-            }
+            };
+            update_identity(&mut id, warp).await;
             let _ = match r {
-                Ok(_) => rsp.send(id),
+                Ok(_) => rsp.send(Ok(id)),
                 Err(e) => {
                     log::error!("failed to update online status: {e}");
                     rsp.send(Err(e))
@@ -456,6 +422,21 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
           //    let r = _multipass_get_identities(dids, &mut warp.multipass).await;
           //    let _ = rsp.send(r);
           //}
+    }
+}
+
+async fn update_identity(id: &mut Identity, warp: &mut crate::warp_runner::manager::Warp) {
+    if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+        id.set_profile_picture(&identity_image_to_base64(&picture));
+    }
+    if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+        id.set_profile_banner(&identity_image_to_base64(&banner));
+    }
+    if let Ok(status) = warp.multipass.identity_status(&id.did_key()).await {
+        id.set_identity_status(status);
+    }
+    if let Ok(platform) = warp.multipass.identity_platform(&id.did_key()).await {
+        id.set_platform(platform);
     }
 }
 
