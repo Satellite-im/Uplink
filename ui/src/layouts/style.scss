@@ -241,6 +241,21 @@
   color: var(--text-color);
 }
 
+#enter-seed-words-layout,
+#copy-seed-words-layout {
+  .seed-words {
+    display: inline-flex;
+    flex-direction: column;
+
+    .row, col {
+      display: inline-flex;
+      flex-direction: row;
+    }
+  }
+}
+
+#enter-seed-words-layout,
+#copy-seed-words-layout,
 #create-or-recover-layout {
   color: var(--text-color);
   flex-direction: column;

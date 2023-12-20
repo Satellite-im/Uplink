@@ -21,8 +21,19 @@ use crate::AuthPages;
 pub const MIN_USERNAME_LEN: i32 = 4;
 pub const MAX_USERNAME_LEN: i32 = 32;
 
+struct CreateAccountCmd {
+    username: String,
+    passphrase: String,
+    seed_words: String,
+}
+
 #[component]
-pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+pub fn Layout(
+    cx: Scope,
+    page: UseState<AuthPages>,
+    pin: UseRef<String>,
+    seed_words: UseRef<String>,
+) -> Element {
     log::trace!("rendering create account layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
@@ -44,18 +55,24 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
         special_chars: None,
     };
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<CreateAccountCmd>| {
         to_owned![page];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((username, passphrase)) = rx.next().await {
+            while let Some(CreateAccountCmd {
+                username,
+                passphrase,
+                seed_words,
+            }) = rx.next().await
+            {
                 let (tx, rx) =
                     oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                     username,
-                    passphrase,
+                    tesseract_passphrase: passphrase,
+                    seed_words,
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
@@ -107,7 +124,11 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                 },
                 onreturn: move |_| {
                     if !*button_disabled.get() {
-                        ch.send((username.get().to_string(), pin.read().to_string()));
+                        ch.send(CreateAccountCmd {
+                            username: username.get().to_string(),
+                            passphrase: pin.read().to_string(),
+                            seed_words: seed_words.read().to_string()
+                        });
                     }
                 }
             },
@@ -118,10 +139,12 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                 icon: Icon::Check,
                 disabled: *button_disabled.get(),
                 onpress: move |_| {
-
-                    ch.send((username.get().to_string(), pin.read().to_string()));
+                    ch.send(CreateAccountCmd {
+                        username: username.get().to_string(),
+                        passphrase: pin.read().to_string(),
+                        seed_words: seed_words.read().to_string()
+                    });
                 }
-
             }
         }
     ))

@@ -208,7 +208,8 @@ async fn handle_login(notify: Arc<Notify>) {
                     },
                     Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                         username,
-                        passphrase,
+                        tesseract_passphrase,
+                        seed_words,
                         rsp,
                     })) => {
                         if account_exists {
@@ -226,12 +227,12 @@ async fn handle_login(notify: Arc<Notify>) {
                             };
                         }
 
-                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                        if let Err(e) = warp.tesseract.unlock(tesseract_passphrase.as_bytes()) {
                             log::info!("unlock failed: {:?}", e);
                             let _ = rsp.send(Err(e));
                             continue;
                         };
-                        match warp.multipass.create_identity(Some(&username), None).await {
+                        match warp.multipass.create_identity(Some(&username), Some(&seed_words)).await {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {

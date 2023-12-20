@@ -1,5 +1,6 @@
-use common::state::State;
+use common::{icons, language::get_local_text, state::State};
 use dioxus::prelude::*;
+use kit::elements::{button::Button, Appearance};
 
 use crate::get_app_style;
 
@@ -15,6 +16,24 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>) -> Element {
         div {
             id: "enter-seed-words-layout",
             aria_label: "enter-seed-words-layout",
+
+            div {
+                class: "back-button",
+                Button {
+                    aria_label: "back-button".into(),
+                    icon: icons::outline::Shape::ChevronLeft,
+                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
+                    appearance: Appearance::Secondary
+                },
+            },
+            div {
+                class: "title",
+                get_local_text("enter-seed-words")
+            },
+            div {
+                class: "instructions",
+                get_local_text("enter-seed-words.instructions")
+            },
         }
     ))
 }

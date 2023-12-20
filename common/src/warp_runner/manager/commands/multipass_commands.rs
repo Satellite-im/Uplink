@@ -30,7 +30,10 @@ pub enum MultiPassCmd {
     #[display(fmt = "CreateIdentity")]
     CreateIdentity {
         username: String,
-        passphrase: String,
+        // used to password protect tesseract
+        tesseract_passphrase: String,
+        // this is the "pass phrase" for multipass
+        seed_words: String,
         rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "TryLogIn")]
