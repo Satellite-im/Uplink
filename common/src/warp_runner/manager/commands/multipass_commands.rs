@@ -24,6 +24,7 @@ pub enum MultiPassCmd {
     #[display(fmt = "CreateIdentity")]
     RecoverIdentity {
         passphrase: String,
+        seed_words: String,
         rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "CreateIdentity")]

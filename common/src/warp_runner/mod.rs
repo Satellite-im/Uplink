@@ -166,6 +166,7 @@ async fn handle_login(notify: Arc<Notify>) {
                 match opt {
                     Some(WarpCmd::MultiPass(MultiPassCmd::RecoverIdentity{
                         passphrase,
+                        seed_words,
                         rsp
                     })) => {
                         let tesseract = init_tesseract(true)
@@ -186,7 +187,7 @@ async fn handle_login(notify: Arc<Notify>) {
                         };
                         match warp.multipass.import_identity(IdentityImportOption::Locate {
                             location: multipass::ImportLocation::Remote,
-                            passphrase
+                            passphrase: seed_words
                         }).await {
                             Ok(ident) => match save_tesseract(&warp.tesseract) {
                                 Ok(_) => {
