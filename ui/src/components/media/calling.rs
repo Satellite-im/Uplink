@@ -430,7 +430,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             },
             Button {
-                icon: if call.call_silenced { Icon::SignalSlash } else { Icon::Signal },
+                icon: if call.call_silenced { Icon::HeadphonesSlash } else { Icon::Headphones },
                 aria_label: "call-speaker-button".into(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
@@ -729,7 +729,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                     rsx!(div {
                         class: "call-status-icon",
                         IconElement {
-                            icon: Icon::SignalSlash,
+                            icon: Icon::HeadphonesSlash,
                             fill:"currentColor",
                         }
                     })
