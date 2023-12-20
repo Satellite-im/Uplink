@@ -1,5 +1,7 @@
+mod copy_seed_words;
 mod create_account;
 mod create_or_recover;
+mod enter_seed_words;
 mod entry_point;
 mod recover_account;
 
@@ -10,15 +12,19 @@ use kit::STYLE as UIKIT_STYLES;
 use warp::multipass;
 pub const APP_STYLE: &str = include_str!("../../compiled_styles.css");
 
+// flows:
+// EntryPoint -> login
+// EntryPoint -> CreateOrRecover -> EnterSeedWords -> login or fail
+// EntryPoint -> CreateOrRecover -> CopySeedWords -> EnterUserName -> login
 // serve as a sort of router while the user logs in]
 #[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
     EntryPoint,
     CreateOrRecover,
-    CreateAccount,
-    RecoverAccount,
-    PickUsername,
+    EnterUserName,
+    EnterSeedWords,
+    CopySeedWords,
     Success(multipass::identity::Identity),
 }
 
@@ -57,8 +63,10 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
 
             match *page.current() {
                 AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
-                AuthPages::CreateAccount => rsx!(create_account::Layout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::EnterUserName => rsx!(create_account::Layout { page: page.clone(), pin: pin.clone() }),
                 AuthPages::CreateOrRecover => rsx!(create_or_recover::Layout { page: page.clone() }),
+                AuthPages::EnterSeedWords => rsx!(enter_seed_words::Layout { page: page.clone() }),
+                AuthPages::CopySeedWords => rsx!(copy_seed_words::Layout { page: page.clone() }),
                 _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }
         }

@@ -30,13 +30,13 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 Button {
                     text: get_local_text("create-or-recover.create"),
                     onpress: move |_| {
-                        page.set(AuthPages::CreateAccount);
+                        page.set(AuthPages::CopySeedWords);
                     }
                 },
                 Button {
                     text: get_local_text("create-or-recover.recover"),
                     onpress: move |_| {
-                        page.set(AuthPages::RecoverAccount);
+                        page.set(AuthPages::EnterSeedWords);
                     }
                 },
             }
