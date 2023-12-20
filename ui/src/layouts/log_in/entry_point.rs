@@ -49,8 +49,8 @@ impl UnlockError {
 
 // todo: go to the auth page if no account has been created
 #[component]
-pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    log::trace!("rendering unlock layout");
+pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    log::trace!("rendering login entry point");
     let validation_failure: &UseState<Option<UnlockError>> =
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
@@ -291,7 +291,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 text: get_local_text("uplink.reset-account"),
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
-                                    page.set(AuthPages::Unlock);
+                                    page.set(AuthPages::EntryPoint);
                                     error.set(None);
                                     account_exists.set(Some(false));
                                     create_uplink_dirs();

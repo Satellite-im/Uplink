@@ -1,5 +1,5 @@
 mod create_account;
-mod existing_account;
+mod entry_point;
 mod recover_account;
 
 use dioxus::prelude::*;
@@ -13,8 +13,11 @@ pub const APP_STYLE: &str = include_str!("../../compiled_styles.css");
 #[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
-    Unlock,
+    EntryPoint,
+    CreateOrRecover,
     CreateAccount,
+    RecoverAccount,
+    PickUsername,
     Success(multipass::identity::Identity),
 }
 
@@ -52,8 +55,8 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
             },
 
             match *page.current() {
-                AuthPages::Unlock => rsx!(existing_account::UnlockLayout { page: page.clone(), pin: pin.clone() }),
-                AuthPages::CreateAccount => rsx!(create_account::CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::CreateAccount => rsx!(create_account::Layout { page: page.clone(), pin: pin.clone() }),
                 _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }
         }

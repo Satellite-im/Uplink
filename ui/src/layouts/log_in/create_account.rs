@@ -22,7 +22,7 @@ pub const MIN_USERNAME_LEN: i32 = 4;
 pub const MAX_USERNAME_LEN: i32 = 32;
 
 #[component]
-pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering create account layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);

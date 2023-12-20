@@ -192,7 +192,7 @@ fn app(cx: Scope) -> Element {
     bootstrap::use_warp_runner(cx);
 
     // 2. Guard the app with the auth
-    let auth = use_state(cx, || AuthPages::Unlock);
+    let auth = use_state(cx, || AuthPages::EntryPoint);
     let AuthPages::Success(identity) = auth.get() else {
         return render! { AuthGuard { page: auth.clone() }};
     };
