@@ -243,6 +243,7 @@ fn app_layout(cx: Scope) -> Element {
                         GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
+                        GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")
                     }
                     log::debug!("shortcut called {:?}", shortcut);
                 }

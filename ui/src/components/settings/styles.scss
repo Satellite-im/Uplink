@@ -169,12 +169,17 @@
     margin: var(--padding-less);
     border: 2px solid var(--border-subtle-color);
     min-width: calc(var(--height-input) * 2);
-    z-index: 3;
 
     &.recording {
       border: 2px solid var(--info);
+      .keybind-section-keys {
+        z-index: 3;
+      }
     }
 
+    &.conflicting {
+      border: 2px solid var(--warning);
+    }
 
     .keybind-key {
       width: fit-content;

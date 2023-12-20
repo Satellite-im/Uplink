@@ -57,6 +57,18 @@ pub struct KeybindSectionProps {
     pub section_label: String,
 }
 
+pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, Shortcut)>) -> bool {
+    let mut instances = 0;
+
+    for sc in shortcuts {
+        if sc.1.get_keys_and_modifiers_as_string() == shortcut.get_keys_and_modifiers_as_string() {
+            instances += 1;
+        }
+    }
+
+    instances > 1
+}
+
 pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let keybind_section_id = cx.props.id.clone();
@@ -85,12 +97,27 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
         .unwrap_or_default();
 
+    let sc = cx
+        .props
+        .bindings
+        .iter()
+        .find(|(gs, _)| *gs == cx.props.shortcut)
+        .map(|(_, sc)| sc.clone())
+        .unwrap_or_default();
+
     let recorded_bindings = use_state(cx, || vec![]);
     
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
 
+    let mut keybind_class = "keybind-section-keys".to_owned();
+    if **is_recording { 
+        keybind_class.push_str(" recording");
+    }
+    if check_for_conflicts(sc, cx.props.bindings.clone()) {
+        keybind_class.push_str(" conflicting");
+    }
     cx.render(rsx!(
         div {
             id: format_args!("{}", keybind_section_id),
@@ -106,7 +133,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 "{cx.props.section_label}"
             },
             div {
-                class: if **is_recording { "keybind-section-keys recording" } else { "keybind-section-keys" },
+                class: "{keybind_class}",
                 contenteditable: true,
                 onfocus: move |_| {
                     is_recording.set(true);
@@ -153,6 +180,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         }
     ))
 }
+
 
 #[allow(non_snake_case)]
 pub fn KeybindSettings(cx: Scope) -> Element {

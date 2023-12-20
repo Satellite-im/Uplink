@@ -10,12 +10,14 @@ use warp::crypto::DID;
 
 use super::State;
 
-#[derive(Eq, PartialEq, Hash, Debug, Clone, Deserialize, Serialize)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Deserialize, Serialize, Default)]
 pub enum GlobalShortcut {
     ToggleMute,
     ToggleDeafen,
     IncreaseFontSize,
     DecreaseFontSize,
+    #[default]
+    Unknown,
 }
 
 impl fmt::Display for GlobalShortcut {
@@ -25,11 +27,12 @@ impl fmt::Display for GlobalShortcut {
             GlobalShortcut::ToggleDeafen => write!(f, "ToggleDeafen"),
             GlobalShortcut::IncreaseFontSize => write!(f, "IncreaseFontSize"),
             GlobalShortcut::DecreaseFontSize => write!(f, "DecreaseFontSize"),
+            GlobalShortcut::Unknown => write!(f, "Unknown"),
         }
     }
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize)]
+#[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Shortcut {
     pub keys: Vec<KeyCode>,             // Keys required
     pub modifiers: Vec<ModifiersState>, // Modifier keys required

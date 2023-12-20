@@ -219,7 +219,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                         let _ = open::that("https://github.com/Satellite-im/Uplink");
                     }
                 }
-            },
+            }
         }
     ))
 }
