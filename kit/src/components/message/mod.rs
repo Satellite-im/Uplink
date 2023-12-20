@@ -12,7 +12,7 @@ use futures::StreamExt;
 use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
-use regex::Regex;
+use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
 use warp::{
@@ -29,7 +29,8 @@ use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
 
-pub static LEADING_WHITESPACE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("(^|\n)[ ]").unwrap());
+pub static MARKDOWN_PROCESSOR_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new("(^|\n)((?:&gt;(?: *&gt;)*)|(?: ))").unwrap());
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
 });
@@ -487,6 +488,19 @@ pub fn replace_emojis(input: &str) -> String {
     process_string(input, |s| stack_processor(s, false, true))
 }
 
+struct RegexReplacer;
+
+impl Replacer for RegexReplacer {
+    fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut String) {
+        dst.push_str(&caps[1]);
+        if caps[2].eq(" ") {
+            dst.push_str("&nbsp;");
+        } else {
+            dst.push_str(&caps[2].replace("&gt;", ">"));
+        }
+    }
+}
+
 fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
     if emojis {
@@ -510,7 +524,7 @@ fn markdown(text: &str, emojis: bool) -> String {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
 
-    let text = LEADING_WHITESPACE_REGEX.replace_all(txt, "$1&nbsp;");
+    let text = MARKDOWN_PROCESSOR_REGEX.replace_all(txt, RegexReplacer);
 
     let mut html_output = String::new();
     let mut in_paragraph = false;
