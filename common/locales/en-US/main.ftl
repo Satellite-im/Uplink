@@ -339,6 +339,8 @@ settings-about = About Settings
     .update-check-error = Failed to fetch update! Check your logs for more info.
     .update-check-error-timeout = Failed to fetch update! Request timed out.
     .update-check-error-request = Failed to fetch update! Couldn't send update request. Please check your internet connection.
+    .made-in = Made in
+    .team = Our team is all over the world with different backgrounds and day-to-day lives, all working on a common goal to build Uplink & Satellite together.
 
 media-player = Media Player 
     .enable-camera = Enable Camera 
