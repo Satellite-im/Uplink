@@ -222,8 +222,10 @@ pub fn AboutPage(cx: Scope) -> Element {
             },
             SettingSection {
                 section_label: get_local_text("settings-about.made-in"),
-                section_description: format!("{} 🇺🇸 🇲🇽 🇵🇹 🇧🇷 🇩🇪", get_local_text("settings-about.team")),
-            },
+                section_description: format!(
+                    "{} \u{1F1FA}\u{1F1F8} \u{1F1F2}\u{1F1FD} \u{1F1F5}\u{1F1F9} \u{1F1E7}\u{1F1F7} \u{1F1E9}\u{1F1EA}", get_local_text("settings-about.team")
+                ),
+            }
         }
     ))
 }
