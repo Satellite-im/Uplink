@@ -124,6 +124,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     }
 
     if *is_recording.get() && !state.read().settings.is_recording_new_keybind {
+        println!("is_recording_new_keybind: true");
         state.write().settings.is_recording_new_keybind = true;
     }
 
@@ -152,7 +153,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     is_recording.set(true);
                 },
                 onkeydown: move |evt| {
-                    // println!("evt: {:?}", evt); 
+                    println!("evt: {:?}", evt); 
 
                     if evt.data.code() == Code::Escape {
                         is_recording.set(false);
