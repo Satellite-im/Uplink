@@ -172,9 +172,7 @@
 
     &.recording {
       border: 2px solid var(--info);
-      .keybind-section-keys {
-        z-index: 3;
-      }
+      z-index: 3;
     }
 
     &.conflicting {
