@@ -153,7 +153,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     is_recording.set(true);
                 },
                 onkeydown: move |evt| {
-                    println!("evt: {:?}", evt); 
+                    // println!("evt: {:?}", evt); 
 
                     if evt.data.code() == Code::Escape {
                         is_recording.set(false);
@@ -252,14 +252,13 @@ fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {
             Modifiers::ALT => modifier_string.push("Alt".to_string()),
             Modifiers::CONTROL => modifier_string.push("Ctrl".to_string()),
             Modifiers::SHIFT => modifier_string.push("Shift".to_string()),
-            Modifiers::META => {
+            Modifiers::META | Modifiers::SUPER => {
                 if cfg!(target_os = "macos") {
                     modifier_string.push("Command".to_string())
                 } else {
                     modifier_string.push("Windows Key".to_string())
                 }
             }
-            Modifiers::SUPER => modifier_string.push("Super".to_string()),
             _ => (),
         }
     }
