@@ -34,7 +34,7 @@ pub fn Layout(
     pin: UseRef<String>,
     seed_words: UseRef<String>,
 ) -> Element {
-    log::trace!("rendering create account layout");
+    log::trace!("rendering enter username layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);

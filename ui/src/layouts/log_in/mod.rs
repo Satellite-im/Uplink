@@ -1,7 +1,7 @@
 mod copy_seed_words;
-mod create_account;
 mod create_or_recover;
 mod enter_seed_words;
+mod enter_username;
 mod entry_point;
 mod recover_account;
 
@@ -64,7 +64,7 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
 
             match *page.current() {
                 AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
-                AuthPages::EnterUserName => rsx!(create_account::Layout { page: page.clone(), pin: pin.clone(), seed_words: seed_words.clone() }),
+                AuthPages::EnterUserName => rsx!(enter_username::Layout { page: page.clone(), pin: pin.clone(), seed_words: seed_words.clone() }),
                 AuthPages::CreateOrRecover => rsx!(create_or_recover::Layout { page: page.clone() }),
                 AuthPages::EnterSeedWords => rsx!(enter_seed_words::Layout { page: page.clone() }),
                 AuthPages::CopySeedWords => rsx!(copy_seed_words::Layout { page: page.clone(), seed_words: seed_words.clone() }),

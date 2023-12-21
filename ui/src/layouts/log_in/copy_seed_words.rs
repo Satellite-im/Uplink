@@ -51,34 +51,43 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
                 get_local_text("copy-seed-words.instructions")
             },
             if let Some(words) = words.value() {
-                rsx!{ SeedWords { words: words.clone() } }
+                rsx!{ SeedWords { page: page.clone(), words: words.clone() } }
             }
         }
     ))
 }
 
 #[component]
-fn SeedWords(cx: Scope, words: Vec<String>) -> Element {
+fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Element {
     render! {
         div {
             class: "seed-words",
-                words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+            words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+                div {
+                    class: "row",
                     div {
-                        class: "row",
-                        div {
-                            class: "col",
+                        class: "col",
 
-                            span { class: "num", ((idx * 2) + 1).to_string() },
-                            span { class: "val", vals.get(0).cloned().unwrap_or_default() }
-                        },
-                        div {
-                            class: "col",
+                        span { class: "num", ((idx * 2) + 1).to_string() },
+                        span { class: "val", vals.get(0).cloned().unwrap_or_default() }
+                    },
+                    div {
+                        class: "col",
 
-                            span { class: "num", ((idx * 2) + 2).to_string() },
-                            span { class: "val", vals.get(1).cloned().unwrap_or_default() }
-                        }
+                        span { class: "num", ((idx * 2) + 2).to_string() },
+                        span { class: "val", vals.get(1).cloned().unwrap_or_default() }
                     }
-                })
-            },
+                }
+            })
+        },
+        div {
+            class: "controls",
+            Button {
+                text: get_local_text("copy-seed-words.finished"),
+                onpress: move |_| {
+                    page.set(AuthPages::EnterUserName);
+                }
+            }
+        }
     }
 }
