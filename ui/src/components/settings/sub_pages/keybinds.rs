@@ -238,7 +238,10 @@ fn return_string_from_modifier(modifier: Modifiers) -> String {
         Modifiers::ALT => "Alt".to_string(),
         Modifiers::CONTROL => "Ctrl".to_string(),
         Modifiers::SHIFT => "Shift".to_string(),
-        Modifiers::META => "Meta".to_string(),
+        Modifiers::META => if cfg!(target_os = "macos") 
+                { "Command".to_string() } 
+            else 
+                { "Windows Key".to_string()},
         Modifiers::SUPER => "Super".to_string(),
         _ => "".to_string(),
     }
