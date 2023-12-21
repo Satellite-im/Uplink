@@ -81,6 +81,7 @@ impl Shortcut {
         for modifier_string in keys_and_modifiers.clone() {
             match modifier_string.as_str() {
                 "Command" => modifiers_state_vec.push(ModifiersState::SUPER),
+                "Windows Key" => modifiers_state_vec.push(ModifiersState::SUPER),
                 "Meta" => modifiers_state_vec.push(ModifiersState::SUPER),
                 "Shift" => modifiers_state_vec.push(ModifiersState::SHIFT),
                 "Ctrl" => modifiers_state_vec.push(ModifiersState::CONTROL),
@@ -208,7 +209,13 @@ pub fn key_code_to_str(key_code: &KeyCode) -> &str {
 
 pub fn modifier_state_to_string(modifier_state: ModifiersState) -> String {
     let modifier_str = match modifier_state {
-        ModifiersState::SUPER => "command",
+        ModifiersState::SUPER => {
+            if cfg!(target_os = "macos") {
+                "command"
+            } else {
+                "windows key"
+            }
+        }
         ModifiersState::SHIFT => "shift",
         ModifiersState::CONTROL => "control",
         ModifiersState::ALT => "alt",
@@ -243,6 +250,7 @@ pub struct Settings {
     font_scale: f32,
     pub user_volumes: HashMap<DID, f32>,
     pub pause_global_keybinds: bool,
+    pub is_recording_new_keybind: bool,
     pub keybinds: Vec<(GlobalShortcut, Shortcut)>,
 }
 
@@ -258,6 +266,7 @@ impl Default for Settings {
             user_volumes: HashMap::new(),
             pause_global_keybinds: false,
             keybinds: super::default_keybinds::get_default_keybinds(),
+            is_recording_new_keybind: false,
         }
     }
 }

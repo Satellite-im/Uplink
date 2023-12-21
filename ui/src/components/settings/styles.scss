@@ -210,6 +210,10 @@
   }
 }
 
+.flags {
+  font-size: 2rem;
+}
+
 .color-swatches {
   display: inline-flex;
   gap: var(--gap);
@@ -230,3 +234,31 @@
   }
 }
 
+.volume-indicator-wrap {
+  width: 100%; 
+  height: var(--text-size-more); 
+  position: relative;
+}
+
+.volume-indicator-wrap {
+  width: 100%; 
+  height: var(--text-size-more); 
+  position: relative;
+}
+
+.volume-indicator {
+  position: absolute; 
+  width: 100%; 
+  height: 100%; 
+  border-radius: var(--border-radius); 
+  background: linear-gradient(90deg, 
+  #00b894 0% 75%,
+  #feca57 75% 90%, 
+  #ba0c0c 90%);
+}
+
+.volume-indicator-overlay {
+  right: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.5);
+}

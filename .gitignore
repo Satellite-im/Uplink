@@ -4,5 +4,6 @@ target
 kit/src/compiled_styles.css
 ui/src/compiled_styles.css
 .uplink
+.env
 ui/wix/*.zip
 __MACOSX
