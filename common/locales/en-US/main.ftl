@@ -384,6 +384,7 @@ copy-seed-words = Recovery Seed
 enter-seed-words = Recovery Seed
     .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by commas.
     .submit = Recover Account
+    .placeholder = Enter Recovery Seed...
 
 auth = Create Account 
     .enter-username = Enter Username

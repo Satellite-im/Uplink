@@ -66,7 +66,7 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
                 AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
                 AuthPages::EnterUserName => rsx!(enter_username::Layout { page: page.clone(), pin: pin.clone(), seed_words: seed_words.clone() }),
                 AuthPages::CreateOrRecover => rsx!(create_or_recover::Layout { page: page.clone() }),
-                AuthPages::EnterSeedWords => rsx!(enter_seed_words::Layout { page: page.clone() }),
+                AuthPages::EnterSeedWords => rsx!(enter_seed_words::Layout { page: page.clone(), pin: pin.clone(), }),
                 AuthPages::CopySeedWords => rsx!(copy_seed_words::Layout { page: page.clone(), seed_words: seed_words.clone() }),
                 _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }

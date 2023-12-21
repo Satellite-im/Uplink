@@ -21,7 +21,7 @@ use crate::{
 
 #[derive(Display)]
 pub enum MultiPassCmd {
-    #[display(fmt = "CreateIdentity")]
+    #[display(fmt = "RecoverIdentity")]
     RecoverIdentity {
         passphrase: String,
         seed_words: String,

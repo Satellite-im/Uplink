@@ -121,7 +121,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                             sounds::Play(sounds::Sounds::On);
                         }
 
-                        page.set(AuthPages::Success(ident))
+                        page.set(AuthPages::Success(ident));
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
