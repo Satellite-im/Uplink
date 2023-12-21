@@ -267,6 +267,10 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                         icon: if *cmd_in_progress.get() {Icon::Loader} else {Icon::Check},
                         disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
+                            // these are only for testing. 
+                            // page.set(AuthPages::CreateOrRecover);
+                            // return;
+
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());
                                 reset_input.set(true);
