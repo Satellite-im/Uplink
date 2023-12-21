@@ -209,7 +209,13 @@ pub fn key_code_to_str(key_code: &KeyCode) -> &str {
 
 pub fn modifier_state_to_string(modifier_state: ModifiersState) -> String {
     let modifier_str = match modifier_state {
-        ModifiersState::SUPER => "command",
+        ModifiersState::SUPER => {
+            if cfg!(target_os = "macos") {
+                "command"
+            } else {
+                "windows key"
+            }
+        }
         ModifiersState::SHIFT => "shift",
         ModifiersState::CONTROL => "control",
         ModifiersState::ALT => "alt",
