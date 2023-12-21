@@ -59,7 +59,7 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                 }
             }
         });
-    } else {
+    } else if !state.read().settings.is_recording_new_keybind {
         let keybinds = state.read().settings.keybinds.clone();
         return cx.render(rsx! {
             for (global_shortcut, shortcut) in keybinds {
@@ -68,14 +68,16 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
-                            let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
-                            let _ = eval(&scroll_script);
+                                let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
+                                let _ = eval(&scroll_script);
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
                 }
             }
         });
+    } else {
+        None
     }
 }
 

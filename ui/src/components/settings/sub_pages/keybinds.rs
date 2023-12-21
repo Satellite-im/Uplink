@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
-use common::state::Action;
 use common::state::settings::{GlobalShortcut, Shortcut};
+use common::state::Action;
 use common::{icons::Icon as IconElement, state::State};
 use dioxus::{html::GlobalAttributes, prelude::*};
 
@@ -78,14 +78,21 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let new_keybind_has_one_key = use_ref(cx, || false);
     let new_keybind_has_at_least_one_modifier = use_ref(cx, || false);
 
-    if update_keybind.read().is_some() && !is_recording.get()  {
+    if update_keybind.read().is_some() && !is_recording.get() {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
-        state.write_silent().settings.keybinds.retain(|(gs, _)| *gs != cx.props.shortcut);
-        state.write().settings.keybinds.push((cx.props.shortcut.clone(), Shortcut {
-            keys: keys,
-            modifiers: modifiers,
-            system_shortcut: system_shortcut,
-        }));
+        state
+            .write_silent()
+            .settings
+            .keybinds
+            .retain(|(gs, _)| *gs != cx.props.shortcut);
+        state.write().settings.keybinds.push((
+            cx.props.shortcut.clone(),
+            Shortcut {
+                keys: keys,
+                modifiers: modifiers,
+                system_shortcut: system_shortcut,
+            },
+        ));
         *update_keybind.write_silent() = None;
     }
 
@@ -106,15 +113,20 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .unwrap_or_default();
 
     let recorded_bindings = use_state(cx, || vec![]);
-    
+
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
 
     let mut keybind_class = "keybind-section-keys".to_owned();
-    if **is_recording { 
+    if **is_recording {
         keybind_class.push_str(" recording");
     }
+
+    if *is_recording.get() && !state.read().settings.is_recording_new_keybind {
+        state.write().settings.is_recording_new_keybind = true;
+    }
+
     if check_for_conflicts(sc, cx.props.bindings.clone()) {
         keybind_class.push_str(" conflicting");
     }
@@ -126,6 +138,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 class: "keybind-section-mask",
                 onclick: move |_| {
                     is_recording.set(false);
+                    state.write().settings.is_recording_new_keybind = false;
                 }
             })),
             div {
@@ -148,17 +161,16 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     }
 
                     let mut binding = vec![];
-                    for modifier in evt.data.modifiers().iter() {
-                        let modifier_string = return_string_from_modifier(modifier);
-                        if !modifier_string.is_empty() {
-                            *new_keybind_has_at_least_one_modifier.write_silent() = true;
-                            binding.push(return_string_from_modifier(modifier));
-                        }
-                    }
-                    
+
                     if is_it_a_key_code(evt.data.key())  {
                         *new_keybind_has_one_key.write_silent() = true;
                         binding.push(evt.data.code().to_string());
+                    }
+
+                    let modifier_string_vec = return_string_from_modifier(evt.data.modifiers());
+                    if !modifier_string_vec.is_empty() {
+                        *new_keybind_has_at_least_one_modifier.write_silent() = true;
+                        binding.extend(modifier_string_vec);
                     }
 
                     recorded_bindings.set(binding);
@@ -172,6 +184,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     *new_keybind_has_one_key.write_silent() = false;
                     *new_keybind_has_at_least_one_modifier.write_silent() = false;
                     is_recording.set(false);
+                    state.write().settings.is_recording_new_keybind = false;
                 },
                 Keybind {
                     keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
@@ -181,14 +194,12 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     ))
 }
 
-
 #[allow(non_snake_case)]
 pub fn KeybindSettings(cx: Scope) -> Element {
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
     if !state.read().settings.pause_global_keybinds {
         state.write().mutate(Action::PauseGlobalKeybinds(true));
     }
-
 
     let bindings = state.read().settings.keybinds.clone();
 
@@ -233,18 +244,25 @@ pub fn KeybindSettings(cx: Scope) -> Element {
     ))
 }
 
-fn return_string_from_modifier(modifier: Modifiers) -> String {
-    match modifier {
-        Modifiers::ALT => "Alt".to_string(),
-        Modifiers::CONTROL => "Ctrl".to_string(),
-        Modifiers::SHIFT => "Shift".to_string(),
-        Modifiers::META => if cfg!(target_os = "macos") 
-                { "Command".to_string() } 
-            else 
-                { "Windows Key".to_string()},
-        Modifiers::SUPER => "Super".to_string(),
-        _ => "".to_string(),
+fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {
+    let mut modifier_string = vec![];
+    for modifier in modifiers.clone() {
+        match modifier {
+            Modifiers::ALT => modifier_string.push("Alt".to_string()),
+            Modifiers::CONTROL => modifier_string.push("Ctrl".to_string()),
+            Modifiers::SHIFT => modifier_string.push("Shift".to_string()),
+            Modifiers::META => {
+                if cfg!(target_os = "macos") {
+                    modifier_string.push("Command".to_string())
+                } else {
+                    modifier_string.push("Windows Key".to_string())
+                }
+            }
+            Modifiers::SUPER => modifier_string.push("Super".to_string()),
+            _ => (),
+        }
     }
+    modifier_string
 }
 
 fn is_it_a_key_code(key: Key) -> bool {

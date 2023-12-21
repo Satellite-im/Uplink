@@ -81,6 +81,7 @@ impl Shortcut {
         for modifier_string in keys_and_modifiers.clone() {
             match modifier_string.as_str() {
                 "Command" => modifiers_state_vec.push(ModifiersState::SUPER),
+                "Windows Key" => modifiers_state_vec.push(ModifiersState::SUPER),
                 "Meta" => modifiers_state_vec.push(ModifiersState::SUPER),
                 "Shift" => modifiers_state_vec.push(ModifiersState::SHIFT),
                 "Ctrl" => modifiers_state_vec.push(ModifiersState::CONTROL),
@@ -243,6 +244,7 @@ pub struct Settings {
     font_scale: f32,
     pub user_volumes: HashMap<DID, f32>,
     pub pause_global_keybinds: bool,
+    pub is_recording_new_keybind: bool,
     pub keybinds: Vec<(GlobalShortcut, Shortcut)>,
 }
 
@@ -258,6 +260,7 @@ impl Default for Settings {
             user_volumes: HashMap::new(),
             pause_global_keybinds: false,
             keybinds: super::default_keybinds::get_default_keybinds(),
+            is_recording_new_keybind: false,
         }
     }
 }
