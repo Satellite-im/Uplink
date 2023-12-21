@@ -240,6 +240,12 @@
 .thumb-text {
   color: var(--text-color);
 }
+#enter-seed-words-layout {
+  .controls {
+    display: inline-flex;
+    flex-direction: column;
+  }
+}
 
 #enter-seed-words-layout,
 #copy-seed-words-layout {

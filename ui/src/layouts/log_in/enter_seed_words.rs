@@ -94,7 +94,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                 get_local_text("enter-seed-words.instructions")
             },
             div {
-                id: "enter-seed-words-layout",
+                class: "controls",
                 aria_label: "enter-seed-words-layout",
 
                 input::Input {

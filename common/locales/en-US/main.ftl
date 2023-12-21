@@ -382,7 +382,7 @@ copy-seed-words = Recovery Seed
     .finished = I Saved It
 
 enter-seed-words = Recovery Seed
-    .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by commas.
+    .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by spaces.
     .submit = Recover Account
     .placeholder = Enter Recovery Seed...
 
