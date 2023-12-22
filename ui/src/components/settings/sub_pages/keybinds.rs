@@ -127,7 +127,6 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     }
 
     if *is_recording.get() && !state.read().settings.is_recording_new_keybind {
-        println!("is_recording_new_keybind: true");
         state.write().settings.is_recording_new_keybind = true;
     }
 
