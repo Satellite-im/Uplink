@@ -242,7 +242,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     if minimal {
         return cx.render(rsx!(
             div {
-                z_index: 6,
+                z_index: 100,
                 Button {
                     icon: Icon::EllipsisVertical,
                     aria_label: "control-group".into(),
@@ -263,9 +263,15 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             },
             show_more.then(|| {
                 rsx!(div {
-                    class: "minimal-chat-button-group",
-                    buttons
-                })
+                        class: "minimal-chat-button-group-out",
+                        onclick: move |_|{
+                            show_more.set(false);
+                        },
+                    }
+                    div {
+                        class: "minimal-chat-button-group",
+                        buttons
+                    })
             }),
             pinned
         ));

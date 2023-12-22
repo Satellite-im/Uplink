@@ -14,9 +14,6 @@
                     // "--package=example"
                 ],
             },
-            "args": [
-                "debug"
-            ],
             "cwd": "${workspaceFolder}"
         },
         {
@@ -24,9 +21,6 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/uplink",
-            "args": [
-                "debug"
-            ],
             "cwd": "${workspaceRoot}"
         },
         {
@@ -36,7 +30,6 @@
             "program": "${workspaceRoot}/target/debug/uplink",
             "args": [
                 "--with-mock",
-                "debug"
             ],
             "cwd": "${workspaceRoot}"
         }
