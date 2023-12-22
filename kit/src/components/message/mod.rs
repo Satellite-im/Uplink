@@ -573,11 +573,14 @@ fn markdown(text: &str, emojis: bool) -> String {
                 }
             }
             event => {
-                if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(_)) = event {
-                    in_code_block = true;
-                } else if let pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) = event
-                {
-                    in_code_block = false;
+                match event {
+                    pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(_)) => {
+                        in_code_block = true;
+                    }
+                    pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                        in_code_block = false;
+                    }
+                    _ => {}
                 }
                 pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event))
             }
