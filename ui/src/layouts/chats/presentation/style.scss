@@ -69,6 +69,16 @@
         width: 60vw;
     }
 }
+
+.minimal-chat-button-group-out {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98,
+}
+
 .minimal-chat-button-group {
     display: flex;
     flex-direction: column; 
@@ -76,7 +86,7 @@
     right: calc(var(--gap) * -1);
     top: calc(var(--gap) * -1); 
     gap: var(--gap);
-    z-index: 5;
+    z-index: 99;
     background: var(--secondary-dark);
     border-radius: var(--border-radius-more) 0 0 var(--border-radius-more);
     padding: var(--gap);

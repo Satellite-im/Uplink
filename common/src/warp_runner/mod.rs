@@ -358,26 +358,16 @@ impl From<&DiscoveryMode> for Discovery {
                     addresses: vec![address.parse().expect("Valid multiaddr address")],
                 },
             },
-            DiscoveryMode::Shuttle => {
-                #[cfg(not(feature = "production_mode"))]
-                {
-                    Discovery::Shuttle {
-                        addresses: HashMap::from_iter([(
-                            "12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
-                                .parse()
-                                .expect("Valid id"),
-                            HashSet::from_iter(["/ip4/104.236.194.35/tcp/34053"
-                                .parse()
-                                .expect("valid addr")]),
-                        )]),
-                    }
-                }
-                #[cfg(feature = "production_mode")]
-                {
-                    //TODO: Add a production map
-                    Discovery::None
-                }
-            }
+            DiscoveryMode::Shuttle => Discovery::Shuttle {
+                addresses: HashMap::from_iter([(
+                    "12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
+                        .parse()
+                        .expect("Valid id"),
+                    HashSet::from_iter(["/ip4/104.236.194.35/tcp/34053"
+                        .parse()
+                        .expect("valid addr")]),
+                )]),
+            },
             DiscoveryMode::Disable => Discovery::None,
         }
     }
