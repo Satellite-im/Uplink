@@ -208,7 +208,19 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                         keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
                     })
                 }
-            }
+            },
+            Button {
+                aria_label: "reset-keybinds-button".into(),
+                icon: Icon::ArrowUturnDown,
+                onpress: move |_| {},
+                appearance: kit::elements::Appearance::Secondary,
+                tooltip: cx.render(rsx!(
+                    Tooltip {
+                        arrow_position: ArrowPosition::Right,
+                        text: get_local_text("settings-keybinds.reset")
+                    }
+                )),
+            },
         }
     ))
 }
