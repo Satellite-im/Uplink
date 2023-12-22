@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::default_keybinds::get_keycode_and_modifier_from_a_shortcut;
 use common::state::settings::{GlobalShortcut, Shortcut};
 use common::state::Action;
 use common::{icons::Icon as IconElement, state::State};
@@ -212,7 +213,11 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             Button {
                 aria_label: "reset-keybinds-button".into(),
                 icon: Icon::ArrowUturnDown,
-                onpress: move |_| {},
+                onpress: move |_| {
+                    let (keys, modifiers) = get_keycode_and_modifier_from_a_shortcut(cx.props.shortcut.clone());
+                    *update_keybind.write() = Some((keys, modifiers));
+
+                },
                 appearance: kit::elements::Appearance::Secondary,
                 tooltip: cx.render(rsx!(
                     Tooltip {

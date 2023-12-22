@@ -4,14 +4,13 @@ use dioxus_desktop::tao::keyboard::ModifiersState;
 use super::settings::{GlobalShortcut, Shortcut};
 
 pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
-    let alt_or_command = if cfg!(target_os = "macos") {
+    let alt_or_command_modifierstate = if cfg!(target_os = "macos") {
         // SUPER is command on mac
         ModifiersState::SUPER
     } else {
         ModifiersState::ALT
     };
     Vec::from([
-        // To avoid multi-key conflicts, when using a shortcut that uses multiple `KeyCode` values, it's best to use the `ALT` modifier by default.
         (
             GlobalShortcut::IncreaseFontSize,
             Shortcut::from((
@@ -34,7 +33,7 @@ pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
             GlobalShortcut::ToggleMute,
             Shortcut::from((
                 vec![KeyCode::M],
-                vec![alt_or_command, ModifiersState::SHIFT],
+                vec![alt_or_command_modifierstate, ModifiersState::SHIFT],
                 true,
             )),
         ),
@@ -42,9 +41,25 @@ pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
             GlobalShortcut::ToggleDeafen,
             Shortcut::from((
                 vec![KeyCode::D],
-                vec![alt_or_command, ModifiersState::SHIFT],
+                vec![alt_or_command_modifierstate, ModifiersState::SHIFT],
                 true,
             )),
         ),
     ])
+}
+
+pub fn get_keycode_and_modifier_from_a_shortcut(
+    global_shortcut_target: GlobalShortcut,
+) -> (Vec<KeyCode>, Vec<ModifiersState>) {
+    let mut keycodes = Vec::new();
+    let mut modifiers = Vec::new();
+    let default_keybinds = get_default_keybinds();
+    for (global_shortcut, shortcut) in default_keybinds {
+        if global_shortcut.clone() == global_shortcut_target {
+            keycodes = shortcut.keys.clone();
+            modifiers = shortcut.modifiers.clone();
+            break;
+        }
+    }
+    (keycodes, modifiers)
 }
