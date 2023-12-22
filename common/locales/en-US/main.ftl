@@ -283,6 +283,7 @@ settings-keybinds = Keybind Settings
     .decrease-font-size = Decrease font size within Uplink.
     .toggle-mute = Mute & un-mute your microphone.
     .toggle-deafen = Toggle turning off all sounds including your microphone and headphones.
+    .conflicting-keybinds = Conflicting Keybind.
     .change-keybind = Record New keybind
     .cancel-change-keybind = Cancel Recording
 

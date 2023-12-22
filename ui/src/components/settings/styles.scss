@@ -160,6 +160,7 @@
   }
   
   .keybind-section-keys {
+    cursor: pointer;
     height: var(--height-input);
     display: inline-flex;
     gap: var(--gap-less);
@@ -176,7 +177,7 @@
     }
 
     &.conflicting {
-      border: 2px solid var(--warning);
+      border: 2px solid var(--danger);
     }
 
     .keybind-key {

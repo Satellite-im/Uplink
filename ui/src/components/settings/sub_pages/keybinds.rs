@@ -8,6 +8,7 @@ use dioxus::{html::GlobalAttributes, prelude::*};
 
 use dioxus_elements::input_data::keyboard_types::Code;
 use dioxus_elements::input_data::keyboard_types::Key;
+use kit::components::tooltip_wrap::TooltipWrap;
 #[allow(unused_imports)]
 use kit::elements::{
     button::Button,
@@ -128,7 +129,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         state.write().settings.is_recording_new_keybind = true;
     }
 
-    if check_for_conflicts(sc, cx.props.bindings.clone()) {
+    let has_conflicts = check_for_conflicts(sc, cx.props.bindings.clone());
+
+    if has_conflicts {
         keybind_class.push_str(" conflicting");
     }
     cx.render(rsx!(
@@ -187,8 +190,22 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                     is_recording.set(false);
                     state.write().settings.is_recording_new_keybind = false;
                 },
-                Keybind {
-                    keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
+                if has_conflicts {
+                    rsx!(TooltipWrap {
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Top,
+                                text: get_local_text("settings-keybinds.conflicting-keybinds")
+                            }
+                        )),
+                        Keybind {
+                            keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
+                        }
+                    })
+                } else {
+                    rsx!(Keybind {
+                        keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
+                    })
                 }
             }
         }

@@ -1,0 +1,17 @@
+.tooltip-parent {
+    width: fit-content;
+    display: inline-flex;
+    position: relative;
+    .tooltip-wrapper {
+        position: absolute;
+        left: 25%;
+        top: calc(100% + var(--gap));
+        visibility: hidden;
+    }
+
+    &:hover {
+        .tooltip-wrapper {
+            visibility: visible;
+        }
+    }
+}
