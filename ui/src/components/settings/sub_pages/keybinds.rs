@@ -17,6 +17,8 @@ use kit::elements::{
 };
 use muda::accelerator::Modifiers;
 
+use crate::components::settings::SettingSection;
+
 const AVOID_INPUT_ON_DIV: &str = r#"
     document.getElementById("$UUID").addEventListener("keypress", function (event) {
         event.preventDefault(); 
@@ -233,6 +235,17 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 p {
                     get_local_text("settings-keybinds.info")
                 }
+            },
+            SettingSection {
+                section_label: get_local_text("settings-keybinds.reset-keybinds"),
+                section_description: get_local_text("settings-keybinds.reset-keybinds-description"),
+                Button {
+                    aria_label: "reset-keybinds-button".into(),
+                    icon: Icon::ArrowUturnDown,
+                    onpress: move |_| {},
+                    text: get_local_text("settings-keybinds.reset-keybinds"),
+                    appearance: kit::elements::Appearance::Secondary
+                },
             },
             KeybindSection {
                 id: format!("{:?}", GlobalShortcut::IncreaseFontSize),
