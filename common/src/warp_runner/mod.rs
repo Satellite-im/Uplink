@@ -236,13 +236,6 @@ async fn handle_login(notify: Arc<Notify>) {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
-                                        // todo: remove this once warp is updated to export the identity automatically
-                                        if matches!(STATIC_ARGS.discovery, DiscoveryMode::Shuttle) {
-                                            if let Err(e) = warp.multipass.export_identity(ImportLocation::Remote).await {
-                                                log::error!("failed to export identity: {e}");
-                                            }
-                                        }
-
                                         let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }
