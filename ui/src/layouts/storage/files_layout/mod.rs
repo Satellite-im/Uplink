@@ -277,12 +277,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let msg = vec!["".to_owned()];
                     let attachments = files_location;
-                    let ui_msg_id = None;
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
                         convs_id,
                         msg,
                         attachments,
-                        ui_msg_id,
+                        appended_msg_id: None,
                         rsp: tx,
                     })) {
                         log::error!("Failed to send warp command: {}", e);

@@ -1,1 +1,1 @@
-return document.getElementById("messages").scrollTop
+return document.getElementById("messages").scrollTop;

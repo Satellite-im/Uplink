@@ -330,7 +330,20 @@ pub async fn fetch_messages2(
 
     let has_more = messages.len() >= config.get_limit();
 
-    Ok(FetchMessagesResponse { messages, has_more })
+    let mut most_recent = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_limit(1).set_last_message(),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+    let most_recent = most_recent.pop().map(|x| x.id());
+
+    Ok(FetchMessagesResponse {
+        messages,
+        has_more,
+        most_recent,
+    })
 }
 
 pub async fn conversation_to_chat(

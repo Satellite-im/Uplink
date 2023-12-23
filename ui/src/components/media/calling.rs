@@ -4,8 +4,10 @@ use std::{
 };
 
 use chrono::Local;
+use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
+use dioxus_core::Element;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -19,7 +21,7 @@ use kit::{
     },
     User,
 };
-use warp::crypto::DID;
+use warp::{blink::ParticipantState, crypto::DID};
 
 use crate::utils::{
     build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -378,7 +380,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 } else if cx.props.in_chat {
                     let call_participants: Vec<_> = other_participants
                         .iter()
-                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), call.participants_joined.get(&x.did_key()).cloned(), build_user_from_identity(x)))
                         .collect();
                     rsx!(CallUserImageGroup {
                         participants: call_participants,
@@ -428,7 +430,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             },
             Button {
-                icon: if call.call_silenced { Icon::SignalSlash } else { Icon::Signal },
+                icon: if call.call_silenced { Icon::HeadphonesSlash } else { Icon::Headphones },
                 aria_label: "call-speaker-button".into(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
@@ -672,7 +674,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
 
 #[derive(Props, PartialEq)]
 pub struct CallUserImageProps {
-    participants: Vec<(bool, User)>,
+    participants: Vec<(bool, Option<ParticipantState>, User)>,
 }
 
 #[allow(non_snake_case)]
@@ -709,14 +711,51 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
         (visible.to_vec(), Some(context.to_vec()))
     };
+
+    let user_state_icons = move |user_state: Option<ParticipantState>| {
+        user_state.map(move |s| {
+            rsx!(div {
+                class: "call-status",
+                s.muted.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::MicrophoneSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.deafened.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::HeadphonesSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.recording.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::VideoCamera,
+                            fill:"currentColor",
+                        }
+                    })
+                })
+            })
+        })
+    };
+
     cx.render(rsx!(
-        visible.iter().map(|(speaking, user)| {
+        visible.iter().map(|(speaking, user_state, user)| {
             rsx!(div {
                 class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
                 UserImage {
                     platform: user.platform,
                     image: user.photo.clone(),
                 }
+                user_state_icons(user_state.clone())
             })
         }),
         context.map(|ctx| {
@@ -728,7 +767,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                         id: format!("{}", id),
                         left_click_trigger: true,
                         items: cx.render(rsx!(
-                            ctx.iter().map(|(speaking,user)|{
+                            ctx.iter().map(|(speaking, user_state, user)|{
                                 rsx!(div {
                                         class: "additional-participant",
                                         div {
@@ -741,7 +780,8 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                                         p {
                                             class: "additional-participant-name",
                                             user.username.to_string()
-                                        }
+                                        },
+                                        user_state_icons(user_state.clone())
                                 })
                             })
                         )),

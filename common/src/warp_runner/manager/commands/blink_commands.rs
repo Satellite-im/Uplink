@@ -1,7 +1,12 @@
 use derive_more::Display;
-use futures::channel::oneshot;
+use futures::channel::oneshot::{self};
+use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;
-use warp::{blink::AudioDeviceConfig, crypto::DID};
+use warp::logging::tracing::log;
+use warp::{
+    blink::{AudioDeviceConfig, AudioTestEvent},
+    crypto::DID,
+};
 
 use crate::warp_runner::Calling;
 
@@ -77,6 +82,14 @@ pub enum BlinkCmd {
         flag: bool,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "TestSpeaker")]
+    TestSpeaker {
+        rsp: oneshot::Sender<UnboundedReceiver<AudioTestEvent>>,
+    },
+    #[display(fmt = "TestMicrophone")]
+    TestMicrophone {
+        rsp: oneshot::Sender<UnboundedReceiver<AudioTestEvent>>,
+    },
 }
 
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
@@ -146,6 +159,34 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             } else {
                 let _ = rsp.send(blink.disable_automute());
             }
+        }
+        BlinkCmd::TestSpeaker { rsp } => {
+            match blink.get_audio_device_config().await {
+                Ok(audio_config) => {
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_speaker(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
+                }
+                Err(e) => {
+                    log::debug!("speaker testing fail {:}", e);
+                }
+            };
+        }
+        BlinkCmd::TestMicrophone { rsp } => {
+            match blink.get_audio_device_config().await {
+                Ok(audio_config) => {
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_microphone(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
+                }
+                Err(e) => {
+                    log::debug!("microphone testing fail {:}", e);
+                }
+            };
         }
     }
 }

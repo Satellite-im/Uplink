@@ -12,7 +12,7 @@ use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
-use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
@@ -47,6 +47,7 @@ use std::sync::Arc;
 
 use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
+use crate::components::shortcuts::change_font_size_shortcut::ChangeFontSizeShortCut;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
@@ -59,7 +60,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log::{self, LevelFilter};
+use warp::logging::tracing::log::{self};
 
 use muda::AboutMetadata;
 use muda::Menu;
@@ -106,16 +107,13 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
-const UNREAD_ASPECT_RATIO: &str = r#"for (element of document.getElementsByClassName("nav-unread-indicator")) {
-    element.style.height = element.getBoundingClientRect().width + "px"
-}"#;
-
 pub fn main_lib() {
     // 1. fix random system quirks
     bootstrap::platform_quirks();
 
     // 2. configure logging via the cli
-    bootstrap::configure_logger(common::Args::parse().profile);
+    let args = common::Args::parse();
+    bootstrap::configure_logger(args.production_mode, args.log_to_file);
 
     // 3. Make sure that if the app panics we can catch it
     bootstrap::set_app_panic_hook();
@@ -243,9 +241,14 @@ fn app_layout(cx: Scope) -> Element {
 
 fn AppStyle(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    render! {
+        style { get_app_style(&state.read()) },
+    }
+}
 
+pub fn get_app_style(state: &State) -> String {
     let mut font_style = String::new();
-    if let Some(font) = state.read().ui.font.clone() {
+    if let Some(font) = state.ui.font.clone() {
         font_style = format!(
             "
         @font-face {{
@@ -264,26 +267,22 @@ fn AppStyle(cx: Scope) -> Element {
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
 
     // render the Uplink app
-    let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+    let open_dyslexic = if state.configuration.general.dyslexia_support {
         OPEN_DYSLEXIC
     } else {
         ""
     };
 
-    let font_scale = format!(
-        "html {{ font-size: {}rem; }}",
-        state.read().settings.font_scale()
-    );
+    let font_scale = format!("html {{ font-size: {}rem; }}", state.settings.font_scale());
 
     let theme = state
-        .read()
         .ui
         .theme
         .as_ref()
         .map(|theme| theme.styles.clone())
         .unwrap_or_default();
 
-    let accent_color = state.read().ui.accent_color;
+    let accent_color = state.ui.accent_color;
     let accent_color = if let Some(color) = accent_color {
         format!(
             ":root {{
@@ -295,9 +294,7 @@ fn AppStyle(cx: Scope) -> Element {
         "".into()
     };
 
-    render! {
-        style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
-    }
+    format!("{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}")
 }
 
 fn use_auto_updater(cx: &ScopeState) -> Option<()> {
@@ -1112,18 +1109,11 @@ fn AppNav<'a>(
         to: "/chat",
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
-        child: (unreads > 0).then(|| {
-            cx.render(rsx!(div {
-                class: "nav-unread-indicator",
-                span {
-                    class: "unread-text",
-                    unreads.to_string(),
-                },
-                script {
-                    UNREAD_ASPECT_RATIO
-                }
-            }))
-        }),
+        with_badge: if unreads > 0 {
+            Some(unreads.to_string())
+        } else {
+            None
+        },
         context_items: (unreads > 0).then(|| {
             cx.render(rsx!(ContextItem {
                 aria_label: "clear-unreads".into(),
@@ -1161,32 +1151,37 @@ fn AppNav<'a>(
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
 
-    render!(kit::components::nav::Nav {
-        routes: _routes,
-        active: match active {
-            UplinkRoute::ChatLayout {} => "/chat",
-            UplinkRoute::SettingsLayout {} => "/settings",
-            UplinkRoute::FriendsLayout {} => "/friends",
-            UplinkRoute::FilesLayout {} => "/files",
-            _ => "",
-        },
-        onnavigate: move |r| {
-            if let Some(f) = onnavigate {
-                f.call(());
-            }
+    render!(
+        if state.read().ui.metadata.focused {
+            rsx!(ChangeFontSizeShortCut {})
+        }
+        kit::components::nav::Nav {
+            routes: _routes,
+            active: match active {
+                UplinkRoute::ChatLayout {} => "/chat",
+                UplinkRoute::SettingsLayout {} => "/settings",
+                UplinkRoute::FriendsLayout {} => "/friends",
+                UplinkRoute::FilesLayout {} => "/files",
+                _ => "",
+            },
+            onnavigate: move |r| {
+                if let Some(f) = onnavigate {
+                    f.call(());
+                }
 
-            let new_layout = match r {
-                "/chat" => UplinkRoute::ChatLayout {},
-                "/settings" => UplinkRoute::SettingsLayout {},
-                "/friends" => UplinkRoute::FriendsLayout {},
-                "/files" => UplinkRoute::FilesLayout {},
-                _ => UplinkRoute::ChatLayout {},
-            };
+                let new_layout = match r {
+                    "/chat" => UplinkRoute::ChatLayout {},
+                    "/settings" => UplinkRoute::SettingsLayout {},
+                    "/friends" => UplinkRoute::FriendsLayout {},
+                    "/files" => UplinkRoute::FilesLayout {},
+                    _ => UplinkRoute::ChatLayout {},
+                };
 
-            navigator.replace(new_layout);
-        },
-        tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
-    })
+                navigator.replace(new_layout);
+            },
+            tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
+        }
+    )
 }
 
 struct LogDropper {}

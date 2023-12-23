@@ -104,7 +104,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        ui_msg_id: Option<Uuid>,
+        appended_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "SendMessageForSeveralChats")]
@@ -112,7 +112,7 @@ pub enum RayGunCmd {
         convs_id: Vec<Uuid>,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        ui_msg_id: Option<Uuid>,
+        appended_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "EditMessage")]
@@ -272,7 +272,7 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
-            ui_msg_id: ui_id,
+            appended_msg_id: ui_id,
             rsp,
         } => {
             let r = if attachments.is_empty() {
@@ -319,7 +319,7 @@ pub async fn handle_raygun_cmd(
             convs_id,
             msg,
             attachments,
-            ui_msg_id: ui_id,
+            appended_msg_id: ui_id,
             rsp,
         } => {
             for chat_id in convs_id {
