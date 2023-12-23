@@ -23,6 +23,15 @@ static LANGUAGES: Lazy<HashMap<String, (LanguageIdentifier, &'static str)>> = La
     add(&mut map, &(langid!("pt-PT"), "Português (Portugal)"));
     add(&mut map, &(langid!("es-MX"), "Español (México)"));
     add(&mut map, &(langid!("de"), "Deutsch"));
+    add(&mut map, &(langid!("sr-RS"), "Serbia (Srbija)"));
+    add(&mut map, &(langid!("hr-HR"), "Croatia (Hrvatska)"));
+    add(
+        &mut map,
+        &(
+            langid!("bs-BA"),
+            "Bosnia and Hercegovina (Bosna i Hercegovina)",
+        ),
+    );
     map
 });
 
