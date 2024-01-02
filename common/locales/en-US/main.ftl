@@ -288,6 +288,8 @@ settings-keybinds = Keybind Settings
     .toggle-deafen = Toggle turning off all sounds including your microphone and headphones.
     .conflicting-keybinds = Conflicting Keybind.
     .change-keybind = Record New keybind
+    .open-dev-tools = Open Web Inspector
+    .toggle-devmode = Toggle Developer Mode
     .cancel-change-keybind = Cancel Recording
 
 settings-extensions = Extension Settings
