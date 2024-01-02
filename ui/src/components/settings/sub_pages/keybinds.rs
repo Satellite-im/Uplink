@@ -88,7 +88,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             .write_silent()
             .settings
             .keybinds
-            .retain(|(gs, _)| *gs != cx.props.shortcut);
+            .retain(|(gs, _)| !matches!(gs, cx.props.shortcut));
         state.write().settings.keybinds.push((
             cx.props.shortcut.clone(),
             Shortcut {
@@ -99,7 +99,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         ));
         *update_keybind.write_silent() = None;
     }
-
+    
     let bindings = cx
         .props
         .bindings
