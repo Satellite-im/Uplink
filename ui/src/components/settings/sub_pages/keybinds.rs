@@ -92,9 +92,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         state.write().settings.keybinds.push((
             cx.props.shortcut.clone(),
             Shortcut {
-                keys: keys,
-                modifiers: modifiers,
-                system_shortcut: system_shortcut,
+                keys,
+                modifiers,
+                system_shortcut,
             },
         ));
         *update_keybind.write_silent() = None;
@@ -116,7 +116,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
-    let recorded_bindings = use_state(cx, || vec![]);
+    let recorded_bindings = use_state(cx, Vec::new);
 
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
@@ -305,7 +305,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
 
 fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {
     let mut modifier_string = vec![];
-    for modifier in modifiers.clone() {
+    for modifier in modifiers {
         match modifier {
             Modifiers::ALT => modifier_string.push("Alt".to_string()),
             Modifiers::CONTROL => modifier_string.push("Ctrl".to_string()),
@@ -323,6 +323,8 @@ fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {
     modifier_string
 }
 
+// Suppress the match_like_matches_macro warning for this specific block
+#[allow(clippy::match_like_matches_macro)]
 fn is_it_a_key_code(key: Key) -> bool {
     match key {
         Key::Alt => false,

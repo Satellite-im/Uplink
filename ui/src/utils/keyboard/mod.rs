@@ -133,7 +133,7 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
         .props
         .modifiers
         .iter()
-        .map(|modifier| modifier_state_to_string(modifier.clone()))
+        .map(|modifier| modifier_state_to_string(*modifier))
         .collect();
 
     let modifiers_and_keys = [modifier_strs.join(" + "), key_code_strs.join(" + ")].join(" + ");
