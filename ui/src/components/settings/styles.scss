@@ -97,6 +97,22 @@
   }
 }
 
+.settings-keybinds-info {
+  background-color: var(--secondary);
+  border-radius: var(--border-radius);
+  margin: var(--gap);
+  display: inline-flex;
+  width: calc(100% - (var(--gap) * 2));
+  padding: var(--padding-less);
+  color: var(--text-color-bright);
+  gap: var(--gap);
+
+  svg {
+    fill: transparent;
+    stroke: var(--text-color-bright);
+  }
+}
+
 .keybind-section {
   display: inline-flex;
   flex-direction: row;
@@ -105,7 +121,18 @@
   justify-content: center;
   align-content: center;
   align-items: center;
-  padding: 0 var(--gap);
+  padding: 0 var(--gap) 0 0;
+  
+  .keybind-section-mask {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: fixed;
+    z-index: 2;
+    background-color: rgba(0,0,0, 0.75);
+    transition: background-color 0.3s ease;
+  }
 
   .keybind-separator {
     fill: transparent;
@@ -133,15 +160,25 @@
   }
   
   .keybind-section-keys {
+    cursor: pointer;
     height: var(--height-input);
     display: inline-flex;
     gap: var(--gap-less);
-    padding: var(--gap-less);
+    padding: calc(var(--gap-less) - 1px);
     background: var(--secondary-darker);
     border-radius: var(--border-radius);
     margin: var(--padding-less);
-    border: 1px solid var(--border-subtle-color);
+    border: 2px solid var(--border-subtle-color);
+    min-width: calc(var(--height-input) * 2);
 
+    &.recording {
+      border: 2px solid var(--info);
+      z-index: 3;
+    }
+
+    &.conflicting {
+      border: 2px solid var(--danger);
+    }
 
     .keybind-key {
       width: fit-content;
@@ -151,6 +188,7 @@
       border-radius: var(--border-radius);
       background-color: var(--secondary-dark);
       color: var(--text-color-muted);
+      pointer-events: none;
       .keybind-key-inner {
         display: inline-flex;
         align-items: center;
@@ -163,6 +201,13 @@
         background-color: var(--secondary);
         padding: 0 var(--gap-less);
       }
+    }
+  }
+
+
+  &.highlight {
+    .keybind-section-keys {
+      border: 2px solid var(--info);
     }
   }
 }
