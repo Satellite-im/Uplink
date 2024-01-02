@@ -60,13 +60,13 @@ pub enum DiscoveryMode {
     Full,
 
     /// Use warp specific discovery
+    #[default]
     Shuttle,
 
     /// Address to a specific discovery point
     RzPoint { address: String },
 
     /// Disable discovery
-    #[default]
     Disable,
 }
 

@@ -10,6 +10,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
+use common::state::settings::GlobalShortcut;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -46,7 +47,6 @@ use std::time::Instant;
 use std::sync::Arc;
 
 use crate::components::debug_logger::DebugLogger;
-use crate::components::shortcuts::change_font_size_shortcut::ChangeFontSizeShortCut;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
@@ -56,6 +56,7 @@ use crate::layouts::log_in::{AuthGuard, AuthPages};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
+use crate::utils::keyboard::KeyboardShortcuts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
@@ -223,12 +224,25 @@ fn app_layout(cx: Scope) -> Element {
     use_app_coroutines(cx)?;
     use_router_notification_listener(cx)?;
 
+    let state = use_shared_state::<State>(cx)?;
+
     render! {
         AppStyle {}
         div { id: "app-wrap",
             Titlebar {},
-            Toasts {
+            KeyboardShortcuts {
+                on_global_shortcut: move |shortcut| {
+                    match shortcut {
+                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(),
+                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
+                        GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
+                        GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
+                        GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")
+                    }
+                    log::debug!("shortcut called {:?}", shortcut);
+                }
             },
+            Toasts {},
             Outlet::<UplinkRoute>{},
             AppLogger {},
             PrismScripts {},
@@ -1148,37 +1162,36 @@ fn AppNav<'a>(
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
 
-    render!(
-        if state.read().ui.metadata.focused {
-            rsx!(ChangeFontSizeShortCut {})
-        }
-        kit::components::nav::Nav {
-            routes: _routes,
-            active: match active {
-                UplinkRoute::ChatLayout {} => "/chat",
-                UplinkRoute::SettingsLayout {} => "/settings",
-                UplinkRoute::FriendsLayout {} => "/friends",
-                UplinkRoute::FilesLayout {} => "/files",
-                _ => "",
-            },
-            onnavigate: move |r| {
-                if let Some(f) = onnavigate {
-                    f.call(());
-                }
+    render!(kit::components::nav::Nav {
+        routes: _routes,
+        active: match active {
+            UplinkRoute::ChatLayout {} => "/chat",
+            UplinkRoute::SettingsLayout {} => "/settings",
+            UplinkRoute::FriendsLayout {} => "/friends",
+            UplinkRoute::FilesLayout {} => "/files",
+            _ => "",
+        },
+        onnavigate: move |r| {
+            if let Some(f) = onnavigate {
+                f.call(());
+            }
 
-                let new_layout = match r {
-                    "/chat" => UplinkRoute::ChatLayout {},
-                    "/settings" => UplinkRoute::SettingsLayout {},
-                    "/friends" => UplinkRoute::FriendsLayout {},
-                    "/files" => UplinkRoute::FilesLayout {},
-                    _ => UplinkRoute::ChatLayout {},
-                };
+            if r != "/settings" {
+                state.write().mutate(Action::PauseGlobalKeybinds(false));
+            }
 
-                navigator.replace(new_layout);
-            },
-            tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
-        }
-    )
+            let new_layout = match r {
+                "/chat" => UplinkRoute::ChatLayout {},
+                "/settings" => UplinkRoute::SettingsLayout {},
+                "/friends" => UplinkRoute::FriendsLayout {},
+                "/files" => UplinkRoute::FilesLayout {},
+                _ => UplinkRoute::ChatLayout {},
+            };
+
+            navigator.replace(new_layout);
+        },
+        tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
+    })
 }
 
 struct LogDropper {}
