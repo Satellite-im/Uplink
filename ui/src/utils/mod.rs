@@ -15,6 +15,7 @@ pub mod download;
 pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod get_font_sizes;
+pub mod keyboard;
 pub mod lifecycle;
 pub mod verify_valid_paths;
 
