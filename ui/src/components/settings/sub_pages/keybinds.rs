@@ -99,7 +99,6 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         ));
         *update_keybind.write_silent() = None;
     }
-
     
     let bindings = cx
         .props
