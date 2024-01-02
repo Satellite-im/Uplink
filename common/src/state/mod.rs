@@ -2,6 +2,7 @@ pub mod action;
 pub mod call;
 pub mod chats;
 pub mod configuration;
+pub mod default_keybinds;
 pub mod friends;
 pub mod identity;
 pub mod notifications;
@@ -205,7 +206,6 @@ impl State {
             Action::RemoveFriend(friend) => self.remove_friend(friend),
             Action::Block(identity) => self.block(identity),
             Action::Unblock(identity) => self.unblock(identity),
-
             // ===== UI =====
             // Favorites
             Action::Favorite(chat) => self.favorite(&chat),
@@ -238,6 +238,8 @@ impl State {
             Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             Action::SetTransformMarkdownText(flag) => self.ui.transform_markdown_text(flag),
             Action::SetTransformAsciiEmojis(flag) => self.ui.transform_ascii_emojis(flag),
+            // ===== Settings =====
+            Action::PauseGlobalKeybinds(b) => self.settings.pause_global_keybinds = b,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts

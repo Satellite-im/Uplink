@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::sounds;
 use common::state::State;
+use common::{icons::outline::Shape as Icon, state::Action};
 use dioxus::prelude::*;
 use kit::{
     components::nav::Nav,
@@ -238,6 +238,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if state.read().configuration.audiovideo.interface_sounds {
                        sounds::Play(sounds::Sounds::Interaction);
                     }
+
+                    if route == "keybinds" {
+                        state.write().mutate(Action::PauseGlobalKeybinds(true));
+                    } else {
+                        state.write().mutate(Action::PauseGlobalKeybinds(false));
+                    }
+
                     emit(&cx, Page::from_str(route).unwrap());
                 }
             }
