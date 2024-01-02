@@ -116,7 +116,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
-    let recorded_bindings = use_state(cx, std::vec::Vec::new);
+    let recorded_bindings = use_state(cx, Vec::new);
 
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
