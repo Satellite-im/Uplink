@@ -16,6 +16,8 @@ pub enum GlobalShortcut {
     ToggleDeafen,
     IncreaseFontSize,
     DecreaseFontSize,
+    OpenDevTools,
+    ToggleDevmode,
     #[default]
     Unknown,
 }
@@ -27,6 +29,8 @@ impl fmt::Display for GlobalShortcut {
             GlobalShortcut::ToggleDeafen => write!(f, "ToggleDeafen"),
             GlobalShortcut::IncreaseFontSize => write!(f, "IncreaseFontSize"),
             GlobalShortcut::DecreaseFontSize => write!(f, "DecreaseFontSize"),
+            GlobalShortcut::OpenDevTools => write!(f, "OpenDevTools"),
+            GlobalShortcut::ToggleDevmode => write!(f, "ToggleDevmode"),
             GlobalShortcut::Unknown => write!(f, "Unknown"),
         }
     }
@@ -64,7 +68,7 @@ impl Shortcut {
         let mut modifier_strs: Vec<String> = self
             .modifiers
             .iter()
-            .map(|modifier| modifier_state_to_string(modifier.clone()))
+            .map(|modifier| modifier_state_to_string(*modifier))
             .collect();
 
         modifier_strs.extend(key_code_strs);
@@ -91,7 +95,7 @@ impl Shortcut {
         }
 
         for key_string in keys_and_modifiers {
-            if key_code_vec.len() > 0 {
+            if !key_code_vec.is_empty() {
                 break;
             }
             match key_string.as_str() {
