@@ -92,9 +92,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         state.write().settings.keybinds.push((
             cx.props.shortcut.clone(),
             Shortcut {
-                keys: keys,
-                modifiers: modifiers,
-                system_shortcut: system_shortcut,
+                keys,
+                modifiers,
+                system_shortcut,
             },
         ));
         *update_keybind.write_silent() = None;
