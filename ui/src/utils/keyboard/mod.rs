@@ -29,6 +29,7 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    is_on_auth_pages: Option<bool>,
     on_global_shortcut: EventHandler<'a, GlobalShortcut>,
     // TODO: overrides: Vec<(String, String)> allow for overriding the default bindings
 }
@@ -37,6 +38,26 @@ pub struct Props<'a> {
 pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     if cfg!(target_os = "linux") {
         return None;
+    }
+
+    if cx.props.is_on_auth_pages.unwrap_or(false) {
+        let state = use_ref(cx, State::load);
+        let keybinds = state.read().settings.keybinds.clone();
+        return cx.render(rsx! {
+            for (global_shortcut, shortcut) in keybinds {
+                rsx!{
+                    RenderGlobalShortCuts {
+                        keys: shortcut.keys,
+                        modifiers: shortcut.modifiers,
+                        on_global_shortcut: move |global_shortcut: GlobalShortcut| {
+                            // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
+                            cx.props.on_global_shortcut.call(global_shortcut);
+                        },
+                        global_shortcut: global_shortcut.clone(),
+                    }
+                }
+            }
+        });
     }
 
     let state = use_shared_state::<State>(cx)?;
@@ -77,6 +98,8 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             }
         });
     } else {
+        println!("rendering keyboard shortcuts - 3");
+
         None
     }
 }

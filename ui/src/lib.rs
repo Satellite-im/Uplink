@@ -198,7 +198,19 @@ fn app(cx: Scope) -> Element {
     // 2. Guard the app with the auth
     let auth = use_state(cx, || AuthPages::Unlock);
     let AuthPages::Success(identity) = auth.get() else {
-        return render! { AuthGuard { page: auth.clone() }};
+        return render! {
+        KeyboardShortcuts {
+            is_on_auth_pages: true,
+            on_global_shortcut: move |shortcut| {
+                match shortcut {
+                    GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx.scope),
+                    GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!"),
+                    _ => log::info!("Just Open Dev Tools shortcut works on Auth Pages!"),
+                }
+                log::debug!("shortcut called {:?}", shortcut);
+            }
+        },
+        AuthGuard { page: auth.clone() }};
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
