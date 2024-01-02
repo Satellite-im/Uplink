@@ -259,6 +259,14 @@ em {
   font-style: italic;
 }
 
+blockquote {
+  padding: 0 20px;
+  border-left: 5px solid var(--secondary-light);
+  &::before {
+    content: "";
+  }
+}
+
 .ellipsis-overflow {
   white-space: nowrap;
   text-overflow: ellipsis;
