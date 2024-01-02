@@ -311,6 +311,8 @@ fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {
     modifier_string
 }
 
+// Suppress the match_like_matches_macro warning for this specific block
+#[allow(clippy::match_like_matches_macro)]
 fn is_it_a_key_code(key: Key) -> bool {
     match key {
         Key::Alt => false,
