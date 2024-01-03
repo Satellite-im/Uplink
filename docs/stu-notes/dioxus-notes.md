@@ -74,7 +74,7 @@
 - a generic within a `Scope`: `fn SomeButton(cx: Scope<SomeButtonProps>) -> Element`
 - `SomeButtonProps` needs to `#[derive(PartialEq, Props)]`
 - access from with `SomeButton` like this: `cx.props.struct_field`
-- use `SomeButton` from with an RSX liek this: `rsx!(SomeButton { field_name: field_value })`
+- use `SomeButton` from with an RSX like this: `rsx!(SomeButton { field_name: field_value })`
 - the `App` component takes `()` as Props. that is, `Scope` equals `Scope<()>`
 - Props can be include references.
 - Dioxus uses "memoization" to determine if an owned Prop needs to be re-rendered
