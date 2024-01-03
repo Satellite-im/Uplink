@@ -1,0 +1,139 @@
+validating mp4 files
+shitty tool: ffmpeg -v error -i test3.mp4 -f null - 2>error.log
+best tool: https://github.com/Eyevinn/mp4ff
+both are needed. 
+
+https://www.mpeg.org/standards/MPEG-4/
+
+https://github.com/MPEGGroup/isobmff
+    - cloned this to the isoLib repository. see wav_to_mp4.c  
+
+- https://wiki.multimedia.cx/index.php/Understanding_AAC
+- https://xhelmboyx.tripod.com/formats/mp4-layout.txt
+- https://dev.to/alfg/a-quick-dive-into-mp4-57fo
+
+try using this: https://docs.rs/mp4/0.13.0/mp4/ with https://github.com/MPEGGroup/isobmff to figure out how to write to mp4.
+
+basically need to [add_track](https://docs.rs/mp4/0.13.0/mp4/struct.Mp4Writer.html#method.add_track) but with the correct TrackConfig
+    - seems that i'd have to use [AAC](https://trac.ffmpeg.org/wiki/Encode/AAC) 
+    - I could convert from raw to wav using [hound](https://docs.rs/hound/3.5.0/hound/) and then go from .wav to AAC, and then save that in the mp4 file using [write_sample](https://docs.rs/mp4/0.13.0/mp4/struct.Mp4Writer.html#method.write_sample)
+
+rust crate for aac?
+- https://docs.rs/fdk-aac-sys/0.4.0/fdk_aac_sys/
+
+need ISO/IEC 14496 but don't know which of the 20 parts are needed. probably 1, 3, and 12. Maybe 14 also. 
+
+I recommend we purchase parts of the MPEG-4 specification directly from the ISO website. A description of the parts of the standard can be found here: https://en.wikipedia.org/wiki/MPEG-4#MPEG-4_Parts
+
+I believe we will want the following
+Part 1 (Systems): https://www.iso.org/standard/55688.html
+Part 3 (Audio): https://www.iso.org/standard/76383.html
+Part 10 (Advanced Video Coding): https://www.iso.org/standard/83529.html
+Part 12 (ISO base media file format): https://www.iso.org/standard/83102.html
+Part 14 (MP4 file format - based on parts 12 and 1): https://www.iso.org/standard/79110.html
+
+
+## from the isobmff repository, the makeAudioMovieSample.c example
+# createMyMovie function
+- calls MP4NewMovie, from MP$Movies.h
+    - includes profile and level descriptions for
+        - object descriptor
+        - scent
+        - audio
+        - visual
+        - graphics
+- creates a new movie track
+- adds the track to the movie initial object descriptor (IOD)
+    - probably used to identify the format of the streams. related to the 4cc
+
+
+- https://xhelmboyx.tripod.com/formats/mp4-layout.txt
+- https://dev.to/alfg/a-quick-dive-into-mp4-57fo
+
+audio requires AAC codec https://github.com/mstorsjo/fdk-aac/blob/master/NOTICE
+rust bindings here: https://docs.rs/fdk-aac/0.4.0/fdk_aac/index.html
+
+
+## opus
+- https://opus-codec.org/docs/opus_in_isobmff.html
+- want to put opus in mp4 file. AAC codec is poorly documented. don't want to use. 
+- iso2 brand
+- handler type field: 'soun' or 0x736F756E
+    - in reference to the rust mp4 crate, this would be the BoxType
+
+# need better mp4 library
+- https://github.com/aspt/mp4/blob/master/src/mp4mux.h
+    - might work
+    - but the rust bindings were obviously copied from somewhere else...
+- https://github.com/lieff/minimp4 (incomplete)
+- example of using fdk-aac: https://github.com/itisyang/mp4-recorder/blob/master/libfdk-aacenc.c
+- libav* - libraries provided by ffmpeg. like libavutil and libavdevice
+    - https://ffmpeg.org/documentation.html
+    - see libraries documentation: libavcodec, libavformat, 
+    - ffmpeg repository: https://github.com/FFmpeg/FFmpeg/tree/master
+        - libavformat: https://github.com/FFmpeg/FFmpeg/tree/master/libavformat
+    - rust crates
+        - USE THIS ONE!!! https://docs.rs/ffmpeg-wasi/0.1.12/ffmpeg_wasi/
+        - https://docs.rs/ac-ffmpeg/0.18.1/ac_ffmpeg/
+    - example code: https://ffmpeg.org/doxygen/0.6/output-example_8c-source.html
+    - more examples: https://github.com/FFmpeg/FFmpeg/tree/master/doc/examples
+
+# mp4 notes
+- the mp4 file contains boxes that provide absolute memory addresses of each "sample box" in a table. 
+- the table comes before the samples, so as the table grows, the address of each sample would get shifted down. shitty. 
+- the mp4 file can be fragmented. There still needs to be a table of the fragments though. so fucking dumb. there is a free space box, which is probably used to account for this stupidity. still, fragmented mode may be somewhat better. 
+    - https://opus-codec.org/docs/opus_in_isobmff.html
+    - https://github-wiki-see.page/m/essential61/mp4analyser/wiki/Understanding-The-Sample-Tables:-An-Example
+    - https://stackoverflow.com/questions/35177797/what-exactly-is-fragmented-mp4fmp4-how-is-it-different-from-normal-mp4
+
+# boxes to use for audio (page 15 of the spec and https://opus-codec.org/docs/opus_in_isobmff.html)
+- ftyp 
+- moov 
+    - mvhd 
+    - iods 
+    - trak
+        - tkhd
+        - edts 
+        - mdia
+            - mdhd
+            - hdlr
+            - minf
+                - smhd
+                - dinf
+                    - dref
+                - stbl
+                    - stsd
+                        - Opus
+                            - dOps
+                    - stts
+                    - stsc
+                    - stsz
+                    - stco
+                    - sgpd
+                    - sbgp
+    - free
+    - mdat
+
+# using only necessary ones from the spec
+- ftyp: file type
+- moov: container for all the structur-data
+    - mvhd: movie header
+    - trak: container for an individual track
+        - tkhd: track header
+        - mdia: container for the media information in a track
+            - mdhd: media header
+            - hdlr: declares the media handler type
+            - minf: media information header
+                - smhd: sound media header. not strictly required, but probably needed for audio
+                - dinf: data information box
+                    - dref: data reference box. can indicate that the media data is stored in another file. 
+                - stbl: sample table box
+                    - stsd: sample descriptions
+                        - Opus
+                            - dOps
+                    - stts: decoding time-to-sample
+                    - stsc: sample-to-chunk, partial data-offset informatoin
+                    - stco: chunk offset, partial data-offset information
+    - free: free space. not required
+    - mdat: media data. not technically required but this holds the actual samples. 
+
