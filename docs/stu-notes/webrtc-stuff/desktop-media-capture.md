@@ -18,7 +18,7 @@
 - how to set up the WebRTC stuff so that it supports multiple audio/video formats? 
     - negotiate formats during signaling 
 - stream management
-    - should forward streams to somethign that combines them, for displaying unified audio/video 
+    - should forward streams to something that combines them, for displaying unified audio/video 
     - register callbacks for each track? 
     - could pass one of these: `Arc<Mutex<dyn webrtc::media::io::Writer + Send + Sync>>,`
     - associate a name/peer id with each track
