@@ -1,3 +1,6 @@
+use std::fs;
+
+use crate::layouts::storage::files_layout::files_sync_functions::STORAGE_LOCAL_FOLDER;
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
 use crate::layouts::storage::send_files_layout::send_files_components::{
     toggle_selected_file, FileCheckbox,
@@ -245,6 +248,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                     aria_label: "files-delete".into(),
                                     text: get_local_text("uplink.delete"),
                                     onpress: move |_| {
+                                        let _ = fs::remove_file(STORAGE_LOCAL_FOLDER.join(file2.name().clone()));
                                         let item = Item::from(file2.clone());
                                         ch.send(ChanCmd::DeleteItems(item));
                                     }
