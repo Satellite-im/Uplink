@@ -45,7 +45,7 @@ cpal (capture audio) -> WebRTC -> cpal (output audio)
 - files can contain multiple audio and video streams
 - a demuxer separates thes streams and exposes them through different output ports
 - the ports through which GStreaemr elements communicate with each other are called pads (GstPad). There are sink and source pads. 
-- elements can be added to a pipeline dyanmically, through a handler. set the handler with g_signal_connect
+- elements can be added to a pipeline dynamically, through a handler. set the handler with g_signal_connect
 - CLEANING UP
     - need to gst_object_unref(bus)
     - need to gst_element_set_state(pipeline, GST_STATE_NULL)
