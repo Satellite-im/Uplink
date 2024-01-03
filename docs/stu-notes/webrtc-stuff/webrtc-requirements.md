@@ -67,7 +67,7 @@
 - media-source-extensions with websockets
     - https://www.w3.org/TR/media-source/
     - proof of concept: create a websocket server and send stuff to dioxus
-- alternative is conencting to the WebView via another WebRTC stream (undesirable)
+- alternative is connecting to the WebView via another WebRTC stream (undesirable)
 - dioxus doesn't support multiple windows so using tao to create a new window for displaying a stream is not an option. 
 
 
