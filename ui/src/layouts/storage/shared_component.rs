@@ -1,6 +1,8 @@
 use std::fs;
 
-use crate::layouts::storage::files_layout::files_sync_functions::STORAGE_LOCAL_FOLDER;
+use crate::layouts::storage::files_layout::files_sync_functions::{
+    verify_if_a_file_was_deleted_from_local_disk, STORAGE_LOCAL_FOLDER,
+};
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
 use crate::layouts::storage::send_files_layout::send_files_components::{
     toggle_selected_file, FileCheckbox,
@@ -91,6 +93,11 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
+
+    use_future(cx, (), |_| async move {
+        verify_if_a_file_was_deleted_from_local_disk().await;
+    });
+
     cx.render(rsx!(span {
         class: "file-parent",
         background: format_args!("{}", if send_files_mode {"var(--secondary)"} else {""}),

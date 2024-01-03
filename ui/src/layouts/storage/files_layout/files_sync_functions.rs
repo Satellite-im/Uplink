@@ -1,6 +1,7 @@
 use std::{
     fs, io,
     path::{Path, PathBuf},
+    time::Duration,
 };
 
 use common::{
@@ -9,6 +10,8 @@ use common::{
 };
 use dioxus::events::{EvalError, UseEval};
 use dioxus_hooks::{Coroutine, UseSharedState};
+use futures::StreamExt;
+use notify::{event::RemoveKind, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use warp::constellation::file::File;
 
@@ -168,7 +171,7 @@ fn sync_files_from_constellation_to_local(
     }
 }
 
-fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
+pub fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
     if path.as_ref().is_dir() {
         for entry in fs::read_dir(path)? {
             let entry = entry?;
@@ -190,4 +193,73 @@ fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Result<V
         }
     }
     Ok(files.clone())
+}
+
+pub async fn verify_if_a_file_was_deleted_from_local_disk() {
+    let (tx, mut rx) = futures::channel::mpsc::unbounded();
+    let mut watcher = match RecommendedWatcher::new(
+        move |res| {
+            let _ = tx.unbounded_send(res);
+        },
+        notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+    ) {
+        Ok(watcher) => watcher,
+        Err(e) => {
+            log::error!("{e}");
+            return;
+        }
+    };
+
+    if let Err(e) = watcher.watch(&STORAGE_LOCAL_FOLDER, RecursiveMode::Recursive) {
+        log::error!("{e}");
+        return;
+    }
+
+    while let Some(event) = rx.next().await {
+        let event = match event {
+            Ok(event) => {
+                match event.kind {
+                    EventKind::Remove(remove_kind_action) => {
+                        match remove_kind_action {
+                            RemoveKind::Any => {
+                                match event.paths.get(0) {
+                                    Some(path) => {
+                                        println!("File deleted: {:?}", path);
+                                        // Execute your command here
+                                    }
+                                    None => println!("No path provided"),
+                                }
+                            }
+                            _ => println!("Other remove kind action: {:?}", remove_kind_action),
+                        }
+                    }
+                    EventKind::Modify(eventkind) => {
+                        println!("eventkind: {:?}", eventkind);
+                        match eventkind {
+                            notify::event::ModifyKind::Any => {
+                                match event.paths.get(0) {
+                                    Some(path) => {
+                                        println!("File modified: {:?}", path);
+                                        // Execute your command here
+                                    }
+                                    None => println!("No path provided"),
+                                }
+                            }
+                            notify::event::ModifyKind::Data(data) => println!("data: {:?}", data),
+                            notify::event::ModifyKind::Name(name) => println!("name: {:?}", name),
+                            notify::event::ModifyKind::Metadata(metadata) => {
+                                println!("metadata: {:?}", metadata)
+                            }
+                            _ => println!("Other modify kind action: {:?}", eventkind),
+                        }
+                    }
+                    _ => println!("Other event kind: {:?}", event.kind),
+                }
+            }
+            Err(e) => {
+                log::error!("{e}");
+                continue;
+            }
+        };
+    }
 }
