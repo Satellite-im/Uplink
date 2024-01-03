@@ -24,7 +24,7 @@
     - associate a name/peer id with each track
     - peer_connection.on_track 
         + possibly store a pointer to the RTCRtpReceiver
-        + recieve bytes
+        + receive bytes
         + check for registered callbacks
         + if they exist, pass bytes to the cb. 
 - signaling needed
