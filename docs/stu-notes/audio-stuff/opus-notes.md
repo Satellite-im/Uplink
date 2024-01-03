@@ -17,7 +17,7 @@
 
 # 3 framing
 - the opus encoder produces "packets" which are contiguous bytes meant to be transmitted as a single unit. Each packet consists of multiple audio frames encoded with the same parameters. 
-- a well-formed opus packet must contain at least one byte - the table of contents header, also known as the TOC byte. see page 15 for mroe information. 
+- a well-formed opus packet must contain at least one byte - the table of contents header, also known as the TOC byte. see page 15 for more information. 
 
 # 4 decoder
 - 
