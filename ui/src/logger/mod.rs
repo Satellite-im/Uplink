@@ -26,6 +26,9 @@ use warp::sync::RwLock;
 use chrono::{DateTime, Local};
 use common::STATIC_ARGS;
 
+const RUST_LOG: &str = "RUST_LOG";
+const ENV_VAR_VALUE: &str = "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug";
+
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 
 #[derive(Debug, Clone)]
@@ -66,17 +69,14 @@ impl LogGlue {
         if !STATIC_ARGS.production_mode {
             dotenv::dotenv().ok();
 
-            if env::var("RUST_LOG").is_err() {
-                env::set_var(
-                    "RUST_LOG",
-                    "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
-                );
+            if env::var(RUST_LOG).is_err() {
+                env::set_var(RUST_LOG, ENV_VAR_VALUE);
             }
         }
 
         // if in production mode, if RUST_LOG isn't set, the default should automatically get set to INFO.
 
-        let mut builder = Builder::from_env("RUST_LOG");
+        let mut builder = Builder::from_env(RUST_LOG);
         let logger = builder.build();
         log::set_max_level(logger.filter());
         Self { logger }
