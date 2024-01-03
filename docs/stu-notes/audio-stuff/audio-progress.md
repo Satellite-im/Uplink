@@ -21,7 +21,7 @@
 ## Echo Cancellation work
 - Tried using PulseAudio's [audio processing module](https://docs.rs/webrtc-audio-processing/0.4.0/webrtc_audio_processing/). It's very difficult to build this for windows. The PulseAudio documentation claims that someone is building it for Windows but their developer documentation only has instructions for building on Mac OSX - https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/Developer/
 - It may be possible to cross compile for Windows. This is likely a multi-day effort. 
-- Was able to use the module on Linux/Mac to cancel some background noise but have not gotten echo cancellation to work yet - if a laptop is used for an audio call and the volume is too high, there will be an echo. This could be a limitation of the library or it could be due to a mismatch in the input/ouput signals (which are passed to the echo cancellation module). 
+- Was able to use the module on Linux/Mac to cancel some background noise but have not gotten echo cancellation to work yet - if a laptop is used for an audio call and the volume is too high, there will be an echo. This could be a limitation of the library or it could be due to a mismatch in the input/output signals (which are passed to the echo cancellation module). 
 
 ## Other options for echo cancellation
 
