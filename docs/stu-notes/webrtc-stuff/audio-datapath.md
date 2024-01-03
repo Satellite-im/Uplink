@@ -27,7 +27,7 @@
     - writes samples to an output buffer
     - copy samples to a channel for CPAL to retrieve them 
 - read from the channel within the callback function passed to the CPAL output device
-    - todo: allow the user to change output devices (speakers, headphones, ect)
+    - todo: allow the user to change output devices (speakers, headphones, etc)
 
 # alternatives
 - use GStreamer
