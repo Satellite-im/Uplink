@@ -22,7 +22,7 @@
     - read bytes from the track
     - turn the bytes into RTP packets via `webrtc::rtp::packet::Packet::unmarshal`
     - the RTP payload should be the encoded audio data
-    - todo: use signaling to tell the recipient the parameters needed to decode the audio (sample rate, ect)
+    - todo: use signaling to tell the recipient the parameters needed to decode the audio (sample rate, etc)
 - decode the payload using a [decoder](https://github.com/Lakelezz/audiopus/blob/master/src/coder/decoder.rs)
     - writes samples to an output buffer
     - copy samples to a channel for CPAL to retrieve them 
