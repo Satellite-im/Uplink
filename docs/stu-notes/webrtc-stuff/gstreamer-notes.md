@@ -111,7 +111,7 @@ cpal (capture audio) -> WebRTC -> cpal (output audio)
 
 
 # ICE notes
-- ICE exchanges a multiplicity of IP addresses and ports, which are then tested for connectivity by p2p conenctivity checks
+- ICE exchanges a multiplicity of IP addresses and ports, which are then tested for connectivity by p2p connectivity checks
 - requires a signaling protocol (NAT traversal must be done separately for signaling - the initial data exchange)
 - gathering candidates
     + ICE gathers ip address/port combinations. 
