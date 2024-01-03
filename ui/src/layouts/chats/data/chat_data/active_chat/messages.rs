@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use common::warp_runner::ui_adapter;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use uuid::Uuid;
 
 use crate::layouts::chats::data::DEFAULT_MESSAGES_TO_TAKE;
@@ -12,6 +12,7 @@ pub struct Messages {
     // messages should be sorted by time in increasing order. earliest first, latest last.
     pub all: VecDeque<ui_adapter::Message>,
     pub displayed: VecDeque<Uuid>,
+    pub loaded: HashSet<Uuid>,
     // used for displayed_messages
     pub times: HashMap<Uuid, DateTime<Utc>>,
 }
@@ -29,6 +30,7 @@ impl Messages {
         Self {
             all: messages,
             displayed,
+            loaded: HashSet::new(),
             times: message_times,
         }
     }
@@ -66,23 +68,23 @@ impl Messages {
         }
 
         if self.all.is_empty() {
-            log::debug!("appending messages");
+            log::trace!("appending messages");
             return self.append_messages(m);
         }
 
         // latest last
         if m.last().unwrap().inner.date() <= self.all.front().unwrap().inner.date() {
-            log::debug!("prepending messages");
+            log::trace!("appending messages");
             return self.prepend_messages(m);
         }
 
         // earliest first
         if m.first().unwrap().inner.date() >= self.all.back().unwrap().inner.date() {
-            log::debug!("appending messages");
+            log::trace!("appending messages");
             return self.append_messages(m);
         }
 
-        log::error!("invalid insert");
+        log::warn!("insert_messages: invalid insert");
     }
 
     pub fn get_earliest_displayed(&self) -> Option<PartialMessage> {
@@ -103,12 +105,23 @@ impl Messages {
         })
     }
 
-    pub fn add_message_to_view(&mut self, message_id: Uuid) {
+    pub fn get_bottom_of_page(&self) -> Option<PartialMessage> {
+        self.all.back().and_then(|msg| {
+            let id = msg.inner.id();
+            self.times.get(&id).map(|date| PartialMessage {
+                message_id: id,
+                date: *date,
+            })
+        })
+    }
+
+    pub fn add_message_to_view(&mut self, message_id: Uuid) -> bool {
+        self.loaded.insert(message_id);
         let date = match self.times.get(&message_id).cloned() {
             Some(time) => time,
             None => {
                 log::error!("tried to add message to view but time lookup failed");
-                return;
+                return false;
             }
         };
 
@@ -136,9 +149,13 @@ impl Messages {
             //     message_id
             // );
         }
+
+        self.loaded.len() != self.all.len()
     }
 
-    pub fn remove_message_from_view(&mut self, message_id: Uuid) {
+    pub fn remove_message_from_view(&mut self, message_id: Uuid) -> bool {
+        self.loaded.insert(message_id);
+
         if self
             .displayed
             .front()
@@ -153,11 +170,13 @@ impl Messages {
             .unwrap_or(false)
         {
             self.displayed.pop_back();
-        } else {
+        } else if self.loaded.len() == self.all.len() {
             // during initialization this triggers when removing a nonexistent item.
-            // log::warn!("failed to remove message from view. fixing with retain()");
-            // self.displayed.retain(|x| x != &message_id);
+            // could also be triggerd by a delete operation
+            self.displayed.retain(|x| x != &message_id);
         }
+
+        self.loaded.len() != self.all.len()
     }
 
     pub fn top(&self) -> Option<Uuid> {

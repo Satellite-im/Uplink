@@ -13,18 +13,17 @@
 //! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
 
 use colored::Colorize;
-use log::{self, Level, LevelFilter, SetLoggerError};
+use env_logger::Builder;
+use log::{self, Level, SetLoggerError};
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
-use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::{collections::VecDeque, env};
 use tokio::sync::mpsc;
 use warp::sync::RwLock;
 
 use chrono::{DateTime, Local};
-
 use common::STATIC_ARGS;
 
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
@@ -55,62 +54,45 @@ pub struct Logger {
     subscribers: Vec<mpsc::UnboundedSender<Log>>,
     max_logs: usize,
     write_to_stdout: bool,
-
-    // display trace logs from uplink
-    uplink_trace: bool,
-    // minimum log level for 3rd party crates (warp, dioxus, etc)
-    min_log_level: Option<Level>,
-    whitelist: Option<HashSet<String>>,
 }
 
 // connects the `log` crate to the `Logger` singleton
 struct LogGlue {
-    max_level: LevelFilter,
+    logger: env_logger::Logger,
 }
 
 impl LogGlue {
-    pub fn new(max_level: LevelFilter) -> Self {
-        Self { max_level }
+    pub fn new() -> Self {
+        if !STATIC_ARGS.production_mode {
+            dotenv::dotenv().ok();
+
+            if env::var("RUST_LOG").is_err() {
+                env::set_var(
+                    "RUST_LOG",
+                    "uplink=debug,common=debug,kit=debug,warp_blink_wrtc=debug",
+                );
+            }
+        }
+
+        // if in production mode, if RUST_LOG isn't set, the default should automatically get set to INFO.
+
+        let mut builder = Builder::from_env("RUST_LOG");
+        let logger = builder.build();
+        log::set_max_level(logger.filter());
+        Self { logger }
     }
 }
 
 impl crate::log::Log for LogGlue {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
-        metadata.level() <= self.max_level
+        self.logger.enabled(metadata)
     }
 
     fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
+        if self.enabled(record.metadata()) {
+            let msg = record.args();
+            LOGGER.write().log(record.level(), &msg.to_string());
         }
-
-        // special path for other libraries
-        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
-            if LOGGER
-                .read()
-                .min_log_level
-                .as_ref()
-                .map(|min_log_level| &record.level() < min_log_level)
-                .unwrap_or(true)
-            {
-                return;
-            }
-
-            if let Some(whitelist) = LOGGER.read().whitelist.as_ref() {
-                let file_name = record.file();
-                let any_allowed = whitelist
-                    .iter()
-                    .any(|x| file_name.as_ref().map(|y| y.contains(x)).unwrap_or(false));
-                if !any_allowed {
-                    return;
-                }
-            }
-        } else if record.level() == Level::Trace && !LOGGER.read().uplink_trace {
-            return;
-        }
-
-        let msg = record.args();
-        LOGGER.write().log(record.level(), &msg.to_string());
     }
 
     fn flush(&self) {}
@@ -127,9 +109,6 @@ impl Logger {
             subscribers: vec![],
             log_entries: VecDeque::new(),
             max_logs: 128,
-            uplink_trace: false,
-            min_log_level: None,
-            whitelist: None,
         }
     }
 
@@ -225,11 +204,14 @@ impl Logger {
             }
         }
     }
+
+    fn set_write_to_stdout(&mut self, b: bool) {
+        self.write_to_stdout = b;
+    }
 }
 
-pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
-    log::set_max_level(level);
-    log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
+pub fn init() -> Result<(), SetLoggerError> {
+    log::set_boxed_logger(Box::new(LogGlue::new()))?;
     Ok(())
 }
 
@@ -255,37 +237,22 @@ pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {
     LOGGER.write().subscribe()
 }
 
-pub fn allow_uplink_trace(b: bool) {
-    LOGGER.write().uplink_trace = b;
-}
-
-pub fn allow_other_crates(min_level: Level, whitelist: Option<&[&str]>) {
-    LOGGER.write().min_log_level.replace(min_level);
-    LOGGER.write().whitelist =
-        whitelist.map(|x| HashSet::from_iter(x.iter().map(|y| y.to_string())));
-}
-
 pub fn set_save_to_file(b: bool) {
     LOGGER.write().set_save_to_file(b);
+}
+
+pub fn set_write_to_stdout(b: bool) {
+    LOGGER.write().set_write_to_stdout(b);
 }
 
 pub fn get_save_to_file() -> bool {
     LOGGER.read().get_save_to_file()
 }
 
-pub fn set_write_to_stdout(b: bool) {
-    LOGGER.write().write_to_stdout = b;
-}
-
-pub fn load_debug_log() -> Vec<String> {
+pub fn load_debug_log() -> Vec<Log> {
     //Note: We shouldnt read from the file since it may be too big or contain irrelevant information related to uplink
     //      unless we have a specific file related to uplink/dioxus logging, in which case we should read only the last few lines
-    LOGGER
-        .read()
-        .log_entries
-        .iter()
-        .map(|x| x.to_string())
-        .collect()
+    LOGGER.read().log_entries.iter().cloned().collect()
 }
 
 // this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.

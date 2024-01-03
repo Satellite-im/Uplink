@@ -3,7 +3,6 @@ use std::backtrace::Backtrace;
 use super::*;
 
 use crate::utils::auto_updater::DownloadState;
-use ::log::Level;
 use chrono::Local;
 use common::state::ui::WindowMeta;
 use common::state::State;
@@ -85,48 +84,16 @@ pub fn set_app_panic_hook() {
     }))
 }
 
-pub fn configure_logger(profile: Option<LogProfile>) {
-    let max_log_level = if let Some(profile) = profile {
-        match profile {
-            LogProfile::Debug => {
-                logger::set_write_to_stdout(true);
-                LevelFilter::Debug
-            }
-            LogProfile::DebugAll => {
-                logger::allow_other_crates(Level::Debug, None);
-                logger::set_save_to_file(true);
-                LevelFilter::Debug
-            }
-            LogProfile::Trace => {
-                logger::allow_uplink_trace(true);
-                logger::set_write_to_stdout(true);
-                LevelFilter::Trace
-            }
-            LogProfile::TraceWarp => {
-                logger::allow_uplink_trace(true);
-                logger::allow_other_crates(Level::Trace, Some(&["warp"]));
-                logger::set_write_to_stdout(true);
-                LevelFilter::Trace
-            }
-            LogProfile::TraceDioxus => {
-                logger::allow_uplink_trace(true);
-                logger::allow_other_crates(Level::Trace, Some(&["dioxus"]));
-                logger::set_write_to_stdout(true);
-                LevelFilter::Trace
-            }
-            LogProfile::TraceAll => {
-                logger::allow_uplink_trace(true);
-                logger::allow_other_crates(Level::Trace, None);
-                logger::set_save_to_file(true);
-                LevelFilter::Trace
-            }
-            _ => LevelFilter::Debug,
-        }
-    } else {
-        LevelFilter::Debug
-    };
+pub fn configure_logger(production_mode: bool, log_to_file: bool) {
+    if log_to_file {
+        logger::set_save_to_file(true);
+    }
 
-    logger::init_with_level(max_log_level).expect("failed to init logger");
+    if !production_mode {
+        logger::set_write_to_stdout(true);
+    }
+
+    logger::init().expect("failed to init logger");
 
     ::log::debug!("starting uplink");
 }

@@ -32,13 +32,15 @@ pub mod controller;
 pub mod file_modal;
 
 use crate::components::files::upload_progress_bar::UploadProgressBar;
-use crate::components::paste_files_with_shortcut;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
+use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -54,6 +56,8 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
+    let files_been_uploaded2 = files_been_uploaded.clone();
     let send_files_from_storage = use_state(cx, || false);
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
@@ -104,14 +108,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused  {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path| {
-                    functions::add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
-                    upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
-                },
-            })
-        }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(get_file_modal {
@@ -129,6 +125,27 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         div {
             id: "files-layout",
             aria_label: "files-layout",
+            tabindex: "0",
+            onkeydown: move |e: Event<KeyboardData>| {
+                    let keyboard_data = e;
+                    if keyboard_data.code() == Code::KeyV
+                        && (keyboard_data.modifiers() == Modifiers::CONTROL || keyboard_data.modifiers() == Modifiers::META)
+                    {
+                        cx.spawn({
+                            to_owned![files_been_uploaded2, files_in_queue_to_upload2, eval];
+                            async move {
+                                let files_local_path = tokio::task::spawn_blocking(|| {
+                                    get_files_path_from_clipboard().unwrap_or_default()
+                                })
+                                .await
+                                .expect("Should succeed");
+                            if !files_local_path.is_empty() {
+                                functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path, &eval);
+                                files_been_uploaded2.with_mut(|i| *i = true);
+                            }
+                        }});
+                }
+            },
             ondragover: move |_| {
                 if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                     upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
@@ -301,12 +318,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let msg = vec!["".to_owned()];
                     let attachments = files_location;
-                    let ui_msg_id = None;
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
                         convs_id,
                         msg,
                         attachments,
-                        ui_msg_id,
+                        appended_msg_id: None,
                         rsp: tx,
                     })) {
                         log::error!("Failed to send warp command: {}", e);
@@ -326,12 +342,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     rsx!(
                         div {
                             class: "no-files-div",
-                            padding: "48px",
                             Label {
                                 text: get_local_text("files.no-files-available"),
                             }
                         }
-                        )
+                    )
                } else {
                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller,

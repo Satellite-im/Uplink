@@ -8,13 +8,13 @@ use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
-use dioxus_hooks::{to_owned, use_ref};
+use dioxus_hooks::{to_owned, use_future, use_ref};
 use once_cell::sync::Lazy;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 
 static LAST_CALLED: Lazy<Mutex<Instant>> =
-    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(2)));
+    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(1)));
 
 fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
     let mut last_called = LAST_CALLED.lock().unwrap();
@@ -52,7 +52,12 @@ pub struct ShortCutProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
+    if cfg!(target_os = "linux") {
+        return None;
+    }
+
     let files_local_path_to_upload = use_ref(cx, Vec::new);
+    let command_pressed = use_ref(cx, || false);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
@@ -67,17 +72,32 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
 
-    use_global_shortcut(cx, (key, modifiers), {
-        to_owned![files_local_path_to_upload];
-        move || {
-            debounced_callback(
-                || {
+    // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
+    use_future(cx, (), |_| {
+        to_owned![command_pressed, files_local_path_to_upload];
+        async move {
+            loop {
+                if command_pressed.with(|i| *i) {
+                    *command_pressed.write_silent() = false;
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
                     if !files_local_path.is_empty() {
                         files_local_path_to_upload.with_mut(|i| *i = files_local_path);
                     }
+                };
+                tokio::time::sleep(Duration::from_millis(250)).await;
+            }
+        }
+    });
+
+    use_global_shortcut(cx, (key, modifiers), {
+        to_owned![command_pressed];
+        move || {
+            // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
+            debounced_callback(
+                || {
+                    command_pressed.with_mut(|i| *i = true);
                 },
-                Duration::from_secs(1),
+                Duration::from_millis(250),
             );
         }
     });

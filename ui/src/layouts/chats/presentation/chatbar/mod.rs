@@ -9,6 +9,8 @@ use common::{
     MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -32,16 +34,20 @@ pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").un
 pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@ ]{2,} ?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
-    components::{files::attachments::Attachments, paste_files_with_shortcut},
+    components::{
+        files::attachments::Attachments,
+        shortcuts::{self},
+    },
     layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
     layouts::{
-        chats::data::{ChatData, ScrollBtn, TypingIndicator},
+        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
-            check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
+            check_if_there_is_file_or_string_in_clipboard, get_files_path_from_clipboard,
+            ClipboardDataType,
         },
     },
 };
@@ -53,8 +59,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
-    let is_loading = !chat_data.read().active_chat.is_initialized;
     let active_chat_id = chat_data.read().active_chat.id();
+
+    // this may just be paranoia
+    let state_matches_active_chat = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.id == active_chat_id)
+        .unwrap_or_default();
+
+    let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -63,19 +77,21 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let suggestions = use_state(cx, || SuggestionType::None);
     let mentions = use_ref(cx, Vec::new);
 
-    let with_scroll_btn = scroll_btn.read().get(active_chat_id);
+    let with_scroll_btn = scroll_btn.read().get(active_chat_id) && !is_loading;
 
     // if the active chat is scrolled up and a message is received, want to increment unreads
     // but the needed information isn't accessible in main.rs. so a flag was added to State
     // and is set here in the chatbar. This was done here instead of in messages.rs as
     // an attempted optimization - don't want to re-render messages whenever scroll_btn
     // is written to, which could be a lot.
-    state
-        .write_silent()
-        .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    if !is_loading {
+        state
+            .write_silent()
+            .set_chat_scrolled(active_chat_id, with_scroll_btn);
+    }
 
     // this was moved from chat/mod.rs so that unreads doesn't get cleared automatically.
-    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() {
+    if !with_scroll_btn && state.read().chats().active_chat_has_unreads() && !is_loading {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
@@ -122,8 +138,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     // this is used to scroll to the bottom of the chat.
     let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-    let msg_ch: Coroutine<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)> =
-        coroutines::get_msg_ch(cx, state);
+    let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(cx, state);
     let local_typing_ch = coroutines::get_typing_ch(cx);
     let local_typing_ch2 = local_typing_ch.clone();
 
@@ -238,10 +253,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(active_chat_id));
             }
-            let ui_id = state
+            let appended_msg_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), &files_to_upload);
-            msg_ch.send((msg, active_chat_id, ui_id, replying_to));
+            msg_ch.send(MsgChInput {
+                msg,
+                conv_id: active_chat_id,
+                appended_msg_id,
+                replying_to,
+            });
         }
     };
 
@@ -302,6 +322,35 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
+            on_paste_keydown: move |e: Event<KeyboardData>| {
+                // HACK: Allow copy and paste files for Linux
+                if cfg!(target_os = "linux") {
+                    let keyboard_data = e;
+                 if keyboard_data.code() == Code::KeyV
+                        && keyboard_data.modifiers() == Modifiers::CONTROL && *enable_paste_shortcut.read()
+                    {
+                    let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+                    if !files_local_path.is_empty() {
+                        let new_files: Vec<Location> = files_local_path
+                        .iter()
+                        .map(|path| Location::Disk { path: path.clone() })
+                        .collect();
+                    let mut current_files: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .drain(..)
+                        .filter(|x| !new_files.contains(x))
+                        .collect();
+                        current_files.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                    }
+                }
+                }
+            },
             onchange: move |v: String| {
                 if !active_chat_id.is_nil() {
                     state.write_silent().mutate(Action::SetChatDraft(active_chat_id, v));
@@ -504,27 +553,28 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
 
     cx.render(rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path: Vec<PathBuf>| {
-                    if !files_local_path.is_empty() {
-                        let new_files: Vec<Location> = files_local_path
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    let mut current_files: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .drain(..)
-                        .filter(|x| !new_files.contains(x))
-                        .collect();
-                        current_files.extend(new_files);
-                    state
-                        .write()
-                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
-                }})}
+                rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
+                    on_paste: move |files_local_path: Vec<PathBuf>| {
+                        if !files_local_path.is_empty() {
+                            let new_files: Vec<Location> = files_local_path
+                            .iter()
+                            .map(|path| Location::Disk { path: path.clone() })
+                            .collect();
+                        let mut current_files: Vec<_> = state
+                            .read()
+                            .get_active_chat()
+                            .map(|f| f.files_attached_to_send)
+                            .unwrap_or_default()
+                            .drain(..)
+                            .filter(|x| !new_files.contains(x))
+                            .collect();
+                            current_files.extend(new_files);
+                        state
+                            .write()
+                            .mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                        }
+                    }})
+            }
                 SendFilesLayoutModal {
                     send_files_from_storage: show_storage_modal,
                     send_files_start_location: SendFilesStartLocation::Chats,
@@ -558,35 +608,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                     get_local_text("messages.scroll-bottom"),
                 })
             })
-            if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-                rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                    on_paste: move |files_local_path: Vec<PathBuf>| {
-                        if !files_local_path.is_empty() {
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                .unwrap_or_default()
-                                .iter()
-                                .filter(|file_location| {
-                                    match file_location {
-                                        Location::Disk { path } => {
-                                            !files_local_path.contains(path)
-                                        },
-                                        Location::Constellation { .. } => {
-                                            true
-                                        }
-                                    }
-                                })
-                                .cloned()
-                                .collect();
-                            let local_disk_files: Vec<Location> = files_local_path
-                                .iter()
-                                .map(|path| Location::Disk { path: path.clone() })
-                                .collect();
-                            new_files_to_upload.extend(local_disk_files);
-                            state.write().mutate(Action::SetChatAttachments(active_chat_id, new_files_to_upload));
-                        }
-                    },
-                })
-            }
         },
         Attachments {
             chat_id: active_chat_id,

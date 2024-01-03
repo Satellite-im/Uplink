@@ -16,21 +16,22 @@ use warp::raygun::{PinState, ReactionState};
 
 use crate::{
     layouts::chats::{
-        data::{self, ChatBehavior, ChatData, JsMsg, DEFAULT_MESSAGES_TO_TAKE},
-        scripts::OBSERVER_SCRIPT,
+        data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
+        scripts,
     },
     utils::download::get_download_path,
 };
 
 use super::{DownloadTracker, MessagesCommand};
 
-pub fn hangle_msg_scroll(
+pub fn handle_msg_scroll(
     cx: &ScopeState,
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
+    scroll_btn: &UseSharedState<ScrollBtn>,
 ) -> Coroutine<()> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![eval_provider, chat_data];
+        to_owned![eval_provider, chat_data, scroll_btn];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
@@ -43,16 +44,37 @@ pub fn hangle_msg_scroll(
                         break 'CONFIGURE_EVAL;
                     }
 
+                    let conv_id = chat_data.read().active_chat.id();
+                    let conv_key = chat_data.read().active_chat.key();
+                    let behavior = chat_data.read().get_chat_behavior(conv_id);
+
+                    // init the scroll button
+                    if let Ok(eval) = eval_provider(scripts::READ_SCROLL) {
+                        if let Ok(result) = eval.join().await {
+                            let scroll = result.as_i64().unwrap_or_default();
+                            chat_data.write_silent().set_scroll_value(conv_id, scroll);
+
+                            if (scroll < -100
+                                || behavior.on_scroll_end != data::ScrollBehavior::DoNothing)
+                                && !scroll_btn.read().get(conv_id)
+                            {
+                                log::debug!("triggering scroll button");
+                                scroll_btn.write().set(conv_id);
+                            } else if scroll >= -100 && scroll_btn.read().get(conv_id) {
+                                scroll_btn.write().clear(conv_id);
+                            }
+                        }
+                    } else {
+                        log::error!("failed to init scroll button");
+                    }
+
                     chat_data
                         .write_silent()
                         .active_chat
                         .messages
                         .displayed
                         .clear();
-
-                    let conv_id = chat_data.read().active_chat.id();
-                    let conv_key = chat_data.read().active_chat.key();
-                    let behavior = chat_data.read().get_chat_behavior(conv_id);
+                    chat_data.write_silent().active_chat.messages.loaded.clear();
 
                     let should_send_top_evt =
                         behavior.on_scroll_top != data::ScrollBehavior::DoNothing;
@@ -72,13 +94,13 @@ pub fn hangle_msg_scroll(
                         .top()
                         .unwrap_or(Uuid::nil());
 
-                    log::debug!(
+                    log::trace!(
                         "top msg is: {}, bottom msg is: {}",
                         top_msg_id,
                         bottom_msg_id
                     );
 
-                    let mut observer_script = OBSERVER_SCRIPT.replace(
+                    let mut observer_script = scripts::OBSERVER_SCRIPT.replace(
                         "$SEND_TOP_EVENT",
                         if should_send_top_evt { "1" } else { "0" },
                     );
@@ -111,7 +133,7 @@ pub fn hangle_msg_scroll(
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
-                                        //log::trace!("{:?}", msg);
+                                        // log::debug!("{:?}", msg);
                                         // perhaps this is redundant now that the IntersectionObserver self terminates.
                                         let is_evt_valid = matches!(msg, JsMsg::Top { key }
                                             | JsMsg::Bottom { key }
@@ -144,7 +166,10 @@ pub fn hangle_msg_scroll(
                             opt = rx.next() => {
                                 match opt {
                                     Some(_) => {
-                                        log::debug!("coroutine restart triggered");
+                                        log::trace!("coroutine restart triggered");
+                                        // Actions::ChatWith will cause the chatbar to render before the stuff in messages.rs initializes
+                                        // the view with the new chat id. when this happens, the scroll button could be displayed erroneously.
+                                        scroll_btn.write_silent().clear(conv_id);
                                         continue 'CONFIGURE_EVAL;
                                     }
                                     None => {
@@ -157,13 +182,25 @@ pub fn hangle_msg_scroll(
                             res = eval_stream.next() => match res {
                                 Some(msg) => match msg {
                                     JsMsg::Add { msg_id, .. } => {
+                                        let loaded1 = chat_data.read().is_loaded(conv_id);
                                         chat_data.write_silent().add_message_to_view(conv_id, msg_id);
+                                        let loaded2 = chat_data.read().is_loaded(conv_id);
+
+                                        if !loaded1 && loaded2 {
+                                            chat_data.write().active_chat.is_initialized = true;
+                                        }
                                     },
                                     JsMsg::Remove { msg_id, .. } => {
+                                        let loaded1 = chat_data.read().is_loaded(conv_id);
                                         chat_data.write_silent().remove_message_from_view(conv_id, msg_id);
+                                        let loaded2 = chat_data.read().is_loaded(conv_id);
+
+                                        if !loaded1 && loaded2 {
+                                            chat_data.write().active_chat.is_initialized = true;
+                                        }
                                     }
                                     JsMsg::Top { .. } => {
-                                        log::debug!("top reached");
+                                        log::trace!("top reached");
                                         // send uuid/timestamp of oldest message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_top_evt {
@@ -205,7 +242,7 @@ pub fn hangle_msg_scroll(
                                         };
 
                                         match rsp {
-                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                            Ok(FetchMessagesResponse{ messages, has_more, most_recent }) => {
                                                 let new_messages = messages.len();
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
@@ -213,8 +250,9 @@ pub fn hangle_msg_scroll(
                                                 if new_messages > 0 {
                                                     behavior.on_scroll_end = data::ScrollBehavior::FetchMore;
                                                 }
+                                                behavior.most_recent_msg_id = most_recent;
 
-                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                log::trace!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 chat_data.write().set_chat_behavior(conv_id, behavior);
                                                 chat_data.write().active_chat.new_key();
                                                 break 'HANDLE_EVAL;
@@ -227,7 +265,7 @@ pub fn hangle_msg_scroll(
                                         }
                                     }
                                     JsMsg::Bottom { .. } => {
-                                        log::debug!("bottom reached");
+                                        log::trace!("bottom reached");
                                         // send uuid/timestamp of most recent message to WarpRunner to process top event
                                         // receive the new messages and if there are more in that direction
                                         if !should_send_bottom_evt {
@@ -267,21 +305,23 @@ pub fn hangle_msg_scroll(
                                         };
 
                                         match rsp {
-                                            Ok(FetchMessagesResponse{ messages, has_more }) => {
+                                            Ok(FetchMessagesResponse{ messages, has_more, most_recent }) => {
                                                 let new_messages = messages.len();
                                                 chat_data.write().insert_messages(conv_id, messages);
                                                 chat_data.write().active_chat.new_key();
                                                 let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                                                behavior.most_recent_msg_id = most_recent;
                                                 if !has_more {
                                                     // remove extra messages from the list and return to ScrollInit::MostRecent
                                                     chat_data.write().reset_messages(conv_id);
+                                                    scroll_btn.write().clear(conv_id);
                                                 } else {
                                                     behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
                                                     behavior.on_scroll_end = if has_more { data::ScrollBehavior::FetchMore } else { data::ScrollBehavior::DoNothing };
                                                     chat_data.write().set_chat_behavior(conv_id, behavior.clone());
                                                 }
 
-                                                log::debug!("fetched {new_messages} messages. new behavior: {:?}", behavior);
+                                                log::trace!("fetched {new_messages} messages. new behavior: {:?}", behavior);
                                                 break 'HANDLE_EVAL;
                                             },
                                             Err(e) => {
@@ -307,6 +347,94 @@ pub fn hangle_msg_scroll(
     });
 
     ch.clone()
+}
+
+pub fn fetch_later_ch(
+    cx: &ScopeState,
+    chat_data: &UseSharedState<data::ChatData>,
+    scroll_btn: &UseSharedState<ScrollBtn>,
+) -> Coroutine<Uuid> {
+    use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+        to_owned![chat_data, scroll_btn];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(conv_id) = rx.next().await {
+                let opt = chat_data.read().get_bottom_of_view(conv_id);
+                let msg = match opt {
+                    Some(x) => x,
+                    None => {
+                        log::error!("no messages at bottom of view");
+                        chat_data
+                            .write_silent()
+                            .set_chat_behavior(conv_id, ChatBehavior::default());
+                        continue;
+                    }
+                };
+
+                let (tx, rx) = oneshot::channel();
+                let cmd = RayGunCmd::FetchMessages {
+                    conv_id,
+                    config: FetchMessagesConfig::Later {
+                        start_date: msg.date,
+                        limit: DEFAULT_MESSAGES_TO_TAKE / 2,
+                    },
+                    rsp: tx,
+                };
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp cmd: {e}");
+                    continue;
+                }
+
+                let rsp = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("failed to send warp command. channel closed. {e}");
+                        continue;
+                    }
+                };
+
+                match rsp {
+                    Ok(FetchMessagesResponse {
+                        messages,
+                        has_more,
+                        most_recent,
+                    }) => {
+                        let new_messages = messages.len();
+                        chat_data.write().insert_messages(conv_id, messages);
+                        chat_data.write().active_chat.new_key();
+                        let mut behavior = chat_data.read().get_chat_behavior(conv_id);
+                        behavior.most_recent_msg_id = most_recent;
+                        if !has_more {
+                            // remove extra messages from the list and return to ScrollInit::MostRecent
+                            chat_data.write().reset_messages(conv_id);
+                            scroll_btn.write().clear(conv_id);
+                        } else {
+                            behavior.on_scroll_top = data::ScrollBehavior::FetchMore;
+                            behavior.on_scroll_end = if has_more {
+                                data::ScrollBehavior::FetchMore
+                            } else {
+                                data::ScrollBehavior::DoNothing
+                            };
+                            chat_data
+                                .write()
+                                .set_chat_behavior(conv_id, behavior.clone());
+                        }
+                        log::debug!(
+                            "fetched {new_messages} messages. new behavior: {:?}",
+                            behavior
+                        );
+                        continue;
+                    }
+                    Err(e) => {
+                        log::error!("FetchMessages command failed: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    })
+    .clone()
 }
 
 pub fn handle_warp_commands(

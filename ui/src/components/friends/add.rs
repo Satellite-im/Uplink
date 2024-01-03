@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 use futures::{channel::oneshot, StreamExt};
 use kit::components::context_menu::{ContextItem, ContextMenu};
 
@@ -189,44 +190,91 @@ pub fn AddFriend(cx: Scope) -> Element {
             },
             div {
                 class: "body",
-                Input {
-                    placeholder: get_local_text("friends.placeholder"),
-                    icon: Icon::MagnifyingGlass,
-                    options: Options {
-                        with_validation: Some(friend_validation),
-                        // Do not replace spaces with underscores
-                        replace_spaces_underscore: false,
-                        // Show a clear button inside the input field
-                        with_clear_btn: true,
-                        clear_validation_on_no_chars: true,
-                        // Use the default options for the remaining fields
-                        ..Options::default()
-                    },
-                    disable_onblur: true,
-                    loading: *add_in_progress.current(),
-                    disabled: *add_in_progress.current(),
-                    reset: clear_input.clone(),
-                    onreturn: move |_| {
-                        if !friend_input_valid.get() {
-                            return;
+                ContextMenu {
+                    key: "{context_key}",
+                    id: "add-friend-input-context-menu".into(),
+                    devmode: state.read().configuration.developer.developer_mode,
+                    children: cx.render(rsx!(
+                        Input {
+                            placeholder: get_local_text("friends.placeholder"),
+                            icon: Icon::MagnifyingGlass,
+                            value: friend_input.get().clone(),
+                            options: Options {
+                                with_validation: Some(friend_validation),
+                                // Do not replace spaces with underscores
+                                replace_spaces_underscore: false,
+                                // Show a clear button inside the input field
+                                with_clear_btn: true,
+                                clear_validation_on_no_chars: true,
+                                // Use the default options for the remaining fields
+                                ..Options::default()
+                            },
+                            disable_onblur: true,
+                            loading: *add_in_progress.current(),
+                            disabled: *add_in_progress.current(),
+                            reset: clear_input.clone(),
+                            onreturn: move |_| {
+                                if !friend_input_valid.get() {
+                                    return;
+                                }
+                                if STATIC_ARGS.use_mock {
+                                    if let Ok(did) = DID::from_str(friend_input.get()) {
+                                        let mut ident = Identity::default();
+                                        ident.set_did_key(did);
+                                        state.write().mutate(Action::SendRequest(ident));
+                                    }
+                                } else {
+                                    add_in_progress.set(true);
+                                    ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                                }
+                            },
+                            onchange: |(s, is_valid)| {
+                                friend_input.set(s);
+                                friend_input_valid.set(is_valid);
+                            },
+                            aria_label: "Add Someone Input".into()
                         }
-                        if STATIC_ARGS.use_mock {
-                            if let Ok(did) = DID::from_str(friend_input.get()) {
-                                let mut ident = Identity::default();
-                                ident.set_did_key(did);
-                                state.write().mutate(Action::SendRequest(ident));
+                    )),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::ClipboardDocument,
+                            aria_label: "friend-add-input-copy".into(),
+                            text: get_local_text("uplink.copy-text"),
+                            onpress: move |_| {
+                                let text = friend_input.get().to_string();
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        if let Err(e) = c.set_text(text) {
+                                            log::warn!("Unable to set text to clipboard: {e}");
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
                             }
-                        } else {
-                            add_in_progress.set(true);
-                            ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                        },
+                        ContextItem {
+                            icon: Icon::ClipboardDocument,
+                            aria_label: "friend-add-input-paste".into(),
+                            text: get_local_text("uplink.paste"),
+                            onpress: move |_| {
+                                match Clipboard::new() {
+                                    Ok(mut c) => {
+                                        let text = c.get_text().map_err(|e| {
+                                             log::error!("Unable to get clipboard content: {e}");
+                                             e
+                                        }).unwrap_or_default();
+                                        friend_input.set(text);
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Unable to create clipboard reference: {e}");
+                                    }
+                                };
+                            }
                         }
-                    },
-                    onchange: |(s, is_valid)| {
-                        friend_input.set(s);
-                        friend_input_valid.set(is_valid);
-                    },
-                    aria_label: "Add Someone Input".into()
-                },
+                    ))
+                }
                 Button {
                     icon: add_friend_icon,
                     text: add_friend_lable.to_string(),
@@ -303,25 +351,27 @@ pub fn AddFriend(cx: Scope) -> Element {
                         Button {
                             aria_label: "Copy ID".into(),
                             icon: Icon::ClipboardDocument,
-                            onpress: move |_| {
-                                match Clipboard::new() {
-                                    Ok(mut c) => {
-                                        if let Err(e) = c.set_text(short_name.clone()) {
-                                            log::warn!("Unable to set text to clipboard: {e}");
+                            onpress: move |mouse_event: MouseEvent| {
+                                if mouse_event.modifiers() != Modifiers::CONTROL {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            if let Err(e) = c.set_text(short_name.clone()) {
+                                                log::warn!("Unable to set text to clipboard: {e}");
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
                                         }
-                                    },
-                                    Err(e) => {
-                                        log::warn!("Unable to create clipboard reference: {e}");
-                                    }
-                                };
-                                state
-                                    .write()
-                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                        "".into(),
-                                        get_local_text("friends.copied-did"),
-                                        None,
-                                        2,
-                                    )));
+                                    };
+                                    state
+                                        .write()
+                                        .mutate(Action::AddToastNotification(ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.copied-did"),
+                                            None,
+                                            2,
+                                        )));
+                                }
                             },
                             tooltip: cx.render(rsx!(Tooltip{
                                 text: get_local_text("settings-profile.copy-id")

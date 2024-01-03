@@ -1,19 +1,24 @@
+use std::time::Duration;
+
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::warp_runner::{BlinkCmd, WarpCmd};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 
+use kit::elements::button::Button;
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
+use warp::blink::AudioTestEvent;
 use warp::logging::tracing::log;
 
-use crate::components::settings::SettingSection;
+use crate::components::settings::{SettingSection, SettingSectionSimple};
 use common::state::{action::ConfigAction, Action, State};
 use common::{sounds, WARP_CMD_CH};
 
 // pub const VOL_MIN: f32 = 0.0;
 // pub const VOL_MAX: f32 = 200.0;
+pub const MAX_VOLUME: f32 = 127_f32 * 0.01;
 
 enum AudioCmd {
     FetchOutputDevices,
@@ -21,6 +26,8 @@ enum AudioCmd {
     FetchInputDevices,
     SetInputDevice(String),
     SetEchoCancellation(bool),
+    TestSpeaker,
+    TestMicrophone,
 }
 
 #[allow(non_snake_case)]
@@ -30,8 +37,17 @@ pub fn AudioSettings(cx: Scope) -> Element {
     let input_devices = use_ref(cx, Vec::new);
     let output_devices = use_ref(cx, Vec::new);
 
+    let speaker_volume = use_ref(cx, || 0);
+    let microphone_volume = use_ref(cx, || 0);
+
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![state, input_devices, output_devices];
+        to_owned![
+            state,
+            input_devices,
+            output_devices,
+            speaker_volume,
+            microphone_volume
+        ];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
@@ -41,7 +57,14 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     warp_cmd_tx
                         .send(WarpCmd::Blink(BlinkCmd::GetAudioDeviceConfig { rsp: tx }))
                         .expect("failed to send command");
-                    rx.await.expect("warp runner failed to get audio config")
+                    match rx.await.expect("warp runner failed to get audio config") {
+                        Ok(r) => r,
+                        Err(e) => {
+                            log::debug!("failed to get audio config: {e}");
+                            tokio::time::sleep(Duration::from_secs(2)).await;
+                            continue;
+                        }
+                    }
                 };
 
                 while let Some(cmd) = rx.next().await {
@@ -138,6 +161,70 @@ pub fn AudioSettings(cx: Scope) -> Element {
                                 }
                             }
                         }
+                        AudioCmd::TestSpeaker => {
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) =
+                                warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::TestSpeaker { rsp: tx }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
+
+                            let mut ch = match rx.await {
+                                Ok(ch) => ch,
+                                Err(_) => {
+                                    log::error!("warp_runner failed to test speaker");
+                                    continue;
+                                }
+                            };
+
+                            while let Some(evt) = ch.recv().await {
+                                match evt {
+                                    AudioTestEvent::Done => {
+                                        log::info!("audio test done");
+                                        break;
+                                    }
+                                    AudioTestEvent::Output { loudness } => {
+                                        *speaker_volume.write() =
+                                            (loudness as f32 / MAX_VOLUME) as u8;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            *speaker_volume.write() = 0;
+                        }
+                        AudioCmd::TestMicrophone => {
+                            let (tx, rx) = oneshot::channel();
+                            if let Err(_e) = warp_cmd_tx
+                                .send(WarpCmd::Blink(BlinkCmd::TestMicrophone { rsp: tx }))
+                            {
+                                log::error!("failed to send blink command");
+                                continue;
+                            }
+
+                            let mut ch = match rx.await {
+                                Ok(ch) => ch,
+                                Err(_) => {
+                                    log::error!("warp_runner failed to test microphone");
+                                    continue;
+                                }
+                            };
+
+                            while let Some(evt) = ch.recv().await {
+                                match evt {
+                                    AudioTestEvent::Done => {
+                                        log::info!("audio test done");
+                                        break;
+                                    }
+                                    AudioTestEvent::Output { loudness } => {
+                                        *microphone_volume.write() =
+                                            (loudness as f32 / MAX_VOLUME) as u8;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            *microphone_volume.write() = 0;
+                        }
                     }
                 }
                 break;
@@ -163,7 +250,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-audio.input-device"),
                 section_description: get_local_text("settings-audio.input-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.input_device.as_ref().cloned().unwrap_or("default".into()),
                     options: input_devices.read().clone(),
@@ -184,10 +270,21 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //         onchange: move |_| {}
             //     }
             // }
+            SettingSectionSimple {
+                Button {
+                    text: get_local_text("settings-audio.device-test"),
+                    disabled: false,
+                    onpress: move |_| {
+                        ch.send(AudioCmd::TestMicrophone);
+                    },
+                },
+                VolumeIndicator {
+                    volume: microphone_volume.clone(),
+                }
+            },
             SettingSection {
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
-                no_border: true,
                 Select {
                     initial_value: state.read().settings.output_device.as_ref().cloned().unwrap_or("default".into()),
                     options: output_devices.read().clone(),
@@ -208,6 +305,18 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //         onchange: move |_| {}
             //     }
             // }
+            SettingSectionSimple {
+                Button {
+                    text: get_local_text("settings-audio.device-test"),
+                    disabled: false,
+                    onpress: move |_| {
+                        ch.send(AudioCmd::TestSpeaker);
+                    },
+                },
+                VolumeIndicator {
+                    volume: speaker_volume.clone(),
+                }
+            },
 
             // currently does nothing
             //SettingSection {
@@ -297,4 +406,24 @@ pub fn AudioSettings(cx: Scope) -> Element {
             }
         }
     ))
+}
+
+#[derive(Props, PartialEq)]
+pub struct VolumeIndicatorProps {
+    volume: UseRef<u8>,
+}
+
+pub fn VolumeIndicator(cx: Scope<VolumeIndicatorProps>) -> Element {
+    cx.render(rsx!(div{
+        class: "volume-indicator-wrap",
+        div {
+            class: "volume-indicator volume-indicator-overlay",
+            z_index: 2,
+            width: format_args!("{}%", 100 - *cx.props.volume.read())
+        },
+        div {
+            class: "volume-indicator",
+            z_index: 1,
+        }
+    }))
 }

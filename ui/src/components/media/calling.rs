@@ -4,8 +4,10 @@ use std::{
 };
 
 use chrono::Local;
+use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
+use dioxus_core::Element;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -19,7 +21,7 @@ use kit::{
     },
     User,
 };
-use warp::crypto::DID;
+use warp::{blink::ParticipantState, crypto::DID};
 
 use crate::utils::{
     build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -101,7 +103,7 @@ pub struct ActiveCallProps {
 fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     log::trace!("Rendering active call window");
     let state = use_shared_state::<State>(cx)?;
-    let active_call = &cx.props.active_call;
+    let active_call: &ActiveCall = &cx.props.active_call;
     let active_call_id = active_call.call.id;
     let active_call_answer_time = active_call.answer_time;
     let scope_id = cx.scope_id();
@@ -319,9 +321,9 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             }
         };
     }
-    let call = &active_call.call;
 
-    let participants = state.read().get_identities(&call.participants_joined);
+    let call = &active_call.call;
+    let participants = state.read().get_identities_from_call(call);
     let other_participants = state.read().remove_self(&participants);
     let participants_name = State::join_usernames(&other_participants);
     let self_id = build_user_from_identity(&state.read().get_own_identity());
@@ -378,7 +380,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 } else if cx.props.in_chat {
                     let call_participants: Vec<_> = other_participants
                         .iter()
-                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), build_user_from_identity(x)))
+                        .map(|x| (call.participants_speaking.contains_key(&x.did_key()), call.participants_joined.get(&x.did_key()).cloned(), build_user_from_identity(x)))
                         .collect();
                     rsx!(CallUserImageGroup {
                         participants: call_participants,
@@ -428,7 +430,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             },
             Button {
-                icon: if call.call_silenced { Icon::SignalSlash } else { Icon::Signal },
+                icon: if call.call_silenced { Icon::HeadphonesSlash } else { Icon::Headphones },
                 aria_label: "call-speaker-button".into(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
@@ -572,7 +574,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
-    let mut participants = state.read().get_identities(&call.participants);
+    let mut participants = state.read().get_identities_from_call(call);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
         Some(c) => match c.conversation_name {
@@ -672,7 +674,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
 
 #[derive(Props, PartialEq)]
 pub struct CallUserImageProps {
-    participants: Vec<(bool, User)>,
+    participants: Vec<(bool, Option<ParticipantState>, User)>,
 }
 
 #[allow(non_snake_case)]
@@ -709,14 +711,51 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
         (visible.to_vec(), Some(context.to_vec()))
     };
+
+    let user_state_icons = move |user_state: Option<ParticipantState>| {
+        user_state.map(move |s| {
+            rsx!(div {
+                class: "call-status",
+                s.muted.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::MicrophoneSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.deafened.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::HeadphonesSlash,
+                            fill:"currentColor",
+                        }
+                    })
+                }),
+                s.recording.then(||{
+                    rsx!(div {
+                        class: "call-status-icon",
+                        IconElement {
+                            icon: Icon::VideoCamera,
+                            fill:"currentColor",
+                        }
+                    })
+                })
+            })
+        })
+    };
+
     cx.render(rsx!(
-        visible.iter().map(|(speaking, user)| {
+        visible.iter().map(|(speaking, user_state, user)| {
             rsx!(div {
                 class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
                 UserImage {
                     platform: user.platform,
                     image: user.photo.clone(),
                 }
+                user_state_icons(user_state.clone())
             })
         }),
         context.map(|ctx| {
@@ -728,7 +767,7 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                         id: format!("{}", id),
                         left_click_trigger: true,
                         items: cx.render(rsx!(
-                            ctx.iter().map(|(speaking,user)|{
+                            ctx.iter().map(|(speaking, user_state, user)|{
                                 rsx!(div {
                                         class: "additional-participant",
                                         div {
@@ -741,7 +780,8 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
                                         p {
                                             class: "additional-participant-name",
                                             user.username.to_string()
-                                        }
+                                        },
+                                        user_state_icons(user_state.clone())
                                 })
                             })
                         )),

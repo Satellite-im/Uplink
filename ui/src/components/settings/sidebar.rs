@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::sounds;
 use common::state::State;
+use common::{icons::outline::Shape as Icon, state::Action};
 use dioxus::prelude::*;
 use kit::{
     components::nav::Nav,
@@ -24,6 +24,7 @@ pub enum Page {
     Messages,
     //Files,
     //Privacy,
+    Keybinds,
     Profile,
     Notifications,
     Accessibility,
@@ -56,6 +57,7 @@ impl FromStr for Page {
             //"files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             "messages" => Ok(Page::Messages),
+            "keybinds" => Ok(Page::Keybinds),
             //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
@@ -162,20 +164,26 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::DocumentText,
         ..UIRoute::default()
     };
+    let keybinds = UIRoute {
+        to: "keybinds",
+        name: get_local_text("settings.keybinds"),
+        icon: Icon::Keybind,
+        ..UIRoute::default()
+    };
 
-    let mut routes = vec![
-        profile,
-        general,
-        messages,
-        //privacy,
-        audio,
-        // files,
-        extensions,
-        accessibility,
-        notifications,
-        about,
-        licenses,
-    ];
+    let mut routes = vec![profile, general, messages];
+    // To control order of routes, add them here.
+    // routes.push(privacy);
+    routes.push(audio);
+    // routes.push(files);
+    routes.push(extensions);
+    if state.read().configuration.developer.experimental_features {
+        routes.push(keybinds);
+    }
+    routes.push(accessibility);
+    routes.push(notifications);
+    routes.push(about);
+    routes.push(licenses);
 
     if state.read().ui.show_dev_settings {
         routes.push(developer);
@@ -230,6 +238,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if state.read().configuration.audiovideo.interface_sounds {
                        sounds::Play(sounds::Sounds::Interaction);
                     }
+
+                    if route == "keybinds" {
+                        state.write().mutate(Action::PauseGlobalKeybinds(true));
+                    } else {
+                        state.write().mutate(Action::PauseGlobalKeybinds(false));
+                    }
+
                     emit(&cx, Page::from_str(route).unwrap());
                 }
             }

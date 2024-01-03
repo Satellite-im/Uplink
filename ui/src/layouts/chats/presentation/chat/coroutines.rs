@@ -50,7 +50,7 @@ pub fn handle_warp_events(
                             .write_silent()
                             .new_message(conversation_id, message)
                         {
-                            log::debug!("adding message to conversation");
+                            log::trace!("adding message to conversation");
                             chat_data.write().active_chat.new_key();
                         }
                     }
@@ -119,11 +119,11 @@ pub fn init_chat_data<'a>(
 
             let r = match config {
                 FetchMessagesConfig::MostRecent { limit } => {
-                    log::debug!("fetching most recent messages for chat");
+                    log::trace!("fetching most recent messages for chat");
                     fetch_most_recent(conv_id, limit).await
                 }
                 FetchMessagesConfig::Window { center, half_size } => {
-                    log::debug!("fetching window for chat");
+                    log::trace!("fetching window for chat");
                     fetch_window(conv_id, behavior, center, half_size).await
                 }
                 _ => unreachable!(),
@@ -151,6 +151,7 @@ pub async fn fetch_window<'a>(
     let mut messages = vec![];
     let has_more_before: bool;
     let has_more_after: bool;
+    let most_recent_msg_id: Option<Uuid>;
 
     let warp_cmd_tx = WARP_CMD_CH.tx.clone();
     let (tx, rx) = oneshot::channel();
@@ -177,6 +178,7 @@ pub async fn fetch_window<'a>(
         Ok(FetchMessagesResponse {
             messages: mut new_messages,
             has_more,
+            most_recent: _,
         }) => {
             has_more_before = has_more;
             messages.append(&mut new_messages);
@@ -209,6 +211,7 @@ pub async fn fetch_window<'a>(
     match rsp {
         Ok(mut r) => {
             has_more_after = r.has_more;
+            most_recent_msg_id = r.most_recent;
             if let Some(msg) = r.messages.first() {
                 if msg.inner.id() == messages.last().map(|x| x.inner.id()).unwrap_or_default() {
                     messages.pop();
@@ -233,6 +236,8 @@ pub async fn fetch_window<'a>(
         } else {
             data::ScrollBehavior::DoNothing
         },
+        most_recent_msg_id,
+        ..Default::default()
     };
 
     Ok((messages, new_behavior))
@@ -262,13 +267,18 @@ pub async fn fetch_most_recent<'a>(
     };
 
     match rsp {
-        Ok(FetchMessagesResponse { messages, has_more }) => {
+        Ok(FetchMessagesResponse {
+            messages,
+            has_more,
+            most_recent: most_recent_msg_id,
+        }) => {
             let chat_behavior = ChatBehavior {
                 on_scroll_top: if has_more {
                     data::ScrollBehavior::FetchMore
                 } else {
                     data::ScrollBehavior::DoNothing
                 },
+                most_recent_msg_id,
                 ..Default::default()
             };
             Ok((messages, chat_behavior))

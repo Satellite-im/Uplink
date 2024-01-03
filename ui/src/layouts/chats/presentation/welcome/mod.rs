@@ -47,7 +47,11 @@ pub fn Welcome(cx: Scope) -> Element {
             Button {
                 icon: Icon::Plus,
                 aria_label: "add-friends-button".into(),
-                text: get_local_text("friends.add"),
+                text: if state.read().friends().all.is_empty() {
+                        get_local_text("friends.add")
+                    } else {
+                        get_local_text("friends.go-to-friends")
+                    },
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
                     router.replace(UplinkRoute::FriendsLayout {  });

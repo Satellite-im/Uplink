@@ -1,6 +1,9 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use derive_more::Display;
-use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use tokio::sync::{
     broadcast,
@@ -354,6 +357,16 @@ impl From<&DiscoveryMode> for Discovery {
                 discovery_type: warp_ipfs::config::DiscoveryType::RzPoint {
                     addresses: vec![address.parse().expect("Valid multiaddr address")],
                 },
+            },
+            DiscoveryMode::Shuttle => Discovery::Shuttle {
+                addresses: HashMap::from_iter([(
+                    "12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
+                        .parse()
+                        .expect("Valid id"),
+                    HashSet::from_iter(["/ip4/104.236.194.35/tcp/34053"
+                        .parse()
+                        .expect("valid addr")]),
+                )]),
             },
             DiscoveryMode::Disable => Discovery::None,
         }

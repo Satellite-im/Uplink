@@ -14,21 +14,26 @@ use uuid::Uuid;
 use warp::raygun::{self, Location};
 
 use crate::layouts::chats::data::{
-    self, ChatInput, ChatProps, TypingInfo, DEFAULT_MESSAGES_TO_TAKE,
+    self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE,
 };
 
 use super::TypingIndicator;
 
-pub type MsgChInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 pub fn get_msg_ch(
     cx: &Scoped<'_, ChatProps>,
     state: &UseSharedState<State>,
 ) -> Coroutine<MsgChInput> {
-    use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
+    use_coroutine(cx, |mut rx: UnboundedReceiver<MsgChInput>| {
         to_owned![state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
+            while let Some(MsgChInput {
+                msg,
+                conv_id,
+                appended_msg_id,
+                replying_to,
+            }) = rx.next().await
+            {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 let attachments = state
                     .read()
@@ -36,7 +41,7 @@ pub fn get_msg_ch(
                     .map(|f| f.files_attached_to_send)
                     .unwrap_or_default();
                 let msg_clone = msg.clone();
-                let cmd = match reply {
+                let cmd = match replying_to {
                     Some(reply_to) => RayGunCmd::Reply {
                         conv_id,
                         reply_to,
@@ -48,7 +53,7 @@ pub fn get_msg_ch(
                         conv_id,
                         msg,
                         attachments,
-                        ui_msg_id,
+                        appended_msg_id,
                         rsp: tx,
                     },
                 };
@@ -78,7 +83,7 @@ pub fn get_msg_ch(
                         conv_id,
                         msg_clone,
                         attachment_files,
-                        ui_msg_id,
+                        appended_msg_id,
                     );
                     continue;
                 }
@@ -90,7 +95,7 @@ pub fn get_msg_ch(
                         conv_id,
                         msg_clone,
                         attachment_files,
-                        ui_msg_id,
+                        appended_msg_id,
                     );
                 }
             }
@@ -115,7 +120,7 @@ pub fn get_scroll_ch(
                 .await
                 {
                     Ok((messages, behavior)) => {
-                        log::debug!("re-init messages with most recent");
+                        log::trace!("re-init messages with most recent");
                         chat_data.write().set_active_chat(
                             &state.read(),
                             &conv_id,

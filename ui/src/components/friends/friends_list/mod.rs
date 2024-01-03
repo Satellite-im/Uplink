@@ -11,7 +11,13 @@ use kit::{
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
-    elements::{button::Button, checkbox::Checkbox, label::Label, Appearance},
+    elements::{
+        button::Button,
+        checkbox::Checkbox,
+        input::{Input, Options},
+        label::Label,
+        Appearance,
+    },
     layout::modal::Modal,
 };
 
@@ -48,11 +54,18 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let reset_filter = use_state(cx, || false);
+    let friend_filter = use_state(cx, String::new);
+    if *reset_filter.get() {
+        friend_filter.set(String::new());
+        reset_filter.set(false);
+    }
+    let filter = friend_filter.get().to_lowercase();
+    let friends_all = state.read().friend_identities();
     let friends_list = HashMap::from_iter(
-        state
-            .read()
-            .friend_identities()
+        friends_all
             .iter()
+            .filter(|id| filter.is_empty() || id.username().to_lowercase().starts_with(&filter))
             .map(|id| (id.did_key(), id.clone())),
     );
     let block_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
@@ -61,6 +74,7 @@ pub fn Friends(cx: Scope) -> Element {
     let share_did = use_state(cx, || None);
 
     let friends = State::get_friends_by_first_letter(friends_list);
+
     let router = use_navigator(cx);
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
@@ -187,6 +201,24 @@ pub fn Friends(cx: Scope) -> Element {
                 text: get_local_text("friends.friends"),
                 aria_label: "friends-list-label".into(),
             },
+            (!friends_all.is_empty()).then(||{
+                rsx!(Input {
+                    placeholder: get_local_text("friends.search-placeholder"),
+                    icon: Icon::MagnifyingGlass,
+                    options: Options {
+                        with_clear_btn: true,
+                        clear_validation_on_no_chars: true,
+                        clear_on_submit: false,
+                        ..Options::default()
+                    },
+                    disable_onblur: true,
+                    reset: reset_filter.clone(),
+                    onchange: |(s, _)| {
+                        friend_filter.set(s);
+                    },
+                    aria_label: "Search Friend".into()
+                })
+            }),
             (friends.is_empty()).then(|| rsx! (
                 div {
                     class: "empty-friends-list",
@@ -199,7 +231,7 @@ pub fn Friends(cx: Scope) -> Element {
                 rsx!(ShareFriendsModal{
                     did: share_did.clone()
                 })
-            })
+            }),
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
                 rsx!(
@@ -384,7 +416,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                     convs_id: uuid,
                     msg,
                     attachments: Vec::new(),
-                    ui_msg_id: None,
+                    appended_msg_id: None,
                     rsp: tx,
                 };
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {

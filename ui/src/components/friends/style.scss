@@ -11,6 +11,12 @@
         display: inline-flex;
         gap: var(--gap);
         width: 100%;
+
+        .context-wrap, 
+        .context-inner, 
+        .input-group {
+            width: 100%;
+        }
     }
     .btn {
         align-self: flex-start;
@@ -92,4 +98,9 @@
         width: 100%;
         align-self: center;
     }
+}
+@media (max-width: 400px) {
+    .add-friend {
+        width: 70%;
+  }
 }

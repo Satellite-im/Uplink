@@ -2,6 +2,7 @@ pub mod action;
 pub mod call;
 pub mod chats;
 pub mod configuration;
+pub mod default_keybinds;
 pub mod friends;
 pub mod identity;
 pub mod notifications;
@@ -57,6 +58,7 @@ use warp::{
     raygun::{self},
 };
 
+use self::call::Call;
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -204,7 +206,6 @@ impl State {
             Action::RemoveFriend(friend) => self.remove_friend(friend),
             Action::Block(identity) => self.block(identity),
             Action::Unblock(identity) => self.unblock(identity),
-
             // ===== UI =====
             // Favorites
             Action::Favorite(chat) => self.favorite(&chat),
@@ -237,6 +238,8 @@ impl State {
             Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             Action::SetTransformMarkdownText(flag) => self.ui.transform_markdown_text(flag),
             Action::SetTransformAsciiEmojis(flag) => self.ui.transform_ascii_emojis(flag),
+            // ===== Settings =====
+            Action::PauseGlobalKeybinds(b) => self.settings.pause_global_keybinds = b,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -337,9 +340,16 @@ impl State {
             event,
             WarpEvent::Blink(BlinkEventKind::ParticipantSpeaking { .. })
                 | WarpEvent::Blink(BlinkEventKind::SelfSpeaking)
+                | WarpEvent::Message(MessageEvent::TypingIndicator { .. })
         ) {
             log::debug!("process_warp_event: {event}");
+        } else if matches!(
+            event,
+            WarpEvent::Message(MessageEvent::TypingIndicator { .. })
+        ) {
+            log::trace!("process_warp_event: {event}");
         }
+
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
@@ -723,13 +733,14 @@ impl State {
                 // todo: notify user
                 log::info!("audio I/O device no longer available");
             }
-            BlinkEventKind::AudioStreamError => {
-                // todo
-            }
             BlinkEventKind::ParticipantStateChanged { peer_id, state } => {
-                if let Err(e) = self.ui.call_info.update_partcipant_state(peer_id, state) {
-                    log::error!("{e}");
+                if let Err(e) = self.ui.call_info.update_participant_state(peer_id, state) {
+                    log::error!("failed to process ParticipantStateChanged event : {e}");
                 }
+            }
+            BlinkEventKind::AudioStreamError => {
+                log::error!("blink audio stream error");
+                // todo
             }
         }
     }
@@ -767,6 +778,11 @@ impl State {
         fs::write(path, serialized)?;
         Ok(())
     }
+
+    pub fn get_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Self {
         if STATIC_ARGS.use_mock {
@@ -1509,6 +1525,13 @@ impl State {
             .all
             .iter()
             .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+    pub fn get_identities_from_call(&self, call: &Call) -> Vec<Identity> {
+        call.participants_joined
+            .keys()
+            .filter_map(|id| self.identities.get(id))
             .cloned()
             .collect()
     }

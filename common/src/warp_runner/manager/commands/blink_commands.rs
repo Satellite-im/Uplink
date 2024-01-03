@@ -1,7 +1,12 @@
 use derive_more::Display;
-use futures::channel::oneshot;
+use futures::channel::oneshot::{self};
+use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;
-use warp::{blink::AudioDeviceConfig, crypto::DID};
+use warp::logging::tracing::log;
+use warp::{
+    blink::{AudioDeviceConfig, AudioTestEvent},
+    crypto::DID,
+};
 
 use crate::warp_runner::Calling;
 
@@ -70,12 +75,20 @@ pub enum BlinkCmd {
     },
     #[display(fmt = "GetAudioDeviceConfig")]
     GetAudioDeviceConfig {
-        rsp: oneshot::Sender<Box<dyn AudioDeviceConfig>>,
+        rsp: oneshot::Sender<Result<Box<dyn AudioDeviceConfig>, warp::error::Error>>,
     },
     #[display(fmt = "SetEchoCancellation")]
     SetEchoCancellation {
         flag: bool,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "TestSpeaker")]
+    TestSpeaker {
+        rsp: oneshot::Sender<UnboundedReceiver<AudioTestEvent>>,
+    },
+    #[display(fmt = "TestMicrophone")]
+    TestMicrophone {
+        rsp: oneshot::Sender<UnboundedReceiver<AudioTestEvent>>,
     },
 }
 
@@ -112,16 +125,25 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         BlinkCmd::AdjustVolume { user, volume, rsp } => {
             let _ = rsp.send(blink.set_peer_audio_gain(user, volume).await);
         }
-        BlinkCmd::SetMicrophone { device_name, rsp } => {
-            let mut audio_config = blink.get_audio_device_config().await;
-            audio_config.set_microphone(&device_name);
-            let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
-        }
-        BlinkCmd::SetSpeaker { device_name, rsp } => {
-            let mut audio_config = blink.get_audio_device_config().await;
-            audio_config.set_speaker(&device_name);
-            let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
-        }
+        BlinkCmd::SetMicrophone { device_name, rsp } => match blink.get_audio_device_config().await
+        {
+            Ok(mut audio_config) => {
+                audio_config.set_microphone(&device_name);
+                let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+            }
+            Err(e) => {
+                let _ = rsp.send(Err(e));
+            }
+        },
+        BlinkCmd::SetSpeaker { device_name, rsp } => match blink.get_audio_device_config().await {
+            Ok(mut audio_config) => {
+                audio_config.set_speaker(&device_name);
+                let _ = rsp.send(blink.set_audio_device_config(audio_config).await);
+            }
+            Err(e) => {
+                let _ = rsp.send(Err(e));
+            }
+        },
         BlinkCmd::StartRecording { output_dir, rsp } => {
             let _ = rsp.send(blink.record_call(&output_dir).await);
         }
@@ -137,6 +159,34 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
             } else {
                 let _ = rsp.send(blink.disable_automute());
             }
+        }
+        BlinkCmd::TestSpeaker { rsp } => {
+            match blink.get_audio_device_config().await {
+                Ok(audio_config) => {
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_speaker(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
+                }
+                Err(e) => {
+                    log::debug!("speaker testing fail {:}", e);
+                }
+            };
+        }
+        BlinkCmd::TestMicrophone { rsp } => {
+            match blink.get_audio_device_config().await {
+                Ok(audio_config) => {
+                    tokio::task::spawn_blocking(move || {
+                        let _ = audio_config
+                            .test_microphone(rsp)
+                            .map_err(warp::error::Error::Any);
+                    });
+                }
+                Err(e) => {
+                    log::debug!("microphone testing fail {:}", e);
+                }
+            };
         }
     }
 }
