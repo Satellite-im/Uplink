@@ -1,0 +1,274 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  overflow: hidden;
+  border-radius: var(--border-radius-app-window);
+}
+#main,
+#app-wrap {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
+  overflow: hidden;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+:root {
+  --titlebar-height: 1.75rem;
+}
+
+.titlebar {
+  height: var(--height-titlebar);
+  width: 100%;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border-subtle-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  cursor: pointer;
+  min-height: 1.6rem;
+  .btn-wrap {
+    padding: unset;
+    .btn {
+      font-size: var(--text-size-less);
+      height: 100%;
+    }
+  }
+
+  .draggable-topbar {
+    flex-grow: 1;
+    height: 100%;
+  }
+}
+
+#lockscreen-controls {
+  align-items: flex-end;
+  justify-content: flex-end;
+
+  .draggable-topbar {
+    flex-grow: 1;
+    height: 100%;
+  }
+}
+
+#update-available-menu {
+  display: flex;
+}
+
+#update-available {
+  gap: var(--gap-less);
+  align-content: center;
+  justify-content: center;
+  margin: auto;
+  width: fit-content;
+  color: var(--warning-light);
+  font-size: var(--text-size-less);
+  cursor: pointer;
+  
+}
+
+#update-available > svg {
+  padding-top: 6px;
+  margin-bottom: 0;
+  height: 16px;
+}
+
+#update-available-menu {
+  margin-right: var(--gap-less);
+}
+
+#main {
+  background-color: var(--background);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle-color);
+}
+
+.search-input,
+.search-input .input-group {
+  width: 100%;
+}
+
+.horizontally-scrollable {
+  display: inline-flex;
+  gap: var(--gap);
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: fit-content;
+  transition: background var(--animation-time);
+  padding-bottom: var(--gap);
+}
+
+.progress {
+  cursor: progress;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  opacity: 1;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: var(--border-radius);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: var(--border-radius);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Disable the corner of scrollbars */
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  z-index: 1;
+}
+
+.topbar-item {
+  background-color: var(--secondary-dark);
+  border-radius: var(--border-radius-less);
+  display: inline-flex;
+  gap: var(--gap-less);
+  width: fit-content;
+  padding: var(--gap-less);
+  user-select: none;
+  margin-right: var(--gap-less);
+}
+
+.inline-controls {
+  display: inline-flex;
+}
+
+.disable-select {
+  -webkit-user-select: none;      
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.disp-flex {
+  display: inline-flex;
+
+  &.row {
+    flex-direction: row;
+  }
+
+  &.col {
+    flex-direction: column;
+  }
+}
+
+.instruction-list {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.download-modal {
+  color: var(--text-color-bright);
+  li {
+    padding: 5px;
+  }
+}
+
+.download-button .btn-wrap {
+  height: 45px;
+  .btn {
+    font-size: 16px;
+  }
+}
+
+.instruction-list .btn-wrap .btn {
+  font-size: 20px;
+}
+
+.nav-unread-indicator {
+  color: var(--text-color); 
+  background-color: var(--unread-indicator); 
+  min-width: 18px; 
+  font-size: var(--text-size-less); 
+  border-radius: var(--border-radius-more); 
+  position: absolute; 
+  top: -4px; 
+  right: -4px; 
+  padding: 2px;
+  text-align: center;
+  display: flex;
+  .unread-text {
+    align-self: center;
+    margin-left: auto;
+    margin-right: auto;
+    cursor: default;
+  }
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: bold;
+}
+
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.25rem;
+}
+
+s {
+  text-decoration: line-through;
+}
+
+del {
+  text-decoration: line-through;
+}
+
+strong {
+  font-weight: bold;
+}
+
+em {
+  font-style: italic;
+}
+
+blockquote {
+  padding: 0 20px;
+  border-left: 5px solid var(--secondary-light);
+  &::before {
+    content: "";
+  }
+}
+
+.ellipsis-overflow {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}

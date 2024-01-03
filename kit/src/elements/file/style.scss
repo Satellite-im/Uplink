@@ -1,0 +1,112 @@
+.file {
+	width: 120px;
+	height: 120px;
+	display: inline-flex;
+	flex-direction: column;
+	align-content: center;
+	justify-content: space-between;
+	transition: background-color var(--animation-time);
+	align-self: flex-start;
+	border-radius: var(--border-radius-less);
+	transition: background-color var(--animation-time) ease;
+	padding: var(--gap-less);
+	.icon {
+		svg {
+			transition: stroke var(--animation-time);
+			fill: transparent;
+			stroke: var(--warning-light);
+			width: 75%;
+			height: 75%;
+		}
+	}
+	.input-group {
+		width: 100%;
+	}
+	.input {
+		height: auto;
+		font-size: var(--text-size-less);
+		padding: var(--padding-less) var(--gap);
+	}
+	&.disabled {
+		.icon {
+			cursor: not-allowed;
+		}
+	}
+
+	
+	.input-checkbox {
+		background-color: transparent;
+		padding: var(--gap-less);
+		border-radius: var(--border-radius-more);
+		margin-right: 0;
+		&:checked {
+			background-color: var(--success);
+		}
+
+		svg {
+			height: 1rem;
+			width: 1rem;
+		}
+	}
+
+	&:hover {
+		cursor: pointer;
+
+		.input-checkbox {
+			background-color: var(--secondary);
+		}
+	}
+
+}
+
+.thumbnail-container {
+	border-radius: var(--border-radius-less);
+	max-height: 100%;
+	max-width: 100%;
+  }
+
+  .play-button {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	appearance: none;
+	padding: 0;
+  }
+
+  .alignment {
+	display: inline-flex;
+	align-content: center;
+	align-self: center;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	svg {
+		height: 75%;
+		width: 75%;
+	}
+  }
+
+.file-name {
+	text-transform: none;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.file-type {
+	text-transform: none;
+	text-align: center;
+	position: absolute;
+	right: calc(var(--gap) * 3);
+	bottom: calc(var(--gap) * 3);
+	padding: var(--gap-less);
+	background-color: var(--warning-light);
+	border-radius: var(--border-radius-less);
+	color: var(--text-color-dark);
+	font-size: var(--text-size-less);
+}

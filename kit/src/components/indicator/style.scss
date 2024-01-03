@@ -1,0 +1,35 @@
+
+.indicator {
+	height: fit-content;
+	width: fit-content;
+	stroke: var(--background);
+	fill: var(--background);
+	display: inline-flex;
+	justify-content: center;
+	align-items: flex-end;
+
+	.circle, .unknown {
+		transform: scale(0.75);
+		transform-origin: bottom center;
+	}
+}
+.indicator-offline {
+	.circle, .unknown {
+		fill: var(--background-light);
+	}
+}
+.indicator-online {
+	.circle, .unknown {
+		fill: var(--success-light);
+	}
+}
+.indicator-do-not-disturb {
+	.circle, .unknown {
+		fill: var(--danger);
+	}
+}
+.indicator-idle {
+	.circle, .unknown {
+		fill: var(--warning-light);
+	}
+}

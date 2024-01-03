@@ -1,0 +1,38 @@
+.friend {
+    display: inline-flex;
+    gap: var(--gap);
+    width: 100%;
+    align-items: center;
+    .request-info {
+        flex: 1;
+        display: inline-block;
+        width: 30px;
+        p {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+            color: var(--text-color);
+            span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+                color: var(--text-color-muted);
+            }
+        }
+    }
+    .request-controls {
+        display: inline-flex;
+        gap: var(--gap);
+    }
+    .status-message {
+        font-size: var(--text-size-less);
+        color: var(--text-color-muted) !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        max-width: 100%;
+    }
+}

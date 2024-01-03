@@ -1,0 +1,14 @@
+{
+	"recommendations": [
+		"tamasfe.even-better-toml",
+		"ms-vscode.makefile-tools",
+		"vadimcn.vscode-lldb",
+		"rust-lang.rust-analyzer",
+		"panicbit.cargo",
+		"JScearcy.rust-doc-viewer",
+		"Swellaby.vscode-rust-test-adapter"
+	],
+	"unwantedRecommendations": [
+		
+	]
+}

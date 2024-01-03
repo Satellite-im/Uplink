@@ -1,0 +1,35 @@
+
+name: Build Linux
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "*"
+
+jobs:
+  check:
+    name: Build Release Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest package list
+        run: sudo apt-get update
+      - name: Install libwebkit2gtk
+        run: sudo apt-get install -y build-essential pkg-config libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev librust-alsa-sys-dev dpkg-dev gzip libxdo-dev
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Build executable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.73.0
+      - run: cargo build --release -F production_mode
+      - run: bash build_linux_installer.sh uplink ${{ github.ref_name }} amd64
+
+      - name: Github Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/*.deb
+            target/release/SHA256SUM

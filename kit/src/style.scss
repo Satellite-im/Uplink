@@ -1,0 +1,404 @@
+/***
+    The new CSS reset - version 1.7.3 (last updated 7.8.2022)
+    GitHub page: https://github.com/elad2412/the-new-css-reset
+***/
+
+/*
+    Remove all the styles of the "User-Agent-Stylesheet", except for the 'display' property
+    - The "symbol *" part is to solve Firefox SVG sprite bug
+ */
+*:where(
+    :not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)
+  ) {
+  all: unset;
+  display: revert;
+}
+
+/* Preferred box-sizing value */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+p,
+label {
+  cursor: default;
+}
+/* Reapply the pointer cursor for anchor tags */
+a {
+  cursor: revert;
+}
+
+button {
+  cursor: pointer;
+}
+
+ul {
+  list-style-type: unset;
+  li > ul {
+    padding-left: 2rem;
+    list-style-type: circle;
+    li > ul {
+      padding-left: 2rem;
+      list-style-type: square;
+    }
+  }
+  li > ol {
+    list-style-type: lower-alpha;
+  }
+}
+
+ol {
+  list-style-type: decimal;
+  li::marker {
+    text-align: right;
+  }
+}
+
+menu {
+  list-style-type: none;
+}
+
+ul, ol, menu {
+  white-space: normal;
+  padding-left: 2em;
+}
+
+/* For images to not be able to exceed their container */
+img {
+  max-width: 100%;
+}
+
+/* removes spacing between cells in tables */
+table {
+  border-collapse: collapse;
+}
+
+/* Safari - solving issue when using user-select:none on the <body> text input doesn't working */
+input,
+textarea {
+  -webkit-user-select: auto;
+  user-select: none;
+}
+
+/* revert the 'white-space' property for textarea elements on Safari */
+textarea {
+  white-space: revert;
+}
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
+/* minimum style to allow to style meter element */
+meter {
+  -webkit-appearance: revert;
+  appearance: revert;
+}
+
+/* reset default text opacity of input placeholder */
+::placeholder {
+  color: unset;
+}
+
+/* fix the feature of 'hidden' attribute.
+   display:revert; revert to element instead of attribute */
+:where([hidden]) {
+  display: none;
+}
+
+/* revert for bug in Chromium browsers
+   - fix for the content editable attribute will work properly.
+   - webkit-user-select: auto; added for Safari in case of using user-select:none on wrapper element*/
+:where([contenteditable]:not([contenteditable="false"])) {
+  -moz-user-modify: read-write;
+  -webkit-user-modify: read-write;
+  overflow-wrap: break-word;
+  -webkit-line-break: after-white-space;
+  line-break: after-white-space;
+  -webkit-user-select: auto;
+  user-select: none;
+}
+
+/* apply back the draggable feature - exist only in Chromium and Safari */
+:where([draggable="true"]) {
+  -webkit-user-drag: element;
+}
+
+@font-face {
+  font-family: OpenDyslexic;
+  font-weight: normal;
+  src: url("./kit/src/fonts/OpenDyslexic-Regular.otf");
+}
+
+@font-face {
+  font-family: Noto;
+  font-weight: normal;
+  src: url("./kit/src/fonts/NotoSans-Regular.ttf");
+}
+
+body,
+html {
+  font-size: var(--text-size);
+  font-family: "Noto", sans-serif;
+  background-color: transparent;
+}
+
+strong {
+  font-weight: bold;
+}
+
+pre {
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+}
+
+pre code {
+  border-radius: none;
+}
+
+.void {
+  display: none;
+}
+
+
+.fs-10 {
+  font-size: 0.1rem;
+}
+
+.fs-20 {
+  font-size: 0.2rem;
+}
+
+.fs-30 {
+  font-size: 0.3rem;
+}
+
+.fs-40 {
+  font-size: 0.4rem;
+}
+
+.fs-50 {
+  font-size: 0.5rem;
+}
+
+.fs-60 {
+  font-size: 0.6rem;
+}
+
+.fs-70 {
+  font-size: 0.7rem;
+}
+
+.fs-80 {
+  font-size: 0.8rem;
+}
+
+.fs-90 {
+  font-size: 0.9rem;
+}
+
+.fs-100 {
+  font-size: 1rem;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+.defaultcursor {
+  cursor: default;
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+:root {
+  --animation-time: 0.2s;
+  --opacity-modifier: 0.75;
+
+  --text-size: 1rem;
+  --text-size-less: 0.75rem;
+  --text-size-more: 1.25rem;
+
+  --emoji-size: 2.3rem;
+
+  --gap: 0.65rem;
+  --gap-less: 0.25rem;
+  --files-grid-gap: 1.5rem;
+
+  --padding: 1.2rem;
+  --padding-more: 2rem;
+  --padding-less: 0.75rem;
+
+  --height-input: 38px;
+  --height-input-less: 28px;
+  --width-sidebar: 300px;
+  --height-titlebar: 27px;
+  --height-topbar: 61px;
+
+  --icon-size-more: 50px;
+  --icon-label-size-vertical: 40px;
+  --icon-label-size-horizontal: 80px;
+
+  --width-sidebar: 300px;
+
+  --border-radius: 4px;
+  --border-radius-less: 2px;
+  --border-radius-more: 20px;
+  --border-radius-inner: 10px;
+  --border-radius-app-window: 10px;
+  --border-color: #fff;
+  --border-subtle-color: #141414;
+  
+  --text-color: #f8f9fa;
+  --text-color-muted: #aaafb2;
+  --text-color-dark: #343a40;
+  --text-color-bright: #ffffff;
+  --text-color-link: #ff860d;
+  --text-color-user-tag: #576ae5b1;
+  --text-selection: #e0e0e0;
+  --placeholder: #bcbcbc;
+  --primary: #fcfbf4;
+  --primary-dark: color-mix(in srgb, var(--primary) 50%, black);
+  --primary-light: color-mix(in srgb, var(--primary) 50%, white);
+  --primary-light-less: color-mix(in srgb, var(--primary) 50%, #d3d2cb);
+  --secondary: #343a40;
+  --secondary-light: #4c555d;
+  --secondary-dark: #212529;
+  --secondary-darker: #16191c;
+  --background: #000000;
+  --background-light: var(--secondary-light);
+  --background-dark: #161a21;
+  --background-modal: rgba(0,0,0, 0.9);
+  --background-mention: #eda46ca1;
+  --success: #1dd1a1;
+  --success-light: #00c29c;
+  --info: #1B9CFC;
+  --info-light: #3da5f4;
+  --warning: #f5af19;
+  --warning-light: #feca57;
+  --danger: #F93854;
+  --danger-light: #fa4662;
+  --unread-indicator: red;
+}
+
+::selection {
+  background: var(--text-selection); /* WebKit/Blink Browsers */
+}
+::-moz-selection {
+  background: var(--text-selection); /* Gecko Browsers */
+}
+
+.skeletal {
+  background: var(--secondary-dark);
+  animation: skeletal 1s infinite;
+  opacity: 0.75;
+}
+
+.skeletal-inline {
+  width: 100%;
+  display: inline-flex;
+  gap: var(--gap-less);
+}
+
+.skeletal-svg {
+  svg {
+    animation: skeletal 1s infinite;
+    stroke: var(--secondary) !important;
+    height: 1.1rem;
+  }
+}
+.skeletal-bars {
+  flex: 1;
+  width: 100%;
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--gap-less);
+}
+
+.skeletal-bar {
+  width: 100%;
+  height: var(--text-size);
+  border-radius: var(--border-radius-less);
+
+  &.thick {
+    height: calc(var(--text-size) * 2);
+  }
+
+  &.seventy-five {
+    max-width: 75% !important;
+  }
+
+  &.flex {
+    flex: 1;
+  }
+}
+
+.visible {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+}
+
+p {
+  font-size: var(--text-size);
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-modifier);
+}
+
+@keyframes pulse {
+  0% {
+    background: var(--text-color-bright);
+  }
+  25% {
+    background: var(--text-color-bright);
+  }
+  75% {
+    background: var(--secondary);
+  }
+  100% {
+    background: var(--text-color-bright);
+  }
+}
+
+@keyframes skeletal {
+  0% {
+    opacity: var(--opacity-modifier);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: var(--opacity-modifier);
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+
+pre[class*="language-"] {
+  overflow: hidden;
+  border-radius: var(--border-radius);
+}
+a {
+  color: var(--text-color-link);
+}
+
+a:hover {
+  text-decoration: underline;
+}

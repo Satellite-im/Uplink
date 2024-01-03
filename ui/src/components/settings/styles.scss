@@ -1,0 +1,266 @@
+#settings-audio,
+#settings-about,
+#settings-developer,
+#settings-extensions,
+#settings-general,
+#settings-profile,
+#settings-files,
+#settings-notifications,
+#settings-privacy {
+  color: var(--text-color);
+  flex: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+}
+
+#settings-layout {
+  .flex {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+
+    #content {
+      flex: 1;
+      overflow-y: auto;
+    }
+  }
+
+  div.disabled,
+  div.enabled {
+    width: 100%;
+  }
+}
+
+.nav.bubble {
+  padding: 0 var(--gap);
+}
+
+.open-dyslexic {
+  font-family: "Open-Dyslexic", sans-serif;
+  width: 100%;
+}
+
+.open-dyslexic-activated {
+  font-family: OpenDyslexic, sans-serif;
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.settings-header {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  width: 100%;
+  padding: var(--padding-less);
+  border-bottom: 1px solid var(--border-subtle-color);
+  color: var(--text-color);
+}
+
+.settings-section {
+  display: inline-flex;
+  gap: var(--gap);
+  border-bottom: 1px solid var(--border-subtle-color);
+  width: 100%;
+  padding: var(--padding-less);
+  .settings-info {
+    flex: 1;
+    min-width: 0;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap-less);
+
+    p {
+      color: var(--text-color);
+    }
+  }
+  .settings-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 20%;
+    min-width: fit-content;
+    gap: var(--gap);
+  }
+  &.no-border {
+    border-bottom: none;
+  }
+}
+
+.settings-section.simple {
+  .settings-control {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.settings-keybinds-info {
+  background-color: var(--secondary);
+  border-radius: var(--border-radius);
+  margin: var(--gap);
+  display: inline-flex;
+  width: calc(100% - (var(--gap) * 2));
+  padding: var(--padding-less);
+  color: var(--text-color-bright);
+  gap: var(--gap);
+
+  svg {
+    fill: transparent;
+    stroke: var(--text-color-bright);
+  }
+}
+
+.keybind-section {
+  display: inline-flex;
+  flex-direction: row;
+  width: 100%;
+  border-bottom: 1px solid var(--border-subtle-color);
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  padding: 0 var(--gap) 0 0;
+  
+  .keybind-section-mask {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: fixed;
+    z-index: 2;
+    background-color: rgba(0,0,0, 0.75);
+    transition: background-color 0.3s ease;
+  }
+
+  .keybind-separator {
+    fill: transparent;
+    stroke: var(--text-color-muted);
+    display: inline-flex;
+    height: 100%;
+    align-content: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .keybind-section-label {
+    color: var(--text-color);
+    flex: 1;
+    padding: var(--gap);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .keybind-section-controls.is-red {
+    svg {
+      fill: var(--danger);
+      stroke: none;
+    }
+  }
+  
+  .keybind-section-keys {
+    cursor: pointer;
+    height: var(--height-input);
+    display: inline-flex;
+    gap: var(--gap-less);
+    padding: calc(var(--gap-less) - 1px);
+    background: var(--secondary-darker);
+    border-radius: var(--border-radius);
+    margin: var(--padding-less);
+    border: 2px solid var(--border-subtle-color);
+    min-width: calc(var(--height-input) * 2);
+
+    &.recording {
+      border: 2px solid var(--info);
+      z-index: 3;
+    }
+
+    &.conflicting {
+      border: 2px solid var(--danger);
+    }
+
+    .keybind-key {
+      width: fit-content;
+      min-width: var(--height-input);
+      height: var(--height-input-less);
+      border: 2px solid var(--secondary-dark);
+      border-radius: var(--border-radius);
+      background-color: var(--secondary-dark);
+      color: var(--text-color-muted);
+      pointer-events: none;
+      .keybind-key-inner {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--placeholder);
+        font-size: var(--text-size-less);
+        border-radius: var(--border-radius);
+        background-color: var(--secondary);
+        padding: 0 var(--gap-less);
+      }
+    }
+  }
+
+
+  &.highlight {
+    .keybind-section-keys {
+      border: 2px solid var(--info);
+    }
+  }
+}
+
+.flags {
+  font-size: 2rem;
+}
+
+.color-swatches {
+  display: inline-flex;
+  gap: var(--gap);
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+// TODO: This should just be included in  dynamically rendered css depending on the screen size
+@media only screen and (max-width: 600px) {
+  .settings-section {
+    flex-direction: column;
+    .settings-control {
+      width: 100%;
+      justify-content: center;
+      padding: var(--gap) 0;
+    }
+  }
+}
+
+.volume-indicator-wrap {
+  width: 100%; 
+  height: var(--text-size-more); 
+  position: relative;
+}
+
+.volume-indicator-wrap {
+  width: 100%; 
+  height: var(--text-size-more); 
+  position: relative;
+}
+
+.volume-indicator {
+  position: absolute; 
+  width: 100%; 
+  height: 100%; 
+  border-radius: var(--border-radius); 
+  background: linear-gradient(90deg, 
+  #00b894 0% 75%,
+  #feca57 75% 90%, 
+  #ba0c0c 90%);
+}
+
+.volume-indicator-overlay {
+  right: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.5);
+}

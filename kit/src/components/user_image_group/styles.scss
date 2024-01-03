@@ -1,0 +1,104 @@
+.user-group-skeletal {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap-less);
+}
+.user-image-group-wrap {
+    position: relative;
+    height: var(--height-input);
+    max-height: var(--height-input);
+    width: var(--height-input);
+    margin-bottom: 2px; // Compensates for the border on user_image
+    
+	&.pressable {
+		cursor: pointer;
+	}
+    &.group {
+        .plus-some {
+            display: inline-flex;
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--secondary);
+            padding: 0 var(--gap);
+            border-radius: var(--border-radius-more);
+            color: var(--text-color-muted);
+            z-index: 4;
+            align-content: center;
+            justify-content: center;
+
+            p {
+                font-size: var(--text-size-less);
+                pointer-events: none;
+            }
+        }
+
+        .user-image-wrap {
+            display: none;
+            position: absolute;
+
+            &:nth-child(1) {
+                transform: scale(0.75);
+                left: unset;
+                top: unset;
+                right: -5px;
+                bottom: -5px;
+                z-index: 3;
+                display: inline-flex;
+            }
+            &:nth-child(2) {
+                transform: scale(0.65);
+                left: -6px;
+                top: -2px;
+                z-index: 2;
+                display: inline-flex;
+            }
+            &:nth-child(3) {
+                transform: scale(0.45);
+                top: -10px;
+                right: -8px;
+                z-index: 1;
+                display: inline-flex;
+            }
+        }
+    }
+}
+
+.user-image-group {
+    z-index: 0;
+    display: inline-flex;
+	flex-direction: column;
+	gap: var(--gap);
+	text-overflow: ellipsis;
+	word-break: break-all;
+    width: var(--height-input);
+    max-height: var(--height-input);
+    position: relative;
+
+    label {
+		display: block;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
+		align-self: center;
+		max-width: 100%;
+	}
+    .dot {
+		height: 8px;
+		width: 8px;
+		border-radius: 50%;
+		background: var(--text-color-bright);
+	}
+	.dot-1 {
+		animation: 1s pulse 0s infinite;
+	}
+	.dot-2 {
+		animation: 1s pulse 0.33s infinite;
+	}
+	.dot-3 {
+		animation: 1s pulse 0.66s infinite;
+	}
+    .profile-typing {
+        z-index: 4;
+    }
+}

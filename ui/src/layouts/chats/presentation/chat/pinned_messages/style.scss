@@ -1,0 +1,102 @@
+#pinned-messages-container {
+    max-width: 400px; 
+    max-height: 500px;
+    overflow: hidden;
+    &.pinned-minimal {
+        .pinned-button-container {
+            flex-direction: column;
+        }
+    }
+}
+
+.pinned-messages {
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+    overflow-y: auto;
+    flex: 1;
+    gap: var(--gap);
+}
+
+.full-flex {
+    width: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+    min-width: 0;
+}
+.pinned-empty {
+    width: 100%; 
+    display: flex; 
+    align-items: center; 
+    text-align: center; 
+    color: var(--text-color);
+    font-size: var(--text-size-less);
+}
+
+.pinned-message-wrap {
+    position: relative;
+    display: inline-flex;
+    background-color: var(--secondary);
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+    gap: var(--gap);
+    margin-right: var(--gap);
+}
+
+.pinned-button-container {
+    display: flex; 
+    gap: var(--gap-less);
+    margin-left: auto;
+}
+
+.pinned-buttons {
+    height: var(--height-input-less);
+    display: inline-flex;
+    font-size: var(--text-size-less);
+    background: var(--secondary-dark);
+    padding: 0 var(--gap);
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+    border-radius: var(--border-radius-more);
+    align-items: center;
+}
+
+.pinned-message { 
+    white-space: pre-wrap; 
+    overflow: hidden; 
+    overflow-wrap: anywhere;
+    width: 100%;
+}
+
+.pinned-content-container {
+    display: flex; 
+    flex-direction: column; 
+    color: var(--text-color);
+    width: 100%;
+}
+
+.pinned-sender-container {
+    width: 100%;
+    margin-bottom: var(--padding-less);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--gap);
+}
+
+.pinned-sender-time {
+    font-size: var(--text-size-less);
+    color: var(--text-color-muted);
+}
+
+.background-highlight {
+    animation-name: highlight;
+    animation-duration: 2s;
+}
+
+@keyframes highlight {
+    0% {background-color: transparent;}
+    30% {background-color: var(--background-dark);}
+    70% {background-color: var(--background-dark);}
+    100% {background-color: transparent;}
+}

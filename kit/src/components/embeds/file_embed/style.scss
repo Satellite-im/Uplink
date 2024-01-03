@@ -1,0 +1,130 @@
+.alignment {
+  width: var(--icon-label-size-more);
+  min-height: 0;
+  flex: 1;
+  display: inline-flex;
+  align-content: center;
+  align-self: center;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;  
+}
+
+.file-embed {
+  display: inline-flex;
+  gap: var(--gap);
+  width: 100%;
+  color: var(--text-color);
+  align-content: center;
+  align-self: flex-end;
+
+  .image-container {
+    display: flex;
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+  }
+
+  .image {
+    width: 100%;
+    max-width: 350px;
+    height: 100%;
+    max-height: 350px;
+    border-radius: var(--border-radius-inner);
+    transition: border-radius var(--animation-time);
+
+    &:hover {
+      border-radius: var(--border-radius);
+    }
+    &.big {
+      max-height: 700px;
+      max-width: 700px;
+    }
+  }
+
+  .expandable-image {
+    cursor: pointer;
+  }
+
+  .meta {
+    font-size: var(--text-size-less);
+  }
+
+  .btn {
+    display: none;
+    background-color: var(--primary-light-less);
+  }
+
+  .btn-wrap {
+    position: absolute;
+    top: var(--gap);
+    left: var(--gap);
+  }
+
+  .icon {
+    svg {
+      transition: stroke var(--animation-time);
+			fill: transparent;
+			stroke: var(--warning-light);
+      width: 60px;
+      height: 60px;
+      margin-top: var(--gap-less);
+    }
+  }
+}
+.file-embed:hover {
+  cursor: pointer;
+  .btn {
+    display: inline-flex;
+    border: 1px solid var(--text-color-dark);
+  }
+}
+
+.icon {
+  display: inline-flex;
+}
+
+.meta {
+  display: inline-flex;
+}
+
+.file-embed.remote {
+  .meta {
+    color: var(--placeholder);
+  }
+  align-self: flex-start;
+}
+
+.upload-bar {
+  position: relative;
+  margin-top: 5px;
+  width: 400px;
+  height: 10px;
+  background-color: var(--background-dark);
+  border-radius: var(--border-radius-more);
+  .upload-progress {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-more);
+    transition: 1s;
+  }
+}
+
+.file-info {
+  word-break: break-all;
+}
+
+.file-embed-type {
+	text-transform: none;
+	text-align: center;
+  position: relative;
+  right: -35px;
+  bottom: 25px;
+	padding:2px;
+	background-color: var(--warning-light);
+	border-radius: 4px;
+	color: var(--text-color-dark);
+	font-size: var(--text-size-less);
+}
