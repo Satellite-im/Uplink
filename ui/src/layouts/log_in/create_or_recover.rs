@@ -1,6 +1,6 @@
 use common::{language::get_local_text, state::State};
 use dioxus::prelude::*;
-use kit::elements::button::Button;
+use kit::elements::{button::Button, label::Label};
 
 use crate::get_app_style;
 
@@ -16,11 +16,10 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>) -> Element {
         div {
             id: "create-or-recover-layout",
             aria_label: "create-or-recover-layout",
-
-            div {
-                class: "title",
-                get_local_text("create-or-recover")
-            },
+            Label {
+                aria_label: "create-or-recover".into(),
+                text: get_local_text("create-or-recover")
+            }
             div {
                 class: "instructions",
                 get_local_text("create-or-recover.instructions")

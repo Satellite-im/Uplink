@@ -252,10 +252,35 @@
   .seed-words {
     display: inline-flex;
     flex-direction: column;
+    width: 100%;
+    gap: var(--gap);
 
-    .row, col {
+    .row, .col {
+      flex: 1;
       display: inline-flex;
       flex-direction: row;
+    }
+
+    .row {
+      gap: var(--gap);
+    }
+
+    .col {
+      background: var(--secondary-dark);
+      border-radius: var(--border-radius);
+
+      .num {
+        background-color: var(--info);
+        padding: var(--gap-less);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        min-width: var(--height-input-less);
+        justify-content: center;
+        display: inline-flex;
+      }
+
+      .val {
+        padding: var(--gap-less) var(--gap);
+      }
     }
   }
 }
@@ -267,6 +292,31 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: var(--padding);
+  gap: var(--gap);
+  display: inline-flex;
+  .instructions {
+    text-align: center;
+  }
+
+  .instructions-important {
+    text-align: center;
+    background: var(--warning);
+    border-radius: var(--border-radius);
+    /* color: var(--text-color-dark); */
+    padding: var(--gap-less);
+  }
+
+  .button-container {
+    display: inline-flex;
+    gap: var(--gap);
+    margin-top: var(--padding);
+  }
+
+  .controls {
+    display: inline-flex;
+    gap: var(--gap);
+  }
 }
 
 #unlock-layout {

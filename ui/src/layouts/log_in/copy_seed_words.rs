@@ -1,7 +1,7 @@
 use bip39::{Language, Mnemonic};
 use common::{icons, language::get_local_text, state::State};
 use dioxus::prelude::*;
-use kit::elements::{button::Button, Appearance};
+use kit::elements::{button::Button, label::Label, Appearance};
 
 use crate::get_app_style;
 
@@ -32,23 +32,13 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
         div {
             id: "copy-seed-words-layout",
             aria_label: "copy-seed-words-layout",
-
             div {
-                class: "back-button",
-                Button {
-                    aria_label: "back-button".into(),
-                    icon: icons::outline::Shape::ChevronLeft,
-                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
-                    appearance: Appearance::Secondary
-                },
-            },
-            div {
-                class: "title",
-                get_local_text("copy-seed-words")
-            },
-            div {
-                class: "instructions",
+                class: "instructions-important",
                 get_local_text("copy-seed-words.instructions")
+            },
+            Label {
+                aria_label: "copy-seed-words".into(),
+                text: get_local_text("copy-seed-words")
             },
             if let Some(words) = words.value() {
                 rsx!{ SeedWords { page: page.clone(), words: words.clone() } }
@@ -82,6 +72,16 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
         },
         div {
             class: "controls",
+            div {
+                class: "back-button",
+                Button {
+                    aria_label: "back-button".into(),
+                    icon: icons::outline::Shape::ChevronLeft,
+                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
+                    text: "Go Back".into(),
+                    appearance: Appearance::Secondary
+                },
+            },
             Button {
                 text: get_local_text("copy-seed-words.finished"),
                 onpress: move |_| {
