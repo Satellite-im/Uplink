@@ -20,7 +20,7 @@
 # tauri
 https://github.com/tauri-apps/wry/blob/dev/examples/wgpu.rs
 
-basically use opengl or webgl and render a texture. a texture is just an image and is usually used when creating animations programatically, but a single video frame could be treated as a texture that is rendered on a 2d scene directly in front of the camera. 
+basically use opengl or webgl and render a texture. a texture is just an image and is usually used when creating animations programmatically, but a single video frame could be treated as a texture that is rendered on a 2d scene directly in front of the camera. 
 
 there's a rust crate called wgpu that could help. 
 

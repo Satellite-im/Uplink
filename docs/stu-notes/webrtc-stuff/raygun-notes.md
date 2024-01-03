@@ -1,6 +1,6 @@
 -`enum MessageEventKind`
     -  processed by the implementors
-    - extensions/warp-rg-ipfs has a `direct_message_event` where a conversations messges `messages` are modified and an event is broadcast. 
+    - extensions/warp-rg-ipfs has a `direct_message_event` where a conversations messages `messages` are modified and an event is broadcast. 
     - warp-rg-ipfs/src/store has a `enum MessagingEvents` which matches `MessageEventKind`. 
     - `direct_message_event` maps from a `MessagingEvents` to a `MessageEventkind`
 

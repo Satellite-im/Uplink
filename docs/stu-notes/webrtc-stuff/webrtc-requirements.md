@@ -10,11 +10,11 @@
 - reconnect on failure
 
 # termination
-- remote side termianted
+- remote side terminated
 - local side terminated
 
 # signalling
-- look at example `play-from-disk-renegotation`
+- look at example `play-from-disk-renegotiation`
 
 # gstreamer
 - use video overlay interface to display a window. need to create a window with a UI toolkit and pass the window to GStreamer

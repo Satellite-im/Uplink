@@ -251,7 +251,7 @@ todo: go through blink implementation and check for deadlocks...
 - background information: the webrtc-rs crate provides a WebRTC API. The objects created during the initialization process need to be saved for future use. 
 - manage RTP source tracks (TrackLocalStaticRTP)
     - upon connecting to a peer, automatically connect it to the local source tracks.
-    - when a source track is added or removed, all peer connections ned to be updated accordingly. 
+    - when a source track is added or removed, all peer connections need to be updated accordingly. 
 - manage peer connections (one RTCPeerConnection and a collection of RTCRtpSender)
     - RTCPeerConnection: used to set the SDP and remove all tracks on disconnect
     - RTCRtpSender: used to remove tracks and read incoming RTP packets

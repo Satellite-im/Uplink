@@ -116,7 +116,7 @@ rust bindings here: https://docs.rs/fdk-aac/0.4.0/fdk_aac/index.html
 
 # using only necessary ones from the spec
 - ftyp: file type
-- moov: container for all the structur-data
+- moov: container for all the structure-data
     - mvhd: movie header
     - trak: container for an individual track
         - tkhd: track header
@@ -132,7 +132,7 @@ rust bindings here: https://docs.rs/fdk-aac/0.4.0/fdk_aac/index.html
                         - Opus
                             - dOps
                     - stts: decoding time-to-sample
-                    - stsc: sample-to-chunk, partial data-offset informatoin
+                    - stsc: sample-to-chunk, partial data-offset information
                     - stco: chunk offset, partial data-offset information
     - free: free space. not required
     - mdat: media data. not technically required but this holds the actual samples. 
