@@ -43,7 +43,7 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
+    let seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         while rx.next().await.is_some() {
             // only one command so far
@@ -68,7 +68,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     todo!()
                 }
                 Err(e) => {
-                    log::error!("failed to et seed words: {e}");
+                    log::error!("failed to get seed words: {e}");
                     continue;
                 }
             }
