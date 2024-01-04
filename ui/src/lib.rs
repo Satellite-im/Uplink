@@ -46,13 +46,13 @@ use std::time::Instant;
 
 use std::sync::Arc;
 
-use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
+use crate::layouts::log_in::{AuthGuard, AuthPages};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
@@ -82,7 +82,6 @@ use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-mod auth_guard;
 mod bootstrap;
 mod components;
 mod extension_browser;
@@ -94,8 +93,6 @@ mod utils;
 mod webview_config;
 mod window_builder;
 mod window_manager;
-
-pub use auth_guard::AuthPages;
 
 pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
@@ -196,7 +193,7 @@ fn app(cx: Scope) -> Element {
     bootstrap::use_warp_runner(cx);
 
     // 2. Guard the app with the auth
-    let auth = use_state(cx, || AuthPages::Unlock);
+    let auth = use_state(cx, || AuthPages::EntryPoint);
     let AuthPages::Success(identity) = auth.get() else {
         return render! {
         KeyboardShortcuts {
