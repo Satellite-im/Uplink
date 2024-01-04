@@ -65,7 +65,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
             match res {
                 Ok(seed_words) => {
-                    todo!()
+                    println!("seed words: {:?}", seed_words);
                 }
                 Err(e) => {
                     log::error!("failed to get seed words: {e}");
@@ -74,6 +74,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             }
         }
     });
+
+    // TODO: Move this behind a button to retireve the phrase.
+    seed_words_ch.send(());
 
     let state = use_shared_state::<State>(cx)?;
     let identity = state.read().get_own_identity();
