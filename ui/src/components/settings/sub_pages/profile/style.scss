@@ -161,6 +161,41 @@
     margin: 0 var(--gap);
   }
 
+  .seed-words {
+    display: inline-flex;
+    flex-direction: column;
+    width: 100%;
+    gap: var(--gap);
+
+    .row, .col {
+      flex: 1;
+      display: inline-flex;
+      flex-direction: row;
+    }
+
+    .row {
+      gap: var(--gap);
+    }
+
+    .col {
+      background: var(--secondary-dark);
+      border-radius: var(--border-radius);
+
+      .num {
+        background-color: var(--info);
+        padding: var(--gap-less);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        min-width: var(--height-input-less);
+        justify-content: center;
+        display: inline-flex;
+      }
+
+      .val {
+        padding: var(--gap-less) var(--gap);
+      }
+    }
+  }
+
   .input-group {
     width: 100%;
     .error {

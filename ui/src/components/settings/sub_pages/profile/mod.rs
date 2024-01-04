@@ -27,7 +27,7 @@ use warp::{error::Error, logging::tracing::log};
 
 use crate::components::crop_image_tool::circle_format_tool::CropCircleImageModal;
 use crate::components::crop_image_tool::rectangle_format_tool::CropRectImageModal;
-use crate::components::settings::SettingSection;
+use crate::components::settings::{SettingSection, SettingSectionSimple};
 
 #[derive(Clone)]
 enum ChanCmd {
@@ -43,41 +43,6 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
-    let seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
-        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        while rx.next().await.is_some() {
-            // only one command so far
-            let (tx, rx) = oneshot::channel();
-            if let Err(e) =
-                warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::GetMnemonic { rsp: tx }))
-            {
-                log::error!("error sending warp command: {e}");
-                continue;
-            }
-
-            let res = match rx.await {
-                Ok(r) => r,
-                Err(e) => {
-                    log::error!("error receiving warp command: {e}");
-                    continue;
-                }
-            };
-
-            match res {
-                Ok(seed_words) => {
-                    println!("seed words: {:?}", seed_words);
-                }
-                Err(e) => {
-                    log::error!("failed to get seed words: {e}");
-                    continue;
-                }
-            }
-        }
-    });
-
-    // TODO: Move this behind a button to retireve the phrase.
-    seed_words_ch.send(());
-
     let state = use_shared_state::<State>(cx)?;
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
@@ -102,6 +67,42 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let no_profile_picture =
         image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
+
+    let seed_phrase: &UseState<Option<String>> = use_state(cx, || None);
+    let seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![seed_phrase];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::GetMnemonic { rsp: tx }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(seed_words) => {
+                        seed_phrase.set(Some(seed_words));
+                    }
+                    Err(e) => {
+                        log::error!("failed to get seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -182,6 +183,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             }
         }
     });
+
     // Set up validation options for the input field
     let username_validation_options = Validation {
         // The input should have a maximum length of 32
@@ -491,6 +493,50 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             ch.send(ChanCmd::Status(status));
                         }
                     },
+                },
+                SettingSection {
+                    section_label: get_local_text("settings-profile.recovery-seed"),
+                    section_description: get_local_text("settings-profile.recovery-seed-description"),
+                    Button {
+                        text: if seed_phrase.as_ref().is_none() { "Reveal Recovery Seed".into() } else { "Hide Seed Phrase".into() },
+                        aria_label: "reveal-recovery-seed-button".into(),
+                        appearance: Appearance::Secondary,
+                        icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
+                        onpress: move |_| {
+                            if seed_phrase.is_some() {
+                                seed_phrase.set(None);
+                            } else {
+                                seed_words_ch.send(());
+                            }
+                        }
+                    }
+                }
+                if let Some(phrase) = seed_phrase.as_ref() {
+                    let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                    render!(
+                        SettingSectionSimple {
+                            div {
+                                class: "seed-words",
+                                words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+                                    div {
+                                        class: "row",
+                                        div {
+                                            class: "col",
+                    
+                                            span { class: "num", ((idx * 2) + 1).to_string() },
+                                            span { class: "val", vals.get(0).cloned().unwrap_or_default() }
+                                        },
+                                        div {
+                                            class: "col",
+                    
+                                            span { class: "num", ((idx * 2) + 2).to_string() },
+                                            span { class: "val", vals.get(1).cloned().unwrap_or_default() }
+                                        }
+                                    }
+                                })
+                            }
+                        }
+                    )
                 },
                 if open_crop_image_modal_for_banner_picture.get().0 {
                     rsx!(CropRectImageModal {
