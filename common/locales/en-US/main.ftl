@@ -387,7 +387,7 @@ create-or-recover = Account Creation
     .recover = Import an Account
 
 copy-seed-words = Recovery Seed
-    .instructions = Write this down in the order that they appear. Having the correct order is crucial when you are recovering your account.
+    .instructions = Write these words down in the order that they appear. Having the correct order is crucial when you are recovering your account.
     .finished = I Saved It
 
 enter-seed-words = Recovery Seed
