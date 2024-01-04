@@ -1,5 +1,6 @@
 use common::{language::get_local_text, state::State};
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use kit::elements::{button::Button, label::Label};
 
 use crate::get_app_style;
@@ -10,7 +11,14 @@ use super::AuthPages;
 #[component]
 pub fn Layout(cx: Scope, page: UseState<AuthPages>) -> Element {
     let state = use_ref(cx, State::load);
+    let window = use_window(cx);
 
+    if !matches!(&*page.current(), AuthPages::Success(_)) {
+        window.set_inner_size(LogicalSize {
+            width: 500.0,
+            height: 250.0,
+        });
+    }
     cx.render(rsx!(
         style {get_app_style(&state.read())},
         div {

@@ -287,6 +287,7 @@
 
 #enter-seed-words-layout,
 #copy-seed-words-layout,
+#unlock-layout,
 #create-or-recover-layout {
   color: var(--text-color);
   flex-direction: column;
@@ -301,7 +302,7 @@
 
   .instructions-important {
     text-align: center;
-    background: var(--warning);
+    background: var(--danger);
     border-radius: var(--border-radius);
     /* color: var(--text-color-dark); */
     padding: var(--gap-less);

@@ -7,8 +7,10 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::elements::label::Label;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -35,6 +37,15 @@ pub fn Layout(
     seed_words: UseRef<String>,
 ) -> Element {
     log::trace!("rendering enter username layout");
+    let window = use_window(cx);
+
+    if !matches!(&*page.current(), AuthPages::Success(_)) {
+        window.set_inner_size(LogicalSize {
+            width: 500.0,
+            height: 250.0,
+        });
+    }
+
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
@@ -100,6 +111,13 @@ pub fn Layout(
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
+            Label {
+                text: get_local_text("auth.enter-username")
+            },
+            div {
+                class: "instructions",
+                get_local_text("auth.enter-username-subtext")
+            },
             Input {
                 id: "username-input".to_owned(),
                 focus: true,

@@ -397,6 +397,7 @@ enter-seed-words = Recovery Seed
 
 auth = Create Account 
     .enter-username = Enter Username
+    .enter-username-subtext = Time to pick your username, you can change this later at any time in settings.
 
 sidebar = Sidebar 
     .subtext = { $user } sent multiple attachments
