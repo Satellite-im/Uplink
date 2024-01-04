@@ -4,7 +4,7 @@ use arboard::Clipboard;
 use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, Identity, State, ToastNotification};
-use common::warp_runner::{handle_tesseract_cmd, MultiPassCmd, TesseractCmd, WarpCmd};
+use common::warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Modifiers;
@@ -43,12 +43,34 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<TesseractCmd>| async move {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        while let Some(cmd) = rx.next().await {
-            match cmd {
-                TesseractCmd::GetMnemonic { rsp } => {}
-                _ => {}
+        while rx.next().await.is_some() {
+            // only one command so far
+            let (tx, rx) = oneshot::channel();
+            if let Err(e) =
+                warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::GetMnemonic { rsp: tx }))
+            {
+                log::error!("error sending warp command: {e}");
+                continue;
+            }
+
+            let res = match rx.await {
+                Ok(r) => r,
+                Err(e) => {
+                    log::error!("error receiving warp command: {e}");
+                    continue;
+                }
+            };
+
+            match res {
+                Ok(seed_words) => {
+                    todo!()
+                }
+                Err(e) => {
+                    log::error!("failed to et seed words: {e}");
+                    continue;
+                }
             }
         }
     });
