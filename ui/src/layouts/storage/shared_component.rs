@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use crate::layouts::storage::files_layout::files_sync_functions::{
     verify_if_a_file_was_deleted_from_local_disk, STORAGE_LOCAL_FOLDER,
@@ -94,8 +95,36 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
 
-    use_future(cx, (), |_| async move {
-        verify_if_a_file_was_deleted_from_local_disk().await;
+    let updates_on_file_from_local_disk: &UseRef<Vec<String>> = use_ref(cx, || Vec::new());
+
+    if !updates_on_file_from_local_disk.read().is_empty() {
+        if updates_on_file_from_local_disk.read().len() == 1 {
+            if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
+                let file_name = Path::new(path)
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+
+                let files_in_storage = storage_controller.read().files_list.clone();
+                for file in files_in_storage {
+                    if file.name() == file_name {
+                        let item = Item::from(file.clone());
+                        ch.send(ChanCmd::DeleteItems(item));
+                        break;
+                    }
+                }
+            };
+        };
+        updates_on_file_from_local_disk.write_silent().clear();
+    }
+
+    use_future(cx, (), |_| {
+        to_owned![updates_on_file_from_local_disk];
+        async move {
+            verify_if_a_file_was_deleted_from_local_disk(&updates_on_file_from_local_disk).await;
+        }
     });
 
     cx.render(rsx!(span {

@@ -9,7 +9,7 @@ use common::{
     STATIC_ARGS,
 };
 use dioxus::events::{EvalError, UseEval};
-use dioxus_hooks::{Coroutine, UseSharedState};
+use dioxus_hooks::{Coroutine, UseRef, UseSharedState};
 use futures::StreamExt;
 use notify::{event::RemoveKind, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -195,7 +195,9 @@ pub fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Resu
     Ok(files.clone())
 }
 
-pub async fn verify_if_a_file_was_deleted_from_local_disk() {
+pub async fn verify_if_a_file_was_deleted_from_local_disk(
+    updates_on_file_from_local_disk: &UseRef<Vec<String>>,
+) {
     let (tx, mut rx) = futures::channel::mpsc::unbounded();
     let mut watcher = match RecommendedWatcher::new(
         move |res| {
@@ -216,44 +218,45 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk() {
     }
 
     while let Some(event) = rx.next().await {
-        let event = match event {
+        let _ = match event {
             Ok(event) => {
+                // Avoid updates when file is .DS_Store in MacOS
+                if event
+                    .paths
+                    .get(0)
+                    .unwrap()
+                    .to_str()
+                    .unwrap_or("")
+                    .contains(".DS_Store")
+                {
+                    continue;
+                }
+
                 match event.kind {
-                    EventKind::Remove(remove_kind_action) => {
-                        match remove_kind_action {
-                            RemoveKind::Any => {
-                                match event.paths.get(0) {
-                                    Some(path) => {
-                                        println!("File deleted: {:?}", path);
-                                        // Execute your command here
-                                    }
-                                    None => println!("No path provided"),
+                    EventKind::Remove(remove_kind_action) => match remove_kind_action {
+                        RemoveKind::Any => match event.paths.get(0) {
+                            Some(path) => {
+                                println!("File deleted: {:?}", path);
+                            }
+                            None => println!("No path provided"),
+                        },
+                        _ => println!("Other remove kind action: {:?}", remove_kind_action),
+                    },
+                    EventKind::Modify(eventkind) => match eventkind {
+                        notify::event::ModifyKind::Name(rename_mode) => match rename_mode {
+                            _ => match event.paths.get(0) {
+                                Some(path) => {
+                                    updates_on_file_from_local_disk
+                                        .write()
+                                        .push(path.to_str().unwrap_or("").to_string());
+                                    println!("File modified in local disk: {:?}", path);
                                 }
-                            }
-                            _ => println!("Other remove kind action: {:?}", remove_kind_action),
-                        }
-                    }
-                    EventKind::Modify(eventkind) => {
-                        println!("eventkind: {:?}", eventkind);
-                        match eventkind {
-                            notify::event::ModifyKind::Any => {
-                                match event.paths.get(0) {
-                                    Some(path) => {
-                                        println!("File modified: {:?}", path);
-                                        // Execute your command here
-                                    }
-                                    None => println!("No path provided"),
-                                }
-                            }
-                            notify::event::ModifyKind::Data(data) => println!("data: {:?}", data),
-                            notify::event::ModifyKind::Name(name) => println!("name: {:?}", name),
-                            notify::event::ModifyKind::Metadata(metadata) => {
-                                println!("metadata: {:?}", metadata)
-                            }
-                            _ => println!("Other modify kind action: {:?}", eventkind),
-                        }
-                    }
-                    _ => println!("Other event kind: {:?}", event.kind),
+                                None => println!("No path provided"),
+                            },
+                        },
+                        _ => (),
+                    },
+                    _ => (),
                 }
             }
             Err(e) => {
