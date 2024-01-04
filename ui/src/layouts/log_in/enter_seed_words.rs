@@ -6,8 +6,9 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::{button::Button, input, Appearance};
+use kit::elements::{button::Button, input, label::Label, Appearance};
 
 use crate::get_app_style;
 
@@ -25,6 +26,14 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
     let loading = use_state(cx, || false);
     let input = use_ref(cx, String::new);
 
+    let window = use_window(cx);
+
+    if !matches!(&*page.current(), AuthPages::Success(_)) {
+        window.set_inner_size(LogicalSize {
+            width: 500.0,
+            height: 260.0,
+        });
+    }
     // todo: show toasts to inform user of errors.
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Cmd>| {
         to_owned![loading, page];
@@ -75,37 +84,32 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
         div {
             id: "enter-seed-words-layout",
             aria_label: "enter-seed-words-layout",
-
-            div {
-                class: "back-button",
-                Button {
-                    aria_label: "back-button".into(),
-                    icon: icons::outline::Shape::ChevronLeft,
-                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
-                    appearance: Appearance::Secondary
-                },
-            },
-            div {
-                class: "title",
-                get_local_text("enter-seed-words")
+            Label {
+                aria_label: "enter-seed-words".into(),
+                text: get_local_text("enter-seed-words")
             },
             div {
                 class: "instructions",
                 get_local_text("enter-seed-words.instructions")
             },
-            div {
-                class: "controls",
-                aria_label: "enter-seed-words-layout",
-
-                input::Input {
-                    placeholder: get_local_text("enter-seed-words.placeholder"),
-                    onchange: move |(x, is_valid)| {
-                        if is_valid {
-                            *input.write_silent() = x;
-                        }
+            input::Input {
+                placeholder: get_local_text("enter-seed-words.placeholder"),
+                onchange: move |(x, is_valid)| {
+                    if is_valid {
+                        *input.write_silent() = x;
                     }
-                },
+                }
+            },
+            div {
+                class: "button-container",
                 // todo: add 12 separate input boxes per figma
+                Button {
+                    aria_label: "back-button".into(),
+                    text: get_local_text("uplink.go-back"),
+                    icon: icons::outline::Shape::ChevronLeft,
+                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
+                    appearance: Appearance::Secondary
+                },
                 Button {
                     text: get_local_text("enter-seed-words.submit"),
                     disabled: *loading.get(),

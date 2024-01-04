@@ -81,15 +81,12 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
         },
         div {
             class: "controls",
-            div {
-                class: "back-button",
-                Button {
-                    aria_label: "back-button".into(),
-                    icon: icons::outline::Shape::ChevronLeft,
-                    onpress: move |_| page.set(AuthPages::CreateOrRecover),
-                    text: "Go Back".into(),
-                    appearance: Appearance::Secondary
-                },
+            Button {
+                text: get_local_text("uplink.go-back"),
+                aria_label: "back-button".into(),
+                icon: icons::outline::Shape::ChevronLeft,
+                onpress: move |_| page.set(AuthPages::CreateOrRecover),
+                appearance: Appearance::Secondary
             },
             Button {
                 text: get_local_text("copy-seed-words.finished"),

@@ -45,6 +45,7 @@ uplink = Uplink
     .copy-text = Copy Text
     .copy = Copy
     .paste = Paste
+    .go-back = Go Back
     
 community = Community
     .invited = You're Invited!
