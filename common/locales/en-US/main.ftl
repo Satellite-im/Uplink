@@ -45,6 +45,7 @@ uplink = Uplink
     .copy-text = Copy Text
     .copy = Copy
     .paste = Paste
+    .go-back = Go Back
     
 community = Community
     .invited = You're Invited!
@@ -381,8 +382,23 @@ unlock = Unlock
     .help = Help (right-click)
     .logging-in = Logging in...
 
+create-or-recover = Account Creation
+    .create = Create New Account
+    .instructions = We're going to create an account for you. On the next screen, you'll see a set of words. Screenshot this or write it down. This is the only way to backup your account.
+    .recover = Import an Account
+
+copy-seed-words = Recovery Seed
+    .instructions = Write these words down in the order that they appear. Having the correct order is crucial when you are recovering your account.
+    .finished = I Saved It
+
+enter-seed-words = Recovery Seed
+    .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by spaces.
+    .submit = Recover Account
+    .placeholder = Enter Recovery Seed...
+
 auth = Create Account 
     .enter-username = Enter Username
+    .enter-username-subtext = Time to pick your username, you can change this later at any time in settings.
 
 sidebar = Sidebar 
     .subtext = { $user } sent multiple attachments
