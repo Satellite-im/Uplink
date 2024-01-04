@@ -172,7 +172,7 @@ impl Messages {
             self.displayed.pop_back();
         } else if self.loaded.len() == self.all.len() {
             // during initialization this triggers when removing a nonexistent item.
-            // could also be triggerd by a delete operation
+            // could also be triggered by a delete operation
             self.displayed.retain(|x| x != &message_id);
         }
 
