@@ -18,7 +18,7 @@ use warp::{
     constellation::{file::FileType, Constellation},
     error::Error,
     logging::tracing::log,
-    multipass::{self, IdentityImportOption, ImportLocation, MultiPass},
+    multipass::{self, IdentityImportOption, MultiPass},
     raygun::RayGun,
     tesseract::Tesseract,
 };
