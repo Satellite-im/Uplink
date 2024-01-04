@@ -51,8 +51,8 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let first_render = use_ref(cx, || true);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
-    functions::get_items_from_current_directory(cx, ch);
 
+    functions::get_items_from_current_directory(cx, ch);
     functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
 
     if *first_render.read() {
@@ -101,7 +101,7 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
                         }
                         )
                } else {
-                rsx!(FilesAndFolders {
+                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller,
                     ch: ch,
                     send_files_mode: true,

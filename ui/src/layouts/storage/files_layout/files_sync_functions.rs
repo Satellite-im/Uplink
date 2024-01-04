@@ -5,19 +5,21 @@ use std::{
 };
 
 use common::{
+    language::get_local_text,
     state::{Action, State, ToastNotification},
     STATIC_ARGS,
 };
 use dioxus::events::{EvalError, UseEval};
 use dioxus_hooks::{Coroutine, UseRef, UseSharedState};
 use futures::StreamExt;
-use notify::{event::RemoveKind, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use kit::elements::{file::INPUT_FILE_NAME_OPTIONS, input::validate};
+use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
-use warp::constellation::file::File;
+use warp::constellation::{file::File, item::Item};
 
 use crate::layouts::storage::functions::{self, ChanCmd, UseEvalFn};
 
-use super::controller::UploadFileController;
+use super::controller::{StorageController, UploadFileController};
 
 pub static STORAGE_LOCAL_FOLDER: Lazy<PathBuf> =
     Lazy::new(|| STATIC_ARGS.uplink_path.join("storage_local_folder"));
@@ -89,7 +91,7 @@ fn sync_files_from_local_to_constellation(
     files_from_storage_local_folder: &Vec<PathBuf>,
     files_from_constellation_in_root_folder: Vec<String>,
     state: &UseSharedState<State>,
-    upload_file_controller: UploadFileController<'_>,
+    upload_file_controller: UploadFileController,
     eval: &std::rc::Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>,
 ) {
     let unique_local_files: Vec<PathBuf> = files_from_storage_local_folder
@@ -110,7 +112,7 @@ fn sync_files_from_local_to_constellation(
         })
         .collect();
 
-    log::debug!(
+    log::info!(
         "unique_local_files available to upload: {:?}",
         unique_local_files.clone()
     );
@@ -152,7 +154,8 @@ fn sync_files_from_constellation_to_local(
         })
         .map(|file| file)
         .collect();
-    log::debug!(
+
+    log::info!(
         "unique_constellation_files available to download: {:?}",
         unique_constellation_files
             .iter()
@@ -195,7 +198,7 @@ pub fn list_files<P: AsRef<Path>>(path: P, files: &mut Vec<PathBuf>) -> io::Resu
     Ok(files.clone())
 }
 
-pub async fn verify_if_a_file_was_deleted_from_local_disk(
+pub async fn verify_if_occured_a_change_in_local_disk(
     updates_on_file_from_local_disk: &UseRef<Vec<String>>,
 ) {
     let (tx, mut rx) = futures::channel::mpsc::unbounded();
@@ -231,7 +234,7 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
                 {
                     continue;
                 }
-
+                log::debug!("Kind of event on local disk storage: {:?}", event.kind);
                 match event.kind {
                     // EventKind::Remove(remove_kind_action) => match remove_kind_action {
                     //     RemoveKind::Any => match event.paths.get(0) {
@@ -242,6 +245,20 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
                     //     },
                     //     _ => println!("Other remove kind action: {:?}", remove_kind_action),
                     // },
+                    EventKind::Create(create_kind_action) => match create_kind_action {
+                        notify::event::CreateKind::File | notify::event::CreateKind::Any => {
+                            match event.paths.get(0) {
+                                Some(path) => {
+                                    log::info!("Local disk file created: {:?}", path);
+                                    updates_on_file_from_local_disk
+                                        .write()
+                                        .push(path.to_str().unwrap_or("").to_string());
+                                }
+                                None => log::error!("No local disk file path provided"),
+                            }
+                        }
+                        _ => (),
+                    },
                     EventKind::Modify(eventkind) => match eventkind {
                         notify::event::ModifyKind::Name(rename_mode) => match rename_mode {
                             _ => match event.paths.get(0) {
@@ -265,4 +282,113 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
             }
         };
     }
+}
+
+pub fn update_constellation_with_last_local_disk_info(
+    storage_controller: &UseRef<StorageController>,
+    updates_on_file_from_local_disk: &UseRef<Vec<String>>,
+    ch: &Coroutine<ChanCmd>,
+    files_in_queue_to_upload: Option<UseRef<Vec<PathBuf>>>,
+    eval: &std::rc::Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>,
+    state: &UseSharedState<State>,
+) {
+    let files_in_storage = storage_controller.read().files_list.clone();
+    // Delete a file on constellation because same file was deleted on local disk or upload a new one
+    if updates_on_file_from_local_disk.read().len() == 1 {
+        if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
+            let file_name = Path::new(path)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string();
+
+            for file in files_in_storage {
+                if file.name() == file_name {
+                    let item = Item::from(file.clone());
+                    ch.send(ChanCmd::DeleteItems(item));
+                    break;
+                }
+            }
+            if let Some(f) = files_in_queue_to_upload {
+                functions::add_files_in_queue_to_upload(
+                    &f.clone(),
+                    vec![PathBuf::from(path)],
+                    &eval,
+                );
+            }
+            // files_been_uploaded2.with_mut(|i| *i = true);
+        };
+
+    // Rename a file on constellation because same file was renamed on local disk
+    } else if updates_on_file_from_local_disk.read().len() == 2 {
+        let old_file_name =
+            if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
+                Path::new(path)
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            } else {
+                "".into()
+            };
+
+        let new_file_name =
+            if let Some(path) = updates_on_file_from_local_disk.read().clone().last() {
+                Path::new(path)
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            } else {
+                "".into()
+            };
+        let validation_result =
+            validate(INPUT_FILE_NAME_OPTIONS.clone(), &new_file_name).unwrap_or_default();
+
+        let is_valid_name = validation_result.is_empty();
+
+        if !is_valid_name {
+            if let Err(_) = fs::rename(
+                STORAGE_LOCAL_FOLDER.join(new_file_name.clone()),
+                STORAGE_LOCAL_FOLDER.join(old_file_name.clone()),
+            ) {
+                log::error!(
+                    "Error renaming file to a valid name in local disk: {}",
+                    new_file_name
+                );
+            }
+        } else {
+            for file in files_in_storage {
+                if file.name() == old_file_name {
+                    if storage_controller
+                        .read()
+                        .files_list
+                        .iter()
+                        .any(|file| file.name() == new_file_name)
+                    {
+                        state
+                            .write()
+                            .mutate(common::state::Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("files.file-already-with-name"),
+                                    None,
+                                    3,
+                                ),
+                            ));
+                        break;
+                    }
+                    ch.send(ChanCmd::RenameItem {
+                        old_name: old_file_name,
+                        new_name: new_file_name,
+                    });
+                    break;
+                }
+            }
+        }
+    }
+    updates_on_file_from_local_disk.write_silent().clear();
 }

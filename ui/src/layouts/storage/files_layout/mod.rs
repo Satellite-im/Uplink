@@ -60,6 +60,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
+    let files_in_queue_to_upload3 = files_in_queue_to_upload.clone();
     let files_been_uploaded2 = files_been_uploaded.clone();
     let send_files_from_storage = use_state(cx, || false);
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
@@ -358,6 +359,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                } else {
                 rsx!(FilesAndFolders {
                     storage_controller: storage_controller,
+                    files_in_queue_to_upload: files_in_queue_to_upload3.clone(),
                     on_click_share_files: move |files_pre_selected: Vec<Location>| {
                         *files_pre_selected_to_send.write_silent() = files_pre_selected;
                         send_files_from_storage.set(true);

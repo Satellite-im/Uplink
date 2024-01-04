@@ -1,8 +1,8 @@
 use std::fs;
-use std::path::Path;
+use std::path::PathBuf;
 
 use crate::layouts::storage::files_layout::files_sync_functions::{
-    verify_if_a_file_was_deleted_from_local_disk, STORAGE_LOCAL_FOLDER,
+    verify_if_occured_a_change_in_local_disk, STORAGE_LOCAL_FOLDER,
 };
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
 use crate::layouts::storage::send_files_layout::send_files_components::{
@@ -10,6 +10,8 @@ use crate::layouts::storage::send_files_layout::send_files_components::{
 };
 
 use super::files_layout::controller::StorageController;
+use super::files_layout::files_sync_functions::update_constellation_with_last_local_disk_info;
+use super::functions::UseEvalFn;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::state::{State, ToastNotification};
@@ -19,9 +21,8 @@ use common::{language::get_local_text, ROOT_DIR_NAME};
 use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::elements::file::{File, INPUT_FILE_NAME_OPTIONS};
+use kit::elements::file::File;
 use kit::elements::folder::Folder;
-use kit::elements::input::validate;
 use warp::constellation::item::Item;
 use warp::raygun::Location;
 
@@ -84,6 +85,7 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
 #[derive(Props)]
 pub struct FilesAndFoldersProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
+    files_in_queue_to_upload: Option<UseRef<Vec<PathBuf>>>,
     ch: &'a Coroutine<ChanCmd>,
     on_click_share_files: Option<EventHandler<'a, Vec<Location>>>,
     send_files_mode: bool,
@@ -95,108 +97,40 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
+    let files_in_queue_to_upload = cx.props.files_in_queue_to_upload.clone();
+    let eval: &UseEvalFn = use_eval(cx);
 
     let updates_on_file_from_local_disk: &UseRef<Vec<String>> = use_ref(cx, || Vec::new());
     let is_renaming = use_ref(cx, || false);
 
     if !updates_on_file_from_local_disk.read().is_empty() && !is_renaming.read().clone() {
-        let files_in_storage = storage_controller.read().files_list.clone();
-
-        if updates_on_file_from_local_disk.read().len() == 1 {
-            if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
-                let file_name = Path::new(path)
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
-
-                for file in files_in_storage {
-                    if file.name() == file_name {
-                        let item = Item::from(file.clone());
-                        ch.send(ChanCmd::DeleteItems(item));
-                        break;
-                    }
-                }
-            };
-        } else if updates_on_file_from_local_disk.read().len() == 2 {
-            let old_file_name =
-                if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
-                    Path::new(path)
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_string()
-                } else {
-                    "".into()
-                };
-
-            let new_file_name =
-                if let Some(path) = updates_on_file_from_local_disk.read().clone().last() {
-                    Path::new(path)
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_string()
-                } else {
-                    "".into()
-                };
-            let validation_result =
-                validate(INPUT_FILE_NAME_OPTIONS.clone(), &new_file_name).unwrap_or_default();
-
-            let is_valid_name = validation_result.is_empty();
-
-            if !is_valid_name {
-                if let Err(_) = fs::rename(
-                    STORAGE_LOCAL_FOLDER.join(new_file_name.clone()),
-                    STORAGE_LOCAL_FOLDER.join(old_file_name.clone()),
-                ) {
-                    log::error!(
-                        "Error renaming file to a valid name in local disk: {}",
-                        new_file_name
-                    );
-                }
-            } else {
-                for file in files_in_storage {
-                    if file.name() == old_file_name {
-                        if storage_controller
-                            .read()
-                            .files_list
-                            .iter()
-                            .any(|file| file.name() == new_file_name)
-                        {
-                            state
-                                .write()
-                                .mutate(common::state::Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text("files.file-already-with-name"),
-                                        None,
-                                        3,
-                                    ),
-                                ));
-                            break;
-                        }
-                        ch.send(ChanCmd::RenameItem {
-                            old_name: old_file_name,
-                            new_name: new_file_name,
-                        });
-                        break;
-                    }
-                }
-            }
-        }
-        updates_on_file_from_local_disk.write_silent().clear();
+        update_constellation_with_last_local_disk_info(
+            storage_controller,
+            updates_on_file_from_local_disk,
+            ch,
+            files_in_queue_to_upload,
+            eval,
+            state,
+        );
     }
 
+    // This should be enable if user allow automated sync folders
     use_future(cx, (), |_| {
         to_owned![updates_on_file_from_local_disk];
         async move {
-            verify_if_a_file_was_deleted_from_local_disk(&updates_on_file_from_local_disk).await;
+            verify_if_occured_a_change_in_local_disk(&updates_on_file_from_local_disk).await;
         }
     });
+
+    // TODO(Sync folders): Sync folders on each 2 seconds if user enable it
+    // use_future(cx, (), |_| {
+    //     to_owned![updates_on_file_from_local_disk, upload_file_controller2];
+    //     async move {
+    //         loop {
+    //             tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    //         }
+    //     }
+    // });
 
     cx.render(rsx!(span {
         class: "file-parent",
