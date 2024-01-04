@@ -19,8 +19,9 @@ use common::{language::get_local_text, ROOT_DIR_NAME};
 use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::elements::file::File;
+use kit::elements::file::{File, INPUT_FILE_NAME_OPTIONS};
 use kit::elements::folder::Folder;
+use kit::elements::input::validate;
 use warp::constellation::item::Item;
 use warp::raygun::Location;
 
@@ -96,8 +97,11 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
     let ch = cx.props.ch;
 
     let updates_on_file_from_local_disk: &UseRef<Vec<String>> = use_ref(cx, || Vec::new());
+    let is_renaming = use_ref(cx, || false);
 
-    if !updates_on_file_from_local_disk.read().is_empty() {
+    if !updates_on_file_from_local_disk.read().is_empty() && !is_renaming.read().clone() {
+        let files_in_storage = storage_controller.read().files_list.clone();
+
         if updates_on_file_from_local_disk.read().len() == 1 {
             if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
                 let file_name = Path::new(path)
@@ -107,7 +111,6 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                     .unwrap()
                     .to_string();
 
-                let files_in_storage = storage_controller.read().files_list.clone();
                 for file in files_in_storage {
                     if file.name() == file_name {
                         let item = Item::from(file.clone());
@@ -116,7 +119,75 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                     }
                 }
             };
-        };
+        } else if updates_on_file_from_local_disk.read().len() == 2 {
+            let old_file_name =
+                if let Some(path) = updates_on_file_from_local_disk.read().clone().first() {
+                    Path::new(path)
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_string()
+                } else {
+                    "".into()
+                };
+
+            let new_file_name =
+                if let Some(path) = updates_on_file_from_local_disk.read().clone().last() {
+                    Path::new(path)
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_string()
+                } else {
+                    "".into()
+                };
+            let validation_result =
+                validate(INPUT_FILE_NAME_OPTIONS.clone(), &new_file_name).unwrap_or_default();
+
+            let is_valid_name = validation_result.is_empty();
+
+            if !is_valid_name {
+                if let Err(_) = fs::rename(
+                    STORAGE_LOCAL_FOLDER.join(new_file_name.clone()),
+                    STORAGE_LOCAL_FOLDER.join(old_file_name.clone()),
+                ) {
+                    log::error!(
+                        "Error renaming file to a valid name in local disk: {}",
+                        new_file_name
+                    );
+                }
+            } else {
+                for file in files_in_storage {
+                    if file.name() == old_file_name {
+                        if storage_controller
+                            .read()
+                            .files_list
+                            .iter()
+                            .any(|file| file.name() == new_file_name)
+                        {
+                            state
+                                .write()
+                                .mutate(common::state::Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        get_local_text("files.file-already-with-name"),
+                                        None,
+                                        3,
+                                    ),
+                                ));
+                            break;
+                        }
+                        ch.send(ChanCmd::RenameItem {
+                            old_name: old_file_name,
+                            new_name: new_file_name,
+                        });
+                        break;
+                    }
+                }
+            }
+        }
         updates_on_file_from_local_disk.write_silent().clear();
     }
 
@@ -362,7 +433,11 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                     storage_controller.with(|i| i.is_renaming_map.is_none());
                                     storage_controller.write().finish_renaming_item(false);
                                     if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                        ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
+                                        *is_renaming.write_silent() = true;
+                                        if let Ok(_) = fs::rename(STORAGE_LOCAL_FOLDER.join(file_name.clone()), STORAGE_LOCAL_FOLDER.join(new_name.clone())) {
+                                            ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
+                                        }
+                                        *is_renaming.write_silent() = false;
                                     }
                                 }
                             }

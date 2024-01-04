@@ -2,6 +2,7 @@ use std::ffi::OsStr;
 
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
+use once_cell::sync::Lazy;
 
 use crate::elements::{
     button::Button,
@@ -17,6 +18,17 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
 ];
 
+pub static INPUT_FILE_NAME_OPTIONS: Lazy<Options> = Lazy::new(|| Options {
+    react_to_esc_key: true,
+    with_validation: Some(Validation {
+        alpha_numeric_only: true,
+        special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
+        min_length: Some(1),
+        max_length: Some(64),
+        ..Validation::default()
+    }),
+    ..Options::default()
+});
 #[derive(Props)]
 pub struct Props<'a> {
     text: String,
@@ -140,17 +152,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 select_on_focus: true,
                                 focus: true,
                                 size: Size::Small,
-                                options: Options {
-                                    react_to_esc_key: true,
-                                    with_validation: Some(Validation {
-                                        alpha_numeric_only: true,
-                                        special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
-                                        min_length: Some(1),
-                                        max_length: Some(64),
-                                        ..Validation::default()
-                                    }),
-                                    ..Options::default()
-                                },
+                                options: INPUT_FILE_NAME_OPTIONS.clone(),
                                 // todo: use is_valid
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape  {

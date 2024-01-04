@@ -266,10 +266,8 @@ pub fn get_label(cx: &Scope<Props>) -> String {
     options.with_label.unwrap_or_default()
 }
 
-pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
+pub fn validate(options: Options, val: &str) -> Option<ValidationError> {
     let mut error: Option<ValidationError> = None;
-
-    let options = cx.props.options.clone().unwrap_or_default();
 
     let validation = options.with_validation.unwrap_or_default();
 
@@ -416,7 +414,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
-                            let validation_result = validate(&cx, &current_val).unwrap_or_default();
+                            let validation_result = validate(cx.props.options.clone().unwrap_or_default(), &current_val).unwrap_or_default();
                             valid.set(validation_result.is_empty());
                             error.set(validation_result);
                             evt.stop_propagation();
@@ -435,7 +433,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
-                                    let validation_result = validate(&cx, "").unwrap_or_default();
+                                    let validation_result = validate(cx.props.options.clone().unwrap_or_default(), "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
                                     error.set(validation_result);
                                     *valid.current()
@@ -465,7 +463,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         onclick: move |_| {
                             *val.write_silent() = String::new();
                             if should_validate {
-                                let validation_result = validate(&cx, "").unwrap_or_default();
+                                let validation_result = validate(cx.props.options.clone().unwrap_or_default(), "").unwrap_or_default();
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }

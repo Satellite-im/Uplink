@@ -61,12 +61,12 @@ pub fn sync_local_files<'a>(
             })
             .collect();
 
-    println!(
-        "files_from_storage_local_folder: {:?}\n\n\n",
+    log::debug!(
+        "Files present in local disk folder: {:?}\n\n\n",
         files_from_storage_local_folder.clone()
     );
-    println!(
-        "files_from_constellation_in_root_folder: {:?}\n\n\n",
+    log::debug!(
+        "Files present in constellation root folder: {:?}\n\n\n",
         files_from_constellation_in_root_folder.clone()
     );
 
@@ -207,13 +207,13 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
     ) {
         Ok(watcher) => watcher,
         Err(e) => {
-            log::error!("{e}");
+            log::error!("Error to define a watcher in local disk storage folder: {e}");
             return;
         }
     };
 
     if let Err(e) = watcher.watch(&STORAGE_LOCAL_FOLDER, RecursiveMode::Recursive) {
-        log::error!("{e}");
+        log::error!("Error to start watch storage local fodler: {e}");
         return;
     }
 
@@ -233,25 +233,25 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
                 }
 
                 match event.kind {
-                    EventKind::Remove(remove_kind_action) => match remove_kind_action {
-                        RemoveKind::Any => match event.paths.get(0) {
-                            Some(path) => {
-                                println!("File deleted: {:?}", path);
-                            }
-                            None => println!("No path provided"),
-                        },
-                        _ => println!("Other remove kind action: {:?}", remove_kind_action),
-                    },
+                    // EventKind::Remove(remove_kind_action) => match remove_kind_action {
+                    //     RemoveKind::Any => match event.paths.get(0) {
+                    //         Some(path) => {
+                    //             println!("File deleted: {:?}", path);
+                    //         }
+                    //         None => println!("No path provided"),
+                    //     },
+                    //     _ => println!("Other remove kind action: {:?}", remove_kind_action),
+                    // },
                     EventKind::Modify(eventkind) => match eventkind {
                         notify::event::ModifyKind::Name(rename_mode) => match rename_mode {
                             _ => match event.paths.get(0) {
                                 Some(path) => {
+                                    log::info!("Local disk file updated: {:?}", path);
                                     updates_on_file_from_local_disk
                                         .write()
                                         .push(path.to_str().unwrap_or("").to_string());
-                                    println!("File modified in local disk: {:?}", path);
                                 }
-                                None => println!("No path provided"),
+                                None => log::error!("No local disk file path provided"),
                             },
                         },
                         _ => (),
@@ -260,7 +260,7 @@ pub async fn verify_if_a_file_was_deleted_from_local_disk(
                 }
             }
             Err(e) => {
-                log::error!("{e}");
+                log::error!("Error on get local disk action event: {e}");
                 continue;
             }
         };
