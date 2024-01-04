@@ -498,7 +498,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     section_label: get_local_text("settings-profile.recovery-seed"),
                     section_description: get_local_text("settings-profile.recovery-seed-description"),
                     Button {
-                        text: if seed_phrase.as_ref().is_none() { "Reveal Recovery Seed".into() } else { "Hide Seed Phrase".into() },
+                        text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-seed") } else { get_local_text("settings-profile.hide-seed") },
                         aria_label: "reveal-recovery-seed-button".into(),
                         appearance: Appearance::Secondary,
                         icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
