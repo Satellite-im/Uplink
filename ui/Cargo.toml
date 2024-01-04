@@ -9,7 +9,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.70"
 async-stream = "0.3"
-bip39 = { version = "2", features = ["rand"]}
 dioxus = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-router = { workspace = true }
