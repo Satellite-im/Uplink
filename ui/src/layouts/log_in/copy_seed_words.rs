@@ -1,4 +1,3 @@
-use bip39::{Language, Mnemonic};
 use common::{icons, language::get_local_text, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
@@ -24,12 +23,13 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
     let words = use_future(cx, (), |_| {
         to_owned![seed_words];
         async move {
-            let mnemonic =
-                Mnemonic::generate_in(Language::English, 12).expect("mnemonic should succeed");
+            let mnemonic = warp::crypto::keypair::generate_mnemonic_phrase(
+                warp::crypto::keypair::PhraseType::Standard,
+            )
+            .into_phrase();
 
-            seed_words.set(mnemonic.to_string());
+            seed_words.set(mnemonic.clone());
             mnemonic
-                .to_string()
                 .split_ascii_whitespace()
                 .map(|x| x.to_string())
                 .collect::<Vec<String>>()
