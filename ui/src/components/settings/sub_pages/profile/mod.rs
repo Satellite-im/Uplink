@@ -522,13 +522,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                         class: "row",
                                         div {
                                             class: "col",
-                    
                                             span { class: "num", ((idx * 2) + 1).to_string() },
                                             span { class: "val", vals.first().cloned().unwrap_or_default() }
                                         },
                                         div {
                                             class: "col",
-                    
                                             span { class: "num", ((idx * 2) + 2).to_string() },
                                             span { class: "val", vals.get(1).cloned().unwrap_or_default() }
                                         }
