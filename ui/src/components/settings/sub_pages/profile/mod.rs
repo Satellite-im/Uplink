@@ -500,7 +500,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Button {
                         text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-seed") } else { get_local_text("settings-profile.hide-seed") },
                         aria_label: "reveal-recovery-seed-button".into(),
-                        appearance: Appearance::Secondary,
+                        appearance: Appearance::Danger,
                         icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
                         onpress: move |_| {
                             if seed_phrase.is_some() {
