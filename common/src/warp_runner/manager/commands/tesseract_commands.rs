@@ -22,9 +22,4 @@ pub fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &Tesseract) {
     if let TesseractCmd::GetMnemonic { rsp } = cmd {
         let _ = rsp.send(tesseract.retrieve("mnemonic"));
     }
-        TesseractCmd::GetMnemonic { rsp } => {
-            let _ = rsp.send(tesseract.retrieve("mnemonic"));
-        }
-        _ => {}
-    }
 }
