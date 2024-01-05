@@ -227,8 +227,8 @@ settings-profile = Profile Settings
     .status-offline = Offline
     .recovery-seed = Recovery Seed
     .recovery-seed-description = This seed represents the "master key" for your account. Keep this safe and secure somewhere in order to maintain proper control and security over your Uplink account.
-    .reveal-seed = Reveal Recovery Seed
-    .hide-seed = Hide Recovery Seed
+    .reveal-recovery-seed = Reveal Recovery Seed
+    .hide-recovery-seed = Hide Recovery Seed
 
 settings-general = General Settings
     .overlay = Uplink Overlay
