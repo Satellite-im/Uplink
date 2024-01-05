@@ -18,6 +18,7 @@ use crate::{
 use super::{
     commands::{
         handle_constellation_cmd, handle_multipass_cmd, handle_other_cmd, handle_raygun_cmd,
+        handle_tesseract_cmd,
     },
     MultiPassCmd,
 };
@@ -137,8 +138,8 @@ pub async fn handle_warp_command(
             // this one could be parallelized
             handle_other_cmd(cmd).await;
         }
-        WarpCmd::Tesseract(_cmd) => {
-            // not accepted at this stage of the program. do nothing and drop the rsp channel
+        WarpCmd::Tesseract(cmd) => {
+            handle_tesseract_cmd(cmd, &warp.tesseract);
         }
         WarpCmd::MultiPass(cmd) => {
             // if a command to block a user comes in, need to update the UI

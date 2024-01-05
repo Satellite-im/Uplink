@@ -11,4 +11,4 @@ pub use constellation_commands::{handle_constellation_cmd, thumbnail_to_base64, 
 pub use multipass_commands::{handle_multipass_cmd, identity_image_to_base64, MultiPassCmd};
 pub use other_commands::*;
 pub use raygun_commands::{handle_raygun_cmd, RayGunCmd};
-pub use tesseract_commands::TesseractCmd;
+pub use tesseract_commands::{handle_tesseract_cmd, TesseractCmd};
