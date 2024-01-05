@@ -19,7 +19,9 @@ impl std::fmt::Debug for TesseractCmd {
 }
 
 pub fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &Tesseract) {
-    match cmd {
+    if let TesseractCmd::GetMnemonic { rsp } = cmd {
+        let _ = rsp.send(tesseract.retrieve("mnemonic"));
+    }
         TesseractCmd::GetMnemonic { rsp } => {
             let _ = rsp.send(tesseract.retrieve("mnemonic"));
         }
