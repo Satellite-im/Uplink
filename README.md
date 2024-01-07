@@ -50,7 +50,8 @@ cargo run --bin uplink --profile=rapid
 | audio opus | brew install opus |
 
 For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
-And for Windows, I followed the steps on this site here
+
+And for Windows, I followed the steps on this site here:
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
