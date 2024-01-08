@@ -17,6 +17,9 @@
     &::-webkit-scrollbar {
         display: none; 
     }
+    .slimbar-scroll {
+        height: 100%;
+    }
 
     // TODO: This is really tricky to get to work cleanly.
     // .slimbar-scroll {
