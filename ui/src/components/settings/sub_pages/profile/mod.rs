@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use arboard::Clipboard;
 use common::get_images_dir;
+use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd};
@@ -12,6 +13,7 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::indicator::{Indicator, Platform, Status};
+use kit::elements::checkbox::Checkbox;
 use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
@@ -20,6 +22,7 @@ use kit::elements::{
     input::{Input, Options, Validation},
     label::Label,
 };
+use kit::layout::modal::Modal;
 use mime::*;
 use rfd::FileDialog;
 use warp::multipass::identity::IdentityStatus;
@@ -233,6 +236,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .unwrap_or_default();
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
+
+    let store_phrase = use_state(cx, || true);
+
+    let show_remove_seed = use_state(cx, || false);
+
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -536,6 +544,65 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     )
                 },
+                SettingSectionSimple {
+                    Checkbox {
+                        disabled: false,
+                        is_checked: *store_phrase.get(),
+                        height: "15px".into(),
+                        width: "15px".into(),
+                        on_click: move |_| {
+                            show_remove_seed.set(true);
+                        },
+                    },
+                    label {
+                        get_local_text("settings-profile.store-on-account")
+                    }
+                },
+                show_remove_seed.then(|| rsx!(
+                    Modal {
+                        open: *show_remove_seed.clone(),
+                        onclose: move |_| show_remove_seed.set(false),
+                        transparent: false,
+                        close_on_click_inside_modal: false,
+                        div {
+                            class: "remove-phrase-container",
+                            div {
+                                class: "warning-symbol",
+                                IconElement {
+                                    icon: Icon::ExclamationTriangle
+                                }
+                            },
+                            Label {
+                                text: get_local_text("settings-profile.remove-recovery-seed"),
+                                aria_label: "remove-phrase-label".into(),
+                            },
+                            p {
+                                get_local_text("settings-profile.remove-recovery-seed-description")
+                            },
+                            div {
+                                class: "button-group",
+                                Button {
+                                    text: get_local_text("uplink.remove"),
+                                    aria_label: "remove-seed-phrase-btn".into(),
+                                    appearance: Appearance::Danger,
+                                    icon: Icon::Trash,
+                                    onpress: move |_| {
+                                        // TODO: We should change the warp flag here to remove the seed phrase. Additionally we should find some way to quickly check if the phrase is stored locally so we don't show the UI for this after it's removed.
+                                    }
+                                },
+                                Button {
+                                    text: get_local_text("uplink.cancel"),
+                                    aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                    icon: Icon::NoSymbol,
+                                    appearance: Appearance::Secondary,
+                                    onpress: move |_| {
+                                        show_remove_seed.set(false);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )),
                 if open_crop_image_modal_for_banner_picture.get().0 {
                     rsx!(CropRectImageModal {
                         large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
