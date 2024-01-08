@@ -142,7 +142,7 @@ impl Logger {
             level,
             message: match level {
                 Level::Error | Level::Warn => {
-                    format!("{}:{} | {}", file, line, message.to_string())
+                    format!("{}:{} | {}", file, line, message)
                 }
                 _ => message.to_string(),
             },
