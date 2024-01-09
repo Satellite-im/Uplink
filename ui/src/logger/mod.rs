@@ -91,7 +91,14 @@ impl crate::log::Log for LogGlue {
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
             let msg = record.args();
-            LOGGER.write().log(record.level(), &msg.to_string());
+            let file = record.file().unwrap_or_default().bright_blue().to_string();
+            let line = record
+                .line()
+                .map(|f| f.to_string().bright_blue().to_string())
+                .unwrap_or_default();
+            LOGGER
+                .write()
+                .log(record.level(), &msg.to_string(), file, line);
         }
     }
 
@@ -130,10 +137,15 @@ fn log_thread(mut file: std::fs::File, rx: std::sync::mpsc::Receiver<Log>) {
 }
 
 impl Logger {
-    fn log(&mut self, level: Level, message: &str) {
+    fn log(&mut self, level: Level, message: &str, file: String, line: String) {
         let new_log = Log {
             level,
-            message: message.to_string(),
+            message: match level {
+                Level::Error | Level::Warn => {
+                    format!("{}:{} | {}", file, line, message)
+                }
+                _ => message.to_string(),
+            },
             datetime: Local::now(),
             colorized: false,
         };
