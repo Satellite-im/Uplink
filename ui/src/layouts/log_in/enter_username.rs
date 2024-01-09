@@ -116,6 +116,7 @@ pub fn Layout(
             },
             div {
                 class: "instructions",
+                aria_label: "instructions",
                 get_local_text("auth.enter-username-subtext")
             },
             Input {

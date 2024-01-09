@@ -110,9 +110,11 @@ pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element<'a> {
                     rsx!(
                         div {
                             class: "fancy-select-options",
+                            aria_label: "selector-options-list",
                             iter.map(|(val, element)|
                                 rsx!(div {
                                     class: "fancy-select-option",
+                                    aria_label: "selector-option",
                                     onclick: move |e| {
                                         if let Some(f) = &cx.props.onselect {
                                             f.call(val.clone())

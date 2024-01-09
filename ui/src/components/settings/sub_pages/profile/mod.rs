@@ -482,6 +482,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                 },
                 SettingSection {
+                    aria_label: "online-status-section".into(),
                     section_label: get_local_text("settings-profile.online-status"),
                     section_description: get_local_text("settings-profile.online-status-description"),
                     FancySelect {
@@ -495,6 +496,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                 },
                 SettingSection {
+                    aria_label: "recovery-seed-section".into(),
                     section_label: get_local_text("settings-profile.recovery-seed"),
                     section_description: get_local_text("settings-profile.recovery-seed-description"),
                     Button {
@@ -515,6 +517,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     let words = phrase.split_whitespace().collect::<Vec<&str>>();
                     render!(
                         SettingSectionSimple {
+                            aria_label: "seed-words-section".into(),
                             div {
                                 class: "seed-words",
                                 words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
@@ -522,13 +525,25 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                         class: "row",
                                         div {
                                             class: "col",
-                                            span { class: "num", ((idx * 2) + 1).to_string() },
-                                            span { class: "val", vals.first().cloned().unwrap_or_default() }
+                                            span { 
+                                                aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
+                                                class: "num", ((idx * 2) + 1).to_string() 
+                                            },
+                                            span { 
+                                                aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
+                                                class: "val", vals.first().cloned().unwrap_or_default() 
+                                            }
                                         },
                                         div {
                                             class: "col",
-                                            span { class: "num", ((idx * 2) + 2).to_string() },
-                                            span { class: "val", vals.get(1).cloned().unwrap_or_default() }
+                                            span { 
+                                                aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
+                                                class: "num", ((idx * 2) + 2).to_string() 
+                                            },
+                                            span { 
+                                                aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
+                                                class: "val", vals.get(1).cloned().unwrap_or_default() 
+                                            }
                                         }
                                     }
                                 })

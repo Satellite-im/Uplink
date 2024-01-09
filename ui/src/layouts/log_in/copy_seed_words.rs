@@ -67,14 +67,25 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
                     div {
                         class: "col",
 
-                        span { class: "num", ((idx * 2) + 1).to_string() },
-                        span { class: "val", vals.get(0).cloned().unwrap_or_default() }
+                        span { 
+                            aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
+                            class: "num", ((idx * 2) + 1).to_string() 
+                        },
+                        span { 
+                            aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
+                            class: "val", vals.get(0).cloned().unwrap_or_default() 
+                        }
                     },
                     div {
                         class: "col",
-
-                        span { class: "num", ((idx * 2) + 2).to_string() },
-                        span { class: "val", vals.get(1).cloned().unwrap_or_default() }
+                        span { 
+                            aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
+                            class: "num", ((idx * 2) + 2).to_string() 
+                        },
+                        span { 
+                            aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
+                            class: "val", vals.get(1).cloned().unwrap_or_default() 
+                        }
                     }
                 }
             })
@@ -89,6 +100,7 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
                 appearance: Appearance::Secondary
             },
             Button {
+                aria_label: "i-saved-it-button".into(),
                 text: get_local_text("copy-seed-words.finished"),
                 onpress: move |_| {
                     page.set(AuthPages::EnterUserName);
