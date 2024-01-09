@@ -1,0 +1,94 @@
+// Same styles as textarea. Maybe merge it?
+.EasyMDEContainer {
+    width: 100%;
+    height: "auto";
+    max-height: 250px; //Maybe make max variable?
+    min-height: 22px;
+    margin: 9px 0;
+    word-wrap: anywhere;
+
+    &.disabled {
+        cursor: not-allowed;
+        filter: brightness(85%);
+    }
+
+    pre {
+        background-color: unset;
+        border-radius: unset;
+    }
+}
+
+.CodeMirror-scroll {
+    overflow-y: scroll;
+    max-height: 250px;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.CodeMirror-measure {
+    position: absolute;
+    overflow: hidden;
+    visibility: hidden;
+    width: 100%;
+}
+
+.cm-strikethrough {
+    text-decoration: line-through;
+}
+
+.cm-strong {
+    font-weight: bold;
+}
+
+.cm-em {
+    font-style: italic;
+}
+
+.cm-link {
+    text-decoration: underline
+}
+
+.cm-link {
+    color: var(--text-color-link)
+}
+
+.cm-comment,
+.cm-quote {
+    color: hsl(220, 14%, 71%);
+    background-color: hsl(220, 13%, 18%);
+}
+
+.cm-formatting-quote {
+    padding: 0 20px;
+    border-left: 5px solid var(--secondary-light);
+
+    &::before {
+        content: "";
+    }
+}
+
+.CodeMirror-placeholder {
+	color: var(--placeholder) !important;
+}
+
+.CodeMirror-line span.cm-keyword {color: #708;}
+.CodeMirror-line span.cm-atom {color: #219;}
+.CodeMirror-line span.cm-number {color: #164;}
+.CodeMirror-line span.cm-def {color: #00f;}
+.CodeMirror-line span.cm-variable {color: black;}
+.CodeMirror-line span.cm-variable-2 {color: #05a;}
+.CodeMirror-line span.cm-variable-3 {color: #085;}
+.CodeMirror-line span.cm-property {color: black;}
+.CodeMirror-line span.cm-operator {color: black;}
+.CodeMirror-line span.cm-string {color: #a11;}
+.CodeMirror-line span.cm-string-2 {color: #f50;}
+.CodeMirror-line span.cm-meta {color: #555;}
+.CodeMirror-line span.cm-error {color: #f00;}
+.CodeMirror-line span.cm-qualifier {color: #555;}
+.CodeMirror-line span.cm-bracket {color: #997;}
+.CodeMirror-line span.cm-tag {color: #170;}
+.CodeMirror-line span.cm-attribute {color: #00c;}
+.CodeMirror-line span.cm-hr {color: #999;}

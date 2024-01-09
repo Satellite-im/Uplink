@@ -179,7 +179,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             cx.props.with_file_upload.as_ref(),
             div{
                 class: "chatbar-group",
-                textarea::Input {
+                textarea::InputRich {
                     key: "{controlled_input_id}",
                     id: controlled_input_id.clone(),
                     loading: cx.props.loading.unwrap_or_default(),

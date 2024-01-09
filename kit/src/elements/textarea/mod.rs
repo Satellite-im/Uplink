@@ -5,6 +5,7 @@
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
+use serde::Deserialize;
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
@@ -12,6 +13,12 @@ use warp::logging::tracing::log;
 pub enum Size {
     Small,
     Normal,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum JSTextData {
+    Input(String),
+    Cursor(i64),
 }
 
 impl Size {
@@ -250,6 +257,281 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+                if *show_char_counter {
+                    rsx!(
+                        div {
+                            class: "input-char-counter",
+                            p {
+                                key: "{id_char_counter}-char-counter",
+                                id: "{id_char_counter}-char-counter",
+                                aria_label: "input-char-counter",
+                                class: "char-counter-p-element",
+                                format!("{}", text_value.read().len()),
+                            },
+                            p {
+                                key: "{id_char_counter}-char-max-length",
+                                id: "{id_char_counter}-char-max-length",
+                                class: "char-counter-p-element",
+                                format!("/{}", max_length - 1),
+                            }
+                        }
+                        )
+                }
+            },
+        }
+        script { script },
+        script { focus_script }
+    ))
+}
+
+// TODO: Forward key input from Codemirror element to here,
+// as e.g. arrow keys (or key bindings in general) are not work properly (e.g. emoji selection)
+// Code highlight not working properly
+#[allow(non_snake_case)]
+pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("render input");
+    let eval = use_eval(cx);
+    let left_shift_pressed = use_ref(cx, || false);
+    let right_shift_pressed = use_ref(cx, || false);
+    let enter_pressed = use_ref(cx, || false);
+    let numpad_enter_pressed = use_ref(cx, || false);
+    let cursor_position = use_ref(cx, || None);
+    let txt_data = use_ref(cx, || None);
+
+    let Props {
+        id: _,
+        ignore_focus: _,
+        loading,
+        placeholder,
+        max_length,
+        size,
+        aria_label,
+        onchange,
+        onreturn,
+        oncursor_update,
+        onkeyup,
+        on_paste_keydown,
+        value,
+        is_disabled,
+        show_char_counter,
+        prevent_up_down_arrows,
+        onup_down_arrow,
+    } = &cx.props;
+
+    let id = if cx.props.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        cx.props.id.clone()
+    };
+    let id2 = id.clone();
+    let id_char_counter = id.clone();
+    let focus_script = if cx.props.ignore_focus {
+        String::new()
+    } else {
+        include_str!("./focus.js").replace("$UUID", &id)
+    };
+
+    let _ = eval(&focus_script);
+
+    let script = include_str!("./script.js")
+        .replace("$UUID", &id)
+        .replace("$MULTI_LINE", &format!("{}", true));
+    let disabled = *loading || *is_disabled;
+
+    let update_char_counter_script = include_str!("./update_char_counter.js").replace("$UUID", &id);
+    let clear_counter_script =
+        r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
+
+    let cursor_script = include_str!("./cursor_script.js").replace("$ID", &id2);
+
+    let text_value = use_ref(cx, || value.clone());
+
+    use_future(cx, value, |val| {
+        to_owned![cursor_position, eval, placeholder];
+        async move {
+            *cursor_position.write_silent() = Some(val.chars().count() as i64);
+            let _ = eval(
+                &update_char_counter_script
+                    .replace("$TEXT", &val)
+                    .replace("$PLACEHOLDER", &placeholder),
+            );
+        }
+    });
+
+    use_effect(cx, placeholder, |placeholder| {
+        to_owned![id, eval];
+        async move {
+            let _ = eval(
+                &include_str!("./placeholder_update.js")
+                    .replace("$UUID", &id)
+                    .replace("$PLACEHOLDER", &placeholder),
+            );
+        }
+    });
+
+    use_effect(cx, (), |_| {
+        to_owned![txt_data, eval, cursor_position, value];
+        let rich_editor: String = include_str!("./rich_editor_handler.js")
+            .replace("$EDITOR_ID", &id2)
+            .replace("$INIT", &value);
+        async move {
+            if let Ok(eval) = eval(&rich_editor) {
+                loop {
+                    if let Ok(val) = eval.recv().await {
+                        match serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default()) {
+                            Ok(data) => match data {
+                                JSTextData::Input(txt) => *txt_data.write() = Some(txt),
+                                JSTextData::Cursor(cursor) => {
+                                    *cursor_position.write() = Some(cursor)
+                                }
+                            },
+                            Err(e) => {
+                                log::error!("failed to deserialize message: {}: {}", val, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    let do_cursor_update = oncursor_update.is_some();
+
+    if let Some(val) = cursor_position.write_silent().take() {
+        if let Some(e) = oncursor_update {
+            e.call((text_value.read().clone(), val));
+        }
+    }
+
+    if let Some(val) = txt_data.write_silent().take() {
+        *text_value.write_silent() = val.clone();
+        onchange.call((val, true));
+    }
+
+    cx.render(rsx! (
+        div {
+            id: "input-group-{id}",
+            class: "input-group",
+            aria_label: "input-group",
+            div {
+                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
+                height: "{size.get_height()}",
+                textarea {
+                    key: "textarea-key-{id}",
+                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
+                    id: "{id}",
+                    aria_label: "{aria_label}",
+                    //contenteditable: !disabled,
+                    //disabled: "{disabled}",
+                    //value: "{text_value.read()}",
+                    //maxlength: "{max_length}",
+                    placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
+                    onblur: move |_| {
+                        onreturn.call((text_value.read().to_string(), false, Code::Enter));
+                    },
+                    /*oninput: {
+                        to_owned![eval, cursor_script];
+                        move |evt| {
+                            let current_val = evt.value.clone();
+                            *text_value.write_silent() = current_val.clone();
+                            onchange.call((current_val, true));
+                            to_owned![eval, cursor_script, cursor_position];
+                            async move {
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_script) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },*/
+                    onkeyup: move |evt| {
+                        match evt.code() {
+                            Code::ShiftLeft => *left_shift_pressed.write_silent() = false,
+                            Code::ShiftRight => *right_shift_pressed.write_silent() = false,
+                            Code::Enter => *enter_pressed.write_silent() = false,
+                            Code::NumpadEnter => *numpad_enter_pressed.write_silent() = false,
+                            _ => {}
+                        };
+                        if let Some(e) = onkeyup {
+                            e.call(evt.code());
+                        }
+                    },
+                    /*onmousedown: {
+                        to_owned![eval, cursor_script];
+                        move |_| {
+                            to_owned![eval, cursor_script, cursor_position];
+                            async move {
+                                if do_cursor_update {
+                                    if let Ok(r) = eval(&cursor_script) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },*/
+                    onkeydown: {
+                        to_owned![eval, cursor_script];
+                        move |evt| {
+                            // HACK(Linux): Allow copy and paste files for Linux 
+                            if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
+                                if let Some(e) = on_paste_keydown {
+                                    e.call(evt.clone());
+                                }
+                            }
+                            // special codepath to handle onreturn
+                            let old_enter_pressed = *enter_pressed.read();
+                            let old_numpad_enter_pressed = *numpad_enter_pressed.read();
+                            match evt.code() {
+                                Code::ShiftLeft => if !*left_shift_pressed.read() { *left_shift_pressed.write_silent() = true; },
+                                Code::ShiftRight => if !*right_shift_pressed.read() { *right_shift_pressed.write_silent() = true; },
+                                Code::Enter => if !*enter_pressed.read() { *enter_pressed.write_silent() = true; } ,
+                                Code::NumpadEnter => if !*numpad_enter_pressed.read() { *numpad_enter_pressed.write_silent() = true; },
+                                _ => {}
+                            };
+                            // write_silent() doesn't update immediately. if the enter key is pressed, have to check the evt code
+                            let enter_toggled = !old_enter_pressed && matches!(evt.code(), Code::Enter);
+                            let numpad_enter_toggled = !old_numpad_enter_pressed && matches!(evt.code(), Code::NumpadEnter);
+                            if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.read() || *left_shift_pressed.read())
+                            {
+                                 if *show_char_counter {
+                                    let _ = eval(&clear_counter_script);
+                                }
+                                onreturn.call((text_value.read().clone(), true, evt.code()));
+                            }
+
+                            // special codepath to handle the arrow keys
+                            let arrow = match evt.code() {
+                                Code::ArrowDown|Code::ArrowUp => {
+                                    if let Some(e) = onup_down_arrow {
+                                        e.call(evt.code());
+                                    };
+                                    true
+                                }
+                                Code::ArrowLeft|Code::ArrowRight => {
+                                    true
+                                }
+                                _ => {
+                                    false
+                                }
+                            };
+                            /*to_owned![eval, cursor_script, cursor_position];
+                            async move {
+                                if do_cursor_update && arrow {
+                                    if let Ok(r) = eval(&cursor_script) {
+                                        if let Ok(val) = r.join().await {
+                                            *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
+                                        }
+                                    }
+                                }
+                            }*/
                         }
                     }
                 }

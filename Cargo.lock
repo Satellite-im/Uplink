@@ -4780,6 +4780,8 @@ dependencies = [
  "reqwest",
  "rsass",
  "scraper 0.17.1",
+ "serde",
+ "serde_json",
  "timeago",
  "unic-emoji-char",
  "unic-segment",

@@ -3,6 +3,7 @@ use super::*;
 const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
 pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
 pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
+pub const EASY_MDE: &str = include_str!("../extra/assets/scripts/easy-mde.js");
 
 pub fn PrismScripts(cx: Scope) -> Element {
     let prism_path = use_prism_path(cx);
@@ -10,6 +11,7 @@ pub fn PrismScripts(cx: Scope) -> Element {
     render! {
         script { "{PRISM_SCRIPT}" },
         script { "{prism_path}" },
+        script { "{EASY_MDE}" },
     }
 }
 
