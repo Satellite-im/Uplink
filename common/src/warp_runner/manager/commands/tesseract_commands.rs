@@ -14,6 +14,10 @@ pub enum TesseractCmd {
     DeleteMnemonic {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "CheckMnemonicExist")]
+    CheckMnemonicExist {
+        rsp: oneshot::Sender<Result<bool, warp::error::Error>>,
+    },
 }
 
 impl std::fmt::Debug for TesseractCmd {
@@ -30,6 +34,10 @@ pub fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &Tesseract) {
         }
         TesseractCmd::DeleteMnemonic { rsp } => {
             let _ = rsp.send(tesseract.delete("mnemonic"));
+        }
+        TesseractCmd::CheckMnemonicExist { rsp } => {
+            let exists = tesseract.exist("mnemonic");
+            let _ = rsp.send(Ok(exists));
         }
     }
 }

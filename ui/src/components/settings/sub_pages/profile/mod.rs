@@ -72,7 +72,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     let seed_phrase: &UseState<Option<String>> = use_state(cx, || None);
-    let seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let seed_words_ch: &Coroutine<()> = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
         to_owned![seed_phrase];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -106,6 +106,80 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             }
         }
     });
+
+    let remove_seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::DeleteMnemonic { rsp: tx }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(_) => {
+                        println!("Removed seed phrase");
+                    }
+                    Err(e) => {
+                        log::error!("failed to remove seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
+
+    let phrase_exists: &UseState<bool> = use_state(cx, || false);
+    let seed_phrase_exists = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![phrase_exists];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::CheckMnemonicExist {
+                        rsp: tx,
+                    }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(does_exist) => {
+                        phrase_exists.set(does_exist);
+                    }
+                    Err(e) => {
+                        log::error!("failed to check for seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
+
+    seed_phrase_exists.send(());
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -502,107 +576,110 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     },
                 },
-                SettingSection {
-                    section_label: get_local_text("settings-profile.recovery-seed"),
-                    section_description: get_local_text("settings-profile.recovery-seed-description"),
-                    Button {
-                        text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
-                        aria_label: "reveal-recovery-seed-button".into(),
-                        appearance: Appearance::Danger,
-                        icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
-                        onpress: move |_| {
-                            if seed_phrase.is_some() {
-                                seed_phrase.set(None);
-                            } else {
-                                seed_words_ch.send(());
-                            }
-                        }
-                    }
-                }
-                if let Some(phrase) = seed_phrase.as_ref() {
-                    let words = phrase.split_whitespace().collect::<Vec<&str>>();
-                    render!(
-                        SettingSectionSimple {
-                            div {
-                                class: "seed-words",
-                                words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
-                                    div {
-                                        class: "row",
-                                        div {
-                                            class: "col",
-                                            span { class: "num", ((idx * 2) + 1).to_string() },
-                                            span { class: "val", vals.first().cloned().unwrap_or_default() }
-                                        },
-                                        div {
-                                            class: "col",
-                                            span { class: "num", ((idx * 2) + 2).to_string() },
-                                            span { class: "val", vals.get(1).cloned().unwrap_or_default() }
-                                        }
-                                    }
-                                })
-                            }
-                        }
-                    )
-                },
-                SettingSectionSimple {
-                    Checkbox {
-                        disabled: false,
-                        is_checked: *store_phrase.get(),
-                        height: "15px".into(),
-                        width: "15px".into(),
-                        on_click: move |_| {
-                            show_remove_seed.set(true);
-                        },
-                    },
-                    label {
-                        get_local_text("settings-profile.store-on-account")
-                    }
-                },
-                show_remove_seed.then(|| rsx!(
-                    Modal {
-                        open: *show_remove_seed.clone(),
-                        onclose: move |_| show_remove_seed.set(false),
-                        transparent: false,
-                        close_on_click_inside_modal: false,
-                        div {
-                            class: "remove-phrase-container",
-                            div {
-                                class: "warning-symbol",
-                                IconElement {
-                                    icon: Icon::ExclamationTriangle
+                if *phrase_exists.get() {rsx!(
+                    SettingSection {
+                        section_label: get_local_text("settings-profile.recovery-seed"),
+                        section_description: get_local_text("settings-profile.recovery-seed-description"),
+                        Button {
+                            text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
+                            aria_label: "reveal-recovery-seed-button".into(),
+                            appearance: Appearance::Danger,
+                            icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
+                            onpress: move |_| {
+                                if seed_phrase.is_some() {
+                                    seed_phrase.set(None);
+                                } else {
+                                    seed_words_ch.send(());
                                 }
+                            }
+                        }
+                    }
+                    if let Some(phrase) = seed_phrase.as_ref() {
+                        let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                        render!(
+                            SettingSectionSimple {
+                                div {
+                                    class: "seed-words",
+                                    words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+                                        div {
+                                            class: "row",
+                                            div {
+                                                class: "col",
+                                                span { class: "num", ((idx * 2) + 1).to_string() },
+                                                span { class: "val", vals.first().cloned().unwrap_or_default() }
+                                            },
+                                            div {
+                                                class: "col",
+                                                span { class: "num", ((idx * 2) + 2).to_string() },
+                                                span { class: "val", vals.get(1).cloned().unwrap_or_default() }
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        )
+                    },
+                    SettingSectionSimple {
+                        Checkbox {
+                            disabled: false,
+                            is_checked: *store_phrase.get(),
+                            height: "15px".into(),
+                            width: "15px".into(),
+                            on_click: move |_| {
+                                show_remove_seed.set(true);
                             },
-                            Label {
-                                text: get_local_text("settings-profile.remove-recovery-seed"),
-                                aria_label: "remove-phrase-label".into(),
-                            },
-                            p {
-                                get_local_text("settings-profile.remove-recovery-seed-description")
-                            },
+                        },
+                        label {
+                            get_local_text("settings-profile.store-on-account")
+                        }
+                    },
+                    show_remove_seed.then(|| rsx!(
+                        Modal {
+                            open: *show_remove_seed.clone(),
+                            onclose: move |_| show_remove_seed.set(false),
+                            transparent: false,
+                            close_on_click_inside_modal: false,
                             div {
-                                class: "button-group",
-                                Button {
-                                    text: get_local_text("uplink.remove"),
-                                    aria_label: "remove-seed-phrase-btn".into(),
-                                    appearance: Appearance::Danger,
-                                    icon: Icon::Trash,
-                                    onpress: move |_| {
-                                        // TODO: We should change the warp flag here to remove the seed phrase. Additionally we should find some way to quickly check if the phrase is stored locally so we don't show the UI for this after it's removed.
+                                class: "remove-phrase-container",
+                                div {
+                                    class: "warning-symbol",
+                                    IconElement {
+                                        icon: Icon::ExclamationTriangle
                                     }
                                 },
-                                Button {
-                                    text: get_local_text("uplink.cancel"),
-                                    aria_label: "cancel-remove-seed-phrase-btn".into(),
-                                    icon: Icon::NoSymbol,
-                                    appearance: Appearance::Secondary,
-                                    onpress: move |_| {
-                                        show_remove_seed.set(false);
+                                Label {
+                                    text: get_local_text("settings-profile.remove-recovery-seed"),
+                                    aria_label: "remove-phrase-label".into(),
+                                },
+                                p {
+                                    get_local_text("settings-profile.remove-recovery-seed-description")
+                                },
+                                div {
+                                    class: "button-group",
+                                    Button {
+                                        text: get_local_text("uplink.remove"),
+                                        aria_label: "remove-seed-phrase-btn".into(),
+                                        appearance: Appearance::Danger,
+                                        icon: Icon::Trash,
+                                        onpress: move |_| {
+                                            // TODO: We should change the warp flag here to remove the seed phrase. Additionally we should find some way to quickly check if the phrase is stored locally so we don't show the UI for this after it's removed.
+                                            remove_seed_words_ch.send(());
+                                        }
+                                    },
+                                    Button {
+                                        text: get_local_text("uplink.cancel"),
+                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                        icon: Icon::NoSymbol,
+                                        appearance: Appearance::Secondary,
+                                        onpress: move |_| {
+                                            show_remove_seed.set(false);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                )),
+                    )),
+                )}
                 if open_crop_image_modal_for_banner_picture.get().0 {
                     rsx!(CropRectImageModal {
                         large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
