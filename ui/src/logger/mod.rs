@@ -92,10 +92,10 @@ impl crate::log::Log for LogGlue {
         if self.enabled(record.metadata()) {
             let msg = record.args();
             let file = record.file().unwrap_or_default().bright_blue().to_string();
-            let line = match record.line() {
-                Some(line) => line.to_string().bright_blue().to_string(),
-                None => "".to_string(),
-            };
+            let line = record
+                .line()
+                .map(|f| f.to_string().bright_blue().to_string())
+                .unwrap_or_default();
             LOGGER
                 .write()
                 .log(record.level(), &msg.to_string(), file, line);
