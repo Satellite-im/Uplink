@@ -525,22 +525,22 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                         class: "row",
                                         div {
                                             class: "col",
-                                            span { 
+                                            span {
                                                 aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
                                                 class: "num", ((idx * 2) + 1).to_string() 
                                             },
-                                            span { 
+                                            span {
                                                 aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
                                                 class: "val", vals.first().cloned().unwrap_or_default() 
                                             }
                                         },
                                         div {
                                             class: "col",
-                                            span { 
+                                            span {
                                                 aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
                                                 class: "num", ((idx * 2) + 2).to_string() 
                                             },
-                                            span { 
+                                            span {
                                                 aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
                                                 class: "val", vals.get(1).cloned().unwrap_or_default() 
                                             }
