@@ -16,7 +16,7 @@ The goal should be to build a hyper-customizable application that can run anywhe
 ---
 ## Pre-Compiled Development
 
-For rapid inspection of our deployed binaries you can open the settings once signed into Uplink, then navigate to "about" and click the version number 10 times which will enable a "developer" section in the settings. From here you can enabled experimental features as well as helpful dev tools.
+For rapid inspection of our deployed binaries you can open the settings once signed into Uplink, then navigate to `About` and click the version number 10 times which will enable a `Developer` section in the settings. From here you can enable experimental features as well as helpful dev tools.
 
 
 ## Quickstart
