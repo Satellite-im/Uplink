@@ -47,6 +47,8 @@ enum ChanCmd {
 pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
     let state = use_shared_state::<State>(cx)?;
+    let first_render = use_state(cx, || true);
+
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
@@ -71,6 +73,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
+    let show_remove_seed = use_state(cx, || false);
     let seed_phrase: &UseState<Option<String>> = use_state(cx, || None);
     let seed_words_ch: &Coroutine<()> = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
         to_owned![seed_phrase];
@@ -100,40 +103,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                     Err(e) => {
                         log::error!("failed to get seed words: {e}");
-                        continue;
-                    }
-                }
-            }
-        }
-    });
-
-    let remove_seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while rx.next().await.is_some() {
-                // only one command so far
-                let (tx, rx) = oneshot::channel();
-                if let Err(e) =
-                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::DeleteMnemonic { rsp: tx }))
-                {
-                    log::error!("error sending warp command: {e}");
-                    continue;
-                }
-
-                let res = match rx.await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        log::error!("error receiving warp command: {e}");
-                        continue;
-                    }
-                };
-
-                match res {
-                    Ok(_) => {
-                        println!("Removed seed phrase");
-                    }
-                    Err(e) => {
-                        log::error!("failed to remove seed words: {e}");
                         continue;
                     }
                 }
@@ -179,7 +148,41 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         }
     });
 
-    seed_phrase_exists.send(());
+    let remove_seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![phrase_exists, show_remove_seed];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::DeleteMnemonic { rsp: tx }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(_) => {
+                        show_remove_seed.set(false);
+                        phrase_exists.set(false);
+                    }
+                    Err(e) => {
+                        log::error!("failed to remove seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -313,7 +316,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     let store_phrase = use_state(cx, || true);
 
-    let show_remove_seed = use_state(cx, || false);
+    if *first_render.get() {
+        seed_phrase_exists.send(());
+        first_render.set(false);
+    }
 
     cx.render(rsx!(
         div {
@@ -662,7 +668,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                         appearance: Appearance::Danger,
                                         icon: Icon::Trash,
                                         onpress: move |_| {
-                                            // TODO: We should change the warp flag here to remove the seed phrase. Additionally we should find some way to quickly check if the phrase is stored locally so we don't show the UI for this after it's removed.
                                             remove_seed_words_ch.send(());
                                         }
                                     },
