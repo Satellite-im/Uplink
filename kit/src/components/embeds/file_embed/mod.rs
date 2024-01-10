@@ -161,7 +161,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
     let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
-    let file_name_with_extension = format!("{}", cx.props.filename);
+    let file_name_with_extension = cx.props.filename.to_string();
     let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
     let temp_dir2 = temp_dir.clone();
 

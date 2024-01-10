@@ -636,22 +636,20 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             file,
                             file_path_to_download
                         })
-                    } else {
-                        if let Some(file_path_to_download) = FileDialog::new()
-                        .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                            if !pending_downloads.read().contains_key(&conv_id) {
-                                pending_downloads.write().insert(conv_id, HashSet::new());
-                            }
-                            pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
-    
-                            ch.send(MessagesCommand::DownloadAttachment {
-                                conv_id,
-                                msg_id: message.inner.id(),
-                                file,
-                                file_path_to_download
-                            })
-                        }
-                    }
+                    } else if let Some(file_path_to_download) = FileDialog::new()
+                                        .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
+                                            if !pending_downloads.read().contains_key(&conv_id) {
+                                                pending_downloads.write().insert(conv_id, HashSet::new());
+                                            }
+                                            pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
+                    
+                                            ch.send(MessagesCommand::DownloadAttachment {
+                                                conv_id,
+                                                msg_id: message.inner.id(),
+                                                file,
+                                                file_path_to_download
+                                            })
+                                        }
 
                     
                 },
