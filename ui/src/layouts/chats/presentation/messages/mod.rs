@@ -588,6 +588,12 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     replier_did: user_did_2.clone(),
                     markdown: render_markdown,
                     transform_ascii_emojis: should_transform_ascii_emojis,
+                    user_image: cx.render(rsx!(UserImage {
+                        loading: false,
+                        platform: todo!(),
+                        status: todo!(),
+                        image: todo!(),
+                    }))
                 }
             )),
             Message {
