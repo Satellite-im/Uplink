@@ -1,10 +1,14 @@
-use common::{icons::outline::Shape, language::get_local_text, STATIC_ARGS};
+use common::{
+    icons::outline::Shape, language::get_local_text, utils::lifecycle::use_component_lifecycle,
+    STATIC_ARGS,
+};
 use dioxus::prelude::*;
 use kit::{
     elements::{button::Button, label::Label, range::Range, Appearance},
     layout::modal::Modal,
 };
-use std::path::PathBuf;
+use once_cell::sync::Lazy;
+use std::{fs, path::PathBuf};
 use tokio::io::AsyncWriteExt;
 
 use crate::components::crop_image_tool::b64_encode;
@@ -13,6 +17,8 @@ const ADJUST_CROP_RECTANGLE_SIZE_SCRIPT: &str = include_str!("./adjust_crop_rect
 const GET_IMAGE_DIMENSIONS_SCRIPT: &str = include_str!("../get_image_dimensions.js");
 const SAVE_CROPPED_IMAGE_SCRIPT: &str = include_str!("./save_cropped_image.js");
 const MOVE_IMAGE_SCRIPT: &str = include_str!("../move_image.js");
+static CROPPED_IMAGE_PATH: Lazy<PathBuf> =
+    Lazy::new(|| STATIC_ARGS.temp_files.join("cropped_image_for_banner.png"));
 
 #[derive(Debug, Clone)]
 struct ImageDimensions {
@@ -66,6 +72,14 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             let _ = eval(MOVE_IMAGE_SCRIPT);
         }
     });
+
+    use_component_lifecycle(
+        cx,
+        || {},
+        move || {
+            let _ = fs::remove_file(CROPPED_IMAGE_PATH.clone());
+        },
+    );
 
     return cx.render(rsx!(div {
         Modal {
@@ -133,8 +147,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         return;
                                                     },
                                                 };
-                                                let cropped_image_path = STATIC_ARGS.temp_files.join("cropped_image_for_banner.png");
-                                                let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
+                                                let mut file = match tokio::fs::File::create(CROPPED_IMAGE_PATH.clone()).await {
                                                     Ok(file) => file,
                                                     Err(e) => {
                                                         log::error!("Error creating cropped image file: {}", e);
@@ -152,7 +165,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     return;
                                                 }
 
-                                                cropped_image_pathbuf.with_mut(|f| *f = cropped_image_path.clone());
+                                                cropped_image_pathbuf.with_mut(|f| *f = CROPPED_IMAGE_PATH.clone());
                                                 clicked_button_to_crop.set(true);
                                             }
                                     }
