@@ -22,6 +22,7 @@ pub fn Settings(cx: Scope) -> Element {
             div {
                 class: "extensions-settings",
                 SettingSection {
+                    aria_label: "open-extensions-section".into(),
                     section_label: get_local_text("settings-extensions.open-extensions-folder"),
                     section_description: get_local_text("settings-extensions.open-folder-description"),
                     Button {
@@ -34,6 +35,7 @@ pub fn Settings(cx: Scope) -> Element {
                     },
                 },
                 SettingSection {
+                    aria_label: "auto-enable-section".into(),
                     section_label: get_local_text("settings-extensions.auto-enable"),
                     section_description: get_local_text("settings-extensions.auto-enable-description"),
                     Switch {
