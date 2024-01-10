@@ -111,9 +111,9 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     on_dismiss: |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
                     },
-                    on_download: move |_| {
+                    on_download: move |temp_path| {
                         let file_name = file2.clone().name();
-                        functions::download_file(&file_name, ch);
+                        functions::download_file(&file_name, ch, temp_path);
                     },
                     file: file.clone()
                 }

@@ -132,7 +132,7 @@ pub fn CropCircleImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         return;
                                                     },
                                                 };
-                                                let cropped_image_path = STATIC_ARGS.uplink_path.join("cropped_image.png");
+                                                let cropped_image_path = STATIC_ARGS.temp_files.join("cropped_image.png");
                                                 let mut file = match tokio::fs::File::create(cropped_image_path.clone()).await {
                                                     Ok(file) => file,
                                                     Err(e) => {

@@ -235,7 +235,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                     aria_label: "files-download".into(),
                                     text: get_local_text("files.download"),
                                     onpress: move |_| {
-                                        download_file(&file_name2, ch);
+                                        download_file(&file_name2, ch, None);
                                     },
                                 },
                                 hr {},

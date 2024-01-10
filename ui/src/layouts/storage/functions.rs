@@ -138,7 +138,11 @@ pub fn format_item_size(item_size: usize) -> String {
     size_formatted_string
 }
 
-pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
+pub fn download_file(
+    file_name: &str,
+    ch: &Coroutine<ChanCmd>,
+    temp_path_to_download_file_to_preview: Option<PathBuf>,
+) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
@@ -149,15 +153,20 @@ pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
         .and_then(OsStr::to_str)
         .map(str::to_string)
         .unwrap_or_default();
-    let file_path_buf = match FileDialog::new()
-        .set_directory(".")
-        .set_file_name(&file_stem)
-        .add_filter("", &[&file_extension])
-        .save_file()
-    {
-        Some(path) => path,
-        None => return,
+    let file_path_buf = if temp_path_to_download_file_to_preview.is_none() {
+        match FileDialog::new()
+            .set_directory(".")
+            .set_file_name(&file_stem)
+            .add_filter("", &[&file_extension])
+            .save_file()
+        {
+            Some(path) => path,
+            None => return,
+        }
+    } else {
+        temp_path_to_download_file_to_preview.unwrap_or_default()
     };
+
     ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,

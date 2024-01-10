@@ -191,7 +191,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     if !temp_dir.exists() {
                                         cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
-                                    let temp_path_as_string = temp_dir.clone().into_os_string().into_string().unwrap();
+                                    let temp_path_as_string = temp_dir.clone().to_string_lossy().to_string();
                                     rsx!(
                                             Modal {
                                                 open: *fullscreen_preview.clone(),
