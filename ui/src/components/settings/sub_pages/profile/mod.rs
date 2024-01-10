@@ -634,6 +634,73 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                     class: "val", vals.get(1).cloned().unwrap_or_default()
                                                 }
                                             }
+                                                span { class: "num", ((idx * 2) + 1).to_string() },
+                                                span { class: "val", vals.first().cloned().unwrap_or_default() }
+                                            },
+                                            div {
+                                                class: "col",
+                                                span { class: "num", ((idx * 2) + 2).to_string() },
+                                                span { class: "val", vals.get(1).cloned().unwrap_or_default() }
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        )
+                    },
+                    SettingSectionSimple {
+                        Checkbox {
+                            disabled: false,
+                            is_checked: *store_phrase.get(),
+                            height: "15px".into(),
+                            width: "15px".into(),
+                            on_click: move |_| {
+                                show_remove_seed.set(true);
+                            },
+                        },
+                        label {
+                            get_local_text("settings-profile.store-on-account")
+                        }
+                    },
+                    show_remove_seed.then(|| rsx!(
+                        Modal {
+                            open: *show_remove_seed.clone(),
+                            onclose: move |_| show_remove_seed.set(false),
+                            transparent: false,
+                            close_on_click_inside_modal: false,
+                            div {
+                                class: "remove-phrase-container",
+                                div {
+                                    class: "warning-symbol",
+                                    IconElement {
+                                        icon: Icon::ExclamationTriangle
+                                    }
+                                },
+                                Label {
+                                    text: get_local_text("settings-profile.remove-recovery-seed"),
+                                    aria_label: "remove-phrase-label".into(),
+                                },
+                                p {
+                                    get_local_text("settings-profile.remove-recovery-seed-description")
+                                },
+                                div {
+                                    class: "button-group",
+                                    Button {
+                                        text: get_local_text("uplink.remove"),
+                                        aria_label: "remove-seed-phrase-btn".into(),
+                                        appearance: Appearance::Danger,
+                                        icon: Icon::Trash,
+                                        onpress: move |_| {
+                                            remove_seed_words_ch.send(());
+                                        }
+                                    },
+                                    Button {
+                                        text: get_local_text("uplink.cancel"),
+                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                        icon: Icon::NoSymbol,
+                                        appearance: Appearance::Secondary,
+                                        onpress: move |_| {
+                                            show_remove_seed.set(false);
                                         }
                                     })
                                 }

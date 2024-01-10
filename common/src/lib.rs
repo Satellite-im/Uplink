@@ -103,7 +103,7 @@ pub struct StaticArgs {
     /// a debug log which is only written to when the settings are enabled. otherwise logs are only sent to stdout
     pub logger_path: PathBuf,
     /// contains the keypair used for IPFS
-    pub tesseract_path: PathBuf,
+    pub tesseract_file: String,
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
     /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
@@ -158,7 +158,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
-        tesseract_path: warp_path.join("tesseract.json"),
+        tesseract_file: "tesseract.json".into(),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         discovery: args.discovery.unwrap_or_default(),

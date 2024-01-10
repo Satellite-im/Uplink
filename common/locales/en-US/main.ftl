@@ -229,6 +229,9 @@ settings-profile = Profile Settings
     .recovery-seed-description = This seed represents the "master key" for your account. Keep this safe and secure somewhere in order to maintain proper control and security over your Uplink account.
     .reveal-recovery-seed = Reveal Recovery Seed
     .hide-recovery-seed = Hide Recovery Seed
+    .store-on-account = Store recovery seed on account (disable this for increased security)
+    .remove-recovery-seed = Remove Seed Phrase
+    .remove-recovery-seed-description = Removing the seed phrase from storage can increase security on your account. However, this action is irreversable and if you have not backed up your seed phrase yet you should select 'Cancel' below.
 
 settings-general = General Settings
     .overlay = Uplink Overlay
