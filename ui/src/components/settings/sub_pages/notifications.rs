@@ -30,6 +30,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 }
             },*/
             SettingSection {
+                aria_label: "enabled-notifications-section".into(),
                 section_label: get_local_text("settings-notifications.enabled"),
                 section_description: get_local_text("settings-notifications.enabled-description"),
                 Switch {
@@ -45,6 +46,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
             div {
                 class: format_args!("{}", if state.read().configuration.notifications.enabled { "enabled" } else { "disabled" }),
                 SettingSection {
+                    aria_label: "friends-notifications-section".into(),
                     section_label: get_local_text("friends"),
                     section_description: get_local_text("settings-notifications.friends-description"),
                     Switch {
@@ -59,6 +61,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                     }
                 },
                 SettingSection {
+                    aria_label: "messages-notifications-section".into(),
                     section_label: get_local_text("messages"),
                     section_description: get_local_text("settings-notifications.messages-description"),
                     Switch {
@@ -73,6 +76,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                     }
                 },
                 SettingSection {
+                    aria_label: "settings-notifications-section".into(),
                     section_label: get_local_text("settings"),
                     section_description: get_local_text("settings-notifications.settings-description"),
                     Switch {

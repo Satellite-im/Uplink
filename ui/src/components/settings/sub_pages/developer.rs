@@ -61,6 +61,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
             id: "settings-developer",
             aria_label: "settings-developer",
             SettingSection {
+                aria_label: "experimental-features-section".into(),
                 section_label: get_local_text("settings-developer.experimental-features"),
                 section_description: get_local_text("settings-developer.experimental-features-description"),
                 Switch {
@@ -71,6 +72,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "developer-mode-section".into(),
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
@@ -85,6 +87,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "test-notification-section".into(),
                 section_label: get_local_text("settings-developer.test-notification"),
                 section_description: get_local_text("settings-developer.test-notification-description"),
                 Button {
@@ -107,6 +110,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "open-cache-section".into(),
                 section_label: get_local_text("settings-developer.open-cache"),
                 section_description: get_local_text("settings-developer.open-cache-description"),
                 Button {
@@ -120,6 +124,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "compress-download-cache-section".into(),
                 section_label: get_local_text("settings-developer.compress-download-cache"),
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),
                 Button {
@@ -135,6 +140,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "print-state-section".into(),
                 section_label: get_local_text("settings-developer.print-state"),
                 section_description: get_local_text("settings-developer.print-state-description"),
                 Button {
@@ -148,6 +154,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "clear-cache-section".into(),
                 section_label: get_local_text("settings-developer.clear-cache"),
                 section_description: get_local_text("settings-developer.clear-cache-description"),
                 Button {
@@ -161,6 +168,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             }
             SettingSection {
+                aria_label: "save-logs-section".into(),
                 section_label: get_local_text("settings-developer.save-logs-to-file"),
                 section_description: get_local_text("settings-developer.save-logs-to-file-description"),
                 Switch {
