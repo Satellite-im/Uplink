@@ -612,7 +612,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 attachments_pending_uploads: pending_uploads,
                 parse_markdown: render_markdown,
                 transform_ascii_emojis: should_transform_ascii_emojis,
-                on_download: move |file: warp::constellation::file::File| {
+                on_download: move |(file, temp_dir): (warp::constellation::file::File, Option<PathBuf>)| {
                     let file_name = file.name();
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
@@ -624,13 +624,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         .and_then(OsStr::to_str)
                         .map(str::to_string)
                         .unwrap_or_default();
-                    if let Some(file_path_to_download) = FileDialog::new()
-                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                        let conv_id = message.inner.conversation_id();
-                        if !pending_downloads.read().contains_key(&conv_id) {
-                            pending_downloads.write().insert(conv_id, HashSet::new());
-                        }
-                        pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
+                    let conv_id = message.inner.conversation_id();
+
+                    if temp_dir.is_some() {
+                        let file_path_to_download = temp_dir.unwrap_or_default();
+                        log::info!("downloading file in temp DIR: {:?}", file_path_to_download);
 
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id,
@@ -638,7 +636,24 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             file,
                             file_path_to_download
                         })
+                    } else {
+                        if let Some(file_path_to_download) = FileDialog::new()
+                        .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
+                            if !pending_downloads.read().contains_key(&conv_id) {
+                                pending_downloads.write().insert(conv_id, HashSet::new());
+                            }
+                            pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
+    
+                            ch.send(MessagesCommand::DownloadAttachment {
+                                conv_id,
+                                msg_id: message.inner.id(),
+                                file,
+                                file_path_to_download
+                            })
+                        }
                     }
+
+                    
                 },
                 on_edit: move |update: String| {
                     edit_msg.set(None);

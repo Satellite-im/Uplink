@@ -6,6 +6,7 @@ use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use dioxus::prelude::*;
@@ -15,6 +16,7 @@ use humansize::DECIMAL;
 use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
+use tempfile::TempDir;
 use warp::constellation::Progression;
 
 #[derive(Props)]
@@ -54,7 +56,7 @@ pub struct Props<'a> {
     download_pending: Option<bool>,
 
     // called shen the icon is clicked
-    on_press: EventHandler<'a, ()>,
+    on_press: EventHandler<'a, Option<PathBuf>>,
 
     progress: Option<&'a Progression>,
 }
@@ -184,23 +186,48 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: "file-icon",
                         if has_thumbnail {
                             rsx!(
-                                fullscreen_preview.then(|| rsx!(
-                                    Modal {
-                                        open: *fullscreen_preview.clone(),
-                                        onclose: move |_| fullscreen_preview.set(false),
-                                        transparent: false,
-                                        close_on_click_inside_modal: true,
-                                        dont_pad: true,
-                                        img {
-                                            id: "image-preview-modal-file-embed",
-                                            aria_label: "image-preview-modal-file-embed",
-                                            src: "{large_thumbnail}",
-                                            max_height: "80vh",
-                                            max_width: "80vw",
-                                            onclick: move |e| e.stop_propagation(),
-                                        },
+                                fullscreen_preview.then(|| {
+                                    let file_name_with_extension = format!("{}", cx.props.filename);
+                                    let temp_dir = STATIC_ARGS.uplink_path.join(file_name_with_extension);
+                                    if !temp_dir.exists() {
+                                        cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
-                                )),
+                                    let temp_path_as_string = temp_dir.clone().into_os_string().into_string().unwrap();
+                                    println!("ARRIVED HERE -> temp_path: {}", temp_path_as_string.clone());
+                                    if temp_dir.exists() {
+                                        rsx!(
+                                            Modal {
+                                                open: *fullscreen_preview.clone(),
+                                                onclose: move |_| fullscreen_preview.set(false),
+                                                transparent: false,
+                                                close_on_click_inside_modal: true,
+                                                dont_pad: true,
+                                                img {
+                                                    id: "image-preview-modal-file-embed",
+                                                    aria_label: "image-preview-modal-file-embed",
+                                                    src: "{temp_path_as_string}",
+                                                    max_height: "80vh",
+                                                    max_width: "80vw",
+                                                    onclick: move |e| e.stop_propagation(),
+                                                },
+                                            }
+                                        )
+                                    } else {
+                                        rsx!(
+                                            Modal {
+                                                open: *fullscreen_preview.clone(),
+                                                onclose: move |_| fullscreen_preview.set(false),
+                                                transparent: false,
+                                                close_on_click_inside_modal: true,
+                                                dont_pad: true,
+                                                div {
+                                                   "Loading..."
+                                                },
+                                            }
+                                        )
+                                    }
+                                    
+                                }),
                                 div {
                                     class: "image-container",
                                     aria_label: "message-image-container",
@@ -347,7 +374,7 @@ fn show_download_button_if_enabled<'a>(
                     icon: btn_icon,
                     appearance: Appearance::Primary,
                     aria_label: "attachment-button".into(),
-                    onpress: move |_| cx.props.on_press.call(()),
+                    onpress: move |_| cx.props.on_press.call(None),
                 }
             }
         ))
