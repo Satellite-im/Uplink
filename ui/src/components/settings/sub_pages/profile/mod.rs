@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use arboard::Clipboard;
 use common::get_images_dir;
+use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd};
@@ -12,6 +13,7 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::indicator::{Indicator, Platform, Status};
+use kit::elements::checkbox::Checkbox;
 use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
@@ -20,6 +22,7 @@ use kit::elements::{
     input::{Input, Options, Validation},
     label::Label,
 };
+use kit::layout::modal::Modal;
 use mime::*;
 use rfd::FileDialog;
 use warp::multipass::identity::IdentityStatus;
@@ -44,6 +47,8 @@ enum ChanCmd {
 pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
     let state = use_shared_state::<State>(cx)?;
+    let first_render = use_state(cx, || true);
+
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
     let online_status = identity.identity_status();
@@ -68,8 +73,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
+    let show_remove_seed = use_state(cx, || false);
     let seed_phrase: &UseState<Option<String>> = use_state(cx, || None);
-    let seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let seed_words_ch: &Coroutine<()> = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
         to_owned![seed_phrase];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -97,6 +103,80 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                     Err(e) => {
                         log::error!("failed to get seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
+
+    let phrase_exists: &UseState<bool> = use_state(cx, || false);
+    let seed_phrase_exists = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![phrase_exists];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::CheckMnemonicExist {
+                        rsp: tx,
+                    }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(does_exist) => {
+                        phrase_exists.set(does_exist);
+                    }
+                    Err(e) => {
+                        log::error!("failed to check for seed words: {e}");
+                        continue;
+                    }
+                }
+            }
+        }
+    });
+
+    let remove_seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![phrase_exists, show_remove_seed];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                // only one command so far
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::DeleteMnemonic { rsp: tx }))
+                {
+                    log::error!("error sending warp command: {e}");
+                    continue;
+                }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("error receiving warp command: {e}");
+                        continue;
+                    }
+                };
+
+                match res {
+                    Ok(_) => {
+                        show_remove_seed.set(false);
+                        phrase_exists.set(false);
+                    }
+                    Err(e) => {
+                        log::error!("failed to remove seed words: {e}");
                         continue;
                     }
                 }
@@ -233,6 +313,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .unwrap_or_default();
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
+
+    let store_phrase = use_state(cx, || true);
+
+    if *first_render.get() {
+        seed_phrase_exists.send(());
+        first_render.set(false);
+    }
+
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -398,7 +486,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     ContextItem {
                                         icon: Icon::Key,
                                         text: get_local_text("settings-profile.copy-did"),
-                                        aria_label: "copy-id-context".into(),
+                                        aria_label: "copy-did-context".into(),
                                         onpress: move |_| {
                                             match Clipboard::new() {
                                                 Ok(mut c) => {
@@ -495,62 +583,123 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     },
                 },
-                SettingSection {
-                    aria_label: "recovery-seed-section".into(),
-                    section_label: get_local_text("settings-profile.recovery-seed"),
-                    section_description: get_local_text("settings-profile.recovery-seed-description"),
-                    Button {
-                        text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
-                        aria_label: "reveal-recovery-seed-button".into(),
-                        appearance: Appearance::Danger,
-                        icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
-                        onpress: move |_| {
-                            if seed_phrase.is_some() {
-                                seed_phrase.set(None);
-                            } else {
-                                seed_words_ch.send(());
+                if *phrase_exists.get() {rsx!(
+                    SettingSection {
+                        aria_label: "recovery-seed-section".into(),
+                        section_label: get_local_text("settings-profile.recovery-seed"),
+                        section_description: get_local_text("settings-profile.recovery-seed-description"),
+                        Button {
+                            text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
+                            aria_label: "reveal-recovery-seed-button".into(),
+                            appearance: Appearance::Danger,
+                            icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
+                            onpress: move |_| {
+                                if seed_phrase.is_some() {
+                                    seed_phrase.set(None);
+                                } else {
+                                    seed_words_ch.send(());
+                                }
                             }
                         }
                     }
-                }
-                if let Some(phrase) = seed_phrase.as_ref() {
-                    let words = phrase.split_whitespace().collect::<Vec<&str>>();
-                    render!(
-                        SettingSectionSimple {
-                            aria_label: "seed-words-section".into(),
-                            div {
-                                class: "seed-words",
-                                words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
-                                    div {
-                                        class: "row",
+                    if let Some(phrase) = seed_phrase.as_ref() {
+                        let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                        render!(
+                            SettingSectionSimple {
+                                aria_label: "seed-words-section".into(),
+                                div {
+                                    class: "seed-words",
+                                    words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
                                         div {
-                                            class: "col",
-                                            span {
-                                                aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                class: "num", ((idx * 2) + 1).to_string() 
+                                            class: "row",
+                                            div {
+                                                class: "col",
+                                                span {
+                                                    aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
+                                                    class: "num", ((idx * 2) + 1).to_string()
+                                                },
+                                                span {
+                                                    aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
+                                                    class: "val", vals.first().cloned().unwrap_or_default()
+                                                }
                                             },
-                                            span {
-                                                aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                                                class: "val", vals.first().cloned().unwrap_or_default() 
-                                            }
-                                        },
-                                        div {
-                                            class: "col",
-                                            span {
-                                                aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                                                class: "num", ((idx * 2) + 2).to_string() 
-                                            },
-                                            span {
-                                                aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
-                                                class: "val", vals.get(1).cloned().unwrap_or_default() 
+                                            div {
+                                                class: "col",
+                                                span {
+                                                    aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
+                                                    class: "num", ((idx * 2) + 2).to_string()
+                                                },
+                                                span {
+                                                    aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
+                                                    class: "val", vals.get(1).cloned().unwrap_or_default()
+                                                }
                                             }
                                         }
+                                    })
+                                }
+                            }
+                        )
+                    },
+                    SettingSectionSimple {
+                        Checkbox {
+                            disabled: false,
+                            is_checked: *store_phrase.get(),
+                            height: "15px".into(),
+                            width: "15px".into(),
+                            on_click: move |_| {
+                                show_remove_seed.set(true);
+                            },
+                        },
+                        label {
+                            get_local_text("settings-profile.store-on-account")
+                        }
+                    },
+                    show_remove_seed.then(|| rsx!(
+                        Modal {
+                            open: *show_remove_seed.clone(),
+                            onclose: move |_| show_remove_seed.set(false),
+                            transparent: false,
+                            close_on_click_inside_modal: false,
+                            div {
+                                class: "remove-phrase-container",
+                                div {
+                                    class: "warning-symbol",
+                                    IconElement {
+                                        icon: Icon::ExclamationTriangle
                                     }
-                                })
+                                },
+                                Label {
+                                    text: get_local_text("settings-profile.remove-recovery-seed"),
+                                    aria_label: "remove-phrase-label".into(),
+                                },
+                                p {
+                                    get_local_text("settings-profile.remove-recovery-seed-description")
+                                },
+                                div {
+                                    class: "button-group",
+                                    Button {
+                                        text: get_local_text("uplink.remove"),
+                                        aria_label: "remove-seed-phrase-btn".into(),
+                                        appearance: Appearance::Danger,
+                                        icon: Icon::Trash,
+                                        onpress: move |_| {
+                                            remove_seed_words_ch.send(());
+                                        }
+                                    },
+                                    Button {
+                                        text: get_local_text("uplink.cancel"),
+                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                        icon: Icon::NoSymbol,
+                                        appearance: Appearance::Secondary,
+                                        onpress: move |_| {
+                                            show_remove_seed.set(false);
+                                        }
+                                    }
+                                }
                             }
                         }
-                    )
-                },
+                    )),
+                )}
                 if open_crop_image_modal_for_banner_picture.get().0 {
                     rsx!(CropRectImageModal {
                         large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
