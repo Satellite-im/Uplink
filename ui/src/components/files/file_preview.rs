@@ -3,6 +3,8 @@ use std::path::PathBuf;
 
 use common::language::get_local_text;
 use common::state::State;
+use common::utils::img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH};
+use common::utils::lifecycle::use_component_lifecycle;
 use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
@@ -52,38 +54,10 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             img {
                 id: "file_preview_img",
                 aria_label: "file-preview-image",
-                max_height: "80vh",
-                max_width: "80vw",
+                max_height: IMAGE_MAX_HEIGHT,
+                max_width: IMAGE_MAX_WIDTH,
                 src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {thumbnail} ),
             },
         },
     ))
-}
-
-struct LifeCycle<D: FnOnce()> {
-    ondestroy: Option<D>,
-}
-
-fn use_component_lifecycle<C: FnOnce() + 'static, D: FnOnce() + 'static>(
-    cx: &ScopeState,
-    create: C,
-    destroy: D,
-) -> &LifeCycle<D> {
-    cx.use_hook(|| {
-        cx.spawn(async move {
-            // This will be run once the component is mounted
-            std::future::ready::<()>(()).await;
-            create();
-        });
-        LifeCycle {
-            ondestroy: Some(destroy),
-        }
-    })
-}
-
-impl<D: FnOnce()> Drop for LifeCycle<D> {
-    fn drop(&mut self) {
-        let f = self.ondestroy.take().unwrap();
-        f();
-    }
 }

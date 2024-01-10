@@ -7,6 +7,9 @@ use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
+use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
+use common::utils::lifecycle::use_component_lifecycle;
 use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -213,8 +216,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
                                                     src: format_args!("{}", if temp_dir.exists() { temp_path_as_string} else {large_thumbnail} ),
-                                                    max_height: "80vh",
-                                                    max_width: "80vw",
+                                                    max_height: IMAGE_MAX_HEIGHT,
+                                                    max_width: IMAGE_MAX_WIDTH,
                                                     onclick: move |e| e.stop_propagation(),
                                                 },
                                             }
@@ -371,33 +374,5 @@ fn show_download_button_if_enabled<'a>(
         ))
     } else {
         None
-    }
-}
-
-struct LifeCycle<D: FnOnce()> {
-    ondestroy: Option<D>,
-}
-
-fn use_component_lifecycle<C: FnOnce() + 'static, D: FnOnce() + 'static>(
-    cx: &ScopeState,
-    create: C,
-    destroy: D,
-) -> &LifeCycle<D> {
-    cx.use_hook(|| {
-        cx.spawn(async move {
-            // This will be run once the component is mounted
-            std::future::ready::<()>(()).await;
-            create();
-        });
-        LifeCycle {
-            ondestroy: Some(destroy),
-        }
-    })
-}
-
-impl<D: FnOnce()> Drop for LifeCycle<D> {
-    fn drop(&mut self) {
-        let f = self.ondestroy.take().unwrap();
-        f();
     }
 }
