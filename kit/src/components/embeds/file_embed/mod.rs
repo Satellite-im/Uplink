@@ -1,4 +1,5 @@
 use std::ffi::OsStr;
+use std::fs;
 use std::path::PathBuf;
 
 use crate::elements::button::Button;
@@ -157,6 +158,17 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
     let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
+    let file_name_with_extension = format!("{}", cx.props.filename);
+    let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
+    let temp_dir2 = temp_dir.clone();
+
+    use_component_lifecycle(
+        cx,
+        || {},
+        move || {
+            let _ = fs::remove_file(temp_dir2.clone());
+        },
+    );
 
     cx.render(rsx! (
         div {
@@ -186,8 +198,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if has_thumbnail {
                             rsx!(
                                 fullscreen_preview.then(|| {
-                                    let file_name_with_extension = format!("{}", cx.props.filename);
-                                    let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
                                     if !temp_dir.exists() {
                                         cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
@@ -361,5 +371,33 @@ fn show_download_button_if_enabled<'a>(
         ))
     } else {
         None
+    }
+}
+
+struct LifeCycle<D: FnOnce()> {
+    ondestroy: Option<D>,
+}
+
+fn use_component_lifecycle<C: FnOnce() + 'static, D: FnOnce() + 'static>(
+    cx: &ScopeState,
+    create: C,
+    destroy: D,
+) -> &LifeCycle<D> {
+    cx.use_hook(|| {
+        cx.spawn(async move {
+            // This will be run once the component is mounted
+            std::future::ready::<()>(()).await;
+            create();
+        });
+        LifeCycle {
+            ondestroy: Some(destroy),
+        }
+    })
+}
+
+impl<D: FnOnce()> Drop for LifeCycle<D> {
+    fn drop(&mut self) {
+        let f = self.ondestroy.take().unwrap();
+        f();
     }
 }

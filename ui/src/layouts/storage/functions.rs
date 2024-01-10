@@ -400,6 +400,7 @@ pub fn init_coroutine<'a>(
                                     ),
                                 ));
                                 log::error!("failed to download file: {}", error);
+                                on_finish.await;
                                 continue;
                             }
                         }
