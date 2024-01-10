@@ -486,7 +486,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     ContextItem {
                                         icon: Icon::Key,
                                         text: get_local_text("settings-profile.copy-did"),
-                                        aria_label: "copy-did-context".into(),
+                                        aria_label: "copy-id-context".into(),
                                         onpress: move |_| {
                                             match Clipboard::new() {
                                                 Ok(mut c) => {
@@ -570,7 +570,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                 },
                 SettingSection {
-                    aria_label: "online-status-section".into(),
                     section_label: get_local_text("settings-profile.online-status"),
                     section_description: get_local_text("settings-profile.online-status-description"),
                     FancySelect {
@@ -585,7 +584,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 },
                 if *phrase_exists.get() {rsx!(
                     SettingSection {
-                        aria_label: "recovery-seed-section".into(),
                         section_label: get_local_text("settings-profile.recovery-seed"),
                         section_description: get_local_text("settings-profile.recovery-seed-description"),
                         Button {
@@ -606,7 +604,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         let words = phrase.split_whitespace().collect::<Vec<&str>>();
                         render!(
                             SettingSectionSimple {
-                                aria_label: "seed-words-section".into(),
                                 div {
                                     class: "seed-words",
                                     words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
@@ -614,26 +611,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                             class: "row",
                                             div {
                                                 class: "col",
-                                                span {
-                                                    aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                    class: "num", ((idx * 2) + 1).to_string()
-                                                },
-                                                span {
-                                                    aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                                                    class: "val", vals.first().cloned().unwrap_or_default()
-                                                }
-                                            },
-                                            div {
-                                                class: "col",
-                                                span {
-                                                    aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                                                    class: "num", ((idx * 2) + 2).to_string()
-                                                },
-                                                span {
-                                                    aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
-                                                    class: "val", vals.get(1).cloned().unwrap_or_default()
-                                                }
-                                            }
                                                 span { class: "num", ((idx * 2) + 1).to_string() },
                                                 span { class: "val", vals.first().cloned().unwrap_or_default() }
                                             },
@@ -642,65 +619,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                 span { class: "num", ((idx * 2) + 2).to_string() },
                                                 span { class: "val", vals.get(1).cloned().unwrap_or_default() }
                                             }
-                                        }
-                                    })
-                                }
-                            }
-                        )
-                    },
-                    SettingSectionSimple {
-                        Checkbox {
-                            disabled: false,
-                            is_checked: *store_phrase.get(),
-                            height: "15px".into(),
-                            width: "15px".into(),
-                            on_click: move |_| {
-                                show_remove_seed.set(true);
-                            },
-                        },
-                        label {
-                            get_local_text("settings-profile.store-on-account")
-                        }
-                    },
-                    show_remove_seed.then(|| rsx!(
-                        Modal {
-                            open: *show_remove_seed.clone(),
-                            onclose: move |_| show_remove_seed.set(false),
-                            transparent: false,
-                            close_on_click_inside_modal: false,
-                            div {
-                                class: "remove-phrase-container",
-                                div {
-                                    class: "warning-symbol",
-                                    IconElement {
-                                        icon: Icon::ExclamationTriangle
-                                    }
-                                },
-                                Label {
-                                    text: get_local_text("settings-profile.remove-recovery-seed"),
-                                    aria_label: "remove-phrase-label".into(),
-                                },
-                                p {
-                                    get_local_text("settings-profile.remove-recovery-seed-description")
-                                },
-                                div {
-                                    class: "button-group",
-                                    Button {
-                                        text: get_local_text("uplink.remove"),
-                                        aria_label: "remove-seed-phrase-btn".into(),
-                                        appearance: Appearance::Danger,
-                                        icon: Icon::Trash,
-                                        onpress: move |_| {
-                                            remove_seed_words_ch.send(());
-                                        }
-                                    },
-                                    Button {
-                                        text: get_local_text("uplink.cancel"),
-                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
-                                        icon: Icon::NoSymbol,
-                                        appearance: Appearance::Secondary,
-                                        onpress: move |_| {
-                                            show_remove_seed.set(false);
                                         }
                                     })
                                 }
