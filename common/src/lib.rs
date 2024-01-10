@@ -90,6 +90,8 @@ pub struct StaticArgs {
     /// ~/.uplink/.user
     /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
+    /// Directory for temporary files and deleted everytime app is closed or opened
+    pub temp_files: PathBuf,
     /// custom themes for the user
     pub themes_path: PathBuf,
     /// custom fonts for the user
@@ -147,6 +149,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(), // TODO: Should this be "User path" instead?
+        temp_files: uplink_container.join("temp_files"),
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),

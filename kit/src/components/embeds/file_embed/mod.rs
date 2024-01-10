@@ -16,7 +16,6 @@ use humansize::DECIMAL;
 use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
-use tempfile::TempDir;
 use warp::constellation::Progression;
 
 #[derive(Props)]
@@ -188,14 +187,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             rsx!(
                                 fullscreen_preview.then(|| {
                                     let file_name_with_extension = format!("{}", cx.props.filename);
-                                    let temp_dir = STATIC_ARGS.uplink_path.join(file_name_with_extension);
+                                    let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
                                     if !temp_dir.exists() {
                                         cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
                                     let temp_path_as_string = temp_dir.clone().into_os_string().into_string().unwrap();
-                                    println!("ARRIVED HERE -> temp_path: {}", temp_path_as_string.clone());
-                                    if temp_dir.exists() {
-                                        rsx!(
+                                    rsx!(
                                             Modal {
                                                 open: *fullscreen_preview.clone(),
                                                 onclose: move |_| fullscreen_preview.set(false),
@@ -205,29 +202,13 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 img {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
-                                                    src: "{temp_path_as_string}",
+                                                    src: format_args!("{}", if temp_dir.exists() { temp_path_as_string} else {large_thumbnail} ),
                                                     max_height: "80vh",
                                                     max_width: "80vw",
                                                     onclick: move |e| e.stop_propagation(),
                                                 },
                                             }
-                                        )
-                                    } else {
-                                        rsx!(
-                                            Modal {
-                                                open: *fullscreen_preview.clone(),
-                                                onclose: move |_| fullscreen_preview.set(false),
-                                                transparent: false,
-                                                close_on_click_inside_modal: true,
-                                                dont_pad: true,
-                                                div {
-                                                   "Loading..."
-                                                },
-                                            }
-                                        )
-                                    }
-                                    
-                                }),
+                                    )}),
                                 div {
                                     class: "image-container",
                                     aria_label: "message-image-container",
