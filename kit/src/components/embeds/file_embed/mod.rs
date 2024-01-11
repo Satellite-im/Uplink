@@ -10,8 +10,8 @@ use common::icons::Icon as IconElement;
 use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
 use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
 use common::utils::lifecycle::use_component_lifecycle;
-use common::STATIC_ARGS;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
+use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use dioxus::prelude::*;
@@ -217,7 +217,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
                                                     src: format_args!("{}", if temp_dir.exists()
-                                                        { temp_file_path_as_string} 
+                                                        { temp_file_path_as_string}
                                                         else {large_thumbnail} ),
                                                     max_height: IMAGE_MAX_HEIGHT,
                                                     max_width: IMAGE_MAX_WIDTH,
