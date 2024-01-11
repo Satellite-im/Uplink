@@ -16,9 +16,11 @@ pub fn Licenses(cx: Scope) -> Element {
             id: "settings-licenses",
             aria_label: "settings-licenses",
             SettingSection {
+                aria_label: "licenses-section".into(),
                 section_label: "Uplink".into(),
                 section_description: "Both code and icons are under the MIT license.".into(),
                 Button {
+                    aria_label: "licenses-button".into(),
                     text: "License Description".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentText,

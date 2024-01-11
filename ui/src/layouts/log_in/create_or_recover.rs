@@ -30,17 +30,20 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>) -> Element {
             }
             div {
                 class: "instructions",
+                aria_label: "create-or-recover-instructions",
                 get_local_text("create-or-recover.instructions")
             },
             div {
                 class: "button-container",
                 Button {
+                    aria_label: "create-button".into(),
                     text: get_local_text("create-or-recover.create"),
                     onpress: move |_| {
                         page.set(AuthPages::CopySeedWords);
                     }
                 },
                 Button {
+                    aria_label: "recover-button".into(),
                     text: get_local_text("create-or-recover.recover"),
                     onpress: move |_| {
                         page.set(AuthPages::EnterSeedWords);

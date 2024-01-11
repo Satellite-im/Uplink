@@ -17,6 +17,7 @@ pub fn Messages(cx: Scope) -> Element {
             id: "settings-messages",
             aria_label: "settings-messages",
              SettingSection {
+                 aria_label: "emoji-conversion-section".into(),
                  section_label: get_local_text("settings-messages.emoji-conversion"),
                  section_description: get_local_text("settings-messages.emoji-conversion-description"),
                  Switch {
@@ -27,6 +28,7 @@ pub fn Messages(cx: Scope) -> Element {
                  }
              },
             SettingSection {
+                aria_label: "markdown-support-section".into(),
                 section_label: get_local_text("settings-messages.markdown-support"),
                 section_description: get_local_text("settings-messages.markdown-support-description"),
                 Switch {

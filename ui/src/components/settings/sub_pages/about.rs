@@ -171,6 +171,7 @@ pub fn AboutPage(cx: Scope) -> Element {
         div {
             id: "settings-about",
             SettingSection {
+                aria_label: "about-info-section".into(),
                 section_label: get_local_text("settings-about.info"),
                 section_description: app_name.into(),
             },
@@ -187,6 +188,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                     }
                 },
                 SettingSection {
+                    aria_label: "about-version-section".into(),
                     section_label:  get_local_text("settings-about.version"),
                     section_description: version.into(),
                     div {
@@ -195,6 +197,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 },
             }
             SettingSection {
+                aria_label: "open-website-section".into(),
                 section_label: get_local_text("settings-about.open-website"),
                 section_description: get_local_text("settings-about.open-website-description"),
                 Button {
@@ -208,6 +211,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "open-codebase-section".into(),
                 section_label: get_local_text("settings-about.open-codebase"),
                 section_description: get_local_text("settings-about.open-codebase-description"),
                 Button {
@@ -221,6 +225,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "made-in-section".into(),
                 section_label: get_local_text("settings-about.made-in"),
                 section_description: get_local_text("settings-about.team"),
                 div {
