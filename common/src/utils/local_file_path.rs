@@ -12,7 +12,7 @@ pub fn get_fixed_path_to_load_local_file(path: PathBuf) -> String {
         format!(
             "{}{}",
             PREFIX_TO_WORK_ON_WINDOWS_OS,
-            path.to_string_lossy().to_string().replace("\\", "/")
+            path.to_string_lossy().to_string().replace('\\', "/")
         )
     }
 }
