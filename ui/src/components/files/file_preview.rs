@@ -9,6 +9,7 @@ use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
+use mime::{IMAGE_JPEG, IMAGE_PNG, IMAGE_SVG};
 use warp::constellation::file::File;
 
 #[derive(Props)]
@@ -27,7 +28,12 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     if !temp_dir.exists() {
         cx.props.on_download.call(Some(temp_dir.clone()));
     }
-    let temp_file_path_as_string = temp_dir.to_string_lossy().to_string().replace("\\", "/");
+    let temp_file_path_as_string = if !cfg!(target_os = "windows") {
+        temp_dir.to_string_lossy().to_string()
+    } else {
+        format!("file://{}", temp_dir.to_string_lossy().to_string())
+    };
+
     use_component_lifecycle(
         cx,
         || {},
@@ -36,11 +42,6 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         },
     );
 
-    println!(
-        "PHILL ---> File Exist: {}, temp_file_path_as_string: {}",
-        temp_dir.exists(),
-        temp_file_path_as_string,
-    );
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
@@ -66,4 +67,40 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
         },
     ))
+}
+
+fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String {
+    let file = match std::fs::read(filepath) {
+        Ok(file) => file,
+        Err(_) => {
+            return String::new();
+        }
+    };
+
+    let parts_of_filename: Vec<&str> = filename.split('.').collect();
+    let mime = match parts_of_filename.last() {
+        Some(m) => match *m {
+            "png" => IMAGE_PNG.to_string(),
+            "jpg" => IMAGE_JPEG.to_string(),
+            "jpeg" => IMAGE_JPEG.to_string(),
+            "svg" => IMAGE_SVG.to_string(),
+            &_ => "".to_string(),
+        },
+        None => "".to_string(),
+    };
+
+    if mime.is_empty() {
+        return String::new();
+    }
+
+    let image = match &file.len() {
+        0 => "".to_string(),
+        _ => {
+            let prefix = format!("data:{mime};base64,");
+            let base64_image = base64::encode(&file);
+            let img = prefix + base64_image.as_str();
+            img
+        }
+    };
+    image
 }
