@@ -164,6 +164,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_name_with_extension = cx.props.filename.to_string();
     let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
     let temp_dir2 = temp_dir.clone();
+    println!(
+        "PHILL SHOW ME THIS PRINT HERE ON WINDWOS -> temp_dir: {:?}",
+        temp_dir
+    );
 
     use_component_lifecycle(
         cx,
