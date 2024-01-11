@@ -357,17 +357,6 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         },
     );
 
-    use_effect(cx, placeholder, |placeholder| {
-        to_owned![id, eval];
-        async move {
-            let _ = eval(
-                &include_str!("./placeholder_update.js")
-                    .replace("$UUID", &id)
-                    .replace("$PLACEHOLDER", &placeholder),
-            );
-        }
-    });
-
     use_effect(cx, (), |_| {
         to_owned![listener_data, eval, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")

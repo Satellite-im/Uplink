@@ -1,3 +1,7 @@
+/**
+ * Create a new rich editor using js
+ */
+
 let text = document.getElementById('$EDITOR_ID')
 
 var keys = [{
