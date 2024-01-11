@@ -90,9 +90,11 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
             },
             div {
                 class: "instructions",
+                aria_label: "instructions",
                 get_local_text("enter-seed-words.instructions")
             },
             input::Input {
+                aria_label: "recovery-seed-input".into(),
                 placeholder: get_local_text("enter-seed-words.placeholder"),
                 onchange: move |(x, is_valid)| {
                     if is_valid {
@@ -111,6 +113,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                     appearance: Appearance::Secondary
                 },
                 Button {
+                    aria_label: "recover-account-button".into(),
                     text: get_local_text("enter-seed-words.submit"),
                     disabled: *loading.get(),
                     onpress: move |_| {

@@ -11,6 +11,7 @@ use common::utils::clear_temp_files_dir::clear_temp_files_directory;
 use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
 use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
 use common::utils::lifecycle::use_component_lifecycle;
+use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -207,7 +208,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     if !temp_dir.exists() {
                                         cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
-                                    let temp_path_as_string = temp_dir.clone().to_string_lossy().to_string();
+                                    let temp_file_path_as_string = get_fixed_path_to_load_local_file(temp_dir.clone());
                                     rsx!(
                                             Modal {
                                                 open: *fullscreen_preview.clone(),
@@ -222,14 +223,16 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         max_height: IMAGE_MAX_HEIGHT,
                                                         max_width: IMAGE_MAX_WIDTH,
                                                         controls: true, 
-                                                        src: format_args!("{}", if temp_dir.exists() { temp_path_as_string } else {"".to_string()} ),
+                                                        src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {"".to_string()} ),
                                         
                                                     })
                                                 } else {
                                                     rsx!(img {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
-                                                    src: format_args!("{}", if temp_dir.exists() { temp_path_as_string} else {large_thumbnail} ),
+                                                    src: format_args!("{}", if temp_dir.exists()
+                                                        { temp_file_path_as_string}
+                                                        else {large_thumbnail} ),
                                                     max_height: IMAGE_MAX_HEIGHT,
                                                     max_width: IMAGE_MAX_WIDTH,
                                                     onclick: move |e| e.stop_propagation(),

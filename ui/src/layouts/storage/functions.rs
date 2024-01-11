@@ -164,12 +164,15 @@ pub fn download_file(
             None => return,
         }
     } else {
-        temp_path_to_download_file_to_preview.unwrap_or_default()
+        temp_path_to_download_file_to_preview
+            .clone()
+            .unwrap_or_default()
     };
 
     ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,
+        notification_download_status: temp_path_to_download_file_to_preview.is_none(),
     });
 }
 
@@ -226,6 +229,7 @@ pub enum ChanCmd {
     DownloadFile {
         file_name: String,
         local_path_to_save_file: PathBuf,
+        notification_download_status: bool,
     },
     RenameItem {
         old_name: String,
@@ -344,6 +348,7 @@ pub fn init_coroutine<'a>(
                     ChanCmd::DownloadFile {
                         file_name,
                         local_path_to_save_file,
+                        notification_download_status,
                     } => {
                         let (local_path_to_save_file, on_finish) =
                             get_download_path(local_path_to_save_file);
@@ -356,38 +361,7 @@ pub fn init_coroutine<'a>(
                                 rsp: tx,
                             },
                         )) {
-                            state.write().mutate(Action::AddToastNotification(
-                                ToastNotification::init(
-                                    "".into(),
-                                    get_local_text_with_args(
-                                        "files.download-failed",
-                                        vec![("file", file_name)],
-                                    ),
-                                    None,
-                                    2,
-                                ),
-                            ));
-                            log::error!("failed to download file {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(_) => {
-                                state.write().mutate(Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text_with_args(
-                                            "files.download-success",
-                                            vec![("file", file_name)],
-                                        ),
-                                        None,
-                                        2,
-                                    ),
-                                ));
-                                on_finish.await
-                            }
-                            Err(error) => {
+                            if notification_download_status {
                                 state.write().mutate(Action::AddToastNotification(
                                     ToastNotification::init(
                                         "".into(),
@@ -399,6 +373,43 @@ pub fn init_coroutine<'a>(
                                         2,
                                     ),
                                 ));
+                            }
+                            log::error!("failed to download file {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(_) => {
+                                if notification_download_status {
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text_with_args(
+                                                "files.download-success",
+                                                vec![("file", file_name)],
+                                            ),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
+                                on_finish.await
+                            }
+                            Err(error) => {
+                                if notification_download_status {
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text_with_args(
+                                                "files.download-failed",
+                                                vec![("file", file_name)],
+                                            ),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
                                 log::error!("failed to download file: {}", error);
                                 on_finish.await;
                                 continue;

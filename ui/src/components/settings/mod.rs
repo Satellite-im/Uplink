@@ -9,6 +9,7 @@ pub mod sub_pages;
 pub struct SectionProps<'a> {
     section_label: String,
     section_description: String,
+    aria_label: Option<String>,
     #[props(default)]
     no_border: bool,
     children: Element<'a>,
@@ -16,6 +17,7 @@ pub struct SectionProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let no_border = cx
         .props
         .no_border
@@ -25,7 +27,7 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "settings-section disable-select {no_border}",
-            aria_label: "settings-section",
+            aria_label: "{aria_label}",
             div {
                 class: "settings-info",
                 aria_label: "settings-info",
@@ -49,14 +51,16 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 pub struct SectionSimpleProps<'a> {
+    aria_label: Option<String>,
     children: Element<'a>,
 }
 #[allow(non_snake_case)]
 pub fn SettingSectionSimple<'a>(cx: Scope<'a, SectionSimpleProps<'a>>) -> Element<'a> {
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     cx.render(rsx!(
         div {
             class: "settings-section simple disable-select",
-            aria_label: "settings-section",
+            aria_label: "{aria_label}",
             cx.props.children.is_some().then(|| rsx!(
                 div {
                     class: "settings-control",
