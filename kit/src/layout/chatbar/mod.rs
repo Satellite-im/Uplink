@@ -293,7 +293,6 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }
-    log::debug!("{:?}", cx.props.selected.read());
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {

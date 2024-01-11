@@ -289,8 +289,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
-// TODO: Forward key input from Codemirror element to here,
-// as e.g. arrow keys (or key bindings in general) are not work properly (e.g. emoji selection)
+// Input using a rich editor making markdown changes visible
 #[allow(non_snake_case)]
 pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
