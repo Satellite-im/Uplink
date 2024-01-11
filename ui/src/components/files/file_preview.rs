@@ -31,7 +31,10 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let temp_file_path_as_string = if !cfg!(target_os = "windows") {
         temp_dir.to_string_lossy().to_string()
     } else {
-        format!("file://{}", temp_dir.to_string_lossy().to_string())
+        format!(
+            "file://{}",
+            temp_dir.to_string_lossy().to_string().replace("\\", "/")
+        )
     };
 
     use_component_lifecycle(
