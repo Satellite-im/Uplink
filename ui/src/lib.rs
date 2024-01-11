@@ -46,13 +46,13 @@ use std::time::Instant;
 
 use std::sync::Arc;
 
-use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
+use crate::layouts::log_in::{AuthGuard, AuthPages};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
@@ -82,7 +82,6 @@ use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-mod auth_guard;
 mod bootstrap;
 mod components;
 mod extension_browser;
@@ -94,8 +93,6 @@ mod utils;
 mod webview_config;
 mod window_builder;
 mod window_manager;
-
-pub use auth_guard::AuthPages;
 
 pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
@@ -196,9 +193,21 @@ fn app(cx: Scope) -> Element {
     bootstrap::use_warp_runner(cx);
 
     // 2. Guard the app with the auth
-    let auth = use_state(cx, || AuthPages::Unlock);
+    let auth = use_state(cx, || AuthPages::EntryPoint);
     let AuthPages::Success(identity) = auth.get() else {
-        return render! { AuthGuard { page: auth.clone() }};
+        return render! {
+        KeyboardShortcuts {
+            is_on_auth_pages: true,
+            on_global_shortcut: move |shortcut| {
+                match shortcut {
+                    GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx.scope),
+                    GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!"),
+                    _ => log::info!("Just Open Dev Tools shortcut works on Auth Pages!"),
+                }
+                log::debug!("shortcut called {:?}", shortcut);
+            }
+        },
+        AuthGuard { page: auth.clone() }};
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
@@ -240,6 +249,8 @@ fn app_layout(cx: Scope) -> Element {
                         GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
+                        GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx),
+                        GlobalShortcut::ToggleDevmode => utils::keyboard::shortcut_handlers::dev::toggle_devmode(state.clone()),
                         GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")
                     }
                     log::debug!("shortcut called {:?}", shortcut);

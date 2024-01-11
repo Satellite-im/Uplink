@@ -49,8 +49,8 @@ impl UnlockError {
 
 // todo: go to the auth page if no account has been created
 #[component]
-pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    log::trace!("rendering unlock layout");
+pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    log::trace!("rendering login entry point");
     let validation_failure: &UseState<Option<UnlockError>> =
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
@@ -121,7 +121,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             sounds::Play(sounds::Sounds::On);
                         }
 
-                        page.set(AuthPages::Success(ident))
+                        page.set(AuthPages::Success(ident));
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
@@ -240,7 +240,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 } else if let Some(e) = error.get() {
                                     shown_error.set(e.translation());
                                 } else if !account_exists.current().unwrap_or_default()  {
-                                    page.set(AuthPages::CreateAccount);
+                                    page.set(AuthPages::CreateOrRecover);
                                 }
                                 cmd_in_progress.set(false);
                         }
@@ -267,6 +267,10 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         icon: if *cmd_in_progress.get() {Icon::Loader} else {Icon::Check},
                         disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
+                            // these are only for testing. 
+                            // page.set(AuthPages::CreateOrRecover);
+                            // return;
+
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());
                                 reset_input.set(true);
@@ -274,7 +278,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(e.translation());
                                 reset_input.set(true);
                             } else {
-                                page.set(AuthPages::CreateAccount);
+                                page.set(AuthPages::CreateOrRecover);
                             }
                             cmd_in_progress.set(false);
                         }
@@ -291,7 +295,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 text: get_local_text("uplink.reset-account"),
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
-                                    page.set(AuthPages::Unlock);
+                                    page.set(AuthPages::EntryPoint);
                                     error.set(None);
                                     account_exists.set(Some(false));
                                     create_uplink_dirs();

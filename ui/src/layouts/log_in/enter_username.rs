@@ -7,8 +7,10 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::elements::label::Label;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -21,9 +23,29 @@ use crate::AuthPages;
 pub const MIN_USERNAME_LEN: i32 = 4;
 pub const MAX_USERNAME_LEN: i32 = 32;
 
+struct CreateAccountCmd {
+    username: String,
+    passphrase: String,
+    seed_words: String,
+}
+
 #[component]
-pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    log::trace!("rendering create account layout");
+pub fn Layout(
+    cx: Scope,
+    page: UseState<AuthPages>,
+    pin: UseRef<String>,
+    seed_words: UseRef<String>,
+) -> Element {
+    log::trace!("rendering enter username layout");
+    let window = use_window(cx);
+
+    if !matches!(&*page.current(), AuthPages::Success(_)) {
+        window.set_inner_size(LogicalSize {
+            width: 500.0,
+            height: 250.0,
+        });
+    }
+
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
@@ -44,18 +66,24 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
         special_chars: None,
     };
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<CreateAccountCmd>| {
         to_owned![page];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((username, passphrase)) = rx.next().await {
+            while let Some(CreateAccountCmd {
+                username,
+                passphrase,
+                seed_words,
+            }) = rx.next().await
+            {
                 let (tx, rx) =
                     oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                     username,
-                    passphrase,
+                    tesseract_passphrase: passphrase,
+                    seed_words,
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
@@ -83,6 +111,14 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
+            Label {
+                text: get_local_text("auth.enter-username")
+            },
+            div {
+                class: "instructions",
+                aria_label: "instructions",
+                get_local_text("auth.enter-username-subtext")
+            },
             Input {
                 id: "username-input".to_owned(),
                 focus: true,
@@ -107,7 +143,11 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 },
                 onreturn: move |_| {
                     if !*button_disabled.get() {
-                        ch.send((username.get().to_string(), pin.read().to_string()));
+                        ch.send(CreateAccountCmd {
+                            username: username.get().to_string(),
+                            passphrase: pin.read().to_string(),
+                            seed_words: seed_words.read().to_string()
+                        });
                     }
                 }
             },
@@ -118,10 +158,12 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 icon: Icon::Check,
                 disabled: *button_disabled.get(),
                 onpress: move |_| {
-
-                    ch.send((username.get().to_string(), pin.read().to_string()));
+                    ch.send(CreateAccountCmd {
+                        username: username.get().to_string(),
+                        passphrase: pin.read().to_string(),
+                        seed_words: seed_words.read().to_string()
+                    });
                 }
-
             }
         }
     ))

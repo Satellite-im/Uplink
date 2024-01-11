@@ -253,6 +253,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "reset-keybinds-section".into(),
                 section_label: get_local_text("settings-keybinds.reset-keybinds"),
                 section_description: get_local_text("settings-keybinds.reset-keybinds-description"),
                 Button {
@@ -286,6 +287,18 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-keybinds.toggle-deafen"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDeafen
+            }
+            KeybindSection {
+                id: format!("{:?}", GlobalShortcut::OpenDevTools),
+                section_label: get_local_text("settings-keybinds.open-dev-tools"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::OpenDevTools
+            }
+            KeybindSection {
+                id: format!("{:?}", GlobalShortcut::ToggleDevmode),
+                section_label: get_local_text("settings-keybinds.toggle-devmode"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::ToggleDevmode
             }
         }
     ))

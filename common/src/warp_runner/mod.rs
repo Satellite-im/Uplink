@@ -18,7 +18,7 @@ use warp::{
     constellation::{file::FileType, Constellation},
     error::Error,
     logging::tracing::log,
-    multipass::{self, MultiPass},
+    multipass::{self, IdentityImportOption, MultiPass},
     raygun::RayGun,
     tesseract::Tesseract,
 };
@@ -164,9 +164,46 @@ async fn handle_login(notify: Arc<Notify>) {
                 }
 
                 match opt {
+                    Some(WarpCmd::MultiPass(MultiPassCmd::RecoverIdentity{
+                        passphrase,
+                        seed_words,
+                        rsp
+                    })) => {
+                        let tesseract = init_tesseract(true)
+                                .await
+                                .expect("failed to initialize tesseract");
+                        warp = match warp_initialization(tesseract).await {
+                            Ok(w) => w,
+                            Err(e) => {
+                                log::error!("warp init failed: {}", e);
+                                let _ = rsp.send(Err(e));
+                                return;
+                            }
+                        };
+                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                            log::info!("unlock failed: {:?}", e);
+                            let _ = rsp.send(Err(e));
+                            continue;
+                        };
+                        match warp.multipass.import_identity(IdentityImportOption::Locate {
+                            location: multipass::ImportLocation::Remote,
+                            passphrase: seed_words
+                        }).await {
+                            Ok(ident) => {
+                                let _ = rsp.send(Ok(ident));
+                                break Some(warp);
+                            },
+                            Err(e) => {
+                                warp.tesseract.lock();
+                                let _ = rsp.send(Err(e));
+                                continue;
+                            }
+                        }
+                    },
                     Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                         username,
-                        passphrase,
+                        tesseract_passphrase,
+                        seed_words,
                         rsp,
                     })) => {
                         if account_exists {
@@ -184,22 +221,16 @@ async fn handle_login(notify: Arc<Notify>) {
                             };
                         }
 
-                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                        if let Err(e) = warp.tesseract.unlock(tesseract_passphrase.as_bytes()) {
                             log::info!("unlock failed: {:?}", e);
                             let _ = rsp.send(Err(e));
                             continue;
                         };
-                        match warp.multipass.create_identity(Some(&username), None).await {
+                        match warp.multipass.create_identity(Some(&username), Some(&seed_words)).await {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
-                                Ok(ident) => match save_tesseract(&warp.tesseract) {
-                                    Ok(_) => {
-                                        let _ = rsp.send(Ok(ident));
-                                        break Some(warp);
-                                    }
-                                    Err(e) => {
-                                        let _ = rsp.send(Err(e));
-                                        continue;
-                                    }
+                                Ok(ident) => {
+                                    let _ = rsp.send(Ok(ident));
+                                    break Some(warp);
                                 },
                                 Err(e) => {
                                     warp.tesseract.lock();
@@ -287,62 +318,26 @@ async fn wait_for_multipass(
 // assumes that all anyone needs from tesseract is "keypair"
 // otherwise, Tesseract::to_file probably needs to call file.sync_all()
 async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error> {
-    log::trace!("initializing tesseract");
+    tokio::task::spawn_blocking(move || {
+        log::trace!("initializing tesseract");
 
-    let configure_tesseract = |tesseract: Tesseract| {
-        // prevent other things from corrupting the real tesseract file.
-        tesseract.set_file(STATIC_ARGS.warp_path.join("fake_tesseract.json"));
-        tesseract.set_autosave();
-        tesseract
-    };
-
-    // this code path addresses cross-platform issues involving account recreation.
-    // the tesseract file was being overwritten incorrectly.
-    // to fix this, manually delete the file and re-create it.
-    if overwrite_old_account {
-        // delete old account data
-        if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.uplink_path) {
-            log::warn!("failed to delete uplink directory: {}", e);
-        }
-
-        // create directories
-        if let Err(e) = std::fs::create_dir_all(&STATIC_ARGS.warp_path) {
-            log::warn!("failed to create warp directory: {}", e);
-        }
-
-        // create the tesseract key file so it can be saved later
-        if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
-            log::error!("failed to create tesseract file: {}", e);
-            return Err(warp::error::Error::CannotSaveTesseract);
-        }
-
-        return Ok(configure_tesseract(Tesseract::default()));
-    }
-
-    // open existing file or create new one
-    let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
-        Ok(mut file) => match Tesseract::from_reader(&mut file) {
-            Ok(tesseract) => configure_tesseract(tesseract),
-            Err(e) => {
-                log::error!("failed to deserialize tesseract: {}", e);
-                log::warn!("creating new tesseract");
-                configure_tesseract(Tesseract::default())
+        if overwrite_old_account {
+            // delete old account data
+            if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.uplink_path) {
+                log::warn!("failed to delete uplink directory: {}", e);
             }
-        },
-        Err(e) => {
-            log::error!("failed to open file: {}", e);
-            log::warn!("creating new tesseract");
 
-            // create the file so it can be saved later
-            if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
-                log::error!("failed to create tesseract file: {}", e);
-                return Err(warp::error::Error::CannotSaveTesseract);
+            // create directories
+            if let Err(e) = std::fs::create_dir_all(&STATIC_ARGS.warp_path) {
+                log::warn!("failed to create warp directory: {}", e);
             }
-            configure_tesseract(Tesseract::default())
         }
-    };
 
-    Ok(tesseract)
+        // open existing file or create new one
+        Tesseract::open_or_create(&STATIC_ARGS.warp_path, &STATIC_ARGS.tesseract_file)
+    })
+    .await
+    .map_err(anyhow::Error::from)?
 }
 
 impl From<&DiscoveryMode> for Discovery {
@@ -390,6 +385,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     // in the near future
     config.store_setting.discovery = Discovery::from(&STATIC_ARGS.discovery);
 
+    config.save_phrase = true; // TODO: This should be bound to a setting within Uplink so that the user can choose not to reveal the phrase for increased security.``
     config.ipfs_setting.disable_quic = !STATIC_ARGS.enable_quic;
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
@@ -424,31 +420,4 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         constellation,
         blink,
     })
-}
-
-pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Error> {
-    log::info!("saving tesseract");
-    let mut file = match std::fs::OpenOptions::new()
-        .write(true)
-        .append(false)
-        .create(false)
-        .open(&STATIC_ARGS.tesseract_path)
-    {
-        Ok(f) => f,
-        Err(e) => {
-            log::error!("failed to open tesseract keystore for saving: {}", e);
-            return Err(Error::CorruptedDataStore);
-        }
-    };
-    if let Err(e) = tesseract.to_writer(&mut file) {
-        log::error!("tesseract.to_writer() failed: {}", e);
-        return Err(e);
-    }
-
-    if let Err(e) = file.sync_all() {
-        log::error!("failed to sync tesseract: {}", e);
-        return Err(Error::CorruptedDataStore);
-    }
-
-    Ok(())
 }

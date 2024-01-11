@@ -66,6 +66,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },*/
             SettingSection {
+                aria_label: "app-language-section".into(),
                 section_label: get_local_text("settings-general.app-language"),
                 section_description: get_local_text("settings-general.change-language"),
                 Select {
@@ -78,6 +79,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "font-section".into(),
                 section_label: get_local_text("settings-general.font"),
                 section_description: get_local_text("settings-general.font-description"),
                 Select {
@@ -108,6 +110,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 },
             },
             SettingSection {
+                aria_label: "font-scaling-section".into(),
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
@@ -120,6 +123,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "theme-section".into(),
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 no_border: true,
@@ -169,6 +173,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 },
             },
             SettingSectionSimple {
+                aria_label: "color-section".into(),
                 div {
                     class: "color-swatches",
                     Button {

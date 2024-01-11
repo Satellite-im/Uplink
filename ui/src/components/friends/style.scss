@@ -99,3 +99,8 @@
         align-self: center;
     }
 }
+@media (max-width: 400px) {
+    .add-friend {
+        width: 70%;
+  }
+}

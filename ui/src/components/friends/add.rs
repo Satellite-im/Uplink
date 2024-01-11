@@ -103,7 +103,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let username = identity.username();
     let short_name = format!("{}#{}", username, short_id);
     let short_name_context = short_name.clone();
-    let add_friend_lable = if !state.read().ui.is_minimal_view() {
+    let add_friend_label = if !state.read().ui.is_minimal_view() {
         get_local_text("uplink.add")
     } else {
         String::new()
@@ -277,7 +277,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 }
                 Button {
                     icon: add_friend_icon,
-                    text: add_friend_lable.to_string(),
+                    text: add_friend_label.to_string(),
                     disabled: !friend_input_valid.get(),
                     onpress: move |_| {
                         if STATIC_ARGS.use_mock {

@@ -45,6 +45,7 @@ uplink = Uplink
     .copy-text = Kopiraj text
     .copy = Kopiraj
     .paste = Zalijepi
+    .go-back = Idi nazad
     
 community = Zajednica
     .invited = Pozvan si!
@@ -224,6 +225,13 @@ settings-profile = Postavke profila
     .status-idle = Neaktivan
     .status-do-not-disturb = Nemoj ometati
     .status-offline = Offline
+    .recovery-seed = Ključ za oporavak
+    .recovery-seed-description = Ovaj ključ predstavlja "glavni ključ" za vaš račun. Čuvajte ga sigurno na mjestu kako biste održali ispravnu kontrolu i sigurnost nad svojim Uplink računom.
+    .reveal-recovery-seed = Otkrij Ključ za Oporavak
+    .hide-recovery-seed = Sakrij Ključ za Oporavak
+    .store-on-account = Spremi ključ za oporavak na račun (onemogući ovo radi povećane sigurnosti)
+    .remove-recovery-seed = Ukloni Ključnu Riječ za Oporavak
+    .remove-recovery-seed-description = Uklanjanje ključne riječi iz pohrane može povećati sigurnost vašeg računa. Međutim, ova radnja je nepovratna, i ako niste prethodno napravili sigurnosnu kopiju ključne riječi, trebali biste odabrati 'Otkaži' ispod.
 
 settings-general = Opće postavke
     .overlay = Uplink Overlay
@@ -277,10 +285,19 @@ settings-files = Postavke datoteka
     .open-sync-folder = Otvori mapu za sinkronizaciju
     .open-sync-folder-description = Otvori mapu gdje su vaše datoteke sinkronizirane.
 
-settings-keybinds = Postavke tipkovnih prečaca
+settings-keybinds = Postavke Tipkovnih Prečaca
+    .reset = Vrati na prethodno
+    .reset-keybinds = Vrati Tipkovne Prečace
+    .reset-keybinds-description = Vrati tipkovne prečace na zadane postavke.
+    .info = Globalni tipkovni prečaci su onemogućeni dok ste na ovoj stranici. Kliknite za uređivanje tipkovnih prečaca, pritisnite tipkovni prečac za označavanje i pronalaženje određenih prečaca.
     .increase-font-size = Povećaj veličinu fonta unutar Uplinka.
     .decrease-font-size = Smanji veličinu fonta unutar Uplinka.
+    .toggle-mute = Uključi/isključi mikrofon.
+    .toggle-deafen = Uključi/isključi sve zvukove, uključujući mikrofon i slušalice.
+    .conflicting-keybinds = Sukobljeni Tipkovni Prečaci.
     .change-keybind = Snimi novi tipkovni prečac
+    .open-dev-tools = Otvori Web Inspektora
+    .toggle-devmode = Uključi/isključi Razvojni Način
     .cancel-change-keybind = Odustani od snimanja
 
 settings-extensions = Postavke proširenja
@@ -342,38 +359,53 @@ settings-about = O postavkama
     .made-in = Napravljeno u
     .team = Naš tim je širom svijeta s različitim pozadinama i svakodnevnim životima, svi rade na zajedničkom cilju izgradnje Uplinka i Satelita zajedno.
 
-media-player = Media Player
-    .enable-camera = Omogući kameru
+media-player = Multimedijski Preglednik
+    .enable-camera = Omogući Kameru
     .fullscreen = Puni zaslon
-    .popout-player = Iskočni player
-    .screenshare = Dijeljenje ekrana
-
-remote-controls = Daljinski upravljači
-    .mute = Bez zvuka
-    .unmute = Uključi zvuk
+    .popout-player = Izdvojeni Preglednik
+    .screenshare = Dijeljenje zaslona
+    
+remote-controls = Daljinski Upravljači 
+    .mute = Isključi zvuk
+    .unmute = Uključi zvuk 
     .listen = Slušaj
-    .silence = Tišina
-    .start-recording = Počni snimati
+    .silence = Utihni
+    .start-recording = Počni snimanje
     .stop-recording = Zaustavi snimanje
-    .incoming-call = Dolazna prijenos ...
-    .outgoing-call = Odlazna prijenos ...
+    .incoming-call = Dolazni prijenos ...
+    .outgoing-call = Odlazni prijenos ...
     .empty = Nitko nije ovdje
 
 unlock = Otključaj
-    .notice = (ovo se koristi za šifriranje svih podataka koje Uplink pohranjuje na vašem računalu kad ga ne koristite, tako da nitko ne može čitati vaše podatke.)
+    .notice = (Ovo se koristi za šifriranje svih podataka koje Uplink pohranjuje na vašem računalu kada ga ne koristite kako nitko ne bi mogao čitati vaše podatke.)
     .enter-pin = Unesite PIN
-    .create-account = Stvori račun
-    .unlock-account = Otključaj račun
+    .create-account = Kreiraj Račun
+    .unlock-account = Otključaj Račun
     .welcome = Dobrodošli natrag, { $name }
     .create-password = Odaberite svoju lozinku
-    .error-pin = Nešto nije u redu s PIN-om koji ste naveli.
-    .invalid-pin = Hmm, taj PIN nije radio.
-    .error-unknown-pin = Dogodila se nepoznata pogreška.
+    .error-pin = Nešto nije u redu s unesenim PIN-om.
+    .invalid-pin = Hmm, taj PIN ne radi.
+    .error-unknown-pin = Došlo je do nepoznate pogreške.
     .help = Pomoć (desni klik)
     .logging-in = Prijavljivanje...
 
+create-or-recover = Stvaranje Računa
+    .create = Stvori Novi Račun
+    .instructions = Kreirat ćemo račun za vas. Na sljedećem zaslonu vidjet ćete niz riječi. Screenshotajte ili ih zapišite. Ovo je jedini način za sigurnosnu kopiju vašeg računa.
+    .recover = Uvezi Račun
+
+copy-seed-words = Recovery Seed
+    .instructions = Zapišite ove riječi u redoslijedu u kojem se pojavljuju. Točan redoslijed je ključan prilikom obnavljanja računa.
+    .finished = Spremio Sam
+
+enter-seed-words = Recovery Seed
+    .instructions = Upišite vaš recovery seed ovdje. Možete unijeti jednu riječ po jednu ili sve odjednom razdvojene razmacima.
+    .submit = Obnovi Račun
+    .placeholder = Unesite Recovery Seed...
+
 auth = Stvaranje računa
     .enter-username = Unesite korisničko ime
+    .enter-username-subtext = Vrijeme je da odaberete svoje korisničko ime, možete ga kasnije promijeniti u postavkama.
 
 sidebar = Bočna traka
     .subtext = { $user } poslao je više privitaka
@@ -396,4 +428,3 @@ toast_actions = Akcije obavijesti
     .DisplayChat = Otvori razgovor
     .FriendListPending = Lista prijatelja
     .Dummy = Dummy akcija
-    

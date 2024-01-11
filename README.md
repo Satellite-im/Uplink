@@ -16,7 +16,7 @@ The goal should be to build a hyper-customizable application that can run anywhe
 ---
 ## Pre-Compiled Development
 
-For rapid inspection of our deployed binaries you can open the settings once signed into Uplink, then navigate to "about" and click the version number 10 times which will enable a "developer" section in the settings. From here you can enabled experimental features as well as helpful dev tools.
+For rapid inspection of our deployed binaries, you can open the settings once signed into Uplink, then navigate to `About` and click the version number 10 times, enabling a `Developer` section in the settings. From here, you can enable experimental features and helpful dev tools.
 
 
 ## Quickstart
@@ -50,7 +50,8 @@ cargo run --bin uplink --profile=rapid
 | audio opus | brew install opus |
 
 For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
-And for Windows, I followed the steps on this site here
+
+And for Windows, I followed the steps on this site here:
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
@@ -87,17 +88,6 @@ And for Windows, I followed the steps on this site here
 | libopus-dev| `sudo dnf install opus-devel` |
 | libxdo-dev| `sudo dnf install libxdo-devel` |
 
-## How to add the extension settings in Uplink:
-
-- Open Uplink and navigate to Settings > Extensions > Settings > Open Extensions.
-- In another Finder window, open Uplink.
-- Inside Uplink, go to Target > Debug, where you'll find the Emoji selector.
-- Drag the Emoji selector to the Extensions window that is still open.
-- Close all open windows.
-- Finally, run cargo run trace2.
-
-https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2
-
 
 ## Contributing
 
@@ -108,4 +98,3 @@ Guidelines for contributing are located in the [`contributing_process.md`](docs/
 # Contributors
 
 ![GitHub Contributors Image](https://contrib.rocks/image?repo=Satellite-im/Uplink)
-

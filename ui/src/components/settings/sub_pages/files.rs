@@ -15,6 +15,7 @@ pub fn FilesSettings(cx: Scope) -> Element {
             id: "settings-files",
             aria_label: "settings-files",
             SettingSection {
+                aria_label: "local-sync-section".into(),
                 section_label: get_local_text("settings-files.local-sync"),
                 section_description: get_local_text("settings-files.local-sync-description"),
                 Switch {
