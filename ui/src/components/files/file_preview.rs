@@ -27,8 +27,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     if !temp_dir.exists() {
         cx.props.on_download.call(Some(temp_dir.clone()));
     }
-    let temp_file_path_as_string = temp_dir.clone().to_string_lossy().to_string();
-
+    let temp_file_path_as_string = temp_dir.to_string_lossy().to_string().replace("\\", "/");
     use_component_lifecycle(
         cx,
         || {},
@@ -37,7 +36,11 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         },
     );
 
-    println!("PHILL ---> temp_dir: {}", temp_dir.to_string_lossy());
+    println!(
+        "PHILL ---> File Exist: {}, temp_file_path_as_string: {}",
+        temp_dir.exists(),
+        temp_file_path_as_string,
+    );
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
@@ -58,7 +61,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 max_height: IMAGE_MAX_HEIGHT,
                 max_width: IMAGE_MAX_WIDTH,
                 src: format_args!("{}", if temp_dir.exists()
-                    { String::from("C:/Users/phil/.uplink/temp_files/test_with_lucas.png") }
+                    { temp_file_path_as_string }
                     else {thumbnail} ),
             },
         },
