@@ -38,7 +38,6 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     );
 
     println!("PHILL ---> temp_dir: {}", temp_dir.to_string_lossy());
-
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
@@ -59,7 +58,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 max_height: IMAGE_MAX_HEIGHT,
                 max_width: IMAGE_MAX_WIDTH,
                 src: format_args!("{}", if temp_dir.exists()
-                    { String::from("C:\\Users\\phil\\.uplink\\temp_files\\test_with_lucas.png") }
+                    { String::from("C:/Users/phil/.uplink/temp_files/test_with_lucas.png") }
                     else {thumbnail} ),
             },
         },
