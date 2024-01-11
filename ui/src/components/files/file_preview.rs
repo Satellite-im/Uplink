@@ -32,14 +32,11 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         temp_dir.to_string_lossy().to_string()
     } else {
         format!(
-            "{}",
+            "http://dioxus.{}",
             temp_dir.to_string_lossy().to_string().replace("\\", "/")
         )
     };
-    println!(
-        "Phill -> temp_file_path_as_string: {}",
-        temp_file_path_as_string
-    );
+
     use_component_lifecycle(
         cx,
         || {},
@@ -73,40 +70,4 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
         },
     ))
-}
-
-fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String {
-    let file = match std::fs::read(filepath) {
-        Ok(file) => file,
-        Err(_) => {
-            return String::new();
-        }
-    };
-
-    let parts_of_filename: Vec<&str> = filename.split('.').collect();
-    let mime = match parts_of_filename.last() {
-        Some(m) => match *m {
-            "png" => IMAGE_PNG.to_string(),
-            "jpg" => IMAGE_JPEG.to_string(),
-            "jpeg" => IMAGE_JPEG.to_string(),
-            "svg" => IMAGE_SVG.to_string(),
-            &_ => "".to_string(),
-        },
-        None => "".to_string(),
-    };
-
-    if mime.is_empty() {
-        return String::new();
-    }
-
-    let image = match &file.len() {
-        0 => "".to_string(),
-        _ => {
-            let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
-            let img = prefix + base64_image.as_str();
-            img
-        }
-    };
-    image
 }
