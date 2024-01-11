@@ -11,6 +11,7 @@ use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
 use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
 use common::utils::lifecycle::use_component_lifecycle;
 use common::STATIC_ARGS;
+use common::utils::treat_paths_to_load_local_files::treat_paths_to_load_local_files;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use dioxus::prelude::*;
@@ -204,7 +205,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     if !temp_dir.exists() {
                                         cx.props.on_press.call(Some(temp_dir.clone()));
                                     }
-                                    let temp_path_as_string = temp_dir.clone().to_string_lossy().to_string();
+                                    let temp_file_path_as_string = treat_paths_to_load_local_files(temp_dir.clone());
                                     rsx!(
                                             Modal {
                                                 open: *fullscreen_preview.clone(),
@@ -215,8 +216,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 img {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
-                                                    src: format_args!("{}", if temp_dir.exists() && !cfg!(target_os = "windows") 
-                                                        { temp_path_as_string} 
+                                                    src: format_args!("{}", if temp_dir.exists()
+                                                        { temp_file_path_as_string} 
                                                         else {large_thumbnail} ),
                                                     max_height: IMAGE_MAX_HEIGHT,
                                                     max_width: IMAGE_MAX_WIDTH,

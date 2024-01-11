@@ -5,11 +5,11 @@ use common::language::get_local_text;
 use common::state::State;
 use common::utils::img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH};
 use common::utils::lifecycle::use_component_lifecycle;
+use common::utils::treat_paths_to_load_local_files::treat_paths_to_load_local_files;
 use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use mime::{IMAGE_JPEG, IMAGE_PNG, IMAGE_SVG};
 use warp::constellation::file::File;
 
 #[derive(Props)]
@@ -28,14 +28,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     if !temp_dir.exists() {
         cx.props.on_download.call(Some(temp_dir.clone()));
     }
-    let temp_file_path_as_string = if !cfg!(target_os = "windows") {
-        temp_dir.to_string_lossy().to_string()
-    } else {
-        format!(
-            "http://dioxus.{}",
-            temp_dir.to_string_lossy().to_string().replace("\\", "/")
-        )
-    };
+    let temp_file_path_as_string = treat_paths_to_load_local_files(temp_dir.clone());
 
     use_component_lifecycle(
         cx,
