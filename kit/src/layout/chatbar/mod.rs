@@ -234,7 +234,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 *selected_suggestion.write_silent() = None;
                                 return;
                             }
-                            let current = &mut *selected_suggestion.write_silent();
+                            let current = &mut *selected_suggestion.write();
                             let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
                                     Some(v) => (v + 1) % amount,
@@ -293,6 +293,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }
+    log::debug!("{:?}", cx.props.selected.read());
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {

@@ -1,32 +1,55 @@
-// Init EasyMDE
-var easyMDE = new EasyMDE({
-    element: document.getElementById('$EDITOR_ID'),
-    toolbar: false,
-    inputStyle: "contenteditable",
-    status: false,
-    scrollbarStyle: "null",
-    minHeight: "0",
-    theme: null,
-    styleSelectedText: false,
-    renderingConfig: {
-        codeSyntaxHighlighting: true
+let text = document.getElementById('$EDITOR_ID')
+
+var keys = [{
+    key: "ArrowUp", run: () => {
+        if (text.classList.contains("up-down-disabled")) {
+            text.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowUp' }))
+            dioxus.send(`{\"KeyPress\":\"ArrowUp\"}`)
+            return true;
+        }
     }
+},
+{
+    key: "ArrowDown", run: () => {
+        if (text.classList.contains("up-down-disabled")) {
+            text.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowDown' }))
+            dioxus.send(`{\"KeyPress\":\"ArrowDown\"}`)
+            return true;
+        }
+    }
+}].concat(ChatEditorKeys(() => dioxus.send(`\"Submit\"`)))
+
+function forwardevent(e) {
+    newEvent = new e.constructor(e.type, e)
+    text.dispatchEvent(newEvent)
+    return newEvent.defaultPrevented
+}
+
+var editor = new MarkdownEditor(
+    document.getElementById('$EDITOR_ID'), {
+    keys: keys,
+    listeners: {
+        //Forward key events to underlying text area
+        "keydown": forwardevent,
+        "keyup": forwardevent,
+        "keypress": forwardevent,
+        "onblue": (e) => {
+            new_event = new e.constructor(e.type, e)
+            text.dispatchEvent(new_event)
+        }
+    },
+    maxLength: text.maxlength,
+    editable: !text.disabled,
 });
 
-easyMDE.value('$INIT');
+editor.value('$INIT');
 
-easyMDE.codemirror.on("change", () => {
+editor.registerListener("input", ({ _element, _codemirror, value }) => {
     // Sync value to uplink
-    dioxus.send(`{\"Input\":\"${easyMDE.value().replaceAll("\n", '\\n')}\"}`)
+    dioxus.send(`{\"Input\":\"${value.replaceAll("\n", '\\n')}\"}`)
 });
 
-easyMDE.codemirror.on("cursorActivity", () => {
-    var c = easyMDE.codemirror.getCursor()
-    var lines = easyMDE.value().split('\n')
-    var charAt = c.ch;
-    for (var i = 0; i < c.line; i++) {
-        charAt += lines[i].length + 1
-    }
-    // Sync cursor position to uplink
-    dioxus.send(`{\"Cursor\":${charAt}}`)
+editor.registerListener("selection", ({ _element, _codemirror, selection }) => {
+    // Sync cursor to uplink
+    dioxus.send(`{\"Cursor\":${selection.main.to}}`)
 });
