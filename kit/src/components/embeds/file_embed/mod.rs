@@ -1,5 +1,4 @@
 use std::ffi::OsStr;
-use std::fs;
 use std::path::PathBuf;
 
 use crate::elements::button::Button;
@@ -7,6 +6,7 @@ use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::is_video;
 use common::utils::clear_temp_files_dir::clear_temp_files_directory;
 use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
 use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
@@ -163,7 +163,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
     let file_name_with_extension = cx.props.filename.to_string();
-    let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
+    let temp_dir = STATIC_ARGS
+        .temp_files
+        .join(file_name_with_extension.clone());
+    let is_video = is_video(&file_name_with_extension);
 
     use_component_lifecycle(
         cx,
@@ -198,7 +201,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
-                        if has_thumbnail {
+                        if has_thumbnail || is_video {
                             rsx!(
                                 fullscreen_preview.then(|| {
                                     if !temp_dir.exists() {
@@ -210,35 +213,74 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 open: *fullscreen_preview.clone(),
                                                 onclose: move |_| fullscreen_preview.set(false),
                                                 transparent: false,
-                                                close_on_click_inside_modal: true,
+                                                close_on_click_inside_modal: false,
                                                 dont_pad: true,
-                                                img {
+                                                if is_video {
+                                                    rsx!(video {
+                                                        id: "image-preview-modal-file-embed",
+                                                        aria_label:"image-preview-modal-file-embed",
+                                                        max_height: IMAGE_MAX_HEIGHT,
+                                                        max_width: IMAGE_MAX_WIDTH,
+                                                        controls: true, 
+                                                        src: format_args!("{}", if temp_dir.exists() { temp_path_as_string } else {"".to_string()} ),
+                                        
+                                                    })
+                                                } else {
+                                                    rsx!(img {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
                                                     src: format_args!("{}", if temp_dir.exists() { temp_path_as_string} else {large_thumbnail} ),
                                                     max_height: IMAGE_MAX_HEIGHT,
                                                     max_width: IMAGE_MAX_WIDTH,
                                                     onclick: move |e| e.stop_propagation(),
-                                                },
-                                            }
+                                                })
+                                            }}
                                     )}),
                                 div {
                                     class: "image-container",
                                     aria_label: "message-image-container",
-                                    img {
-                                        aria_label: "message-image",
-                                        onclick: move |mouse_event_data: Event<MouseData>|
-                                        if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                            fullscreen_preview.set(true)
-                                        },
-                                        class: format_args!(
-                                            "image {} expandable-image",
-                                            if cx.props.big.unwrap_or_default() {
-                                                "big"
-                                            } else { "" }
-                                        ),
-                                        src: "{thumbnail}",
-                                    },
+                                    if is_video {
+                                        rsx!(div {
+                                                height: "60px",
+                                                onclick: move |mouse_event_data: Event<MouseData>|
+                                                if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                                    fullscreen_preview.set(true)
+                                                },
+                                                IconElement {
+                                                    icon: Icon::Document
+                                                }
+                                                if !file_extension_is_empty {
+                                                    rsx!( label {
+                                                        class: "file-embed-type",
+                                                        "{file_extension}"
+                                                    })
+                                                }
+                                                div {
+                                                    class: "play-button",
+                                                    Button {
+                                                        icon: Icon::Play,
+                                                        appearance: Appearance::Transparent,
+                                                        small: true,
+                                                    }
+                                                }
+                                            })
+                                    } else {
+                                        rsx!(img {
+                                            aria_label: "message-image",
+                                            onclick: move |mouse_event_data: Event<MouseData>|
+                                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                                fullscreen_preview.set(true)
+                                            },
+                                            class: format_args!(
+                                                "image {} expandable-image",
+                                                if cx.props.big.unwrap_or_default() {
+                                                    "big"
+                                                } else { "" }
+                                            ),
+                                            src: "{thumbnail}",
+                                        },)
+                                    }
+                                    
                                     show_download_button_if_enabled(cx, with_download_button, btn_icon),
                                    }
                                     )
@@ -285,7 +327,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 )
                         }
                     }
-                    if !has_thumbnail || is_from_attachments {
+                    if !has_thumbnail || is_from_attachments || !is_video {
                         rsx!( div {
                             class: "file-info",
                             width: "100%",

@@ -10,8 +10,8 @@ use crate::elements::{
 };
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
-use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::{icons::outline::Shape as Icon, is_video};
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
@@ -34,13 +34,6 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
     loading: Option<bool>,
-}
-
-pub fn is_video(file_name: String) -> bool {
-    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-    let file_extension = get_file_extension(file_name);
-
-    video_formats.iter().any(|f| f == &file_extension)
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
@@ -77,7 +70,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
-    let is_video = is_video(cx.props.text.clone());
+    let is_video = is_video(&cx.props.text.clone());
 
     let loading = cx.props.loading.unwrap_or_default();
 
