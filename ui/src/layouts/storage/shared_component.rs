@@ -6,6 +6,7 @@ use crate::layouts::storage::send_files_layout::send_files_components::{
 use super::files_layout::controller::StorageController;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::is_video;
 use common::state::{State, ToastNotification};
 use common::warp_runner::thumbnail_to_base64;
 use common::{language::get_local_text, ROOT_DIR_NAME};
@@ -283,7 +284,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'
                                         ));
                                         return;
                                     }
-                                    if file3.thumbnail().is_empty() {
+                                    if file3.thumbnail().is_empty() && !is_video(&file3.name()) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(

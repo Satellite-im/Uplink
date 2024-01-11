@@ -7,6 +7,7 @@ use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::utils::clear_temp_files_dir::clear_temp_files_directory;
 use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
 use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
 use common::utils::lifecycle::use_component_lifecycle;
@@ -163,13 +164,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let has_thumbnail = !thumbnail.is_empty();
     let file_name_with_extension = cx.props.filename.to_string();
     let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
-    let temp_dir2 = temp_dir.clone();
 
     use_component_lifecycle(
         cx,
         || {},
         move || {
-            let _ = fs::remove_file(temp_dir2.clone());
+            let _ = clear_temp_files_directory(None);
         },
     );
 
