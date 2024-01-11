@@ -32,11 +32,14 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         temp_dir.to_string_lossy().to_string()
     } else {
         format!(
-            "file://{}",
+            "dioxus://{}",
             temp_dir.to_string_lossy().to_string().replace("\\", "/")
         )
     };
-
+    println!(
+        "Phill -> temp_file_path_as_string: {}",
+        temp_file_path_as_string
+    );
     use_component_lifecycle(
         cx,
         || {},
