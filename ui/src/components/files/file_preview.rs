@@ -56,7 +56,9 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 aria_label: "file-preview-image",
                 max_height: IMAGE_MAX_HEIGHT,
                 max_width: IMAGE_MAX_WIDTH,
-                src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {thumbnail} ),
+                src: format_args!("{}", if temp_dir.exists() && !cfg!(target_os = "windows")
+                    { temp_file_path_as_string }
+                    else {thumbnail} ),
             },
         },
     ))

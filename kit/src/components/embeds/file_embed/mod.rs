@@ -164,10 +164,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_name_with_extension = cx.props.filename.to_string();
     let temp_dir = STATIC_ARGS.temp_files.join(file_name_with_extension);
     let temp_dir2 = temp_dir.clone();
-    println!(
-        "PHILL SHOW ME THIS PRINT HERE ON WINDWOS -> temp_dir: {:?}",
-        temp_dir
-    );
 
     use_component_lifecycle(
         cx,
@@ -219,7 +215,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 img {
                                                     id: "image-preview-modal-file-embed",
                                                     aria_label: "image-preview-modal-file-embed",
-                                                    src: format_args!("{}", if temp_dir.exists() { temp_path_as_string} else {large_thumbnail} ),
+                                                    src: format_args!("{}", if temp_dir.exists() && !cfg!(target_os = "windows") 
+                                                        { temp_path_as_string} 
+                                                        else {large_thumbnail} ),
                                                     max_height: IMAGE_MAX_HEIGHT,
                                                     max_width: IMAGE_MAX_WIDTH,
                                                     onclick: move |e| e.stop_propagation(),
