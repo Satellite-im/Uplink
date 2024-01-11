@@ -32,7 +32,7 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         temp_dir.to_string_lossy().to_string()
     } else {
         format!(
-            "dioxus://{}",
+            "{}",
             temp_dir.to_string_lossy().to_string().replace("\\", "/")
         )
     };
