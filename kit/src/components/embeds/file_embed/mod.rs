@@ -258,14 +258,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                         "{file_extension}"
                                                     })
                                                 }
-                                                div {
-                                                    class: "play-button",
-                                                    Button {
-                                                        icon: Icon::Play,
-                                                        appearance: Appearance::Transparent,
-                                                        small: true,
-                                                    }
-                                                }
                                             })
                                     } else {
                                         rsx!(img {
@@ -283,13 +275,19 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             src: "{thumbnail}",
                                         },)
                                     }
-                                    
                                     show_download_button_if_enabled(cx, with_download_button, btn_icon),
                                    }
                                     )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
-                            let thubmnail = get_file_thumbnail_if_is_image(filepath, filename.clone());
-                            if thubmnail.is_empty() {
+                            let is_image = is_image(filename.clone());
+                            if is_image && filepath.exists() {
+                                let fixed_path = get_fixed_path_to_load_local_file(filepath.clone());
+                                rsx!(img {
+                                    aria_label: "image-preview-modal",
+                                    src: "{fixed_path}",
+                                    onclick: move |e| e.stop_propagation(),
+                                })
+                            } else {
                                 rsx!(
                                     div {
                                         height: "60px",
@@ -306,12 +304,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     }
                                     )
-                            } else {
-                                rsx!(img {
-                                    aria_label: "image-preview-modal",
-                                    src: "{thubmnail}",
-                                    onclick: move |e| e.stop_propagation(),
-                                })
+                              
                             }
                         } else {
                             rsx!(
@@ -330,7 +323,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 )
                         }
                     }
-                    if !has_thumbnail || is_from_attachments || !is_video {
+                    if !has_thumbnail || !is_video || is_from_attachments  {
                         rsx!( div {
                             class: "file-info",
                             width: "100%",
@@ -364,14 +357,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
-fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String {
-    let file = match std::fs::read(filepath) {
-        Ok(file) => file,
-        Err(_) => {
-            return String::new();
-        }
-    };
-
+fn is_image(filename: String) -> bool {
     let parts_of_filename: Vec<&str> = filename.split('.').collect();
     let mime = match parts_of_filename.last() {
         Some(m) => match *m {
@@ -385,19 +371,10 @@ fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String
     };
 
     if mime.is_empty() {
-        return String::new();
+        return false;
     }
 
-    let image = match &file.len() {
-        0 => "".to_string(),
-        _ => {
-            let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
-            let img = prefix + base64_image.as_str();
-            img
-        }
-    };
-    image
+    true
 }
 
 fn show_download_button_if_enabled<'a>(
