@@ -8489,7 +8489,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=e7572e83ad80ff165467c61d45975a8591deb309#e7572e83ad80ff165467c61d45975a8591deb309"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9888,7 +9888,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=e7572e83ad80ff165467c61d45975a8591deb309#e7572e83ad80ff165467c61d45975a8591deb309"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9944,7 +9944,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=e7572e83ad80ff165467c61d45975a8591deb309#e7572e83ad80ff165467c61d45975a8591deb309"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9976,7 +9976,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=e7572e83ad80ff165467c61d45975a8591deb309#e7572e83ad80ff165467c61d45975a8591deb309"
 dependencies = [
  "paste",
  "quote",
@@ -9986,7 +9986,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=e7572e83ad80ff165467c61d45975a8591deb309#e7572e83ad80ff165467c61d45975a8591deb309"
 dependencies = [
  "anyhow",
  "async-stream",

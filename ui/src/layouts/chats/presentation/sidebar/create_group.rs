@@ -21,7 +21,7 @@ use kit::{
     },
 };
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{crypto::DID, logging::tracing::log, raygun::GroupSettings};
 
 use crate::{layouts::chats::data::get_input_options, UplinkRoute};
 
@@ -39,6 +39,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let group_name = use_state(cx, || Some(String::new()));
+    let all_can_add_members = use_state(cx, || false);
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -60,13 +61,15 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _friends = State::get_friends_by_first_letter(friends_list);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![selected_friends, chat_with, group_name];
+        to_owned![selected_friends, chat_with, group_name, all_can_add_members];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
                 let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
                 let group_name: Option<String> = group_name.current().as_ref().clone();
                 let group_name_string = group_name.clone().unwrap_or_default();
+                let mut settings = GroupSettings::default();
+                settings.set_members_can_add_participants(*all_can_add_members.current());
 
                 let (tx, rx) = oneshot::channel();
                 let cmd = RayGunCmd::CreateGroupConversation {
@@ -78,6 +81,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else {
                         group_name
                     },
+                    settings,
                     rsp: tx,
                 };
 
@@ -130,7 +134,23 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                             group_name.set(Some(v));
                         },
+                }
+            },
+            div {
+                Label {
+                    aria_label: "group-everyone-can-add-members".into(),
+                    text: "Everyone can add members".into(),
+                }
+                Checkbox {
+                    disabled: false,
+                    is_checked: *all_can_add_members.get(),
+                    width: "1em".into(),
+                    height: "1em".into(),
+                    on_click: move |_| {
+                        let new_value = !*all_can_add_members.get();
+                        all_can_add_members.set(new_value);
                     },
+                }
             },
             div {
                 class: "search-input",
