@@ -107,6 +107,9 @@
     .controls {
         position: relative;
     }
+    .user-info-status {
+        cursor: pointer;
+    }
 }
 @media (max-width: 600px) {
     .context-menu {
