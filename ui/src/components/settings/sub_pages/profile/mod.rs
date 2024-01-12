@@ -14,7 +14,6 @@ use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::indicator::{Indicator, Platform, Status};
 use kit::elements::checkbox::Checkbox;
-use kit::elements::loader::Loader;
 use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
@@ -545,9 +544,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             },
                         }
                     },
-                },
-                Loader {
-                    spinning: true
                 },
                 div {
                     class: "content-item",
