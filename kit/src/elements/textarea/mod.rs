@@ -348,7 +348,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             async move {
                 let _ = eval(
                     &update_char_counter_script
-                        .replace("$TEXT", &val)
+                        .replace("$TEXT", &val.replace('"', "\\\"").replace("\n", "\\n"))
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
                 );

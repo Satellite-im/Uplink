@@ -21,7 +21,7 @@ var keys = [{
             return true;
         }
     }
-}].concat(ChatEditorKeys(() => dioxus.send(`\"Submit\"`)))
+}].concat(MarkdownEditor.ChatEditorKeys(() => dioxus.send(`\"Submit\"`)))
 
 function forwardevent(e) {
     newEvent = new e.constructor(e.type, e)
@@ -42,15 +42,15 @@ var editor = new MarkdownEditor(
             text.dispatchEvent(new_event)
         }
     },
-    maxLength: text.maxlength,
     editable: !text.disabled,
+    highlightmap: MarkdownEditor.PrismMap
 });
 
 editor.value('$INIT');
 
 editor.registerListener("input", ({ _element, _codemirror, value }) => {
     // Sync value to uplink
-    dioxus.send(`{\"Input\":\"${value.replaceAll("\n", '\\n')}\"}`)
+    dioxus.send(`{\"Input\":\"${value.replaceAll("\"", '\\"').replaceAll("\n", '\\n')}\"}`)
 });
 
 editor.registerListener("selection", ({ _element, _codemirror, selection }) => {

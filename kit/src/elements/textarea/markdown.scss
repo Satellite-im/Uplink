@@ -1,5 +1,5 @@
 // Same styles as textarea. Maybe merge it?
-.EasyMDEContainer {
+.cm-editor {
     width: 100%;
     height: "auto";
     max-height: 250px; //Maybe make max variable?
@@ -16,23 +16,39 @@
         background-color: unset;
         border-radius: unset;
     }
-}
 
-.CodeMirror-scroll {
-    overflow-y: scroll;
-    max-height: 250px;
-    &::-webkit-scrollbar {
-        display: none;
+    .cm-cursor {
+        border-left-color: var(--text-color);
     }
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
 
-.CodeMirror-measure {
-    position: absolute;
-    overflow: hidden;
-    visibility: hidden;
-    width: 100%;
+    &.cm-focused {
+        outline: none;
+    }
+
+    .cm-content {
+        padding: 0;
+        white-space: pre-wrap;
+        word-wrap: anywhere;
+        width: 100%;
+    }
+
+    .cm-scroller {
+        overflow: hidden;
+        overflow-y: scroll;
+
+        font-family: unset;
+        line-height: unset;
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection {
+        background: var(--text-selection);
+    }
 }
 
 .cm-strikethrough {
@@ -43,25 +59,25 @@
     font-weight: bold;
 }
 
-.cm-em {
+.cm-emphasis {
     font-style: italic;
 }
 
-.cm-link {
-    text-decoration: underline
+.cm-url {
+    text-decoration: underline;
+    color: var(--text-color-link);
 }
 
-.cm-link {
-    color: var(--text-color-link)
-}
-
-.cm-comment,
-.cm-quote {
+.cm-codeblock,
+.cm-lineComment,
+.cm-blockComment,
+.cm-docComment,
+.cm-blockquote {
     color: hsl(220, 14%, 71%);
-    background-color: hsl(220, 13%, 18%);
+    background-color: color-mix(in srgb, hsl(220, 13%, 18%) 70%, transparent);
 }
 
-.cm-formatting-quote {
+.cm-blockquote {
     padding: 0 20px;
     border-left: 5px solid var(--secondary-light);
 
@@ -70,25 +86,6 @@
     }
 }
 
-.CodeMirror-placeholder {
-	color: var(--placeholder) !important;
+.cm-placeholder {
+    color: var(--placeholder) !important;
 }
-
-.CodeMirror-line span.cm-keyword {color: #708;}
-.CodeMirror-line span.cm-atom {color: #219;}
-.CodeMirror-line span.cm-number {color: #164;}
-.CodeMirror-line span.cm-def {color: #00f;}
-.CodeMirror-line span.cm-variable {color: black;}
-.CodeMirror-line span.cm-variable-2 {color: #05a;}
-.CodeMirror-line span.cm-variable-3 {color: #085;}
-.CodeMirror-line span.cm-property {color: black;}
-.CodeMirror-line span.cm-operator {color: black;}
-.CodeMirror-line span.cm-string {color: #a11;}
-.CodeMirror-line span.cm-string-2 {color: #f50;}
-.CodeMirror-line span.cm-meta {color: #555;}
-.CodeMirror-line span.cm-error {color: #f00;}
-.CodeMirror-line span.cm-qualifier {color: #555;}
-.CodeMirror-line span.cm-bracket {color: #997;}
-.CodeMirror-line span.cm-tag {color: #170;}
-.CodeMirror-line span.cm-attribute {color: #00c;}
-.CodeMirror-line span.cm-hr {color: #999;}
