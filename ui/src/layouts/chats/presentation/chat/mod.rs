@@ -30,7 +30,11 @@ use common::state::{ui, Action, Identity, State};
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{
+    crypto::DID,
+    logging::tracing::log,
+    raygun::{group::Group, ConversationType},
+};
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -160,7 +164,7 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             )),
         show_group_users
-            .map_or(false, |group_chat_id| (group_chat_id == chat_id) && (chat_data.read().active_chat.other_participants().len() > 1)).then(|| rsx!(
+            .map_or(false, |group_chat_id| (group_chat_id == chat_id) && (chat_data.read().active_chat.conversation_type() == ConversationType::Group)).then(|| rsx!(
                 Modal {
                     open: show_group_users.is_some(),
                     transparent: true,
