@@ -202,81 +202,83 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
-                        if has_thumbnail || is_video {
-                            rsx!(
-                                fullscreen_preview.then(|| {
-                                    if !temp_dir.exists() {
-                                        cx.props.on_press.call(Some(temp_dir.clone()));
-                                    }
-                                    let temp_file_path_as_string = get_fixed_path_to_load_local_file(temp_dir.clone());
-                                    rsx!(
-                                            Modal {
-                                                open: *fullscreen_preview.clone(),
-                                                onclose: move |_| fullscreen_preview.set(false),
-                                                transparent: false,
-                                                close_on_click_inside_modal: false,
-                                                dont_pad: true,
-                                                if is_video {
-                                                    rsx!(video {
+                            if has_thumbnail || is_video {
+                                rsx!(
+                                    fullscreen_preview.then(|| {
+                                        if !temp_dir.exists() {
+                                            cx.props.on_press.call(Some(temp_dir.clone()));
+                                        }
+                                        let temp_file_path_as_string = get_fixed_path_to_load_local_file(temp_dir.clone());
+                                        rsx!(
+                                                Modal {
+                                                    open: *fullscreen_preview.clone(),
+                                                    onclose: move |_| fullscreen_preview.set(false),
+                                                    transparent: false,
+                                                    close_on_click_inside_modal: false,
+                                                    dont_pad: true,
+                                                    if is_video {
+                                                        rsx!(video {
+                                                            id: "image-preview-modal-file-embed",
+                                                            aria_label:"image-preview-modal-file-embed",
+                                                            max_height: IMAGE_MAX_HEIGHT,
+                                                            max_width: IMAGE_MAX_WIDTH,
+                                                            controls: true, 
+                                                            src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {"".to_string()} ),
+                                            
+                                                        })
+                                                    } else {
+                                                        rsx!(img {
                                                         id: "image-preview-modal-file-embed",
-                                                        aria_label:"image-preview-modal-file-embed",
+                                                        aria_label: "image-preview-modal-file-embed",
+                                                        src: format_args!("{}", if temp_dir.exists()
+                                                            { temp_file_path_as_string}
+                                                            else {large_thumbnail} ),
                                                         max_height: IMAGE_MAX_HEIGHT,
                                                         max_width: IMAGE_MAX_WIDTH,
-                                                        controls: true, 
-                                                        src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {"".to_string()} ),
-                                        
+                                                        onclick: move |e| e.stop_propagation(),
                                                     })
-                                                } else {
-                                                    rsx!(img {
-                                                    id: "image-preview-modal-file-embed",
-                                                    aria_label: "image-preview-modal-file-embed",
-                                                    src: format_args!("{}", if temp_dir.exists()
-                                                        { temp_file_path_as_string}
-                                                        else {large_thumbnail} ),
-                                                    max_height: IMAGE_MAX_HEIGHT,
-                                                    max_width: IMAGE_MAX_WIDTH,
-                                                    onclick: move |e| e.stop_propagation(),
+                                                }}
+                                        )}),
+                                    div {
+                                        class: "image-container",
+                                        aria_label: "message-image-container",
+                                        if is_video {
+                                            rsx!(div {
+                                                    height: "60px",
+                                                    onclick: move |mouse_event_data: Event<MouseData>|
+                                                    if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                                        fullscreen_preview.set(true)
+                                                    },
+                                                    IconElement {
+                                                        icon: Icon::Document
+                                                    }
+                                                    if !file_extension_is_empty {
+                                                        rsx!( label {
+                                                            class: "file-embed-type",
+                                                            "{file_extension}"
+                                                        })
+                                                    }
                                                 })
-                                            }}
-                                    )}),
-                                div {
-                                    class: "image-container",
-                                    aria_label: "message-image-container",
-                                    if is_video {
-                                        rsx!(div {
-                                                height: "60px",
+                                        } else {
+                                            rsx!(img {
+                                                aria_label: "message-image",
                                                 onclick: move |mouse_event_data: Event<MouseData>|
                                                 if mouse_event_data.modifiers() != Modifiers::CONTROL {
                                                     fullscreen_preview.set(true)
                                                 },
-                                                IconElement {
-                                                    icon: Icon::Document
-                                                }
-                                                if !file_extension_is_empty {
-                                                    rsx!( label {
-                                                        class: "file-embed-type",
-                                                        "{file_extension}"
-                                                    })
-                                                }
-                                            })
-                                    } else {
-                                        rsx!(img {
-                                            aria_label: "message-image",
-                                            onclick: move |mouse_event_data: Event<MouseData>|
-                                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                fullscreen_preview.set(true)
-                                            },
-                                            class: format_args!(
-                                                "image {} expandable-image",
-                                                if cx.props.big.unwrap_or_default() {
-                                                    "big"
-                                                } else { "" }
-                                            ),
-                                            src: "{thumbnail}",
-                                        },)
+                                                class: format_args!(
+                                                    "image {} expandable-image",
+                                                    if cx.props.big.unwrap_or_default() {
+                                                        "big"
+                                                    } else { "" }
+                                                ),
+                                                src: "{thumbnail}",
+                                            },)
+                                        }
+                                        if !is_video {
+                                            show_download_button_if_enabled(cx, with_download_button, btn_icon);
+                                        }
                                     }
-                                    show_download_button_if_enabled(cx, with_download_button, btn_icon),
-                                   }
                                     )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
                             let is_image = is_image(filename.clone());
