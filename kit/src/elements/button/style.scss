@@ -2,7 +2,7 @@
   user-select: none;
   cursor: pointer;
   border: none;
-  height: var(--height-input);
+  height: var(--height-input) !important;
   border-radius: var(--border-radius-more);
   background-color: var(--primary);
   color: var(--text-color-dark);
