@@ -264,7 +264,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                         },
                         aria_label: "create-account-button".into(),
                         appearance: kit::elements::Appearance::Primary,
-                        loading:  if *cmd_in_progress.get() { true } else { false },
+                        loading:  *cmd_in_progress.get(),
                         disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
                             // these are only for testing. 
