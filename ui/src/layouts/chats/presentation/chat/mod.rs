@@ -160,7 +160,7 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             )),
         show_group_users
-            .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
+            .map_or(false, |group_chat_id| (group_chat_id == chat_id) && (chat_data.read().active_chat.other_participants().len() > 1)).then(|| rsx!(
                 Modal {
                     open: show_group_users.is_some(),
                     transparent: true,
