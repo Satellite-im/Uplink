@@ -5,13 +5,15 @@ function countGraphemeClusters(input) {
 var text = "$TEXT"
 var e = document.getElementById('$UUID')
 var update = "$UPDATE";
-if (update === "true" && e.markdownEditor) {
+if (e.markdownEditor) {
   // Only update if text differs
-  if (e.markdownEditor.value() !== text) {
+  if (update === "true" && e.markdownEditor.value() !== text) {
     e.markdownEditor.value(text);
   }
-  e.markdownEditor.updatePlaceholder("$PLACEHOLDER")
-  e.markdownEditor.setEditable(!$DISABLED)
+  let placeholder = "$PLACEHOLDER"
+  if (placeholder !== "$"+"PLACEHOLDER")  
+    e.markdownEditor.updatePlaceholder(placeholder)
+  e.markdownEditor.setEditable("$DISABLED" !== "true")
 }
 
 var counter = document.getElementById('$UUID-char-counter');

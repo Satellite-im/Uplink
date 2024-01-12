@@ -332,27 +332,17 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text_value = use_ref(cx, || value.clone());
     let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
 
-    use_future(cx, value, |val| {
-        to_owned![text_value, eval, show_char_counter, sync_script];
-        async move {
-            *text_value.write_silent() = val;
-            if show_char_counter {
-                let _ = eval(&sync_script.replace("$TEXT", &text_value.read()));
-            }
-        }
-    });
-
     // Sync changed to the editor
-    // Dont do it when editor text changes
     use_future(
         cx,
-        (&id, placeholder, &disabled),
-        |(_id, placeholder, disabled)| {
-            to_owned![eval, value, sync_script];
+        (value, placeholder, &disabled),
+        |(value, placeholder, disabled)| {
+            to_owned![eval, value, sync_script, text_value];
             async move {
+                let update = !text_value.read().eq(&value);
                 let _ = eval(
                     &sync_script
-                        .replace("$UPDATE", "true")
+                        .replace("$UPDATE", &update.to_string())
                         .replace("$TEXT", &value.replace('"', "\\\"").replace("\n", "\\n"))
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
