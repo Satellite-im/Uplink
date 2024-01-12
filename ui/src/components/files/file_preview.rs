@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use common::language::get_local_text;
 use common::state::State;
+use common::utils::clear_temp_files_dir::clear_temp_files_directory;
 use common::utils::img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH};
+use common::utils::lifecycle::use_component_lifecycle;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use common::{is_video, STATIC_ARGS};
@@ -27,6 +29,14 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.on_download.call(Some(temp_dir.clone()));
     }
     let temp_file_path_as_string = get_fixed_path_to_load_local_file(temp_dir.clone());
+
+    use_component_lifecycle(
+        cx,
+        || {},
+        move || {
+            let _ = clear_temp_files_directory(None);
+        },
+    );
 
     cx.render(rsx!(
         ContextMenu {

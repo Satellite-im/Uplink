@@ -7,8 +7,6 @@ use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
-use common::utils::clear_temp_files_dir::clear_temp_files_directory;
-use common::utils::lifecycle::use_component_lifecycle;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
@@ -105,14 +103,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     );
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
-
-    use_component_lifecycle(
-        cx,
-        || {},
-        move || {
-            let _ = clear_temp_files_directory(None);
-        },
-    );
 
     cx.render(rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
