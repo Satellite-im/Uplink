@@ -248,6 +248,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             id: "settings-audio",
             aria_label: "settings-audio",
             SettingSection {
+                aria_label: "input-device-section".into(),
                 section_label: get_local_text("settings-audio.input-device"),
                 section_description: get_local_text("settings-audio.input-device-description"),
                 Select {
@@ -271,6 +272,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //     }
             // }
             SettingSectionSimple {
+                aria_label: "test-device-input-section".into(),
                 Button {
                     text: get_local_text("settings-audio.device-test"),
                     disabled: false,
@@ -283,6 +285,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "output-device-section".into(),
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
                 Select {
@@ -306,6 +309,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //     }
             // }
             SettingSectionSimple {
+                aria_label: "test-device-output-section".into(),
                 Button {
                     text: get_local_text("settings-audio.device-test"),
                     disabled: false,
@@ -344,6 +348,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             //}
 
             SettingSection {
+                aria_label: "echo-cancellation-section".into(),
                 section_label: get_local_text("settings-audio.echo-cancellation"),
                 section_description: get_local_text("settings-audio.echo-cancellation-description"),
                 Switch {
@@ -361,6 +366,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
 
             SettingSection {
+                aria_label: "interface-sounds-section".into(),
                 section_label: get_local_text("settings-audio.interface-sounds"),
                 section_description: get_local_text("settings-audio.interface-sounds-description"),
                 Switch {
@@ -374,6 +380,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "media-sounds-section".into(),
                 section_label: get_local_text("settings-audio.media-sounds"),
                 section_description: get_local_text("settings-audio.media-sounds-description"),
                 Switch {
@@ -387,6 +394,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "message-sounds-section".into(),
                 section_label: get_local_text("settings-audio.message-sounds"),
                 section_description: get_local_text("settings-audio.message-sounds-description"),
                 Switch {
@@ -400,6 +408,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "call-timer-section".into(),
                 section_label: get_local_text("settings-audio.call-timer"),
                 section_description: get_local_text("settings-audio.call-timer-description"),
                 Switch {}

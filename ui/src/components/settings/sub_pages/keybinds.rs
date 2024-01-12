@@ -253,6 +253,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                aria_label: "reset-keybinds-section".into(),
                 section_label: get_local_text("settings-keybinds.reset-keybinds"),
                 section_description: get_local_text("settings-keybinds.reset-keybinds-description"),
                 Button {
