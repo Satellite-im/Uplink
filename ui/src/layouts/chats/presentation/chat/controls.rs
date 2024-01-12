@@ -132,15 +132,15 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let buttons = cx.render(rsx!(
         if cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(Button {
-                icon: Icon::PencilSquare,
-                aria_label: "edit-group".into(),
+                icon: Icon::Users,
+                aria_label: "edit-group-members".into(),
                 appearance: if edit_group_activated {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
                 },
-                text: text_builder("friends.edit-group"),
-                tooltip: tooltip_builder("friends.edit-group", arrow_top),
+                text: text_builder("friends.manage-group-members"),
+                tooltip: tooltip_builder("friends.manage-group-members", arrow_top),
                 onpress: move |_| {
                     if edit_group_activated {
                         cx.props.show_edit_group.set(None);
@@ -149,6 +149,18 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                         cx.props.show_group_users.set(None);
                     }
                     show_more.set(false);
+                }
+            })
+        }
+        if cx.props.is_owner && conversation_type == ConversationType::Group {
+            rsx!(Button {
+                icon: Icon::Cog,
+                aria_label: "group-settings".into(),
+                appearance: Appearance::Secondary,
+                text: text_builder("settings"),
+                tooltip: tooltip_builder("settings", arrow_top),
+                onpress: move |_| {
+                    
                 }
             })
         }

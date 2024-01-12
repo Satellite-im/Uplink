@@ -113,8 +113,8 @@ pub fn EditGroup(cx: Scope) -> Element {
 
     cx.render(rsx!(
         div {
-            id: "edit-group",
-            aria_label: "edit-group",
+            id: "edit-members",
+            aria_label: "edit-members",
             Topbar {
                 with_back_button: false,
                 div {
