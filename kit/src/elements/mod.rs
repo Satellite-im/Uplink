@@ -6,6 +6,7 @@ pub mod file;
 pub mod folder;
 pub mod input;
 pub mod label;
+pub mod loader;
 pub mod multiline;
 pub mod radio_list;
 pub mod range;
