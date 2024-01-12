@@ -139,7 +139,9 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                     ContextItem {
                         icon: Icon::PencilSquare,
                         text: "Rename".into(),
-                        onpress: move |_| {}
+                        onpress: move |_| {
+                            cx.props.show_rename_group.set(true);
+                        }
                     },
                     ContextItem {
                         icon: Icon::Users,
@@ -190,6 +192,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                                     if v != conversation_title.clone() {
                                         ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
                                     }
+                                    cx.props.show_rename_group.set(false);
                                 },
                             },
                     })
