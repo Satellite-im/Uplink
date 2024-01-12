@@ -152,10 +152,11 @@ pub fn Compose(cx: Scope) -> Element {
                 Modal {
                     open: show_edit_group.is_some(),
                     transparent: true,
-                    with_title: get_local_text("friends.edit-group"),
+                    with_title: get_local_text("friends.manage-group-members"),
                     onclose: move |_| {
                         show_edit_group.set(None);
                     },
+                    right: "var(--gap)",
                     EditGroup {}
                 }
             )),
