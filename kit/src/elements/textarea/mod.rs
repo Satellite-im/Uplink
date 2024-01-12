@@ -343,7 +343,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let _ = eval(
                     &sync_script
                         .replace("$UPDATE", &update.to_string())
-                        .replace("$TEXT", &value.replace('"', "\\\"").replace("\n", "\\n"))
+                        .replace("$TEXT", &value.replace('"', "\\\"").replace('\n', "\\n"))
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
                 );
@@ -356,7 +356,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)
             .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
-            .replace("$INIT", &value.replace('"', "\\\"").replace("\n", "\\n"));
+            .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
         async move {
             if let Ok(eval) = eval(&rich_editor) {
                 loop {
