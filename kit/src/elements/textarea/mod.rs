@@ -113,7 +113,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .replace("$MULTI_LINE", &format!("{}", true));
     let disabled = *loading || *is_disabled;
 
-    let update_char_counter_script = include_str!("./sync_data.js").replace("$UUID", &id);
+    let sync = include_str!("./sync_data.js").replace("$UUID", &id);
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
@@ -126,7 +126,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             *cursor_position.write_silent() = Some(val.chars().count() as i64);
             *text_value.write_silent() = val;
             if show_char_counter {
-                let _ = eval(&update_char_counter_script.replace("$TEXT", &text_value.read()));
+                let _ = eval(&sync.replace("$TEXT", &text_value.read()));
             }
         }
     });
@@ -344,10 +344,10 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         (value, placeholder, &disabled),
         |(val, placeholder, disabled)| {
             to_owned![eval];
-            let update_char_counter_script = include_str!("./sync_data.js").replace("$UUID", &id);
+            let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
             async move {
                 let _ = eval(
-                    &update_char_counter_script
+                    &sync_script
                         .replace("$TEXT", &val.replace('"', "\\\"").replace("\n", "\\n"))
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
