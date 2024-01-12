@@ -40,12 +40,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let favorite = chat_data.read().active_chat.is_favorite();
     let conversation_type = chat_data.read().active_chat.conversation_type();
-    let edit_group_activated = cx
-        .props
-        .show_edit_group
-        .get()
-        .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
-        .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
     let show_more = use_state(cx, || false);
@@ -134,7 +128,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             rsx!(Button {
                 icon: Icon::Users,
                 aria_label: "edit-group-members".into(),
-                appearance: if edit_group_activated {
+                appearance: if cx.props.show_manage_members.is_some() {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -142,10 +136,10 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: text_builder("friends.manage-group-members"),
                 tooltip: tooltip_builder("friends.manage-group-members", arrow_top),
                 onpress: move |_| {
-                    if edit_group_activated {
-                        cx.props.show_edit_group.set(None);
+                    if cx.props.show_manage_members.is_some() {
+                        cx.props.show_manage_members.set(None);
                     } else if chat_data.read().active_chat.is_initialized {
-                        cx.props.show_edit_group.set(Some(chat_data.read().active_chat.id()));
+                        cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
                         cx.props.show_group_users.set(None);
                     }
                     show_more.set(false);
