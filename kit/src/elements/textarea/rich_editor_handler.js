@@ -48,6 +48,10 @@ var editor = new MarkdownEditor(
 
 editor.value('$INIT');
 
+if ($AUTOFOCUS) {
+    addEventListener("focus", () => { editor.codemirror.focus() });
+}
+
 editor.registerListener("input", ({ _element, _codemirror, value }) => {
     // Sync value to uplink
     dioxus.send(`{\"Input\":\"${value.replaceAll("\"", '\\"').replaceAll("\n", '\\n')}\"}`)

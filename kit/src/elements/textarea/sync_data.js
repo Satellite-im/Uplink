@@ -4,11 +4,13 @@ function countGraphemeClusters(input) {
 
 var text = "$TEXT"
 var e = document.getElementById('$UUID')
-if (e.markdownEditor) {
+var update = "$UPDATE";
+if (update === "true" && e.markdownEditor) {
   // Only update if text differs
   if (e.markdownEditor.value() !== text) {
     e.markdownEditor.value(text);
   }
+  e.markdownEditor.updatePlaceholder("$PLACEHOLDER")
   e.markdownEditor.setEditable(!$DISABLED)
 }
 

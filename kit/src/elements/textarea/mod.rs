@@ -323,13 +323,6 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let id2 = id.clone();
     let id_char_counter = id.clone();
-    // let focus_script = if cx.props.ignore_focus {
-    //     String::new()
-    // } else {
-    //     include_str!("./focus.js").replace("$UUID", &id)
-    // };
-
-    // let _ = eval(&focus_script);
 
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
@@ -337,18 +330,30 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = *loading || *is_disabled;
 
     let text_value = use_ref(cx, || value.clone());
+    let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
+
+    use_future(cx, value, |val| {
+        to_owned![text_value, eval, show_char_counter, sync_script];
+        async move {
+            *text_value.write_silent() = val;
+            if show_char_counter {
+                let _ = eval(&sync_script.replace("$TEXT", &text_value.read()));
+            }
+        }
+    });
 
     // Sync changed to the editor
+    // Dont do it when editor text changes
     use_future(
         cx,
-        (value, placeholder, &disabled),
-        |(val, placeholder, disabled)| {
-            to_owned![eval];
-            let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
+        (&id, placeholder, &disabled),
+        |(_id, placeholder, disabled)| {
+            to_owned![eval, value, sync_script];
             async move {
                 let _ = eval(
                     &sync_script
-                        .replace("$TEXT", &val.replace('"', "\\\"").replace("\n", "\\n"))
+                        .replace("$UPDATE", "true")
+                        .replace("$TEXT", &value.replace('"', "\\\"").replace("\n", "\\n"))
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
                 );
@@ -360,7 +365,8 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to_owned![listener_data, eval, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)
-            .replace("$INIT", &value);
+            .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
+            .replace("$INIT", &value.replace('"', "\\\"").replace("\n", "\\n"));
         async move {
             if let Ok(eval) = eval(&rich_editor) {
                 loop {
@@ -458,7 +464,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 id: "{id_char_counter}-char-counter",
                                 aria_label: "input-char-counter",
                                 class: "char-counter-p-element",
-                                format!("{}", text_value.read().len()),
+                                format!("{}", text_value.read().chars().count()),
                             },
                             p {
                                 key: "{id_char_counter}-char-max-length",
@@ -472,6 +478,5 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
         }
         script { script },
-        //script { focus_script }
     ))
 }
