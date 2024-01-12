@@ -4,8 +4,8 @@ use common::language::get_local_text;
 use common::state::State;
 use common::utils::img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH};
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
-use common::{STATIC_ARGS, is_video};
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
+use common::{is_video, STATIC_ARGS};
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use warp::constellation::file::File;
@@ -48,9 +48,10 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "file-preview-image",
                     max_height: IMAGE_MAX_HEIGHT,
                     max_width: IMAGE_MAX_WIDTH,
-                    controls: true, 
-                    src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {"".to_string()} ),
-    
+                    controls: true,
+                    src: format_args!("{}", if temp_dir.exists()
+                        { temp_file_path_as_string }
+                        else {"".to_string()} ),
                 })
             } else {
                 rsx!(img {
@@ -58,7 +59,9 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "file-preview-image",
                     max_height: IMAGE_MAX_HEIGHT,
                     max_width: IMAGE_MAX_WIDTH,
-                    src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {thumbnail} ),
+                    src: format_args!("{}", if temp_dir.exists()
+                        { temp_file_path_as_string }
+                        else {thumbnail} ),
                 },)
             }
         },

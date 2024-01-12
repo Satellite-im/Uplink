@@ -222,9 +222,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                             aria_label:"image-preview-modal-file-embed",
                                                             max_height: IMAGE_MAX_HEIGHT,
                                                             max_width: IMAGE_MAX_WIDTH,
-                                                            controls: true, 
-                                                            src: format_args!("{}", if temp_dir.exists() { temp_file_path_as_string } else {"".to_string()} ),
-                                            
+                                                            controls: true,
+                                                            src: format_args!("{}", if temp_dir.exists() 
+                                                                { temp_file_path_as_string }
+                                                                else {"".to_string()} ),
                                                         })
                                                     } else {
                                                         rsx!(img {
@@ -306,7 +307,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     }
                                     )
-                              
                             }
                         } else {
                             rsx!(
