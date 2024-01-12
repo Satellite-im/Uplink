@@ -19,6 +19,7 @@ pub fn AccessibilitySettings(cx: Scope) -> Element {
             div {
                 class: format_args!("{}", if state.read().configuration.general.dyslexia_support {"open-dyslexic-activated"} else {"open-dyslexic"}),
                 SettingSection {
+                    aria_label: "open-dyslexic-section".into(),
                     section_label: get_local_text("settings-accessibility.dyslexia"),
                     section_description: get_local_text("settings-accessibility.dyslexia-description"),
                     Switch {

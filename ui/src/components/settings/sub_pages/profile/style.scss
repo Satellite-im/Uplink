@@ -1,13 +1,36 @@
 #settings-profile {
   align-items: flex-start;
   
+  .remove-phrase-container {
+    padding: var(--padding);
+    width: calc(var(--width-sidebar) * 2);
+    display: inline-flex;
+    gap: var(--gap);
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+    flex-direction: column;
+
+    .button-group {
+      display: inline-flex;
+      margin-top: var(--padding);
+      gap: var(--gap);
+    }
+
+    .warning-symbol svg {
+      width: var(--height-input);
+      height: var(--height-input);
+      fill: transparent;
+      stroke: var(--warning);
+    }
+  }
+
   .profile-header {
     background: var(--secondary);
     height: calc(var(--width-sidebar) / 2);
     width: 100%;
     position: relative;
     margin-bottom: calc((var(--width-sidebar) / 6.3) / 2 + var(--gap));
-
 
     #profile-banner-context-menu {
       width: 100%;
