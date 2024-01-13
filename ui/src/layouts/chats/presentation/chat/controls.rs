@@ -141,6 +141,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                     } else if chat_data.read().active_chat.is_initialized {
                         cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
                         cx.props.show_group_users.set(None);
+                        cx.props.show_group_settings.set(false);
                     }
                     show_more.set(false);
                 }
@@ -154,7 +155,13 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: text_builder("settings"),
                 tooltip: tooltip_builder("settings", arrow_top),
                 onpress: move |_| {
-                    
+                    if *cx.props.show_group_settings.get() {
+                        cx.props.show_group_settings.set(false);
+                    } else if chat_data.read().active_chat.is_initialized {
+                        cx.props.show_group_settings.set(true);
+                        cx.props.show_manage_members.set(None);
+                        cx.props.show_group_users.set(None);
+                    }
                 }
             })
         }
