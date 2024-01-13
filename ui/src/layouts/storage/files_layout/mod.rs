@@ -27,12 +27,12 @@ use uuid::Uuid;
 use warp::raygun::Location;
 
 pub mod controller;
-pub mod file_modal;
+pub mod file_preview;
 
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
-use crate::layouts::storage::files_layout::file_modal::get_file_modal;
+use crate::layouts::storage::files_layout::file_preview::open_file_preview_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
@@ -107,7 +107,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     cx.render(rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
-            rsx!(get_file_modal {
+            rsx!(open_file_preview_modal {
                     on_dismiss: |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
                     },

@@ -3,14 +3,9 @@ use std::path::PathBuf;
 
 use crate::elements::button::Button;
 use crate::elements::Appearance;
-use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::is_video;
-use common::utils::clear_temp_files_dir::clear_temp_files_directory;
-use common::utils::img_dimensions_preview::IMAGE_MAX_HEIGHT;
-use common::utils::img_dimensions_preview::IMAGE_MAX_WIDTH;
-use common::utils::lifecycle::use_component_lifecycle;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
@@ -69,7 +64,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //log::trace!("rendering file embed: {}", cx.props.filename);
-    let fullscreen_preview = use_state(cx, || false);
+    let enable_file_fullscreen_preview = use_state(cx, || false);
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
         .and_then(OsStr::to_str)
@@ -161,21 +156,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let remote = cx.props.remote.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
-    let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
     let file_name_with_extension = cx.props.filename.to_string();
     let temp_dir = STATIC_ARGS
         .temp_files
         .join(file_name_with_extension.clone());
     let is_video = is_video(&file_name_with_extension);
-
-    use_component_lifecycle(
-        cx,
-        || {},
-        move || {
-            let _ = clear_temp_files_directory(None);
-        },
-    );
 
     cx.render(rsx! (
         div {
@@ -204,42 +190,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: "file-icon",
                             if has_thumbnail || is_video {
                                 rsx!(
-                                    fullscreen_preview.then(|| {
-                                        if !temp_dir.exists() {
-                                            cx.props.on_press.call(Some(temp_dir.clone()));
-                                        }
-                                        let temp_file_path_as_string = get_fixed_path_to_load_local_file(temp_dir.clone());
-                                        rsx!(
-                                                Modal {
-                                                    open: *fullscreen_preview.clone(),
-                                                    onclose: move |_| fullscreen_preview.set(false),
-                                                    transparent: false,
-                                                    close_on_click_inside_modal: false,
-                                                    dont_pad: true,
-                                                    if is_video {
-                                                        rsx!(video {
-                                                            id: "image-preview-modal-file-embed",
-                                                            aria_label:"image-preview-modal-file-embed",
-                                                            max_height: IMAGE_MAX_HEIGHT,
-                                                            max_width: IMAGE_MAX_WIDTH,
-                                                            controls: true,
-                                                            src: format_args!("{}", if temp_dir.exists() 
-                                                                { temp_file_path_as_string }
-                                                                else {"".to_string()} ),
-                                                        })
-                                                    } else {
-                                                        rsx!(img {
-                                                        id: "image-preview-modal-file-embed",
-                                                        aria_label: "image-preview-modal-file-embed",
-                                                        src: format_args!("{}", if temp_dir.exists()
-                                                            { temp_file_path_as_string}
-                                                            else {large_thumbnail} ),
-                                                        max_height: IMAGE_MAX_HEIGHT,
-                                                        max_width: IMAGE_MAX_WIDTH,
-                                                        onclick: move |e| e.stop_propagation(),
-                                                    })
-                                                }}
-                                        )}),
+                                    enable_file_fullscreen_preview.then(|| {
+                                        cx.props.on_press.call(Some(temp_dir.clone()));
+                                        enable_file_fullscreen_preview.set(false);
+                                    })
                                     div {
                                         class: "image-container",
                                         aria_label: "message-image-container",
@@ -248,7 +202,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     height: "60px",
                                                     onclick: move |mouse_event_data: Event<MouseData>|
                                                     if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                        fullscreen_preview.set(true)
+                                                        enable_file_fullscreen_preview.set(true)
                                                     },
                                                     IconElement {
                                                         icon: Icon::Document
@@ -265,7 +219,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 aria_label: "message-image",
                                                 onclick: move |mouse_event_data: Event<MouseData>|
                                                 if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                    fullscreen_preview.set(true)
+                                                    enable_file_fullscreen_preview.set(true)
                                                 },
                                                 class: format_args!(
                                                     "image {} expandable-image",

@@ -1,23 +1,56 @@
 use std::path::PathBuf;
 
-use common::language::get_local_text;
-use common::state::State;
-use common::utils::img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH};
-use common::utils::local_file_path::get_fixed_path_to_load_local_file;
-use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
-use common::{is_video, STATIC_ARGS};
 use dioxus::prelude::*;
-use kit::components::context_menu::{ContextItem, ContextMenu};
+
+use kit::{
+    components::context_menu::{ContextItem, ContextMenu},
+    layout::modal::Modal,
+};
 use warp::constellation::file::File;
 
+use common::{
+    icons::outline::Shape as Icon,
+    is_video,
+    language::get_local_text,
+    state::State,
+    utils::{
+        img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH},
+        local_file_path::get_fixed_path_to_load_local_file,
+    },
+    warp_runner::thumbnail_to_base64,
+    STATIC_ARGS,
+};
+
+#[component(no_case_check)]
+pub fn open_file_preview_modal<'a>(
+    cx: Scope<'a>,
+    on_dismiss: EventHandler<'a, ()>,
+    on_download: EventHandler<'a, Option<PathBuf>>,
+    file: File,
+) -> Element<'a> {
+    cx.render(rsx!(Modal {
+        onclose: move |_| on_dismiss.call(()),
+        open: true,
+        transparent: false,
+        dont_pad: true,
+        close_on_click_inside_modal: true,
+        children: cx.render(rsx!(FilePreview {
+            file: file,
+            on_download: |temp_path| {
+                on_download.call(temp_path);
+            },
+        }))
+    }))
+}
+
 #[derive(Props)]
-pub struct Props<'a> {
+struct Props<'a> {
     file: &'a File,
     on_download: EventHandler<'a, Option<PathBuf>>,
 }
 
 #[allow(non_snake_case)]
-pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let file_path_in_local_disk = use_ref(cx, || PathBuf::new());
 
@@ -30,11 +63,13 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ));
 
     let is_video = is_video(&cx.props.file.name());
-    if !temp_dir_with_file_id.exists() {
-        cx.props.on_download.call(Some(temp_dir.clone()));
-    }
-    if !file_path_in_local_disk.read().exists() && temp_dir_with_file_id.exists() {
-        file_path_in_local_disk.set(temp_dir_with_file_id.clone());
+    if file_path_in_local_disk.read().to_string_lossy().is_empty() {
+        if !temp_dir_with_file_id.exists() {
+            cx.props.on_download.call(Some(temp_dir.clone()));
+        }
+        if temp_dir_with_file_id.exists() {
+            file_path_in_local_disk.set(temp_dir_with_file_id.clone());
+        }
     }
 
     use_future(cx, (), |_| {
