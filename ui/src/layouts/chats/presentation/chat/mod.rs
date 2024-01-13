@@ -163,6 +163,18 @@ pub fn Compose(cx: Scope) -> Element {
                     EditGroup {}
                 }
             )),
+        show_group_settings.then(|| rsx!(
+                Modal {
+                    open: *show_group_settings.get(),
+                    transparent: true,
+                    with_title: get_local_text("settings"),
+                    onclose: move |_| {
+                        show_group_settings.set(false);
+                    },
+                    right: "var(--gap)",
+                    "Settings Placeholder"
+                }
+            )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {

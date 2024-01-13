@@ -146,13 +146,17 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                     ContextItem {
                         icon: Icon::Users,
                         text: "Manage Members".into(),
-                        onpress: move |_| {}
+                        onpress: move |_| {
+                            cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                        }
                     },
                     ContextItem {
                         danger: true,
                         icon: Icon::Cog,
                         text: "Settings".into(),
-                        onpress: move |_| {}
+                        onpress: move |_| {
+                            cx.props.show_group_settings.set(true);
+                        }
                     },
                     ContextItem {
                         danger: true,
