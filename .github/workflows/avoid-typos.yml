@@ -17,4 +17,4 @@ jobs:
           locale: "US"
           reporter: github-pr-review
           level: error
-          exclude: "*.css"
+          exclude: "*.css, *.js"
