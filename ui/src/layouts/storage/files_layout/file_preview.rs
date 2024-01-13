@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 
 use kit::{
     components::context_menu::{ContextItem, ContextMenu},
+    elements::loader::Loader,
     layout::modal::Modal,
 };
 use warp::constellation::file::File;
@@ -20,6 +21,9 @@ use common::{
     warp_runner::thumbnail_to_base64,
     STATIC_ARGS,
 };
+
+const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
+const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 500;
 
 #[component(no_case_check)]
 pub fn open_file_preview_modal<'a>(
@@ -56,6 +60,9 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let thumbnail = thumbnail_to_base64(cx.props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(cx.props.file.name());
+    let file_loading_counter = use_ref(cx, || 0);
+    // Using id to change file name in case of duplicate files and avoid
+    // open different file from that user clicked
     let temp_dir_with_file_id = STATIC_ARGS.temp_files.join(format!(
         "{}.{}",
         cx.props.file.id().to_string(),
@@ -73,8 +80,14 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     }
 
     use_future(cx, (), |_| {
-        to_owned![temp_dir, file_path_in_local_disk, temp_dir_with_file_id];
+        to_owned![
+            temp_dir,
+            file_path_in_local_disk,
+            temp_dir_with_file_id,
+            file_loading_counter
+        ];
         async move {
+            let mut counter = 0;
             loop {
                 if file_path_in_local_disk.read().exists() {
                     break;
@@ -89,11 +102,21 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     break;
                 }
                 tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+                counter += 250;
+                if counter > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD && !is_video {
+                    file_loading_counter.with_mut(|i| *i = counter);
+                    break;
+                }
+                if counter > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD && is_video {
+                    file_loading_counter.with_mut(|i| *i = counter);
+                    break;
+                }
             }
         }
     });
 
-    let fixed_path = get_fixed_path_to_load_local_file(file_path_in_local_disk.read().clone());
+    let local_disk_path_fixed =
+        get_fixed_path_to_load_local_file(file_path_in_local_disk.read().clone());
 
     cx.render(rsx!(
         ContextMenu {
@@ -109,29 +132,64 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
             )),
-            if is_video {
-                rsx!(video {
-                    id: "file_preview_img",
-                    aria_label: "file-preview-image",
-                    max_height: IMAGE_MAX_HEIGHT,
-                    max_width: IMAGE_MAX_WIDTH,
-                    autoplay: true,
-                    controls: true,
-                    src: format_args!("{}", if file_path_in_local_disk.read().exists()
-                        { fixed_path }
-                        else {"".to_string()} ),
+            if *file_loading_counter.read() > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD
+                && is_video {
+                // It will show a video player with error, because take much time
+                // to download a video and is not possible to load it
+                rsx!(FileTypeTag {
+                    is_video: true,
+                    source: "".to_string()
+                })
+            } else if !file_path_in_local_disk.read().exists()
+                && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
+                && !is_video {
+                // It will show image with thumbnial and not with high quality
+                // because image didn't download and is not possible to load it
+                rsx!(FileTypeTag {
+                    is_video: false,
+                    source: thumbnail
+                })
+            } else if file_path_in_local_disk.read().exists() {
+                // Success for both video and image
+                rsx!(FileTypeTag {
+                    is_video: is_video,
+                    source: local_disk_path_fixed
                 })
             } else {
-                rsx!(img {
-                    id: "file_preview_img",
-                    aria_label: "file-preview-image",
-                    max_height: IMAGE_MAX_HEIGHT,
-                    max_width: IMAGE_MAX_WIDTH,
-                    src: format_args!("{}", if file_path_in_local_disk.read().exists()
-                        { fixed_path }
-                        else {thumbnail} ),
+                rsx!(Loader {
+                    spinning: true
                 },)
             }
         },
     ))
+}
+
+#[derive(Props, PartialEq)]
+struct FileTypeTagProps {
+    is_video: bool,
+    source: String,
+}
+
+#[allow(non_snake_case)]
+fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
+    let is_video = cx.props.is_video;
+    let source_path = cx.props.source.clone();
+    cx.render(match is_video {
+        true => rsx!(video {
+            id: "file_preview_img",
+            aria_label: "file-preview-image",
+            max_height: IMAGE_MAX_HEIGHT,
+            max_width: IMAGE_MAX_WIDTH,
+            autoplay: true,
+            controls: true,
+            src: "{source_path}"
+        }),
+        false => rsx!(img {
+            id: "file_preview_img",
+            aria_label: "file-preview-image",
+            max_height: IMAGE_MAX_HEIGHT,
+            max_width: IMAGE_MAX_WIDTH,
+            src: "{source_path}"
+        },),
+    })
 }
