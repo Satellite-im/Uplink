@@ -1,6 +1,7 @@
 mod controls;
 pub mod coroutines;
 mod edit_group;
+mod group_settings;
 mod group_users;
 mod pinned_messages;
 mod topbar;
@@ -17,7 +18,7 @@ use crate::{
     layouts::chats::{
         data::{self, ChatData, ScrollBtn},
         presentation::{
-            chat::{edit_group::EditGroup, group_users::GroupUsers},
+            chat::{edit_group::EditGroup, group_settings::GroupSettings, group_users::GroupUsers},
             chatbar::get_chatbar,
             messages::get_messages,
         },
@@ -172,7 +173,7 @@ pub fn Compose(cx: Scope) -> Element {
                         show_group_settings.set(false);
                     },
                     right: "var(--gap)",
-                    "Settings Placeholder"
+                    GroupSettings {}
                 }
             )),
         show_group_users
