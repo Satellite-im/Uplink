@@ -44,6 +44,11 @@ impl MessageGroupMsg {
     }
 }
 
+/// Create a Vec of MessageGroup from a Vec of ui_adapter::Message.
+///
+/// If sender is different from the last group message, it creates a new group.
+///
+/// if last message in a group is a reply, it creates a new group.
 pub fn create_message_groups(
     my_id: Identity,
     other_ids: Vec<Identity>,
@@ -60,6 +65,7 @@ pub fn create_message_groups(
             if let Some(last_group_message) = group.messages.last() {
                 if group.sender == msg.inner.sender()
                     && last_group_message.message.in_reply_to.is_none()
+                    && msg.in_reply_to.is_none()
                 {
                     let g = MessageGroupMsg {
                         message: msg.clone(),
