@@ -55,22 +55,27 @@ pub fn create_message_groups(
 
     for mut msg in input.drain(..) {
         msg.insert_did(&other_ids, &my_id.did_key());
-        if let Some(group) = messages.iter_mut().last() {
-            if group.sender == msg.inner.sender() {
-                let g = MessageGroupMsg {
-                    message: msg,
-                    is_pending: false,
-                    is_first: false,
-                    is_last: true,
-                    file_progress: None,
-                };
-                // I really hope last() is O(1) time
-                if let Some(g) = group.messages.iter_mut().last() {
-                    g.clear_last();
-                }
 
-                group.messages.push(g);
-                continue;
+        if let Some(group) = messages.iter_mut().last() {
+            if let Some(last_group_message) = group.messages.last() {
+                if group.sender == msg.inner.sender()
+                    && last_group_message.message.in_reply_to.is_none()
+                {
+                    let g = MessageGroupMsg {
+                        message: msg.clone(),
+                        is_pending: false,
+                        is_first: false,
+                        is_last: true,
+                        file_progress: None,
+                    };
+                    // I really hope last() is O(1) time
+                    if let Some(g) = group.messages.iter_mut().last() {
+                        g.clear_last();
+                    }
+
+                    group.messages.push(g);
+                    continue;
+                }
             }
         }
 
@@ -86,7 +91,6 @@ pub fn create_message_groups(
         grp.messages.push(g);
         messages.push(grp);
     }
-
     messages
 }
 
