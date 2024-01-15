@@ -8500,7 +8500,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=311c769e6e351420f7298c2295a92d38dc24793c#311c769e6e351420f7298c2295a92d38dc24793c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7e60da5bf6ad760a1058df260a3f5d7d02596837#7e60da5bf6ad760a1058df260a3f5d7d02596837"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9899,7 +9899,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=311c769e6e351420f7298c2295a92d38dc24793c#311c769e6e351420f7298c2295a92d38dc24793c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7e60da5bf6ad760a1058df260a3f5d7d02596837#7e60da5bf6ad760a1058df260a3f5d7d02596837"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9955,7 +9955,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=311c769e6e351420f7298c2295a92d38dc24793c#311c769e6e351420f7298c2295a92d38dc24793c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7e60da5bf6ad760a1058df260a3f5d7d02596837#7e60da5bf6ad760a1058df260a3f5d7d02596837"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9987,7 +9987,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=311c769e6e351420f7298c2295a92d38dc24793c#311c769e6e351420f7298c2295a92d38dc24793c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7e60da5bf6ad760a1058df260a3f5d7d02596837#7e60da5bf6ad760a1058df260a3f5d7d02596837"
 dependencies = [
  "paste",
  "quote",
@@ -9997,7 +9997,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=311c769e6e351420f7298c2295a92d38dc24793c#311c769e6e351420f7298c2295a92d38dc24793c"
+source = "git+https://github.com/Satellite-im/Warp?rev=7e60da5bf6ad760a1058df260a3f5d7d02596837#7e60da5bf6ad760a1058df260a3f5d7d02596837"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",
