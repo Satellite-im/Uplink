@@ -628,10 +628,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         .unwrap_or_default();
                     let conv_id = message.inner.conversation_id();
 
-                    if temp_dir.is_some() {
-                        let file_path_to_download = temp_dir.unwrap_or_default();
-                        log::info!("downloading file in temp DIR: {:?}", file_path_to_download);
-
+                    if  let Some(file_path_to_download) = temp_dir {
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id,
                             msg_id: message.inner.id(),
