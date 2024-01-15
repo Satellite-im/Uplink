@@ -11,6 +11,8 @@ use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::state::settings::GlobalShortcut;
+use common::utils::clear_temp_files_dir::clear_temp_files_directory;
+use common::utils::lifecycle::use_component_lifecycle;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -237,6 +239,14 @@ fn app_layout(cx: Scope) -> Element {
     use_router_notification_listener(cx)?;
 
     let state = use_shared_state::<State>(cx)?;
+
+    use_component_lifecycle(
+        cx,
+        || {},
+        move || {
+            let _ = clear_temp_files_directory();
+        },
+    );
 
     render! {
         AppStyle {}

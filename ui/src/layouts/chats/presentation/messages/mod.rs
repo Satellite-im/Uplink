@@ -605,7 +605,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                 })
                             }
                         } else {
-                            download_file(file2.clone(), message.inner.conversation_id(), message.inner.id(), pending_downloads, ch.clone());
+                            download_file(&file2, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch);
                         }
                     },
                     file: file.clone()
@@ -652,7 +652,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         preview_file_in_the_message.set((true, Some(file.clone())));
                         return;
                     } else {
-                        download_file(file, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch.clone());
+                        download_file(&file, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch);
                     }
                 },
                 on_edit: move |update: String| {
@@ -740,11 +740,11 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
 }
 
 fn download_file(
-    file: warp::constellation::file::File,
+    file: &warp::constellation::file::File,
     conv_id: Uuid,
     msg_id: Uuid,
     pending_downloads: &UseSharedState<HashMap<Uuid, HashSet<File>>>,
-    ch: Coroutine<MessagesCommand>,
+    ch: &Coroutine<MessagesCommand>,
 ) {
     let file_name = file.name();
     let file_extension = std::path::Path::new(&file_name)
@@ -774,7 +774,7 @@ fn download_file(
         ch.send(MessagesCommand::DownloadAttachment {
             conv_id,
             msg_id,
-            file,
+            file: file.clone(),
             file_path_to_download,
         })
     }
