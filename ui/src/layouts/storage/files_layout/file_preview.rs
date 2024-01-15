@@ -56,7 +56,7 @@ struct Props<'a> {
 #[allow(non_snake_case)]
 fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let file_path_in_local_disk = use_ref(cx, || PathBuf::new());
+    let file_path_in_local_disk = use_ref(cx, PathBuf::new);
 
     let thumbnail = thumbnail_to_base64(cx.props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(cx.props.file.name());
@@ -65,7 +65,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // open different file from that user clicked
     let temp_dir_with_file_id = STATIC_ARGS.temp_files.join(format!(
         "{}.{}",
-        cx.props.file.id().to_string(),
+        cx.props.file.id(),
         temp_dir.extension().unwrap_or_default().to_string_lossy()
     ));
 

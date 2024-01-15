@@ -586,7 +586,10 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         div {
             class: "msg-wrapper",
             preview_file_in_the_message.0.then(|| {
-                let file = preview_file_in_the_message.1.clone().map(|f| f.clone()).unwrap();
+                if preview_file_in_the_message.1.is_none() {
+                    preview_file_in_the_message.set((false, None));
+                }
+                let file = preview_file_in_the_message.1.clone().unwrap();
                 let file2 = file.clone();
                 rsx!(open_file_preview_modal {
                     on_dismiss: |_| {
@@ -650,7 +653,6 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 on_download: move |(file, temp_dir): (warp::constellation::file::File, Option<PathBuf>)| {
                     if temp_dir.is_some() {
                         preview_file_in_the_message.set((true, Some(file.clone())));
-                        return;
                     } else {
                         download_file(&file, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch);
                     }
