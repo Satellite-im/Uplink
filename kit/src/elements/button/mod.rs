@@ -1,6 +1,6 @@
 use dioxus::{events::MouseEvent, prelude::*};
 
-use crate::elements::Appearance;
+use crate::elements::{loader::Loader, Appearance};
 
 use common::icons::outline::Shape as Icon;
 
@@ -117,6 +117,13 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if !cx.props.disabled.unwrap_or_default() {
                         let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
                     }
+                },
+                if let Some(loading) = cx.props.loading {
+                    loading.then(|| rsx!(
+                        Loader {
+                            spinning: true
+                        }
+                    ))
                 },
                 if let Some(_icon) = cx.props.icon {
                     rsx!(

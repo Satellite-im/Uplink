@@ -19,7 +19,10 @@ use kit::{
         message_reply::MessageReply,
         user_image::UserImage,
     },
-    elements::tooltip::{ArrowPosition, Tooltip},
+    elements::{
+        loader::Loader,
+        tooltip::{ArrowPosition, Tooltip},
+    },
 };
 
 use common::state::{pending_message::PendingMessage, Action, Identity, State};
@@ -102,9 +105,8 @@ pub fn get_messages(
             rsx!(div {
                 class: "fetching",
                 p {
-                    IconElement {
-                        icon: Icon::Loader,
-                        class: "spin",
+                    Loader {
+                        spinning: true
                     },
                     get_local_text("messages.fetching")
                 }

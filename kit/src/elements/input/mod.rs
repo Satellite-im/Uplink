@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub type ValidationError = String;
 use crate::elements::label::Label;
+use crate::elements::loader::Loader;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -483,9 +484,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )),
                 cx.props.loading.unwrap_or(false).then(move || rsx!(
-                    IconElement {
-                        icon: Icon::Loader
-                    }
+                    Loader { spinning: true },
                 )),
             },
             (!error.is_empty()).then(|| rsx!(
