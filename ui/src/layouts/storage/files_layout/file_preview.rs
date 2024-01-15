@@ -23,7 +23,7 @@ use common::{
 };
 
 const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
-const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 500;
+const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
 
 #[component(no_case_check)]
 pub fn open_file_preview_modal<'a>(
