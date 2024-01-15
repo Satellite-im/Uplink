@@ -23,7 +23,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_ipfs::{
-    config::{Config, Discovery, UpdateEvents},
+    config::{Config, Discovery, UpdateEvents, RelayQuorum},
     WarpIpfsBuilder,
 };
 
@@ -389,6 +389,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.ipfs_setting.disable_quic = !STATIC_ARGS.enable_quic;
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
+    config.ipfs_setting.relay_client.quorum = RelayQuorum::First;
     config.store_setting.emit_online_event = true;
     config.store_setting.share_platform = true;
     config.store_setting.update_events = UpdateEvents::Enabled;
