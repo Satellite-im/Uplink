@@ -18,6 +18,24 @@
         fill: transparent;
         stroke: var(--text-color);
     }
+
+    &.large {
+      width: 60px;
+      height: 60px;
+
+      .spin {
+        width: 60px;
+        height: 60px;
+        top: 30px;
+        left: 30px;
+      }
+
+      svg {
+        height: 60px;
+        width: 60px;
+        stroke-width: 0.02rem;
+      }
+    }
 }
 
 @keyframes spin {
