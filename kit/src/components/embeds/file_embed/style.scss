@@ -128,3 +128,26 @@
 	color: var(--text-color-dark);
 	font-size: var(--text-size-less);
 }
+
+.play-button-file-embed {
+	position: absolute;
+	top: 45%;
+	left: 45%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	appearance: none;
+	padding: 0;
+
+    .btn {
+      display: inline-flex;
+      border: 1px solid var(--text-color-dark);
+    }
+
+    .btn-wrap {
+      position: absolute;
+      top: var(--gap);
+      left: var(--gap);
+      background-color: var(--text-color-link);
+      border-radius: 100px;
+    }
+  }

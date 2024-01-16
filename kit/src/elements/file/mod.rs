@@ -98,7 +98,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_extension}"
                             },
                             IconElement {
-                            icon: Icon::Document,
+                                icon: Icon::Document,
                             }
                         )
                     } else {

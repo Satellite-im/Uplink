@@ -188,51 +188,39 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
-                            if has_thumbnail || is_video {
-                                rsx!(
-                                    enable_file_fullscreen_preview.then(|| {
-                                        cx.props.on_press.call(Some(temp_dir.clone()));
-                                        enable_file_fullscreen_preview.set(false);
-                                    })
-                                    div {
+                            enable_file_fullscreen_preview.then(|| {
+                                cx.props.on_press.call(Some(temp_dir.clone()));
+                                enable_file_fullscreen_preview.set(false);
+                            }),
+                            if has_thumbnail || (is_video && has_thumbnail) {
+                                rsx!(div {
                                         class: "image-container",
                                         aria_label: "message-image-container",
+                                        img {
+                                            aria_label: "message-image",
+                                            onclick: move |mouse_event_data: Event<MouseData>|
+                                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                                enable_file_fullscreen_preview.set(true)
+                                            },
+                                            class: format_args!(
+                                                "image {} expandable-image",
+                                                if cx.props.big.unwrap_or_default() {
+                                                    "big"
+                                                } else { "" }
+                                            ),
+                                            src: "{thumbnail}",
+                                        },
                                         if is_video {
                                             rsx!(div {
-                                                    height: "60px",
-                                                    onclick: move |mouse_event_data: Event<MouseData>|
-                                                    if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                        enable_file_fullscreen_preview.set(true)
-                                                    },
-                                                    IconElement {
-                                                        icon: Icon::Document
-                                                    }
-                                                    if !file_extension_is_empty {
-                                                        rsx!( label {
-                                                            class: "file-embed-type",
-                                                            "{file_extension}"
-                                                        })
-                                                    }
-                                                })
-                                        } else {
-                                            rsx!(img {
-                                                aria_label: "message-image",
-                                                onclick: move |mouse_event_data: Event<MouseData>|
-                                                if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                    enable_file_fullscreen_preview.set(true)
-                                                },
-                                                class: format_args!(
-                                                    "image {} expandable-image",
-                                                    if cx.props.big.unwrap_or_default() {
-                                                        "big"
-                                                    } else { "" }
-                                                ),
-                                                src: "{thumbnail}",
-                                            },)
+                                                class: "play-button-file-embed",
+                                                Button {
+                                                    icon: Icon::Play,
+                                                    appearance: Appearance::Transparent,
+                                                    small: false,
+                                                }
+                                            })
                                         }
-                                        if !is_video {
-                                            show_download_button_if_enabled(cx, with_download_button, btn_icon);
-                                        }
+                                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
                                     }
                                     )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
@@ -266,6 +254,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             rsx!(
                                 div {
                                     height: "60px",
+                                    onclick: move |mouse_event_data: Event<MouseData>| {
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video {
+                                            enable_file_fullscreen_preview.set(true)
+                                        }
+                                    },
                                     IconElement {
                                         icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                     }
@@ -279,7 +272,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 )
                         }
                     }
-                    if !has_thumbnail || !is_video || is_from_attachments  {
+                    if !has_thumbnail || is_from_attachments  {
                         rsx!( div {
                             class: "file-info",
                             width: "100%",
