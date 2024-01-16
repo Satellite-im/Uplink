@@ -147,7 +147,30 @@
       position: absolute;
       top: var(--gap);
       left: var(--gap);
-      background-color: var(--text-color-link);
+      background-color: var(--warning-light);
       border-radius: 100px;
     }
   }
+
+  .play-button-file-embed-no-thumb {
+    position: absolute;
+    top: 30%;
+    left: 5%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    appearance: none;
+    padding: 0;
+  
+      .btn {
+        display: inline-flex;
+        border: 1px solid var(--text-color-dark);
+      }
+
+      .btn-wrap {
+        position: absolute;
+        top: var(--gap);
+        left: var(--gap);
+        background-color: var(--warning-light);
+        border-radius: 100px;
+      }
+    }

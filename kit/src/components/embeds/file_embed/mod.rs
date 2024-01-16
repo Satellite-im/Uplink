@@ -268,6 +268,16 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             "{file_extension}"
                                         })
                                     }
+                                    if is_video {
+                                        rsx!(div {
+                                            class: "play-button-file-embed-no-thumb",
+                                            Button {
+                                                icon: Icon::Play,
+                                                appearance: Appearance::Transparent,
+                                                small: true,
+                                            }
+                                        })
+                                    }
                                 }
                                 )
                         }
