@@ -25,3 +25,21 @@ jobs:
           components: rustfmt, clippy
       - run: cargo clippy --no-deps -- -D warnings
       - run: cargo fmt --check
+
+      - name: Add linter failing label if cargo workflow fails
+        if: failure()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            linter failing
+          type: add
+
+      - name: Remove label if all test jobs succeeded
+        if: success()
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            linter failing
+          type: remove
