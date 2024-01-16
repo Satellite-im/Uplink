@@ -192,7 +192,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 cx.props.on_press.call(Some(temp_dir.clone()));
                                 enable_file_fullscreen_preview.set(false);
                             }),
-                            if has_thumbnail || (is_video && has_thumbnail) {
+                            if has_thumbnail {
                                 rsx!(div {
                                         class: "image-container",
                                         aria_label: "message-image-container",
