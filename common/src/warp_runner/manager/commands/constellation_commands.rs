@@ -277,8 +277,8 @@ fn get_items_from_current_directory(
         .filter_map(|item| item.get_file().ok())
         .collect::<Vec<_>>();
 
-    directories.sort_by_key(|b| std::cmp::Reverse(b.modified()));
-    files.sort_by_key(|b| std::cmp::Reverse(b.modified()));
+    directories.sort_by_key(|b| std::cmp::Reverse(b.creation()));
+    files.sort_by_key(|b| std::cmp::Reverse(b.creation()));
 
     let max_size = warp_storage.max_size();
     let current_size = warp_storage.current_size();
