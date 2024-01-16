@@ -35,7 +35,7 @@ jobs:
             linter failing
           type: add
 
-      - name: Remove label if all test jobs succeeded
+      - name: Remove label if exists and job is successful
         if: success()
         uses: buildsville/add-remove-label@v2.0.0
         with:
