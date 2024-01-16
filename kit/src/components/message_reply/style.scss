@@ -9,8 +9,16 @@
 	align-self: flex-end;
 	align-items: flex-end;
 	position: relative;
-	flex-direction: column;
+	flex-direction: row-reverse;
 	opacity: var(--opacity-modifier);
+	position: relative;
+
+	.connector {
+		color: var(--text-color-muted);
+		font-size: var(--height-input-less);
+		position: absolute;
+		left: calc(100% + var(--gap));
+	}
 	.user-image {
 		transform: scale(0.75);
 		opacity: var(--opacity-modifier);
@@ -26,7 +34,7 @@
     	flex-direction: column;
 		color: var(--text-color);
 		background-color: var(--primary);
-		padding: var(--padding-less) var(--padding);
+		padding: var(--gap) var(--padding);
 		font-size: var(--text-size-less);
 		border-radius: var(--border-radius-more);
 		border-bottom-right-radius: var(--border-radius-less);
@@ -50,6 +58,9 @@
 			left: 0;
 			right: unset;
 			white-space: nowrap;
+		}
+		.connector {
+			left: calc((var(--height-input-less) * -1) - var(--gap));
 		}
 	}
 	.prefix {
