@@ -27,5 +27,24 @@ jobs:
             :warning: The title of this PR is invalid.
             Please make the title match the regex `(?:add|update|task|chore|feat|fix|refactor)\([a-z-A-Z]+\):\s.+`.
             e.g.) `add(cli): enable --verbose flag`, `fix(api): avoid unexpected error in handler`
+
+      - name: Add invalid PR title label if regex is not matching
+        if: ${{ steps.regex-match.outputs.match == '' }}
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            invalid PR title
+          type: add
+
+      - name: Remove label if regex is matching
+        if: ${{ steps.regex-match.outputs.match != '' }}
+        uses: buildsville/add-remove-label@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: |
+            invalid PR title
+          type: remove
+
       - run: exit 1
         if: ${{ steps.regex-match.outputs.match == '' }}
