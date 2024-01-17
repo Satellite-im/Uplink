@@ -260,6 +260,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     if !file_extension_is_empty {
                                         rsx!( label {
                                             class: "file-embed-type",
+                                            cursor: "pointer",
                                             "{file_extension}"
                                         })
                                     }
@@ -280,6 +281,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if !has_thumbnail || is_from_attachments  {
                         rsx!( div {
                             class: "file-info",
+                            cursor: "default",
                             width: "100%",
                             aria_label: "file-info",
                             p {
