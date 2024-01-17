@@ -25,6 +25,21 @@
     height: fit-content;
   }
 
+  .document-container {
+    position: relative;
+
+    .button-position {
+      position: absolute;
+      top: -15%;
+      left: -23%;
+    }
+
+    .btn {
+      display: inline-flex;
+      border: 1px solid var(--text-color-dark);
+    }
+  }
+
   .image {
     width: 100%;
     max-width: 350px;
@@ -113,6 +128,7 @@
 }
 
 .file-info {
+  position: relative;
   word-break: break-all;
 }
 
@@ -154,7 +170,7 @@
 
   .play-button-file-embed-no-thumb {
     position: absolute;
-    top: 30%;
+    top: 8%;
     left: 5%;
     transform: translate(-50%, -50%);
     pointer-events: none;

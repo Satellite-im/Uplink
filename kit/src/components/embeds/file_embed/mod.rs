@@ -248,7 +248,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             rsx!(
                                 div {
-                                    height: "60px",
+                                    class: "document-container",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video {
                                             cx.props.on_press.call(Some(temp_dir.clone()));
@@ -274,8 +274,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             }
                                         })
                                     }
+                                    div {
+                                        class: "button-position",
+                                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                    }
                                 }
-                                )
+                            )
                         }
                     }
                     if !has_thumbnail || is_from_attachments  {
@@ -296,7 +300,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_description}"
                             }
                         },
-                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                        
                     )
                     }
                     if is_pending {
