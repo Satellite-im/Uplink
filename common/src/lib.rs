@@ -4,6 +4,7 @@ pub mod sounds;
 pub mod state;
 pub mod testing;
 pub mod upload_file_channel;
+pub mod utils;
 pub mod warp_runner;
 
 use anyhow::bail;
