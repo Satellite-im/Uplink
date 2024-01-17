@@ -21,7 +21,13 @@ use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::{components::files::upload_progress_bar, utils::download::get_download_path};
+use crate::{
+    components::files::upload_progress_bar,
+    utils::{
+        async_task_queue::{async_queue, ListenerAction, ACTION_LISTENER},
+        download::get_download_path,
+    },
+};
 
 use super::files_layout::controller::{StorageController, UploadFileController};
 
@@ -228,10 +234,64 @@ pub enum ChanCmd {
 pub fn init_coroutine<'a>(
     cx: &'a ScopeState,
     controller: &'a UseRef<StorageController>,
-    state: &'a UseSharedState<State>,
 ) -> &'a Coroutine<ChanCmd> {
+    let download_queue = async_queue(
+        cx,
+        |(file_name, local_path_to_save_file): (String, PathBuf)| async move {
+            let (local_path_to_save_file, on_finish) = get_download_path(local_path_to_save_file);
+            let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            if let Err(e) =
+                warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::DownloadFile {
+                    file_name: file_name.clone(),
+                    local_path_to_save_file,
+                    rsp: tx,
+                }))
+            {
+                let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
+                    title: "".into(),
+                    content: get_local_text_with_args(
+                        "files.download-failed",
+                        vec![("file", file_name)],
+                    ),
+                    icon: None,
+                    timeout: 2,
+                });
+                log::error!("failed to download file {}", e);
+                return;
+            }
+
+            let rsp = rx.await.expect("command canceled");
+            match rsp {
+                Ok(_) => {
+                    let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
+                        title: "".into(),
+                        content: get_local_text_with_args(
+                            "files.download-success",
+                            vec![("file", file_name)],
+                        ),
+                        icon: None,
+                        timeout: 2,
+                    });
+                    on_finish.await
+                }
+                Err(error) => {
+                    let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
+                        title: "".into(),
+                        content: get_local_text_with_args(
+                            "files.download-failed",
+                            vec![("file", file_name)],
+                        ),
+                        icon: None,
+                        timeout: 2,
+                    });
+                    log::error!("failed to download file: {}", error);
+                }
+            }
+        },
+    );
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![controller, state];
+        to_owned![controller, download_queue];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -336,64 +396,9 @@ pub fn init_coroutine<'a>(
                         file_name,
                         local_path_to_save_file,
                     } => {
-                        let (local_path_to_save_file, on_finish) =
-                            get_download_path(local_path_to_save_file);
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::DownloadFile {
-                                file_name: file_name.clone(),
-                                local_path_to_save_file,
-                                rsp: tx,
-                            },
-                        )) {
-                            state.write().mutate(Action::AddToastNotification(
-                                ToastNotification::init(
-                                    "".into(),
-                                    get_local_text_with_args(
-                                        "files.download-failed",
-                                        vec![("file", file_name)],
-                                    ),
-                                    None,
-                                    2,
-                                ),
-                            ));
-                            log::error!("failed to download file {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(_) => {
-                                state.write().mutate(Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text_with_args(
-                                            "files.download-success",
-                                            vec![("file", file_name)],
-                                        ),
-                                        None,
-                                        2,
-                                    ),
-                                ));
-                                on_finish.await
-                            }
-                            Err(error) => {
-                                state.write().mutate(Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text_with_args(
-                                            "files.download-failed",
-                                            vec![("file", file_name)],
-                                        ),
-                                        None,
-                                        2,
-                                    ),
-                                ));
-                                log::error!("failed to download file: {}", error);
-                                continue;
-                            }
-                        }
+                        download_queue
+                            .write()
+                            .append((file_name, local_path_to_save_file));
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();

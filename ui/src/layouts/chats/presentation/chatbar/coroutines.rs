@@ -4,17 +4,18 @@ use std::{
 };
 
 use common::{
-    state::{Action, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    state::{pending_message::PendingMessage, Action, State},
+    warp_runner::{ui_adapter::MessageEvent, RayGunCmd, WarpCmd, WarpEvent},
+    STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use uuid::Uuid;
-use warp::raygun::{self, Location};
+use warp::raygun::{self, AttachmentEventStream, AttachmentKind, Location};
 
-use crate::layouts::chats::data::{
-    self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE,
+use crate::{
+    layouts::chats::data::{self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE},
+    utils::async_task_queue::{async_queue, AsyncRef},
 };
 
 use super::TypingIndicator;
@@ -23,8 +24,9 @@ pub fn get_msg_ch(
     cx: &Scoped<'_, ChatProps>,
     state: &UseSharedState<State>,
 ) -> Coroutine<MsgChInput> {
+    let upload_streams = chat_upload_stream_handler(cx);
     use_coroutine(cx, |mut rx: UnboundedReceiver<MsgChInput>| {
-        to_owned![state];
+        to_owned![state, upload_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(MsgChInput {
@@ -34,7 +36,7 @@ pub fn get_msg_ch(
                 replying_to,
             }) = rx.next().await
             {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) = oneshot::channel();
                 let attachments = state
                     .read()
                     .get_active_chat()
@@ -45,15 +47,14 @@ pub fn get_msg_ch(
                     Some(reply_to) => RayGunCmd::Reply {
                         conv_id,
                         reply_to,
-                        msg,
+                        msg: msg.clone(),
                         attachments,
                         rsp: tx,
                     },
                     None => RayGunCmd::SendMessage {
                         conv_id,
-                        msg,
+                        msg: msg.clone(),
                         attachments,
-                        appended_msg_id,
                         rsp: tx,
                     },
                 };
@@ -89,14 +90,24 @@ pub fn get_msg_ch(
                 }
 
                 let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send message: {}", e);
-                    state.write().decrement_outgoing_messages(
+                match rsp {
+                    Ok(Some(attachment)) => upload_streams.write().append((
                         conv_id,
-                        msg_clone,
-                        attachment_files,
+                        msg,
+                        attachments,
                         appended_msg_id,
-                    );
+                        attachment,
+                    )),
+                    Err(e) => {
+                        log::error!("failed to send message: {}", e);
+                        state.write().decrement_outgoing_messages(
+                            conv_id,
+                            msg_clone,
+                            attachment_files,
+                            appended_msg_id,
+                        )
+                    }
+                    _ => {}
                 }
             }
         }
@@ -212,4 +223,55 @@ pub fn get_typing_ch(cx: &Scoped<'_, ChatProps>) -> Coroutine<TypingIndicator> {
         }
     })
     .clone()
+}
+
+pub fn chat_upload_stream_handler(
+    cx: &ScopeState,
+) -> &UseRef<
+    AsyncRef<(
+        Uuid,
+        Vec<String>,
+        Vec<Location>,
+        Option<Uuid>,
+        AttachmentEventStream,
+    )>,
+> {
+    async_queue(
+        cx,
+        |(conv_id, msg, attachments, appended_msg_id, mut stream): (
+            Uuid,
+            Vec<String>,
+            Vec<Location>,
+            Option<Uuid>,
+            AttachmentEventStream,
+        )| {
+            async move {
+                loop {
+                    let msg_clone = msg.clone();
+                    if let Some(kind) = stream.next().await {
+                        match kind {
+                            AttachmentKind::Pending(_) => {
+                                return;
+                            }
+                            AttachmentKind::AttachedProgress(progress) => {
+                                if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
+                                    MessageEvent::AttachmentProgress {
+                                        progress,
+                                        conversation_id: conv_id,
+                                        msg: PendingMessage::for_compare(
+                                            msg_clone,
+                                            &attachments,
+                                            appended_msg_id,
+                                        ),
+                                    },
+                                )) {
+                                    log::error!("failed to send warp_event: {e}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+    )
 }

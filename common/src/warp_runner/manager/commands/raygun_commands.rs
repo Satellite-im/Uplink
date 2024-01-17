@@ -12,7 +12,10 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, AttachmentKind, ConversationType, Location, PinState, ReactionState},
+    raygun::{
+        self, AttachmentEventStream, AttachmentKind, ConversationType, Location, PinState,
+        ReactionState,
+    },
 };
 
 use crate::{
@@ -104,8 +107,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        appended_msg_id: Option<Uuid>,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Option<AttachmentEventStream>, warp::error::Error>>,
     },
     #[display(fmt = "SendMessageForSeveralChats")]
     SendMessageForSeveralChats {
@@ -142,7 +144,7 @@ pub enum RayGunCmd {
         reply_to: Uuid,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Option<AttachmentEventStream>, warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
     #[display(fmt = "RemoveDirectConvs")]
@@ -272,43 +274,17 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
-            appended_msg_id: ui_id,
             rsp,
         } => {
             let r = if attachments.is_empty() {
-                messaging.send(conv_id, msg).await
+                messaging.send(conv_id, msg).await.map(|_| None)
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
                     .attach(conv_id, None, attachments.clone(), msg.clone())
                     .await
                 {
-                    Ok(mut stream) => loop {
-                        let msg_clone = msg.clone();
-                        //let attachment_clone = attachments.clone();
-                        if let Some(kind) = stream.next().await {
-                            match kind {
-                                AttachmentKind::Pending(result) => {
-                                    break result;
-                                }
-                                AttachmentKind::AttachedProgress(progress) => {
-                                    if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
-                                        MessageEvent::AttachmentProgress {
-                                            progress,
-                                            conversation_id: conv_id,
-                                            msg: PendingMessage::for_compare(
-                                                msg_clone,
-                                                &attachments,
-                                                ui_id,
-                                            ),
-                                        },
-                                    )) {
-                                        log::error!("failed to send warp_event: {e}");
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    Ok(stream) => Result::Ok(Some(stream)),
                     Err(e) => Err(e),
                 }
             };
@@ -404,18 +380,13 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = if attachments.is_empty() {
-                messaging.reply(conv_id, reply_to, msg).await
+                messaging.reply(conv_id, reply_to, msg).await.map(|_| None)
             } else {
-                //TODO: Pass stream off to attachment events
                 match messaging
                     .attach(conv_id, Some(reply_to), attachments, msg)
                     .await
                 {
-                    Ok(mut stream) => loop {
-                        if let Some(AttachmentKind::Pending(result)) = stream.next().await {
-                            break result;
-                        }
-                    },
+                    Ok(stream) => Result::Ok(Some(stream)),
                     Err(e) => Err(e),
                 }
             };
