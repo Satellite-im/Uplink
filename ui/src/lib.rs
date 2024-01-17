@@ -1200,10 +1200,6 @@ fn AppNav<'a>(
                 f.call(());
             }
 
-            if r != "/settings" {
-                state.write().mutate(Action::PauseGlobalKeybinds(false));
-            }
-
             let new_layout = match r {
                 "/chat" => UplinkRoute::ChatLayout {},
                 "/settings" => UplinkRoute::SettingsLayout {},
