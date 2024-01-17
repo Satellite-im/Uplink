@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use derive_more::Display;
-use futures::{channel::oneshot, StreamExt};
+use futures::channel::oneshot;
 use std::{
     collections::{HashMap, HashSet},
     ops::Range,
@@ -12,24 +12,19 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{
-        self, AttachmentEventStream, AttachmentKind, ConversationType, Location, PinState,
-        ReactionState,
-    },
+    raygun::{self, AttachmentEventStream, ConversationType, Location, PinState, ReactionState},
 };
 
 use crate::{
-    state::{chats, identity, pending_message::PendingMessage, Friends},
+    state::{chats, identity, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages2, fetch_messages_between,
             fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
-            MessageEvent,
         },
-        Account, FetchMessagesConfig, FetchMessagesResponse, Messaging, WarpEvent,
+        Account, FetchMessagesConfig, FetchMessagesResponse, Messaging,
     },
-    WARP_EVENT_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -114,8 +109,7 @@ pub enum RayGunCmd {
         convs_id: Vec<Uuid>,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        appended_msg_id: Option<Uuid>,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Vec<(Uuid, AttachmentEventStream)>, warp::error::Error>>,
     },
     #[display(fmt = "EditMessage")]
     EditMessage {
@@ -295,53 +289,27 @@ pub async fn handle_raygun_cmd(
             convs_id,
             msg,
             attachments,
-            appended_msg_id: ui_id,
             rsp,
         } => {
+            let mut streams = vec![];
             for chat_id in convs_id {
-                let _ = if attachments.is_empty() {
-                    messaging.send(chat_id, msg.clone()).await
+                if attachments.is_empty() {
+                    let _ = messaging.send(chat_id, msg.clone()).await;
                 } else {
                     //TODO: Pass stream off to attachment events
                     match messaging
                         .attach(chat_id, None, attachments.clone(), msg.clone())
                         .await
                     {
-                        Ok(mut stream) => loop {
-                            let msg_clone = msg.clone();
-                            //let attachment_clone = attachments.clone();
-                            if let Some(kind) = stream.next().await {
-                                match kind {
-                                    AttachmentKind::Pending(result) => {
-                                        break result;
-                                    }
-                                    AttachmentKind::AttachedProgress(progress) => {
-                                        if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
-                                            MessageEvent::AttachmentProgress {
-                                                progress,
-                                                conversation_id: chat_id,
-                                                msg: PendingMessage::for_compare(
-                                                    msg_clone,
-                                                    &attachments,
-                                                    ui_id,
-                                                ),
-                                            },
-                                        )) {
-                                            log::error!("failed to send warp_event: {e}");
-                                        }
-                                    }
-                                }
-                            }
-                        },
+                        Ok(stream) => streams.push((chat_id, stream)),
                         Err(e) => {
                             log::error!("Raygun: Send files to several chats: {}", e);
-                            Err(e)
                         }
                     }
                 };
             }
 
-            let _ = rsp.send(Ok(()));
+            let _ = rsp.send(Ok(streams));
         }
         RayGunCmd::EditMessage {
             conv_id,

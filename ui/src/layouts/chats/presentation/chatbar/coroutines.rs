@@ -4,18 +4,18 @@ use std::{
 };
 
 use common::{
-    state::{pending_message::PendingMessage, Action, State},
-    warp_runner::{ui_adapter::MessageEvent, RayGunCmd, WarpCmd, WarpEvent},
-    STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
+    state::{Action, State},
+    warp_runner::{RayGunCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use uuid::Uuid;
-use warp::raygun::{self, AttachmentEventStream, AttachmentKind, Location};
+use warp::raygun::{self, Location};
 
 use crate::{
     layouts::chats::data::{self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE},
-    utils::async_task_queue::{async_queue, AsyncRef},
+    utils::async_task_queue::chat_upload_stream_handler,
 };
 
 use super::TypingIndicator;
@@ -223,55 +223,4 @@ pub fn get_typing_ch(cx: &Scoped<'_, ChatProps>) -> Coroutine<TypingIndicator> {
         }
     })
     .clone()
-}
-
-pub fn chat_upload_stream_handler(
-    cx: &ScopeState,
-) -> &UseRef<
-    AsyncRef<(
-        Uuid,
-        Vec<String>,
-        Vec<Location>,
-        Option<Uuid>,
-        AttachmentEventStream,
-    )>,
-> {
-    async_queue(
-        cx,
-        |(conv_id, msg, attachments, appended_msg_id, mut stream): (
-            Uuid,
-            Vec<String>,
-            Vec<Location>,
-            Option<Uuid>,
-            AttachmentEventStream,
-        )| {
-            async move {
-                loop {
-                    let msg_clone = msg.clone();
-                    if let Some(kind) = stream.next().await {
-                        match kind {
-                            AttachmentKind::Pending(_) => {
-                                return;
-                            }
-                            AttachmentKind::AttachedProgress(progress) => {
-                                if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
-                                    MessageEvent::AttachmentProgress {
-                                        progress,
-                                        conversation_id: conv_id,
-                                        msg: PendingMessage::for_compare(
-                                            msg_clone,
-                                            &attachments,
-                                            appended_msg_id,
-                                        ),
-                                    },
-                                )) {
-                                    log::error!("failed to send warp_event: {e}");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-    )
 }
