@@ -64,7 +64,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //log::trace!("rendering file embed: {}", cx.props.filename);
-    let enable_file_fullscreen_preview = use_state(cx, || false);
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
         .and_then(OsStr::to_str)
@@ -188,10 +187,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
-                            enable_file_fullscreen_preview.then(|| {
-                                cx.props.on_press.call(Some(temp_dir.clone()));
-                                enable_file_fullscreen_preview.set(false);
-                            }),
                             if has_thumbnail {
                                 rsx!(div {
                                         class: "image-container",
@@ -200,7 +195,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             aria_label: "message-image",
                                             onclick: move |mouse_event_data: Event<MouseData>|
                                             if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                enable_file_fullscreen_preview.set(true)
+                                                cx.props.on_press.call(Some(temp_dir.clone()));
                                             },
                                             class: format_args!(
                                                 "image {} expandable-image",
@@ -256,7 +251,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     height: "60px",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video {
-                                            enable_file_fullscreen_preview.set(true)
+                                            cx.props.on_press.call(Some(temp_dir.clone()));
                                         }
                                     },
                                     IconElement {
