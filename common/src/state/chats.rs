@@ -8,7 +8,7 @@ use uuid::Uuid;
 use warp::{
     constellation::Progression,
     crypto::DID,
-    raygun::{self, ConversationType, Location},
+    raygun::{self, ConversationSettings, ConversationType, Location},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
@@ -39,6 +39,8 @@ pub struct Chat {
     // this makes it easier to tell direct conversations from group conversations. There should be no group conversations with only 2 participants.
     #[serde(default = "default_conversation_type")]
     pub conversation_type: ConversationType,
+    // Conversation settings.
+    pub settings: ConversationSettings,
     // only Some for group chats
     #[serde(default)]
     pub conversation_name: Option<String>,
@@ -87,6 +89,7 @@ impl Default for Chat {
             id: Default::default(),
             participants: Default::default(),
             conversation_type: ConversationType::Direct,
+            settings: ConversationSettings::Direct(Default::default()),
             conversation_name: Default::default(),
             creator: Default::default(),
             messages: Default::default(),
@@ -109,6 +112,7 @@ impl Chat {
         id: Uuid,
         participants: HashSet<DID>,
         conversation_type: ConversationType,
+        settings: ConversationSettings,
         conversation_name: Option<String>,
         creator: Option<DID>,
         messages: VecDeque<ui_adapter::Message>,
@@ -118,6 +122,7 @@ impl Chat {
             id,
             participants,
             conversation_type,
+            settings: settings,
             conversation_name,
             creator,
             messages,

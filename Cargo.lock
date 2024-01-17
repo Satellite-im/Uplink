@@ -1429,7 +1429,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "base64 0.20.0",
@@ -2801,7 +2801,7 @@ dependencies = [
 
 [[package]]
 name = "extensions"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "dioxus",
  "libloading 0.7.4",
@@ -4246,7 +4246,7 @@ dependencies = [
 
 [[package]]
 name = "icons"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "dioxus",
  "dioxus-html",
@@ -4694,7 +4694,7 @@ dependencies = [
 
 [[package]]
 name = "kit"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "arboard",
  "base64 0.20.0",
@@ -8500,7 +8500,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=375d13c4a60eb3a37ca697d8bd635a452a18dc40#375d13c4a60eb3a37ca697d8bd635a452a18dc40"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9719,7 +9719,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "uplink"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "arboard",
@@ -9899,7 +9899,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=375d13c4a60eb3a37ca697d8bd635a452a18dc40#375d13c4a60eb3a37ca697d8bd635a452a18dc40"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9954,7 +9954,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=375d13c4a60eb3a37ca697d8bd635a452a18dc40#375d13c4a60eb3a37ca697d8bd635a452a18dc40"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9986,7 +9986,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=375d13c4a60eb3a37ca697d8bd635a452a18dc40#375d13c4a60eb3a37ca697d8bd635a452a18dc40"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",

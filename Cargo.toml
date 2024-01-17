@@ -35,7 +35,9 @@ dioxus = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db848
 dioxus-hooks = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
 dioxus-html = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
 dioxus-router = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
-dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2", features = ["transparent"] }
+dioxus-desktop = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2", features = [
+    "transparent",
+] }
 muda = "0.9.4"
 raw-window-handle = "0.5"
 dioxus-core = { git = "https://github.com/satellite-im/dioxus", rev = "1dba57f39db8485ccdc03f3a6c11a6fcbb2f87f2" }
@@ -45,9 +47,9 @@ arboard = "3.2"
 humansize = "2.1.3"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "a92a3674cd1d2e700e5275beb606984160cb9532" }
-warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a92a3674cd1d2e700e5275beb606984160cb9532" }
-warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "a92a3674cd1d2e700e5275beb606984160cb9532" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
+warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
+warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
 rfd = "0.11.3"
 mime = "0.3.16"
 serde = "1.0"
@@ -83,7 +85,11 @@ zip = "0.6.4"
 
 image = "0.24"
 linkify = "0.9.0"
-reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
+reqwest = { version = "0.11", default-features = false, features = [
+    "json",
+    "rustls-tls",
+    "stream",
+] }
 select = "0.6.0"
 
 common = { path = "common" }

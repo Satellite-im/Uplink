@@ -16,7 +16,7 @@ use warp::{
     constellation::{directory::Directory, file::File},
     crypto::DID,
     multipass::identity::{IdentityStatus, Platform},
-    raygun::{ConversationType, Message},
+    raygun::{ConversationSettings, ConversationType, Message},
 };
 
 use crate::state::{storage::Storage, Chat, Chats, Friends, Identity, State, ToastNotification};
@@ -128,6 +128,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
             0..=2 => ConversationType::Direct,
             _ => ConversationType::Group,
         },
+        ConversationSettings::Direct(Default::default()),
         None,
         None,
         messages,

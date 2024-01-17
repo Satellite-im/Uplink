@@ -3,7 +3,7 @@ use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
-    raygun::{self, ConversationType},
+    raygun::{self, ConversationSettings, ConversationType},
 };
 
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
@@ -19,6 +19,7 @@ pub struct Metadata {
     pub platform: Platform,
     pub conversation_name: Option<String>,
     pub conversation_type: Option<ConversationType>,
+    pub conversation_settings: ConversationSettings,
     pub creator: Option<DID>,
     pub replying_to: Option<raygun::Message>,
     pub unreads: usize,
@@ -59,6 +60,7 @@ impl Metadata {
             platform,
             conversation_name: chat.conversation_name.clone(),
             conversation_type: Some(chat.conversation_type),
+            conversation_settings: chat.settings,
             creator: chat.creator.clone(),
             replying_to: chat.replying_to.clone(),
             unreads: chat.unreads() as _,

@@ -388,6 +388,7 @@ pub async fn conversation_to_chat(
         conv.id(),
         HashSet::from_iter(conv.recipients()),
         conv.conversation_type(),
+        conv.settings(),
         conv.name(),
         conv.creator(),
         messages,

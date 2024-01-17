@@ -21,7 +21,7 @@ use kit::{
     },
 };
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{crypto::DID, logging::tracing::log, raygun::GroupSettings};
 
 use crate::{layouts::chats::data::get_input_options, UplinkRoute};
 
@@ -78,6 +78,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else {
                         group_name
                     },
+                    settings: GroupSettings::default(),
                     rsp: tx,
                 };
 
