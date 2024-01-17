@@ -582,6 +582,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let preview_file_in_the_message: &UseState<(bool, Option<File>)> =
         use_state(cx, || (false, None));
 
+    let mut reply_user = Identity::default();
+    if let Some(info) = &message.in_reply_to {
+        reply_user = state.read().get_identity(&info.2).unwrap_or_default();
+    }
+
     cx.render(rsx!(
         div {
             class: "msg-wrapper",
@@ -620,12 +625,19 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     key: "reply-{message_key}",
                     with_text: other_msg.to_string(),
                     with_attachments: other_msg_attachments.clone(),
+                    // This remote should be true only if the reply itself is remove, not the message being replied to.
                     remote: cx.props.is_remote,
                     remote_message: cx.props.is_remote,
                     sender_did: sender_did.clone(),
                     replier_did: user_did_2.clone(),
                     markdown: render_markdown,
                     transform_ascii_emojis: should_transform_ascii_emojis,
+                    user_image: cx.render(rsx!(UserImage {
+                        loading: false,
+                        platform: reply_user.platform().into(),
+                        status: reply_user.identity_status().into(),
+                        image: reply_user.profile_picture(),
+                    }))
                 }
             )),
             Message {
