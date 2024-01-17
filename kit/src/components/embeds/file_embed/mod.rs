@@ -185,7 +185,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
                 rsx!(
                     div {
-                        class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
+                        class: format_args!("{}", if has_thumbnail {""} else {"icon-document"}),
                         aria_label: "file-icon",
                             if has_thumbnail {
                                 rsx!(div {
@@ -300,6 +300,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_description}"
                             }
                         },
+                       
                         
                     )
                     }

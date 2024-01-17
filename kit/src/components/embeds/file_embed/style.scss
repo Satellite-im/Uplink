@@ -32,11 +32,14 @@
       position: absolute;
       top: -15%;
       left: -23%;
-    }
 
-    .btn {
-      display: inline-flex;
-      border: 1px solid var(--text-color-dark);
+      svg {
+        margin-top: 0;
+        stroke: var(--text-color-dark);
+        fill: transparent;
+        height: 1.1rem;
+        width: 1.1rem;
+      }
     }
   }
 
@@ -76,7 +79,7 @@
     left: var(--gap);
   }
 
-  .icon {
+  .icon-document {
     svg {
       transition: stroke var(--animation-time);
 			fill: transparent;
@@ -87,6 +90,7 @@
     }
   }
 }
+
 .file-embed:hover {
   cursor: pointer;
   .btn {
@@ -168,7 +172,7 @@
     }
   }
 
-  .play-button-file-embed-no-thumb {
+.play-button-file-embed-no-thumb {
     position: absolute;
     top: 8%;
     left: 5%;
