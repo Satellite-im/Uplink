@@ -300,10 +300,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_description}"
                             }
                         },
-                       
-                        
-                    )
-                    }
+                    )}
                     if is_pending {
                         rsx!(div {
                             class: "upload-bar",
