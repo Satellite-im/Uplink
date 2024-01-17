@@ -125,6 +125,14 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (cx.props.user_image.is_some() && !remote_message).then(|| rsx! (
                 cx.props.user_image.as_ref()
             )),
+            div {
+                class: "connector",
+                if cx.props.remote.unwrap_or_default() {
+                    "┌"
+                } else {
+                    "┐"
+                }
+            }
         }
     ))
 }
