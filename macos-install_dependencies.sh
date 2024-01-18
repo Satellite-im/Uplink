@@ -17,4 +17,3 @@ brew install ffmpeg
 
 # Install Opus
 brew install opus
-
