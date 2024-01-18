@@ -98,30 +98,28 @@ pub fn chat_upload_stream_handler(
             AttachmentEventStream,
         )| {
             async move {
-                loop {
-                    let msg_clone = msg.clone();
-                    if let Some(kind) = stream.next().await {
-                        match kind {
-                            AttachmentKind::Pending(res) => {
-                                if let Err(e) = res {
-                                    log::debug!("Error uploading file {}", e);
-                                }
-                                return;
+                let msg_clone = msg.clone();
+                while let Some(kind) = stream.next().await {
+                    match kind {
+                        AttachmentKind::Pending(res) => {
+                            if let Err(e) = res {
+                                log::debug!("Error uploading file {}", e);
                             }
-                            AttachmentKind::AttachedProgress(progress) => {
-                                if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
-                                    MessageEvent::AttachmentProgress {
-                                        progress,
-                                        conversation_id: conv_id,
-                                        msg: PendingMessage::for_compare(
-                                            msg_clone,
-                                            &attachments,
-                                            appended_msg_id,
-                                        ),
-                                    },
-                                )) {
-                                    log::error!("failed to send warp_event: {e}");
-                                }
+                            return;
+                        }
+                        AttachmentKind::AttachedProgress(progress) => {
+                            if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
+                                MessageEvent::AttachmentProgress {
+                                    progress,
+                                    conversation_id: conv_id,
+                                    msg: PendingMessage::for_compare(
+                                        msg_clone,
+                                        &attachments,
+                                        appended_msg_id,
+                                    ),
+                                },
+                            )) {
+                                log::error!("failed to send warp_event: {e}");
                             }
                         }
                     }
