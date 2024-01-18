@@ -102,7 +102,10 @@ pub fn chat_upload_stream_handler(
                     let msg_clone = msg.clone();
                     if let Some(kind) = stream.next().await {
                         match kind {
-                            AttachmentKind::Pending(_) => {
+                            AttachmentKind::Pending(res) => {
+                                if let Err(e) = res {
+                                    log::debug!("Error uploading file {}", e);
+                                }
                                 return;
                             }
                             AttachmentKind::AttachedProgress(progress) => {
