@@ -103,7 +103,6 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         let mut default_message = Message::default();
         default_message.set_conversation_id(conversation);
         default_message.set_sender(sender.did_key());
-        default_message.set_reactions(vec![]);
         default_message.set_lines(vec![lipsum(word_count)]);
 
         messages.push_back(ui_adapter::Message {
@@ -256,7 +255,6 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> ui_a
     default_message.set_conversation_id(conversation_id);
     default_message.set_date(timestamp);
     default_message.set_sender(sender.did_key());
-    default_message.set_reactions(vec![]);
     default_message.set_replied(None);
     default_message.set_lines(vec![text.into()]);
 
