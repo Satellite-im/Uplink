@@ -151,7 +151,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "input-group",
             aria_label: "input-group",
             div {
-                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
+                class: format_args!("input {}", if disabled { "disabled" } else { "" }),
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
@@ -436,7 +436,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "input-group",
             aria_label: "input-group",
             div {
-                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
+                class: format_args!("input {}", if disabled { "disabled" } else { "" }),
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
