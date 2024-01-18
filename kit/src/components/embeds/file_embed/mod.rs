@@ -288,7 +288,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
                                         })
                                     }
-                                   
                                 }
                             )
                         }
@@ -309,7 +308,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             aria_label: "file-meta",
                             "{file_description}"
                         }
-                       
                     },
                     if !has_thumbnail && is_from_attachments  {
                         rsx!(show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon))
