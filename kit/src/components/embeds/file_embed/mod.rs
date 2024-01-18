@@ -87,12 +87,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
         with_download_button
+    } else if let Some(is_from_attachments) = cx.props.is_from_attachments {
+        is_from_attachments
     } else {
-        if let Some(is_from_attachments) = cx.props.is_from_attachments {
-            is_from_attachments
-        } else {
-            false
-        }
+        false
     };
 
     let is_pending = cx.props.progress.is_some();
@@ -198,10 +196,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         img {
                                             aria_label: "message-image",
                                             onclick: move |mouse_event_data: Event<MouseData>|
-                                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                if !is_from_attachments {
-                                                    cx.props.on_press.call(Some(temp_dir.clone()));
-                                                }
+                                            if mouse_event_data.modifiers() != Modifiers::CONTROL && !is_from_attachments {
+                                                cx.props.on_press.call(Some(temp_dir.clone()));
                                             },
                                             class: format_args!(
                                                 "image {} expandable-image",
@@ -256,10 +252,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 div {
                                     class: "document-container",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
-                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video {
-                                            if !is_from_attachments {
-                                                cx.props.on_press.call(Some(temp_dir.clone()));
-                                            }
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video && !is_from_attachments {
+                                            cx.props.on_press.call(Some(temp_dir.clone()));
                                         }
                                     },
                                     IconElement {
