@@ -23,7 +23,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_ipfs::{
-    config::{Config, Discovery, UpdateEvents},
+    config::{Bootstrap, Config, Discovery, UpdateEvents},
     WarpIpfsBuilder,
 };
 
@@ -386,6 +386,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.store_setting.discovery = Discovery::from(&STATIC_ARGS.discovery);
 
     config.save_phrase = true; // TODO: This should be bound to a setting within Uplink so that the user can choose not to reveal the phrase for increased security.``
+    config.bootstrap = Bootstrap::None;
     config.ipfs_setting.disable_quic = !STATIC_ARGS.enable_quic;
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));

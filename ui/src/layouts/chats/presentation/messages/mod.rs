@@ -551,14 +551,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .inner
         .reactions()
         .iter()
-        .map(|x| {
-            let users = x.users();
+        .map(|(emoji, users)| {
             let user_names: Vec<String> = users
                 .iter()
                 .filter_map(|id| state.read().get_identity(id).map(|x| x.username()))
                 .collect();
             ReactionAdapter {
-                emoji: x.emoji(),
+                emoji: emoji.into(),
                 reaction_count: users.len(),
                 self_reacted: users.iter().any(|x| x == &user_did),
                 alt: user_names.join(", "),

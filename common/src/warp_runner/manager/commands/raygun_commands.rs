@@ -12,7 +12,9 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, AttachmentKind, ConversationType, Location, PinState, ReactionState},
+    raygun::{
+        self, AttachmentKind, ConversationType, GroupSettings, Location, PinState, ReactionState,
+    },
 };
 
 use crate::{
@@ -611,7 +613,7 @@ async fn raygun_create_group_conversation(
     group_name: Option<String>,
 ) -> Result<Uuid, Error> {
     match messaging
-        .create_group_conversation(group_name, recipients)
+        .create_group_conversation(group_name, recipients, GroupSettings::default())
         .await
     {
         Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
