@@ -534,6 +534,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-recursion"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fd55a5ba1179988837d24ab4c7cc8ed6efdeff578ede0416b4225a5fca35bd0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8489,7 +8500,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9888,7 +9899,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9934,7 +9945,6 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "uuid",
- "warp-derive",
  "wasm-bindgen",
  "web-sys",
  "x25519-dalek 1.1.1",
@@ -9944,7 +9954,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9974,21 +9984,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "warp-derive"
-version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
-dependencies = [
- "paste",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e#ac92f8f7a683b8f4a6954349c983a4fe5e32dc1e"
+source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
 dependencies = [
  "anyhow",
+ "async-recursion 1.0.5",
  "async-stream",
  "async-trait",
  "bayespam",
@@ -11145,7 +11146,7 @@ dependencies = [
  "async-executor",
  "async-io 1.13.0",
  "async-lock 2.8.0",
- "async-recursion",
+ "async-recursion 0.3.2",
  "async-task",
  "async-trait",
  "byteorder",

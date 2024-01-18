@@ -31,7 +31,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use warp::blink::BlinkEventKind;
 use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
-use warp::raygun::{ConversationType, Location, Reaction};
+use warp::raygun::{ConversationType, Location};
 
 use crate::STATIC_ARGS;
 
@@ -1146,7 +1146,7 @@ impl State {
 
     // this is used for adding/removing reactions.
     // if pinned messages ever need to display a reaction, additional code may be needed here.
-    pub fn update_reactions(&mut self, mut message: warp::raygun::Message) {
+    pub fn update_reactions(&mut self, message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -1160,15 +1160,7 @@ impl State {
             .iter_mut()
             .find(|m| m.inner.id() == message_id)
         {
-            let mut reactions: Vec<Reaction> = Vec::new();
-            for mut reaction in message.reactions() {
-                let users_not_duplicated: HashSet<DID> =
-                    HashSet::from_iter(reaction.users().iter().cloned());
-                reaction.set_users(users_not_duplicated.into_iter().collect());
-                reactions.insert(0, reaction);
-            }
-            message.set_reactions(reactions);
-            msg.inner = message.clone();
+            *msg.inner.reactions_mut() = message.reactions();
         } else {
             log::warn!("attempted to update a message which wasn't found");
         }
