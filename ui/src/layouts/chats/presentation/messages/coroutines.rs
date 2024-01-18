@@ -9,7 +9,7 @@ use common::{
 
 use dioxus_core::ScopeState;
 use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
-use futures::{channel::oneshot, pin_mut, Future, StreamExt};
+use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
 use warp::raygun::{PinState, ReactionState};
@@ -19,10 +19,7 @@ use crate::{
         data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         scripts,
     },
-    utils::{
-        async_task_queue::{async_queue, ListenerAction, ACTION_LISTENER},
-        download::get_download_path,
-    },
+    utils::{async_task_queue::download_stream_handler, download::get_download_path},
 };
 
 use super::{DownloadTracker, MessagesCommand};
@@ -445,30 +442,7 @@ pub fn handle_warp_commands(
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
-    let download_streams = async_queue(
-        cx,
-        |(mut stream, file, on_finish): (
-            warp::constellation::ConstellationProgressStream,
-            String,
-            std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
-        )| {
-            async move {
-                while let Some(p) = stream.next().await {
-                    log::debug!("download progress: {p:?}");
-                }
-                let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
-                    title: "".into(),
-                    content: get_local_text_with_args(
-                        "files.download-success",
-                        vec![("file", file)],
-                    ),
-                    icon: None,
-                    timeout: 2,
-                });
-                on_finish.await
-            }
-        },
-    );
+    let download_streams = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         to_owned![state, pending_downloads, download_streams];
         async move {

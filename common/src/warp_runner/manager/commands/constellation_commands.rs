@@ -1,6 +1,6 @@
 use std::{
     ffi::OsStr,
-    io::Read,
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::mpsc,
@@ -8,7 +8,7 @@ use std::{
 
 use derive_more::Display;
 
-use futures::{channel::oneshot, StreamExt};
+use futures::{channel::oneshot, stream, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
@@ -71,7 +71,7 @@ pub enum ConstellationCmd {
     DownloadFile {
         file_name: String,
         local_path_to_save_file: PathBuf,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<ConstellationProgressStream, warp::error::Error>>,
     },
     #[display(fmt = "DeleteItems {{ item: {item:?} }} ")]
     DeleteItems {
@@ -747,12 +747,45 @@ async fn download_file(
     warp_storage: &warp_storage,
     file_name: String,
     local_path_to_save_file: PathBuf,
-) -> Result<(), Error> {
-    warp_storage
-        .get(&file_name, &local_path_to_save_file.to_string_lossy())
-        .await?;
-    log::info!("{file_name} downloaded");
-    Ok(())
+) -> Result<ConstellationProgressStream, Error> {
+    let size = warp_storage
+        .current_directory()?
+        .get_item_by_path(&file_name)
+        .map(|d| d.size())
+        .unwrap_or_default();
+    let stream = warp_storage.get_stream(&file_name).await?;
+    let path = local_path_to_save_file.clone();
+    let mut file = std::fs::File::create(local_path_to_save_file)
+        .expect(&format!("Couldn't create file {:?}", path.as_os_str()));
+    let name = file_name.clone();
+    let name2 = file_name.clone();
+    let stream = stream
+        .map(move |v| match v {
+            Ok(data) => {
+                let _ = file.write(&data);
+                Progression::CurrentProgress {
+                    name: file_name.clone(),
+                    current: file
+                        .metadata()
+                        .map(|d| d.len() as usize)
+                        .unwrap_or_default(),
+                    total: Some(size),
+                }
+            }
+            Err(e) => Progression::ProgressFailed {
+                name: file_name.clone(),
+                last_size: file.metadata().map(|d| d.len() as usize).ok(),
+                error: Some(format!("{}", e)),
+            },
+        })
+        .chain(stream::once(async move {
+            Progression::ProgressComplete {
+                name,
+                total: path.metadata().map(|d| d.len() as usize).ok(),
+            }
+        }));
+    log::info!("{name2} downloaded");
+    Ok(ConstellationProgressStream(stream.boxed()))
 }
 
 pub fn thumbnail_to_base64(file: &File) -> String {

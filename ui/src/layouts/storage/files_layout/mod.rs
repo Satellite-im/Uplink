@@ -64,7 +64,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
 
     functions::use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
+    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
 
     use_future(cx, (), |_| {
         to_owned![files_been_uploaded, files_in_queue_to_upload];

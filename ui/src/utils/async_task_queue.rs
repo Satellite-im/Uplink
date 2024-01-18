@@ -1,5 +1,6 @@
 use common::{
     icons::outline::Shape as Icon,
+    language::get_local_text_with_args,
     state::pending_message::PendingMessage,
     warp_runner::{ui_adapter::MessageEvent, WarpEvent},
     WARP_EVENT_CH,
@@ -122,6 +123,41 @@ pub fn chat_upload_stream_handler(
                         }
                     }
                 }
+            }
+        },
+    )
+}
+
+pub fn download_stream_handler(
+    cx: &ScopeState,
+) -> &UseRef<
+    AsyncRef<(
+        warp::constellation::ConstellationProgressStream,
+        String,
+        std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+    )>,
+> {
+    async_queue(
+        cx,
+        |(mut stream, file, on_finish): (
+            warp::constellation::ConstellationProgressStream,
+            String,
+            std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+        )| {
+            async move {
+                while let Some(p) = stream.next().await {
+                    log::debug!("download progress: {p:?}");
+                }
+                let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
+                    title: "".into(),
+                    content: get_local_text_with_args(
+                        "files.download-success",
+                        vec![("file", file)],
+                    ),
+                    icon: None,
+                    timeout: 2,
+                });
+                on_finish.await
             }
         },
     )
