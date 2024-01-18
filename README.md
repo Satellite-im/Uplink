@@ -49,9 +49,7 @@ cargo run --bin uplink --profile=rapid
 | ffmpeg | brew install ffmpeg |
 | audio opus | brew install opus |
 
-For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
-
-And for Windows, I followed the steps on this site here:
+You can also run [macos-install_dependencies.sh](https://github.com/Satellite-im/Uplink/blob/sara/add-macos-script/macos-install_dependencies.sh) to install all of the above in bulk.
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
