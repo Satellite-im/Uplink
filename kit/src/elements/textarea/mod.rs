@@ -5,9 +5,15 @@
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::Deserialize;
 use uuid::Uuid;
 use warp::logging::tracing::log;
+
+// "{\"Input\":\"((?:.|\n)*)\"}"
+static INPUT_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"\{\"Input\":\"((?:.|\n)+)\"}"#).unwrap());
 
 #[derive(Clone, Copy)]
 pub enum Size {
@@ -343,7 +349,13 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let _ = eval(
                     &sync_script
                         .replace("$UPDATE", &update.to_string())
-                        .replace("$TEXT", &value.replace('"', "\\\"").replace('\n', "\\n"))
+                        .replace(
+                            "$TEXT",
+                            &value
+                                .replace('"', "\\\"")
+                                .replace('\\', "\\\\")
+                                .replace('\n', "\\n"),
+                        )
                         .replace("$PLACEHOLDER", &placeholder)
                         .replace("$DISABLED", &disabled.to_string()),
                 );
@@ -361,7 +373,15 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             if let Ok(eval) = eval(&rich_editor) {
                 loop {
                     if let Ok(val) = eval.recv().await {
-                        match serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default()) {
+                        let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
+                        // Instead of escaping all needed chars just try extract the input string
+                        let data = if let Some(capt) = input {
+                            let txt = capt.get(1).map(|t| t.as_str()).unwrap_or_default();
+                            Ok(JSTextData::Input(txt.to_string()))
+                        } else {
+                            serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default())
+                        };
+                        match data {
                             Ok(data) => {
                                 let new =
                                     listener_data.with(|current: &Option<Vec<JSTextData>>| {

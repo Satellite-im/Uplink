@@ -54,7 +54,7 @@ if ($AUTOFOCUS) {
 
 editor.registerListener("input", ({ _element, _codemirror, value }) => {
     // Sync value to uplink
-    dioxus.send(`{\"Input\":\"${value.replaceAll("\"", '\\"').replaceAll("\n", '\\n')}\"}`)
+    dioxus.send(`{\"Input\":\"${value}\"}`)
 });
 
 editor.registerListener("selection", ({ _element, _codemirror, selection }) => {
