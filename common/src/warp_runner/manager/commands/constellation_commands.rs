@@ -743,6 +743,7 @@ async fn set_thumbnail_if_file_is_document(
     .map_err(anyhow::Error::from)?
 }
 
+#[allow(clippy::expect_fun_call)]
 async fn download_file(
     warp_storage: &warp_storage,
     file_name: String,

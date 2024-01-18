@@ -127,18 +127,16 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                         log::error!("Failed to send warp command: {}", e);
                         return;
                     }
-                    if let Ok(val) = rx.await {
-                        if let Ok(streams) = val {
-                            let mut to_append = upload_streams.write();
-                            for (chat, stream) in streams {
-                                to_append.append((
-                                    chat,
-                                    vec!["".to_owned()],
-                                    attachments.clone(),
-                                    None,
-                                    stream,
-                                ))
-                            }
+                    if let Ok(Ok(streams)) = rx.await {
+                        let mut to_append = upload_streams.write();
+                        for (chat, stream) in streams {
+                            to_append.append((
+                                chat,
+                                vec!["".to_owned()],
+                                attachments.clone(),
+                                None,
+                                stream,
+                            ))
                         }
                     }
                     send_files_from_storage.set(false);
