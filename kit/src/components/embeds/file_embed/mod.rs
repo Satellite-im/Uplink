@@ -88,7 +88,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
         with_download_button
     } else {
-        true
+        if let Some(is_from_attachments) = cx.props.is_from_attachments {
+            is_from_attachments
+        } else {
+            false
+        }
     };
 
     let is_pending = cx.props.progress.is_some();
@@ -195,7 +199,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             aria_label: "message-image",
                                             onclick: move |mouse_event_data: Event<MouseData>|
                                             if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                                cx.props.on_press.call(Some(temp_dir.clone()));
+                                                if !is_from_attachments {
+                                                    cx.props.on_press.call(Some(temp_dir.clone()));
+                                                }
                                             },
                                             class: format_args!(
                                                 "image {} expandable-image",
@@ -215,7 +221,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                 }
                                             })
                                         }
-                                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                        show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
                                     }
                                     )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
@@ -251,7 +257,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     class: "document-container",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video {
-                                            cx.props.on_press.call(Some(temp_dir.clone()));
+                                            if !is_from_attachments {
+                                                cx.props.on_press.call(Some(temp_dir.clone()));
+                                            }
                                         }
                                     },
                                     IconElement {
@@ -274,33 +282,38 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             }
                                         })
                                     }
-                                    div {
-                                        class: "button-position",
-                                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                    if !is_from_attachments {
+                                        rsx!( div {
+                                            class: "button-position",
+                                            show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
+                                        })
                                     }
+                                   
                                 }
                             )
                         }
                     }
-                    if !has_thumbnail || is_from_attachments  {
-                        rsx!( div {
-                            class: "file-info",
-                            cursor: "default",
-                            width: "100%",
-                            aria_label: "file-info",
-                            p {
-                                class: "name",
-                                aria_label: "file-name",
-                                color: "var(--text-color)",
-                                "{filename}"
-                            },
-                            p {
-                                class: "meta",
-                                aria_label: "file-meta",
-                                "{file_description}"
-                            }
+                    div {
+                        class: "file-info",
+                        cursor: "default",
+                        width: "100%",
+                        aria_label: "file-info",
+                        p {
+                            class: "name",
+                            aria_label: "file-name",
+                            color: "var(--text-color)",
+                            "{filename}"
                         },
-                    )}
+                        p {
+                            class: "meta",
+                            aria_label: "file-meta",
+                            "{file_description}"
+                        }
+                       
+                    },
+                    if !has_thumbnail && is_from_attachments  {
+                        rsx!(show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon))
+                    }
                     if is_pending {
                         rsx!(div {
                             class: "upload-bar",
@@ -335,7 +348,7 @@ fn is_image(filename: String) -> bool {
     true
 }
 
-fn show_download_button_if_enabled<'a>(
+fn show_download_or_minus_button_if_enabled<'a>(
     cx: Scope<'a, Props<'a>>,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,

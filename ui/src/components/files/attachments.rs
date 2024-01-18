@@ -64,10 +64,12 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
             is_from_attachments: true,
             thumbnail: thumbnail,
             button_icon: icons::outline::Shape::Minus,
-            on_press: move |_| {
-                let mut attachments = cx.props.files_to_attach.clone();
-                attachments.retain(|location2| location2 != location);
-                cx.props.on_remove.call(attachments);
+            on_press: move |pathbuf: Option<PathBuf>| {
+                if pathbuf.is_none() {
+                    let mut attachments = cx.props.files_to_attach.clone();
+                    attachments.retain(|location2| location2 != location);
+                    cx.props.on_remove.call(attachments);
+                }
             },
         })
     })));
