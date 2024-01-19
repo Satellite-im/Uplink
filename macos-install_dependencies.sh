@@ -9,11 +9,5 @@ xcode-select --install
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Install CMake
-brew install cmake
-
-# Install FFmpeg
-brew install ffmpeg
-
-# Install Opus
-brew install opus
+# Install CMake, FFmpeg and Opus
+brew install cmake ffmpeg opus
