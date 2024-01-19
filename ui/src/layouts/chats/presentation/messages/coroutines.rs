@@ -451,13 +451,14 @@ pub fn handle_warp_commands(
                 match cmd {
                     MessagesCommand::React((user, message, emoji)) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
-                        let reaction_state =
-                            match message.reactions().iter().find(|x| x.emoji() == emoji) {
-                                Some(reaction) if reaction.users().contains(&user) => {
-                                    ReactionState::Remove
-                                }
-                                _ => ReactionState::Add,
-                            };
+                        let reaction_state = match message
+                            .reactions()
+                            .iter()
+                            .find(|(message_emoji, _)| emoji == message_emoji.to_string())
+                        {
+                            Some((_, users)) if users.contains(&user) => ReactionState::Remove,
+                            _ => ReactionState::Add,
+                        };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),

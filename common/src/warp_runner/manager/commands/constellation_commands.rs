@@ -786,7 +786,7 @@ async fn download_file(
             }
         }));
     log::info!("{name2} downloaded");
-    Ok(ConstellationProgressStream(stream.boxed()))
+    Ok(stream.boxed())
 }
 
 pub fn thumbnail_to_base64(file: &File) -> String {
