@@ -40,6 +40,7 @@ pub struct Chat {
     #[serde(default = "default_conversation_type")]
     pub conversation_type: ConversationType,
     // Conversation settings.
+    #[serde(default)]
     pub settings: ConversationSettings,
     // only Some for group chats
     #[serde(default)]
