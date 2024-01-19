@@ -299,6 +299,7 @@ settings-keybinds = Keybind Settings
     .open-dev-tools = Open Web Inspector
     .toggle-devmode = Toggle Developer Mode
     .cancel-change-keybind = Cancel Recording
+    .set-app-visible = Set Uplink Visible
 
 settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
