@@ -3,11 +3,7 @@ use std::ffi::OsStr;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 
-use crate::elements::{
-    button::Button,
-    input::{Input, Options, Size, SpecialCharsAction, Validation},
-    Appearance,
-};
+use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validation};
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use common::icons::Icon as IconElement;
@@ -98,7 +94,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_extension}"
                             },
                             IconElement {
-                                icon: Icon::Document,
+                                icon: if is_video {Icon::DocumentVideoFile} else {Icon::Document}
                             }
                         )
                     } else {
@@ -107,16 +103,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             height: if is_video {"50px"} else {""},
                             width: if is_video {"100px"} else {""},
                             src: "{thumbnail}",
-                        })
-                    }
-                    if is_video {
-                        rsx!(div {
-                            class: "play-button",
-                            Button {
-                                icon: Icon::Play,
-                                appearance: Appearance::Transparent,
-                                small: true,
-                            }
                         })
                     }
                 },

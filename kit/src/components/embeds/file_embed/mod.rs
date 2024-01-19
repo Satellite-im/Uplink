@@ -236,22 +236,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         width: "60px",
                                         margin: "30px 0",
                                         IconElement {
-                                            icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                                            icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentVideoFile} else {Icon::Document})
                                         }
                                         if !file_extension_is_empty {
                                             rsx!( label {
                                                 class: "file-embed-type",
                                                 "{file_extension}"
-                                            })
-                                        }
-                                        if is_video {
-                                            rsx!(div {
-                                                class: "play-button-file-embed-no-thumb-small",
-                                                Button {
-                                                    icon: Icon::Play,
-                                                    appearance: Appearance::Transparent,
-                                                    small: true,
-                                                }
                                             })
                                         }
                                     }
@@ -267,23 +257,13 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     },
                                     IconElement {
-                                        icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                                        icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentVideoFile} else {Icon::Document})
                                     }
                                     if !file_extension_is_empty {
                                         rsx!( label {
                                             class: "file-embed-type",
                                             cursor: "pointer",
                                             "{file_extension}"
-                                        })
-                                    }
-                                    if is_video {
-                                        rsx!(div {
-                                            class: "play-button-file-embed-no-thumb",
-                                            Button {
-                                                icon: Icon::Play,
-                                                appearance: Appearance::Transparent,
-                                                small: true,
-                                            }
                                         })
                                     }
                                     if !is_from_attachments {
