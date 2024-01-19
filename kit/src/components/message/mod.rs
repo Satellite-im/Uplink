@@ -164,6 +164,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 thumbnail: thumbnail_to_base64(file),
                 big: true,
                 remote: is_remote,
+                with_download_button: true,
                 download_pending: cx
                     .props
                     .attachments_pending_download
