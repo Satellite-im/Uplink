@@ -12,6 +12,7 @@
 
 .file-embed {
   display: inline-flex;
+  height: 100%;
   gap: var(--gap);
   width: 100%;
   color: var(--text-color);
@@ -80,6 +81,8 @@
   }
 
   .icon-document {
+    align-self: center;
+
     svg {
       transition: stroke var(--animation-time);
 			fill: transparent;
