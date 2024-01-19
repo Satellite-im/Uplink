@@ -201,3 +201,39 @@
         margin-top: 0;
       }
 }
+
+.play-button-file-embed-no-thumb-small {
+  position: relative;
+  top: -90%;
+  left: 75%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  padding: 0;
+}
+
+.play-button-file-embed-no-thumb-small .btn {
+  display: inline-flex;
+  background-color: transparent;
+  border: transparent;
+  stroke: var(--warning-light);
+}
+
+.play-button-file-embed-no-thumb-small .btn-wrap {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  background-color: transparent;
+  border: transparent;
+  stroke: var(--warning-light);
+}
+
+.play-button-file-embed-no-thumb-small .icon {
+  .play-button-file-embed-no-thumb-small svg {
+    margin-top: 0;
+    transition: stroke var(--animation-time);
+    fill: transparent;
+    stroke: var(--warning-light);
+    width: 75%;
+    height: 75%;
+  }
+}
