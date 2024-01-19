@@ -98,7 +98,6 @@ pub fn chat_upload_stream_handler(
             AttachmentEventStream,
         )| {
             async move {
-                let msg_clone = msg.clone();
                 while let Some(kind) = stream.next().await {
                     match kind {
                         AttachmentKind::Pending(res) => {
@@ -113,7 +112,7 @@ pub fn chat_upload_stream_handler(
                                     progress,
                                     conversation_id: conv_id,
                                     msg: PendingMessage::for_compare(
-                                        msg_clone,
+                                        msg.clone(),
                                         &attachments,
                                         appended_msg_id,
                                     ),
