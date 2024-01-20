@@ -1,5 +1,5 @@
 
-Command Cheat Sheet (Unix)
+# Command Cheat Sheet (Unix)
 
 # Logging
 ### Show Help Commands:
@@ -23,12 +23,10 @@ ____
 ## Run Multiple Uplinks locally
 ```cargo run --release -- --path ~/path/to/profile/you/want```
 
-  
-
 ___
 
 ## Copy Extensions and Run App (from within the Uplink folder)
-#### dylib is a macos specific extension, it will have a different extension on Windows and Linux
+#### dylib is a macOS specific extension, it will have a different extension on Windows and Linux
 ```cargo build --release && cp ./target/release/libemoji_selector.dylib ~/.uplink/extensions && cargo run --release```
 
 ___
