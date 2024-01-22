@@ -352,8 +352,8 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         .replace(
                             "$TEXT",
                             &value
-                                .replace('"', "\\\"")
                                 .replace('\\', "\\\\")
+                                .replace('"', "\\\"")
                                 .replace('\n', "\\n"),
                         )
                         .replace("$PLACEHOLDER", &placeholder)
@@ -373,6 +373,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             if let Ok(eval) = eval(&rich_editor) {
                 loop {
                     if let Ok(val) = eval.recv().await {
+                        log::debug!("val {val}");
                         let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
                         // Instead of escaping all needed chars just try extract the input string
                         let data = if let Some(capt) = input {
