@@ -11,7 +11,7 @@ pub enum UploadFileAction<T> {
     Cancelling,
     UploadFiles(Vec<PathBuf>),
     Uploading((String, String, String)),
-    Finishing,
+    Finishing(PathBuf, bool),
     Finished(T),
     Error,
 }
