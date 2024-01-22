@@ -19,7 +19,7 @@ use crate::{
         data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         scripts,
     },
-    utils::download::get_download_path,
+    utils::{async_task_queue::download_stream_handler, download::get_download_path},
 };
 
 use super::{DownloadTracker, MessagesCommand};
@@ -442,8 +442,9 @@ pub fn handle_warp_commands(
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
+    let download_streams = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, pending_downloads];
+        to_owned![state, pending_downloads, download_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -536,22 +537,10 @@ pub fn handle_warp_commands(
 
                         let res = rx.await.expect("command canceled");
                         match res {
-                            Ok(mut stream) => {
-                                while let Some(p) = stream.next().await {
-                                    log::debug!("{p:?}");
-                                }
-                                state.write().mutate(Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text_with_args(
-                                            "files.download-success",
-                                            vec![("file", file.name())],
-                                        ),
-                                        None,
-                                        2,
-                                    ),
-                                ));
-                                on_finish.await
+                            Ok(stream) => {
+                                download_streams
+                                    .write()
+                                    .append((stream, file.name(), on_finish));
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(
