@@ -11,8 +11,7 @@ use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::state::settings::GlobalShortcut;
-use common::utils::clear_temp_files_dir::clear_temp_files_directory;
-use common::utils::lifecycle::use_component_lifecycle;
+use common::state::ToastNotification;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -58,6 +57,7 @@ use crate::layouts::log_in::{AuthGuard, AuthPages};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
+use crate::utils::async_task_queue::{ListenerAction, ACTION_LISTENER};
 use crate::utils::keyboard::KeyboardShortcuts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
@@ -239,14 +239,6 @@ fn app_layout(cx: Scope) -> Element {
     use_router_notification_listener(cx)?;
 
     let state = use_shared_state::<State>(cx)?;
-
-    use_component_lifecycle(
-        cx,
-        || {},
-        move || {
-            let _ = clear_temp_files_directory();
-        },
-    );
 
     render! {
         AppStyle {}
@@ -540,6 +532,29 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             let mut ch = channel.lock().await;
             while (ch.recv().await).is_some() {
                 desktop.set_focus();
+            }
+        }
+    });
+
+    // Listen to async tasks actions that should be handled on main thread
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            let channel = ACTION_LISTENER.rx.clone();
+            let mut ch = channel.lock().await;
+            while let Some(action) = ch.recv().await {
+                match action {
+                    ListenerAction::ToastAction {
+                        title,
+                        content,
+                        icon,
+                        timeout,
+                    } => {
+                        state.write().mutate(Action::AddToastNotification(
+                            ToastNotification::init(title, content, icon, timeout),
+                        ));
+                    }
+                }
             }
         }
     });

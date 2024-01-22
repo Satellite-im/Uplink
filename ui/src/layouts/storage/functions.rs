@@ -21,7 +21,10 @@ use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::{components::files::upload_progress_bar, utils::download::get_download_path};
+use crate::{
+    components::files::upload_progress_bar,
+    utils::{async_task_queue::download_stream_handler, download::get_download_path},
+};
 
 use super::files_layout::controller::{StorageController, UploadFileController};
 
@@ -138,11 +141,7 @@ pub fn format_item_size(item_size: usize) -> String {
     size_formatted_string
 }
 
-pub fn download_file(
-    file_name: &str,
-    ch: &Coroutine<ChanCmd>,
-    temp_path_to_download_file_to_preview: Option<PathBuf>,
-) {
+pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
@@ -153,26 +152,18 @@ pub fn download_file(
         .and_then(OsStr::to_str)
         .map(str::to_string)
         .unwrap_or_default();
-    let file_path_buf = if temp_path_to_download_file_to_preview.is_none() {
-        match FileDialog::new()
-            .set_directory(".")
-            .set_file_name(&file_stem)
-            .add_filter("", &[&file_extension])
-            .save_file()
-        {
-            Some(path) => path,
-            None => return,
-        }
-    } else {
-        temp_path_to_download_file_to_preview
-            .clone()
-            .unwrap_or_default()
+    let file_path_buf = match FileDialog::new()
+        .set_directory(".")
+        .set_file_name(&file_stem)
+        .add_filter("", &[&file_extension])
+        .save_file()
+    {
+        Some(path) => path,
+        None => return,
     };
-
     ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,
-        notification_download_status: temp_path_to_download_file_to_preview.is_none(),
     });
 }
 
@@ -229,7 +220,6 @@ pub enum ChanCmd {
     DownloadFile {
         file_name: String,
         local_path_to_save_file: PathBuf,
-        notification_download_status: bool,
     },
     RenameItem {
         old_name: String,
@@ -243,8 +233,9 @@ pub fn init_coroutine<'a>(
     controller: &'a UseRef<StorageController>,
     state: &'a UseSharedState<State>,
 ) -> &'a Coroutine<ChanCmd> {
+    let download_queue = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![controller, state];
+        to_owned![controller, download_queue, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -348,11 +339,10 @@ pub fn init_coroutine<'a>(
                     ChanCmd::DownloadFile {
                         file_name,
                         local_path_to_save_file,
-                        notification_download_status,
                     } => {
                         let (local_path_to_save_file, on_finish) =
                             get_download_path(local_path_to_save_file);
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let (tx, rx) = oneshot::channel();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::DownloadFile {
@@ -361,7 +351,29 @@ pub fn init_coroutine<'a>(
                                 rsp: tx,
                             },
                         )) {
-                            if notification_download_status {
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text_with_args(
+                                        "files.download-failed",
+                                        vec![("file", file_name)],
+                                    ),
+                                    None,
+                                    2,
+                                ),
+                            ));
+                            log::error!("failed to download file {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(stream) => {
+                                download_queue
+                                    .write()
+                                    .append((stream, file_name, on_finish));
+                            }
+                            Err(error) => {
                                 state.write().mutate(Action::AddToastNotification(
                                     ToastNotification::init(
                                         "".into(),
@@ -373,45 +385,7 @@ pub fn init_coroutine<'a>(
                                         2,
                                     ),
                                 ));
-                            }
-                            log::error!("failed to download file {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(_) => {
-                                if notification_download_status {
-                                    state.write().mutate(Action::AddToastNotification(
-                                        ToastNotification::init(
-                                            "".into(),
-                                            get_local_text_with_args(
-                                                "files.download-success",
-                                                vec![("file", file_name)],
-                                            ),
-                                            None,
-                                            2,
-                                        ),
-                                    ));
-                                }
-                                on_finish.await
-                            }
-                            Err(error) => {
-                                if notification_download_status {
-                                    state.write().mutate(Action::AddToastNotification(
-                                        ToastNotification::init(
-                                            "".into(),
-                                            get_local_text_with_args(
-                                                "files.download-failed",
-                                                vec![("file", file_name)],
-                                            ),
-                                            None,
-                                            2,
-                                        ),
-                                    ));
-                                }
                                 log::error!("failed to download file: {}", error);
-                                on_finish.await;
                                 continue;
                             }
                         }
@@ -579,10 +553,12 @@ pub fn start_upload_file_listener(
                         upload_progress_bar::change_progress_percentage(&window, progress.clone());
                         upload_progress_bar::change_progress_description(&window, msg);
                     }
-                    UploadFileAction::Finishing => {
+                    UploadFileAction::Finishing(file, finish) => {
                         *files_been_uploaded.write_silent() = true;
-                        if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
+                        if !files_in_queue_to_upload.read().is_empty()
+                            && (finish || files_in_queue_to_upload.read().len() > 1)
+                        {
+                            files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&file)));
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),
