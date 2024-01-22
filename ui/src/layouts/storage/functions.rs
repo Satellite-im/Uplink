@@ -553,10 +553,12 @@ pub fn start_upload_file_listener(
                         upload_progress_bar::change_progress_percentage(&window, progress.clone());
                         upload_progress_bar::change_progress_description(&window, msg);
                     }
-                    UploadFileAction::Finishing => {
+                    UploadFileAction::Finishing(file, finish) => {
                         *files_been_uploaded.write_silent() = true;
-                        if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
+                        if !files_in_queue_to_upload.read().is_empty()
+                            && (finish || files_in_queue_to_upload.read().len() > 1)
+                        {
+                            files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&file)));
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),

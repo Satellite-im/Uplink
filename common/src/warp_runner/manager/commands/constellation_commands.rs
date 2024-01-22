@@ -511,6 +511,12 @@ async fn handle_upload_progress(
                             percentage_number as usize
                         )
                     }
+                    // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
+                    // This causes pending file count to not be updated which is way we send a message here too
+                    if current_percentage == 100 {
+                        let _ = tx_upload_file
+                            .send(UploadFileAction::Finishing(file_path.clone(), false));
+                    }
                 }
             }
             Progression::ProgressComplete { name, total } => {
@@ -589,7 +595,7 @@ async fn handle_upload_progress(
             }
         };
     }
-    let _ = tx_upload_file.send(UploadFileAction::Finishing);
+    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_path, true));
     log::info!("{:?} file uploaded!", filename);
 }
 
