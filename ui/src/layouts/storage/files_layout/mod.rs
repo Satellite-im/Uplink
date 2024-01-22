@@ -12,7 +12,7 @@ use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
-use futures::channel::oneshot;
+use futures::{channel::oneshot, StreamExt};
 use kit::elements::label::Label;
 use kit::{
     elements::{
@@ -36,6 +36,7 @@ use crate::layouts::storage::files_layout::file_modal::get_file_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
+use crate::utils::async_task_queue::chat_upload_stream_handler;
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
@@ -103,6 +104,46 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     );
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
+
+    let upload_streams = chat_upload_stream_handler(cx);
+    let send_ch = use_coroutine(
+        cx,
+        |mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
+            to_owned![upload_streams, send_files_from_storage];
+            async move {
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                while let Some((files_location, convs_id)) = rx.next().await {
+                    let (tx, rx) = oneshot::channel();
+                    let msg = vec!["".to_owned()];
+                    let attachments = files_location;
+                    if let Err(e) =
+                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                            convs_id,
+                            msg,
+                            attachments: attachments.clone(),
+                            rsp: tx,
+                        }))
+                    {
+                        log::error!("Failed to send warp command: {}", e);
+                        return;
+                    }
+                    if let Ok(Ok(streams)) = rx.await {
+                        let mut to_append = upload_streams.write();
+                        for (chat, stream) in streams {
+                            to_append.append((
+                                chat,
+                                vec!["".to_owned()],
+                                attachments.clone(),
+                                None,
+                                stream,
+                            ))
+                        }
+                    }
+                    send_files_from_storage.set(false);
+                }
+            }
+        },
+    );
 
     cx.render(rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
@@ -273,21 +314,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 send_files_start_location: SendFilesStartLocation::Storage,
                 files_pre_selected_to_send: files_pre_selected_to_send.read().clone(),
                 on_send: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
-                    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                    let (tx, _) = oneshot::channel::<Result<(), warp::error::Error>>();
-                    let msg = vec!["".to_owned()];
-                    let attachments = files_location;
-                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                        convs_id,
-                        msg,
-                        attachments,
-                        appended_msg_id: None,
-                        rsp: tx,
-                    })) {
-                        log::error!("Failed to send warp command: {}", e);
-                        return;
-                    }
-                    send_files_from_storage.set(false);
+                    send_ch.send((files_location, convs_id));
                 }
             },
             FilesBreadcumbs {
