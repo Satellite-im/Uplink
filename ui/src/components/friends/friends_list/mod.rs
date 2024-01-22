@@ -411,12 +411,11 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((id, uuid)) = rx.next().await {
                 let msg = vec![id.to_string()];
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) = oneshot::channel();
                 let cmd = RayGunCmd::SendMessageForSeveralChats {
                     convs_id: uuid,
                     msg,
                     attachments: Vec::new(),
-                    appended_msg_id: None,
                     rsp: tx,
                 };
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {

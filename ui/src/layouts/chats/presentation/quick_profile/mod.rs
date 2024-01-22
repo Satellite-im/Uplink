@@ -229,12 +229,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             None => return,
                         };
                         let msg_vec = msg.clone();
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let (tx, rx) = oneshot::channel();
                         let cmd = RayGunCmd::SendMessage {
                             conv_id: c,
                             msg,
                             attachments: Vec::new(),
-                            appended_msg_id: uuid,
                             rsp: tx,
                         };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {

@@ -73,7 +73,7 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
                         },
                         span {
                             aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                            class: "val", vals.get(0).cloned().unwrap_or_default()
+                            class: "val", vals.first().cloned().unwrap_or_default()
                         }
                     },
                     div {
