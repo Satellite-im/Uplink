@@ -12,8 +12,6 @@
 
 .file-embed {
   display: inline-flex;
-  height: 100%;
-  max-height: 300px;
   gap: var(--gap);
   width: 100%;
   color: var(--text-color);
@@ -25,10 +23,6 @@
     position: relative;
     width: fit-content;
     height: fit-content;
-  }
-
-  .image-preview-modal {
-    max-height: 140px;
   }
 
   .document-container {
@@ -85,9 +79,7 @@
     left: var(--gap);
   }
 
-  .icon-document {
-    align-self: center;
-
+  .icon {
     svg {
       transition: stroke var(--animation-time);
 			fill: transparent;
@@ -98,7 +90,6 @@
     }
   }
 }
-
 .file-embed:hover {
   cursor: pointer;
   .btn {
@@ -140,7 +131,6 @@
 }
 
 .file-info {
-  position: relative;
   word-break: break-all;
 }
 
@@ -155,90 +145,4 @@
 	border-radius: 4px;
 	color: var(--text-color-dark);
 	font-size: var(--text-size-less);
-}
-
-.play-button-file-embed {
-	position: absolute;
-	top: 45%;
-	left: 45%;
-	transform: translate(-50%, -50%);
-	pointer-events: none;
-	appearance: none;
-	padding: 0;
-
-    .btn {
-      display: inline-flex;
-      border: 1px solid var(--text-color-dark);
-    }
-
-    .btn-wrap {
-      position: absolute;
-      top: var(--gap);
-      left: var(--gap);
-      background-color: var(--warning-light);
-      border-radius: 100px;
-    }
-  }
-
-.play-button-file-embed-no-thumb {
-    position: absolute;
-    top: 8%;
-    left: 5%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    appearance: none;
-    padding: 0;
-  
-      .btn {
-        display: inline-flex;
-        border: 1px solid var(--text-color-dark);
-      }
-
-      .btn-wrap {
-        position: absolute;
-        top: var(--gap);
-        left: var(--gap);
-        background-color: var(--warning-light);
-        border-radius: 100px;
-      }
-
-      svg {
-        margin-top: 0;
-      }
-}
-
-.play-button-file-embed-no-thumb-small {
-  position: relative;
-  top: -90%;
-  left: 75%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  padding: 0;
-}
-
-.play-button-file-embed-no-thumb-small .btn {
-  display: inline-flex;
-  background-color: transparent;
-  border: transparent;
-  stroke: var(--warning-light);
-}
-
-.play-button-file-embed-no-thumb-small .btn-wrap {
-  position: absolute;
-  top: var(--gap);
-  left: var(--gap);
-  background-color: transparent;
-  border: transparent;
-  stroke: var(--warning-light);
-}
-
-.play-button-file-embed-no-thumb-small .icon {
-  .play-button-file-embed-no-thumb-small svg {
-    margin-top: 0;
-    transition: stroke var(--animation-time);
-    fill: transparent;
-    stroke: var(--warning-light);
-    width: 75%;
-    height: 75%;
-  }
 }
