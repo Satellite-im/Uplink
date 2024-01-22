@@ -198,7 +198,9 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
 pub fn is_video(file_name: &str) -> bool {
-    VIDEO_FILE_EXTENSIONS.iter().any(|x| file_name.ends_with(x))
+    VIDEO_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
 }
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {
