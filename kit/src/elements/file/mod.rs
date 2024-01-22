@@ -94,7 +94,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_extension}"
                             },
                             IconElement {
-                                icon: if is_video {Icon::DocumentVideoFile} else {Icon::Document}
+                                icon: if is_video {Icon::DocumentMedia} else {Icon::Document}
                             }
                         )
                     } else {

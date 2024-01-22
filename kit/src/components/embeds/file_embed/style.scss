@@ -13,6 +13,7 @@
 .file-embed {
   display: inline-flex;
   height: 100%;
+  max-height: 300px;
   gap: var(--gap);
   width: 100%;
   color: var(--text-color);
@@ -24,6 +25,10 @@
     position: relative;
     width: fit-content;
     height: fit-content;
+  }
+
+  .image-preview-modal {
+    max-height: 140px;
   }
 
   .document-container {

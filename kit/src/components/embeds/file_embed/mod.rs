@@ -225,6 +225,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if is_image_or_video && filepath.exists() {
                                 let fixed_path = get_fixed_path_to_load_local_file(filepath.clone());
                                 rsx!(img {
+                                    class: "image-preview-modal",
                                     aria_label: "image-preview-modal",
                                     src: "{fixed_path}",
                                     onclick: move |e| e.stop_propagation(),
@@ -236,7 +237,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         width: "60px",
                                         margin: "30px 0",
                                         IconElement {
-                                            icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentVideoFile} else {Icon::Document})
+                                            icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
                                         }
                                         if !file_extension_is_empty {
                                             rsx!( label {
@@ -257,7 +258,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     },
                                     IconElement {
-                                        icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentVideoFile} else {Icon::Document})
+                                        icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
                                     }
                                     if !file_extension_is_empty {
                                         rsx!( label {
