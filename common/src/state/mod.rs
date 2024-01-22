@@ -1625,7 +1625,6 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                log::debug!("v {v} prefix : {name_prefix}");
                 v.to_lowercase().starts_with(&name_prefix.to_lowercase())
             }
         };
