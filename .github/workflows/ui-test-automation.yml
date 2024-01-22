@@ -531,14 +531,13 @@ jobs:
 
   remove-label:
     needs:
-      [
-        build-mac,
-        build-windows,
-        test-mac,
-        test-mac-chats,
-        test-windows,
-        publish-results,
-      ]
+    - build-mac
+    - build-windows
+    - test-mac
+    - test-mac-chats
+    - test-windows
+    - publish-results
+
     runs-on: ubuntu-latest
 
     steps:
