@@ -538,9 +538,12 @@ pub fn handle_warp_commands(
                         let res = rx.await.expect("command canceled");
                         match res {
                             Ok(stream) => {
-                                download_streams
-                                    .write()
-                                    .append((stream, file.name(), on_finish));
+                                download_streams.write().append((
+                                    stream,
+                                    file.name(),
+                                    on_finish,
+                                    true,
+                                ));
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(

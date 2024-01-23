@@ -60,6 +60,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let thumbnail = thumbnail_to_base64(cx.props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(cx.props.file.name());
+
     let file_loading_counter = use_ref(cx, || 0);
     // Using id to change file name in case of duplicate files and avoid
     // open different file from that user clicked
@@ -68,11 +69,13 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.file.id(),
         temp_dir.extension().unwrap_or_default().to_string_lossy()
     ));
+    let should_download = use_state(cx, || true);
 
     let is_video = is_video(&cx.props.file.name());
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
-        if !temp_dir_with_file_id.exists() {
+        if !temp_dir_with_file_id.exists() && *should_download.get() {
             cx.props.on_download.call(Some(temp_dir.clone()));
+            should_download.set(false);
         }
         if temp_dir_with_file_id.exists() {
             file_path_in_local_disk.set(temp_dir_with_file_id.clone());

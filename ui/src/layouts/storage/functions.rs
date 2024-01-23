@@ -171,7 +171,6 @@ pub fn download_file(
             .clone()
             .unwrap_or_default()
     };
-
     ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,
@@ -385,22 +384,27 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(stream) => {
-                                download_queue
-                                    .write()
-                                    .append((stream, file_name, on_finish));
+                                download_queue.write().append((
+                                    stream,
+                                    file_name,
+                                    on_finish,
+                                    notification_download_status,
+                                ));
                             }
                             Err(error) => {
-                                state.write().mutate(Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        get_local_text_with_args(
-                                            "files.download-failed",
-                                            vec![("file", file_name)],
+                                if notification_download_status {
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text_with_args(
+                                                "files.download-failed",
+                                                vec![("file", file_name)],
+                                            ),
+                                            None,
+                                            2,
                                         ),
-                                        None,
-                                        2,
-                                    ),
-                                ));
+                                    ));
+                                }
                                 log::error!("failed to download file: {}", error);
                                 continue;
                             }

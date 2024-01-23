@@ -9,10 +9,6 @@ use dioxus_html::input_data::keyboard_types::Modifiers;
 use common::icons::Icon as IconElement;
 use common::{icons::outline::Shape as Icon, is_video};
 
-pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
-    ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
-];
-
 #[derive(Props)]
 pub struct Props<'a> {
     text: String,
