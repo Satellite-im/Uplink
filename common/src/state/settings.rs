@@ -19,6 +19,7 @@ pub enum GlobalShortcut {
     OpenDevTools,
     ToggleDevmode,
     SetAppVisible,
+    SetAppInvisible,
     #[default]
     Unknown,
 }
@@ -33,6 +34,7 @@ impl fmt::Display for GlobalShortcut {
             GlobalShortcut::OpenDevTools => write!(f, "OpenDevTools"),
             GlobalShortcut::ToggleDevmode => write!(f, "ToggleDevmode"),
             GlobalShortcut::SetAppVisible => write!(f, "SetAppVisible"),
+            GlobalShortcut::SetAppInvisible => write!(f, "SetAppInvisible"),
             GlobalShortcut::Unknown => write!(f, "Unknown"),
         }
     }

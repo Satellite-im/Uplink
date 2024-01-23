@@ -315,6 +315,12 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::SetAppVisible
             }
+            KeybindSection {
+                id: format!("{:?}", GlobalShortcut::SetAppInvisible),
+                section_label: get_local_text("settings-keybinds.set-app-invisible"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::SetAppInvisible
+            }
         }
     ))
 }
