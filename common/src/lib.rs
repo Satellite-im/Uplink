@@ -91,6 +91,8 @@ pub struct StaticArgs {
     /// ~/.uplink/.user
     /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
+    /// Directory for temporary files and deleted everytime app is closed or opened
+    pub temp_files: PathBuf,
     /// custom themes for the user
     pub themes_path: PathBuf,
     /// custom fonts for the user
@@ -148,6 +150,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(), // TODO: Should this be "User path" instead?
+        temp_files: uplink_container.join("temp_files"),
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
@@ -193,6 +196,12 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
 ];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
+
+pub fn is_video(file_name: &str) -> bool {
+    VIDEO_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {
     if !cfg!(feature = "production_mode") {
