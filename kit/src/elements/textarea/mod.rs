@@ -373,7 +373,6 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             if let Ok(eval) = eval(&rich_editor) {
                 loop {
                     if let Ok(val) = eval.recv().await {
-                        log::debug!("val {val}");
                         let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
                         // Instead of escaping all needed chars just try extract the input string
                         let data = if let Some(capt) = input {
@@ -460,7 +459,6 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         // HACK(Linux): Allow copy and paste files for Linux 
                         if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
                             if let Some(e) = on_paste_keydown {
-                                log::debug!("paste");
                                 e.call(evt.clone());
                             }
                         }
