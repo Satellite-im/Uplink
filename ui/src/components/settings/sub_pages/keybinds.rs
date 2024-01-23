@@ -26,6 +26,20 @@ const AVOID_INPUT_ON_DIV: &str = r#"
         event.preventDefault(); 
     });"#;
 
+const UNFOCUS_DIV_ON_SUBMIT: &str = r#"
+        let currentDiv = document.getElementById("$UUID");
+        let innerDiv = currentDiv.querySelector('.keybind-section-keys');
+
+        if (innerDiv.classList.contains('recording')) {
+            console.log("Found recording");
+            innerDiv.addEventListener('keyup', function() {
+                // Remove focus from the div
+                console.log("hits inside further");
+                innerDiv.blur();
+            });
+          }
+"#;
+
 #[derive(PartialEq, Props)]
 pub struct KeybindProps {
     pub keys: Vec<String>, // TODO: This should be a Vec<Key>
@@ -122,6 +136,18 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
+    let keybind_section_id_clone = keybind_section_id.clone();
+
+    use_effect(cx, is_recording, |is_recording| {
+        to_owned![eval];
+        async move {
+            if *is_recording {
+                let unfocus_script =
+                    UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
+                let _ = eval(&unfocus_script);
+            };
+        }
+    });
 
     let mut keybind_class = "keybind-section-keys".to_owned();
     if **is_recording {
