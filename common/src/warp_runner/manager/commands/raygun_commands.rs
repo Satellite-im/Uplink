@@ -13,8 +13,8 @@ use warp::{
     error::Error,
     logging::tracing::log,
     raygun::{
-        self, AttachmentEventStream, ConversationType, GroupSettings, Location, PinState,
-        ReactionState,
+        self, AttachmentEventStream, ConversationSettings, ConversationType, GroupSettings,
+        Location, PinState, ReactionState,
     },
 };
 
