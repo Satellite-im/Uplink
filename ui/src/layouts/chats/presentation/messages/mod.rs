@@ -38,6 +38,7 @@ use rfd::FileDialog;
 
 use uuid::Uuid;
 use warp::{
+    constellation::file::File,
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
@@ -46,9 +47,12 @@ use warp::{
 
 use crate::{
     components::emoji_group::EmojiGroup,
-    layouts::chats::{
-        data::{self, ChatData, ScrollBtn},
-        scripts,
+    layouts::{
+        chats::{
+            data::{self, ChatData, ScrollBtn},
+            scripts,
+        },
+        storage::files_layout::file_preview::open_file_preview_modal,
     },
     utils::format_timestamp::format_timestamp_timeago,
 };
@@ -574,6 +578,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .as_ref()
         .unwrap_or(&msg_lines)
         .clone();
+    let preview_file_in_the_message: &UseState<(bool, Option<File>)> =
+        use_state(cx, || (false, None));
 
     let mut reply_user = Identity::default();
     if let Some(info) = &message.in_reply_to {
@@ -583,6 +589,36 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "msg-wrapper",
+            preview_file_in_the_message.0.then(|| {
+                if preview_file_in_the_message.1.is_none() {
+                    preview_file_in_the_message.set((false, None));
+                }
+                let file = preview_file_in_the_message.1.clone().unwrap();
+                let file2 = file.clone();
+                rsx!(open_file_preview_modal {
+                    on_dismiss: |_| {
+                        preview_file_in_the_message.set((false, None));
+                    },
+                    on_download: move |temp_path: Option<PathBuf>| {
+                        let conv_id = message.inner.conversation_id();
+                        if let Some(path) = temp_path {
+                            if !path.exists() {
+                                log::info!("downloading file in temp directory: {:?}", path.clone());
+                                ch.send(MessagesCommand::DownloadAttachment {
+                                    conv_id,
+                                    msg_id: message.inner.id(),
+                                    file: file2.clone(),
+                                    file_path_to_download: path,
+                                })
+                            }
+                        } else {
+                            download_file(&file2, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch);
+                        }
+                    },
+                    file: file.clone()
+                }
+            )
+            }),
             message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
             MessageReply {
                     key: "reply-{message_key}",
@@ -625,32 +661,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 attachments_pending_uploads: pending_uploads,
                 parse_markdown: render_markdown,
                 transform_ascii_emojis: should_transform_ascii_emojis,
-                on_download: move |file: warp::constellation::file::File| {
-                    let file_name = file.name();
-                    let file_extension = std::path::Path::new(&file_name)
-                        .extension()
-                        .and_then(OsStr::to_str)
-                        .map(|s| s.to_string())
-                        .unwrap_or_default();
-                    let file_stem = PathBuf::from(&file_name)
-                        .file_stem()
-                        .and_then(OsStr::to_str)
-                        .map(str::to_string)
-                        .unwrap_or_default();
-                    if let Some(file_path_to_download) = FileDialog::new()
-                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                        let conv_id = message.inner.conversation_id();
-                        if !pending_downloads.read().contains_key(&conv_id) {
-                            pending_downloads.write().insert(conv_id, HashSet::new());
-                        }
-                        pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
-
-                        ch.send(MessagesCommand::DownloadAttachment {
-                            conv_id,
-                            msg_id: message.inner.id(),
-                            file,
-                            file_path_to_download
-                        })
+                on_download: move |(file, temp_dir): (warp::constellation::file::File, Option<PathBuf>)| {
+                    if temp_dir.is_some() {
+                        preview_file_in_the_message.set((true, Some(file.clone())));
+                    } else {
+                        download_file(&file, message.inner.conversation_id(), message.inner.id(), pending_downloads, ch);
                     }
                 },
                 on_edit: move |update: String| {
@@ -735,4 +750,45 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
             },)
         }
     )))
+}
+
+fn download_file(
+    file: &warp::constellation::file::File,
+    conv_id: Uuid,
+    msg_id: Uuid,
+    pending_downloads: &UseSharedState<HashMap<Uuid, HashSet<File>>>,
+    ch: &Coroutine<MessagesCommand>,
+) {
+    let file_name = file.name();
+    let file_extension = std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+    let file_stem = PathBuf::from(&file_name)
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    if let Some(file_path_to_download) = FileDialog::new()
+        .set_directory(dirs::download_dir().unwrap_or_default())
+        .set_file_name(&file_stem)
+        .add_filter("", &[&file_extension])
+        .save_file()
+    {
+        if !pending_downloads.read().contains_key(&conv_id) {
+            pending_downloads.write().insert(conv_id, HashSet::new());
+        }
+        pending_downloads
+            .write()
+            .get_mut(&conv_id)
+            .map(|conv| conv.insert(file.clone()));
+        ch.send(MessagesCommand::DownloadAttachment {
+            conv_id,
+            msg_id,
+            file: file.clone(),
+            file_path_to_download,
+        })
+    }
 }

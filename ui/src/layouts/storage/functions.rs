@@ -141,7 +141,11 @@ pub fn format_item_size(item_size: usize) -> String {
     size_formatted_string
 }
 
-pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
+pub fn download_file(
+    file_name: &str,
+    ch: &Coroutine<ChanCmd>,
+    temp_path_to_download_file_to_preview: Option<PathBuf>,
+) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
@@ -152,18 +156,25 @@ pub fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
         .and_then(OsStr::to_str)
         .map(str::to_string)
         .unwrap_or_default();
-    let file_path_buf = match FileDialog::new()
-        .set_directory(".")
-        .set_file_name(&file_stem)
-        .add_filter("", &[&file_extension])
-        .save_file()
-    {
-        Some(path) => path,
-        None => return,
+    let file_path_buf = if temp_path_to_download_file_to_preview.is_none() {
+        match FileDialog::new()
+            .set_directory(".")
+            .set_file_name(&file_stem)
+            .add_filter("", &[&file_extension])
+            .save_file()
+        {
+            Some(path) => path,
+            None => return,
+        }
+    } else {
+        temp_path_to_download_file_to_preview
+            .clone()
+            .unwrap_or_default()
     };
     ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,
+        notification_download_status: temp_path_to_download_file_to_preview.is_none(),
     });
 }
 
@@ -220,6 +231,7 @@ pub enum ChanCmd {
     DownloadFile {
         file_name: String,
         local_path_to_save_file: PathBuf,
+        notification_download_status: bool,
     },
     RenameItem {
         old_name: String,
@@ -339,6 +351,7 @@ pub fn init_coroutine<'a>(
                     ChanCmd::DownloadFile {
                         file_name,
                         local_path_to_save_file,
+                        notification_download_status,
                     } => {
                         let (local_path_to_save_file, on_finish) =
                             get_download_path(local_path_to_save_file);
@@ -351,29 +364,7 @@ pub fn init_coroutine<'a>(
                                 rsp: tx,
                             },
                         )) {
-                            state.write().mutate(Action::AddToastNotification(
-                                ToastNotification::init(
-                                    "".into(),
-                                    get_local_text_with_args(
-                                        "files.download-failed",
-                                        vec![("file", file_name)],
-                                    ),
-                                    None,
-                                    2,
-                                ),
-                            ));
-                            log::error!("failed to download file {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(stream) => {
-                                download_queue
-                                    .write()
-                                    .append((stream, file_name, on_finish));
-                            }
-                            Err(error) => {
+                            if notification_download_status {
                                 state.write().mutate(Action::AddToastNotification(
                                     ToastNotification::init(
                                         "".into(),
@@ -385,6 +376,35 @@ pub fn init_coroutine<'a>(
                                         2,
                                     ),
                                 ));
+                            }
+                            log::error!("failed to download file {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(stream) => {
+                                download_queue.write().append((
+                                    stream,
+                                    file_name,
+                                    on_finish,
+                                    notification_download_status,
+                                ));
+                            }
+                            Err(error) => {
+                                if notification_download_status {
+                                    state.write().mutate(Action::AddToastNotification(
+                                        ToastNotification::init(
+                                            "".into(),
+                                            get_local_text_with_args(
+                                                "files.download-failed",
+                                                vec![("file", file_name)],
+                                            ),
+                                            None,
+                                            2,
+                                        ),
+                                    ));
+                                }
                                 log::error!("failed to download file: {}", error);
                                 continue;
                             }

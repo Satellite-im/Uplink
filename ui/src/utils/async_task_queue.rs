@@ -135,28 +135,32 @@ pub fn download_stream_handler(
         warp::constellation::ConstellationProgressStream,
         String,
         std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+        bool,
     )>,
 > {
     async_queue(
         cx,
-        |(mut stream, file, on_finish): (
+        |(mut stream, file, on_finish, should_show_toast_notification): (
             warp::constellation::ConstellationProgressStream,
             String,
             std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+            bool,
         )| {
             async move {
                 while let Some(p) = stream.next().await {
                     log::debug!("download progress: {p:?}");
                 }
-                let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
-                    title: "".into(),
-                    content: get_local_text_with_args(
-                        "files.download-success",
-                        vec![("file", file)],
-                    ),
-                    icon: None,
-                    timeout: 2,
-                });
+                if should_show_toast_notification {
+                    let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
+                        title: "".into(),
+                        content: get_local_text_with_args(
+                            "files.download-success",
+                            vec![("file", file)],
+                        ),
+                        icon: None,
+                        timeout: 2,
+                    });
+                }
                 on_finish.await
             }
         },
