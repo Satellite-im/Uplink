@@ -3,9 +3,11 @@ use std::path::PathBuf;
 
 use crate::elements::button::Button;
 use crate::elements::Appearance;
-use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::is_video;
+use common::utils::local_file_path::get_fixed_path_to_load_local_file;
+use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use dioxus::prelude::*;
@@ -54,7 +56,7 @@ pub struct Props<'a> {
     download_pending: Option<bool>,
 
     // called shen the icon is clicked
-    on_press: EventHandler<'a, ()>,
+    on_press: EventHandler<'a, Option<PathBuf>>,
 
     progress: Option<&'a Progression>,
 }
@@ -62,7 +64,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //log::trace!("rendering file embed: {}", cx.props.filename);
-    let fullscreen_preview = use_state(cx, || false);
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
         .and_then(OsStr::to_str)
@@ -86,8 +87,10 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
         with_download_button
+    } else if let Some(is_from_attachments) = cx.props.is_from_attachments {
+        is_from_attachments
     } else {
-        true
+        false
     };
 
     let is_pending = cx.props.progress.is_some();
@@ -154,8 +157,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let remote = cx.props.remote.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
-    let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
+    let file_name_with_extension = cx.props.filename.to_string();
+    let temp_dir = STATIC_ARGS
+        .temp_files
+        .join(file_name_with_extension.clone());
+    let is_video = is_video(&file_name_with_extension);
 
     cx.render(rsx! (
         div {
@@ -184,31 +191,14 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: "file-icon",
                         if has_thumbnail {
                             rsx!(
-                                fullscreen_preview.then(|| rsx!(
-                                    Modal {
-                                        open: *fullscreen_preview.clone(),
-                                        onclose: move |_| fullscreen_preview.set(false),
-                                        transparent: false,
-                                        close_on_click_inside_modal: true,
-                                        dont_pad: true,
-                                        img {
-                                            id: "image-preview-modal-file-embed",
-                                            aria_label: "image-preview-modal-file-embed",
-                                            src: "{large_thumbnail}",
-                                            max_height: "80vh",
-                                            max_width: "80vw",
-                                            onclick: move |e| e.stop_propagation(),
-                                        },
-                                    }
-                                )),
                                 div {
                                     class: "image-container",
                                     aria_label: "message-image-container",
                                     img {
                                         aria_label: "message-image",
                                         onclick: move |mouse_event_data: Event<MouseData>|
-                                        if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                            fullscreen_preview.set(true)
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && !is_from_attachments {
+                                            cx.props.on_press.call(Some(temp_dir.clone()));
                                         },
                                         class: format_args!(
                                             "image {} expandable-image",
@@ -218,19 +208,27 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         ),
                                         src: "{thumbnail}",
                                     },
-                                    show_download_button_if_enabled(cx, with_download_button, btn_icon),
+                                    show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
                                    }
                                     )
                         } else if let Some(filepath) = cx.props.filepath.clone() {
-                            let thubmnail = get_file_thumbnail_if_is_image(filepath, filename.clone());
-                            if thubmnail.is_empty() {
+                            let is_image_or_video = is_image(filename.clone()) || is_video;
+                            if is_image_or_video && filepath.exists() {
+                                let fixed_path = get_fixed_path_to_load_local_file(filepath.clone());
+                                rsx!(img {
+                                    class: "image-preview-modal",
+                                    aria_label: "image-preview-modal",
+                                    src: "{fixed_path}",
+                                    onclick: move |e| e.stop_propagation(),
+                                })
+                            } else {
                                 rsx!(
                                     div {
                                         height: "60px",
                                         width: "60px",
                                         margin: "30px 0",
                                         IconElement {
-                                            icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                                            icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
                                         }
                                         if !file_extension_is_empty {
                                             rsx!( label {
@@ -240,19 +238,19 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         }
                                     }
                                     )
-                            } else {
-                                rsx!(img {
-                                    aria_label: "image-preview-modal",
-                                    src: "{thubmnail}",
-                                    onclick: move |e| e.stop_propagation(),
-                                })
                             }
                         } else {
                             rsx!(
                                 div {
+                                    class: "document-container",
                                     height: "60px",
+                                    onclick: move |mouse_event_data: Event<MouseData>| {
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video && !is_from_attachments {
+                                            cx.props.on_press.call(Some(temp_dir.clone()));
+                                        }
+                                    },
                                     IconElement {
-                                        icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                                        icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
                                     }
                                     if !file_extension_is_empty {
                                         rsx!( label {
@@ -260,12 +258,17 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             "{file_extension}"
                                         })
                                     }
+                                    if !is_from_attachments {
+                                        rsx!( div {
+                                            class: "button-position",
+                                            show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
+                                        })
+                                    }
                                 }
                                 )
                         }
                     }
-                    if !has_thumbnail || is_from_attachments {
-                        rsx!( div {
+                    div {
                             class: "file-info",
                             width: "100%",
                             aria_label: "file-info",
@@ -281,9 +284,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_description}"
                             }
                         },
-                        show_download_button_if_enabled(cx, with_download_button, btn_icon),
-                    )
-                    }
+                        if !has_thumbnail && is_from_attachments {
+                            rsx!(show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon))
+                        }
                     if is_pending {
                         rsx!(div {
                             class: "upload-bar",
@@ -298,14 +301,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
-fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String {
-    let file = match std::fs::read(filepath) {
-        Ok(file) => file,
-        Err(_) => {
-            return String::new();
-        }
-    };
-
+fn is_image(filename: String) -> bool {
     let parts_of_filename: Vec<&str> = filename.split('.').collect();
     let mime = match parts_of_filename.last() {
         Some(m) => match *m {
@@ -319,22 +315,13 @@ fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String
     };
 
     if mime.is_empty() {
-        return String::new();
+        return false;
     }
 
-    let image = match &file.len() {
-        0 => "".to_string(),
-        _ => {
-            let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
-            let img = prefix + base64_image.as_str();
-            img
-        }
-    };
-    image
+    true
 }
 
-fn show_download_button_if_enabled<'a>(
+fn show_download_or_minus_button_if_enabled<'a>(
     cx: Scope<'a, Props<'a>>,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,
@@ -347,7 +334,7 @@ fn show_download_button_if_enabled<'a>(
                     icon: btn_icon,
                     appearance: Appearance::Primary,
                     aria_label: "attachment-button".into(),
-                    onpress: move |_| cx.props.on_press.call(()),
+                    onpress: move |_| cx.props.on_press.call(None),
                 }
             }
         ))
