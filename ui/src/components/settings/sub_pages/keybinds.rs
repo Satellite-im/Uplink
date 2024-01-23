@@ -29,12 +29,8 @@ const AVOID_INPUT_ON_DIV: &str = r#"
 const UNFOCUS_DIV_ON_SUBMIT: &str = r#"
         let currentDiv = document.getElementById("$UUID");
         let innerDiv = currentDiv.querySelector('.keybind-section-keys');
-
         if (innerDiv.classList.contains('recording')) {
-            console.log("Found recording");
             innerDiv.addEventListener('keyup', function() {
-                // Remove focus from the div
-                console.log("hits inside further");
                 innerDiv.blur();
             });
           }
