@@ -268,11 +268,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx!( div {
                             class: "file-info",
                             width: "100%",
+                            color: "var(--text-color-dark)",
                             aria_label: "file-info",
                             p {
                                 class: "name",
                                 aria_label: "file-name",
-                                color: "var(--text-color)",
                                 "{filename}"
                             },
                             p {
