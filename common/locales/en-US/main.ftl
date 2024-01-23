@@ -300,7 +300,6 @@ settings-keybinds = Keybind Settings
     .toggle-devmode = Toggle Developer Mode
     .cancel-change-keybind = Cancel Recording
     .set-app-visible = Set Uplink Visible
-    .set-app-invisible = Set Uplink Invisible
 
 settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
