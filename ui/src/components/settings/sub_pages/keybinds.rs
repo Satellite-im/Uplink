@@ -309,6 +309,12 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDevmode
             }
+            KeybindSection {
+                id: format!("{:?}", GlobalShortcut::SetAppVisible),
+                section_label: get_local_text("settings-keybinds.hide-focus-uplink"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::SetAppVisible
+            }
         }
     ))
 }

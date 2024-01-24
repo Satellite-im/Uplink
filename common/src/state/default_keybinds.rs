@@ -61,6 +61,14 @@ pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
                 false,
             )),
         ),
+        (
+            GlobalShortcut::SetAppVisible,
+            Shortcut::from((
+                vec![KeyCode::U],
+                vec![ModifiersState::CONTROL, ModifiersState::SHIFT],
+                true,
+            )),
+        ),
     ])
 }
 
