@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
 use common::language::{get_local_text, get_local_text_with_args};
@@ -91,7 +92,7 @@ pub struct Props<'a> {
     attachments_pending_download: Option<HashSet<File>>,
 
     /// called when an attachment is downloaded
-    on_download: EventHandler<'a, File>,
+    on_download: EventHandler<'a, (File, Option<PathBuf>)>,
 
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
@@ -163,13 +164,17 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 thumbnail: thumbnail_to_base64(file),
                 big: true,
                 remote: is_remote,
+                with_download_button: true,
                 download_pending: cx
                     .props
                     .attachments_pending_download
                     .as_ref()
                     .map(|x| x.contains(file))
                     .unwrap_or(false),
-                on_press: move |_| cx.props.on_download.call(file.clone()),
+                on_press: move |temp_dir_option| cx
+                    .props
+                    .on_download
+                    .call((file.clone(), temp_dir_option)),
             })
         })
     });

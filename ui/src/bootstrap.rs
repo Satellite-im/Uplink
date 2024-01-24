@@ -99,11 +99,19 @@ pub fn configure_logger(production_mode: bool, log_to_file: bool) {
 }
 
 pub fn create_uplink_dirs() {
+    // Guarantee all files in temp files directory will be deleted
+    if STATIC_ARGS.temp_files.exists() {
+        std::fs::remove_dir_all(&STATIC_ARGS.temp_files)
+            .expect("Error removing temp files directory");
+    }
     // Initializes the cache dir if needed
     std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
     std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
-    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.fonts_path)
+        .expect("error creating fonts themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.temp_files)
+        .expect("error creatings temporary files directory");
 }
 
 pub fn platform_quirks() {
