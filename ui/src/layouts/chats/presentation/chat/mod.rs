@@ -41,8 +41,8 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
-    let data = chat_data.read();
-    let conv_settings = data.active_chat.conversation_settings();
+    let data = chat_data.read().clone();
+    let conv_settings = data.clone().active_chat.conversation_settings();
 
     println!("Conv settings {:?}", conv_settings);
 
