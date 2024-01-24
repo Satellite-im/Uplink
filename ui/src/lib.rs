@@ -253,6 +253,7 @@ fn app_layout(cx: Scope) -> Element {
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
                         GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx),
                         GlobalShortcut::ToggleDevmode => utils::keyboard::shortcut_handlers::dev::toggle_devmode(state.clone()),
+                        GlobalShortcut::SetAppVisible => utils::keyboard::shortcut_handlers::navigation::set_app_visible(cx),
                         GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")
                     }
                     log::debug!("shortcut called {:?}", shortcut);
