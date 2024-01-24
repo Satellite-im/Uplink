@@ -44,6 +44,8 @@ pub fn Compose(cx: Scope) -> Element {
     let data = chat_data.read().clone();
     let conv_settings = data.clone().active_chat.conversation_settings();
 
+    println!("conv settings {:?}", conv_settings);
+
     let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
