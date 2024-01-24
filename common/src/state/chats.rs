@@ -123,7 +123,7 @@ impl Chat {
             id,
             participants,
             conversation_type,
-            settings: settings,
+            settings,
             conversation_name,
             creator,
             messages,
