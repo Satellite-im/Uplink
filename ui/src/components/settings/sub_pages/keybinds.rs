@@ -311,7 +311,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             }
             KeybindSection {
                 id: format!("{:?}", GlobalShortcut::SetAppVisible),
-                section_label: get_local_text("settings-keybinds.set-app-visible"),
+                section_label: get_local_text("settings-keybinds.hide-focus-uplink"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::SetAppVisible
             }
