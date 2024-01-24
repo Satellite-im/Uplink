@@ -813,6 +813,25 @@ impl State {
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
         }
+
+        // Guarantee any new keybinds added, will be added to the user's settings
+        let default_keybinds = default_keybinds::get_default_keybinds();
+        if state.settings.keybinds.len() < default_keybinds.len() {
+            let new_keybinds = default_keybinds
+                .iter()
+                .filter(|default_keybind| {
+                    !state
+                        .settings
+                        .keybinds
+                        .iter()
+                        .any(|keybind| &keybind == default_keybind)
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+
+            state.settings.keybinds.extend(new_keybinds);
+        }
+
         // Reload themes from disc
         let themes = get_available_themes();
         let theme = themes.iter().find(|t| {
