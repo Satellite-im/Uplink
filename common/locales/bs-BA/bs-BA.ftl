@@ -296,7 +296,7 @@ settings-keybinds = Postavke Tipkovnih Prečaca
     .toggle-deafen = Uključi/isključi sve zvukove, uključujući mikrofon i slušalice.
     .conflicting-keybinds = Sukobljeni Tipkovni Prečaci.
     .change-keybind = Snimi novi tipkovni prečac
-    .open-dev-tools = Otvori Web Inspektora
+    .open-close-dev-tools = Otvori/Zatvori Web Inspektora
     .toggle-devmode = Uključi/isključi Razvojni Način
     .cancel-change-keybind = Odustani od snimanja
 
