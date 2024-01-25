@@ -12,7 +12,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats, Identity, MAX_PINNED_MESSAGES};
+use crate::state::{self, chats, utils::mention_regex_epattern, Identity, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -38,8 +38,7 @@ use super::{
 pub struct Message {
     pub inner: warp::raygun::Message,
     pub in_reply_to: Option<(String, Vec<File>, DID)>,
-    pub lines_to_render: Option<String>,
-    pub is_mention: bool,
+    is_mention: i8,
     /// this field exists so that the UI can tell Dioxus when a message has been edited and thus
     /// needs to be re-rendered. Before the addition of this field, the compose view was
     /// using the message Uuid, but this doesn't change when a message is edited.
@@ -47,40 +46,30 @@ pub struct Message {
 }
 
 impl Message {
-    // resolve the message lines to e.g. format user mentions correctly
-    pub fn insert_did(&mut self, participants: &[state::Identity], own: &DID) {
-        if self.lines_to_render.is_some() {
-            return;
+    pub fn new(
+        inner: warp::raygun::Message,
+        in_reply_to: Option<(String, Vec<File>, DID)>,
+        key: String,
+    ) -> Message {
+        Message {
+            inner,
+            in_reply_to,
+            key,
+            ..Default::default()
         }
-        // Better if warp provides a way of saving mentions in the message
-        // so dont need to loop over all participants
-        let lines = self.inner.lines().join("\n");
-        let (lines, is_mention) = format_mentions(lines, participants, own, false);
-        self.is_mention = is_mention;
-        self.lines_to_render = Some(lines);
     }
-}
 
-pub fn format_mentions(
-    message: String,
-    participants: &[state::Identity],
-    own: &DID,
-    visual: bool,
-) -> (String, bool) {
-    if !message.contains('@') {
-        return (message, false);
-    }
-    let mut result = message;
-    let mut is_mention = false;
-    participants.iter().for_each(|id| {
-        let reg = state::mention_regex_pattern(id, false);
-        let replaced = reg.replace_all(&result, state::mention_replacement_pattern(id, visual));
-        if own.eq(&id.did_key()) && !replaced.eq(&result) {
-            is_mention = true;
+    // Lazily evaluate if the user is mentioned
+    pub fn is_mention_self(&mut self, own: &DID) -> bool {
+        if self.is_mention == 0 {
+            let reg = mention_regex_epattern(&own.to_string());
+            match reg.find(&self.inner.lines().join("\n")) {
+                Some(c) => self.is_mention = if c.as_str().starts_with("`") { 1 } else { 2 },
+                None => self.is_mention = 1,
+            }
         }
-        result = replaced.to_string();
-    });
-    (result, is_mention)
+        self.is_mention == 2
+    }
 }
 
 #[derive(Clone)]

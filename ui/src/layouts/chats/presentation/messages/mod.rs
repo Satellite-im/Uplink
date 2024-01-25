@@ -525,6 +525,8 @@ struct MessageProps<'a> {
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
     let state = use_shared_state::<State>(cx)?;
+    let chat_data = use_shared_state::<ChatData>(cx)?;
+
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
     let user_did = state.read().did_key();
 
@@ -572,12 +574,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let should_transform_ascii_emojis = state.read().ui.should_transform_ascii_emojis();
     let msg_lines = message.inner.lines().join("\n");
 
-    let is_mention = message.is_mention;
-    let rendered_lines = message
-        .lines_to_render
-        .as_ref()
-        .unwrap_or(&msg_lines)
-        .clone();
+    let is_mention = message.clone().is_mention_self(&user_did);
     let preview_file_in_the_message: &UseState<(bool, Option<File>)> =
         use_state(cx, || (false, None));
 
@@ -631,6 +628,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     replier_did: user_did_2.clone(),
                     markdown: render_markdown,
                     transform_ascii_emojis: should_transform_ascii_emojis,
+                    state: state,
+                    chat: chat_data.read().active_chat.id(),
                     user_image: cx.render(rsx!(UserImage {
                         loading: false,
                         platform: reply_user.platform().into(),
@@ -645,9 +644,10 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 editing: is_editing,
                 remote: cx.props.is_remote,
                 with_text: msg_lines,
-                tagged_text: rendered_lines,
                 is_mention: is_mention,
                 reactions: reactions_list,
+                state: state,
+                chat: chat_data.read().active_chat.id(),
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message
                 .inner

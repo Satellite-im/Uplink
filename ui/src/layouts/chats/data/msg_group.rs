@@ -58,9 +58,7 @@ pub fn create_message_groups(
     let mut other_ids = other_ids.clone();
     other_ids.push(my_id.clone());
 
-    for mut msg in input.drain(..) {
-        msg.insert_did(&other_ids, &my_id.did_key());
-
+    for msg in input.drain(..) {
         if let Some(group) = messages.iter_mut().last() {
             if let Some(last_group_message) = group.messages.last() {
                 if group.sender == msg.inner.sender()
@@ -114,8 +112,7 @@ pub fn pending_group_messages(
     let mut messages: Vec<MessageGroupMsg> = vec![];
     let size = pending.len();
     for (i, msg) in pending.iter().enumerate() {
-        let mut message = msg.message.clone();
-        message.insert_did(&other_ids, &my_id.did_key());
+        let message = msg.message.clone();
         if i == size - 1 {
             let g = MessageGroupMsg {
                 message,
