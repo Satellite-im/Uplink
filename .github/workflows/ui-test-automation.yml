@@ -53,16 +53,8 @@ jobs:
     needs: create-node
     runs-on: macos-13
     steps:
-      - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
-        with:
-          repository: Satellite-im/testing-uplink
-          ref: luis/CI-updates
-
       - name: Checkout Uplink Repo 🔖
         uses: actions/checkout@v4
-        with:
-          path: "./Uplink"
 
       - name: Download Peer ID file 🗳️
         uses: actions/download-artifact@v3
@@ -87,17 +79,19 @@ jobs:
 
       - name: Replace Warp Peer ID in Uplink 🚀
         run: |
-          chmod +x ./scripts/replace_node.sh
-          ./scripts/replace_node.sh
+          chmod +x ./utils/replace_node.sh
+          ./utils/replace_node.sh
+
+      - name: Output contents from mod.rs file
+        run: cat ./common/src/warp_runner/mod.rs
 
       - name: Build executable 🖥️
-        working-directory: ./Uplink
         run: make dmg
         continue-on-error: true
 
       - name: Create ZIP archive on MacOS 🗳️
         run: |
-          ditto -c -k --sequesterRsrc --keepParent Uplink/target/release/macos/Uplink.app Uplink-Mac-Universal.zip
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
 
       - name: Calculate hashes 🧮
         run: |
@@ -129,16 +123,8 @@ jobs:
       labels: windows-latest
 
     steps:
-      - name: Checkout testing directory 🔖
-        uses: actions/checkout@v3
-        with:
-          repository: Satellite-im/testing-uplink
-          ref: luis/CI-updates
-
       - name: Checkout Uplink Repo 🔖
         uses: actions/checkout@v4
-        with:
-          path: "./Uplink"
 
       - name: Download Peer ID file 🗳️
         uses: actions/download-artifact@v3
@@ -155,19 +141,28 @@ jobs:
           toolchain: 1.73.0
           components: rustfmt, clippy
 
+      - name: Set execution policy
+        run: |
+          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+      - name: Replace Warp Peer ID in Uplink 🚀
+        run: .\utils\replace_node.ps1
+
+      - name: Output contents from mod.rs file
+        run: Get-Content .\common\src\warp_runner\mod.rs
+
       - name: Build executable 🖥️
-        working-directory: .\Uplink
         run: cargo build --release -F production_mode
         continue-on-error: true
 
       - name: Copy Extensions 🗳️
         run: |
-          mkdir .\Uplink\ui\extra\extensions
-          cp -r .\Uplink\target\release\emoji_selector.d .\Uplink\ui\extra\extensions\
-          cp -r .\Uplink\target\release\emoji_selector.dll .\Uplink\ui\extra\extensions\
-          cp -r .\Uplink\target\release\emoji_selector.dll.exp .\Uplink\ui\extra\extensions\
-          cp -r .\Uplink\target\release\emoji_selector.dll.lib .\Uplink\ui\extra\extensions\
-          cp -r .\Uplink\target\release\emoji_selector.pdb .\Uplink\ui\extra\extensions\
+          mkdir .\ui\extra\extensions
+          cp -r .\target\release\emoji_selector.d .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll.exp .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll.lib .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.pdb .\ui\extra\extensions\
 
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
@@ -175,17 +170,17 @@ jobs:
           name: Uplink-Windows
           if-no-files-found: error
           path: |
-            Uplink\target\release\uplink.exe
+            target\release\uplink.exe
 
       - name: Upload Windows Assets
         uses: actions/upload-artifact@v3
         with:
           name: uplink-windows-assets
           path: |
-            Uplink\ui\extra\images\
-            Uplink\ui\extra\prism_langs\
-            Uplink\ui\extra\themes\
-            Uplink\ui\extra\extensions\
+            ui\extra\images\
+            ui\extra\prism_langs\
+            ui\extra\themes\
+            ui\extra\extensions\
 
       - name: Add label if any of build or test jobs failed
         if: failure()
@@ -208,7 +203,7 @@ jobs:
           ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
           path: "./warp"
@@ -221,6 +216,8 @@ jobs:
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
@@ -344,7 +341,7 @@ jobs:
           ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
           path: "./warp"
@@ -357,6 +354,8 @@ jobs:
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
@@ -479,7 +478,7 @@ jobs:
           ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
           path: "./warp"
@@ -492,6 +491,8 @@ jobs:
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
