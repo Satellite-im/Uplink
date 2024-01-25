@@ -40,10 +40,11 @@ use uuid::Uuid;
 use warp::{
     constellation::file::File,
     crypto::DID,
-    logging::tracing::log,
     multipass::identity::IdentityStatus,
     raygun::{self},
 };
+
+use tracing::log;
 
 use crate::{
     components::emoji_group::EmojiGroup,

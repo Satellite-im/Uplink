@@ -1,7 +1,7 @@
 use common::{state, STATIC_ARGS};
 use dioxus::prelude::{EvalError, UseEval};
 use filetime::FileTime;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use std::{fs, path::Path, rc::Rc};
 

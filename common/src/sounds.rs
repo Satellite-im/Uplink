@@ -2,7 +2,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use warp::logging::tracing::log;
+use tracing::log;
 
 pub enum Sounds {
     Notification,

@@ -16,12 +16,12 @@ use colored::Colorize;
 use env_logger::Builder;
 use log::{self, Level, SetLoggerError};
 use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::{collections::VecDeque, env};
 use tokio::sync::mpsc;
-use warp::sync::RwLock;
 
 use chrono::{DateTime, Local};
 use common::STATIC_ARGS;

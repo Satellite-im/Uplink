@@ -1,9 +1,10 @@
 use warp::{
     blink::BlinkEventKind,
-    logging::tracing::log,
     multipass::MultiPassEventKind,
     raygun::{MessageEventKind, RayGunEventKind},
 };
+
+use tracing::log;
 
 use crate::{
     warp_runner::{

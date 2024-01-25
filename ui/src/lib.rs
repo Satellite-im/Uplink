@@ -63,7 +63,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log::{self};
+use tracing::log::{self};
 
 use muda::AboutMetadata;
 use muda::Menu;

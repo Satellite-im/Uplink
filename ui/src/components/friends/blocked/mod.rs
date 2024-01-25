@@ -17,7 +17,9 @@ use kit::{
     },
     elements::label::Label,
 };
-use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity::Relationship};
+use warp::{crypto::DID, error::Error, multipass::identity::Relationship};
+
+use tracing::log;
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {

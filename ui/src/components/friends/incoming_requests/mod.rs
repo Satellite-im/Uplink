@@ -19,7 +19,9 @@ use kit::{
     elements::label::Label,
 };
 use warp::crypto::DID;
-use warp::{logging::tracing::log, multipass::identity::Relationship};
+use warp::multipass::identity::Relationship;
+
+use tracing::log;
 
 enum ChanCmd {
     AcceptRequest(DID),

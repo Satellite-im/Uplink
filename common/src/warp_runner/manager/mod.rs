@@ -7,9 +7,11 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 
 use warp::{
-    blink::BlinkEventStream, logging::tracing::log, multipass::MultiPassEventStream,
-    raygun::RayGunEventStream, tesseract::Tesseract,
+    blink::BlinkEventStream, multipass::MultiPassEventStream, raygun::RayGunEventStream,
+    tesseract::Tesseract,
 };
+
+use tracing::log;
 
 use super::{conv_stream, Account, Calling, Messaging, Storage};
 use crate::WARP_CMD_CH;
