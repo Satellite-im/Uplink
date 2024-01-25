@@ -2,7 +2,7 @@ use common::language::get_local_text;
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
 use kit::elements::switch::Switch;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::components::settings::SettingSection;
 

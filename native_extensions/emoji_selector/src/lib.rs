@@ -16,9 +16,9 @@ use kit::{
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
+use tracing::log;
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::ReactionState};
-
+use warp::raygun::ReactionState;
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());

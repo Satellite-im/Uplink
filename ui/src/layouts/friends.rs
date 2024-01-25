@@ -21,7 +21,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use tokio::sync::broadcast::error::RecvError;
-use warp::logging::tracing::log;
+use tracing::log;
 
 #[derive(PartialEq, Clone)]
 pub enum FriendRoute {

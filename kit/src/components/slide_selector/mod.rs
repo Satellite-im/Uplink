@@ -1,6 +1,6 @@
 use common::icons::outline::Shape;
 use dioxus::prelude::*;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::elements::button::Button;
 

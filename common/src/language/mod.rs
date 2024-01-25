@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use fluent_templates::{
     fluent_bundle::FluentValue, once_cell::sync::Lazy, LanguageIdentifier, Loader,
 };
+use parking_lot::RwLock;
 use unic_langid::langid;
-use warp::sync::RwLock;
 
 use crate::LOCALES;
 

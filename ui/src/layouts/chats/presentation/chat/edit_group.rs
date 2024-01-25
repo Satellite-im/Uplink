@@ -19,9 +19,9 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
+use tracing::log;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
-
+use warp::crypto::DID;
 #[derive(PartialEq, Clone)]
 enum EditGroupAction {
     Add,

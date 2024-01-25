@@ -27,7 +27,9 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::Location};
+use warp::{crypto::DID, raygun::Location};
+
+use tracing::log;
 
 const MAX_CHARS_LIMIT: usize = 1024;
 pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());

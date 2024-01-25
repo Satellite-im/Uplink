@@ -12,7 +12,7 @@ use rfd::FileDialog;
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
-use warp::logging::tracing::log;
+use tracing::log;
 
 // these types exist to allow different parts of the app to share the same logic for managing software updates
 pub struct SoftwareUpdateCmd(pub mpsc::UnboundedReceiver<f32>);

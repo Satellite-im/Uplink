@@ -12,8 +12,8 @@ use kit::{
     components::user_image::UserImage,
     elements::input::{Input, Options},
 };
-use warp::{crypto::DID, logging::tracing::log};
-
+use tracing::log;
+use warp::crypto::DID;
 #[derive(Props, PartialEq)]
 pub struct Props {
     #[props(!optional)]

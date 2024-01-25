@@ -11,8 +11,8 @@ use std::{
     collections::{hash_map, HashMap},
     rc::Weak,
 };
+use tracing::log;
 use uuid::Uuid;
-use warp::logging::tracing::log;
 
 use super::{call, notifications::Notifications};
 

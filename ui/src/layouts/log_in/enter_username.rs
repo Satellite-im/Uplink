@@ -15,7 +15,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
 };
-use warp::logging::tracing::log;
+use tracing::log;
 use warp::multipass;
 
 use crate::AuthPages;

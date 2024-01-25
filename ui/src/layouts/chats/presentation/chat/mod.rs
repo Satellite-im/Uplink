@@ -29,8 +29,9 @@ use common::state::{ui, Action, Identity, State};
 
 use common::language::get_local_text;
 
+use tracing::log;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::crypto::DID;
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {

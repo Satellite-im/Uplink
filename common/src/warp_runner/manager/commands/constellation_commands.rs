@@ -29,9 +29,10 @@ use warp::{
         ConstellationProgressStream, Progression,
     },
     error::Error,
-    logging::tracing::log,
-    sync::RwLock,
 };
+
+use parking_lot::RwLock;
+use tracing::log;
 
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
