@@ -296,7 +296,7 @@ settings-keybinds = Поставке тастатурских пречица
     .toggle-deafen = Промените искључивање свих звукова, укључујући микрофон и слушалице.
     .conflicting-keybinds = Сукоб тастатурских пречица.
     .change-keybind = Запиши нову тастатурску пречицу
-    .open-dev-tools = Отвори веб инспектор
+    .open-close-dev-tools = Отвори/Затвори веб инспектор
     .toggle-devmode = Промени режим програмера
     .cancel-change-keybind = Откажи записivanje
 
