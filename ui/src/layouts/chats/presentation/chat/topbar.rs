@@ -14,7 +14,9 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::ConversationType};
+use warp::raygun::ConversationType;
+
+use tracing::log;
 
 use crate::{
     layouts::chats::data::{get_input_options, ChatData, ChatProps},

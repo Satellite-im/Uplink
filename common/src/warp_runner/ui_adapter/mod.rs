@@ -23,10 +23,11 @@ use warp::{
     constellation::file::File,
     crypto::DID,
     error::Error,
-    logging::tracing::log,
     multipass::identity::{Identifier, Platform},
     raygun::{self, Conversation, MessageOptions},
 };
+
+use tracing::log;
 
 use super::{
     manager::commands::identity_image_to_base64, FetchMessagesConfig, FetchMessagesResponse,

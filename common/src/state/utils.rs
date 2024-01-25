@@ -4,8 +4,8 @@ use std::{
 };
 
 use titlecase::titlecase;
+use tracing::log;
 use walkdir::WalkDir;
-use warp::logging::tracing::log;
 
 use crate::{get_extras_dir, STATIC_ARGS};
 

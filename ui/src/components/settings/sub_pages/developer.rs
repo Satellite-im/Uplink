@@ -16,7 +16,7 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::{button::Button, switch::Switch, Appearance};
 use rfd::FileDialog;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::{components::settings::SettingSection, logger};
 

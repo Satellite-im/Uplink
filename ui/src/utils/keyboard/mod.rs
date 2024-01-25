@@ -5,7 +5,7 @@ use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use once_cell::sync::Lazy;
 
-use warp::sync::RwLock;
+use parking_lot::RwLock;
 
 pub mod shortcut_handlers;
 

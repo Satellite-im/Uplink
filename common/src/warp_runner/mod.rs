@@ -1,15 +1,13 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use derive_more::Display;
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use tokio::sync::{
     broadcast,
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
 };
+use tracing::log;
 use warp::{
     blink::{
         Blink::{self},
@@ -17,7 +15,6 @@ use warp::{
     },
     constellation::{file::FileType, Constellation},
     error::Error,
-    logging::tracing::log,
     multipass::{self, IdentityImportOption, MultiPass},
     raygun::RayGun,
     tesseract::Tesseract,
@@ -353,16 +350,13 @@ impl From<&DiscoveryMode> for Discovery {
                     addresses: vec![address.parse().expect("Valid multiaddr address")],
                 },
             },
-            DiscoveryMode::Shuttle => Discovery::Shuttle {
-                addresses: HashMap::from_iter([(
-                    "12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
-                        .parse()
-                        .expect("Valid id"),
-                    HashSet::from_iter(["/ip4/104.236.194.35/tcp/34053"
-                        .parse()
-                        .expect("valid addr")]),
-                )]),
-            },
+            DiscoveryMode::Shuttle => {
+                let addresses = Vec::from_iter(["/ip4/104.236.194.35/tcp/34053/p2p/12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
+                .parse()
+                .expect("valid addr")]);
+
+                Discovery::Shuttle { addresses }
+            }
             DiscoveryMode::Disable => Discovery::None,
         }
     }

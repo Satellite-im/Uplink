@@ -49,6 +49,8 @@ tempfile = { workspace = true }
 fdlimit = { workspace = true }
 
 once_cell = { workspace = true }
+tracing.workspace = true
+parking_lot.workspace = true
 
 futures = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
@@ -65,8 +67,8 @@ reqwest = { workspace = true, default-features = false, features = [
     "stream",
 ] }
 log = { workspace = true }
-env_logger = { version = "0.10"}
-dotenv = {version = "0.15.0"}
+env_logger = { version = "0.10" }
+dotenv = { version = "0.15.0" }
 
 [features]
 default = ["dioxus-desktop/devtools"]
