@@ -20,7 +20,9 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
     },
 };
-use warp::{logging::tracing::log, multipass};
+use warp::multipass;
+
+use tracing::log;
 
 use common::icons::outline::Shape as Icon;
 use common::{

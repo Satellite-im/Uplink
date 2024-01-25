@@ -1,6 +1,6 @@
 use common::icons;
 use dioxus::prelude::*;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::elements::{button::Button, Appearance};
 

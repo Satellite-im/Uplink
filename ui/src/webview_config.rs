@@ -1,7 +1,7 @@
 use crate::utils::get_drag_event::{BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX, DRAG_EVENT};
 use common::STATIC_ARGS;
 use dioxus_desktop::{wry::webview::FileDropEvent, Config};
-use warp::logging::tracing::log;
+use tracing::log;
 
 pub(crate) fn webview_config() -> Config {
     let window = crate::window_builder::get_window_builder(true);

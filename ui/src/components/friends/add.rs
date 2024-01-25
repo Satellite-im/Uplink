@@ -14,8 +14,10 @@ use kit::elements::{
     tooltip::Tooltip,
 };
 
+use warp::crypto::DID;
 use warp::error::Error;
-use warp::{crypto::DID, logging::tracing::log};
+
+use tracing::log;
 
 use common::icons::outline::Shape as Icon;
 use common::{
