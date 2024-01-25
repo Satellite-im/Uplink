@@ -25,7 +25,9 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
+use warp::{crypto::DID, raygun::ConversationType};
+
+use tracing::log;
 
 enum ControlsCmd {
     VoiceCall {

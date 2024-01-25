@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use crate::{layouts::chats::data::get_input_options, UplinkRoute};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
@@ -20,10 +21,9 @@ use kit::{
         Appearance,
     },
 };
+use tracing::log;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
-
-use crate::{layouts::chats::data::get_input_options, UplinkRoute};
+use warp::crypto::DID;
 
 #[derive(Props)]
 pub struct Props<'a> {

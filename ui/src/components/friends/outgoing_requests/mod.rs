@@ -17,7 +17,9 @@ use kit::{
     },
     elements::label::Label,
 };
-use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
+use warp::{crypto::DID, multipass::identity::Relationship};
+
+use tracing::log;
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {

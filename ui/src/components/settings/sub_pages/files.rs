@@ -2,7 +2,7 @@ use common::language::get_local_text;
 use dioxus::prelude::*;
 #[allow(unused_imports)]
 use kit::elements::{button::Button, switch::Switch};
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::components::settings::SettingSection;
 

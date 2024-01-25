@@ -22,7 +22,9 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, error::Error, logging::tracing::log};
+use warp::{crypto::DID, error::Error};
+
+use tracing::log;
 
 use crate::{
     components::{friends::friends_list::ShareFriendsModal, settings::sidebar::Page},
