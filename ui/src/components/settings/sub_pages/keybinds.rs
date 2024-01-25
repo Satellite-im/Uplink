@@ -320,10 +320,10 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 shortcut: GlobalShortcut::ToggleDeafen
             }
             KeybindSection {
-                id: format!("{:?}", GlobalShortcut::OpenDevTools),
-                section_label: get_local_text("settings-keybinds.open-dev-tools"),
+                id: format!("{:?}", GlobalShortcut::OpenCloseDevTools),
+                section_label: get_local_text("settings-keybinds.open-close-dev-tools"),
                 bindings: bindings.clone(),
-                shortcut: GlobalShortcut::OpenDevTools
+                shortcut: GlobalShortcut::OpenCloseDevTools
             }
             KeybindSection {
                 id: format!("{:?}", GlobalShortcut::ToggleDevmode),
