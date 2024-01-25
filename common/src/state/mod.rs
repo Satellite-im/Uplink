@@ -446,7 +446,8 @@ impl State {
                 conversation_id,
                 mut message,
             } => {
-                let ping = message.is_mention_self(&self.get_own_identity().did_key());
+                let own = self.get_own_identity().did_key();
+                let ping = message.is_mention_self(&own);
                 self.update_identity_status_hack(&message.inner.sender());
                 let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.

@@ -193,7 +193,7 @@ pub fn parse_mentions(
 }
 
 pub fn mention_to_did_key(id: &Identity) -> String {
-    format!("@{}", id.did_key().to_string())
+    format!("@{}", id.did_key())
 }
 
 // Replacement pattern converting a user tag to a highlight div
