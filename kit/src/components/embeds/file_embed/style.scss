@@ -14,7 +14,7 @@
   display: inline-flex;
   gap: var(--gap);
   width: 100%;
-  color: var(--text-color);
+  color: var(--text-color-dark);
   align-content: center;
   align-self: flex-end;
 
@@ -110,6 +110,7 @@
   .meta {
     color: var(--placeholder);
   }
+  color: var(--text-color);
   align-self: flex-start;
 }
 
