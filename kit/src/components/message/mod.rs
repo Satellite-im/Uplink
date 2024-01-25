@@ -328,7 +328,7 @@ struct EditProps<'a> {
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
 
-    cx.render(rsx!(textarea::Input {
+    cx.render(rsx!(textarea::InputRich {
         id: cx.props.id.clone(),
         aria_label: "edit-message-input".into(),
         ignore_focus: false,

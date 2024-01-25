@@ -141,15 +141,22 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
     if modifiers_and_keys.contains("unknown") {
         return None;
     }
+
+    let global_shortcut = cx.props.global_shortcut.clone();
+
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
-        to_owned![command_pressed];
+        to_owned![command_pressed, global_shortcut];
         move || {
-            debounced_callback(
-                || {
-                    command_pressed.with_mut(|i| *i = true);
-                },
-                Duration::from_millis(500),
-            );
+            if global_shortcut == GlobalShortcut::SetAppVisible {
+                command_pressed.with_mut(|i| *i = true);
+            } else {
+                debounced_callback(
+                    || {
+                        command_pressed.with_mut(|i| *i = true);
+                    },
+                    Duration::from_millis(500),
+                );
+            }
         }
     });
 

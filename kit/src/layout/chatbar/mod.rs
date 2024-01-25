@@ -183,7 +183,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             cx.props.with_file_upload.as_ref(),
             div{
                 class: "chatbar-group",
-                textarea::Input {
+                textarea::InputRich {
                     key: "{controlled_input_id}",
                     id: controlled_input_id.clone(),
                     loading: cx.props.loading.unwrap_or_default(),
@@ -238,7 +238,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 *selected_suggestion.write_silent() = None;
                                 return;
                             }
-                            let current = &mut *selected_suggestion.write_silent();
+                            let current = &mut *selected_suggestion.write();
                             let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
                                     Some(v) => (v + 1) % amount,
@@ -251,7 +251,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             };
                             *current = Some(selected_idx);
-                            let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &selected_idx.to_string()));
+                            let _ = eval(&include_str!("./suggestion_scroll.js").replace("$NUM", &selected_idx.to_string()));
                         }
                 },
                 is_typing.then(|| {
