@@ -297,7 +297,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
 
                     let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => {
-                            format_text(&v, markdown, should_transform_ascii_emojis, Some((&state.read(), &chat.id, true)))
+                            format_text(v, markdown, should_transform_ascii_emojis, Some((&state.read(), &chat.id, true)))
                         }
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
