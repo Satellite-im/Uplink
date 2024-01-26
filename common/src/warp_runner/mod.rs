@@ -352,14 +352,14 @@ impl From<&DiscoveryMode> for Discovery {
             },
             DiscoveryMode::Shuttle => {
                 let env_addrs = match cfg!(feature = "production_mode") {
-                    true => std::env::var("SHUTTLE_ADDR_POINT")
+                    false => std::env::var("SHUTTLE_ADDR_POINT")
                         .map(|val| {
                             val.split(',')
                                 .filter_map(|addr_str| addr_str.parse::<_>().ok())
                                 .collect::<Vec<_>>()
                         })
                         .unwrap_or_default(),
-                    false => vec![],
+                    true => vec![],
                 };
 
                 let  addresses = match env_addrs.is_empty() {
