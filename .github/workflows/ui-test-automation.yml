@@ -82,8 +82,8 @@ jobs:
           chmod +x ./utils/replace_node.sh
           ./utils/replace_node.sh
 
-      - name: Output contents from mod.rs file
-        run: cat ./common/src/warp_runner/mod.rs
+      - name: Output contents from Makefile modified file
+        run: cat ./Makefile
 
       - name: Build executable 🖥️
         run: make dmg
@@ -148,8 +148,8 @@ jobs:
       - name: Replace Warp Peer ID in Uplink 🚀
         run: .\utils\replace_node.ps1
 
-      - name: Output contents from mod.rs file
-        run: Get-Content .\common\src\warp_runner\mod.rs
+      - name: Output contents from modified Makefile file
+        run: Get-Content .\Makefile
 
       - name: Build executable 🖥️
         run: cargo build --release -F production_mode
