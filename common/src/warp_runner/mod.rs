@@ -363,10 +363,10 @@ impl From<&DiscoveryMode> for Discovery {
                 };
 
                 let  addresses = match env_addrs.is_empty() {
-                    false => Vec::from_iter(["/ip4/104.236.194.35/tcp/34053/p2p/12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
+                    true => Vec::from_iter(["/ip4/104.236.194.35/tcp/34053/p2p/12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
                                 .parse()
                                 .expect("valid addr")]),
-                    true => env_addrs
+                    false => env_addrs
                 };
 
                 log::info!("shuttle addresses: {:?}", addresses);
