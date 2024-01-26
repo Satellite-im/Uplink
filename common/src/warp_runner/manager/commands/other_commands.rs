@@ -8,7 +8,10 @@ use zip::{result::ZipError, write::FileOptions};
 
 use derive_more::Display;
 use futures::channel::oneshot;
-use warp::{error, logging::tracing::log};
+use warp::error;
+
+use tracing::log;
+
 #[derive(Display)]
 pub enum OtherCmd {
     #[display(fmt = "CompressFolder {{ src: {src:?}, dest: {dest:?} }} ")]

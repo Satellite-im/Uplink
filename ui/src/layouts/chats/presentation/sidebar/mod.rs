@@ -33,9 +33,10 @@ use uuid::Uuid;
 use warp::raygun::ConversationType;
 use warp::{
     crypto::DID,
-    logging::tracing::log,
     raygun::{self},
 };
+
+use tracing::log;
 
 use crate::components::media::calling::CallControl;
 

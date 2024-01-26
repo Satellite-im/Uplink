@@ -20,8 +20,9 @@ use warp::error::Error;
 use warp::{
     constellation::{file::File, Progression},
     crypto::DID,
-    logging::tracing::log,
 };
+
+use tracing::log;
 
 use common::icons::outline::Shape as Icon;
 

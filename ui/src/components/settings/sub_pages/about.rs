@@ -8,7 +8,7 @@ use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};

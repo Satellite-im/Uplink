@@ -6,8 +6,8 @@ use super::sounds::{Play, Sounds};
 use derive_more::Display;
 use notify_rust::Notification;
 use std::sync::Arc;
+use tracing::log;
 use uuid::Uuid;
-use warp::logging::tracing::log;
 
 use once_cell::sync::Lazy;
 use tokio::sync::{

@@ -6,9 +6,10 @@ use std::{
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex, Replacer};
 use titlecase::titlecase;
+use tracing::log;
 use uuid::Uuid;
 use walkdir::WalkDir;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::crypto::DID;
 
 use crate::{get_extras_dir, STATIC_ARGS};
 

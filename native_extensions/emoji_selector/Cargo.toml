@@ -19,3 +19,4 @@ warp = { workspace = true}
 uuid = { workspace = true }
 futures = { workspace = true }
 regex = { workspace = true }
+tracing.workspace = true

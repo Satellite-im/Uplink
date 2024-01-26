@@ -1,8 +1,8 @@
-use derive_more::Display;
-use uuid::Uuid;
-use warp::{error::Error, logging::tracing::log, raygun::RayGunEventKind};
-
 use super::{super::conv_stream, init_conversation, ChatAdapter};
+use derive_more::Display;
+use tracing::log;
+use uuid::Uuid;
+use warp::{error::Error, raygun::RayGunEventKind};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display, Clone)]

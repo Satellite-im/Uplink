@@ -50,12 +50,9 @@ use std::{
     time::{Duration, Instant},
 };
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-    multipass::identity::IdentityStatus,
-    raygun::{self},
-};
+use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun};
+
+use tracing::log;
 
 use self::call::Call;
 use self::pending_message::PendingMessage;
