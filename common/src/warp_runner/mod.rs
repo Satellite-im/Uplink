@@ -369,6 +369,8 @@ impl From<&DiscoveryMode> for Discovery {
                     true => env_addrs
                 };
 
+                log::info!("shuttle addresses: {:?}", addresses);
+
                 Discovery::Shuttle { addresses }
             }
             DiscoveryMode::Disable => Discovery::None,
