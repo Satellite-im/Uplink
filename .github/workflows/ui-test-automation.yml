@@ -200,7 +200,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
@@ -213,11 +212,6 @@ jobs:
         with:
           name: keyfile
           path: ./warp
-
-      - name: Set up cargo cache 🛠️
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
@@ -338,7 +332,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
@@ -351,11 +344,6 @@ jobs:
         with:
           name: keyfile
           path: ./warp
-
-      - name: Set up cargo cache 🛠️
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
@@ -475,7 +463,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/CI-updates
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
@@ -488,11 +475,6 @@ jobs:
         with:
           name: keyfile
           path: ./warp
-
-      - name: Set up cargo cache 🛠️
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-directories: "./warp"
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
