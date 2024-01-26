@@ -369,7 +369,7 @@ impl From<&DiscoveryMode> for Discovery {
                     false => env_addrs
                 };
 
-                log::info!("shuttle addresses: {:?}", addresses);
+                log::debug!("shuttle addresses: {:?}", addresses);
 
                 Discovery::Shuttle { addresses }
             }
