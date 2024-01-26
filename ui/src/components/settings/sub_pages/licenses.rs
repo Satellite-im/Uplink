@@ -2,7 +2,7 @@ use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::components::settings::SettingSection;
 

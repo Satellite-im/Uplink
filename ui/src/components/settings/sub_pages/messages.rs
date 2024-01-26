@@ -4,7 +4,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use kit::elements::switch::Switch;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::components::settings::SettingSection;
 

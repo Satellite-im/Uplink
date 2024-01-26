@@ -31,10 +31,11 @@ use common::{
 use uuid::Uuid;
 use warp::{
     crypto::DID,
-    logging::tracing::log,
     multipass::identity::Relationship,
     raygun::{self, ConversationType},
 };
+
+use tracing::log;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},

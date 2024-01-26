@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::STATIC_ARGS;
 

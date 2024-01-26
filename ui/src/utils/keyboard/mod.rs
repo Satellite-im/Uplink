@@ -4,28 +4,14 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use once_cell::sync::Lazy;
-use std::{
-    sync::Mutex,
-    time::{Duration, Instant},
-};
+
+use parking_lot::RwLock;
 
 pub mod shortcut_handlers;
 
+static CALL_COUNT: Lazy<RwLock<u32>> = Lazy::new(|| RwLock::new(0));
+
 const NAVIGATE_AND_HIGHLIGHT_KEYBINDS: &str = include_str!("./navigate_and_highlight_keybinds.js");
-
-// TODO: This fires once on key-down as well as key-up we should fix this in the future.
-static LAST_CALLED: Lazy<Mutex<Instant>> =
-    Lazy::new(|| Mutex::new(Instant::now() - Duration::from_secs(1)));
-
-fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
-    let mut last_called = LAST_CALLED.lock().unwrap();
-    let now = Instant::now();
-
-    if now.duration_since(*last_called) > debounce_duration {
-        callback();
-        *last_called = now;
-    }
-}
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -142,20 +128,17 @@ fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> 
         return None;
     }
 
-    let global_shortcut = cx.props.global_shortcut.clone();
-
     use_global_shortcut(cx, modifiers_and_keys.as_str(), {
-        to_owned![command_pressed, global_shortcut];
+        to_owned![command_pressed];
         move || {
-            if global_shortcut == GlobalShortcut::SetAppVisible {
+            *CALL_COUNT.write() += 1;
+
+            if *CALL_COUNT.read() == 1 {
                 command_pressed.with_mut(|i| *i = true);
-            } else {
-                debounced_callback(
-                    || {
-                        command_pressed.with_mut(|i| *i = true);
-                    },
-                    Duration::from_millis(500),
-                );
+            }
+
+            if *CALL_COUNT.read() == 2 {
+                *CALL_COUNT.write() = 0;
             }
         }
     });

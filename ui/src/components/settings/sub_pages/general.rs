@@ -10,7 +10,7 @@ use kit::elements::button::Button;
 use kit::elements::tooltip::{ArrowPosition, Tooltip};
 #[allow(unused_imports)]
 use kit::elements::{select::Select, switch::Switch};
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::components::settings::{SettingSection, SettingSectionSimple};
 use crate::utils::get_font_sizes::FONT_SIZE_OPTIONS;

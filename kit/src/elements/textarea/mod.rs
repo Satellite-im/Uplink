@@ -8,8 +8,8 @@ use dioxus_html::input_data::keyboard_types::Modifiers;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
+use tracing::log;
 use uuid::Uuid;
-use warp::logging::tracing::log;
 
 // "{\"Input\":\"((?:.|\n)*)\"}"
 static INPUT_REGEX: Lazy<Regex> =

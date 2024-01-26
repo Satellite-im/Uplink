@@ -63,7 +63,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log::{self};
+use tracing::log::{self};
 
 use muda::AboutMetadata;
 use muda::Menu;
@@ -202,7 +202,7 @@ fn app(cx: Scope) -> Element {
             is_on_auth_pages: true,
             on_global_shortcut: move |shortcut| {
                 match shortcut {
-                    GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx.scope),
+                    GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx.scope),
                     GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!"),
                     _ => log::info!("Just Open Dev Tools shortcut works on Auth Pages!"),
                 }
@@ -251,7 +251,7 @@ fn app_layout(cx: Scope) -> Element {
                         GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
-                        GlobalShortcut::OpenDevTools => utils::keyboard::shortcut_handlers::dev::open_dev_tools(cx),
+                        GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx),
                         GlobalShortcut::ToggleDevmode => utils::keyboard::shortcut_handlers::dev::toggle_devmode(state.clone()),
                         GlobalShortcut::SetAppVisible => utils::keyboard::shortcut_handlers::navigation::set_app_visible(cx),
                         GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")

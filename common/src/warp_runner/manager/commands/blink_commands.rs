@@ -1,8 +1,8 @@
 use derive_more::Display;
 use futures::channel::oneshot::{self};
 use tokio::sync::mpsc::UnboundedReceiver;
+use tracing::log;
 use uuid::Uuid;
-use warp::logging::tracing::log;
 use warp::{
     blink::{AudioDeviceConfig, AudioTestEvent},
     crypto::DID,

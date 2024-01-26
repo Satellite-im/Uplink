@@ -1455,6 +1455,7 @@ dependencies = [
  "notify-rust",
  "objc",
  "once_cell",
+ "parking_lot 0.12.1",
  "plot_icon",
  "rand 0.8.5",
  "regex",
@@ -1466,6 +1467,7 @@ dependencies = [
  "titlecase",
  "tokio",
  "tokio-util",
+ "tracing",
  "unic-langid",
  "uuid",
  "walkdir",
@@ -2594,6 +2596,7 @@ dependencies = [
  "kit",
  "once_cell",
  "regex",
+ "tracing",
  "uuid",
  "warp",
 ]
@@ -4703,7 +4706,6 @@ dependencies = [
  "glob",
  "humansize",
  "linkify",
- "log",
  "mime",
  "once_cell",
  "pulldown-cmark",
@@ -4714,6 +4716,7 @@ dependencies = [
  "serde",
  "serde_json",
  "timeago",
+ "tracing",
  "unic-emoji-char",
  "unic-segment",
  "uuid",
@@ -8494,7 +8497,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9758,6 +9761,7 @@ dependencies = [
  "once_cell",
  "open",
  "opener",
+ "parking_lot 0.12.1",
  "rand 0.8.5",
  "raw-window-handle",
  "regex",
@@ -9772,6 +9776,7 @@ dependencies = [
  "titlecase",
  "tokio",
  "tokio-util",
+ "tracing",
  "uuid",
  "walkdir",
  "warp",
@@ -9893,7 +9898,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9948,7 +9953,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9965,6 +9970,7 @@ dependencies = [
  "mp4",
  "once_cell",
  "opus",
+ "parking_lot 0.12.1",
  "rand 0.8.5",
  "rayon",
  "ringbuf",
@@ -9980,7 +9986,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=a92a3674cd1d2e700e5275beb606984160cb9532#a92a3674cd1d2e700e5275beb606984160cb9532"
+source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",
@@ -9998,6 +10004,7 @@ dependencies = [
  "image",
  "libipld",
  "mediatype",
+ "parking_lot 0.12.1",
  "rust-ipfs",
  "serde",
  "serde_json",

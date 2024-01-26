@@ -10,7 +10,9 @@ use dioxus::prelude::*;
 use futures::StreamExt;
 use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_image::UserImage};
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::PinState};
+use warp::raygun::PinState;
+
+use tracing::log;
 
 use crate::layouts::chats::{
     data::{self, ChatData},
