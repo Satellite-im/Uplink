@@ -351,9 +351,23 @@ impl From<&DiscoveryMode> for Discovery {
                 },
             },
             DiscoveryMode::Shuttle => {
-                let addresses = Vec::from_iter(["/ip4/104.236.194.35/tcp/34053/p2p/12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
-                .parse()
-                .expect("valid addr")]);
+                let env_addrs = match cfg!(feature = "production_mode") {
+                    true => std::env::var("SHUTTLE_ADDR_POINT")
+                        .map(|val| {
+                            val.split(',')
+                                .filter_map(|addr_str| addr_str.parse::<_>().ok())
+                                .collect::<Vec<_>>()
+                        })
+                        .unwrap_or_default(),
+                    false => vec![],
+                };
+
+                let  addresses = match env_addrs.is_empty() {
+                    false => Vec::from_iter(["/ip4/104.236.194.35/tcp/34053/p2p/12D3KooWJSes8386p2T1sMeZ2DzsNJThKkZWbj4US6uPMpEgBTHu"
+                                .parse()
+                                .expect("valid addr")]),
+                    true => env_addrs
+                };
 
                 Discovery::Shuttle { addresses }
             }
