@@ -21,7 +21,7 @@ use crate::{
             chatbar::get_chatbar,
             messages::get_messages,
         },
-        scripts::{SHOW_CONTEXT, USER_TAG_SCRIPT},
+        scripts::{DISABLE_RELOAD, SHOW_CONTEXT, USER_TAG_SCRIPT},
     },
 };
 
@@ -54,6 +54,8 @@ pub fn Compose(cx: Scope) -> Element {
     let identity_profile = use_state(cx, DID::default);
 
     let eval_provider = use_eval(cx);
+    let script = DISABLE_RELOAD;
+    let _ = eval_provider(&script);
     // Handle user tag click
     // We handle it here since user tags are not dioxus components
     use_effect(cx, chat_data, |_| {

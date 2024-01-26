@@ -10,3 +10,4 @@ pub const SCROLL_TO_END: &str = include_str!("./scroll_to_end.js");
 pub const OBSERVER_SCRIPT: &str = include_str!("./observer_script.js");
 pub const READ_SCROLL: &str = include_str!("./read_scroll.js");
 pub const USER_TAG_SCRIPT: &str = include_str!("./user_tag_click_handler.js");
+pub const DISABLE_RELOAD: &str = include_str!("./disable_reload_hotkeys.js");
