@@ -39,7 +39,7 @@ use super::{
 pub struct Message {
     pub inner: warp::raygun::Message,
     pub in_reply_to: Option<(String, Vec<File>, DID)>,
-    is_mention: i8,
+    is_mention: Option<bool>,
     /// this field exists so that the UI can tell Dioxus when a message has been edited and thus
     /// needs to be re-rendered. Before the addition of this field, the compose view was
     /// using the message Uuid, but this doesn't change when a message is edited.
@@ -62,14 +62,20 @@ impl Message {
 
     // Lazily evaluate if the user is mentioned
     pub fn is_mention_self(&mut self, own: &DID) -> bool {
-        if self.is_mention == 0 {
+        if self.is_mention.is_none() {
             let reg = mention_regex_epattern(&own.to_string());
             match reg.find(&self.inner.lines().join("\n")) {
-                Some(c) => self.is_mention = if c.as_str().starts_with('`') { 1 } else { 2 },
-                None => self.is_mention = 1,
+                Some(c) => {
+                    self.is_mention = if c.as_str().starts_with('`') {
+                        Some(false)
+                    } else {
+                        Some(true)
+                    }
+                }
+                None => self.is_mention = Some(false),
             }
         }
-        self.is_mention == 2
+        self.is_mention.unwrap()
     }
 }
 
