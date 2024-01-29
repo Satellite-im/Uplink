@@ -82,9 +82,6 @@ jobs:
           chmod +x ./utils/replace_node.sh
           ./utils/replace_node.sh
 
-      - name: Output contents from Makefile modified file
-        run: cat ./Makefile
-
       - name: Build executable 🖥️
         run: make dmg
         continue-on-error: true
@@ -146,7 +143,6 @@ jobs:
           $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
           echo "localPeerId=$localPeerId" >> $env:GITHUB_ENV
           $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
-          echo $env:SHUTTLE_ADDR_POINT
           cargo build --release
 
       - name: Copy Extensions 🗳️
@@ -547,7 +543,9 @@ jobs:
         run: ./target/release/shuttle --keyfile key.bin --listen-addr /ip4/127.0.0.1/tcp/4444 &
 
       - name: Run Tests on Windows 🧪
-        run: npm run windows.ci
+        run: |
+          $env:DRIVER="windows"
+          npm run windows.ci
 
       - name: Upload Test Report - Windows CI
         if: always()
