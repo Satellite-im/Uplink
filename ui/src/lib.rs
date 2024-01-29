@@ -10,6 +10,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
+use common::profile_update_channel::{ProfileUpdateAction, PROFILE_CHANNEL_LISTENER};
 use common::state::settings::GlobalShortcut;
 use common::state::ToastNotification;
 use common::warp_runner::ui_adapter::MessageEvent;
@@ -533,6 +534,32 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             let mut ch = channel.lock().await;
             while (ch.recv().await).is_some() {
                 desktop.set_focus();
+            }
+        }
+    });
+
+    // Listen to profile updates
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            while !state.read().initialized {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+            let channel = PROFILE_CHANNEL_LISTENER.rx.clone();
+            let mut ch = channel.lock().await;
+            while let Some(action) = ch.recv().await {
+                match action {
+                    ProfileUpdateAction::ProfilePictureUpdate(did, pic) => {
+                        state
+                            .write()
+                            .update_identity_with(did, |id| id.set_profile_picture(&pic));
+                    }
+                    ProfileUpdateAction::ProfileBannerUpdate(did, pic) => {
+                        state
+                            .write()
+                            .update_identity_with(did, |id| id.set_profile_banner(&pic));
+                    }
+                }
             }
         }
     });
