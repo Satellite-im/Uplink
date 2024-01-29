@@ -163,8 +163,8 @@ pub async fn did_to_identity(
                 .unwrap_or(Platform::Unknown);
             let id = state::Identity::new(id, status, platform);
 
-            fetch_identity_data(&slice::from_ref(&id), false);
-            fetch_identity_data(&slice::from_ref(&id), true);
+            fetch_identity_data(slice::from_ref(&id), false);
+            fetch_identity_data(slice::from_ref(&id), true);
             id
         }
         None => get_uninitialized_identity(did)?,

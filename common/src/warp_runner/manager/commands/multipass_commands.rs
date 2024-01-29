@@ -447,8 +447,8 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
 }
 
 async fn update_identity(id: &mut Identity, warp: &mut crate::warp_runner::manager::Warp) {
-    fetch_identity_data(&slice::from_ref(id), false);
-    fetch_identity_data(&slice::from_ref(id), true);
+    fetch_identity_data(slice::from_ref(id), false);
+    fetch_identity_data(slice::from_ref(id), true);
     if let Ok(status) = warp.multipass.identity_status(&id.did_key()).await {
         id.set_identity_status(status);
     }
