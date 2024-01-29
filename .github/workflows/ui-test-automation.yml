@@ -141,19 +141,13 @@ jobs:
           toolchain: 1.73.0
           components: rustfmt, clippy
 
-      - name: Set execution policy
+      - name: Get Warp Peer ID and Build app 🚀
         run: |
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
-      - name: Replace Warp Peer ID in Uplink 🚀
-        run: .\utils\replace_node.ps1
-
-      - name: Output contents from modified Makefile file
-        run: Get-Content .\Makefile
-
-      - name: Build executable 🖥️
-        run: cargo build --release -F production_mode
-        continue-on-error: true
+          $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
+          echo "localPeerId=$localPeerId" >> $env:GITHUB_ENV
+          $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
+          echo $env:SHUTTLE_ADDR_POINT
+          cargo build --release
 
       - name: Copy Extensions 🗳️
         run: |
