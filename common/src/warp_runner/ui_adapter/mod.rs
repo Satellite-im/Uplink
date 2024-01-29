@@ -65,13 +65,7 @@ impl Message {
         if self.is_mention.is_none() {
             let reg = mention_regex_epattern(&own.to_string());
             match reg.find(&self.inner.lines().join("\n")) {
-                Some(c) => {
-                    self.is_mention = if c.as_str().starts_with('`') {
-                        Some(false)
-                    } else {
-                        Some(true)
-                    }
-                }
+                Some(c) => self.is_mention = Some(!c.as_str().starts_with('`')),
                 None => self.is_mention = Some(false),
             }
         }
