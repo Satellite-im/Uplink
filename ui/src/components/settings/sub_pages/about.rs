@@ -230,8 +230,51 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_description: get_local_text("settings-about.team"),
                 div {
                     class: "flags",
-                    "🇺🇸🇲🇽🇩🇪🇵🇹🇧🇷🇮🇹🇺🇦🇧🇾🇯🇵🇦🇺🇮🇩"
-                }
+                    img {
+                        src: "./img/USA-Flag.png",
+                        alt: "USA Flag",
+                    },
+                    /*img {
+                        src: "path_to_mexico_flag.png",
+                        alt: "Mexico Flag",
+                    }
+                    img {
+                        src: "path_to_germany_flag.png",
+                        alt: "Germany Flag",
+                    }
+                    img {
+                        src: "path_to_portugal_flag.png",
+                        alt: "Portugal Flag",
+                    }
+                    img {
+                        src: "path_to_brazil_flag.png",
+                        alt: "Brazil Flag",
+                    }
+                    img {
+                        src: "path_to_italy_flag.png",
+                        alt: "Italy Flag",
+                    }
+                    img {
+                        src: "path_to_ukraine_flag.png",
+                        alt: "Ukraine Flag",
+                    }
+                    img {
+                        src: "path_to_belarus_flag.png",
+                        alt: "Belarus Flag",
+                    }
+                    img {
+                        src: "path_to_japan_flag.png",
+                        alt: "Japan Flag",
+                    }
+                    img {
+                        src: "path_to_australia_flag.png",
+                        alt: "Australia Flag",
+                    }
+                    img {
+                        src: "path_to_indonesia_flag.png",
+                        alt: "Indonesia Flag",
+                    }*/
+                }            
             }
         }
     ))
