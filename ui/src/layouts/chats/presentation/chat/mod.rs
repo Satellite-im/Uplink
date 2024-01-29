@@ -56,7 +56,7 @@ pub fn Compose(cx: Scope) -> Element {
 
     let eval_provider = use_eval(cx);
     let script = DISABLE_RELOAD;
-    let _ = eval_provider(&script);
+    let _ = eval_provider(script);
     // Handle user tag click
     // We handle it here since user tags are not dioxus components
     use_effect(cx, chat_data, |_| {
