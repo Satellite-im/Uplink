@@ -234,46 +234,46 @@ pub fn AboutPage(cx: Scope) -> Element {
                         src: "./img/USA-Flag.png",
                         alt: "USA Flag",
                     },
-                    /*img {
-                        src: "path_to_mexico_flag.png",
+                    img {
+                        src: "./img/MX-Flag.png",
                         alt: "Mexico Flag",
                     }
                     img {
-                        src: "path_to_germany_flag.png",
+                        src: "./img/DE-Flag.png",
                         alt: "Germany Flag",
                     }
                     img {
-                        src: "path_to_portugal_flag.png",
+                        src: "./img/PT-Flag.png",
                         alt: "Portugal Flag",
                     }
                     img {
-                        src: "path_to_brazil_flag.png",
+                        src: "./img/BR-Flag.png",
                         alt: "Brazil Flag",
                     }
                     img {
-                        src: "path_to_italy_flag.png",
+                        src: "./img/IT-Flag.png",
                         alt: "Italy Flag",
                     }
                     img {
-                        src: "path_to_ukraine_flag.png",
+                        src: "./img/UR-Flag.png",
                         alt: "Ukraine Flag",
                     }
                     img {
-                        src: "path_to_belarus_flag.png",
+                        src: "./img/BL-Flag.png",
                         alt: "Belarus Flag",
                     }
                     img {
-                        src: "path_to_japan_flag.png",
+                        src: "./img/JP-Flag.png",
                         alt: "Japan Flag",
                     }
                     img {
-                        src: "path_to_australia_flag.png",
+                        src: "./img/AU-Flag.png",
                         alt: "Australia Flag",
                     }
                     img {
-                        src: "path_to_indonesia_flag.png",
+                        src: "./img/IN-Flag.png",
                         alt: "Indonesia Flag",
-                    }*/
+                    }
                 }            
             }
         }
