@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use dioxus::hooks::to_owned;
 use futures::channel::oneshot;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
@@ -31,7 +30,7 @@ pub enum ProfileUpdateAction {
 }
 
 pub fn fetch_identity_data(identities: &[Identity], banner: bool) {
-    to_owned![identities];
+    let identities: Vec<_> = identities.iter().map(|id| id.did_key()).collect();
     tokio::spawn(async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
@@ -39,12 +38,12 @@ pub fn fetch_identity_data(identities: &[Identity], banner: bool) {
             let (tx, rx) = oneshot::channel();
             let cmd = if banner {
                 WarpCmd::MultiPass(MultiPassCmd::GetProfileBanner {
-                    did: identity.did_key(),
+                    did: identity.clone(),
                     rsp: tx,
                 })
             } else {
                 WarpCmd::MultiPass(MultiPassCmd::GetProfilePicture {
-                    did: identity.did_key(),
+                    did: identity.clone(),
                     rsp: tx,
                 })
             };
@@ -52,9 +51,9 @@ pub fn fetch_identity_data(identities: &[Identity], banner: bool) {
             let pic = rx.await.unwrap();
             if let Ok(pic) = pic {
                 let cmd = if banner {
-                    ProfileUpdateAction::ProfileBannerUpdate(identity.did_key(), pic)
+                    ProfileUpdateAction::ProfileBannerUpdate(identity, pic)
                 } else {
-                    ProfileUpdateAction::ProfilePictureUpdate(identity.did_key(), pic)
+                    ProfileUpdateAction::ProfilePictureUpdate(identity, pic)
                 };
                 let _ = PROFILE_CHANNEL_LISTENER.tx.send(cmd);
             }

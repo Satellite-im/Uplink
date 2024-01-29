@@ -550,14 +550,26 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             while let Some(action) = ch.recv().await {
                 match action {
                     ProfileUpdateAction::ProfilePictureUpdate(did, pic) => {
-                        state
-                            .write()
-                            .update_identity_with(did, |id| id.set_profile_picture(&pic));
+                        let mut id = state.read().get_own_identity();
+                        if did.eq(&id.did_key()) {
+                            id.set_profile_picture(&pic);
+                            state.write().set_own_identity(id);
+                        } else {
+                            state
+                                .write()
+                                .update_identity_with(did, |id| id.set_profile_picture(&pic));
+                        }
                     }
                     ProfileUpdateAction::ProfileBannerUpdate(did, pic) => {
-                        state
-                            .write()
-                            .update_identity_with(did, |id| id.set_profile_banner(&pic));
+                        let mut id = state.read().get_own_identity();
+                        if did.eq(&id.did_key()) {
+                            id.set_profile_banner(&pic);
+                            state.write().set_own_identity(id);
+                        } else {
+                            state
+                                .write()
+                                .update_identity_with(did, |id| id.set_profile_banner(&pic));
+                        }
                     }
                 }
             }

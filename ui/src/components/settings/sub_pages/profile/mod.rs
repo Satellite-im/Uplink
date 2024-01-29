@@ -188,7 +188,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
-        state.write().set_own_identity(ident.clone());
+        let mut ident = ident.clone();
+        let current = state.read().get_own_identity();
+        ident.set_profile_banner(&current.profile_banner());
+        ident.set_profile_picture(&current.profile_picture());
+        state.write().set_own_identity(ident);
         state
             .write()
             .mutate(common::state::Action::AddToastNotification(
