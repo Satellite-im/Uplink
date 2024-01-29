@@ -274,7 +274,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                         src: "./img/IN-Flag.png",
                         alt: "Indonesia Flag",
                     }
-                }            
+                }
             }
         }
     ))
