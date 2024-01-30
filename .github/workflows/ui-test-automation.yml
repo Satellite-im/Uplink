@@ -13,11 +13,54 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  create-node:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Warp directory 🔖
+        uses: actions/checkout@v4
+        with:
+          repository: Satellite-im/Warp
+
+      - name: Set up cargo cache 🛠️
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.73.0
+          override: true
+          components: rustfmt, clippy
+
+      - name: Run cargo build shuttle on Warp 🚀
+        run: cargo build --bin shuttle --release
+
+      - name: Launch CI instance of Warp 🚀
+        run: ./target/release/shuttle --keyfile key.bin --listen-addr /ip4/127.0.0.1/tcp/4444 > peerID.txt &
+
+      - name: Upload Artifact Peer ID data⬆️
+        uses: actions/upload-artifact@v3
+        with:
+          name: peerID
+          path: peerID.txt
+
+      - name: Upload Artifact Key File data⬆️
+        uses: actions/upload-artifact@v3
+        with:
+          name: keyfile
+          path: key.bin
+
   build-mac:
+    needs: create-node
     runs-on: macos-13
     steps:
-      - name: Checkout Repo 🔖
+      - name: Checkout Uplink Repo 🔖
         uses: actions/checkout@v4
+
+      - name: Download Peer ID file 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: peerID
+          path: ./warp
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -33,6 +76,11 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "10.13"
         run: |
           rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
+      - name: Replace Warp Peer ID in Uplink 🚀
+        run: |
+          chmod +x ./utils/replace_node.sh
+          ./utils/replace_node.sh
 
       - name: Build executable 🖥️
         run: make dmg
@@ -67,12 +115,19 @@ jobs:
           type: add
 
   build-windows:
+    needs: create-node
     runs-on:
       labels: windows-latest
 
     steps:
-      - name: Checkout testing directory 🔖
+      - name: Checkout Uplink Repo 🔖
         uses: actions/checkout@v4
+
+      - name: Download Peer ID file 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: peerID
+          path: ./warp
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -83,18 +138,21 @@ jobs:
           toolchain: 1.73.0
           components: rustfmt, clippy
 
-      - name: Build executable 🖥️
-        run: cargo build --release -F production_mode
-        continue-on-error: true
+      - name: Get Warp Peer ID and Build app 🚀
+        run: |
+          $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
+          echo "localPeerId=$localPeerId" >> $env:GITHUB_ENV
+          $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
+          cargo build --release
 
       - name: Copy Extensions 🗳️
         run: |
-          mkdir ./ui/extra/extensions
-          cp -r ./target/release/emoji_selector.d ./ui/extra/extensions/
-          cp -r ./target/release/emoji_selector.dll ./ui/extra/extensions/
-          cp -r ./target/release/emoji_selector.dll.exp ./ui/extra/extensions/
-          cp -r ./target/release/emoji_selector.dll.lib ./ui/extra/extensions/
-          cp -r ./target/release/emoji_selector.pdb ./ui/extra/extensions/
+          mkdir .\ui\extra\extensions
+          cp -r .\target\release\emoji_selector.d .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll.exp .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.dll.lib .\ui\extra\extensions\
+          cp -r .\target\release\emoji_selector.pdb .\ui\extra\extensions\
 
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
@@ -102,17 +160,17 @@ jobs:
           name: Uplink-Windows
           if-no-files-found: error
           path: |
-            target/release/uplink.exe
+            target\release\uplink.exe
 
       - name: Upload Windows Assets
         uses: actions/upload-artifact@v3
         with:
           name: uplink-windows-assets
           path: |
-            ui/extra/images/
-            ui/extra/prism_langs/
-            ui/extra/themes/
-            ui/extra/extensions/
+            ui\extra\images\
+            ui\extra\prism_langs\
+            ui\extra\themes\
+            ui\extra\extensions\
 
       - name: Add label if any of build or test jobs failed
         if: failure()
@@ -128,22 +186,45 @@ jobs:
     runs-on: macos-13
 
     steps:
-      - name: Checkout working directory 🔖
-        uses: actions/checkout@v4
-
       - name: Checkout testing directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          path: "./appium-tests"
+
+      - name: Checkout Warp directory 🔖
+        uses: actions/checkout@v4
+        with:
+          repository: Satellite-im/Warp
+          path: "./warp"
+
+      - name: Download Key file 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: keyfile
+          path: ./warp
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.73.0
+          override: true
+          components: rustfmt, clippy
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
           node-version: 18.17.1
+          cache: "npm"
+
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-mac
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        working-directory: ./appium-tests
+        if: steps.cache-mac.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Enable opening app not codesigned 🖥️
@@ -153,10 +234,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: app-macos
-          path: ./appium-tests/apps
+          path: ./apps
 
       - name: Copy DMG to Appium Apps Directory 💿
-        working-directory: ./appium-tests/apps
+        working-directory: ./apps
         run: |
           unzip Uplink-Mac-Universal.zip
           cp -r ./Uplink.app /Applications/
@@ -181,41 +262,47 @@ jobs:
       - name: Delete Cache Folder and copy reusable data
         run: |
           rm -rf ~/.uplink
-          mkdir ./appium-tests/tests/fixtures/users/mac2
-          cp -r ./appium-tests/tests/fixtures/users/FriendsTestUser/ ./appium-tests/tests/fixtures/users/mac2/FriendsTestUser
+          mkdir ./tests/fixtures/users/mac2
+          cp -r ./tests/fixtures/users/FriendsTestUser/ ./tests/fixtures/users/mac2/FriendsTestUser
+
+      - name: Run cargo build shuttle on Warp 🚀
+        working-directory: ./warp
+        run: cargo build --bin shuttle --release
+
+      - name: Launch CI instance of Warp 🚀
+        working-directory: ./warp
+        run: ./target/release/shuttle --keyfile key.bin --listen-addr /ip4/127.0.0.1/tcp/4444 &
 
       - name: Run Tests on MacOS 🧪
-        run: |
-          cd ./appium-tests
-          npm run mac.ci
+        run: npm run mac.ci
 
       - name: Upload Test Report - MacOS CI
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-report-macos-ci
-          path: ./appium-tests/test-report/*.xml
+          path: ./test-report/*.xml
 
       - name: Upload Allure Test Results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-allure-macos-ci
-          path: ./appium-tests/allure-results/
+          path: ./allure-results/
 
       - name: Upload Screenshots for MacOS 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-screenshots-MacOS
-          path: ./appium-tests/test-results
+          path: ./test-results
 
       - name: Upload Appium Log for MacOS 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-log-macos
-          path: ./appium-tests/appium.log
+          path: ./appium.log
 
       - name: Add label if any of test jobs failed
         if: failure()
@@ -231,22 +318,45 @@ jobs:
     runs-on: macos-13
 
     steps:
-      - name: Checkout working directory 🔖
-        uses: actions/checkout@v4
-
       - name: Checkout testing directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          path: "./appium-tests"
+
+      - name: Checkout Warp directory 🔖
+        uses: actions/checkout@v4
+        with:
+          repository: Satellite-im/Warp
+          path: "./warp"
+
+      - name: Download Key file 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: keyfile
+          path: ./warp
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.73.0
+          override: true
+          components: rustfmt, clippy
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
           node-version: 18.17.1
+          cache: "npm"
+
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-mac
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        working-directory: ./appium-tests
+        if: steps.cache-mac.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Enable opening app not codesigned 🖥️
@@ -256,10 +366,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: app-macos
-          path: ./appium-tests/apps
+          path: ./apps
 
       - name: Copy DMG to Appium Apps Directory 💿
-        working-directory: ./appium-tests/apps
+        working-directory: ./apps
         run: |
           unzip Uplink-Mac-Universal.zip
           cp -r ./Uplink.app ./Uplink2.app
@@ -286,38 +396,44 @@ jobs:
           defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
           defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
 
+      - name: Run cargo build shuttle on Warp 🚀
+        working-directory: ./warp
+        run: cargo build --bin shuttle --release
+
+      - name: Launch CI instance of Warp 🚀
+        working-directory: ./warp
+        run: ./target/release/shuttle --keyfile key.bin --listen-addr /ip4/127.0.0.1/tcp/4444 &
+
       - name: Run Tests on MacOS 🧪
-        run: |
-          cd ./appium-tests
-          npm run mac.multiremote
+        run: npm run mac.multiremote
 
       - name: Upload Test Report - MacOS Chats
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-report-macos-chats
-          path: ./appium-tests/test-report/*.xml
+          path: ./test-report/*.xml
 
       - name: Upload Allure Test Results for MacOS Chats
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-allure-macos-chats
-          path: ./appium-tests/allure-results/
+          path: ./allure-results/
 
       - name: Upload Screenshots for MacOS Chats 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-screenshots-MacOS-chats
-          path: ./appium-tests/test-results
+          path: ./test-results
 
       - name: Upload Appium Log for MacOS Chats 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-log-macos-chats
-          path: ./appium-tests/appium.log
+          path: ./appium.log
 
       - name: Add label if any of test jobs failed
         if: failure()
@@ -333,14 +449,29 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout working directory 🔖
-        uses: actions/checkout@v4
-
       - name: Checkout testing directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          path: "./appium-tests"
+
+      - name: Checkout Warp directory 🔖
+        uses: actions/checkout@v4
+        with:
+          repository: Satellite-im/Warp
+          path: "./warp"
+
+      - name: Download Key file 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: keyfile
+          path: ./warp
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.73.0
+          override: true
+          components: rustfmt, clippy
 
       - name: Change resolution on Windows Runner
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
@@ -350,25 +481,33 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.17.1
+          cache: "npm"
+
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-mac
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        working-directory: ./appium-tests
+        if: steps.cache-mac.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Download the Windows app 🗳️
         uses: actions/download-artifact@v3
         with:
           name: Uplink-Windows
-          path: ./appium-tests/apps
+          path: ./apps
 
       - name: Download the Windows app assets
         uses: actions/download-artifact@v3
         with:
           name: uplink-windows-assets
-          path: ./appium-tests/apps
+          path: ./apps
 
       - name: Move Windows assets to correct locations 💿
-        working-directory: ./appium-tests/apps
+        working-directory: ./apps
         run: |
           mkdir ./bin/extra
           mkdir ./extra
@@ -395,37 +534,46 @@ jobs:
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
         shell: powershell
 
+      - name: Run cargo build shuttle on Warp 🚀
+        working-directory: ./warp
+        run: cargo build --bin shuttle --release
+
+      - name: Launch CI instance of Warp 🚀
+        working-directory: ./warp
+        run: ./target/release/shuttle --keyfile key.bin --listen-addr /ip4/127.0.0.1/tcp/4444 &
+
       - name: Run Tests on Windows 🧪
-        working-directory: ./appium-tests
-        run: npm run windows.ci
+        run: |
+          $env:DRIVER="windows"
+          npm run windows.ci
 
       - name: Upload Test Report - Windows CI
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-report-windows-ci
-          path: ./appium-tests/test-report/*.xml
+          path: ./test-report/*.xml
 
       - name: Upload Allure Test Results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-allure-windows-ci
-          path: ./appium-tests/allure-results/
+          path: ./allure-results/
 
       - name: Upload Screenshots for Windows 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-screenshots-windows
-          path: ./appium-tests/test-results
+          path: ./test-results
 
       - name: Upload Appium Log for Windows 📷
         uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: appium-log-windows
-          path: ./appium-tests/appium.log
+          path: ./appium.log
 
       - name: Add label if any of test jobs failed
         if: failure()
@@ -438,7 +586,14 @@ jobs:
 
   publish-results:
     if: always()
-    needs: [build-mac, build-windows, test-mac, test-mac-chats, test-windows]
+    needs:
+      - create-node
+      - build-mac
+      - build-windows
+      - test-mac
+      - test-mac-chats
+      - test-windows
+
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -531,12 +686,13 @@ jobs:
 
   remove-label:
     needs:
-    - build-mac
-    - build-windows
-    - test-mac
-    - test-mac-chats
-    - test-windows
-    - publish-results
+      - create-node
+      - build-mac
+      - build-windows
+      - test-mac
+      - test-mac-chats
+      - test-windows
+      - publish-results
 
     runs-on: ubuntu-latest
 
@@ -548,6 +704,8 @@ jobs:
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
+            peerID
+            keyfile
             Uplink-Windows
             uplink-windows-assets
             app-macos

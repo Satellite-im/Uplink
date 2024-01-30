@@ -67,7 +67,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
     let reset_input = use_state(cx, || false);
 
     // On windows, is necessary use state on topbar controls, without using use_shared_state
-    // So state is loaded thete to use window_maximized and offer better UX
+    // So state is loaded there to use window_maximized and offer better UX
     if cfg!(target_os = "windows") && *first_render.read() {
         *first_render.write_silent() = false;
         state.write_silent().ui.window_maximized = false;
@@ -127,7 +127,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
-                            // check if account exist. can be the case when account got reset
+                            // check if account exists. can be the case when account got reset
                             if account.unwrap_or_default() {
                                 // wrong password
                                 error.set(Some(UnlockError::InvalidPin));
@@ -140,7 +140,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                         _ => {
                             // unexpected
                             error.set(Some(UnlockError::Unknown));
-                            log::error!("LogIn failed: {}", err);
+                            log::error!("Login failed: {}", err);
                         }
                     },
                 }
