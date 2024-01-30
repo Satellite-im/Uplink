@@ -6,7 +6,7 @@ on:
 jobs:
   misspell:
     name: runner / misspell
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code.
         uses: actions/checkout@v4
