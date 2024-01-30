@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
@@ -36,6 +37,14 @@ pub static MARKDOWN_PROCESSOR_REGEX: Lazy<Regex> =
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
 });
+
+const HTML_ESCAPES: [(&'static str, &'static str); 5] = [
+    ("&", "&amp;"),
+    ("<", "&lt;"),
+    (">", "&gt;"),
+    ("\"", "&quot;"),
+    ("\'", "&#x27;"),
+];
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -413,12 +422,9 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
 pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
     // warning: this will probably break markdown regarding block quotes. still seems like an improvement.
-    let safe_text = text
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('\"', "&quot;")
-        .replace('\'', "&#x27;")
+    let safe_text = HTML_ESCAPES
+        .iter()
+        .fold(Cow::from(text), |s, (from, to)| s.replace(*from, to).into())
         .replace('\n', "&nbsp;&nbsp;\n");
     let text = &safe_text;
     if should_markdown {
@@ -437,13 +443,11 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
 
 fn stack_processor(stack: &str, unescape_html: bool, emojis: bool) -> &str {
     if unescape_html {
-        match stack {
-            "&quot;" => return "\"",
-            "&amp;" => return "&",
-            "&lt;" => return "<",
-            "&gt;" => return ">",
-            "&nbsp;" => return " ",
-            _ => {}
+        if let Some((esc, _)) = HTML_ESCAPES.iter().find(|(_, s)| stack.eq(*s)) {
+            return esc;
+        }
+        if "&nbsp;".eq(stack) {
+            return " ";
         }
     }
     if !emojis {
@@ -543,6 +547,15 @@ fn markdown(text: &str, emojis: bool) -> String {
                 CodeBlockKind::Indented,
             )) => {
                 html_output.push_str("</p>\n<p> </p><p>");
+            }
+            pulldown_cmark::Event::Code(mut txt) => {
+                txt = HTML_ESCAPES
+                    .iter()
+                    .fold(txt, |s, (to, from)| s.replace(*from, to).into());
+                pulldown_cmark::html::push_html(
+                    &mut html_output,
+                    std::iter::once(pulldown_cmark::Event::Code(txt)),
+                )
             }
             pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(CodeBlockKind::Indented)) => {
             }
