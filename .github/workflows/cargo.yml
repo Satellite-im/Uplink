@@ -15,7 +15,7 @@ jobs:
       - name: Install Homebrew packages
         run: |
           brew update
-          brew install pkg-config openssl gtk+3 webkit2gtk librsvg rust
+          brew install pkg-config openssl gtk+3 webkit2png librsvg rust
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Run cargo checks
