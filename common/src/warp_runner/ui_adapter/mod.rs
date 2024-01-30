@@ -64,10 +64,11 @@ impl Message {
     pub fn is_mention_self(&mut self, own: &DID) -> bool {
         if self.is_mention.is_none() {
             let reg = mention_regex_epattern(&own.to_string());
-            match reg.find(&self.inner.lines().join("\n")) {
-                Some(c) => self.is_mention = Some(!c.as_str().starts_with('`')),
-                None => self.is_mention = Some(false),
-            }
+            self.is_mention = Some(
+                reg.find(&self.inner.lines().join("\n"))
+                    .map(|c| !c.as_str().starts_with('`'))
+                    .unwrap_or_default(),
+            );
         }
         self.is_mention.unwrap()
     }
