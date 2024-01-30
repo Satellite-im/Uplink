@@ -146,7 +146,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             } else if !file_path_in_local_disk.read().exists()
                 && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
                 && !is_video {
-                // It will show image with thumbnial and not with high quality
+                // It will show image with thumbnail and not with high quality
                 // because image didn't download and is not possible to load it
                 rsx!(FileTypeTag {
                     is_video: false,
