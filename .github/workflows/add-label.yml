@@ -6,7 +6,7 @@ on:
 jobs:
   add-label:
     name: Add Label
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: delivery-much/actions-assigner@v1
