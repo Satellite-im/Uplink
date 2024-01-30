@@ -450,7 +450,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                     class: "send-chat-button",
                     Button {
                         text: get_local_text("friends.share-to-chat"),
-                        icon: Icon::ArrowTopRightOnSquare,
+                        icon: Icon::Share,
                         aria_label: "share_to_chat".into(),
                         appearance: Appearance::Secondary,
                         disabled: chats_selected.read().is_empty(),
