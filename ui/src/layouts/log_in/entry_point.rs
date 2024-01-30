@@ -140,7 +140,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Elem
                         _ => {
                             // unexpected
                             error.set(Some(UnlockError::Unknown));
-                            log::error!("LogIn failed: {}", err);
+                            log::error!("Login failed: {}", err);
                         }
                     },
                 }
