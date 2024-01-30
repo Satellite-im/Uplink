@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
+    components::invisible_closer::InvisibleCloser,
     elements::{
         button::Button,
         tooltip::{ArrowPosition, Tooltip},
@@ -264,9 +265,9 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 }
             },
             show_more.then(|| {
-                rsx!(div {
-                        class: "minimal-chat-button-group-out",
-                        onclick: move |_|{
+                rsx!(InvisibleCloser {
+                        classes: "minimal-chat-button-group-out".into(),
+                        onclose: move |_|{
                             show_more.set(false);
                         },
                     }
