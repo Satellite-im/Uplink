@@ -158,7 +158,7 @@ impl Drop for WindowDropHandler {
     fn drop(&mut self) {
         let cmd_tx = WINDOW_CMD_CH.tx.clone();
         if let Err(_e) = cmd_tx.send(self.cmd) {
-            // todo: log error
+            log::error!("Failed to send command in WindowDropHandler: {}", e);
         }
     }
 }
