@@ -110,9 +110,7 @@ pub struct StaticArgs {
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
     /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
-    /// Path to 'login_config.json'. Stores serialized part of the application state, specifically
-    /// for audio-video settings used by the unlock and auth pages. These settings are saved here
-    /// because these pages do not have access to the full application state.
+    /// path to custom plugins
     pub extensions_path: PathBuf,
     /// crash logs
     pub crash_logs: PathBuf,
