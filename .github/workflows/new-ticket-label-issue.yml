@@ -5,7 +5,7 @@ on:
 
 jobs:
   automate-issues-labels:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: initial labeling
         uses: andymckay/labeler@master
