@@ -95,6 +95,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
             },
             input::Input {
                 aria_label: "recovery-seed-input".into(),
+                focus: true,
                 placeholder: get_local_text("enter-seed-words.placeholder"),
                 onchange: move |(x, is_valid)| {
                     if is_valid {
