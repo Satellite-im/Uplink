@@ -204,7 +204,9 @@ pub struct UI {
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emojis: EmojiCounter,
+    #[serde(skip)]
     pub emoji_destination: Option<EmojiDestination>,
+    #[serde(skip)]
     pub emoji_picker_visible: bool,
     #[serde(default = "bool_true")]
     transform_markdown_text: bool,
