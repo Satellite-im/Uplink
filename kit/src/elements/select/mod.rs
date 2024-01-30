@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use dioxus::prelude::*;
 use dioxus_elements::GlobalAttributes;
 
+use crate::components::invisible_closer::InvisibleCloser;
+
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -126,9 +128,8 @@ pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element<'a> {
                                 })
                             )
                         },
-                        div {
-                            class: "select-outside",
-                            onclick: |_| {
+                        InvisibleCloser {
+                            onclose: |_| {
                                 visible.set(false);
                             }
                         }
