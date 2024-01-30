@@ -1,9 +1,10 @@
 .close-handler-behind {
     position: fixed;
-    top: 0;
+    top: var(--titlebar-height);
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 1;
+    cursor: default;
   }
   
