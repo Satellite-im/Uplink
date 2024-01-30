@@ -6,7 +6,7 @@ on:
 
 jobs:
   remove_labels:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: rogerluan/label-remover@v1.1.0
