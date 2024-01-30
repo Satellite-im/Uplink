@@ -111,7 +111,7 @@ pub struct StaticArgs {
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
     /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
-    /// todo: document
+    /// path to custom plugins
     pub extensions_path: PathBuf,
     /// crash logs
     pub crash_logs: PathBuf,
