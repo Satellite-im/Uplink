@@ -92,13 +92,13 @@ pub fn allow_drag_event_for_non_macos_systems(
                         .iter()
                         .filter(|&path| {
                             let data = path.to_string_lossy().to_string();
-                            if data.contains("data:image/jpeg;base64")
-                                || data.contains("data:image/png;base64")
+                            if data.contains("image/jpeg;base64")
+                                || data.contains("image/png;base64")
                             {
                                 println!("Valor falso retornando");
                                 return false;
                             } else {
-                                println!("Valor true retornando: {}", data);
+                                println!("Valor true retornando");
                                 return true;
                             }
                         })
