@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "macos"))]
+// #[cfg(not(target_os = "macos"))]
 use crate::utils::get_drag_event;
 use common::{
     language::{get_local_text, get_local_text_with_args},
@@ -9,7 +9,7 @@ use common::{
 };
 use dioxus::prelude::{use_eval, EvalError, UseEval};
 use dioxus_core::ScopeState;
-#[cfg(not(target_os = "macos"))]
+// #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
@@ -87,18 +87,24 @@ pub fn allow_drag_event_for_non_macos_systems(
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { paths, .. } = get_drag_event::get_drag_event() {
-                    println!("### 1 - paths: {:?}", paths);
                     let filtered_paths: Vec<PathBuf> = paths
                         .clone()
                         .iter()
                         .filter(|&path| {
-                            let data = path.to_string_lossy();
-                            !data.contains("data:image/jpeg;base64")
-                                && !data.contains("data:image/png;base64")
+                            let data = path.to_string_lossy().to_string();
+                            if data.contains("data:image/jpeg;base64")
+                                || data.contains("data:image/png;base64")
+                            {
+                                println!("Valor falso retornando");
+                                return false;
+                            } else {
+                                println!("Valor true retornando");
+                                return true;
+                            }
                         })
                         .cloned()
                         .collect();
-                    println!("### 2 - filtered_paths: {:?}", filtered_paths);
+                    println!("### 2 - filtered_paths: {:?}", filtered_paths.len());
 
                     if !filtered_paths.is_empty() {
                         if are_files_hovering_app.with(|i| !(*i)) {
