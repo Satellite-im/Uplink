@@ -38,7 +38,7 @@ pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
 });
 
-const HTML_ESCAPES: [(&'static str, &'static str); 5] = [
+const HTML_ESCAPES: [(&str, &str); 5] = [
     ("&", "&amp;"),
     ("<", "&lt;"),
     (">", "&gt;"),
