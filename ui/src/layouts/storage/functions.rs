@@ -87,6 +87,7 @@ pub fn allow_drag_event_for_non_macos_systems(
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { paths, .. } = get_drag_event::get_drag_event() {
+                    println!("### 1 - paths: {:?}", paths);
                     let filtered_paths: Vec<PathBuf> = paths
                         .clone()
                         .iter()
@@ -97,6 +98,8 @@ pub fn allow_drag_event_for_non_macos_systems(
                         })
                         .cloned()
                         .collect();
+                    println!("### 2 - filtered_paths: {:?}", filtered_paths);
+
                     if !filtered_paths.is_empty() {
                         if are_files_hovering_app.with(|i| !(*i)) {
                             are_files_hovering_app.with_mut(|i| *i = true);
