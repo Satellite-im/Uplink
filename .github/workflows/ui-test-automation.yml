@@ -51,7 +51,7 @@ jobs:
 
   build-mac:
     needs: create-node
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Checkout Uplink Repo 🔖
         uses: actions/checkout@v4
@@ -183,7 +183,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Checkout testing directory 🔖
@@ -315,7 +315,7 @@ jobs:
 
   test-mac-chats:
     needs: build-mac
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Checkout testing directory 🔖
