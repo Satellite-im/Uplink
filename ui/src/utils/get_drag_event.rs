@@ -3,6 +3,20 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 
 pub fn get_drag_event() -> FileDropEvent {
+    match DRAG_EVENT.read().clone() {
+        FileDropEvent::Cancelled => return FileDropEvent::Cancelled,
+        FileDropEvent::Hovered { paths, .. } => {
+            if paths.is_empty() {
+                return FileDropEvent::Cancelled;
+            }
+        }
+        FileDropEvent::Dropped { paths, .. } => {
+            if paths.is_empty() {
+                return FileDropEvent::Cancelled;
+            }
+        }
+        _ => return FileDropEvent::Cancelled,
+    }
     DRAG_EVENT.read().clone()
 }
 
