@@ -189,6 +189,7 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
             ondragover: move |_| {
                 let file_drop_event = get_drag_event();
                 if let FileDropEvent::Hovered { .. } = file_drop_event {
+                    println!("Arriving here - 2");
                     if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
                         upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
                     }

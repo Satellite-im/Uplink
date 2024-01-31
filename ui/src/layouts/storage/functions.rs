@@ -95,18 +95,15 @@ pub fn allow_drag_event_for_non_macos_systems(
                             if data.contains("image/jpeg;base64")
                                 || data.contains("image/png;base64")
                             {
-                                println!("Valor falso retornando");
                                 return false;
                             } else {
-                                println!("Valor true retornando");
                                 return true;
                             }
                         })
                         .cloned()
                         .collect();
-                    println!("### 2 - filtered_paths: {:?}", filtered_paths.len());
-
                     if !filtered_paths.is_empty() {
+                        println!("Arriving here - 1");
                         if are_files_hovering_app.with(|i| !(*i)) {
                             are_files_hovering_app.with_mut(|i| *i = true);
                         };
