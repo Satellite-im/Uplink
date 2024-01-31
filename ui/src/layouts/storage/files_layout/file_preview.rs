@@ -11,7 +11,7 @@ use warp::constellation::file::File;
 
 use common::{
     icons::outline::Shape as Icon,
-    is_video,
+    is_audio, is_video,
     language::get_local_text,
     state::State,
     utils::{
@@ -21,6 +21,13 @@ use common::{
     warp_runner::thumbnail_to_base64,
     STATIC_ARGS,
 };
+
+#[derive(Debug, Clone, PartialEq)]
+enum FileType {
+    Video,
+    Image,
+    Audio,
+}
 
 const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
 const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
@@ -72,6 +79,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let should_download = use_state(cx, || true);
 
     let is_video = is_video(&cx.props.file.name());
+    let is_audio = is_audio(&cx.props.file.name());
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
         if !temp_dir_with_file_id.exists() && *should_download.get() {
             cx.props.on_download.call(Some(temp_dir.clone()));
@@ -136,11 +144,11 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
             )),
             if *file_loading_counter.read() > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD
-                && is_video {
+                && (is_video || is_audio) {
                 // It will show a video player with error, because take much time
                 // to download a video and is not possible to load it
                 rsx!(FileTypeTag {
-                    is_video: true,
+                    file_type: FileType::Video,
                     source: "".to_string()
                 })
             } else if !file_path_in_local_disk.read().exists()
@@ -149,13 +157,19 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 // It will show image with thumbnail and not with high quality
                 // because image didn't download and is not possible to load it
                 rsx!(FileTypeTag {
-                    is_video: false,
+                    file_type: FileType::Image,
                     source: thumbnail
                 })
             } else if file_path_in_local_disk.read().exists() {
                 // Success for both video and image
                 rsx!(FileTypeTag {
-                    is_video: is_video,
+                    file_type: if is_video {
+                        FileType::Video
+                    } else if is_audio {
+                        FileType::Audio
+                    } else {
+                        FileType::Image
+                    },
                     source: local_disk_path_fixed
                 })
             } else {
@@ -169,16 +183,16 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
 #[derive(Props, PartialEq)]
 struct FileTypeTagProps {
-    is_video: bool,
+    file_type: FileType,
     source: String,
 }
 
 #[allow(non_snake_case)]
 fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
-    let is_video = cx.props.is_video;
+    let file_type = cx.props.file_type.clone();
     let source_path = cx.props.source.clone();
-    cx.render(match is_video {
-        true => rsx!(video {
+    cx.render(match file_type {
+        FileType::Video => rsx!(video {
             id: "file_preview_img",
             aria_label: "file-preview-image",
             max_height: IMAGE_MAX_HEIGHT,
@@ -187,11 +201,18 @@ fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
             controls: true,
             src: "{source_path}"
         }),
-        false => rsx!(img {
+        FileType::Image => rsx!(img {
             id: "file_preview_img",
             aria_label: "file-preview-image",
             max_height: IMAGE_MAX_HEIGHT,
             max_width: IMAGE_MAX_WIDTH,
+            src: "{source_path}"
+        },),
+        FileType::Audio => rsx!(audio {
+            id: "file_preview_img",
+            aria_label: "file-preview-image",
+            autoplay: true,
+            controls: true,
             src: "{source_path}"
         },),
     })

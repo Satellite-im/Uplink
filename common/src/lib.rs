@@ -11,6 +11,7 @@ use anyhow::bail;
 use clap::Parser;
 // export icons crate
 pub use icons;
+use icons::outline::Shape as Icon;
 use once_cell::sync::Lazy;
 use std::{
     path::{Path, PathBuf},
@@ -195,12 +196,36 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
 ];
 
+pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"];
+
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
 pub fn is_video(file_name: &str) -> bool {
     VIDEO_FILE_EXTENSIONS
         .iter()
         .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn is_audio(file_name: &str) -> bool {
+    AUDIO_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn return_correct_icon(file_name: &str) -> Icon {
+    if is_video(file_name) {
+        return Icon::DocumentMedia;
+    }
+    if is_audio(file_name) {
+        return Icon::DocumentMedia;
+    }
+    if DOC_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+    {
+        return Icon::Document;
+    }
+    Icon::Document
 }
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {
