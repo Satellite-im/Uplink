@@ -1,5 +1,6 @@
 use std::ffi::OsStr;
 
+use common::return_correct_icon;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 
@@ -90,7 +91,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_extension}"
                             },
                             IconElement {
-                                icon: if is_video {Icon::DocumentMedia} else {Icon::Document}
+                                icon: return_correct_icon(&file_extension.clone())
                             }
                         )
                     } else {

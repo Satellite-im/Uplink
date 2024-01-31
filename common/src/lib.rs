@@ -217,7 +217,7 @@ pub fn return_correct_icon(file_name: &str) -> Icon {
         return Icon::DocumentMedia;
     }
     if is_audio(file_name) {
-        return Icon::DocumentMedia;
+        return Icon::DocumentAudio;
     }
     if DOC_EXTENSIONS
         .iter()
