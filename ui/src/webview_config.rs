@@ -24,7 +24,7 @@ pub(crate) fn webview_config() -> Config {
                 .to_string(),
         )
         .with_file_drop_handler(|_w, drag_event| {
-            log::info!("Drag Event: {:?}", drag_event);
+            // log::info!("Drag Event: {:?}", drag_event);
             if cfg!(target_os = "linux") {
                 match drag_event {
                     FileDropEvent::Hovered { .. } => {
