@@ -1,4 +1,4 @@
-// #[cfg(not(target_os = "macos"))]
+#[cfg(not(target_os = "macos"))]
 use crate::utils::get_drag_event;
 use common::{
     language::{get_local_text, get_local_text_with_args},
@@ -9,7 +9,7 @@ use common::{
 };
 use dioxus::prelude::{use_eval, EvalError, UseEval};
 use dioxus_core::ScopeState;
-// #[cfg(not(target_os = "macos"))]
+#[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
@@ -86,28 +86,10 @@ pub fn allow_drag_event_for_non_macos_systems(
             // ondragover function from div does not work on windows
             loop {
                 sleep(Duration::from_millis(100)).await;
-                if let FileDropEvent::Hovered { paths, .. } = get_drag_event::get_drag_event() {
-                    let filtered_paths: Vec<PathBuf> = paths
-                        .clone()
-                        .iter()
-                        .filter(|&path| {
-                            let data = path.to_string_lossy().to_string();
-                            if data.contains("image/jpeg;base64")
-                                || data.contains("image/png;base64")
-                            {
-                                return false;
-                            } else {
-                                return true;
-                            }
-                        })
-                        .cloned()
-                        .collect();
-                    if !filtered_paths.is_empty() {
-                        println!("Arriving here - 1");
-                        if are_files_hovering_app.with(|i| !(*i)) {
-                            are_files_hovering_app.with_mut(|i| *i = true);
-                        };
-                    }
+                if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
+                    if are_files_hovering_app.with(|i| !(*i)) {
+                        are_files_hovering_app.with_mut(|i| *i = true);
+                    };
                 }
             }
         }
