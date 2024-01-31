@@ -98,7 +98,7 @@ pub fn allow_drag_event_for_non_macos_systems(
                                 println!("Valor falso retornando");
                                 return false;
                             } else {
-                                println!("Valor true retornando");
+                                println!("Valor true retornando: {}", data);
                                 return true;
                             }
                         })
