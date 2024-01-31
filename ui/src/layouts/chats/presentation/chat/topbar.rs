@@ -141,7 +141,6 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             placeholder:  get_local_text("messages.group-name"),
                             default_text: conversation_title.clone(),
                             aria_label: "groupname-input".into(),
-                            focus: true,
                             options: Options {
                                 with_clear_btn: true,
                                 ..get_input_options()
