@@ -119,6 +119,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         placeholder:  get_local_text("messages.group-name"),
                         default_text: group_name.get().clone().unwrap_or_default(),
                         aria_label: "groupname-input".into(),
+                        focus: true,
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options()
