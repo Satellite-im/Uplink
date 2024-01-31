@@ -13,11 +13,7 @@ pub fn get_drag_event() -> FileDropEvent {
                 .iter()
                 .filter(|&path| {
                     let data = path.to_string_lossy().to_string();
-                    if data.contains("image/jpeg;base64") || data.contains("image/png;base64") {
-                        return false;
-                    } else {
-                        return true;
-                    }
+                    !(data.contains("image/jpeg;base64") || data.contains("image/png;base64"))
                 })
                 .cloned()
                 .collect();
@@ -31,11 +27,7 @@ pub fn get_drag_event() -> FileDropEvent {
                 .iter()
                 .filter(|&path| {
                     let data = path.to_string_lossy().to_string();
-                    if data.contains("image/jpeg;base64") || data.contains("image/png;base64") {
-                        return false;
-                    } else {
-                        return true;
-                    }
+                    !(data.contains("image/jpeg;base64") || data.contains("image/png;base64"))
                 })
                 .cloned()
                 .collect();
