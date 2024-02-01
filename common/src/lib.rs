@@ -191,9 +191,8 @@ pub const MAX_FILES_PER_MESSAGE: usize = 8;
 
 pub const ROOT_DIR_NAME: &str = "root";
 
-pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
-    ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
-];
+pub const VIDEO_FILE_EXTENSIONS: &[&str] =
+    &[".mp4", ".mov", ".avi", ".flv", ".wmv", ".m4v", ".3gp"];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
