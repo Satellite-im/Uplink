@@ -177,9 +177,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     routes.push(audio);
     // routes.push(files);
     routes.push(extensions);
-    if state.read().configuration.developer.experimental_features {
-        routes.push(keybinds);
-    }
+    routes.push(keybinds);
     routes.push(accessibility);
     routes.push(notifications);
     routes.push(about);
