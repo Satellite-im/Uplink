@@ -5,7 +5,9 @@ use crate::elements::button::Button;
 use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
+use common::is_audio;
 use common::is_video;
+use common::return_correct_icon;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
 use dioxus_html::input_data::keyboard_types::Modifiers;
@@ -162,6 +164,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let temp_dir = STATIC_ARGS
         .temp_files
         .join(file_name_with_extension.clone());
+    let is_video_or_audio =
+        is_video(&file_name_with_extension) || is_audio(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
     cx.render(rsx! (
@@ -228,7 +232,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         width: "60px",
                                         margin: "30px 0",
                                         IconElement {
-                                            icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
+                                            icon: cx.props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                         }
                                         if !file_extension_is_empty {
                                             rsx!( label {
@@ -245,12 +249,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     class: "document-container",
                                     height: "60px",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
-                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video && !is_from_attachments {
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video_or_audio && !is_from_attachments {
                                             cx.props.on_press.call(Some(temp_dir.clone()));
                                         }
                                     },
                                     IconElement {
-                                        icon: cx.props.attachment_icon.unwrap_or(if is_video {Icon::DocumentMedia} else {Icon::Document})
+                                        icon: cx.props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                     }
                                     if !file_extension_is_empty {
                                         rsx!( label {

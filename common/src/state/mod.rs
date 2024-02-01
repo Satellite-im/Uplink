@@ -24,7 +24,6 @@ pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
-use regex::Regex;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
@@ -280,12 +279,7 @@ impl State {
                 m.set_conversation_id(id);
                 m.set_sender(sender);
                 m.set_lines(msg);
-                let m = ui_adapter::Message {
-                    inner: m,
-                    in_reply_to: None,
-                    key: Uuid::new_v4().to_string(),
-                    ..Default::default()
-                };
+                let m = ui_adapter::Message::new(m, None, Uuid::new_v4().to_string());
                 self.add_msg_to_chat(id, m);
             }
             // ===== Media =====
@@ -452,13 +446,8 @@ impl State {
                 conversation_id,
                 mut message,
             } => {
-                if let Some(ids) = self
-                    .get_chat_by_id(conversation_id)
-                    .map(|c| self.chat_participants(&c))
-                {
-                    message.insert_did(&ids, &self.get_own_identity().did_key());
-                }
-                let ping = message.is_mention;
+                let own = self.get_own_identity().did_key();
+                let ping = message.is_mention_self(&own);
                 self.update_identity_status_hack(&message.inner.sender());
                 let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
@@ -535,15 +524,6 @@ impl State {
                 self.update_identity_status_hack(&message.inner.sender());
                 let own = self.get_own_identity().did_key();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    message.insert_did(
-                        &chat
-                            .participants
-                            .iter()
-                            .filter_map(|id| self.identities.get(id))
-                            .cloned()
-                            .collect::<Vec<_>>(),
-                        &own,
-                    );
                     let id = message.inner.id();
                     if let Some(msg) = chat.messages.iter_mut().find(|msg| msg.inner.id() == id) {
                         *msg = message.clone();
@@ -559,7 +539,7 @@ impl State {
                         *msg = message.inner.clone();
                     }
 
-                    if message.is_mention {
+                    if message.is_mention_self(&own) {
                         if let Some(msg) = chat.mentions.iter_mut().find(|m| m.inner.id() == id) {
                             *msg = message.clone();
                         }
@@ -1933,25 +1913,4 @@ pub fn pending_group_messages<'a>(
         remote: false,
         messages,
     })
-}
-
-pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
-    Regex::new(&format!(
-        "(^| )@{}( |$)",
-        if username {
-            id.username()
-        } else {
-            id.did_key().to_string()
-        }
-    ))
-    .unwrap()
-}
-
-pub fn mention_replacement_pattern(id: &Identity, visual: bool) -> String {
-    format!(
-        r#"<div class="message-user-tag {}" value="{}">@{}</div>"#,
-        if visual { "visual-only" } else { "" },
-        id.did_key(),
-        id.username()
-    )
 }

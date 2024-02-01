@@ -1,7 +1,8 @@
-use common::warp_runner::thumbnail_to_base64;
+use common::{state::State, warp_runner::thumbnail_to_base64};
 use derive_more::Display;
 use dioxus::prelude::*;
 
+use uuid::Uuid;
 use warp::{constellation::file::File, crypto::DID};
 
 use crate::components::embeds::file_embed::FileEmbed;
@@ -42,6 +43,8 @@ pub struct Props<'a> {
     replier_did: Option<DID>,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
+    state: &'a UseSharedState<State>,
+    chat: Uuid,
 }
 
 #[allow(non_snake_case)]
@@ -50,6 +53,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         &cx.props.with_text.clone().unwrap_or_default(),
         cx.props.markdown.unwrap_or_default(),
         cx.props.transform_ascii_emojis.unwrap_or_default(),
+        Some((&cx.props.state.read(), &cx.props.chat, true)),
     );
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
