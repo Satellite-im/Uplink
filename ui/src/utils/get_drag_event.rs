@@ -7,21 +7,7 @@ use parking_lot::RwLock;
 pub fn get_drag_event() -> FileDropEvent {
     match DRAG_EVENT.read().clone() {
         FileDropEvent::Cancelled => return FileDropEvent::Cancelled,
-        FileDropEvent::Hovered { paths, .. } => {
-            let filtered_paths: Vec<PathBuf> = paths
-                .clone()
-                .iter()
-                .filter(|&path| {
-                    let data = path.to_string_lossy().to_string();
-                    !(data.contains("image/jpeg;base64") || data.contains("image/png;base64"))
-                })
-                .cloned()
-                .collect();
-            if filtered_paths.is_empty() {
-                return FileDropEvent::Cancelled;
-            }
-        }
-        FileDropEvent::Dropped { paths, .. } => {
+        FileDropEvent::Hovered { paths, .. } | FileDropEvent::Dropped { paths, .. } => {
             let filtered_paths: Vec<PathBuf> = paths
                 .clone()
                 .iter()
