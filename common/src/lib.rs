@@ -219,12 +219,6 @@ pub fn return_correct_icon(file_name: &str) -> Icon {
     if is_audio(file_name) {
         return Icon::DocumentAudio;
     }
-    if DOC_EXTENSIONS
-        .iter()
-        .any(|x| file_name.to_lowercase().ends_with(x))
-    {
-        return Icon::Document;
-    }
     Icon::Document
 }
 
