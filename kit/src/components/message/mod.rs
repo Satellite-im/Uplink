@@ -34,7 +34,7 @@ use super::embeds::link_embed::EmbedLinks;
 pub static MARKDOWN_PROCESSOR_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new("(^|\n)((?:&gt;(?: *&gt;)*)|(?: ))").unwrap());
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"((?:www\.)|(?:https?:\/\/)[\w-]+(?:\.[\w-]+)+(?:\/[^\s<]*)*)|((mailto: {0,1})([\w.+-]+@[\w-]+(?:\.[\w.-]+)+))").unwrap()
+    Regex::new(r"((?:www\.)|(?:https?:\/\/)[\w-]+(?:\.[\w-]+)+(?:\/[^)\s<]*)*)|((mailto: {0,1})([\w.+-]+@[\w-]+(?:\.[\w.-]+)+))").unwrap()
 });
 
 const HTML_ESCAPES: [(&str, &str); 5] = [
@@ -130,20 +130,33 @@ struct LinkReplacer(Vec<String>);
 
 impl Replacer for LinkReplacer {
     fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut String) {
-        let url = caps.get(0).unwrap().as_str();
-        let s = if url.starts_with("www.") {
-            self.0.push(url.to_string());
-            format!("<a href=\"https://{}\">{}</a>", url, url)
-        } else if url.starts_with("mailto:") {
-            if url.starts_with("mailto: ") {
+        let mut url = caps.get(0).unwrap().as_str().to_string();
+        if url.starts_with("mailto:") {
+            let s = if url.starts_with("mailto: ") {
                 format!("{}<a href=\"{}\">{}</a>", &caps[3], url, &caps[4])
             } else {
                 format!("<a href=\"{}\">{}</a>", url, url)
+            };
+            dst.push_str(&s);
+            return;
+        }
+        // Check if it ends with a ) and exclude it if its not part of url
+        while url.ends_with(')') {
+            let count = url.chars().count();
+            let open = url.chars().filter(|c| *c == '(').count();
+            let close = url.chars().filter(|c| *c == ')').count();
+            if close > open {
+                url = url.chars().take(count - 1).collect::<String>();
+            } else {
+                break;
             }
+        }
+        let s = if url.starts_with("www.") {
+            format!("<a href=\"https://{}\">{}</a>", url, url)
         } else {
-            self.0.push(url.to_string());
             format!("<a href=\"{}\">{}</a>", url, url)
         };
+        self.0.push(url);
         dst.push_str(&s);
     }
 }
@@ -537,14 +550,17 @@ fn markdown(text: &str, emojis: bool) -> String {
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
-    let mut in_link = false;
+    let (mut skipping, mut in_link) = (false, false);
 
     let parser = pulldown_cmark::Parser::new_ext(&text, options);
     for (event, range) in parser.into_offset_iter() {
-        if in_link {
-            if let pulldown_cmark::Event::End(Tag::Link(_, _, _)) = event {
-                in_link = false;
-            }
+        log::debug!("evt {event:?}");
+        if skipping {
+            skipping = if in_link {
+                matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)))
+            } else {
+                matches!(event, pulldown_cmark::Event::End(Tag::Image(_, _, _)))
+            };
             continue;
         }
         match event {
@@ -576,14 +592,16 @@ fn markdown(text: &str, emojis: bool) -> String {
             pulldown_cmark::Event::End(Tag::Paragraph) => {
                 in_paragraph = false;
             }
-            pulldown_cmark::Event::Start(Tag::Link(_, _, _)) => {
-                // Ignore links parsing
+            pulldown_cmark::Event::Start(Tag::Image(_, _, _))
+            | pulldown_cmark::Event::Start(Tag::Link(_, _, _)) => {
+                // Ignore links and image parsing
                 // We only want Autolink but that doesn't work (or needs <> which we also dont weed)
-                in_link = true;
+                skipping = true;
+                in_link = matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)));
                 let txt = &text[range];
                 pulldown_cmark::html::push_html(
                     &mut html_output,
-                    std::iter::once(pulldown_cmark::Event::Code(txt.into())),
+                    std::iter::once(pulldown_cmark::Event::Text(txt.into())),
                 )
             }
             pulldown_cmark::Event::Text(t) => {
