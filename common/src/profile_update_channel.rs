@@ -3,6 +3,7 @@ use std::sync::Arc;
 use futures::channel::oneshot;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
+use tracing::log;
 use warp::crypto::DID;
 
 use crate::{
@@ -12,8 +13,8 @@ use crate::{
 };
 
 pub struct ProfileUpdateChannel {
-    pub tx: tokio::sync::mpsc::UnboundedSender<ProfileUpdateAction>,
-    pub rx: Arc<Mutex<tokio::sync::mpsc::UnboundedReceiver<ProfileUpdateAction>>>,
+    pub tx: tokio::sync::mpsc::UnboundedSender<ProfileDataUpdate>,
+    pub rx: Arc<Mutex<tokio::sync::mpsc::UnboundedReceiver<ProfileDataUpdate>>>,
 }
 
 pub static PROFILE_CHANNEL_LISTENER: Lazy<ProfileUpdateChannel> = Lazy::new(|| {
@@ -24,39 +25,60 @@ pub static PROFILE_CHANNEL_LISTENER: Lazy<ProfileUpdateChannel> = Lazy::new(|| {
     }
 });
 
-pub enum ProfileUpdateAction {
-    ProfilePictureUpdate(DID, String),
-    ProfileBannerUpdate(DID, String),
+pub struct ProfileDataUpdate {
+    pub did: DID,
+    pub picture: String,
+    pub banner: String,
 }
 
-pub fn fetch_identity_data(identities: &[Identity], banner: bool) {
+pub fn fetch_identity_data(identities: &[Identity]) {
     let identities: Vec<_> = identities.iter().map(|id| id.did_key()).collect();
     tokio::spawn(async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
         for identity in identities {
             let (tx, rx) = oneshot::channel();
-            let cmd = if banner {
-                WarpCmd::MultiPass(MultiPassCmd::GetProfileBanner {
-                    did: identity.clone(),
-                    rsp: tx,
-                })
-            } else {
-                WarpCmd::MultiPass(MultiPassCmd::GetProfilePicture {
-                    did: identity.clone(),
-                    rsp: tx,
-                })
+            let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetProfilePicture {
+                did: identity.clone(),
+                rsp: tx,
+            }));
+
+            let profile_picture = match rx.await {
+                Ok(res) => match res {
+                    Ok(pic) => pic,
+                    Err(e) => {
+                        log::error!("error fetching profile pic {e}");
+                        return;
+                    }
+                },
+                Err(e) => {
+                    log::error!("error fetching profile pic {e}");
+                    return;
+                }
             };
-            let _ = warp_cmd_tx.send(cmd);
-            let pic = rx.await.unwrap();
-            if let Ok(pic) = pic {
-                let cmd = if banner {
-                    ProfileUpdateAction::ProfileBannerUpdate(identity, pic)
-                } else {
-                    ProfileUpdateAction::ProfilePictureUpdate(identity, pic)
-                };
-                let _ = PROFILE_CHANNEL_LISTENER.tx.send(cmd);
-            }
+            let (tx, rx) = oneshot::channel();
+            let _ = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetProfileBanner {
+                did: identity.clone(),
+                rsp: tx,
+            }));
+            let profile_banner = match rx.await {
+                Ok(res) => match res {
+                    Ok(pic) => pic,
+                    Err(e) => {
+                        log::error!("error fetching profile banner {e}");
+                        return;
+                    }
+                },
+                Err(e) => {
+                    log::error!("error fetching profile banner {e}");
+                    return;
+                }
+            };
+            let _ = PROFILE_CHANNEL_LISTENER.tx.send(ProfileDataUpdate {
+                did: identity,
+                picture: profile_picture,
+                banner: profile_banner,
+            });
         }
     });
 }

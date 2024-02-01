@@ -10,7 +10,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
-use common::profile_update_channel::{ProfileUpdateAction, PROFILE_CHANNEL_LISTENER};
+use common::profile_update_channel::PROFILE_CHANNEL_LISTENER;
 use common::state::settings::GlobalShortcut;
 use common::state::ToastNotification;
 use common::warp_runner::ui_adapter::MessageEvent;
@@ -548,29 +548,17 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             let channel = PROFILE_CHANNEL_LISTENER.rx.clone();
             let mut ch = channel.lock().await;
             while let Some(action) = ch.recv().await {
-                match action {
-                    ProfileUpdateAction::ProfilePictureUpdate(did, pic) => {
-                        let mut id = state.read().get_own_identity();
-                        if did.eq(&id.did_key()) {
-                            id.set_profile_picture(&pic);
-                            state.write().set_own_identity(id);
-                        } else {
-                            state
-                                .write()
-                                .update_identity_with(did, |id| id.set_profile_picture(&pic));
-                        }
-                    }
-                    ProfileUpdateAction::ProfileBannerUpdate(did, pic) => {
-                        let mut id = state.read().get_own_identity();
-                        if did.eq(&id.did_key()) {
-                            id.set_profile_banner(&pic);
-                            state.write().set_own_identity(id);
-                        } else {
-                            state
-                                .write()
-                                .update_identity_with(did, |id| id.set_profile_banner(&pic));
-                        }
-                    }
+                let mut id = state.read().get_own_identity();
+                let did = action.did;
+                if did.eq(&id.did_key()) {
+                    id.set_profile_picture(&action.picture);
+                    id.set_profile_picture(&action.banner);
+                    state.write().set_own_identity(id);
+                } else {
+                    state.write().update_identity_with(did, |id| {
+                        id.set_profile_picture(&action.picture);
+                        id.set_profile_banner(&action.banner);
+                    });
                 }
             }
         }

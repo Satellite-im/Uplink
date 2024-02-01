@@ -163,8 +163,7 @@ pub async fn did_to_identity(
                 .unwrap_or(Platform::Unknown);
             let id = state::Identity::new(id, status, platform);
 
-            fetch_identity_data(slice::from_ref(&id), false);
-            fetch_identity_data(slice::from_ref(&id), true);
+            fetch_identity_data(slice::from_ref(&id));
             id
         }
         None => get_uninitialized_identity(did)?,
@@ -189,8 +188,7 @@ pub async fn dids_to_identity(
         state::Identity::new(id, status, platform)
     });
     let converted_ids: Vec<Identity> = FuturesOrdered::from_iter(ids).collect().await;
-    fetch_identity_data(&converted_ids, false);
-    fetch_identity_data(&converted_ids, true);
+    fetch_identity_data(&converted_ids);
     Ok(converted_ids)
 }
 
