@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::state::utils::{mention_replacement_pattern, parse_mentions};
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
 use common::{state::pending_message::progress_file, WARP_CMD_CH};
@@ -73,8 +74,6 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    tagged_text: Option<String>,
-
     reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
@@ -114,6 +113,10 @@ pub struct Props<'a> {
     pinned: bool,
 
     is_mention: bool,
+
+    state: &'a UseSharedState<State>,
+
+    chat: Uuid,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -140,11 +143,6 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // omitting the class will display the reactions starting from the bottom right corner
     let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
-    let rendered_text = cx
-        .props
-        .tagged_text
-        .as_ref()
-        .or(cx.props.with_text.as_ref());
 
     let has_attachments = cx
         .props
@@ -263,10 +261,12 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
-                    text: rendered_text.cloned().unwrap_or_default(),
+                    text: cx.props.with_text.as_ref().cloned().unwrap_or_default(),
                     remote: is_remote,
                     pending: cx.props.pending,
                     markdown: cx.props.parse_markdown,
+                    state: cx.props.state,
+                    chat: cx.props.chat,
                     ascii_emoji: cx.props.transform_ascii_emojis,
                 }
             )),
@@ -345,18 +345,19 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     }))
 }
 
-#[derive(Props, PartialEq)]
-pub struct ChatMessageProps {
+#[derive(Props)]
+pub struct ChatMessageProps<'a> {
     text: String,
     remote: bool,
     pending: bool,
     markdown: bool,
     ascii_emoji: bool,
-    participants: Option<Vec<String>>,
+    state: &'a UseSharedState<State>,
+    chat: Uuid,
 }
 
 #[allow(non_snake_case)]
-pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element<'a> {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
     if cx.props.text.len() > 2 {
         if let Ok(id) = DID::from_str(&cx.props.text) {
@@ -364,9 +365,13 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         }
     }
 
-    let mut formatted_text = format_text(&cx.props.text, cx.props.markdown, cx.props.ascii_emoji);
+    let mut formatted_text = format_text(
+        &cx.props.text,
+        cx.props.markdown,
+        cx.props.ascii_emoji,
+        Some((&cx.props.state.read(), &cx.props.chat, false)),
+    );
     formatted_text = wrap_links_with_a_tags(&formatted_text);
-
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&formatted_text)
@@ -411,7 +416,12 @@ pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     ))
 }
 
-pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
+pub fn format_text(
+    text: &str,
+    should_markdown: bool,
+    emojis: bool,
+    data: Option<(&State, &Uuid, bool)>,
+) -> String {
     // warning: this will probably break markdown regarding block quotes. still seems like an improvement.
     let safe_text = text
         .replace('&', "&amp;")
@@ -420,9 +430,21 @@ pub fn format_text(text: &str, should_markdown: bool, emojis: bool) -> String {
         .replace('\"', "&quot;")
         .replace('\'', "&#x27;")
         .replace('\n', "&nbsp;&nbsp;\n");
-    let text = &safe_text;
+    let mut text = safe_text;
+    // We want to do this after we escape html tags
+    if let Some((state, chat, visual)) = data {
+        if let Some(participants) = state
+            .get_chat_by_id(*chat)
+            .map(|c| state.chat_participants(&c))
+        {
+            let (line, _) = parse_mentions(&text, &participants, &state.did_key(), false, |id| {
+                mention_replacement_pattern(id, visual)
+            });
+            text = line;
+        }
+    }
     if should_markdown {
-        markdown(text, emojis)
+        markdown(&text, emojis)
     } else if emojis {
         let s = replace_emojis(text.trim());
         if is_only_emojis(&s) {
@@ -886,8 +908,8 @@ mod tests2 {
     fn test_format_text1() {
         let input = ":) ";
         let expected = "<span class=\"big-emoji\">🙂</span>";
-        assert_eq!(&format_text(input, true, true), expected);
-        assert_eq!(&format_text(input, false, true), expected);
+        assert_eq!(&format_text(input, true, true, None), expected);
+        assert_eq!(&format_text(input, false, true, None), expected);
     }
 }
 
