@@ -237,6 +237,9 @@ impl State {
             Action::SetTransformAsciiEmojis(flag) => self.ui.transform_ascii_emojis(flag),
             // ===== Settings =====
             Action::PauseGlobalKeybinds(b) => self.settings.pause_global_keybinds = b,
+            Action::ResetKeybinds => {
+                self.settings.keybinds = default_keybinds::get_default_keybinds()
+            }
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
