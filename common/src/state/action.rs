@@ -110,6 +110,8 @@ pub enum Action<'a> {
     SetLanguage(String),
     #[display(fmt = "PauseGlobalKeybinds")]
     PauseGlobalKeybinds(bool), // If provided false, keybinds will be un-paused.
+    #[display(fmt = "ResetKeybinds")]
+    ResetKeybinds,
     // Routes
     /// Set the active route
     #[display(fmt = "Navigate")]
