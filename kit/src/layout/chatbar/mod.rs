@@ -1,6 +1,7 @@
-use common::state::Identity;
+use common::state::{Identity, State};
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
+use uuid::Uuid;
 use warp::constellation::file::File;
 
 use crate::{
@@ -88,6 +89,8 @@ pub struct ReplyProps<'a> {
     children: Element<'a>,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
+    state: &'a UseSharedState<State>,
+    chat: Uuid,
 }
 
 #[allow(non_snake_case)]
@@ -97,6 +100,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
         &cx.props.message,
         cx.props.markdown.unwrap_or_default(),
         cx.props.transform_ascii_emojis.unwrap_or_default(),
+        Some((&cx.props.state.read(), &cx.props.chat, true)),
     );
 
     let has_attachments = cx

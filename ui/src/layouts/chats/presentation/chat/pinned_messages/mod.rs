@@ -146,6 +146,7 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
                     let message_date = message.date();
                     rsx!(PinnedMessage {
                         message: message.clone(),
+                        chat: chat_data.read().active_chat.id(),
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
@@ -165,6 +166,7 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
 #[derive(Props)]
 pub struct PinnedMessageProp<'a> {
     message: warp::raygun::Message,
+    chat: Uuid,
     #[props(!optional)]
     sender: Option<Identity>,
     onremove: EventHandler<'a, (Event<MouseData>, warp::raygun::Message)>,
@@ -254,6 +256,8 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         text: message.lines().join("\n"),
                         remote: true,
                         pending: false,
+                        state: &state,
+                        chat: cx.props.chat,
                         markdown: state.read().ui.should_transform_markdown_text(),
                         ascii_emoji: state.read().ui.should_transform_ascii_emojis(),
                     }
