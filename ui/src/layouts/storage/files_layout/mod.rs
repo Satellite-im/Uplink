@@ -11,6 +11,7 @@ use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::label::Label;
@@ -38,6 +39,7 @@ use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
 use crate::utils::async_task_queue::chat_upload_stream_handler;
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
+use crate::utils::get_drag_event::get_drag_event;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -185,10 +187,13 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 }
             },
             ondragover: move |_| {
-                if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
-                    upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
+                let file_drop_event = get_drag_event();
+                if let FileDropEvent::Hovered { .. } = file_drop_event {
+                    if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
+                        upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
+                    }
                 }
-                },
+            },
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
