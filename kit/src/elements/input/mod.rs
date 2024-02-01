@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::utils::lifecycle::use_component_lifecycle;
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
@@ -132,6 +133,7 @@ pub struct Props<'a> {
     id: String,
     #[props(default = false)]
     focus: bool,
+    focus_just_on_render: Option<bool>,
     loading: Option<bool>,
     placeholder: String,
     max_length: Option<i32>,
@@ -307,6 +309,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.id.clone()
     };
     let focus_script = include_str!("./script.js").replace("$UUID", &input_id);
+    let focus_script2 = focus_script.clone();
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || cx.props.default_text.clone().unwrap_or_default());
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
@@ -353,6 +356,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // Run the script after the component is mounted.
     let eval = use_eval(cx);
+    let eval2 = eval.clone();
     use_effect(
         cx,
         (&cx.props.focus, &focus_script),
@@ -364,6 +368,17 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             }
         },
+    );
+
+    let focus_just_on_render = cx.props.focus_just_on_render.unwrap_or_default();
+    use_component_lifecycle(
+        cx,
+        move || {
+            if focus_just_on_render {
+                let _ = eval2(&focus_script2);
+            }
+        },
+        || {},
     );
 
     cx.render(rsx! (

@@ -290,7 +290,9 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 Button {
                     aria_label: "reset-keybinds-button".into(),
                     icon: Icon::ArrowUturnDown,
-                    onpress: move |_| {},
+                    onpress: move |_| {
+                        state.write().mutate(Action::ResetKeybinds);
+                    },
                     text: get_local_text("settings-keybinds.reset-keybinds"),
                     appearance: kit::elements::Appearance::Secondary
                 },
