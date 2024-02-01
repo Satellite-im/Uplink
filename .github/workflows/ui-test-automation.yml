@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
+          ref: 32f4c53fc462d53553a31762ecd12b4af9329a4a
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -129,6 +130,12 @@ jobs:
           name: peerID
           path: ./warp
 
+      - name: Install Wix
+        uses: actions/checkout@v4
+        with:
+          repository: fbarresi/wix
+          path: wix
+
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
 
@@ -138,6 +145,9 @@ jobs:
           toolchain: 1.73.0
           components: rustfmt, clippy
 
+      - name: Install cargo wix
+        run: cargo install cargo-wix
+
       - name: Get Warp Peer ID and Build app 🚀
         run: |
           $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
@@ -145,32 +155,14 @@ jobs:
           $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
           cargo build --release
 
-      - name: Copy Extensions 🗳️
-        run: |
-          mkdir .\ui\extra\extensions
-          cp -r .\target\release\emoji_selector.d .\ui\extra\extensions\
-          cp -r .\target\release\emoji_selector.dll .\ui\extra\extensions\
-          cp -r .\target\release\emoji_selector.dll.exp .\ui\extra\extensions\
-          cp -r .\target\release\emoji_selector.dll.lib .\ui\extra\extensions\
-          cp -r .\target\release\emoji_selector.pdb .\ui\extra\extensions\
+      - name: Build Installer
+        run: cargo wix --package uplink --no-build --nocapture
 
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
         with:
           name: Uplink-Windows
-          if-no-files-found: error
-          path: |
-            target\release\uplink.exe
-
-      - name: Upload Windows Assets
-        uses: actions/upload-artifact@v3
-        with:
-          name: uplink-windows-assets
-          path: |
-            ui\extra\images\
-            ui\extra\prism_langs\
-            ui\extra\themes\
-            ui\extra\extensions\
+          path: target/wix/*.msi
 
       - name: Add label if any of build or test jobs failed
         if: failure()
@@ -190,11 +182,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
+          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
+          ref: 32f4c53fc462d53553a31762ecd12b4af9329a4a
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -322,11 +316,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
+          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
+          ref: 32f4c53fc462d53553a31762ecd12b4af9329a4a
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -453,11 +449,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
+          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
+          ref: 32f4c53fc462d53553a31762ecd12b4af9329a4a
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -500,21 +498,18 @@ jobs:
           name: Uplink-Windows
           path: ./apps
 
-      - name: Download the Windows app assets
-        uses: actions/download-artifact@v3
-        with:
-          name: uplink-windows-assets
-          path: ./apps
-
-      - name: Move Windows assets to correct locations 💿
+      - name: Install MSI and copy assets
         working-directory: ./apps
         run: |
-          mkdir ./bin/extra
-          mkdir ./extra
-          mv ./uplink.exe ./bin/
-          mv ./images/ ./bin/extra/
-          mv ./prism_langs/ ./bin/extra/
-          mv ./themes/ ./extra/
+          Get-ChildItem -Recurse -Include "*.msi" | Rename-Item -NewName "uplink.msi"
+          mkdir C:\uplink
+          mv ./uplink.msi C:\uplink
+          Start-Process msiexec.exe -Wait -ArgumentList '/i "C:\uplink\uplink.msi" /qb'
+
+      - name: Copy assets from Uplink
+        run: |
+          cp -r C:\uplink\bin\uplink.exe C:\uplink
+          cp -r C:\uplink\extensions\ C:\
 
       - name: Install and Run Appium Server 💻
         run: |
