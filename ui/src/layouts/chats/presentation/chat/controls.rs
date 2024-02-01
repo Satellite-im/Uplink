@@ -26,7 +26,7 @@ use common::{
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::ConversationType};
+use warp::{crypto::DID, raygun::ConversationSettings};
 
 use tracing::log;
 
@@ -42,7 +42,6 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let minimal = state.read().ui.metadata.minimal_view;
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let favorite = chat_data.read().active_chat.is_favorite();
-    let conversation_type = chat_data.read().active_chat.conversation_type();
 
     let call_pending = use_state(cx, || false);
     let show_more = use_state(cx, || false);
@@ -126,8 +125,18 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
         },
     );
 
+    let show_edit_members = || match chat_data.read().active_chat.conversation_settings() {
+        ConversationSettings::Group(group_settings) => {
+            cx.props.is_owner || group_settings.members_can_add_participants()
+        }
+        ConversationSettings::Direct(_) => false,
+    };
+    let show_group_settings = || match chat_data.read().active_chat.conversation_settings() {
+        ConversationSettings::Group(_) => cx.props.is_owner,
+        ConversationSettings::Direct(_) => false,
+    };
     let buttons = cx.render(rsx!(
-        if cx.props.is_owner && conversation_type == ConversationType::Group {
+        if show_edit_members() {
             rsx!(Button {
                 icon: Icon::Users,
                 aria_label: "edit-group-members".into(),
@@ -139,10 +148,11 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: text_builder("friends.manage-group-members"),
                 tooltip: tooltip_builder("friends.manage-group-members", arrow_top),
                 onpress: move |_| {
+                    let active = &chat_data.read().active_chat;
                     if cx.props.show_manage_members.is_some() {
                         cx.props.show_manage_members.set(None);
-                    } else if chat_data.read().active_chat.is_initialized {
-                        cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                    } else if active.is_initialized {
+                        cx.props.show_manage_members.set(Some(active.id()));
                         cx.props.show_group_users.set(None);
                         cx.props.show_group_settings.set(false);
                     }
@@ -150,7 +160,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 }
             })
         }
-        if cx.props.is_owner && conversation_type == ConversationType::Group {
+        if show_group_settings() {
             rsx!(Button {
                 icon: Icon::Cog,
                 aria_label: "group-settings".into(),
