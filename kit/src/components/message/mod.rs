@@ -34,7 +34,7 @@ use super::embeds::link_embed::EmbedLinks;
 pub static MARKDOWN_PROCESSOR_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new("(^|\n)((?:&gt;(?: *&gt;)*)|(?: ))").unwrap());
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"((?:www\.)|(?:https?:\/\/)[\w-]+(?:\.[\w-]+)+(?:\/[^\s<]*)*)|((mailto: {0,1})([\w.+-]+@[\w-]+(?:\.[\w.-]+)+))"#).unwrap()
+    Regex::new(r"((?:www\.)|(?:https?:\/\/)[\w-]+(?:\.[\w-]+)+(?:\/[^\s<]*)*)|((mailto: {0,1})([\w.+-]+@[\w-]+(?:\.[\w.-]+)+))").unwrap()
 });
 
 const HTML_ESCAPES: [(&str, &str); 5] = [
