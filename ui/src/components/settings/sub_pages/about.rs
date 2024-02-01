@@ -231,47 +231,47 @@ pub fn AboutPage(cx: Scope) -> Element {
                 div {
                     class: "flags",
                     img {
-                        src: "./icons/USA-Flag.png",
+                        src: "./ui/extra/images/USA-Flag.png",
                         alt: "USA Flag",
                     },
                     img {
-                        src: "./icons/MX-Flag.png",
+                        src: "./ui/extra/images/MX-Flag.png",
                         alt: "Mexico Flag",
                     }
                     img {
-                        src: "./icons/DE-Flag.png",
+                        src: "./ui/extra/images/DE-Flag.png",
                         alt: "Germany Flag",
                     }
                     img {
-                        src: "./icons/PT-Flag.png",
+                        src: "./ui/extra/images/PT-Flag.png",
                         alt: "Portugal Flag",
                     }
                     img {
-                        src: "./icons/BR-Flag.png",
+                        src: "./ui/extra/images/BR-Flag.png",
                         alt: "Brazil Flag",
                     }
                     img {
-                        src: "./icons/IT-Flag.png",
+                        src: "./ui/extra/images/IT-Flag.png",
                         alt: "Italy Flag",
                     }
                     img {
-                        src: "./icons/UR-Flag.png",
+                        src: "./ui/extra/images/UR-Flag.png",
                         alt: "Ukraine Flag",
                     }
                     img {
-                        src: "./icons/BL-Flag.png",
+                        src: "./ui/extra/images/BL-Flag.png",
                         alt: "Belarus Flag",
                     }
                     img {
-                        src: "./icons/JP-Flag.png",
+                        src: "./ui/extra/images/JP-Flag.png",
                         alt: "Japan Flag",
                     }
                     img {
-                        src: "./icons/AU-Flag.png",
+                        src: "./ui/extra/images/AU-Flag.png",
                         alt: "Australia Flag",
                     }
                     img {
-                        src: "./icons/IN-Flag.png",
+                        src: "./ui/extra/images/IN-Flag.png",
                         alt: "Indonesia Flag",
                     }
                 }
