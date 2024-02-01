@@ -5,7 +5,10 @@ use std::{path::PathBuf, time::Duration};
 use common::{
     icons::{self},
     language::{get_local_text, get_local_text_with_args},
-    state::{Action, Identity, State},
+    state::{
+        utils::{mention_to_did_key, parse_mentions},
+        Action, Identity, State,
+    },
     MAX_FILES_PER_MESSAGE, STATIC_ARGS,
 };
 use dioxus::prelude::*;
@@ -205,6 +208,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         })
         .unwrap_or_default();
     let chat_participants_2 = chat_participants.clone();
+    let chat_participants_3 = chat_participants.clone();
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
@@ -222,16 +226,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             .get_active_chat()
             .as_ref()
             .and_then(|d| d.draft.clone())
+            .map(|msg| {
+                let (txt, _) =
+                    parse_mentions(&msg, &chat_participants_3, &my_id, true, mention_to_did_key);
+                txt
+            })
             .unwrap_or_default()
             .lines()
-            .map(|x| {
-                let mut s = x.to_string();
-                mentions
-                    .read()
-                    .iter()
-                    .for_each(|(did, name)| s = x.replace(name, &format!("{}", did)));
-                s
-            })
+            .map(|x| x.trim_end().to_string())
             .collect::<Vec<String>>();
 
         if !active_chat_id.is_nil() {
@@ -482,6 +484,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                                     message: msg.lines().join("\n"), 
                                     markdown: state.read().ui.should_transform_markdown_text(),
                                     transform_ascii_emojis: state.read().ui.should_transform_ascii_emojis(),
+                                    state: state,
+                                    chat: chat_data.read().active_chat.id(),
                                     UserImage {
                                         image: profile_picture,
                                         platform: platform,

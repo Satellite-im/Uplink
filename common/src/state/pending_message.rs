@@ -21,12 +21,7 @@ impl PendingMessage {
             inner.set_id(m_id);
         }
         inner.set_lines(text);
-        let message = Message {
-            inner,
-            in_reply_to: None,
-            key: String::new(),
-            ..Default::default()
-        };
+        let message = Message::new(inner, None, Uuid::new_v4().to_string());
         PendingMessage {
             attachments: attachments
                 .iter()
@@ -60,12 +55,7 @@ impl PendingMessage {
             .cloned()
             .collect::<Vec<_>>();
 
-        let message = Message {
-            inner,
-            in_reply_to: None,
-            key: Uuid::new_v4().to_string(),
-            ..Default::default()
-        };
+        let message = Message::new(inner, None, Uuid::new_v4().to_string());
         PendingMessage {
             attachments: attachments
                 .iter()
