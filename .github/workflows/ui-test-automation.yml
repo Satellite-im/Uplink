@@ -506,13 +506,15 @@ jobs:
           mv ./uplink.msi C:\uplink
           Start-Process msiexec.exe -Wait -ArgumentList '/i "C:\uplink\uplink.msi" /qb'
 
-      - name: Copy assets from Uplink
+      - name: Copy assets from Uplink for Appium Execution
         run: |
           mkdir C:\Program` Files\extensions
           mkdir $home/.uplink/themes
+          mkdir $home/.uplink/extensions
           cp -r C:\Program` Files\uplink\bin\uplink.exe C:\Program` Files\uplink
-          cp -r C:\Program` Files\uplink\extensions\emoji_selector.dll C:\Program` Files\extensions\
+          cp -r C:\Program` Files\uplink\extensions\emoji_selector.dll C:\Program` Files\extensions
           cp -r C:\Program` Files\uplink\extra\themes\ $home/.uplink/themes
+          cp -r C:\Program` Files\uplink\extensions\emoji_selector.dll $home/.uplink/extensions
 
       - name: Install and Run Appium Server 💻
         run: |
