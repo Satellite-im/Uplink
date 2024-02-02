@@ -155,7 +155,9 @@ impl Replacer for LinkReplacer {
             }
         }
         let s = if url.starts_with("www.") {
-            format!("<a href=\"https://{}\">{}</a>", url, url)
+            let html = format!("<a href=\"https://{}\">{}</a>", url, url);
+            url = format!("https://{}", url);
+            html
         } else {
             format!("<a href=\"{}\">{}</a>", url, url)
         };
@@ -621,11 +623,7 @@ fn markdown(text: &str, emojis: bool) -> String {
                 // We only want Autolink but that doesn't work (or needs <> which we also dont weed)
                 skipping = true;
                 in_link = matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)));
-                let txt = &text[range];
-                pulldown_cmark::html::push_html(
-                    &mut html_output,
-                    std::iter::once(pulldown_cmark::Event::Text(txt.into())),
-                )
+                html_output.push_str(&text[range]);
             }
             pulldown_cmark::Event::Text(t) => {
                 let text = if emojis || in_code_block {
