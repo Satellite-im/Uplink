@@ -14,6 +14,20 @@ use crate::get_app_style;
 
 use super::AuthPages;
 
+enum SeedError {
+    ValidationError,
+    InvalidSeed,
+}
+
+impl SeedError {
+    fn translation(&self) -> String {
+        match self {
+            SeedError::ValidationError => get_local_text("enter-seed-words.error-seed"),
+            SeedError::InvalidSeed => get_local_text("enter-seed-words.invalid-seed"),
+        }
+    }
+}
+
 struct Cmd {
     seed_words: String,
     passphrase: String,
@@ -25,6 +39,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
     let state = use_ref(cx, State::load);
     let loading = use_state(cx, || false);
     let input = use_ref(cx, String::new);
+    let seed_error = use_state(cx, || None);
 
     let window = use_window(cx);
 
@@ -36,7 +51,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
     }
     // todo: show toasts to inform user of errors.
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Cmd>| {
-        to_owned![loading, page];
+        to_owned![loading, page, seed_error];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(Cmd {
@@ -71,6 +86,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                     }
                     Err(e) => {
                         loading.set(false);
+                        seed_error.set(Some(SeedError::InvalidSeed));
                         log::error!("warp runner cmd cancelled: {e}");
                         continue;
                     }
@@ -97,12 +113,30 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                 aria_label: "recovery-seed-input".into(),
                 focus: true,
                 placeholder: get_local_text("enter-seed-words.placeholder"),
-                onchange: move |(x, is_valid)| {
+                onchange: move |(x, is_valid): (String, bool)| {
+                    if x.is_empty() || seed_error.get().is_some() {
+                        seed_error.set(None);
+                    }
                     if is_valid {
                         *input.write_silent() = x;
+                    } else{
+                        seed_error.set(Some(SeedError::ValidationError));
                     }
+                },
+                onreturn: move |_|{
+                    loading.set(true);
+                    ch.send(Cmd {
+                        seed_words: input.read().clone(),
+                        passphrase: pin.read().clone()
+                    });
                 }
             },
+            seed_error.as_ref().map(|e| rsx!(
+                span {
+                    class: "error",
+                    e.translation()
+                }
+            )),
             div {
                 class: "button-container",
                 // todo: add 12 separate input boxes per figma
