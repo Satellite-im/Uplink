@@ -252,7 +252,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_label: get_local_text("settings-about.made-in"),
                 section_description: get_local_text("settings-about.team"),
                 div {
-                    class: "flags",
+                    class: "flags-settings",
                     img {
                         src: "{image_path_flag_USA}",
                         alt: "USA Flag",
