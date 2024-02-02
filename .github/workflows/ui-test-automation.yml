@@ -508,7 +508,7 @@ jobs:
 
       - name: Copy assets from Uplink
         run: |
-          mkdir C:\Program` Files\extensions  
+          mkdir C:\Program` Files\extensions
           cp -r C:\Program` Files\uplink\bin\uplink.exe C:\Program` Files\uplink
           cp -r C:\Program` Files\uplink\extensions\ C:\Program` Files\extensions
 
