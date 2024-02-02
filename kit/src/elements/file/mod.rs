@@ -58,6 +58,8 @@ pub fn get_file_extension(file_name: String) -> String {
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension = get_file_extension(cx.props.text.clone());
     let file_name = cx.props.text.clone();
+    let file_name2 = file_name.clone();
+
     let aria_label = get_aria_label(&cx);
     let placeholder = file_name.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
@@ -90,8 +92,13 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 class: "file-type",
                                 "{file_extension}"
                             },
-                            IconElement {
-                                icon: return_correct_icon(&file_extension.clone())
+                            div {
+                                height: "80px",
+                                width: "80px",
+                                margin: "30px 0",
+                                IconElement {
+                                    icon: return_correct_icon(&file_name2.clone())
+                                }
                             }
                         )
                     } else {
