@@ -192,7 +192,7 @@ fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
     let file_type = cx.props.file_type.clone();
     let source_path = cx.props.source.clone();
     cx.render(match file_type {
-        FileType::Video | FileType::Audio => rsx!(video {
+        FileType::Video => rsx!(video {
             id: "file_preview_img",
             aria_label: "file-preview-image",
             max_height: IMAGE_MAX_HEIGHT,
@@ -208,5 +208,18 @@ fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
             max_width: IMAGE_MAX_WIDTH,
             src: "{source_path}"
         },),
+        FileType::Audio => rsx!(
+         div {
+             height: "80px",
+             padding_top: "50px",
+             audio {
+                 id: "file_preview_img",
+                 aria_label: "file-preview-image",
+                 autoplay: true,
+                 controls: true,
+                 src: "{source_path}"
+             }
+         }
+        ),
     })
 }
