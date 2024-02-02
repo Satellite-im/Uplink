@@ -1,5 +1,6 @@
 use std::process::Command;
 
+use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, ToastNotification};
 use common::{icons::outline::Shape as Icon, state::State};
@@ -78,6 +79,27 @@ pub fn AboutPage(cx: Scope) -> Element {
     let opt = download_available.get().clone();
     let stage = download_state.read().stage;
     let pending_key = format!("btn-pending{}", download_state.read().progress);
+
+    let image_path_flag_AU = get_flag_image_path("AU");
+    let image_path_flag_USA = get_flag_image_path("USA");
+    let image_path_flag_MX = get_flag_image_path("MX");
+    let image_path_flag_DE = get_flag_image_path("DE");
+    let image_path_flag_PT = get_flag_image_path("PT");
+    let image_path_flag_BR = get_flag_image_path("BR");
+    let image_path_flag_IT = get_flag_image_path("IT");
+    let image_path_flag_UR = get_flag_image_path("UR");
+    let image_path_flag_BL = get_flag_image_path("BL");
+    let image_path_flag_JP = get_flag_image_path("JP");
+    let image_path_flag_IN = get_flag_image_path("IN");
+
+    fn get_flag_image_path(flag: &str) -> String {
+        get_images_dir()
+            .unwrap_or_default()
+            .join(format!("{}-flag.png", flag))
+            .to_str()
+            .map(|x| x.to_string())
+            .unwrap_or_default()
+    }
 
     let about_button = cx.render(rsx!(match opt {
         None if stage == DownloadProgress::Idle => {
@@ -231,47 +253,47 @@ pub fn AboutPage(cx: Scope) -> Element {
                 div {
                     class: "flags",
                     img {
-                        src: "./ui/extra/images/USA-Flag.png",
+                        src: "{image_path_flag_USA}",
                         alt: "USA Flag",
                     },
                     img {
-                        src: "./ui/extra/images/MX-Flag.png",
+                        src: "{image_path_flag_MX}",
                         alt: "Mexico Flag",
                     }
                     img {
-                        src: "./ui/extra/images/DE-Flag.png",
+                        src: "{image_path_flag_DE}",
                         alt: "Germany Flag",
                     }
                     img {
-                        src: "./ui/extra/images/PT-Flag.png",
+                        src: "{image_path_flag_PT}",
                         alt: "Portugal Flag",
                     }
                     img {
-                        src: "./ui/extra/images/BR-Flag.png",
+                        src: "{image_path_flag_BR}",
                         alt: "Brazil Flag",
                     }
                     img {
-                        src: "./ui/extra/images/IT-Flag.png",
+                        src: "{image_path_flag_IT}",
                         alt: "Italy Flag",
                     }
                     img {
-                        src: "./ui/extra/images/UR-Flag.png",
+                        src: "{image_path_flag_UR}",
                         alt: "Ukraine Flag",
                     }
                     img {
-                        src: "./ui/extra/images/BL-Flag.png",
+                        src: "{image_path_flag_BL}",
                         alt: "Belarus Flag",
                     }
                     img {
-                        src: "./ui/extra/images/JP-Flag.png",
+                        src: "{image_path_flag_JP}",
                         alt: "Japan Flag",
                     }
                     img {
-                        src: "./ui/extra/images/AU-Flag.png",
+                        src: "{image_path_flag_AU}",
                         alt: "Australia Flag",
                     }
                     img {
-                        src: "./ui/extra/images/IN-Flag.png",
+                        src: "{image_path_flag_IN}",
                         alt: "Indonesia Flag",
                     }
                 }
