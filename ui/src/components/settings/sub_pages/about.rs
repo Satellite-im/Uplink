@@ -8,8 +8,6 @@ use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
-use tracing::log;
-
 use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
 use crate::{
@@ -230,50 +228,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_description: get_local_text("settings-about.team"),
                 div {
                     class: "flags",
-                    img {
-                        src: "./img/USA-Flag.png",
-                        alt: "USA Flag",
-                    },
-                    img {
-                        src: "./img/MX-Flag.png",
-                        alt: "Mexico Flag",
-                    }
-                    img {
-                        src: "./img/DE-Flag.png",
-                        alt: "Germany Flag",
-                    }
-                    img {
-                        src: "./img/PT-Flag.png",
-                        alt: "Portugal Flag",
-                    }
-                    img {
-                        src: "./img/BR-Flag.png",
-                        alt: "Brazil Flag",
-                    }
-                    img {
-                        src: "./img/IT-Flag.png",
-                        alt: "Italy Flag",
-                    }
-                    img {
-                        src: "./img/UR-Flag.png",
-                        alt: "Ukraine Flag",
-                    }
-                    img {
-                        src: "./img/BL-Flag.png",
-                        alt: "Belarus Flag",
-                    }
-                    img {
-                        src: "./img/JP-Flag.png",
-                        alt: "Japan Flag",
-                    }
-                    img {
-                        src: "./img/AU-Flag.png",
-                        alt: "Australia Flag",
-                    }
-                    img {
-                        src: "./img/IN-Flag.png",
-                        alt: "Indonesia Flag",
-                    }
+                    "🇺🇸🇲🇽🇩🇪🇵🇹🇧🇷🇮🇹🇺🇦🇧🇾🇯🇵🇦🇺🇮🇩"
                 }
             }
         }
