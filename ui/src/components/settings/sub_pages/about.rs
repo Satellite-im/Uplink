@@ -1,7 +1,7 @@
 use std::process::Command;
 
+use common::get_images_dir;
 use common::language::get_local_text;
-use common::{get_images_dir};
 use common::state::{Action, ToastNotification};
 use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
