@@ -8,14 +8,14 @@ use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
-use tracing::log;
-
 use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
 use crate::{
     components::settings::SettingSection,
     utils::{self, auto_updater::GitHubRelease},
 };
+use common::get_images_dir;
+use tracing::log;
 
 #[allow(non_snake_case)]
 pub fn AboutPage(cx: Scope) -> Element {
@@ -167,6 +167,83 @@ pub fn AboutPage(cx: Scope) -> Element {
         },
     }));
 
+    let image_path_flag_USA = get_images_dir()
+        .unwrap_or_default()
+        .join("USA-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_MX = get_images_dir()
+        .unwrap_or_default()
+        .join("MX-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_DE = get_images_dir()
+        .unwrap_or_default()
+        .join("DE-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_PT = get_images_dir()
+        .unwrap_or_default()
+        .join("PT-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_BR = get_images_dir()
+        .unwrap_or_default()
+        .join("BR-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_IT = get_images_dir()
+        .unwrap_or_default()
+        .join("IT-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_UR = get_images_dir()
+        .unwrap_or_default()
+        .join("UR-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_BL = get_images_dir()
+        .unwrap_or_default()
+        .join("BL-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_JP = get_images_dir()
+        .unwrap_or_default()
+        .join("JP-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_AU = get_images_dir()
+        .unwrap_or_default()
+        .join("AU-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
+    let image_path_flag_IN = get_images_dir()
+        .unwrap_or_default()
+        .join("IN-Flag.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             id: "settings-about",
@@ -231,48 +308,48 @@ pub fn AboutPage(cx: Scope) -> Element {
                 div {
                     class: "flags",
                     img {
-                        src: "./ui/extra/images/USA-Flag.png",
-                        alt: "USA Flag",
-                    },
-                    img {
-                        src: "./ui/extra/images/MX-Flag.png",
-                        alt: "Mexico Flag",
+                        src: "{image_path_flag_USA}",
+                        alt: "USA-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/DE-Flag.png",
-                        alt: "Germany Flag",
+                        src: "{image_path_flag_MX}",
+                        alt: "MX-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/PT-Flag.png",
-                        alt: "Portugal Flag",
+                        src: "{image_path_flag_DE}",
+                        alt: "DE-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/BR-Flag.png",
-                        alt: "Brazil Flag",
+                        src: "{image_path_flag_PT}",
+                        alt: "PT-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/IT-Flag.png",
-                        alt: "Italy Flag",
+                        src: "{image_path_flag_BR}",
+                        alt: "BR-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/UR-Flag.png",
-                        alt: "Ukraine Flag",
+                        src: "{image_path_flag_IT}",
+                        alt: "IT-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/BL-Flag.png",
-                        alt: "Belarus Flag",
+                        src: "{image_path_flag_UR}",
+                        alt: "UR-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/JP-Flag.png",
-                        alt: "Japan Flag",
+                        src: "{image_path_flag_BL}",
+                        alt: "BL-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/AU-Flag.png",
-                        alt: "Australia Flag",
+                        src: "{image_path_flag_JP}",
+                        alt: "JP-Flag",
                     }
                     img {
-                        src: "./ui/extra/images/IN-Flag.png",
-                        alt: "Indonesia Flag",
+                        src: "{image_path_flag_AU}",
+                        alt: "AU-Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_IN}",
+                        alt: "IN-Flag",
                     }
                 }
             }
