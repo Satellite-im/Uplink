@@ -508,8 +508,9 @@ jobs:
 
       - name: Copy assets from Uplink
         run: |
+          mkdir C:\Program` Files\extensions  
           cp -r C:\Program` Files\uplink\bin\uplink.exe C:\Program` Files\uplink
-          cp -r C:\Program` Files\uplink\extensions\ C:\Program` Files\
+          cp -r C:\Program` Files\uplink\extensions\ C:\Program` Files\extensions
 
       - name: Install and Run Appium Server 💻
         run: |
