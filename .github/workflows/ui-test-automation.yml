@@ -509,8 +509,10 @@ jobs:
       - name: Copy assets from Uplink
         run: |
           mkdir C:\Program` Files\extensions
+          mkdir $home/.uplink/themes
           cp -r C:\Program` Files\uplink\bin\uplink.exe C:\Program` Files\uplink
-          cp -r C:\Program` Files\uplink\extensions\ C:\Program` Files\extensions
+          cp -r C:\Program` Files\uplink\extensions\emoji_selector.dll C:\Program` Files\extensions\
+          cp -r C:\Program` Files\uplink\extra\themes\ $home/.uplink/themes
 
       - name: Install and Run Appium Server 💻
         run: |
