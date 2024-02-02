@@ -114,6 +114,45 @@
             <Component Id="cmpUplink.gif" Guid="0FCF0295-7EC7-4299-A2E0-DF94F1DECBEF">
                <File Id="Uplink.gif" Name="uplink.gif" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink.gif" />
             </Component>
+            <Directory Id="FlagsFolder" Name="flags">
+               <Component Id="auFlag.png" Guid="1A45E907-FC60-4195-BE6B-5BCEAB44BF74">
+                  <File Id="AU-flag.png" Name="AU-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\AU-flag.png" />
+               </Component>
+               <Component Id="blFlag.png" Guid="A6126993-7660-449C-82AA-708ACC9A1FAF">
+                  <File Id="BL-flag.png" Name="BL-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\BL-flag.png" />
+               </Component>
+               <Component Id="brFlag.png" Guid="0E195B97-E0A9-4599-BB64-093741A5F920">
+                  <File Id="BR-flag.png" Name="BR-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\BR-flag.png" />
+               </Component>
+               <Component Id="deFlag.png" Guid="3BA30F48-2C8B-4668-9FCA-2D61BEDF8E4D">
+                  <File Id="DE-flag.png" Name="DE-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\DE-flag.png" />
+               </Component>
+               <Component Id="inFlag.png" Guid="FDD429F1-A497-4764-B4B6-D56DAC079282">
+                  <File Id="IN-flag.png" Name="IN-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\IN-flag.png" />
+               </Component>
+               <Component Id="itFlag.png" Guid="34834F2B-C5D2-434F-90C1-B623C229BFE4">
+                  <File Id="IT-flag.png" Name="IT-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\IT-flag.png" />
+               </Component>
+               <Component Id="jpFlag.png" Guid="FB729FD4-F3A0-498F-9C89-9757ED541B74">
+                  <File Id="JP-flag.png" Name="JP-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\JP-flag.png" />
+               </Component>
+               <Component Id="mxFlag.png" Guid="6FD8AF34-8E95-4172-8C59-1D00E7AC6F7B">
+                  <File Id="MX-flag.png" Name="MX-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\MX-flag.png" />
+               </Component>
+               <Component Id="ptFlag.png" Guid="6AED4F8F-696F-48FD-8D31-6E61AA5AE89A">
+                  <File Id="PT-flag.png" Name="PT-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\PT-flag.png" />
+               </Component>
+               <Component Id="ukFlag.png" Guid="7B4704CA-C280-4737-A1E4-D80A7C3219B1">
+                  <File Id="UK-flag.png" Name="UK-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\UK-flag.png" />
+               </Component>
+               <Component Id="urFlag.png" Guid="9EA96615-465A-43C1-8AB4-60D5FB5AF696">
+                  <File Id="UR-flag.png" Name="UR-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\UR-flag.png" />
+               </Component>
+               <Component Id="usFlag.png" Guid="D8597AF6-89AA-454A-BAA8-4C6F465D4552">
+                  <File Id="USA-flag.png" Name="USA-flag.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\flags\USA-flag.png" />
+               </Component>
+            </Directory>
+            <!-- end of flagsFolder-->
             <Directory Id="MascotFolder" Name="mascot">
                <Component Id="cmpBetterWithFriends.webp" Guid="EC75FF96-C19B-41B3-BF57-84D785FCA3DA">
                   <File Id="BetterWithFriends.webp" Name="better_with_friends.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\better_with_friends.webp" />
@@ -186,6 +225,18 @@
          <ComponentRef Id="cmpIdleAlt.png" />
          <ComponentRef Id="cmpIdleWave.png" />
          <ComponentRef Id="cmpIdle.png" />
+         <ComponentRef Id="auFlag.png" />
+         <ComponentRef Id="blFlag.png" />
+         <ComponentRef Id="brFlag.png" />
+         <ComponentRef Id="deFlag.png" />
+         <ComponentRef Id="inFlag.png" />
+         <ComponentRef Id="itFlag.png" />
+         <ComponentRef Id="jpFlag.png" />
+         <ComponentRef Id="mxFlag.png" />
+         <ComponentRef Id="ptFlag.png" />
+         <ComponentRef Id="ukFlag.png" />
+         <ComponentRef Id="urFlag.png" />
+         <ComponentRef Id="usFlag.png" />
          <ComponentRef Id="cmpLocked.webp" />
          <ComponentRef Id="cmpParty.webp" />
          <ComponentRef Id="cmpWorking.webp" />

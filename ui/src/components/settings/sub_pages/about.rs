@@ -1,5 +1,6 @@
 use std::process::Command;
 
+use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, ToastNotification};
 use common::{icons::outline::Shape as Icon, state::State};
@@ -7,6 +8,8 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
+
+use tracing::log;
 
 use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
@@ -76,6 +79,28 @@ pub fn AboutPage(cx: Scope) -> Element {
     let opt = download_available.get().clone();
     let stage = download_state.read().stage;
     let pending_key = format!("btn-pending{}", download_state.read().progress);
+
+    let image_path_flag_AU = get_flag_image_path("AU");
+    let image_path_flag_USA = get_flag_image_path("USA");
+    let image_path_flag_MX = get_flag_image_path("MX");
+    let image_path_flag_DE = get_flag_image_path("DE");
+    let image_path_flag_PT = get_flag_image_path("PT");
+    let image_path_flag_BR = get_flag_image_path("BR");
+    let image_path_flag_IT = get_flag_image_path("IT");
+    let image_path_flag_UR = get_flag_image_path("UR");
+    let image_path_flag_BL = get_flag_image_path("BL");
+    let image_path_flag_JP = get_flag_image_path("JP");
+    let image_path_flag_IN = get_flag_image_path("IN");
+
+    fn get_flag_image_path(flag: &str) -> String {
+        get_images_dir()
+            .unwrap_or_default()
+            .join("flags")
+            .join(format!("{}-flag.png", flag))
+            .to_str()
+            .map(|x| x.to_string())
+            .unwrap_or_default()
+    }
 
     let about_button = cx.render(rsx!(match opt {
         None if stage == DownloadProgress::Idle => {
@@ -228,7 +253,50 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_description: get_local_text("settings-about.team"),
                 div {
                     class: "flags",
-                    "🇺🇸🇲🇽🇩🇪🇵🇹🇧🇷🇮🇹🇺🇦🇧🇾🇯🇵🇦🇺🇮🇩"
+                    img {
+                        src: "{image_path_flag_USA}",
+                        alt: "USA Flag",
+                    },
+                    img {
+                        src: "{image_path_flag_MX}",
+                        alt: "Mexico Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_DE}",
+                        alt: "Germany Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_PT}",
+                        alt: "Portugal Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_BR}",
+                        alt: "Brazil Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_IT}",
+                        alt: "Italy Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_UR}",
+                        alt: "Ukraine Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_BL}",
+                        alt: "Belarus Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_JP}",
+                        alt: "Japan Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_AU}",
+                        alt: "Australia Flag",
+                    }
+                    img {
+                        src: "{image_path_flag_IN}",
+                        alt: "Indonesia Flag",
+                    }
                 }
             }
         }
