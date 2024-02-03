@@ -182,7 +182,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
@@ -316,7 +315,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
@@ -449,7 +447,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/testing-uplink
-          ref: luis/windows-installer
 
       - name: Checkout Warp directory 🔖
         uses: actions/checkout@v4
