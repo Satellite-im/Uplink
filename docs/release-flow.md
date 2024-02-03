@@ -39,11 +39,4 @@ https://github.com/Satellite-im/Uplink/assets/29093946/97ef7baf-13a8-41ae-a2b3-c
 - Create a release with that tag, add title in this case the same number as the release and description
 - Done
 
-
-
-
-https://github.com/Satellite-im/Uplink/assets/29093946/e50dfcbe-fffd-4834-a9d7-91cc71126540
-
-
-
-
+https://github.com/Satellite-im/Uplink/assets/29093946/748d192e-752d-43cb-9c51-7791a19b93c7
