@@ -531,7 +531,7 @@ jobs:
         id: setup-ffmpeg
 
       - name: Delete Cache Folder if exists - Windows
-        run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
+        run: If (Test-Path $home/.uplink/.user) {Remove-Item -Recurse -Force $home/.uplink/.user} Else { Break }
         shell: powershell
 
       - name: Run cargo build shuttle on Warp 🚀
