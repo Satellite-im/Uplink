@@ -29,6 +29,13 @@ https://github.com/Satellite-im/Uplink/assets/29093946/d8fd9eb5-34a7-47df-948f-8
 
 https://github.com/Satellite-im/Uplink/assets/29093946/97ef7baf-13a8-41ae-a2b3-cb240940989b
 
+The artifacts will appear under the release number you choose above 
+
+example
+
+<img width="1191" alt="Captura de ecrã 2024-02-03, às 00 27 34" src="https://github.com/Satellite-im/Uplink/assets/29093946/178b7768-fbba-4c68-927e-e76b9b1f9161">
+
+
 # How to do the real release
 
 - Test the release with the above steps
