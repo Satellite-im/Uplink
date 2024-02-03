@@ -5,7 +5,7 @@
 
 - Go to the [private repo](https://github.com/Satellite-im/Uplink-copy/tree/dev)
 - If you want try a release with the same content as the `dev` branch, you go to the `actions` tab and select [A1 - Sync Public Repo to Private
-](https://github.com/Satellite-im/Uplink-copy/actions/workflows/sync-repo.yml) workflow and click on `Run workflow` and then again on + `Run workflow` green button
+](https://github.com/Satellite-im/Uplink-copy/actions/workflows/sync-repo.yml) workflow and click on `Run workflow` and then again on `Run workflow` green button
 
 
 https://github.com/Satellite-im/Uplink/assets/29093946/4fb57366-71c8-4d25-a0a0-8a6cacedf689
