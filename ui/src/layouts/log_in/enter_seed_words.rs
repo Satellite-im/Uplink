@@ -46,7 +46,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
-            height: 260.0,
+            height: 280.0,
         });
     }
     // todo: show toasts to inform user of errors.
