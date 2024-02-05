@@ -1,21 +1,14 @@
 use std::ffi::OsStr;
 
+use common::return_correct_icon;
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 
-use crate::elements::{
-    button::Button,
-    input::{Input, Options, Size, SpecialCharsAction, Validation},
-    Appearance,
-};
+use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validation};
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
-use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-
-pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
-    ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
-];
+use common::{icons::outline::Shape as Icon, is_video};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -34,13 +27,6 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
     loading: Option<bool>,
-}
-
-pub fn is_video(file_name: String) -> bool {
-    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-    let file_extension = get_file_extension(file_name);
-
-    video_formats.iter().any(|f| f == &file_extension)
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
@@ -77,7 +63,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
-    let is_video = is_video(cx.props.text.clone());
+    let is_video = is_video(&cx.props.text.clone());
 
     let loading = cx.props.loading.unwrap_or_default();
 
@@ -105,7 +91,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 "{file_extension}"
                             },
                             IconElement {
-                            icon: Icon::Document,
+                                icon: return_correct_icon(&file_extension.clone())
                             }
                         )
                     } else {
@@ -114,16 +100,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             height: if is_video {"50px"} else {""},
                             width: if is_video {"100px"} else {""},
                             src: "{thumbnail}",
-                        })
-                    }
-                    if is_video {
-                        rsx!(div {
-                            class: "play-button",
-                            Button {
-                                icon: Icon::Play,
-                                appearance: Appearance::Transparent,
-                                small: true,
-                            }
                         })
                     }
                 },

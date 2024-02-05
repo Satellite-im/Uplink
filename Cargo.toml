@@ -27,7 +27,7 @@ opt-level = 3
 codegen-units = 1
 
 [workspace.package]
-version = "0.2.1"
+version = "0.2.2"
 rust-version = "1.73"
 
 [workspace.dependencies]
@@ -47,9 +47,9 @@ arboard = "3.2"
 humansize = "2.1.3"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
-warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
-warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "375d13c4a60eb3a37ca697d8bd635a452a18dc40" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "32f4c53fc462d53553a31762ecd12b4af9329a4a" }
+warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "32f4c53fc462d53553a31762ecd12b4af9329a4a" }
+warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "32f4c53fc462d53553a31762ecd12b4af9329a4a" }
 rfd = "0.11.3"
 mime = "0.3.16"
 serde = "1.0"
@@ -74,6 +74,9 @@ tempfile = "3.0.7"
 fdlimit = "0.2"
 
 once_cell = "1.17"
+parking_lot = { version = "0.12" }
+tracing = { version = "0.1" }
+tracing-futures = { version = "0.2" }
 
 futures = "0.3"
 tokio = { version = "1", features = ["full"] }

@@ -58,6 +58,10 @@
     }
 }
 
+.fetching {
+    color: var(--text-color);
+}
+
 .quick-profile-context {
     z-index: 1005;
     width: 0;
@@ -71,11 +75,6 @@
 }
 
 .minimal-chat-button-group-out {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     z-index: 98,
 }
 

@@ -11,12 +11,13 @@ use warp::{
     constellation::ConstellationProgressStream,
     crypto::DID,
     error::Error,
-    logging::tracing::log,
     raygun::{
         self, AttachmentEventStream, ConversationSettings, ConversationType, GroupSettings,
         Location, PinState, ReactionState,
     },
 };
+
+use tracing::log;
 
 use crate::{
     state::{chats, identity, Friends},

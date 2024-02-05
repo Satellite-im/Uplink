@@ -16,8 +16,9 @@ pub enum GlobalShortcut {
     ToggleDeafen,
     IncreaseFontSize,
     DecreaseFontSize,
-    OpenDevTools,
+    OpenCloseDevTools,
     ToggleDevmode,
+    SetAppVisible,
     #[default]
     Unknown,
 }
@@ -29,8 +30,9 @@ impl fmt::Display for GlobalShortcut {
             GlobalShortcut::ToggleDeafen => write!(f, "ToggleDeafen"),
             GlobalShortcut::IncreaseFontSize => write!(f, "IncreaseFontSize"),
             GlobalShortcut::DecreaseFontSize => write!(f, "DecreaseFontSize"),
-            GlobalShortcut::OpenDevTools => write!(f, "OpenDevTools"),
+            GlobalShortcut::OpenCloseDevTools => write!(f, "OpenCloseDevTools"),
             GlobalShortcut::ToggleDevmode => write!(f, "ToggleDevmode"),
+            GlobalShortcut::SetAppVisible => write!(f, "SetAppVisible"),
             GlobalShortcut::Unknown => write!(f, "Unknown"),
         }
     }

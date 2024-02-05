@@ -26,6 +26,16 @@ const AVOID_INPUT_ON_DIV: &str = r#"
         event.preventDefault(); 
     });"#;
 
+const UNFOCUS_DIV_ON_SUBMIT: &str = r#"
+        let currentDiv = document.getElementById("$UUID");
+        let innerDiv = currentDiv.querySelector('.keybind-section-keys');
+        if (innerDiv.classList.contains('recording')) {
+            innerDiv.addEventListener('keyup', function() {
+                innerDiv.blur();
+            });
+          }
+"#;
+
 #[derive(PartialEq, Props)]
 pub struct KeybindProps {
     pub keys: Vec<String>, // TODO: This should be a Vec<Key>
@@ -122,6 +132,18 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
+    let keybind_section_id_clone = keybind_section_id.clone();
+
+    use_effect(cx, is_recording, |is_recording| {
+        to_owned![eval];
+        async move {
+            if *is_recording {
+                let unfocus_script =
+                    UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
+                let _ = eval(&unfocus_script);
+            };
+        }
+    });
 
     let mut keybind_class = "keybind-section-keys".to_owned();
     if **is_recording {
@@ -268,7 +290,9 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 Button {
                     aria_label: "reset-keybinds-button".into(),
                     icon: Icon::ArrowUturnDown,
-                    onpress: move |_| {},
+                    onpress: move |_| {
+                        state.write().mutate(Action::ResetKeybinds);
+                    },
                     text: get_local_text("settings-keybinds.reset-keybinds"),
                     appearance: kit::elements::Appearance::Secondary
                 },
@@ -298,16 +322,22 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 shortcut: GlobalShortcut::ToggleDeafen
             }
             KeybindSection {
-                id: format!("{:?}", GlobalShortcut::OpenDevTools),
-                section_label: get_local_text("settings-keybinds.open-dev-tools"),
+                id: format!("{:?}", GlobalShortcut::OpenCloseDevTools),
+                section_label: get_local_text("settings-keybinds.open-close-dev-tools"),
                 bindings: bindings.clone(),
-                shortcut: GlobalShortcut::OpenDevTools
+                shortcut: GlobalShortcut::OpenCloseDevTools
             }
             KeybindSection {
                 id: format!("{:?}", GlobalShortcut::ToggleDevmode),
                 section_label: get_local_text("settings-keybinds.toggle-devmode"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDevmode
+            }
+            KeybindSection {
+                id: format!("{:?}", GlobalShortcut::SetAppVisible),
+                section_label: get_local_text("settings-keybinds.hide-focus-uplink"),
+                bindings: bindings.clone(),
+                shortcut: GlobalShortcut::SetAppVisible
             }
         }
     ))

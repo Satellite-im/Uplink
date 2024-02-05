@@ -8,7 +8,7 @@ use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
-use warp::logging::tracing::log;
+use tracing::log;
 
 use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
@@ -230,7 +230,50 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_description: get_local_text("settings-about.team"),
                 div {
                     class: "flags",
-                    "🇺🇸🇲🇽🇩🇪🇵🇹🇧🇷🇮🇹🇺🇦🇧🇾🇯🇵🇦🇺🇮🇩"
+                    img {
+                        src: "./ui/extra/images/USA-Flag.png",
+                        alt: "USA Flag",
+                    },
+                    img {
+                        src: "./ui/extra/images/MX-Flag.png",
+                        alt: "Mexico Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/DE-Flag.png",
+                        alt: "Germany Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/PT-Flag.png",
+                        alt: "Portugal Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/BR-Flag.png",
+                        alt: "Brazil Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/IT-Flag.png",
+                        alt: "Italy Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/UR-Flag.png",
+                        alt: "Ukraine Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/BL-Flag.png",
+                        alt: "Belarus Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/JP-Flag.png",
+                        alt: "Japan Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/AU-Flag.png",
+                        alt: "Australia Flag",
+                    }
+                    img {
+                        src: "./ui/extra/images/IN-Flag.png",
+                        alt: "Indonesia Flag",
+                    }
                 }
             }
         }

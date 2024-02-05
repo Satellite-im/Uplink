@@ -8,6 +8,7 @@ use dioxus::prelude::*;
 use emojis::{Group, UnicodeVersion};
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use futures::StreamExt;
+use kit::components::invisible_closer::InvisibleCloser;
 use kit::elements::textarea;
 use kit::{
     components::nav::{Nav, Route},
@@ -15,9 +16,9 @@ use kit::{
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
+use tracing::log;
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::ReactionState};
-
+use warp::raygun::ReactionState;
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").unwrap());
@@ -190,111 +191,112 @@ fn render_selector<'a>(
     });
 
     cx.render(rsx! (
+        InvisibleCloser {
+            onclose: |_|{
+                state.write().mutate(Action::SetEmojiDestination(
+                    Some(common::state::ui::EmojiDestination::Chatbar),
+                ));
+                if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
+                    state.write().mutate(Action::SetEmojiPickerVisible(false));
+                }
+            }
+        }
+        div {
+            onmouseenter: |_| {
+                *mouse_over_emoji_selector.write_silent() = true;
+            },
+            onmouseleave: |_| {
+                *mouse_over_emoji_selector.write_silent() = false;
+                let _ = eval(focus_script);
+            },
+            id: "emoji_selector",
+            aria_label: "emoji-selector",
+            tabindex: "0",
             div {
-                onmouseenter: |_| {
-                    *mouse_over_emoji_selector.write_silent() = true;
-                },
-                onmouseleave: |_| {
-                    *mouse_over_emoji_selector.write_silent() = false;
-                    let _ = eval(focus_script);
-                },
-                id: "emoji_selector",
-                aria_label: "emoji-selector",
-                tabindex: "0",
-                onblur: |_| {
-                    // When leaving default to the chatbar
-                    state.write().mutate(Action::SetEmojiDestination(
-                        Some(common::state::ui::EmojiDestination::Chatbar),
-                    ));
-                    if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
-                        state.write().mutate(Action::SetEmojiPickerVisible(false));
-                    }
-                },
-                div {
-                    class: "search-input disable-select",
-                    textarea::Input {
-                        placeholder: get_local_text("uplink.search-placeholder"),
-                        key: "emoji-search-input",
-                        id: String::from("emoji-search-input"),
-                        loading: false,
-                        ignore_focus: false,
-                        show_char_counter: false,
-                        aria_label: "emoji-search-input".into(),
-                        value: String::new(),
-                        onreturn:  |_| {},
-                        onchange: |_| {},
-                        onkeyup: |_| {},
-                        prevent_up_down_arrows: !emoji_suggestions.is_empty(),
-                        oncursor_update: move |(v, p): (String, i64)| {
-                            let mut sub: String = v.chars().take(p as usize).collect();
-                            sub = if !sub.starts_with(':') {
-                                format!(":{}", sub)
-                            } else {
-                                sub
-                            };
-                            let capture = EMOJI_REGEX.captures(&sub);
-                            match capture {
-                                Some(emoji) => {
-                                    let emoji = &emoji[0];
-                                    if emoji.contains(char::is_whitespace) {
-                                        emoji_suggestions.set(vec![]);
-                                        return;
-                                    }
-                                    let alias = emoji.replace(':', "");
-                                        emoji_suggestions
-                                            .set(state.read().ui.emojis.get_matching_emoji(&alias, false));
+                class: "search-input disable-select",
+                textarea::Input {
+                    placeholder: get_local_text("uplink.search-placeholder"),
+                    key: "emoji-search-input",
+                    id: String::from("emoji-search-input"),
+                    loading: false,
+                    ignore_focus: false,
+                    show_char_counter: false,
+                    aria_label: "emoji-search-input".into(),
+                    value: String::new(),
+                    onreturn:  |_| {},
+                    onchange: |_| {},
+                    onkeyup: |_| {},
+                    prevent_up_down_arrows: !emoji_suggestions.is_empty(),
+                    oncursor_update: move |(v, p): (String, i64)| {
+                        let mut sub: String = v.chars().take(p as usize).collect();
+                        sub = if !sub.starts_with(':') {
+                            format!(":{}", sub)
+                        } else {
+                            sub
+                        };
+                        let capture = EMOJI_REGEX.captures(&sub);
+                        match capture {
+                            Some(emoji) => {
+                                let emoji = &emoji[0];
+                                if emoji.contains(char::is_whitespace) {
+                                    emoji_suggestions.set(vec![]);
+                                    return;
                                 }
-                                None => emoji_suggestions.set(vec![]),
+                                let alias = emoji.replace(':', "");
+                                    emoji_suggestions
+                                        .set(state.read().ui.emojis.get_matching_emoji(&alias, false));
                             }
-                        },
+                            None => emoji_suggestions.set(vec![]),
                         }
                     },
-                div {
-                    id: "scrolling",
-                    padding_top: if !emoji_suggestions.is_empty() {"4px"} else {""},
-                    if !emoji_suggestions.is_empty() {
-                        rsx!(emoji_suggestions.iter().map(|(emoji, _)| {
-                            rsx!(
-                                div {
-                                    aria_label: emoji.as_str(),
-                                    class: "emoji",
-                                    onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
-                                    emoji.as_str()
-                                }
-                            )
-                        }))
-                    } else {
-                        rsx! (emojis::Group::iter().map(|group| {
-                            let name: String = group_to_str(group);
-                            rsx!(
-                                div {
-                                    id: "{group_to_str(group)}",
-                                    Label {
-                                        text: name
-                                    },
-                                }
-                                div {
-                                    class: "emojis-container",
-                                    aria_label: "emojis-container",
-                                    group.emojis().filter(|emoji|is_supported(emoji.unicode_version())).map(|emoji| {
-                                        rsx!(
-                                            div {
-                                                aria_label: emoji.as_str(),
-                                                class: "emoji",
-                                                onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
-                                                emoji.as_str()
-                                            }
-                                        )
-                                    })
-                                }
-                            )
-                        }))
                     }
+                },
+            div {
+                id: "scrolling",
+                padding_top: if !emoji_suggestions.is_empty() {"4px"} else {""},
+                if !emoji_suggestions.is_empty() {
+                    rsx!(emoji_suggestions.iter().map(|(emoji, _)| {
+                        rsx!(
+                            div {
+                                aria_label: emoji.as_str(),
+                                class: "emoji",
+                                onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
+                                emoji.as_str()
+                            }
+                        )
+                    }))
+                } else {
+                    rsx! (emojis::Group::iter().map(|group| {
+                        let name: String = group_to_str(group);
+                        rsx!(
+                            div {
+                                id: "{group_to_str(group)}",
+                                Label {
+                                    text: name
+                                },
+                            }
+                            div {
+                                class: "emojis-container",
+                                aria_label: "emojis-container",
+                                group.emojis().filter(|emoji|is_supported(emoji.unicode_version())).map(|emoji| {
+                                    rsx!(
+                                        div {
+                                            aria_label: emoji.as_str(),
+                                            class: "emoji",
+                                            onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
+                                            emoji.as_str()
+                                        }
+                                    )
+                                })
+                            }
+                        )
+                    }))
                 }
-                nav
-            },
-            script { focus_script },
-        ))
+            }
+            nav
+        },
+        script { focus_script },
+    ))
 }
 
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work

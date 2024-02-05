@@ -24,7 +24,6 @@ pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
-use regex::Regex;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
@@ -51,12 +50,9 @@ use std::{
     time::{Duration, Instant},
 };
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-    multipass::identity::IdentityStatus,
-    raygun::{self},
-};
+use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun};
+
+use tracing::log;
 
 use self::call::Call;
 use self::pending_message::PendingMessage;
@@ -240,6 +236,9 @@ impl State {
             Action::SetTransformAsciiEmojis(flag) => self.ui.transform_ascii_emojis(flag),
             // ===== Settings =====
             Action::PauseGlobalKeybinds(b) => self.settings.pause_global_keybinds = b,
+            Action::ResetKeybinds => {
+                self.settings.keybinds = default_keybinds::get_default_keybinds()
+            }
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -280,12 +279,7 @@ impl State {
                 m.set_conversation_id(id);
                 m.set_sender(sender);
                 m.set_lines(msg);
-                let m = ui_adapter::Message {
-                    inner: m,
-                    in_reply_to: None,
-                    key: Uuid::new_v4().to_string(),
-                    ..Default::default()
-                };
+                let m = ui_adapter::Message::new(m, None, Uuid::new_v4().to_string());
                 self.add_msg_to_chat(id, m);
             }
             // ===== Media =====
@@ -452,13 +446,8 @@ impl State {
                 conversation_id,
                 mut message,
             } => {
-                if let Some(ids) = self
-                    .get_chat_by_id(conversation_id)
-                    .map(|c| self.chat_participants(&c))
-                {
-                    message.insert_did(&ids, &self.get_own_identity().did_key());
-                }
-                let ping = message.is_mention;
+                let own = self.get_own_identity().did_key();
+                let ping = message.is_mention_self(&own);
                 self.update_identity_status_hack(&message.inner.sender());
                 let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
@@ -535,15 +524,6 @@ impl State {
                 self.update_identity_status_hack(&message.inner.sender());
                 let own = self.get_own_identity().did_key();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    message.insert_did(
-                        &chat
-                            .participants
-                            .iter()
-                            .filter_map(|id| self.identities.get(id))
-                            .cloned()
-                            .collect::<Vec<_>>(),
-                        &own,
-                    );
                     let id = message.inner.id();
                     if let Some(msg) = chat.messages.iter_mut().find(|msg| msg.inner.id() == id) {
                         *msg = message.clone();
@@ -559,7 +539,7 @@ impl State {
                         *msg = message.inner.clone();
                     }
 
-                    if message.is_mention {
+                    if message.is_mention_self(&own) {
                         if let Some(msg) = chat.mentions.iter_mut().find(|m| m.inner.id() == id) {
                             *msg = message.clone();
                         }
@@ -813,6 +793,25 @@ impl State {
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
         }
+
+        // Guarantee any new keybinds added, will be added to the user's settings
+        let default_keybinds = default_keybinds::get_default_keybinds();
+        if state.settings.keybinds.len() < default_keybinds.len() {
+            let new_keybinds = default_keybinds
+                .iter()
+                .filter(|default_keybind| {
+                    !state
+                        .settings
+                        .keybinds
+                        .iter()
+                        .any(|keybind| &keybind == default_keybind)
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+
+            state.settings.keybinds.extend(new_keybinds);
+        }
+
         // Reload themes from disc
         let themes = get_available_themes();
         let theme = themes.iter().find(|t| {
@@ -1625,7 +1624,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
+                v.to_lowercase().starts_with(&name_prefix.to_lowercase())
             }
         };
 
@@ -1908,25 +1907,4 @@ pub fn pending_group_messages<'a>(
         remote: false,
         messages,
     })
-}
-
-pub fn mention_regex_pattern(id: &Identity, username: bool) -> Regex {
-    Regex::new(&format!(
-        "(^| )@{}( |$)",
-        if username {
-            id.username()
-        } else {
-            id.did_key().to_string()
-        }
-    ))
-    .unwrap()
-}
-
-pub fn mention_replacement_pattern(id: &Identity, visual: bool) -> String {
-    format!(
-        r#"<div class="message-user-tag {}" value="{}">@{}</div>"#,
-        if visual { "visual-only" } else { "" },
-        id.did_key(),
-        id.username()
-    )
 }

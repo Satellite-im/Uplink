@@ -105,12 +105,11 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_sender(sender.did_key());
         default_message.set_lines(vec![lipsum(word_count)]);
 
-        messages.push_back(ui_adapter::Message {
-            inner: default_message,
-            in_reply_to: None,
-            key: Uuid::new_v4().to_string(),
-            ..Default::default()
-        });
+        messages.push_back(ui_adapter::Message::new(
+            default_message,
+            None,
+            Uuid::new_v4().to_string(),
+        ));
     }
 
     let pinned_messages: Vec<_> = messages
@@ -259,12 +258,7 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> ui_a
     default_message.set_replied(None);
     default_message.set_lines(vec![text.into()]);
 
-    ui_adapter::Message {
-        inner: default_message,
-        in_reply_to: None,
-        key: Uuid::new_v4().to_string(),
-        ..Default::default()
-    }
+    ui_adapter::Message::new(default_message, None, Uuid::new_v4().to_string())
 }
 
 fn generate_fake_storage() -> Storage {

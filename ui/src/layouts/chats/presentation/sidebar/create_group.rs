@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use crate::{layouts::chats::data::get_input_options, UplinkRoute};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
@@ -20,10 +21,9 @@ use kit::{
         Appearance,
     },
 };
+use tracing::log;
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::GroupSettings};
-
-use crate::{layouts::chats::data::get_input_options, UplinkRoute};
+use warp::{crypto::DID, raygun::GroupSettings};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -120,6 +120,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         placeholder:  get_local_text("messages.group-name"),
                         default_text: group_name.get().clone().unwrap_or_default(),
                         aria_label: "groupname-input".into(),
+                        focus_just_on_render: true,
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options()

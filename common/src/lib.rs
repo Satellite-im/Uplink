@@ -11,6 +11,7 @@ use anyhow::bail;
 use clap::Parser;
 // export icons crate
 pub use icons;
+use icons::outline::Shape as Icon;
 use once_cell::sync::Lazy;
 use std::{
     path::{Path, PathBuf},
@@ -91,6 +92,8 @@ pub struct StaticArgs {
     /// ~/.uplink/.user
     /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
+    /// Directory for temporary files and deleted everytime app is closed or opened
+    pub temp_files: PathBuf,
     /// custom themes for the user
     pub themes_path: PathBuf,
     /// custom fonts for the user
@@ -108,7 +111,7 @@ pub struct StaticArgs {
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
     /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
-    /// todo: document
+    /// path to custom plugins
     pub extensions_path: PathBuf,
     /// crash logs
     pub crash_logs: PathBuf,
@@ -148,6 +151,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(), // TODO: Should this be "User path" instead?
+        temp_files: uplink_container.join("temp_files"),
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
@@ -188,11 +192,34 @@ pub const MAX_FILES_PER_MESSAGE: usize = 8;
 
 pub const ROOT_DIR_NAME: &str = "root";
 
-pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
-    ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
-];
+pub const VIDEO_FILE_EXTENSIONS: &[&str] =
+    &[".mp4", ".mov", ".avi", ".flv", ".wmv", ".m4v", ".3gp"];
+
+pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
+
+pub fn is_video(file_name: &str) -> bool {
+    VIDEO_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn is_audio(file_name: &str) -> bool {
+    AUDIO_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn return_correct_icon(file_name: &str) -> Icon {
+    if is_video(file_name) {
+        return Icon::DocumentMedia;
+    }
+    if is_audio(file_name) {
+        return Icon::DocumentAudio;
+    }
+    Icon::Document
+}
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {
     if !cfg!(feature = "production_mode") {

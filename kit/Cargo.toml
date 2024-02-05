@@ -11,6 +11,8 @@ regex = "1.8.4"
 scraper = "0.17.1"
 chrono = { workspace = true }
 dioxus = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-desktop = { workspace = true, features = ["transparent"] }
 dioxus-hooks = { workspace = true }
@@ -31,7 +33,7 @@ once_cell = { workspace = true }
 emojis = "0.5"
 unic-segment = "0.9"
 unic-emoji-char = "0.9"
-log = { workspace = true }
+tracing = { workspace = true }
 
 [dependencies.uuid]
 workspace = true

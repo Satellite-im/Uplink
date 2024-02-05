@@ -5,13 +5,28 @@
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
+use once_cell::sync::Lazy;
+use regex::Regex;
+use serde::Deserialize;
+use tracing::log;
 use uuid::Uuid;
-use warp::logging::tracing::log;
+
+// "{\"Input\":\"((?:.|\n)*)\"}"
+static INPUT_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"\{\"Input\":\"((?:.|\n)+)\"}"#).unwrap());
 
 #[derive(Clone, Copy)]
 pub enum Size {
     Small,
     Normal,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum JSTextData {
+    Input(String),
+    Cursor(i64),
+    KeyPress(Code),
+    Submit,
 }
 
 impl Size {
@@ -104,7 +119,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .replace("$MULTI_LINE", &format!("{}", true));
     let disabled = *loading || *is_disabled;
 
-    let update_char_counter_script = include_str!("./update_char_counter.js").replace("$UUID", &id);
+    let sync = include_str!("./sync_data.js").replace("$UUID", &id);
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
@@ -117,7 +132,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             *cursor_position.write_silent() = Some(val.chars().count() as i64);
             *text_value.write_silent() = val;
             if show_char_counter {
-                let _ = eval(&update_char_counter_script.replace("$TEXT", &text_value.read()));
+                let _ = eval(&sync.replace("$TEXT", &text_value.read()));
             }
         }
     });
@@ -136,7 +151,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "input-group",
             aria_label: "input-group",
             div {
-                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
+                class: format_args!("input {}", if disabled { "disabled" } else { "" }),
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
@@ -277,5 +292,200 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
         script { script },
         script { focus_script }
+    ))
+}
+
+// Input using a rich editor making markdown changes visible
+#[allow(non_snake_case)]
+pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("render input");
+    let eval = use_eval(cx);
+    let listener_data = use_ref(cx, || None);
+
+    let Props {
+        id: _,
+        ignore_focus: _,
+        loading,
+        placeholder,
+        max_length,
+        size,
+        aria_label,
+        onchange,
+        onreturn,
+        oncursor_update,
+        onkeyup,
+        on_paste_keydown,
+        value,
+        is_disabled,
+        show_char_counter,
+        prevent_up_down_arrows,
+        onup_down_arrow,
+    } = &cx.props;
+
+    let id = if cx.props.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        cx.props.id.clone()
+    };
+    let id2 = id.clone();
+    let id_char_counter = id.clone();
+
+    let script = include_str!("./script.js")
+        .replace("$UUID", &id)
+        .replace("$MULTI_LINE", &format!("{}", true));
+    let disabled = *loading || *is_disabled;
+
+    let text_value = use_ref(cx, || value.clone());
+    let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
+
+    // Sync changed to the editor
+    use_future(
+        cx,
+        (value, placeholder, &disabled),
+        |(value, placeholder, disabled)| {
+            to_owned![eval, value, sync_script, text_value];
+            async move {
+                let update = !text_value.read().eq(&value);
+                let _ = eval(
+                    &sync_script
+                        .replace("$UPDATE", &update.to_string())
+                        .replace(
+                            "$TEXT",
+                            &value
+                                .replace('\\', "\\\\")
+                                .replace('"', "\\\"")
+                                .replace('\n', "\\n"),
+                        )
+                        .replace("$PLACEHOLDER", &placeholder)
+                        .replace("$DISABLED", &disabled.to_string()),
+                );
+            }
+        },
+    );
+
+    use_effect(cx, (), |_| {
+        to_owned![listener_data, eval, value];
+        let rich_editor: String = include_str!("./rich_editor_handler.js")
+            .replace("$EDITOR_ID", &id2)
+            .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
+            .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
+        async move {
+            if let Ok(eval) = eval(&rich_editor) {
+                loop {
+                    if let Ok(val) = eval.recv().await {
+                        let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
+                        // Instead of escaping all needed chars just try extract the input string
+                        let data = if let Some(capt) = input {
+                            let txt = capt.get(1).map(|t| t.as_str()).unwrap_or_default();
+                            Ok(JSTextData::Input(txt.to_string()))
+                        } else {
+                            serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default())
+                        };
+                        match data {
+                            Ok(data) => {
+                                let new =
+                                    listener_data.with(|current: &Option<Vec<JSTextData>>| {
+                                        match current {
+                                            Some(pending) => {
+                                                let mut pending = pending.clone();
+                                                pending.push(data);
+                                                pending
+                                            }
+                                            None => vec![data],
+                                        }
+                                    });
+                                *listener_data.write() = Some(new)
+                            }
+                            Err(e) => {
+                                log::error!("failed to deserialize message: {}: {}", val, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if let Some(pending) = listener_data.write_silent().take() {
+        pending.iter().for_each(|val| match val.to_owned() {
+            JSTextData::Input(txt) => {
+                *text_value.write_silent() = txt.clone();
+                onchange.call((txt, true))
+            }
+            JSTextData::Cursor(cursor) => {
+                if let Some(e) = oncursor_update {
+                    e.call((text_value.read().clone(), cursor));
+                }
+            }
+            JSTextData::Submit => {
+                onreturn.call((text_value.read().clone(), true, Code::Enter));
+            }
+            JSTextData::KeyPress(code) => {
+                if matches!(code, Code::ArrowDown | Code::ArrowUp) {
+                    if let Some(e) = onup_down_arrow {
+                        e.call(code);
+                    };
+                }
+            }
+        });
+    }
+
+    cx.render(rsx! (
+        div {
+            id: "input-group-{id}",
+            class: "input-group",
+            aria_label: "input-group",
+            div {
+                class: format_args!("input {}", if disabled { "disabled" } else { "" }),
+                height: "{size.get_height()}",
+                textarea {
+                    key: "textarea-key-{id}",
+                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
+                    id: "{id}",
+                    aria_label: "{aria_label}",
+                    disabled: "{disabled}",
+                    maxlength: "{max_length}",
+                    placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
+                    onblur: move |_| {
+                        onreturn.call((text_value.read().to_string(), false, Code::Enter));
+                    },
+                    onkeyup: move |evt| {
+                        if let Some(e) = onkeyup {
+                            e.call(evt.code());
+                        }
+                    },
+                    onkeydown: move |evt| {
+                        // Note for some reason arrow key events are not forwarded to here
+                        // HACK(Linux): Allow copy and paste files for Linux 
+                        if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
+                            if let Some(e) = on_paste_keydown {
+                                e.call(evt.clone());
+                            }
+                        }
+                    }
+                }
+                if *show_char_counter {
+                    rsx!(
+                        div {
+                            class: "input-char-counter",
+                            p {
+                                key: "{id_char_counter}-char-counter",
+                                id: "{id_char_counter}-char-counter",
+                                aria_label: "input-char-counter",
+                                class: "char-counter-p-element",
+                                format!("{}", text_value.read().chars().count()),
+                            },
+                            p {
+                                key: "{id_char_counter}-char-max-length",
+                                id: "{id_char_counter}-char-max-length",
+                                class: "char-counter-p-element",
+                                format!("/{}", max_length - 1),
+                            }
+                        }
+                    )
+                }
+            },
+        }
+        script { script },
     ))
 }

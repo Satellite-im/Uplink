@@ -9,8 +9,8 @@ use futures::{channel::oneshot, StreamExt};
 use kit::elements::button::Button;
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
+use tracing::log;
 use warp::blink::AudioTestEvent;
-use warp::logging::tracing::log;
 
 use crate::components::settings::{SettingSection, SettingSectionSimple};
 use common::state::{action::ConfigAction, Action, State};

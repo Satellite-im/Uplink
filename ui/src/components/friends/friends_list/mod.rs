@@ -31,10 +31,11 @@ use common::{
 use uuid::Uuid;
 use warp::{
     crypto::DID,
-    logging::tracing::log,
     multipass::identity::Relationship,
     raygun::{self, ConversationType},
 };
+
+use tracing::log;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
@@ -449,7 +450,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                     class: "send-chat-button",
                     Button {
                         text: get_local_text("friends.share-to-chat"),
-                        icon: Icon::ArrowTopRightOnSquare,
+                        icon: Icon::Share,
                         aria_label: "share_to_chat".into(),
                         appearance: Appearance::Secondary,
                         disabled: chats_selected.read().is_empty(),
@@ -473,7 +474,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                 };
                 let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
                 let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                    Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis()),
+                    Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis(), Some((&state.read(), &chat.id, true))),
                     _ => match &unwrapped_message.attachments()[..] {
                         [] => get_local_text("sidebar.chat-new"),
                         [ file ] => file.name(),

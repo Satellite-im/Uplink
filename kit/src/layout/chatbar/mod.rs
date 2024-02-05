@@ -1,6 +1,7 @@
-use common::state::Identity;
+use common::state::{Identity, State};
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
+use uuid::Uuid;
 use warp::constellation::file::File;
 
 use crate::{
@@ -88,6 +89,8 @@ pub struct ReplyProps<'a> {
     children: Element<'a>,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
+    state: &'a UseSharedState<State>,
+    chat: Uuid,
 }
 
 #[allow(non_snake_case)]
@@ -97,6 +100,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
         &cx.props.message,
         cx.props.markdown.unwrap_or_default(),
         cx.props.transform_ascii_emojis.unwrap_or_default(),
+        Some((&cx.props.state.read(), &cx.props.chat, true)),
     );
 
     let has_attachments = cx
@@ -179,7 +183,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             cx.props.with_file_upload.as_ref(),
             div{
                 class: "chatbar-group",
-                textarea::Input {
+                textarea::InputRich {
                     key: "{controlled_input_id}",
                     id: controlled_input_id.clone(),
                     loading: cx.props.loading.unwrap_or_default(),
@@ -234,7 +238,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 *selected_suggestion.write_silent() = None;
                                 return;
                             }
-                            let current = &mut *selected_suggestion.write_silent();
+                            let current = &mut *selected_suggestion.write();
                             let selected_idx = if code == Code::ArrowDown {
                                 match current.as_ref() {
                                     Some(v) => (v + 1) % amount,
@@ -247,7 +251,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             };
                             *current = Some(selected_idx);
-                            let _ = eval(&include_str!("./emoji_scroll.js").replace("$NUM", &selected_idx.to_string()));
+                            let _ = eval(&include_str!("./suggestion_scroll.js").replace("$NUM", &selected_idx.to_string()));
                         }
                 },
                 is_typing.then(|| {

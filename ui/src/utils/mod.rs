@@ -1,7 +1,7 @@
 use common::{state, STATIC_ARGS};
 use dioxus::prelude::{EvalError, UseEval};
 use filetime::FileTime;
-use warp::logging::tracing::log;
+use tracing::log;
 
 use std::{fs, path::Path, rc::Rc};
 
@@ -17,7 +17,6 @@ pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod get_font_sizes;
 pub mod keyboard;
-pub mod lifecycle;
 pub mod verify_valid_paths;
 
 pub type EvalProvider = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
@@ -159,7 +158,7 @@ impl Drop for WindowDropHandler {
     fn drop(&mut self) {
         let cmd_tx = WINDOW_CMD_CH.tx.clone();
         if let Err(_e) = cmd_tx.send(self.cmd) {
-            // todo: log error
+            log::error!("Failed to send command in WindowDropHandler: {}", _e);
         }
     }
 }

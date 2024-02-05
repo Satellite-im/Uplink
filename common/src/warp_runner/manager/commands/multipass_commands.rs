@@ -7,12 +7,13 @@ use warp::{
     constellation::file::FileType,
     crypto::DID,
     error::Error,
-    logging::tracing::log,
     multipass::{
         self,
         identity::{self, Identifier, IdentityImage, IdentityStatus, IdentityUpdate},
     },
 };
+
+use tracing::log;
 
 use crate::{
     state::{self, Identity},

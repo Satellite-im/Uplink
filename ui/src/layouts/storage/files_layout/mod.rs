@@ -11,6 +11,7 @@ use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::label::Label;
@@ -27,17 +28,18 @@ use uuid::Uuid;
 use warp::raygun::Location;
 
 pub mod controller;
-pub mod file_modal;
+pub mod file_preview;
 
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
-use crate::layouts::storage::files_layout::file_modal::get_file_modal;
+use crate::layouts::storage::files_layout::file_preview::open_file_preview_modal;
 use crate::layouts::storage::send_files_layout::modal::SendFilesLayoutModal;
 use crate::layouts::storage::send_files_layout::SendFilesStartLocation;
 use crate::layouts::storage::shared_component::{FilesAndFolders, FilesBreadcumbs};
 use crate::utils::async_task_queue::chat_upload_stream_handler;
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
+use crate::utils::get_drag_event::get_drag_event;
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -148,13 +150,13 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     cx.render(rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
-            rsx!(get_file_modal {
+            rsx!(open_file_preview_modal {
                     on_dismiss: |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
                     },
-                    on_download: move |_| {
+                    on_download: move |temp_path| {
                         let file_name = file2.clone().name();
-                        functions::download_file(&file_name, ch);
+                        functions::download_file(&file_name, ch, temp_path);
                     },
                     file: file.clone()
                 }
@@ -185,10 +187,13 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                 }
             },
             ondragover: move |_| {
-                if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
-                    upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
+                let file_drop_event = get_drag_event();
+                if let FileDropEvent::Hovered { .. } = file_drop_event {
+                    if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
+                        upload_file_controller.are_files_hovering_app.with_mut(|i| *i = true);
+                    }
                 }
-                },
+            },
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
