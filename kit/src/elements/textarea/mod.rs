@@ -366,15 +366,17 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         },
     );
 
-    use_effect(cx, (), |_| {
-        to_owned![listener_data, eval, value];
-        let rich_editor: String = include_str!("./rich_editor_handler.js")
+    let rich_editor: &UseRef<String> = use_ref(cx, || {
+        include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2.to_string())
             .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
-            .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
+            .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"))
+    });
+
+    use_effect(cx, (), |_| {
+        to_owned![listener_data, eval, rich_editor];
         async move {
-            if let Ok(eval) = eval(&rich_editor) {
-                println!("{:?}", &id2);
+            if let Ok(eval) = eval(&rich_editor.read()) {
                 loop {
                     if let Ok(val) = eval.recv().await {
                         let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
