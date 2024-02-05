@@ -27,6 +27,18 @@ sendButton[1].addEventListener("click", (event) => {
     textareas[0].value = "";
 })
 
+var input_element = document.getElementById('$UUID');
+input_element.focus();
+    console.log("hit's plain script file", input_element, textareas[0]);
+    textareas[0].focus();
+    input_element.focus();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var input_element = document.getElementById('$UUID');
+            input_element.focus();
+        }, 1000); // 100 milliseconds delay (adjust if necessary)
+    });
 switch (textareas[0].style.height) {
     case "66px":
     case "44px":

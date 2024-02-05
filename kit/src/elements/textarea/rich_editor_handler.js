@@ -4,6 +4,11 @@
 
 let text = document.getElementById('$EDITOR_ID')
 
+if ($AUTOFOCUS) {
+    console.log('$EDITOR_ID', text, text.id);
+    text.focus();
+}
+
 var keys = [{
     key: "ArrowUp", run: () => {
         if (text.classList.contains("up-down-disabled")) {
@@ -48,9 +53,7 @@ var editor = new MarkdownEditor(
 
 editor.value('$INIT');
 
-if ($AUTOFOCUS) {
-    addEventListener("focus", () => { editor.codemirror.focus() });
-}
+
 
 editor.registerListener("input", ({ _element, _codemirror, value }) => {
     // Sync value to uplink

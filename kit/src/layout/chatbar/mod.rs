@@ -188,7 +188,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: controlled_input_id.clone(),
                     loading: cx.props.loading.unwrap_or_default(),
                     placeholder: cx.props.placeholder.clone(),
-                    ignore_focus: cx.props.ignore_focus,
+                    ignore_focus: false,
                     show_char_counter: true,
                     value: if cx.props.is_disabled { get_local_text("messages.loading")} else { cx.props.value.clone().unwrap_or_default()},
                     onkeyup: move |keycode| {

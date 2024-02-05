@@ -111,14 +111,16 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         include_str!("./focus.js").replace("$UUID", &id)
     };
+    println!("{:?}", &id);
 
     let _ = eval(&focus_script);
 
     let script = include_str!("./script.js")
-        .replace("$UUID", &id)
+        .replace("$UUID", &id2)
         .replace("$MULTI_LINE", &format!("{}", true));
+    println!("{:?}", &id2);
     let disabled = *loading || *is_disabled;
-
+    let _ = eval(&script);
     let sync = include_str!("./sync_data.js").replace("$UUID", &id);
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
@@ -166,6 +168,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
                     oninput: {
+                        println!("{:?}", &id);
                         to_owned![eval, cursor_script];
                         move |evt| {
                             let current_val = evt.value.clone();
@@ -331,7 +334,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let id_char_counter = id.clone();
 
     let script = include_str!("./script.js")
-        .replace("$UUID", &id)
+        .replace("$UUID", &id.to_string())
         .replace("$MULTI_LINE", &format!("{}", true));
     let disabled = *loading || *is_disabled;
 
@@ -366,11 +369,12 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     use_effect(cx, (), |_| {
         to_owned![listener_data, eval, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
-            .replace("$EDITOR_ID", &id2)
+            .replace("$EDITOR_ID", &id2.to_string())
             .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
             .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
         async move {
             if let Ok(eval) = eval(&rich_editor) {
+                println!("{:?}", &id2);
                 loop {
                     if let Ok(val) = eval.recv().await {
                         let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
