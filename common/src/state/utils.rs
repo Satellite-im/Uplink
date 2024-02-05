@@ -200,7 +200,7 @@ pub fn mention_to_did_key(id: &Identity) -> String {
 // Replacement pattern converting a user tag to a highlight div
 pub fn mention_replacement_pattern(id: &Identity, visual: bool) -> String {
     format!(
-        r#"<div class="message-user-tag {}" value="{}">@{}</div>"#,
+        r#"<a class="message-user-tag {}" value="{}">@{}</a>"#,
         if visual { "visual-only" } else { "" },
         id.did_key(),
         id.username()
