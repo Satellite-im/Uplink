@@ -552,12 +552,16 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 let did = action.did;
                 if did.eq(&id.did_key()) {
                     id.set_profile_picture(&action.picture);
-                    id.set_profile_picture(&action.banner);
+                    if let Some(banner) = action.banner.as_ref() {
+                        id.set_profile_banner(banner);
+                    }
                     state.write().set_own_identity(id);
                 } else {
                     state.write().update_identity_with(did, |id| {
                         id.set_profile_picture(&action.picture);
-                        id.set_profile_banner(&action.banner);
+                        if let Some(banner) = action.banner.as_ref() {
+                            id.set_profile_banner(banner);
+                        }
                     });
                 }
             }
