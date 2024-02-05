@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use dioxus::prelude::*;
 
@@ -11,7 +14,7 @@ use warp::constellation::file::File;
 
 use common::{
     icons::outline::Shape as Icon,
-    is_audio, is_video,
+    is_audio, is_doc, is_lang_file, is_video,
     language::get_local_text,
     state::State,
     utils::{
@@ -27,6 +30,8 @@ enum FileType {
     Video,
     Image,
     Audio,
+    Doc,
+    Code,
 }
 
 const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
@@ -80,6 +85,8 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let is_video = is_video(&cx.props.file.name());
     let is_audio = is_audio(&cx.props.file.name());
+    let is_doc = is_doc(&cx.props.file.name());
+    let is_code = is_lang_file(&cx.props.file.name());
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
         if !temp_dir_with_file_id.exists() && *should_download.get() {
             cx.props.on_download.call(Some(temp_dir.clone()));
@@ -129,6 +136,15 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let local_disk_path_fixed =
         get_fixed_path_to_load_local_file(file_path_in_local_disk.read().clone());
 
+    let code_content = if is_code {
+        match fs::read_to_string(file_path_in_local_disk.read().clone()) {
+            Ok(content) => content,
+            Err(_) => String::new(),
+        }
+    } else {
+        String::new()
+    };
+
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
@@ -149,7 +165,8 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 // to download a video and is not possible to load it
                 rsx!(FileTypeTag {
                     file_type: FileType::Video,
-                    source: "".to_string()
+                    source: "".to_string(),
+                    code_content: code_content,
                 })
             } else if !file_path_in_local_disk.read().exists()
                 && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
@@ -158,7 +175,8 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 // because image didn't download and is not possible to load it
                 rsx!(FileTypeTag {
                     file_type: FileType::Image,
-                    source: thumbnail
+                    source: thumbnail,
+                    code_content: code_content,
                 })
             } else if file_path_in_local_disk.read().exists() {
                 // Success for both video and image
@@ -167,10 +185,15 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         FileType::Video
                     } else if is_audio {
                         FileType::Audio
+                    } else if is_doc {
+                        FileType::Doc
+                    } else if is_code {
+                        FileType::Code
                     } else {
                         FileType::Image
                     },
-                    source: local_disk_path_fixed
+                    source: local_disk_path_fixed,
+                    code_content: code_content,
                 })
             } else {
                 rsx!(Loader {
@@ -185,13 +208,17 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 struct FileTypeTagProps {
     file_type: FileType,
     source: String,
+    code_content: String,
 }
 
 #[allow(non_snake_case)]
 fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
     let file_type = cx.props.file_type.clone();
     let source_path = cx.props.source.clone();
-    cx.render(match file_type {
+    let code_content = cx.props.code_content.clone();
+    let code_class = get_language_class(&source_path);
+
+    cx.render(rsx! {match file_type {
         FileType::Video | FileType::Audio => rsx!(video {
             id: "file_preview_img",
             aria_label: "file-preview-image",
@@ -208,5 +235,57 @@ fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
             max_width: IMAGE_MAX_WIDTH,
             src: "{source_path}"
         },),
-    })
+        FileType::Doc => rsx!(
+                iframe {
+                    id: "file_preview_img",
+                    aria_label: "file-preview-image",
+                    max_height: "80vh",
+                    max_width: "80vw",
+                    height: "800px",
+                    width: "800px",
+                    src: "{source_path}"
+                }
+            ),
+            FileType::Code => rsx!(
+                div {
+                    class: "code-preview",
+                    pre {
+                        code {
+                            class: format_args!("{code_class}"),
+                            "{code_content}"
+                        }
+                    }
+                }
+                script {
+                    r#"
+                    (() => {{
+                        Prism.highlightAll();
+                    }})();
+                    "#
+                }
+            ),
+    },})
+}
+
+fn get_language_class(file_path: &str) -> String {
+    let extension = Path::new(file_path)
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or("");
+
+    let extension_formatted = match extension {
+        "rs" => "rust",
+        "js" => "javascript",
+        "py" => "python",
+        "html" => "html",
+        "css" => "css",
+        "toml" => "toml",
+        "java" => "java",
+        "cpp" => "cpp",
+        "c" => "c",
+        _ => "plaintext",
+    }
+    .to_string();
+
+    format!("language-{}", extension_formatted)
 }

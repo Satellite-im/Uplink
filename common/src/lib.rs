@@ -197,7 +197,17 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] =
 
 pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"];
 
-pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
+pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt", ".csv", ".tsv"];
+
+pub const PRODUCTIVITY_DOCS: &[&str] = &[
+    ".xls", ".xlsx", ".xlsm", ".xlsb", // Excel extensions
+    ".ppt", ".pptx", ".pps", ".ppsx", // PowerPoint extensions
+    ".odt", ".ott", ".ods", ".ots", ".odp", ".otp", ".rtf",
+];
+
+pub fn is_file_available_to_preview(file_name: &str) -> bool {
+    is_video(file_name) || is_audio(file_name) || is_pdf_file(file_name) || is_lang_file(file_name)
+}
 
 pub fn is_video(file_name: &str) -> bool {
     VIDEO_FILE_EXTENSIONS
@@ -211,6 +221,28 @@ pub fn is_audio(file_name: &str) -> bool {
         .any(|x| file_name.to_lowercase().ends_with(x))
 }
 
+pub fn is_doc(file_name: &str) -> bool {
+    DOC_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn is_pdf_file(file_name: &str) -> bool {
+    file_name.to_lowercase().ends_with(".pdf")
+}
+
+pub fn is_productivity_doc(file_name: &str) -> bool {
+    PRODUCTIVITY_DOCS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
+pub fn is_lang_file(file_name: &str) -> bool {
+    PROGRAMMING_LANG_FILES
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
+}
+
 pub fn return_correct_icon(file_name: &str) -> Icon {
     if is_video(file_name) {
         return Icon::DocumentMedia;
@@ -218,7 +250,20 @@ pub fn return_correct_icon(file_name: &str) -> Icon {
     if is_audio(file_name) {
         return Icon::DocumentAudio;
     }
-    Icon::Document
+
+    if is_doc(file_name) {
+        return Icon::DocumentText;
+    }
+
+    if is_productivity_doc(file_name) {
+        return Icon::DocumentChartBar;
+    }
+
+    if is_lang_file(file_name) {
+        return Icon::DocumentCode;
+    }
+
+    Icon::DocumentQuestion
 }
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {
@@ -284,3 +329,48 @@ pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
 
     Ok(extensions_path)
 }
+
+pub const PROGRAMMING_LANG_FILES: &[&str] = &[
+    ".c", ".cpp", ".cc", ".h", ".hpp",  // C/C++
+    ".cs",   // C#
+    ".java", // Java
+    ".js", ".jsx", ".ts", ".tsx", // JavaScript
+    ".py", ".pyc", ".pyd", ".pyo", ".pyw", ".pyz", // Python
+    ".rb",  // Ruby
+    ".php", ".php4", ".php5", ".php7", ".phtml", // PHP
+    ".swift", // Swift
+    ".go",    // Go
+    ".rs", ".toml", // Rust
+    ".kt", ".kts", // Kotlin
+    ".scala", ".sc", // Scala
+    ".pl", ".pm", // Perl
+    ".sh", ".bash", ".zsh",  // Shell Scripting
+    ".ps1",  // PowerShell
+    ".r",    // R
+    ".dart", // Dart
+    ".lua",  // Lua
+    ".hs",   // Haskell
+    ".m",    // Objective-C
+    ".sql",  // SQL
+    ".html", ".htm", ".css", ".scss", // HTML/CSS
+    ".xml",  // XML
+    ".asm", ".s", // Assembly
+    ".m", ".mlx", // Matlab
+    ".f", ".for", ".f90", // Fortran
+    ".lisp", ".lsp", // Lisp
+    ".pro", ".P", // Prolog
+    ".ada", ".ads", ".adb", // Ada
+    ".groovy", ".gvy", ".gy", ".gsh", // Groovy
+    ".clj", ".cljs", ".cljc", ".edn", // Clojure
+    ".elm", // Elm
+    ".ex", ".exs", // Elixir
+    ".erl", ".hrl", // Erlang
+    ".vbs", // VBScript
+    ".vb",  // Visual Basic .NET
+    ".fs", ".fsx", ".fsi",    // F#
+    ".ts",     // TypeScript
+    ".coffee", // CoffeeScript
+    ".json",   // JSON
+    ".yaml", ".yml", // YAML
+    ".md",  // Markdown
+];
