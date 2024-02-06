@@ -195,7 +195,7 @@ pub const ROOT_DIR_NAME: &str = "root";
 pub const VIDEO_FILE_EXTENSIONS: &[&str] =
     &[".mp4", ".mov", ".avi", ".flv", ".wmv", ".m4v", ".3gp"];
 
-pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".ogg", ".flac", ".aac", ".m4a"];
+pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".flac", ".aac", ".m4a"];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt", ".csv", ".tsv"];
 
