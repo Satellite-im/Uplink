@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use dioxus::prelude::*;
 
@@ -136,14 +133,10 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let local_disk_path_fixed =
         get_fixed_path_to_load_local_file(file_path_in_local_disk.read().clone());
 
-    let code_content = if is_code {
-        match fs::read_to_string(file_path_in_local_disk.read().clone()) {
-            Ok(content) => content,
-            Err(_) => String::new(),
-        }
-    } else {
-        String::new()
-    };
+    let code_content = is_code
+        .then(|| std::fs::read_to_string(file_path_in_local_disk.read().clone()).ok())
+        .flatten()
+        .unwrap_or_default();
 
     cx.render(rsx!(
         ContextMenu {
@@ -170,7 +163,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 })
             } else if !file_path_in_local_disk.read().exists()
                 && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
-                && !is_video {
+                && !is_video && !is_audio {
                 // It will show image with thumbnail and not with high quality
                 // because image didn't download and is not possible to load it
                 rsx!(FileTypeTag {
@@ -271,7 +264,7 @@ fn get_language_class(file_path: &str) -> String {
     let extension = Path::new(file_path)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or("");
+        .unwrap_or_default();
 
     let extension_formatted = match extension {
         "rs" => "rust",
