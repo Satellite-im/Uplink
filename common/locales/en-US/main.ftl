@@ -404,6 +404,8 @@ enter-seed-words = Recovery Seed
     .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by spaces.
     .submit = Recover Account
     .placeholder = Enter Recovery Seed...
+    .invalid-seed = Hmm, that seed didn't work.
+    .error-seed = This is an invalid seed!
 
 auth = Create Account 
     .enter-username = Enter Username
