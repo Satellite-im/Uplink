@@ -46,7 +46,9 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
     let keys_rendered = cx.props.keys.iter().enumerate().map(|(idx, key)| {
         rsx!(div {
             class: "keybind-key",
+            aria_label: "keybind-key",
             div {
+                aria_label: "keybind-key-inner",
                 class: "keybind-key-inner",
                 "{key.to_uppercase()}",
             }
@@ -54,6 +56,7 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
         if idx != cx.props.keys.len() - 1 {
             rsx!(div {
                 class: "keybind-separator",
+                aria_label: "keybind-separator",
                 IconElement {
                     icon: Icon::Plus
                 }
@@ -70,6 +73,7 @@ pub struct KeybindSectionProps {
     pub bindings: Vec<(GlobalShortcut, Shortcut)>,
     pub shortcut: GlobalShortcut,
     pub section_label: String,
+    pub aria_label: Option<String>,
 }
 
 pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, Shortcut)>) -> bool {
@@ -92,6 +96,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
     let system_shortcut = Shortcut::get_system_shortcut(state, cx.props.shortcut.clone());
     let new_keybind_has_one_key = use_ref(cx, || false);
     let new_keybind_has_at_least_one_modifier = use_ref(cx, || false);
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
     if update_keybind.read().is_some() && !is_recording.get() {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
@@ -163,6 +168,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         div {
             id: format_args!("{}", keybind_section_id),
             class: "keybind-section",
+            aria_label: "{aria_label}",
             (**is_recording).then(|| rsx!(div {
                 class: "keybind-section-mask",
                 onclick: move |_| {
@@ -171,11 +177,13 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 }
             })),
             div {
+                aria_label: "keybind-section-label",
                 class: "keybind-section-label",
                 "{cx.props.section_label}"
             },
             div {
                 class: "{keybind_class}",
+                aria_label: "keybind-section-keys",
                 contenteditable: true,
                 onfocus: move |_| {
                     is_recording.set(true);
@@ -234,7 +242,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 }
             },
             Button {
-                aria_label: "reset-keybinds-button".into(),
+                aria_label: "reset-single-keybind-button".into(),
                 icon: Icon::ArrowUturnDown,
                 onpress: move |_| {
                     let (keys, modifiers) = get_keycode_and_modifier_from_a_shortcut(cx.props.shortcut.clone());
@@ -276,10 +284,12 @@ pub fn KeybindSettings(cx: Scope) -> Element {
             aria_label: "settings-keybinds",
             div {
                 class: "settings-keybinds-info",
+                aria_label: "settings-keybind-info",
                 IconElement {
                     icon: Icon::Keybind
                 },
                 p {
+                    aria_label: "settings-keybind-info-text",
                     get_local_text("settings-keybinds.info")
                 }
             },
@@ -288,7 +298,7 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-keybinds.reset-keybinds"),
                 section_description: get_local_text("settings-keybinds.reset-keybinds-description"),
                 Button {
-                    aria_label: "reset-keybinds-button".into(),
+                    aria_label: "revert-keybinds-button".into(),
                     icon: Icon::ArrowUturnDown,
                     onpress: move |_| {
                         state.write().mutate(Action::ResetKeybinds);
@@ -298,42 +308,49 @@ pub fn KeybindSettings(cx: Scope) -> Element {
                 },
             },
             KeybindSection {
+                aria_label: "increase-font-size-section".into(),
                 id: format!("{:?}", GlobalShortcut::IncreaseFontSize),
                 section_label: get_local_text("settings-keybinds.increase-font-size"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::IncreaseFontSize
             }
             KeybindSection {
+                aria_label: "decrease-font-size-section".into(),
                 id: format!("{:?}", GlobalShortcut::DecreaseFontSize),
                 section_label: get_local_text("settings-keybinds.decrease-font-size"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::DecreaseFontSize
             }
             KeybindSection {
+                aria_label: "toggle-mute-section".into(),
                 id: format!("{:?}", GlobalShortcut::ToggleMute),
                 section_label: get_local_text("settings-keybinds.toggle-mute"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleMute
             }
             KeybindSection {
+                aria_label: "toggle-deafen-section".into(),
                 id: format!("{:?}", GlobalShortcut::ToggleDeafen),
                 section_label: get_local_text("settings-keybinds.toggle-deafen"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDeafen
             }
             KeybindSection {
+                aria_label: "open-close-dev-tools-section".into(),
                 id: format!("{:?}", GlobalShortcut::OpenCloseDevTools),
                 section_label: get_local_text("settings-keybinds.open-close-dev-tools"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::OpenCloseDevTools
             }
             KeybindSection {
+                aria_label: "toggle-devmode-section".into(),
                 id: format!("{:?}", GlobalShortcut::ToggleDevmode),
                 section_label: get_local_text("settings-keybinds.toggle-devmode"),
                 bindings: bindings.clone(),
                 shortcut: GlobalShortcut::ToggleDevmode
             }
             KeybindSection {
+                aria_label: "hide-focus-uplink-section".into(),
                 id: format!("{:?}", GlobalShortcut::SetAppVisible),
                 section_label: get_local_text("settings-keybinds.hide-focus-uplink"),
                 bindings: bindings.clone(),
