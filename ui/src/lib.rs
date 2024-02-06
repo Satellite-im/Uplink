@@ -551,14 +551,18 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 let mut id = state.read().get_own_identity();
                 let did = action.did;
                 if did.eq(&id.did_key()) {
-                    id.set_profile_picture(&action.picture);
+                    if let Some(picture) = action.picture.as_ref() {
+                        id.set_profile_picture(picture);
+                    }
                     if let Some(banner) = action.banner.as_ref() {
                         id.set_profile_banner(banner);
                     }
                     state.write().set_own_identity(id);
                 } else {
                     state.write().update_identity_with(did, |id| {
-                        id.set_profile_picture(&action.picture);
+                        if let Some(picture) = action.picture.as_ref() {
+                            id.set_profile_picture(picture);
+                        }
                         if let Some(banner) = action.banner.as_ref() {
                             id.set_profile_banner(banner);
                         }

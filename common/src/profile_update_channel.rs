@@ -27,7 +27,7 @@ pub static PROFILE_CHANNEL_LISTENER: Lazy<ProfileUpdateChannel> = Lazy::new(|| {
 
 pub struct ProfileDataUpdate {
     pub did: DID,
-    pub picture: String,
+    pub picture: Option<String>,
     pub banner: Option<String>,
 }
 
@@ -45,11 +45,8 @@ pub fn fetch_identity_data(identities: &[Identity]) {
 
             let profile_picture = match rx.await {
                 Ok(res) => match res {
-                    Ok(pic) => pic,
-                    Err(e) => {
-                        log::error!("error fetching profile pic {e}");
-                        return;
-                    }
+                    Ok(pic) => Some(pic),
+                    Err(_) => None,
                 },
                 Err(e) => {
                     log::error!("error fetching profile pic {e}");
@@ -71,11 +68,13 @@ pub fn fetch_identity_data(identities: &[Identity]) {
                     return;
                 }
             };
-            let _ = PROFILE_CHANNEL_LISTENER.tx.send(ProfileDataUpdate {
-                did: identity,
-                picture: profile_picture,
-                banner: profile_banner,
-            });
+            if profile_picture.is_some() || profile_banner.is_some() {
+                let _ = PROFILE_CHANNEL_LISTENER.tx.send(ProfileDataUpdate {
+                    did: identity,
+                    picture: profile_picture,
+                    banner: profile_banner,
+                });
+            }
         }
     });
 }
