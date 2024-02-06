@@ -255,46 +255,57 @@ pub fn AboutPage(cx: Scope) -> Element {
                     class: "flags-settings",
                     img {
                         src: "{image_path_flag_USA}",
+                        aria_label: "usa-flag",
                         alt: "USA Flag",
                     },
                     img {
                         src: "{image_path_flag_MX}",
+                        aria_label: "mx-flag",
                         alt: "Mexico Flag",
                     }
                     img {
                         src: "{image_path_flag_DE}",
+                        aria_label: "de-flag",
                         alt: "Germany Flag",
                     }
                     img {
                         src: "{image_path_flag_PT}",
+                        aria_label: "pt-flag",
                         alt: "Portugal Flag",
                     }
                     img {
                         src: "{image_path_flag_BR}",
+                        aria_label: "br-flag",
                         alt: "Brazil Flag",
                     }
                     img {
                         src: "{image_path_flag_IT}",
+                        aria_label: "it-flag",
                         alt: "Italy Flag",
                     }
                     img {
                         src: "{image_path_flag_UR}",
+                        aria_label: "ur-flag",
                         alt: "Ukraine Flag",
                     }
                     img {
                         src: "{image_path_flag_BL}",
+                        aria_label: "bl-flag",
                         alt: "Belarus Flag",
                     }
                     img {
                         src: "{image_path_flag_JP}",
+                        aria_label: "jp-flag",
                         alt: "Japan Flag",
                     }
                     img {
                         src: "{image_path_flag_AU}",
+                        aria_label: "au-flag",
                         alt: "Australia Flag",
                     }
                     img {
                         src: "{image_path_flag_IN}",
+                        aria_label: "in-flag",
                         alt: "Indonesia Flag",
                     }
                 }

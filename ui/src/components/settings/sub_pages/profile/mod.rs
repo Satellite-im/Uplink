@@ -647,7 +647,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         )
                     },
                     SettingSectionSimple {
+                        aria_label: "store-recovery-seed-on-account-section".into(),
                         Checkbox {
+                            aria_label: "store-recovery-seed-on-account-checkbox".into(),
                             disabled: false,
                             is_checked: *store_phrase.get(),
                             height: "15px".into(),
@@ -657,6 +659,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             },
                         },
                         label {
+                            aria_label: "store-recovery-seed-on-account-label",
                             get_local_text("settings-profile.store-on-account")
                         }
                     },
