@@ -205,6 +205,15 @@ pub const PRODUCTIVITY_DOCS: &[&str] = &[
     ".odt", ".ott", ".ods", ".ots", ".odp", ".otp", ".rtf",
 ];
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum FileType {
+    Video,
+    Image,
+    Audio,
+    Doc,
+    Code,
+}
+
 pub fn is_file_available_to_preview(file_name: &str) -> bool {
     is_video(file_name) || is_audio(file_name) || is_pdf_file(file_name) || is_lang_file(file_name)
 }
@@ -264,6 +273,20 @@ pub fn return_correct_icon(file_name: &str) -> Icon {
     }
 
     Icon::DocumentQuestion
+}
+
+pub fn get_file_type(file_name: &str) -> FileType {
+    if is_video(file_name) {
+        FileType::Video
+    } else if is_audio(file_name) {
+        FileType::Audio
+    } else if is_doc(file_name) {
+        FileType::Doc
+    } else if is_lang_file(file_name) {
+        FileType::Code
+    } else {
+        FileType::Image
+    }
 }
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {

@@ -10,26 +10,18 @@ use kit::{
 use warp::constellation::file::File;
 
 use common::{
+    get_file_type,
     icons::outline::Shape as Icon,
-    is_audio, is_doc, is_lang_file, is_video,
+    is_audio, is_lang_file, is_video,
     language::get_local_text,
-    state::State,
+    state::{State, ToastNotification},
     utils::{
         img_dimensions_preview::{IMAGE_MAX_HEIGHT, IMAGE_MAX_WIDTH},
         local_file_path::get_fixed_path_to_load_local_file,
     },
     warp_runner::thumbnail_to_base64,
-    STATIC_ARGS,
+    FileType, STATIC_ARGS,
 };
-
-#[derive(Debug, Clone, PartialEq)]
-enum FileType {
-    Video,
-    Image,
-    Audio,
-    Doc,
-    Code,
-}
 
 const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
 const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
@@ -52,6 +44,7 @@ pub fn open_file_preview_modal<'a>(
             on_download: |temp_path| {
                 on_download.call(temp_path);
             },
+            on_dismiss: move |_| on_dismiss.call(()),
         }))
     }))
 }
@@ -60,6 +53,7 @@ pub fn open_file_preview_modal<'a>(
 struct Props<'a> {
     file: &'a File,
     on_download: EventHandler<'a, Option<PathBuf>>,
+    on_dismiss: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
@@ -82,8 +76,8 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let is_video = is_video(&cx.props.file.name());
     let is_audio = is_audio(&cx.props.file.name());
-    let is_doc = is_doc(&cx.props.file.name());
     let is_code = is_lang_file(&cx.props.file.name());
+
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
         if !temp_dir_with_file_id.exists() && *should_download.get() {
             cx.props.on_download.call(Some(temp_dir.clone()));
@@ -118,11 +112,11 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
                 tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
                 counter += 250;
-                if counter > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD && !is_video {
+                if counter > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD && !is_video && !is_audio {
                     file_loading_counter.with_mut(|i| *i = counter);
                     break;
                 }
-                if counter > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD && is_video {
+                if counter > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD && (is_video || is_audio) {
                     file_loading_counter.with_mut(|i| *i = counter);
                     break;
                 }
@@ -137,6 +131,8 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .then(|| std::fs::read_to_string(file_path_in_local_disk.read().clone()).ok())
         .flatten()
         .unwrap_or_default();
+
+    let file_type = get_file_type(&file_path_in_local_disk.read().to_string_lossy());
 
     cx.render(rsx!(
         ContextMenu {
@@ -157,41 +153,44 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 // It will show a video player with error, because take much time
                 // to download a video and is not possible to load it
                 rsx!(FileTypeTag {
-                    file_type: FileType::Video,
+                    file_type: file_type,
                     source: "".to_string(),
                     code_content: code_content,
                 })
             } else if !file_path_in_local_disk.read().exists()
                 && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
-                && !is_video && !is_audio {
+                && file_type == FileType::Image {
                 // It will show image with thumbnail and not with high quality
                 // because image didn't download and is not possible to load it
                 rsx!(FileTypeTag {
-                    file_type: FileType::Image,
+                    file_type: file_type,
                     source: thumbnail,
                     code_content: code_content,
                 })
             } else if file_path_in_local_disk.read().exists() {
-                // Success for both video and image
+                // Success for both any kind of file
                 rsx!(FileTypeTag {
-                    file_type: if is_video {
-                        FileType::Video
-                    } else if is_audio {
-                        FileType::Audio
-                    } else if is_doc {
-                        FileType::Doc
-                    } else if is_code {
-                        FileType::Code
-                    } else {
-                        FileType::Image
-                    },
+                    file_type: file_type,
                     source: local_disk_path_fixed,
                     code_content: code_content,
                 })
-            } else {
+            } else if *file_loading_counter.read() <  TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD {
                 rsx!(Loader {
                     spinning: true
                 },)
+            } else {
+                state
+                .write()
+                .mutate(common::state::Action::AddToastNotification(
+                    ToastNotification::init(
+                        "".into(),
+                        get_local_text("files.not-possible-to-preview-file"),
+                        None,
+                        3,
+                    ),
+                ));
+                cx.props.on_dismiss.call(());
+                rsx!(div {})
             }
         },
     ))
@@ -280,6 +279,7 @@ fn get_language_class(file_path: &str) -> String {
     let extension_formatted = match extension {
         "rs" => "rust",
         "js" => "javascript",
+        "ts" => "typescript",
         "py" => "python",
         "html" => "html",
         "css" => "css",
