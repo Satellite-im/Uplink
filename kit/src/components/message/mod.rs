@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
@@ -11,7 +12,6 @@ use arboard::Clipboard;
 use derive_more::Display;
 use dioxus::prelude::*;
 use futures::StreamExt;
-use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::{Captures, Regex, Replacer};
@@ -35,8 +35,16 @@ use super::embeds::link_embed::EmbedLinks;
 pub static MARKDOWN_PROCESSOR_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new("(^|\n)((?:&gt;(?: *&gt;)*)|(?: ))").unwrap());
 pub static LINK_TAGS_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap()
+    Regex::new(r"((?:(?:www\.)|(?:https?:\/\/))[\w-]+(?:\.[\w-]+)+(?:\/[^)\s<]*)*)|((mailto: {0,1})([\w.+-]+@[\w-]+(?:\.[\w.-]+)+))").unwrap()
 });
+
+const HTML_ESCAPES: [(&str, &str); 5] = [
+    ("&", "&amp;"),
+    ("<", "&lt;"),
+    (">", "&gt;"),
+    ("\"", "&quot;"),
+    ("\'", "&#x27;"),
+];
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -119,17 +127,51 @@ pub struct Props<'a> {
     chat: Uuid,
 }
 
-fn wrap_links_with_a_tags(text: &str) -> String {
-    LINK_TAGS_REGEX
-        .replace_all(text, |caps: &regex::Captures| {
-            let url = caps.get(0).unwrap().as_str();
-            if url.starts_with("www.") {
-                format!("<a href=\"https://{}\">{}</a>", url, url)
+// Struct for replacing links with clickable divs.
+// Also saves the links
+struct LinkReplacer(Vec<String>);
+
+impl Replacer for LinkReplacer {
+    fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut String) {
+        let mut url = caps.get(0).unwrap().as_str().to_string();
+        if url.starts_with("mailto:") {
+            let s = if url.starts_with("mailto: ") {
+                format!("{}<a href=\"{}\">{}</a>", &caps[3], url, &caps[4])
             } else {
                 format!("<a href=\"{}\">{}</a>", url, url)
+            };
+            dst.push_str(&s);
+            return;
+        }
+        // Check if it ends with a ) and exclude it if its not part of url
+        while url.ends_with(')') {
+            let count = url.chars().count();
+            let open = url.chars().filter(|c| *c == '(').count();
+            let close = url.chars().filter(|c| *c == ')').count();
+            if close > open {
+                url = url.chars().take(count - 1).collect::<String>();
+            } else {
+                break;
             }
-        })
-        .into_owned()
+        }
+        let s = if url.starts_with("www.") {
+            let html = format!("<a href=\"https://{}\">{}</a>", url, url);
+            url = format!("https://{}", url);
+            html
+        } else {
+            format!("<a href=\"{}\">{}</a>", url, url)
+        };
+        self.0.push(url);
+        dst.push_str(&s);
+    }
+}
+
+fn wrap_links_with_a_tags(text: &str) -> (String, Vec<String>) {
+    let mut links = LinkReplacer(vec![]);
+    let res = LINK_TAGS_REGEX
+        .replace_all(text, links.by_ref())
+        .into_owned();
+    (res, links.0)
 }
 
 #[allow(non_snake_case)]
@@ -365,32 +407,13 @@ pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element<'a> {
         }
     }
 
-    let mut formatted_text = format_text(
+    let formatted_text = format_text(
         &cx.props.text,
         cx.props.markdown,
         cx.props.ascii_emoji,
         Some((&cx.props.state.read(), &cx.props.chat, false)),
     );
-    formatted_text = wrap_links_with_a_tags(&formatted_text);
-    let finder = LinkFinder::new();
-    let links: Vec<String> = finder
-        .spans(&formatted_text)
-        .filter(|e| matches!(e.kind(), Some(LinkKind::Url)))
-        .map(|e| e.as_str().to_string())
-        .collect();
-
-    // this is broken. may be fixed later.
-    let _texts = finder.spans(&formatted_text).map(|e| match e.kind() {
-        Some(LinkKind::Url) => {
-            rsx!(
-                a {
-                    href: e.as_str(),
-                    e.as_str()
-                }
-            )
-        }
-        _ => rsx!(e.as_str()),
-    });
+    let (formatted_text, links) = wrap_links_with_a_tags(&formatted_text);
 
     let text_type_class = if cx.props.pending {
         "pending-text"
@@ -423,12 +446,9 @@ pub fn format_text(
     data: Option<(&State, &Uuid, bool)>,
 ) -> String {
     // warning: this will probably break markdown regarding block quotes. still seems like an improvement.
-    let safe_text = text
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('\"', "&quot;")
-        .replace('\'', "&#x27;")
+    let safe_text = HTML_ESCAPES
+        .iter()
+        .fold(Cow::from(text), |s, (from, to)| s.replace(*from, to).into())
         .replace('\n', "&nbsp;&nbsp;\n");
     let mut text = safe_text;
     // We want to do this after we escape html tags
@@ -459,13 +479,11 @@ pub fn format_text(
 
 fn stack_processor(stack: &str, unescape_html: bool, emojis: bool) -> &str {
     if unescape_html {
-        match stack {
-            "&quot;" => return "\"",
-            "&amp;" => return "&",
-            "&lt;" => return "<",
-            "&gt;" => return ">",
-            "&nbsp;" => return " ",
-            _ => {}
+        if let Some((esc, _)) = HTML_ESCAPES.iter().find(|(_, s)| stack.eq(*s)) {
+            return esc;
+        }
+        if "&nbsp;".eq(stack) {
+            return " ";
         }
     }
     if !emojis {
@@ -557,14 +575,33 @@ fn markdown(text: &str, emojis: bool) -> String {
     let mut html_output = String::new();
     let mut in_paragraph = false;
     let mut in_code_block = false;
+    let (mut skipping, mut in_link) = (false, false);
 
     let parser = pulldown_cmark::Parser::new_ext(&text, options);
-    for event in parser {
+    for (event, range) in parser.into_offset_iter() {
+        log::debug!("evt {event:?}");
+        if skipping {
+            skipping = if in_link {
+                matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)))
+            } else {
+                matches!(event, pulldown_cmark::Event::End(Tag::Image(_, _, _)))
+            };
+            continue;
+        }
         match event {
             pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(
                 CodeBlockKind::Indented,
             )) => {
                 html_output.push_str("</p>\n<p> </p><p>");
+            }
+            pulldown_cmark::Event::Code(mut txt) => {
+                txt = HTML_ESCAPES
+                    .iter()
+                    .fold(txt, |s, (to, from)| s.replace(*from, to).into());
+                pulldown_cmark::html::push_html(
+                    &mut html_output,
+                    std::iter::once(pulldown_cmark::Event::Code(txt)),
+                )
             }
             pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(CodeBlockKind::Indented)) => {
             }
@@ -579,6 +616,14 @@ fn markdown(text: &str, emojis: bool) -> String {
             }
             pulldown_cmark::Event::End(Tag::Paragraph) => {
                 in_paragraph = false;
+            }
+            pulldown_cmark::Event::Start(Tag::Image(_, _, _))
+            | pulldown_cmark::Event::Start(Tag::Link(_, _, _)) => {
+                // Ignore links and image parsing
+                // We only want Autolink but that doesn't work (or needs <> which we also dont weed)
+                skipping = true;
+                in_link = matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)));
+                html_output.push_str(&text[range]);
             }
             pulldown_cmark::Event::Text(t) => {
                 let text = if emojis || in_code_block {
