@@ -13,12 +13,14 @@ pub struct Props<'a> {
     is_checked: bool,
     // returns true if the box is selected, false otherwise
     on_click: EventHandler<'a, ()>,
+    aria_label: Option<String>,
 }
 
 #[allow(non_snake_case)]
 pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled_class = if cx.props.disabled { "disabled" } else { "" };
     let checked_class = if cx.props.is_checked { "checked" } else { "" };
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
 
     let height = cx
         .props
@@ -33,6 +35,7 @@ pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx!(
             div {
+            aria_label: "{aria_label}",
             class: "input-checkbox {checked_class} {disabled_class} ",
             height: "{height}",
             width: "{width}",
