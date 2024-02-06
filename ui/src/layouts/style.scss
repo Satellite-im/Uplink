@@ -245,6 +245,10 @@
     display: inline-flex;
     flex-direction: column;
   }
+  .error {
+    color: var(--danger);
+    align-self: flex-start;
+  }
 }
 
 #enter-seed-words-layout,
