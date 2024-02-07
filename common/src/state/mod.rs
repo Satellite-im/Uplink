@@ -1707,6 +1707,12 @@ impl State {
             *friend = ident;
         }
     }
+
+    pub fn update_identity_with(&mut self, id: DID, mut ident: impl FnMut(&mut Identity)) {
+        if let Some(friend) = self.identities.get_mut(&id) {
+            ident(friend);
+        }
+    }
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.
     // this function checks if the friend is offline and if so, sets them to online. This may be incorrect, but should
     // be corrected when the identity list is periodically updated
