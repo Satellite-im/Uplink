@@ -133,6 +133,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .unwrap_or_default();
 
     let file_type = get_file_type(&file_path_in_local_disk.read().to_string_lossy());
+    let should_dismiss_on_error = use_ref(cx, || false);
 
     cx.render(rsx!(
         ContextMenu {
@@ -168,6 +169,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     code_content: code_content,
                 })
             } else if file_path_in_local_disk.read().exists() {
+                *should_dismiss_on_error.write_silent() = true;
                 // Success for both any kind of file
                 rsx!(FileTypeTag {
                     file_type: file_type,
@@ -175,6 +177,9 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     code_content: code_content,
                 })
             } else if *file_loading_counter.read() <  TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD {
+                if *should_dismiss_on_error.read() {
+                    cx.props.on_dismiss.call(());
+                }
                 rsx!(Loader {
                     spinning: true
                 },)
