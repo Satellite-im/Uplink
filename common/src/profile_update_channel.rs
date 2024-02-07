@@ -44,10 +44,7 @@ pub fn fetch_identity_data(identities: &[Identity]) {
             }));
 
             let profile_picture = match rx.await {
-                Ok(res) => match res {
-                    Ok(pic) => Some(pic),
-                    Err(_) => None,
-                },
+                Ok(res) => res.ok(),
                 Err(e) => {
                     log::error!("error fetching profile pic {e}");
                     return;
