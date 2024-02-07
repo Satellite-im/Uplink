@@ -56,10 +56,7 @@ pub fn fetch_identity_data(identities: &[Identity]) {
                 rsp: tx,
             }));
             let profile_banner = match rx.await {
-                Ok(res) => match res {
-                    Ok(pic) => Some(pic),
-                    Err(_) => None,
-                },
+                Ok(res) => res.ok(),
                 Err(e) => {
                     log::error!("error fetching profile banner {e}");
                     return;
