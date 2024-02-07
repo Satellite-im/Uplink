@@ -24,7 +24,7 @@ use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 use uuid::Uuid;
-use warp::raygun::Location;
+
 
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
