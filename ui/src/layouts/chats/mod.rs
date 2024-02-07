@@ -25,7 +25,6 @@ use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 use uuid::Uuid;
 
-
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
 pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
