@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, slice, str::FromStr};
 
 use derive_more::Display;
 
@@ -16,6 +16,7 @@ use warp::{
 use tracing::log;
 
 use crate::{
+    profile_update_channel::fetch_identity_data,
     state::{self, Identity},
     warp_runner::{ui_adapter::dids_to_identity, Account},
 };
@@ -93,12 +94,12 @@ pub enum MultiPassCmd {
     #[display(fmt = "UpdateProfilePicture")]
     GetProfilePicture {
         did: DID,
-        rsp: oneshot::Sender<Result<IdentityImage, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<String, warp::error::Error>>,
     },
     #[display(fmt = "UpdateProfilePicture")]
     GetProfileBanner {
         did: DID,
-        rsp: oneshot::Sender<Result<IdentityImage, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<String, warp::error::Error>>,
     },
     #[display(fmt = "UpdateProfilePicture")]
     UpdateProfilePicture {
@@ -250,11 +251,19 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = rsp.send(r);
         }
         MultiPassCmd::GetProfilePicture { did, rsp } => {
-            let pfp = warp.multipass.identity_picture(&did).await;
+            let pfp = warp
+                .multipass
+                .identity_picture(&did)
+                .await
+                .map(|img| identity_image_to_base64(&img));
             let _ = rsp.send(pfp);
         }
         MultiPassCmd::GetProfileBanner { did, rsp } => {
-            let pfb = warp.multipass.identity_banner(&did).await;
+            let pfb = warp
+                .multipass
+                .identity_banner(&did)
+                .await
+                .map(|img| identity_image_to_base64(&img));
             let _ = rsp.send(pfb);
         }
         MultiPassCmd::ClearProfilePicture { rsp } => {
@@ -438,12 +447,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
 }
 
 async fn update_identity(id: &mut Identity, warp: &mut crate::warp_runner::manager::Warp) {
-    if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
-        id.set_profile_picture(&identity_image_to_base64(&picture));
-    }
-    if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
-        id.set_profile_banner(&identity_image_to_base64(&banner));
-    }
+    fetch_identity_data(slice::from_ref(id));
     if let Ok(status) = warp.multipass.identity_status(&id.did_key()).await {
         id.set_identity_status(status);
     }
