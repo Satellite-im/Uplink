@@ -19,8 +19,7 @@
 	}
 	.text {
 		color: var(--text-color-dark);
-		display: inline-flex;
-		flex-direction: column;
+		display: block;
 		white-space:pre-wrap;
 
 		.big-emoji {
@@ -140,6 +139,7 @@
 
 .message-user-tag {
 	background-color: var(--text-color-user-tag);
+	color: var(--text-color-dark);
 	width: fit-content;
 	height: fit-content;
 	&:not(.visual-only) {
