@@ -133,6 +133,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
             },
             seed_error.as_ref().map(|e| rsx!(
                 span {
+                    aria_label: "input-error",
                     class: "error",
                     e.translation()
                 }
