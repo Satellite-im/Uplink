@@ -159,6 +159,13 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
                     })
                 }))
             }
+            script {
+                r#"
+                (() => {{
+                    Prism.highlightAll();
+                }})();
+                "#
+            }
         }
     }))
 }
