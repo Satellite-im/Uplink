@@ -287,6 +287,10 @@ pub fn return_correct_icon(file_name: &str) -> Icon {
         return Icon::DocumentCode;
     }
 
+    if is_image(file_name) {
+        return Icon::Document;
+    }
+
     Icon::DocumentQuestion
 }
 
