@@ -12,12 +12,16 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats, utils::mention_regex_epattern, Identity, MAX_PINNED_MESSAGES};
+use crate::{
+    profile_update_channel::fetch_identity_data,
+    state::{self, chats, utils::mention_regex_epattern, Identity, MAX_PINNED_MESSAGES},
+};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
     ops::Range,
+    slice,
 };
 use warp::{
     constellation::file::File,
@@ -29,9 +33,7 @@ use warp::{
 
 use tracing::log;
 
-use super::{
-    manager::commands::identity_image_to_base64, FetchMessagesConfig, FetchMessagesResponse,
-};
+use super::{FetchMessagesConfig, FetchMessagesResponse};
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
 /// fetch that before sending the message to the UI.
@@ -149,16 +151,9 @@ pub async fn did_to_identity(
                 .identity_platform(&id.did_key())
                 .await
                 .unwrap_or(Platform::Unknown);
-            let mut id = state::Identity::new(id, status, platform);
+            let id = state::Identity::new(id, status, platform);
 
-            if let Ok(picture) = account.identity_picture(&id.did_key()).await {
-                id.set_profile_picture(&identity_image_to_base64(&picture));
-            }
-
-            if let Ok(banner) = account.identity_banner(&id.did_key()).await {
-                id.set_profile_banner(&identity_image_to_base64(&banner));
-            }
-
+            fetch_identity_data(slice::from_ref(&id));
             id
         }
         None => get_uninitialized_identity(did)?,
@@ -180,19 +175,10 @@ pub async fn dids_to_identity(
             .identity_platform(&id.did_key())
             .await
             .unwrap_or(Platform::Unknown);
-        let mut id = state::Identity::new(id, status, platform);
-
-        if let Ok(picture) = account.identity_picture(&id.did_key()).await {
-            id.set_profile_picture(&identity_image_to_base64(&picture));
-        }
-
-        if let Ok(banner) = account.identity_banner(&id.did_key()).await {
-            id.set_profile_banner(&identity_image_to_base64(&banner));
-        }
-
-        id
+        state::Identity::new(id, status, platform)
     });
-    let converted_ids = FuturesOrdered::from_iter(ids).collect().await;
+    let converted_ids: Vec<Identity> = FuturesOrdered::from_iter(ids).collect().await;
+    fetch_identity_data(&converted_ids);
     Ok(converted_ids)
 }
 
