@@ -1,5 +1,6 @@
 pub mod language;
 pub mod notifications;
+pub mod profile_update_channel;
 pub mod sounds;
 pub mod state;
 pub mod testing;
