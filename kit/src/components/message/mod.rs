@@ -579,7 +579,6 @@ fn markdown(text: &str, emojis: bool) -> String {
 
     let parser = pulldown_cmark::Parser::new_ext(&text, options);
     for (event, range) in parser.into_offset_iter() {
-        log::debug!("evt {event:?}");
         if skipping {
             skipping = if in_link {
                 matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)))
