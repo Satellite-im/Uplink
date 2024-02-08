@@ -23,7 +23,6 @@ use dioxus::prelude::*;
 use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
-use uuid::Uuid;
 
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
@@ -119,7 +118,7 @@ pub fn ChatLayout(cx: Scope) -> Element {
                                 })
                                 .await
                                 .expect("Should succeed");
-                                let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or(Uuid::nil());
+                                let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or_default();
                                 state
                                     .write()
                                     .mutate(Action::AppendChatAttachments(active_chat_id, files_local_path));
@@ -165,7 +164,7 @@ async fn drop_and_attach_files(
         .read()
         .get_active_chat()
         .map(|f| f.id)
-        .unwrap_or(Uuid::nil());
+        .unwrap_or_default();
     state
         .write()
         .mutate(Action::AppendChatAttachments(chat_uuid, new_files));
