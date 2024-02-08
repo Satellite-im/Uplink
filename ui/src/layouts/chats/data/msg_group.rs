@@ -99,7 +99,7 @@ pub fn create_message_groups(
 }
 
 pub fn pending_group_messages(
-    pending: &Vec<PendingMessage>,
+    pending: &[PendingMessage],
     other_ids: Vec<Identity>,
     my_id: Identity,
 ) -> Option<MessageGroup> {
