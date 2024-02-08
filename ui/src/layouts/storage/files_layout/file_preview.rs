@@ -132,7 +132,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .flatten()
         .unwrap_or_default();
 
-    let file_type = get_file_type(&file_path_in_local_disk.read().to_string_lossy());
+    let file_type = get_file_type(&cx.props.file.name());
     let should_dismiss_on_error = use_ref(cx, || false);
 
     if file_type == FileType::Unkwnown {
