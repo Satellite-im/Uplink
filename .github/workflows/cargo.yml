@@ -21,7 +21,7 @@ jobs:
       - name: Run cargo checks
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           components: rustfmt, clippy
       - run: cargo clippy --no-deps -- -D warnings
       - run: cargo fmt --check
