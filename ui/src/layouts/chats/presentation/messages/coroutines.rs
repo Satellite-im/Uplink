@@ -86,13 +86,13 @@ pub fn handle_msg_scroll(
                         .active_chat
                         .messages
                         .bottom()
-                        .unwrap_or(Uuid::nil());
+                        .unwrap_or_default();
                     let top_msg_id: Uuid = chat_data
                         .read()
                         .active_chat
                         .messages
                         .top()
-                        .unwrap_or(Uuid::nil());
+                        .unwrap_or_default();
 
                     log::trace!(
                         "top msg is: {}, bottom msg is: {}",
