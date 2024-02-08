@@ -5,7 +5,7 @@ use crate::elements::button::Button;
 use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::is_audio;
+use common::is_file_available_to_preview;
 use common::is_video;
 use common::return_correct_icon;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
@@ -164,8 +164,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let temp_dir = STATIC_ARGS
         .temp_files
         .join(file_name_with_extension.clone());
-    let is_video_or_audio =
-        is_video(&file_name_with_extension) || is_audio(&file_name_with_extension);
+    let is_file_available_to_preview = is_file_available_to_preview(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
     cx.render(rsx! (
@@ -249,7 +248,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     class: "document-container",
                                     height: "60px",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
-                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_video_or_audio && !is_from_attachments {
+                                        if mouse_event_data.modifiers() != Modifiers::CONTROL && is_file_available_to_preview && !is_from_attachments {
                                             cx.props.on_press.call(Some(temp_dir.clone()));
                                         }
                                     },
