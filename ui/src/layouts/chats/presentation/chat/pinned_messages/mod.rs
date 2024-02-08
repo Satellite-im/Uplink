@@ -168,7 +168,7 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
                         onclick: move |_| {
                             ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date, show_pinned: cx.props.show_pinned.clone()});
                         }
-                    }, 
+                    },
      )
                 }))
             }
