@@ -783,7 +783,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
             let mut watcher = match RecommendedWatcher::new(
                 move |res| {
-                    let _ = tx.unbounded_send(res);
+                    _ = tx.unbounded_send(res);
                 },
                 notify::Config::default().with_poll_interval(Duration::from_secs(1)),
             ) {
