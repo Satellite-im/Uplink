@@ -13,7 +13,7 @@ use kit::{
 };
 
 use crate::{
-    components::media::calling::CallControl,
+    components::{file_progress::FileTransferModal, media::calling::CallControl},
     layouts::chats::{
         data::{self, ChatData, ScrollBtn},
         presentation::{
@@ -25,7 +25,7 @@ use crate::{
     },
 };
 
-use common::state::{ui, Action, Identity, State};
+use common::state::{data_transfer::TransferTracker, ui, Action, Identity, State};
 
 use common::language::get_local_text;
 
@@ -40,7 +40,8 @@ pub fn Compose(cx: Scope) -> Element {
     use_shared_state_provider(cx, ScrollBtn::new);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
-
+    let file_tracker = use_shared_state::<TransferTracker>(cx)?;
+    state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
     let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
@@ -137,6 +138,11 @@ pub fn Compose(cx: Scope) -> Element {
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
                     is_edit_group: is_edit_group,
+                },
+                FileTransferModal {
+                    file_progress_download: file_tracker.read().chat_progress_download.clone(),
+                    on_download_pause: move |f| {},
+                    on_download_cancel: move |f| {},
                 }
             },
             // may need this later when video calling is possible.

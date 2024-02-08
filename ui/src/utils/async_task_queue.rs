@@ -16,7 +16,10 @@ use tokio::sync::{
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use uuid::Uuid;
-use warp::raygun::{AttachmentEventStream, AttachmentKind, Location};
+use warp::{
+    constellation::Progression,
+    raygun::{AttachmentEventStream, AttachmentKind, Location},
+};
 
 pub enum ListenerAction {
     ToastAction {
@@ -24,6 +27,17 @@ pub enum ListenerAction {
         content: String,
         icon: Option<Icon>,
         timeout: u32,
+    },
+    TransferProgress {
+        file: String,
+        progression: Progression,
+        download: bool,
+        chat: bool,
+    },
+    FinishTransfer {
+        file: String,
+        chat: bool,
+        download: bool,
     },
 }
 
@@ -130,6 +144,7 @@ pub fn chat_upload_stream_handler(
 
 pub fn download_stream_handler(
     cx: &ScopeState,
+    chat: bool,
 ) -> &UseRef<
     AsyncRef<(
         warp::constellation::ConstellationProgressStream,
@@ -147,20 +162,30 @@ pub fn download_stream_handler(
             bool,
         )| {
             async move {
-                while let Some(p) = stream.next().await {
-                    log::debug!("download progress: {p:?}");
+                while let Some(progress) = stream.next().await {
+                    let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
+                        file: file.clone(),
+                        progression: progress,
+                        download: true,
+                        chat,
+                    });
                 }
                 if should_show_toast_notification {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
                         title: "".into(),
                         content: get_local_text_with_args(
                             "files.download-success",
-                            vec![("file", file)],
+                            vec![("file", file.clone())],
                         ),
                         icon: None,
                         timeout: 2,
                     });
                 }
+                let _ = ACTION_LISTENER.tx.send(ListenerAction::FinishTransfer {
+                    file,
+                    download: true,
+                    chat,
+                });
                 on_finish.await
             }
         },

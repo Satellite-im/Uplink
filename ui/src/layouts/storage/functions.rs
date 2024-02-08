@@ -245,7 +245,7 @@ pub fn init_coroutine<'a>(
     controller: &'a UseRef<StorageController>,
     state: &'a UseSharedState<State>,
 ) -> &'a Coroutine<ChanCmd> {
-    let download_queue = download_stream_handler(cx);
+    let download_queue = download_stream_handler(cx, false);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![controller, download_queue, state];
         async move {

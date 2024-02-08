@@ -2,13 +2,18 @@ use std::time::Duration;
 
 use common::{
     language::get_local_text_with_args,
-    state::{Action, State, ToastNotification},
+    state::{
+        data_transfer::{TrackerType, TransferTracker},
+        Action, State, ToastNotification,
+    },
     warp_runner::{FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
+use dioxus_hooks::{
+    to_owned, use_coroutine, use_shared_state, Coroutine, UnboundedReceiver, UseSharedState,
+};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
@@ -442,9 +447,10 @@ pub fn handle_warp_commands(
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
-    let download_streams = download_stream_handler(cx);
+    let file_tracker = use_shared_state::<TransferTracker>(cx).unwrap();
+    let download_streams = download_stream_handler(cx, true);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, pending_downloads, download_streams];
+        to_owned![state, file_tracker, pending_downloads, download_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -560,6 +566,9 @@ pub fn handle_warp_commands(
                                 log::error!("failed to download attachment: {}", e);
                             }
                         }
+                        file_tracker
+                            .write()
+                            .start_file_transfer(file.name(), TrackerType::ChatDownload);
                         if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
                             conv.remove(&file);
                         }

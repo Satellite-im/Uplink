@@ -11,6 +11,7 @@ use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::profile_update_channel::PROFILE_CHANNEL_LISTENER;
+use common::state::data_transfer::{TrackerType, TransferTracker};
 use common::state::settings::GlobalShortcut;
 use common::state::ToastNotification;
 use common::warp_runner::ui_adapter::MessageEvent;
@@ -572,9 +573,12 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
         }
     });
 
+    let file_tracker = use_shared_state::<TransferTracker>(cx).unwrap();
+
     // Listen to async tasks actions that should be handled on main thread
     use_future(cx, (), |_| {
-        to_owned![state];
+        to_owned![state, file_tracker];
+        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
         async move {
             let channel = ACTION_LISTENER.rx.clone();
             let mut ch = channel.lock().await;
@@ -589,6 +593,46 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         state.write().mutate(Action::AddToastNotification(
                             ToastNotification::init(title, content, icon, timeout),
                         ));
+                    }
+                    ListenerAction::TransferProgress {
+                        file,
+                        download,
+                        progression,
+                        chat,
+                    } => {
+                        file_tracker.write_silent().update_file_upload(
+                            file,
+                            progression,
+                            if chat {
+                                TrackerType::ChatDownload
+                            } else if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        );
+                        if let Some(v) = state.read().scope_ids.file_transfer {
+                            schedule(ScopeId(v))
+                        }
+                    }
+                    ListenerAction::FinishTransfer {
+                        file,
+                        download,
+                        chat,
+                    } => {
+                        file_tracker.write_silent().remove_file_upload(
+                            file,
+                            if chat {
+                                TrackerType::ChatDownload
+                            } else if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        );
+                        if let Some(v) = state.read().scope_ids.file_transfer {
+                            schedule(ScopeId(v))
+                        }
                     }
                 }
             }

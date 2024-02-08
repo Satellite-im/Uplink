@@ -1,0 +1,61 @@
+.file-transfer-modal {
+    background: var(--background-light);
+    z-index: 1000;
+    border-radius: var(--border-radius);
+    display: flex;
+}
+
+.file-transfer-label-container {
+    margin: var(--padding-less); 
+    margin-bottom: 0;
+}
+
+.file-transfer-file {
+    display: flex;
+    background: #8c8c8c;
+    margin: var(--gap);
+    padding: var(--padding-less);
+    border-radius: var(--border-radius);
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    gap: var(--gap-less);
+    color: var(--text-color-dark);
+}
+
+.progress-bar-filename-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.file-transfer-buttons {
+    display: flex; 
+    margin-top: auto; 
+    margin-bottom: auto;
+    margin-left: var(--padding-less);
+    gap: var(--gap-less);
+}
+
+.progress-indicator-wrap {
+    width: 100%;
+    height: var(--text-size-more);
+    position: relative;
+}
+
+.progress-indicator {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius);
+    background: var(--background-light);
+    overflow: hidden;
+}
+
+.progress-indicator-overlay {
+    left: 0;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--primary) 70%, transparent);
+}

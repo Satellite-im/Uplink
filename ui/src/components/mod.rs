@@ -2,6 +2,7 @@ pub mod community;
 pub mod crop_image_tool;
 pub mod debug_logger;
 pub mod emoji_group;
+pub mod file_progress;
 pub mod files;
 pub mod friends;
 pub mod media;

@@ -1,0 +1,103 @@
+use warp::constellation::Progression;
+
+#[derive(Debug, Clone)]
+pub enum TransferProgress {
+    Starting,
+    Progress(u8),
+    Finishing,
+    Cancelling,
+    Error,
+}
+
+#[derive(Debug, Clone)]
+pub enum TrackerType {
+    FileUpload,
+    FileDownload,
+    ChatDownload,
+}
+
+#[derive(Debug, Clone)]
+pub struct FileProgress {
+    pub file: String,
+    pub progress: TransferProgress,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TransferTracker {
+    pub file_progress_upload: Vec<FileProgress>,
+    pub file_progress_download: Vec<FileProgress>,
+    pub chat_progress_download: Vec<FileProgress>,
+}
+
+impl TransferTracker {
+    pub fn start_file_transfer(&mut self, file: String, tracker: TrackerType) {
+        match tracker {
+            TrackerType::FileUpload => self.file_progress_upload.push(FileProgress {
+                file,
+                progress: TransferProgress::Starting,
+            }),
+            TrackerType::FileDownload => self.file_progress_download.push(FileProgress {
+                file,
+                progress: TransferProgress::Starting,
+            }),
+            TrackerType::ChatDownload => self.chat_progress_download.push(FileProgress {
+                file,
+                progress: TransferProgress::Starting,
+            }),
+        }
+    }
+
+    pub fn update_file_upload(
+        &mut self,
+        file: String,
+        progression: Progression,
+        tracker: TrackerType,
+    ) {
+        let progress = match progression {
+            Progression::CurrentProgress {
+                name: _,
+                current,
+                total,
+            } => TransferProgress::Progress(
+                total
+                    .map(|total| current as f64 / total as f64 * 100.)
+                    .unwrap_or_default() as u8,
+            ),
+            Progression::ProgressComplete { name: _, total: _ } => TransferProgress::Finishing,
+            Progression::ProgressFailed {
+                name: _,
+                last_size: _,
+                error: _,
+            } => TransferProgress::Error,
+        };
+        if let Some(f) = self
+            .get_tracker_from(tracker)
+            .iter_mut()
+            .find(|p| file.eq(&p.file))
+        {
+            f.progress = progress;
+        }
+    }
+
+    pub fn cancel_file_upload(&mut self, file: String, tracker: TrackerType) {
+        if let Some(f) = self
+            .get_tracker_from(tracker)
+            .iter_mut()
+            .find(|p| file.eq(&p.file))
+        {
+            f.progress = TransferProgress::Cancelling;
+        }
+    }
+
+    pub fn remove_file_upload(&mut self, file: String, tracker: TrackerType) {
+        self.get_tracker_from(tracker).retain(|p| !file.eq(&p.file))
+    }
+
+    fn get_tracker_from(&mut self, tracker: TrackerType) -> &mut Vec<FileProgress> {
+        match tracker {
+            TrackerType::FileUpload => &mut self.file_progress_upload,
+            TrackerType::FileDownload => &mut self.file_progress_download,
+            TrackerType::ChatDownload => &mut self.chat_progress_download,
+        }
+    }
+}
