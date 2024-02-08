@@ -28,18 +28,12 @@ pub fn YouTubePlayer(cx: Scope<Props>) -> Element {
 fn extract_video_id_from_embed_url(embed_url: &str) -> Option<String> {
     let base_embed_url = "https://www.youtube.com/embed/";
 
-    // Using strip_prefix to remove the base URL if it exists
     if let Some(video_id_with_params) = embed_url.strip_prefix(base_embed_url) {
-        // Now, extract the video ID before any additional parameters
         let video_id = match video_id_with_params.find('&') {
-            Some(end_pos) => &video_id_with_params[..end_pos], // Extract the video ID up to the start of additional parameters
-            None => video_id_with_params, // If there is no '&', the entire string is the video ID
+            Some(end_pos) => &video_id_with_params[..end_pos],
+            None => video_id_with_params,
         };
-
-        // Return the video ID
         return Some(video_id.to_string());
     }
-
-    // Return None if the URL doesn't start with the expected base embed URL
     None
 }
