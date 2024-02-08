@@ -31,5 +31,5 @@ fn extract_video_id_from_embed_url(embed_url: &str) -> Option<String> {
         Some(end_pos) => &video_id_with_params[..end_pos],
         None => video_id_with_params,
     };
-    Some(format!("{}{}", base_embed_url, video_id.to_string()))
+    Some(format!("{}{}", base_embed_url, video_id))
 }
