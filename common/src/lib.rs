@@ -196,6 +196,9 @@ pub const ROOT_DIR_NAME: &str = "root";
 pub const VIDEO_FILE_EXTENSIONS: &[&str] =
     &[".mp4", ".mov", ".avi", ".flv", ".wmv", ".m4v", ".3gp"];
 
+pub const IMAGE_FILE_EXTENSIONS: &[&str] =
+    &[".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".svg"];
+
 pub const AUDIO_FILE_EXTENSIONS: &[&str] = &[".mp3", ".wav", ".flac", ".aac", ".m4a"];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt", ".csv", ".tsv"];
@@ -213,10 +216,21 @@ pub enum FileType {
     Audio,
     Doc,
     Code,
+    Unkwnown,
 }
 
 pub fn is_file_available_to_preview(file_name: &str) -> bool {
-    is_video(file_name) || is_audio(file_name) || is_pdf_file(file_name) || is_lang_file(file_name)
+    is_image(file_name)
+        || is_video(file_name)
+        || is_audio(file_name)
+        || is_pdf_file(file_name)
+        || is_lang_file(file_name)
+}
+
+pub fn is_image(file_name: &str) -> bool {
+    IMAGE_FILE_EXTENSIONS
+        .iter()
+        .any(|x| file_name.to_lowercase().ends_with(x))
 }
 
 pub fn is_video(file_name: &str) -> bool {
@@ -285,8 +299,10 @@ pub fn get_file_type(file_name: &str) -> FileType {
         FileType::Doc
     } else if is_lang_file(file_name) {
         FileType::Code
-    } else {
+    } else if is_image(file_name) {
         FileType::Image
+    } else {
+        FileType::Unkwnown
     }
 }
 

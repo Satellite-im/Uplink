@@ -135,6 +135,20 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_type = get_file_type(&file_path_in_local_disk.read().to_string_lossy());
     let should_dismiss_on_error = use_ref(cx, || false);
 
+    if file_type == FileType::Unkwnown {
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    "".into(),
+                    get_local_text("files.not-possible-to-preview-file"),
+                    None,
+                    3,
+                ),
+            ));
+        cx.props.on_dismiss.call(());
+    }
+
     cx.render(rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
@@ -272,6 +286,7 @@ fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
                     "#
             }
         ),
+        _ => rsx!(div {}),
     })
 }
 
