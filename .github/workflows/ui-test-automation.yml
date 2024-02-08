@@ -28,7 +28,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           override: true
           components: rustfmt, clippy
 
@@ -69,7 +69,7 @@ jobs:
       - name: Install Rust 💿
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           components: rustfmt, clippy
 
       - name: Add Targets for MacOS
@@ -142,7 +142,7 @@ jobs:
       - name: Install Rust 💿
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           components: rustfmt, clippy
 
       - name: Install cargo wix
@@ -199,7 +199,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           override: true
           components: rustfmt, clippy
 
@@ -332,7 +332,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           override: true
           components: rustfmt, clippy
 
@@ -464,7 +464,7 @@ jobs:
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.73.0
+          toolchain: 1.75.0
           override: true
           components: rustfmt, clippy
 
