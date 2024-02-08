@@ -334,24 +334,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                         && keyboard_data.modifiers() == Modifiers::CONTROL && *enable_paste_shortcut.read()
                     {
                     let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-                    if !files_local_path.is_empty() {
-                        let new_files: Vec<Location> = files_local_path
-                        .iter()
-                        .map(|path| Location::Disk { path: path.clone() })
-                        .collect();
-                    let mut current_files: Vec<_> = state
-                        .read()
-                        .get_active_chat()
-                        .map(|f| f.files_attached_to_send)
-                        .unwrap_or_default()
-                        .drain(..)
-                        .filter(|x| !new_files.contains(x))
-                        .collect();
-                        current_files.extend(new_files);
                     state
                         .write()
-                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                    }
+                        .mutate(Action::AppendChatAttachments(active_chat_id, files_local_path));
                 }
                 }
             },
@@ -534,13 +519,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
                             .set_directory(dirs::home_dir().unwrap_or_default())
                             .pick_files()
                         {
-                            let new_files: Vec<Location> = new_files.iter()
-                            .map(|path| Location::Disk { path: path.clone() })
-                            .collect();
-                            let mut current_files: Vec<_> =  state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default().drain(..).filter(|x| !new_files.contains(x)).collect();
-                            current_files.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(active_chat_id, current_files));
+                            state
+                                .write()
+                                .mutate(Action::AppendChatAttachments(active_chat_id, new_files));
                             update_send();
                             }
                         },
@@ -561,24 +542,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
                 rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
                     on_paste: move |files_local_path: Vec<PathBuf>| {
-                        if !files_local_path.is_empty() {
-                            let new_files: Vec<Location> = files_local_path
-                            .iter()
-                            .map(|path| Location::Disk { path: path.clone() })
-                            .collect();
-                        let mut current_files: Vec<_> = state
-                            .read()
-                            .get_active_chat()
-                            .map(|f| f.files_attached_to_send)
-                            .unwrap_or_default()
-                            .drain(..)
-                            .filter(|x| !new_files.contains(x))
-                            .collect();
-                            current_files.extend(new_files);
                         state
                             .write()
-                            .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                        }
+                            .mutate(Action::AppendChatAttachments(active_chat_id, files_local_path));
                     }})
             }
                 SendFilesLayoutModal {
