@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{collections::HashMap, rc::Weak};
 
 use derive_more::Display;
@@ -179,6 +180,9 @@ pub enum Action<'a> {
     /// Sets a files attached to send
     #[display(fmt = "SetChatAttachments")]
     SetChatAttachments(Uuid, Vec<Location>),
+    /// Similar to SetChatAttachments, but appends to the existing attachments
+    #[display(fmt = "AppendChatAttachments")]
+    AppendChatAttachments(Uuid, Vec<PathBuf>),
     /// Clear attachments on chat
     #[display(fmt = "ClearChatAttachments")]
     ClearChatAttachments(Uuid),
