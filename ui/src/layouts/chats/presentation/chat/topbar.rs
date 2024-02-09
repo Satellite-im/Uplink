@@ -19,7 +19,7 @@ use common::{state::State, WARP_CMD_CH};
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::raygun::ConversationType;
+use warp::raygun::{ConversationSettings, ConversationType};
 
 use tracing::log;
 
@@ -99,6 +99,13 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         .unwrap_or(false);
 
     let direct_message = data.active_chat.conversation_type() == ConversationType::Direct;
+    let (show_manage_members, show_rename) = match data.active_chat.conversation_settings() {
+        ConversationSettings::Group(group_settings) => (
+            cx.props.is_owner || group_settings.members_can_add_participants(),
+            cx.props.is_owner || group_settings.members_can_change_name(),
+        ),
+        ConversationSettings::Direct(_) => (false, true),
+    };
 
     let active_participant = data.active_chat.my_id();
     let mut all_participants = data.active_chat.other_participants();
@@ -138,20 +145,24 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                         onpress: move |_| {}
                     }
                 )} else {rsx!(
-                    ContextItem {
-                        icon: Icon::PencilSquare,
-                        text: "Rename".into(),
-                        onpress: move |_| {
-                            cx.props.show_rename_group.set(true);
+                    if show_rename {rsx!(
+                        ContextItem {
+                            icon: Icon::PencilSquare,
+                            text: "Rename".into(),
+                            onpress: move |_| {
+                                cx.props.show_rename_group.set(true);
+                            }
                         }
-                    },
-                    ContextItem {
-                        icon: Icon::Users,
-                        text: "Manage Members".into(),
-                        onpress: move |_| {
-                            cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                    )}
+                    if show_manage_members {rsx!(
+                        ContextItem {
+                            icon: Icon::Users,
+                            text: "Manage Members".into(),
+                            onpress: move |_| {
+                                cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                            }
                         }
-                    },
+                    )}
                     ContextItem {
                         danger: true,
                         icon: Icon::Cog,
