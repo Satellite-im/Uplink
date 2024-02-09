@@ -1903,7 +1903,7 @@ pub fn create_message_groups<'a>(
 }
 
 pub fn pending_group_messages<'a>(
-    pending: &'a Vec<PendingMessage>,
+    pending: &'a [PendingMessage],
     own_did: DID,
 ) -> Option<MessageGroup<'a>> {
     if pending.is_empty() {
