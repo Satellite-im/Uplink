@@ -171,12 +171,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             cx.props.show_group_settings.set(true);
                         }
                     },
-                    ContextItem {
-                        danger: true,
-                        icon: Icon::XMark,
-                        text: "Delete".into(),
-                        onpress: move |_| {}
-                    },
+                    // TODO: `Delete` item
                 )}
             )),
             div {
