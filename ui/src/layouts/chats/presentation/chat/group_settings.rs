@@ -33,7 +33,7 @@ pub fn GroupSettings(cx: Scope) -> Element {
                     let active = &data.active_chat;
                     let mut settings = match active.conversation_settings() {
                         ConversationSettings::Group(settings) => settings,
-                        ConversationSettings::Direct(__) => {
+                        ConversationSettings::Direct(_) => {
                             log::warn!("Group conversation has direct conversation settings.");
                             return;
                         }
