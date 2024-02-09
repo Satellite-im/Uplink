@@ -117,13 +117,16 @@ impl Chat {
     pub fn new(
         id: Uuid,
         participants: HashSet<DID>,
-        conversation_type: ConversationType,
         settings: ConversationSettings,
         conversation_name: Option<String>,
         creator: Option<DID>,
         messages: VecDeque<ui_adapter::Message>,
         pinned_messages: Vec<raygun::Message>,
     ) -> Self {
+        let conversation_type = match settings {
+            ConversationSettings::Direct(_) => ConversationType::Direct,
+            ConversationSettings::Group(_) => ConversationType::Group,
+        };
         Self {
             id,
             participants,
