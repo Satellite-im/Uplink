@@ -1,0 +1,43 @@
+name: Manage label based on assignee changes
+
+on:
+  issues:
+    types: [opened, edited, reopened, assigned, unassigned, labeled, unlabeled]
+
+jobs:
+  manage_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if issue has an assignee
+        id: check_assignee
+        run: echo "::set-output name=assignee::$(jq -r '.issue.assignee.login // empty' $GITHUB_EVENT_PATH)"
+
+      - name: Determine if assignee changes
+        id: check_assignee_changes
+        run: |
+          current_assignee=$(jq -r '.issue.assignee.login // empty' $GITHUB_EVENT_PATH)
+          previous_assignee=$(jq -r '.changes.assignee.previous_value // empty' $GITHUB_EVENT_PATH)
+          if [ "$current_assignee" != "$previous_assignee" ]; then
+            echo "::set-output name=assignee_changes::true"
+          else
+            echo "::set-output name=assignee_changes::false"
+          fi
+
+      - name: Add label if issue has an assignee
+        if: steps.check_assignee.outputs.assignee != '' && steps.check_assignee_changes.outputs.assignee_changes == 'true'
+        run: |
+          echo "Adding label..."
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels \
+            -d '["assigned :computer:"]'
+
+      - name: Remove label if issue has no assignee
+        if: steps.check_assignee.outputs.assignee == ''
+        run: |
+          echo "Removing label..."
+          curl -X DELETE \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/assigned%20%3Acomputer%3A
