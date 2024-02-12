@@ -23,8 +23,6 @@ use dioxus::prelude::*;
 use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
-use uuid::Uuid;
-use warp::raygun::Location;
 
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
@@ -120,25 +118,10 @@ pub fn ChatLayout(cx: Scope) -> Element {
                                 })
                                 .await
                                 .expect("Should succeed");
-                                if !files_local_path.is_empty() {
-                                    let new_files: Vec<Location> = files_local_path
-                                    .iter()
-                                    .map(|path| Location::Disk { path: path.clone() })
-                                    .collect();
-                                let mut current_files: Vec<_> = state
-                                    .read()
-                                    .get_active_chat()
-                                    .map(|f| f.files_attached_to_send)
-                                    .unwrap_or_default()
-                                    .drain(..)
-                                    .filter(|x| !new_files.contains(x))
-                                    .collect();
-                                    current_files.extend(new_files);
-                                    let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or(Uuid::nil());
-                                    state
-                                        .write()
-                                        .mutate(Action::SetChatAttachments(active_chat_id, current_files));
-                                }
+                                let active_chat_id = state.read().get_active_chat().map(|f| f.id).unwrap_or_default();
+                                state
+                                    .write()
+                                    .mutate(Action::AppendChatAttachments(active_chat_id, files_local_path));
                             }
                         });
                 }
@@ -177,28 +160,14 @@ async fn drop_and_attach_files(
     state: UseSharedState<State>,
 ) {
     let new_files = drag_and_drop_function(eval, window, drag_event).await;
-    let new_files: Vec<Location> = new_files
-        .iter()
-        .map(|path| Location::Disk { path: path.clone() })
-        .collect();
-
-    let mut current_files: Vec<_> = state
-        .read()
-        .get_active_chat()
-        .map(|f| f.files_attached_to_send)
-        .unwrap_or_default()
-        .drain(..)
-        .filter(|x| !new_files.contains(x))
-        .collect();
-    current_files.extend(new_files);
     let chat_uuid = state
         .read()
         .get_active_chat()
         .map(|f| f.id)
-        .unwrap_or(Uuid::nil());
+        .unwrap_or_default();
     state
         .write()
-        .mutate(Action::SetChatAttachments(chat_uuid, current_files));
+        .mutate(Action::AppendChatAttachments(chat_uuid, new_files));
 }
 
 // Like ui::src:layout::storage::drag_and_drop_function

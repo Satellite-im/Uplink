@@ -269,6 +269,24 @@ impl State {
             Action::SetChatAttachments(chat_id, value) => {
                 self.set_chat_attachments(&chat_id, value)
             }
+            Action::AppendChatAttachments(chat_id, value) => {
+                if value.is_empty() {
+                    return;
+                }
+                let new_files: Vec<Location> = value
+                    .iter()
+                    .map(|path| Location::Disk { path: path.clone() })
+                    .collect();
+                let mut current_files: Vec<_> = self
+                    .get_active_chat()
+                    .map(|f| f.files_attached_to_send)
+                    .unwrap_or_default()
+                    .drain(..)
+                    .filter(|x| !new_files.contains(x))
+                    .collect();
+                current_files.extend(new_files);
+                self.set_chat_attachments(&chat_id, current_files)
+            }
             Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
             Action::AddReaction(_, _, emoji) => {
                 self.ui.emojis.increment_emoji(emoji);
