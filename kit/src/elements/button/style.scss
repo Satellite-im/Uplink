@@ -167,3 +167,14 @@
     }
   }
 }
+
+.circular-progress {
+  --circular-indicator: var(--info);
+  --circular-bar: var(--secondary-light);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  mask-image: radial-gradient(farthest-side, transparent calc(100% - 2px), black 0);
+  animation: progress 2s 1 forwards;
+}

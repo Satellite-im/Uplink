@@ -614,6 +614,9 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         if let Some(v) = state.read().scope_ids.file_transfer {
                             schedule(ScopeId(v))
                         }
+                        if let Some(v) = state.read().scope_ids.file_transfer_icon {
+                            schedule(ScopeId(v))
+                        }
                     }
                     ListenerAction::FinishTransfer {
                         file,
@@ -631,6 +634,9 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                             },
                         );
                         if let Some(v) = state.read().scope_ids.file_transfer {
+                            schedule(ScopeId(v))
+                        }
+                        if let Some(v) = state.read().scope_ids.file_transfer_icon {
                             schedule(ScopeId(v))
                         }
                     }
@@ -1226,6 +1232,8 @@ fn AppNav<'a>(
     use kit::components::nav::Route as UIRoute;
 
     let state = use_shared_state::<State>(cx)?;
+    let tracker = use_shared_state::<TransferTracker>(cx)?;
+    state.write_silent().scope_ids.file_transfer_icon = Some(cx.scope_id().0);
     let navigator = use_navigator(cx);
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state
@@ -1253,6 +1261,7 @@ fn AppNav<'a>(
                 }
             },))
         }),
+        progress_bar: Some(tracker.read().total_progress(false)),
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
@@ -1277,6 +1286,7 @@ fn AppNav<'a>(
         to: "/files",
         name: get_local_text("files.files"),
         icon: Icon::Folder,
+        progress_bar: Some(tracker.read().total_progress(true)),
         ..UIRoute::default()
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
