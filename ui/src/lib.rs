@@ -601,7 +601,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         chat,
                     } => {
                         file_tracker.write_silent().update_file_upload(
-                            file,
+                            &file,
                             progression,
                             if chat {
                                 TrackerType::ChatDownload
@@ -621,7 +621,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         chat,
                     } => {
                         file_tracker.write_silent().remove_file_upload(
-                            file,
+                            &file,
                             if chat {
                                 TrackerType::ChatDownload
                             } else if download {

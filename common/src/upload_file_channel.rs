@@ -2,16 +2,17 @@ use std::{path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
+use warp::constellation::Progression;
 
 use crate::state::storage::Storage;
 
 pub enum UploadFileAction<T> {
     Starting(String),
     SizeNotAvailable(String),
-    Cancelling,
+    Cancelling(String),
     UploadFiles(Vec<PathBuf>),
-    Uploading((String, String, String)),
-    Finishing(PathBuf, bool),
+    Uploading((Option<Progression>, String, String)),
+    Finishing(PathBuf, String, bool),
     Finished(T),
     Error,
 }

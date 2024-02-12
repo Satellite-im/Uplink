@@ -49,7 +49,7 @@ impl TransferTracker {
 
     pub fn update_file_upload(
         &mut self,
-        file: String,
+        file: &String,
         progression: Progression,
         tracker: TrackerType,
     ) {
@@ -79,7 +79,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn cancel_file_upload(&mut self, file: String, tracker: TrackerType) {
+    pub fn cancel_file_upload(&mut self, file: &String, tracker: TrackerType) {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
@@ -89,7 +89,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn remove_file_upload(&mut self, file: String, tracker: TrackerType) {
+    pub fn remove_file_upload(&mut self, file: &String, tracker: TrackerType) {
         self.get_tracker_from(tracker).retain(|p| !file.eq(&p.file))
     }
 
