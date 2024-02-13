@@ -29,9 +29,7 @@ pub fn GroupSettings(cx: Scope) -> Element {
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some(change) = rx.next().await {
-                    let data = chat_data.read();
-                    let active = &data.active_chat;
-                    let mut settings = match active.conversation_settings() {
+                    let mut settings = match chat_data.read().active_chat.conversation_settings() {
                         ConversationSettings::Group(settings) => settings,
                         ConversationSettings::Direct(_) => {
                             log::warn!("Group conversation has direct conversation settings.");
@@ -50,7 +48,7 @@ pub fn GroupSettings(cx: Scope) -> Element {
 
                     let (tx, rx) = oneshot::channel();
                     let cmd = RayGunCmd::UpdateConversationSettings {
-                        conv_id: active.id(),
+                        conv_id: chat_data.read().active_chat.id(),
                         settings: ConversationSettings::Group(settings),
                         rsp: tx,
                     };
