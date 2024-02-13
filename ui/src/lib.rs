@@ -52,7 +52,7 @@ use std::time::Instant;
 use std::sync::Arc;
 
 use crate::components::debug_logger::DebugLogger;
-use crate::components::file_progress::FileTransferModal;
+use crate::components::file_transfer::FileTransferModal;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;

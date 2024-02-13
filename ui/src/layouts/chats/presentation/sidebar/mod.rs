@@ -40,7 +40,7 @@ use warp::{
 
 use tracing::log;
 
-use crate::components::file_progress::FileTransferModal;
+use crate::components::file_transfer::FileTransferModal;
 use crate::components::media::calling::CallControl;
 
 use crate::layouts::chats::presentation::sidebar::create_group::CreateGroup;
