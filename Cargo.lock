@@ -8497,7 +8497,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
+source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9898,7 +9898,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
+source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9953,7 +9953,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
+source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9986,7 +9986,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=32f4c53fc462d53553a31762ecd12b4af9329a4a#32f4c53fc462d53553a31762ecd12b4af9329a4a"
+source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",
