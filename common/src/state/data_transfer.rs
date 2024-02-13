@@ -1,6 +1,8 @@
 use uuid::Uuid;
 use warp::constellation::Progression;
 
+use crate::language::get_local_text;
+
 #[derive(Debug, Clone)]
 pub enum TransferProgress {
     Starting,
@@ -104,6 +106,17 @@ impl TransferTracker {
             .find(|p| file_id.eq(&p.id))
         {
             f.progress = TransferProgress::Cancelling;
+        }
+    }
+
+    pub fn error_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+        if let Some(f) = self
+            .get_tracker_from(tracker)
+            .iter_mut()
+            .find(|p| file_id.eq(&p.id))
+        {
+            f.progress = TransferProgress::Error;
+            f.description = Some(get_local_text("files.error-to-upload"));
         }
     }
 

@@ -549,7 +549,7 @@ pub fn handle_warp_commands(
                                 download_streams.write().append((
                                     stream,
                                     file.name(),
-                                    file_id.clone(),
+                                    file_id,
                                     on_finish,
                                     true,
                                 ));

@@ -10,12 +10,12 @@ use crate::state::storage::Storage;
 pub enum UploadFileAction<T> {
     Starting(Uuid, String),
     SizeNotAvailable(String),
-    Cancelling(Uuid, String),
+    Cancelling(Uuid),
     UploadFiles(Vec<PathBuf>),
     Uploading((Option<Progression>, String, Uuid)),
-    Finishing(PathBuf, Uuid, bool),
+    Finishing(Uuid, bool),
     Finished(T),
-    Error,
+    Error(Option<Uuid>),
 }
 pub struct UploadFileChannel<T> {
     pub tx: tokio::sync::mpsc::UnboundedSender<UploadFileAction<T>>,

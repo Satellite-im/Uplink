@@ -163,7 +163,7 @@ pub fn download_stream_handler(
             async move {
                 while let Some(progress) = stream.next().await {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
-                        id: id.clone(),
+                        id,
                         progression: progress,
                         download: true,
                     });

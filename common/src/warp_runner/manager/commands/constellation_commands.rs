@@ -367,7 +367,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     let current_directory = match warp_storage.current_directory() {
         Ok(d) => d,
         Err(_) => {
-            let _ = tx_upload_file.send(UploadFileAction::Error);
+            let _ = tx_upload_file.send(UploadFileAction::Error(None));
             return;
         }
     };
@@ -383,7 +383,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Some(file) => file,
             None => {
                 log::error!("Not possible to get filename");
-                let _ = tx_upload_file.send(UploadFileAction::Error);
+                let _ = tx_upload_file.send(UploadFileAction::Error(None));
                 continue;
             }
         };
@@ -394,7 +394,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Ok(metadata) => metadata.len() as usize,
             Err(e) => {
                 log::error!("Not possible to get file size, error: {}", e);
-                let _ = tx_upload_file.send(UploadFileAction::Error);
+                let _ = tx_upload_file.send(UploadFileAction::Error(None));
                 continue;
             }
         };
@@ -412,21 +412,13 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_name));
             continue;
         }
-        // let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         let original = filename.clone();
         let file = PathBuf::from(&original);
+        // Generate uuid for tracking
         let file_id = Uuid::new_v4();
-        // let _ = tx_upload_file.send(UploadFileAction::Uploading((
-        //     None, //"0%".into(),
-        //     get_local_text("files.checking-duplicated-name"),
-        //     filename.clone(),
-        // )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
-        let _ = tx_upload_file.send(UploadFileAction::Starting(
-            file_id.clone(),
-            filename.clone(),
-        ));
+        let _ = tx_upload_file.send(UploadFileAction::Starting(file_id, filename.clone()));
 
         match warp_storage.put(&filename, &local_path).await {
             Ok(upload_progress) => {
@@ -460,7 +452,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         }
         let ret = match get_items_from_current_directory(&mut warp_storage) {
             Ok(r) => UploadFileAction::Finished(r),
-            Err(_) => UploadFileAction::Error,
+            Err(_) => UploadFileAction::Error(None),
         };
 
         let _ = tx_upload_file.send(ret);
@@ -497,7 +489,7 @@ async fn handle_upload_progress(
                     .try_recv()
                 {
                     if received_tx {
-                        let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_id, name));
+                        let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_id));
                         break;
                     }
                 }
@@ -526,11 +518,7 @@ async fn handle_upload_progress(
                     // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
                     // This causes pending file count to not be updated which is way we send a message here too
                     if current_percentage == 100 {
-                        let _ = tx_upload_file.send(UploadFileAction::Finishing(
-                            file_path.clone(),
-                            file_id,
-                            false,
-                        ));
+                        let _ = tx_upload_file.send(UploadFileAction::Finishing(file_id, false));
                     }
                 }
             }
@@ -554,7 +542,7 @@ async fn handle_upload_progress(
                     last_size.unwrap_or_default(),
                     error.unwrap_or_default()
                 );
-                let _ = tx_upload_file.send(UploadFileAction::Error);
+                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_id)));
                 break;
             }
         }
@@ -610,7 +598,7 @@ async fn handle_upload_progress(
             }
         };
     }
-    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_path, file_id, true));
+    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_id, true));
     log::info!("{:?} file uploaded!", filename);
 }
 

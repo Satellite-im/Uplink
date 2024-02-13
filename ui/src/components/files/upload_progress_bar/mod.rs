@@ -4,7 +4,6 @@ use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
-use kit::elements::{button::Button, Appearance};
 
 use crate::utils::get_drag_event::BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX;
 use crate::utils::{
@@ -17,60 +16,10 @@ static FILES_TO_UPLOAD_SCRIPT: &str = r#"
     element.textContent = '$TEXT';
 "#;
 
-static PROGRESS_UPLOAD_PERCENTAGE_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-percentage');
-    element.textContent = '$TEXT';
-
-    var element_percentage = document.getElementById('progress-percentage');
-    element_percentage.style.width = '$WIDTH';
-"#;
-
-static PROGRESS_UPLOAD_DESCRIPTION_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-description');
-    element.textContent = '$TEXT';
-"#;
-
-static UPDATE_FILENAME_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-filename');
-    element.textContent = '$TEXT';
-"#;
-
-static UPDATE_FILE_QUEUE_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-files-queue');
-    element.textContent = '$TEXT_TRANSLATED ($FILES_IN_QUEUE)';
-"#;
-
 static UPDATE_FILES_TO_DROP: &str = r#"
     var element = document.getElementById('upload-progress-drop-files');
     element.textContent = '$TEXT1 $FILES_NUMBER $TEXT2';
 "#;
-
-pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
-    let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
-        .replace("$TEXT", &new_percentage)
-        .replace("$WIDTH", &new_percentage);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn change_progress_description(window: &DesktopContext, new_description: String) {
-    let new_script = PROGRESS_UPLOAD_DESCRIPTION_SCRIPT.replace("$TEXT", &new_description);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn update_filename(window: &DesktopContext, filename: String) {
-    let new_script = UPDATE_FILENAME_SCRIPT.replace("$TEXT", &filename);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
-    let new_script = UPDATE_FILE_QUEUE_SCRIPT
-        .replace(
-            "$TEXT_TRANSLATED",
-            &format!(" / {}", get_local_text("files.files-in-queue")),
-        )
-        .replace("$FILES_IN_QUEUE", &format!("{}", files_in_queue));
-    _ = window.webview.evaluate_script(&new_script);
-}
 
 fn update_files_to_drop_while_upload_other_file(
     window: &DesktopContext,
@@ -102,13 +51,11 @@ fn update_files_to_drop_while_upload_other_file(
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     files_been_uploaded: &'a UseRef<bool>,
-    disable_cancel_upload_button: &'a UseRef<bool>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
-    on_cancel: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
-pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn FileHoverHandler<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
     let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
     let called_drag_and_drop_function: &UseRef<bool> = use_ref(cx, || false);
@@ -141,74 +88,6 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             .on_update
             .call(files_ready_to_upload.read().clone());
         *files_ready_to_upload.write_silent() = Vec::new();
-    }
-
-    if *cx.props.files_been_uploaded.read() {
-        return cx.render(rsx!(
-            div {
-                class: "upload-progress-bar-container",
-                aria_label: "upload-progress-bar-container",
-                div {
-                    class: "progress-percentage-description-container",
-                    p {
-                        id: "upload-progress-description",
-                        class: "upload-progress-description",
-                        aria_label: "upload-progress-description",
-                        get_local_text("files.uploading-file"),
-                    },
-                    p {
-                        id: "upload-progress-percentage",
-                        class: "upload-progress-percentage",
-                        aria_label: "upload-progress-percentage",
-                        "0%",
-                    },
-                    p {
-                        id: "upload-progress-drop-files",
-                        class: "upload-progress-drop-files",
-                    },
-                },
-                div {
-                    class: "progress-bar-button-container",
-                    div {
-                        class: "progress-bar-filename-container",
-                        div {
-                            class: "progress-bar",
-                            div {
-                                id: "progress-percentage",
-                                class: "progress-percentage",
-                                aria_label: "progress-percentage",
-                            },
-                        }
-                        div {
-                            class: "filaname-and-queue-container",
-                            p {
-                                id: "upload-progress-filename",
-                                class: "filename-and-file-queue-text",
-                                aria_label: "filename-and-file-queue-text",
-                            },
-                            p {
-                                id: "upload-progress-files-queue",
-                                aria_label: "upload-progress-files-queue",
-                                class: "file-queue-text",
-                            },
-                        }
-                    }
-                    div {
-                        class: "cancel-button",
-                        Button {
-                            aria_label: "cancel-upload".into(),
-                            disabled: *cx.props.disable_cancel_upload_button.read(),
-                            appearance: Appearance::Primary,
-                            onpress: move |_| {
-                                cx.props.on_cancel.call(());
-                            },
-                            text: get_local_text("uplink.cancel"),
-                        }
-                    }
-                }
-
-            },
-        ));
     }
 
     if !*cx.props.are_files_hovering_app.read() {
