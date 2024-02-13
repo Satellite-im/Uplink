@@ -150,6 +150,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                 if direct_message {rsx!(
                     ContextItem {
                         icon: Icon::XMark,
+                        aria_label: "close-chat-context-option".into(),
                         text: "Close Chat".into(),
                         onpress: move |_| {}
                     }
