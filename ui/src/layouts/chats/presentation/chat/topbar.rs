@@ -6,7 +6,11 @@ use kit::{
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
-    elements::input::{Input, Options},
+    elements::{
+        button::Button,
+        input::{Input, Options},
+        Appearance,
+    },
 };
 
 use common::{
@@ -190,23 +194,29 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                         id: "edit-group-name",
                         class: "edit-group-name",
                         Input {
-                                placeholder:  get_local_text("messages.group-name"),
-                                default_text: conversation_title.clone(),
-                                aria_label: "groupname-input".into(),
-                                options: Options {
-                                    with_clear_btn: true,
-                                    ..get_input_options()
-                                },
-                                onreturn: move |(v, is_valid, _): (String, bool, _)| {
-                                    if !is_valid {
-                                        return;
-                                    }
-                                    if v != conversation_title.clone() {
-                                        ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
-                                    }
-                                    cx.props.show_rename_group.set(false);
-                                },
+                            placeholder:  get_local_text("messages.group-name"),
+                            default_text: conversation_title.clone(),
+                            aria_label: "groupname-input".into(),
+                            options: Options {
+                                with_clear_btn: true,
+                                ..get_input_options()
                             },
+                            onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                                if !is_valid {
+                                    return;
+                                }
+                                if v != conversation_title.clone() {
+                                    ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
+                                }
+                                cx.props.show_rename_group.set(false);
+                            },
+                        },
+                        Button {
+                            icon: Icon::XMark,
+                            appearance: Appearance::Secondary,
+                            onpress: move |_| cx.props.show_rename_group.set(false),
+                            aria_label: "close-rename-group".into(),
+                        }
                     })
                 } else {rsx!(
                     p {
