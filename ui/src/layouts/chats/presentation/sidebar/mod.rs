@@ -2,7 +2,9 @@ mod create_group;
 mod search;
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::state::ui::Layout;
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
+use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::html::input_data::keyboard_types::Code;
@@ -38,6 +40,7 @@ use warp::{
 
 use tracing::log;
 
+use crate::components::file_progress::FileTransferModal;
 use crate::components::media::calling::CallControl;
 
 use crate::layouts::chats::presentation::sidebar::create_group::CreateGroup;
@@ -68,6 +71,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
     let search_friends_is_focused = use_ref(cx, || false);
+    let storage = state.read().ui.current_layout == Layout::Storage;
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -112,6 +116,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
         .map(|(_, ext)| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
+    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -440,6 +445,24 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     }
                 ))
             },
+            storage.then(||
+                rsx!(FileTransferModal {
+                    state: state,
+                    on_upload_pause: move |_| {
+                        // TODO
+                    },
+                    on_upload_cancel: move |_| {
+                        let _ = tx_cancel_file_upload.send(true);
+                        let _ = tx_cancel_file_upload.send(false);
+                    },
+                    on_download_pause: move |_| {
+                        // TODO
+                    },
+                    on_download_cancel: move |_| {
+                        // TODO
+                    },
+                })
+            )
         }
     ))
 }

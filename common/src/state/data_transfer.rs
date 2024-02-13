@@ -5,6 +5,7 @@ pub enum TransferProgress {
     Starting,
     Progress(u8),
     Finishing,
+    Paused,
     Cancelling,
     Error,
 }
@@ -101,39 +102,43 @@ impl TransferTracker {
         }
     }
 
-    pub fn total_progress(&self, files: bool) -> i8 {
-        if files {
-            let upload = self.file_progress_upload.iter().filter_map(|f| {
-                if let TransferProgress::Progress(p) = f.progress {
-                    Some(p as u32)
-                } else {
-                    None
-                }
-            });
-            let download = self.file_progress_download.iter().filter_map(|f| {
-                if let TransferProgress::Progress(p) = f.progress {
-                    Some(p as u32)
-                } else {
-                    None
-                }
-            });
-            let count = (upload.clone().count() + download.clone().count()) as f64 * 100.;
-            let sum = (upload.sum::<u32>() + download.sum::<u32>()) as f64;
-            return if count > 0. {
-                ((sum / count) * 100.) as i8
-            } else {
-                -1
-            };
+    pub fn get_tracker(&self, upload: bool) -> Vec<FileProgress> {
+        if upload {
+            self.file_progress_upload.clone()
+        } else {
+            let mut result = vec![];
+            result.append(&mut self.file_progress_download.clone());
+            result.append(&mut self.chat_progress_download.clone());
+            result
         }
-        let iter = self.chat_progress_download.iter().filter_map(|f| {
+    }
+
+    pub fn total_progress(&self) -> i8 {
+        let upload = self.file_progress_upload.iter().filter_map(|f| {
             if let TransferProgress::Progress(p) = f.progress {
                 Some(p as u32)
             } else {
                 None
             }
         });
-        let count = iter.clone().count() as f64 * 100.;
-        let sum = iter.sum::<u32>() as f64;
+        let download = self.file_progress_download.iter().filter_map(|f| {
+            if let TransferProgress::Progress(p) = f.progress {
+                Some(p as u32)
+            } else {
+                None
+            }
+        });
+        let chat = self.chat_progress_download.iter().filter_map(|f| {
+            if let TransferProgress::Progress(p) = f.progress {
+                Some(p as u32)
+            } else {
+                None
+            }
+        });
+        let count = (upload.clone().count() + download.clone().count() + chat.clone().count())
+            as f64
+            * 100.;
+        let sum = (upload.sum::<u32>() + download.sum::<u32>() + chat.sum::<u32>()) as f64;
         if count > 0. {
             ((sum / count) * 100.) as i8
         } else {

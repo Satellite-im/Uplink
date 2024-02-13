@@ -13,7 +13,7 @@ use kit::{
 };
 
 use crate::{
-    components::{file_progress::FileTransferModal, media::calling::CallControl},
+    components::media::calling::CallControl,
     layouts::chats::{
         data::{self, ChatData, ScrollBtn},
         presentation::{
@@ -136,12 +136,6 @@ pub fn Compose(cx: Scope) -> Element {
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
                     is_edit_group: is_edit_group,
-                },
-                FileTransferModal {
-                    is_files: false,
-                    state: state,
-                    on_download_pause: move |_| {},
-                    on_download_cancel: move |_| {},
                 }
             },
             // may need this later when video calling is possible.

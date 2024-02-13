@@ -13,7 +13,9 @@ use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::profile_update_channel::PROFILE_CHANNEL_LISTENER;
 use common::state::data_transfer::{TrackerType, TransferTracker};
 use common::state::settings::GlobalShortcut;
+use common::state::ui::Layout;
 use common::state::ToastNotification;
+use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -50,6 +52,7 @@ use std::time::Instant;
 use std::sync::Arc;
 
 use crate::components::debug_logger::DebugLogger;
+use crate::components::file_progress::FileTransferModal;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
@@ -1242,6 +1245,9 @@ fn AppNav<'a>(
         .iter()
         .map(|c| c.unreads())
         .sum();
+    let file_progress = tracker.read().total_progress();
+    let file_progress_ctx = file_progress >= 0 && state.read().ui.current_layout != Layout::Storage;
+    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     let chat_route = UIRoute {
         to: "/chat",
@@ -1261,7 +1267,6 @@ fn AppNav<'a>(
                 }
             },))
         }),
-        progress_bar: Some(tracker.read().total_progress(false)),
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
@@ -1286,7 +1291,25 @@ fn AppNav<'a>(
         to: "/files",
         name: get_local_text("files.files"),
         icon: Icon::Folder,
-        progress_bar: Some(tracker.read().total_progress(true)),
+        progress_bar: Some(file_progress),
+        context_items: file_progress_ctx.then(|| {
+            cx.render(rsx!(FileTransferModal {
+                state: state,
+                on_upload_pause: move |_| {
+                    // TODO
+                },
+                on_upload_cancel: move |_| {
+                    let _ = tx_cancel_file_upload.send(true);
+                    let _ = tx_cancel_file_upload.send(false);
+                },
+                on_download_pause: move |_| {
+                    // TODO
+                },
+                on_download_cancel: move |_| {
+                    // TODO
+                },
+            }))
+        }),
         ..UIRoute::default()
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];

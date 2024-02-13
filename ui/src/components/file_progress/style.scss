@@ -1,8 +1,11 @@
-.file-transfer-modal {
+.file-transfer-wrap {
     background: var(--background-light);
-    z-index: 1000;
     border-radius: var(--border-radius);
     display: flex;
+}
+
+.file-transfer-modal {
+    z-index: 1000;
 }
 
 .file-transfer-label-container {
@@ -21,7 +24,8 @@
 .progress-container {
     display: flex;
     flex-direction: column;
-    width: 200px;
+    min-width: 150px;
+    width: 100%;
     gap: var(--gap-less);
     color: var(--text-color-dark);
 }

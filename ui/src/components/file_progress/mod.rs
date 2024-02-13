@@ -7,30 +7,30 @@ use kit::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
-    is_files: bool,
     state: &'a UseSharedState<State>,
     on_upload_pause: Option<EventHandler<'a, String>>,
     on_upload_cancel: Option<EventHandler<'a, String>>,
     on_download_pause: EventHandler<'a, String>,
     on_download_cancel: EventHandler<'a, String>,
+    modal: Option<bool>,
 }
 
 pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let file_tracker = use_shared_state::<TransferTracker>(cx)?;
     cx.props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
-    let (file_progress_upload, file_progress_download) = if cx.props.is_files {
-        (
-            Some(file_tracker.read().file_progress_upload.clone()),
-            file_tracker.read().file_progress_download.clone(),
-        )
-    } else {
-        (None, file_tracker.read().chat_progress_download.clone())
-    };
+    let (file_progress_upload, file_progress_download) = (
+        file_tracker.read().get_tracker(true),
+        file_tracker.read().get_tracker(false),
+    );
+    if file_progress_upload.is_empty() && file_progress_download.is_empty() {
+        return cx.render(rsx!(()));
+    }
+    let modal = cx.props.modal.unwrap_or_default();
     cx.render(rsx!(div {
-        class: "file-transfer-modal",
-        file_progress_upload.map(|uploads| (!uploads.is_empty()).then(||
+        class: format_args!("file-transfer-wrap {}", if modal {"file-transfer-modal"} else {""}),
+        (!file_progress_upload.is_empty()).then(||
             rsx!(FileTransferElement {
-                transfers: uploads,
+                transfers: file_progress_upload,
                 label: get_local_text("uplink.upload-queue"),
                 on_pause: move |f| {
                     if let Some(e) = cx.props.on_upload_pause.as_ref() {
@@ -43,7 +43,7 @@ pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     }
                 }
             })
-        )),
+        ),
         (!file_progress_download.is_empty()).then(||
             rsx!(FileTransferElement {
                 transfers: file_progress_download,
@@ -111,7 +111,7 @@ pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> 
                         class: "file-transfer-buttons",
                         Button {
                             aria_label: "pause-upload".into(),
-                            disabled: matches!(f.progress, TransferProgress::Progress(100)),
+                            disabled: matches!(f.progress, TransferProgress::Paused | TransferProgress::Progress(100)),
                             appearance: Appearance::Primary,
                             small: true,
                             icon: Icon::Pause,
