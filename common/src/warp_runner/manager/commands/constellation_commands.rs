@@ -367,7 +367,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     let current_directory = match warp_storage.current_directory() {
         Ok(d) => d,
         Err(_) => {
-            let _ = tx_upload_file.send(UploadFileAction::Error(None));
+            let _ = tx_upload_file.send(UploadFileAction::Error(None, None));
             return;
         }
     };
@@ -383,7 +383,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Some(file) => file,
             None => {
                 log::error!("Not possible to get filename");
-                let _ = tx_upload_file.send(UploadFileAction::Error(None));
+                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_path), None));
                 continue;
             }
         };
@@ -394,7 +394,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Ok(metadata) => metadata.len() as usize,
             Err(e) => {
                 log::error!("Not possible to get file size, error: {}", e);
-                let _ = tx_upload_file.send(UploadFileAction::Error(None));
+                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_path), None));
                 continue;
             }
         };
@@ -409,7 +409,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 Some(name) => name.to_str().unwrap_or(&local_path).to_string(),
                 None => local_path.to_string(),
             };
-            let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_name));
+            let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_path, file_name));
             continue;
         }
 
@@ -452,7 +452,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         }
         let ret = match get_items_from_current_directory(&mut warp_storage) {
             Ok(r) => UploadFileAction::Finished(r),
-            Err(_) => UploadFileAction::Error(None),
+            Err(_) => UploadFileAction::Error(None, None),
         };
 
         let _ = tx_upload_file.send(ret);
@@ -489,7 +489,8 @@ async fn handle_upload_progress(
                     .try_recv()
                 {
                     if received_tx {
-                        let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_id));
+                        let _ = tx_upload_file
+                            .send(UploadFileAction::Cancelling(file_path.clone(), file_id));
                         break;
                     }
                 }
@@ -518,7 +519,11 @@ async fn handle_upload_progress(
                     // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
                     // This causes pending file count to not be updated which is way we send a message here too
                     if current_percentage == 100 {
-                        let _ = tx_upload_file.send(UploadFileAction::Finishing(file_id, false));
+                        let _ = tx_upload_file.send(UploadFileAction::Finishing(
+                            file_path.clone(),
+                            file_id,
+                            false,
+                        ));
                     }
                 }
             }
@@ -542,7 +547,10 @@ async fn handle_upload_progress(
                     last_size.unwrap_or_default(),
                     error.unwrap_or_default()
                 );
-                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_id)));
+                let _ = tx_upload_file.send(UploadFileAction::Error(
+                    Some(file_path.clone()),
+                    Some(file_id),
+                ));
                 break;
             }
         }
@@ -598,7 +606,7 @@ async fn handle_upload_progress(
             }
         };
     }
-    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_id, true));
+    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_path, file_id, true));
     log::info!("{:?} file uploaded!", filename);
 }
 

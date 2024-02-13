@@ -108,7 +108,6 @@ pub struct UploadFileController<'a> {
     pub are_files_hovering_app: &'a UseRef<bool>,
     pub files_been_uploaded: &'a UseRef<bool>,
     pub files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
-    pub disable_cancel_upload_button: &'a UseRef<bool>,
 }
 
 impl<'a> UploadFileController<'a> {
@@ -121,7 +120,6 @@ impl<'a> UploadFileController<'a> {
             files_in_queue_to_upload: use_ref(cx, || {
                 state.read().storage.files_in_queue_to_upload.clone()
             }),
-            disable_cancel_upload_button: use_ref(cx, || false),
         }
     }
 }
