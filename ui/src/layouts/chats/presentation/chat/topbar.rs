@@ -157,6 +157,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                     if show_rename {rsx!(
                         ContextItem {
                             icon: Icon::PencilSquare,
+                            aria_label: "rename-group-context-option".into(),
                             text: "Rename".into(),
                             onpress: move |_| {
                                 cx.props.show_rename_group.set(true);
@@ -166,6 +167,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                     if show_manage_members {rsx!(
                         ContextItem {
                             icon: Icon::Users,
+                            aria_label: "manage-members-context-option".into(),
                             text: "Manage Members".into(),
                             onpress: move |_| {
                                 cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
@@ -176,6 +178,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                         ContextItem {
                             danger: true,
                             icon: Icon::Cog,
+                            aria_label: "group-settings-context-option".into(),
                             text: "Settings".into(),
                             onpress: move |_| {
                                 cx.props.show_group_settings.set(true);
