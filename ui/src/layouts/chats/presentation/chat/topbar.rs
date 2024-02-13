@@ -16,6 +16,7 @@ use kit::{
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text_with_args,
+    state::Action,
     warp_runner::{RayGunCmd, WarpCmd},
 };
 use common::{state::State, WARP_CMD_CH};
@@ -152,7 +153,9 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                         icon: Icon::XMark,
                         aria_label: "close-chat-context-option".into(),
                         text: "Close Chat".into(),
-                        onpress: move |_| {}
+                        onpress: move |_| {
+                            state.write().mutate(Action::RemoveFromSidebar(conv_id));
+                        }
                     }
                 )} else {rsx!(
                     if show_rename {rsx!(
