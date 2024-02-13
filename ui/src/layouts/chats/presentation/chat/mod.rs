@@ -40,6 +40,7 @@ pub fn Compose(cx: Scope) -> Element {
     use_shared_state_provider(cx, ScrollBtn::new);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
+
     let init = coroutines::init_chat_data(cx, state, chat_data);
     coroutines::handle_warp_events(cx, state, chat_data);
 
