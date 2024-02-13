@@ -19,6 +19,12 @@ use crate::layouts::chats::{
     presentation::chat::coroutines::fetch_window,
 };
 
+const MARKDOWN_FOR_CODE_BLOCK: &str = r#"
+(() => {{
+    Prism.highlightAll();
+}})();
+"#;
+
 pub enum ChannelCommand {
     RemovePinnedMessage {
         conversation_id: Uuid,
@@ -121,11 +127,17 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
         }
     });
     let pinned_messages = chat_data.read().active_chat.pinned_messages();
+    let eval = use_eval(cx);
+    let _ = eval(MARKDOWN_FOR_CODE_BLOCK);
 
-    cx.render(rsx!(div {
-        id: "pinned-messages-container",
-        class: format_args!("{}", if minimal {"pinned-minimal"} else {""}),
-        aria_label: "pinned-messages-label",
+    cx.render(rsx!(
+        script {
+            MARKDOWN_FOR_CODE_BLOCK
+        }
+        div {
+            id: "pinned-messages-container",
+            class: format_args!("{}", if minimal {"pinned-minimal"} else {""}),
+            aria_label: "pinned-messages-label",
         div {
             class: "pinned-messages",
             aria_label: "pinned-messages-container",
@@ -156,7 +168,8 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
                         onclick: move |_| {
                             ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date, show_pinned: cx.props.show_pinned.clone()});
                         }
-                    })
+                    },
+     )
                 }))
             }
         }
@@ -196,8 +209,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
     });
     let has_attachments = !attachments.is_empty();
 
-    cx.render(rsx!(
-        div {
+    cx.render(rsx!(div {
             class: "pinned-message-wrap",
             aria_label: "pinned-message-wrap",
             cx.props.sender.as_ref().map(|sender| {
