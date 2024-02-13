@@ -781,10 +781,12 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
         to_owned![state];
         async move {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
+            let handler = move |res| {
+                _ = tx.unbounded_send(res);
+            };
+
             let mut watcher = match RecommendedWatcher::new(
-                move |res| {
-                    let _ = tx.unbounded_send(res);
-                },
+                handler,
                 notify::Config::default().with_poll_interval(Duration::from_secs(1)),
             ) {
                 Ok(watcher) => watcher,

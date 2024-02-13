@@ -2,11 +2,11 @@
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn verify_paths(paths: &Vec<PathBuf>) -> bool {
+pub fn verify_paths(paths: &[PathBuf]) -> bool {
     if paths.is_empty() {
         false
     } else {
-        decoded_pathbufs(paths.clone())
+        decoded_pathbufs(paths.to_vec())
             .first()
             .map_or(false, |path| path.exists())
     }
