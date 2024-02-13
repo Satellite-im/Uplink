@@ -23,7 +23,7 @@ use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
 use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
-use warp::constellation::{directory::Directory, item::Item, Progression};
+use warp::constellation::{directory::Directory, item::Item};
 
 use crate::{
     components::files::upload_progress_bar,
@@ -575,7 +575,7 @@ pub fn start_upload_file_listener(
                             *files_been_uploaded.write_silent() = false;
                         }
                     }
-                    UploadFileAction::Uploading((progress, msg, filename)) => {
+                    UploadFileAction::Uploading((progress, _msg, filename)) => {
                         if !*files_been_uploaded.read() && controller.read().first_render {
                             files_been_uploaded.with_mut(|i| *i = true);
                         }
@@ -601,7 +601,7 @@ pub fn start_upload_file_listener(
                             );
                         }
                     }
-                    UploadFileAction::Finishing(file, filename, finish) => {
+                    UploadFileAction::Finishing(_file, filename, finish) => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty()
                             && (finish || files_in_queue_to_upload.read().len() > 1)

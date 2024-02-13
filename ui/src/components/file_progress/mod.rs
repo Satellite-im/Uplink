@@ -79,7 +79,7 @@ pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> 
         cx.props.transfers.iter().map(|f| {
             let progress = match f.progress {
                 TransferProgress::Progress(p) => p,
-                _ => 0 as u8
+                _ => 0
             };
             rsx!(
                 div {

@@ -7,7 +7,6 @@ use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::data_transfer::TransferTracker;
 use common::state::{ui, Action, State};
-use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
@@ -110,8 +109,6 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
         upload_file_controller.clone(),
         file_tracker,
     );
-
-    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     let upload_streams = chat_upload_stream_handler(cx);
     let send_ch = use_coroutine(
