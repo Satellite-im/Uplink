@@ -122,6 +122,11 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     let conv_id = data.active_chat.id();
     let subtext = data.active_chat.subtext();
 
+    let show_group_settings = || match chat_data.read().active_chat.conversation_settings() {
+        ConversationSettings::Group(_) => cx.props.is_owner,
+        ConversationSettings::Direct(_) => false,
+    };
+
     cx.render(rsx!(
         if direct_message {rsx! (
             UserImage {
@@ -167,14 +172,16 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             }
                         }
                     )}
-                    ContextItem {
-                        danger: true,
-                        icon: Icon::Cog,
-                        text: "Settings".into(),
-                        onpress: move |_| {
-                            cx.props.show_group_settings.set(true);
-                        }
-                    },
+                    if show_group_settings() {rsx!(
+                        ContextItem {
+                            danger: true,
+                            icon: Icon::Cog,
+                            text: "Settings".into(),
+                            onpress: move |_| {
+                                cx.props.show_group_settings.set(true);
+                            }
+                        },
+                    )}
                     // TODO: `Delete` item
                 )}
             )),
