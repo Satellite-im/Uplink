@@ -1,3 +1,4 @@
+use uuid::Uuid;
 use warp::constellation::Progression;
 
 #[derive(Debug, Clone)]
@@ -14,43 +15,44 @@ pub enum TransferProgress {
 pub enum TrackerType {
     FileUpload,
     FileDownload,
-    ChatDownload,
 }
 
 #[derive(Debug, Clone)]
 pub struct FileProgress {
+    // Use an uuid for duplicate file names
+    pub id: Uuid,
     pub file: String,
     pub progress: TransferProgress,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct TransferTracker {
     pub file_progress_upload: Vec<FileProgress>,
     pub file_progress_download: Vec<FileProgress>,
-    pub chat_progress_download: Vec<FileProgress>,
 }
 
 impl TransferTracker {
-    pub fn start_file_transfer(&mut self, file: String, tracker: TrackerType) {
+    pub fn start_file_transfer(&mut self, id: Uuid, file: String, tracker: TrackerType) {
         match tracker {
             TrackerType::FileUpload => self.file_progress_upload.push(FileProgress {
+                id,
                 file,
                 progress: TransferProgress::Starting,
+                description: None,
             }),
             TrackerType::FileDownload => self.file_progress_download.push(FileProgress {
+                id,
                 file,
                 progress: TransferProgress::Starting,
-            }),
-            TrackerType::ChatDownload => self.chat_progress_download.push(FileProgress {
-                file,
-                progress: TransferProgress::Starting,
+                description: None,
             }),
         }
     }
 
     pub fn update_file_upload(
         &mut self,
-        file: &String,
+        file_id: &Uuid,
         progression: Progression,
         tracker: TrackerType,
     ) {
@@ -74,31 +76,46 @@ impl TransferTracker {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
-            .find(|p| file.eq(&p.file))
+            .find(|p| file_id.eq(&p.id))
         {
             f.progress = progress;
         }
     }
 
-    pub fn cancel_file_upload(&mut self, file: &String, tracker: TrackerType) {
+    pub fn update_file_description(
+        &mut self,
+        file_id: &Uuid,
+        description: String,
+        tracker: TrackerType,
+    ) {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
-            .find(|p| file.eq(&p.file))
+            .find(|p| file_id.eq(&p.id))
+        {
+            f.description = Some(description);
+        }
+    }
+
+    pub fn cancel_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+        if let Some(f) = self
+            .get_tracker_from(tracker)
+            .iter_mut()
+            .find(|p| file_id.eq(&p.id))
         {
             f.progress = TransferProgress::Cancelling;
         }
     }
 
-    pub fn remove_file_upload(&mut self, file: &String, tracker: TrackerType) {
-        self.get_tracker_from(tracker).retain(|p| !file.eq(&p.file))
+    pub fn remove_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+        self.get_tracker_from(tracker)
+            .retain(|p| !file_id.eq(&p.id))
     }
 
     fn get_tracker_from(&mut self, tracker: TrackerType) -> &mut Vec<FileProgress> {
         match tracker {
             TrackerType::FileUpload => &mut self.file_progress_upload,
             TrackerType::FileDownload => &mut self.file_progress_download,
-            TrackerType::ChatDownload => &mut self.chat_progress_download,
         }
     }
 
@@ -106,10 +123,7 @@ impl TransferTracker {
         if upload {
             self.file_progress_upload.clone()
         } else {
-            let mut result = vec![];
-            result.append(&mut self.file_progress_download.clone());
-            result.append(&mut self.chat_progress_download.clone());
-            result
+            self.file_progress_download.clone()
         }
     }
 
@@ -128,17 +142,8 @@ impl TransferTracker {
                 None
             }
         });
-        let chat = self.chat_progress_download.iter().filter_map(|f| {
-            if let TransferProgress::Progress(p) = f.progress {
-                Some(p as u32)
-            } else {
-                None
-            }
-        });
-        let count = (upload.clone().count() + download.clone().count() + chat.clone().count())
-            as f64
-            * 100.;
-        let sum = (upload.sum::<u32>() + download.sum::<u32>() + chat.sum::<u32>()) as f64;
+        let count = (upload.clone().count() + download.clone().count()) as f64 * 100.;
+        let sum = (upload.sum::<u32>() + download.sum::<u32>()) as f64;
         if count > 0. {
             ((sum / count) * 100.) as i8
         } else {

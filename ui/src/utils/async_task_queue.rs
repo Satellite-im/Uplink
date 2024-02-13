@@ -29,14 +29,12 @@ pub enum ListenerAction {
         timeout: u32,
     },
     TransferProgress {
-        file: String,
+        id: Uuid,
         progression: Progression,
         download: bool,
-        chat: bool,
     },
     FinishTransfer {
-        file: String,
-        chat: bool,
+        id: Uuid,
         download: bool,
     },
 }
@@ -144,30 +142,30 @@ pub fn chat_upload_stream_handler(
 
 pub fn download_stream_handler(
     cx: &ScopeState,
-    chat: bool,
 ) -> &UseRef<
     AsyncRef<(
         warp::constellation::ConstellationProgressStream,
         String,
+        Uuid,
         std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
         bool,
     )>,
 > {
     async_queue(
         cx,
-        |(mut stream, file, on_finish, should_show_toast_notification): (
+        |(mut stream, file, id, on_finish, should_show_toast_notification): (
             warp::constellation::ConstellationProgressStream,
             String,
+            Uuid,
             std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
             bool,
         )| {
             async move {
                 while let Some(progress) = stream.next().await {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
-                        file: file.clone(),
+                        id: id.clone(),
                         progression: progress,
                         download: true,
-                        chat,
                     });
                 }
                 if should_show_toast_notification {
@@ -175,17 +173,15 @@ pub fn download_stream_handler(
                         title: "".into(),
                         content: get_local_text_with_args(
                             "files.download-success",
-                            vec![("file", file.clone())],
+                            vec![("file", file)],
                         ),
                         icon: None,
                         timeout: 2,
                     });
                 }
-                let _ = ACTION_LISTENER.tx.send(ListenerAction::FinishTransfer {
-                    file,
-                    download: true,
-                    chat,
-                });
+                let _ = ACTION_LISTENER
+                    .tx
+                    .send(ListenerAction::FinishTransfer { id, download: true });
                 on_finish.await
             }
         },

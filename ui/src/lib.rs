@@ -598,17 +598,14 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         ));
                     }
                     ListenerAction::TransferProgress {
-                        file,
+                        id,
                         download,
                         progression,
-                        chat,
                     } => {
                         file_tracker.write_silent().update_file_upload(
-                            &file,
+                            &id,
                             progression,
-                            if chat {
-                                TrackerType::ChatDownload
-                            } else if download {
+                            if download {
                                 TrackerType::FileDownload
                             } else {
                                 TrackerType::FileUpload
@@ -621,16 +618,10 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                             schedule(ScopeId(v))
                         }
                     }
-                    ListenerAction::FinishTransfer {
-                        file,
-                        download,
-                        chat,
-                    } => {
+                    ListenerAction::FinishTransfer { id, download } => {
                         file_tracker.write_silent().remove_file_upload(
-                            &file,
-                            if chat {
-                                TrackerType::ChatDownload
-                            } else if download {
+                            &id,
+                            if download {
                                 TrackerType::FileDownload
                             } else {
                                 TrackerType::FileUpload

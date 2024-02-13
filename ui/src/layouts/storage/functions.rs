@@ -23,6 +23,7 @@ use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
 use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
+use uuid::Uuid;
 use warp::constellation::{directory::Directory, item::Item};
 
 use crate::{
@@ -250,7 +251,7 @@ pub fn init_coroutine<'a>(
     state: &'a UseSharedState<State>,
     file_tracker: &UseSharedState<TransferTracker>,
 ) -> &'a Coroutine<ChanCmd> {
-    let download_queue = download_stream_handler(cx, false);
+    let download_queue = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![controller, download_queue, state, file_tracker];
         async move {
@@ -386,12 +387,15 @@ pub fn init_coroutine<'a>(
                             continue;
                         }
 
+                        // Unique id to track this download
+                        let file_id = Uuid::new_v4();
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(stream) => {
                                 download_queue.write().append((
                                     stream,
                                     file_name.clone(),
+                                    file_id.clone(),
                                     on_finish,
                                     notification_download_status,
                                 ));
@@ -414,9 +418,11 @@ pub fn init_coroutine<'a>(
                                 continue;
                             }
                         }
-                        file_tracker
-                            .write()
-                            .start_file_transfer(file_name, TrackerType::FileDownload);
+                        file_tracker.write().start_file_transfer(
+                            file_id,
+                            file_name,
+                            TrackerType::FileDownload,
+                        );
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
@@ -522,16 +528,6 @@ pub fn start_upload_file_listener(
                         }
                     }
                     UploadFileAction::SizeNotAvailable(file_name) => {
-                        file_tracker
-                            .write()
-                            .remove_file_upload(&file_name, TrackerType::FileUpload);
-                        // if !files_in_queue_to_upload.read().is_empty() {
-                        //     files_in_queue_to_upload.with_mut(|i| i.remove(0));
-                        //     upload_progress_bar::update_files_queue_len(
-                        //         &window,
-                        //         files_in_queue_to_upload.read().len(),
-                        //     );
-                        // }
                         state
                             .write()
                             .mutate(common::state::Action::AddToastNotification(
@@ -546,15 +542,16 @@ pub fn start_upload_file_listener(
                                 ),
                             ));
                     }
-                    UploadFileAction::Starting(file_name) => {
+                    UploadFileAction::Starting(id, file_name) => {
                         *files_been_uploaded.write_silent() = true;
-                        // upload_progress_bar::update_filename(&window, file_name.clone());
-                        file_tracker
-                            .write()
-                            .start_file_transfer(file_name, TrackerType::FileUpload);
+                        file_tracker.write().start_file_transfer(
+                            id,
+                            file_name,
+                            TrackerType::FileUpload,
+                        );
                         sleep(Duration::from_millis(500)).await;
                     }
-                    UploadFileAction::Cancelling(filename) => {
+                    UploadFileAction::Cancelling(id, filename) => {
                         *disable_cancel_upload_button.write_silent() = true;
                         // if !files_in_queue_to_upload.read().is_empty() {
                         //     files_in_queue_to_upload.with_mut(|i| i.remove(0));
@@ -569,13 +566,13 @@ pub fn start_upload_file_listener(
                         // );
                         file_tracker
                             .write()
-                            .cancel_file_upload(&filename, TrackerType::FileUpload);
+                            .cancel_file_upload(&id, TrackerType::FileUpload);
                         sleep(Duration::from_millis(500)).await;
                         if files_in_queue_to_upload.read().is_empty() {
                             *files_been_uploaded.write_silent() = false;
                         }
                     }
-                    UploadFileAction::Uploading((progress, _msg, filename)) => {
+                    UploadFileAction::Uploading((progress, _msg, file)) => {
                         if !*files_been_uploaded.read() && controller.read().first_render {
                             files_been_uploaded.with_mut(|i| *i = true);
                         }
@@ -595,20 +592,20 @@ pub fn start_upload_file_listener(
                         // upload_progress_bar::change_progress_description(&window, msg);
                         if let Some(progress) = progress {
                             file_tracker.write().update_file_upload(
-                                &filename,
+                                &file,
                                 progress,
                                 TrackerType::FileUpload,
                             );
                         }
                     }
-                    UploadFileAction::Finishing(_file, filename, finish) => {
+                    UploadFileAction::Finishing(_file, file, finish) => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty()
                             && (finish || files_in_queue_to_upload.read().len() > 1)
                         {
                             file_tracker
                                 .write()
-                                .remove_file_upload(&filename, TrackerType::FileUpload);
+                                .remove_file_upload(&file, TrackerType::FileUpload);
                             // files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&file)));
                             // upload_progress_bar::update_files_queue_len(
                             //     &window,

@@ -448,7 +448,7 @@ pub fn handle_warp_commands(
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
     let file_tracker = use_shared_state::<TransferTracker>(cx).unwrap();
-    let download_streams = download_stream_handler(cx, true);
+    let download_streams = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         to_owned![state, file_tracker, pending_downloads, download_streams];
         async move {
@@ -541,12 +541,15 @@ pub fn handle_warp_commands(
                             continue;
                         }
 
+                        // Unique id to track this download
+                        let file_id = Uuid::new_v4();
                         let res = rx.await.expect("command canceled");
                         match res {
                             Ok(stream) => {
                                 download_streams.write().append((
                                     stream,
                                     file.name(),
+                                    file_id.clone(),
                                     on_finish,
                                     true,
                                 ));
@@ -566,9 +569,11 @@ pub fn handle_warp_commands(
                                 log::error!("failed to download attachment: {}", e);
                             }
                         }
-                        file_tracker
-                            .write()
-                            .start_file_transfer(file.name(), TrackerType::ChatDownload);
+                        file_tracker.write().start_file_transfer(
+                            file_id,
+                            file.name(),
+                            TrackerType::FileDownload,
+                        );
                         if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
                             conv.remove(&file);
                         }
