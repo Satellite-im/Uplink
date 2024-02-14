@@ -112,7 +112,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             aria_label: "button-nav",
             class: {
-                format_args!("nav {}", if bubble { "bubble" } else { "" })
+                format_args!("nav disable-select {}", if bubble { "bubble" } else { "" })
             },
             cx.props.routes.iter().map(|route| {
                 let badge = get_badge(route);
