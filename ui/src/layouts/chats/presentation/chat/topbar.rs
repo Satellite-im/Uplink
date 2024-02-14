@@ -1,20 +1,30 @@
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::{user_image::UserImage, user_image_group::UserImageGroup},
-    elements::input::{Input, Options},
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        user_image::UserImage,
+        user_image_group::UserImageGroup,
+    },
+    elements::{
+        button::Button,
+        input::{Input, Options},
+        Appearance,
+    },
 };
 
-use common::WARP_CMD_CH;
 use common::{
+    icons::outline::Shape as Icon,
     language::get_local_text_with_args,
+    state::Action,
     warp_runner::{RayGunCmd, WarpCmd},
 };
+use common::{state::State, WARP_CMD_CH};
 
 use common::language::get_local_text;
 
 use uuid::Uuid;
-use warp::raygun::ConversationType;
+use warp::raygun::{ConversationSettings, ConversationType};
 
 use tracing::log;
 
@@ -28,6 +38,8 @@ enum EditGroupCmd {
 }
 
 pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
@@ -92,6 +104,13 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         .unwrap_or(false);
 
     let direct_message = data.active_chat.conversation_type() == ConversationType::Direct;
+    let (show_manage_members, show_rename) = match data.active_chat.conversation_settings() {
+        ConversationSettings::Group(group_settings) => (
+            cx.props.is_owner || group_settings.members_can_add_participants(),
+            cx.props.is_owner || group_settings.members_can_change_name(),
+        ),
+        ConversationSettings::Direct(_) => (false, true),
+    };
 
     let active_participant = data.active_chat.my_id();
     let mut all_participants = data.active_chat.other_participants();
@@ -103,6 +122,11 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
 
     let conv_id = data.active_chat.id();
     let subtext = data.active_chat.subtext();
+
+    let show_group_settings = || match chat_data.read().active_chat.conversation_settings() {
+        ConversationSettings::Group(_) => cx.props.is_owner,
+        ConversationSettings::Direct(_) => false,
+    };
 
     cx.render(rsx!(
         if direct_message {rsx! (
@@ -119,29 +143,74 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                 participants: build_participants(&all_participants),
             }
         )}
-        div {
-            class: "user-info",
-            aria_label: "user-info",
-            onclick: move |_| {
-                if cx.props.is_owner {
-                    return;
-                }
-                if show_group_list {
-                    cx.props.show_group_users.set(None);
-                } else {
-                    cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
-                    cx.props.show_edit_group.set(None);
-                }
-            },
-            if cx.props.is_edit_group {rsx! (
-                div {
-                    id: "edit-group-name",
-                    class: "edit-group-name",
-                    Input {
+        ContextMenu {
+            id: "chat_topbar_context".into(),
+            key: "{cx.props.channel.id}-channel",
+            devmode: state.read().configuration.developer.developer_mode,
+            items: cx.render(rsx!(
+                if direct_message {rsx!(
+                    ContextItem {
+                        icon: Icon::XMark,
+                        aria_label: "close-chat-context-option".into(),
+                        text: "Close Chat".into(),
+                        onpress: move |_| {
+                            state.write().mutate(Action::RemoveFromSidebar(conv_id));
+                        }
+                    }
+                )} else {rsx!(
+                    if show_rename {rsx!(
+                        ContextItem {
+                            icon: Icon::PencilSquare,
+                            aria_label: "rename-group-context-option".into(),
+                            text: "Rename".into(),
+                            onpress: move |_| {
+                                cx.props.show_rename_group.set(true);
+                            }
+                        }
+                    )}
+                    if show_manage_members {rsx!(
+                        ContextItem {
+                            icon: Icon::Users,
+                            aria_label: "manage-members-context-option".into(),
+                            text: "Manage Members".into(),
+                            onpress: move |_| {
+                                cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                            }
+                        }
+                    )}
+                    if show_group_settings() {rsx!(
+                        ContextItem {
+                            danger: true,
+                            icon: Icon::Cog,
+                            aria_label: "group-settings-context-option".into(),
+                            text: "Settings".into(),
+                            onpress: move |_| {
+                                cx.props.show_group_settings.set(true);
+                            }
+                        },
+                    )}
+                    // TODO: `Delete` item
+                )}
+            )),
+            div {
+                class: "user-info",
+                aria_label: "user-info",
+                onclick: move |_| {
+                    if show_group_list && !direct_message {
+                        cx.props.show_group_users.set(None);
+                    } else if !direct_message {
+                        cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
+                        cx.props.show_rename_group.set(false);
+                    }
+                },
+                if *cx.props.show_rename_group.get() {rsx! (
+                    div {
+                        id: "edit-group-name",
+                        class: "edit-group-name",
+                        Input {
                             placeholder:  get_local_text("messages.group-name"),
                             default_text: conversation_title.clone(),
                             aria_label: "groupname-input".into(),
-                            focus_just_on_render: true,
                             options: Options {
                                 with_clear_btn: true,
                                 ..get_input_options()
@@ -153,29 +222,37 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                                 if v != conversation_title.clone() {
                                     ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
                                 }
+                                cx.props.show_rename_group.set(false);
                             },
                         },
-                })
-            } else {rsx!(
-                p {
-                    aria_label: "user-info-username",
-                    class: "username",
-                    "{conversation_title}"
-                },
-                p {
-                    aria_label: "user-info-status",
-                    class: "status",
-                    if direct_message {
-                        rsx! (span {
-                            "{subtext}"
-                        })
-                    } else {
-                        rsx! (
-                            span {"{members_count}"}
-                        )
+                        Button {
+                            icon: Icon::XMark,
+                            appearance: Appearance::Secondary,
+                            onpress: move |_| cx.props.show_rename_group.set(false),
+                            aria_label: "close-rename-group".into(),
+                        }
+                    })
+                } else {rsx!(
+                    p {
+                        aria_label: "user-info-username",
+                        class: "username",
+                        "{conversation_title}"
+                    },
+                    p {
+                        aria_label: "user-info-status",
+                        class: "status",
+                        if direct_message {
+                            rsx! (span {
+                                "{subtext}"
+                            })
+                        } else {
+                            rsx! (
+                                span {"{members_count}"}
+                            )
+                        }
                     }
-                }
-            )}
+                )}
+            }
         }
     ))
 }

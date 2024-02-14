@@ -106,6 +106,31 @@
     .controls {
         position: relative;
     }
+    .user-info-status {
+        cursor: pointer;
+    }
+}
+
+#group-settings {
+    color: var(--text-color-muted);
+
+    .switch {
+        margin-bottom: unset !important;
+    }
+
+    .settings-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .settings {
+        display: inline-flex;
+        flex-direction: column;
+
+        .settings-control {
+            gap: var(--padding-more);
+            display: inline-flex;
+        }
+    }
 }
 @media (max-width: 600px) {
     .context-menu {

@@ -364,7 +364,7 @@ pub async fn conversation_to_chat(
     let chat = chats::Chat::new(
         conv.id(),
         HashSet::from_iter(conv.recipients()),
-        conv.conversation_type(),
+        conv.settings(),
         conv.name(),
         conv.creator(),
         messages,
