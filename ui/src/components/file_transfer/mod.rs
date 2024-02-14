@@ -3,15 +3,12 @@ use common::state::data_transfer::{TransferProgress, TransferTracker};
 use common::state::State;
 use common::{language::get_local_text, state::data_transfer::FileProgress};
 use dioxus::prelude::*;
+use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
     state: &'a UseSharedState<State>,
-    on_upload_pause: Option<EventHandler<'a, String>>,
-    on_upload_cancel: Option<EventHandler<'a, String>>,
-    on_download_pause: EventHandler<'a, String>,
-    on_download_cancel: EventHandler<'a, String>,
     modal: Option<bool>,
 }
 
@@ -32,42 +29,24 @@ pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             rsx!(FileTransferElement {
                 transfers: file_progress_upload,
                 label: get_local_text("uplink.upload-queue"),
-                on_pause: move |f| {
-                    if let Some(e) = cx.props.on_upload_pause.as_ref() {
-                        e.call(f)
-                    }
-                },
-                on_cancel: move |f| {
-                    if let Some(e) = cx.props.on_upload_cancel.as_ref() {
-                        e.call(f)
-                    }
-                }
             })
         ),
         (!file_progress_download.is_empty()).then(||
             rsx!(FileTransferElement {
                 transfers: file_progress_download,
                 label: get_local_text("uplink.download-queue"),
-                on_pause: move |f| {
-                    cx.props.on_download_pause.call(f)
-                },
-                on_cancel: move |f| {
-                    cx.props.on_download_cancel.call(f)
-                }
             })
         ),
     }))
 }
 
-#[derive(Props)]
-pub struct TransferProps<'a> {
+#[derive(Props, PartialEq)]
+pub struct TransferProps {
     transfers: Vec<FileProgress>,
     label: String,
-    on_pause: EventHandler<'a, String>,
-    on_cancel: EventHandler<'a, String>,
 }
 
-pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> {
+pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
     cx.render(rsx!(div {
         class: "file-transfer-container",
         div {
@@ -79,8 +58,18 @@ pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> 
         cx.props.transfers.iter().map(|f| {
             let progress = match f.progress {
                 TransferProgress::Progress(p) => p,
+                TransferProgress::Paused(p) => p,
                 _ => 0
             };
+            let state = f.state.clone();
+            let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<bool>| {
+                to_owned![state];
+                async move {
+                    while let Some(cancel) = rx.next().await {
+                        state.update(cancel).await;
+                    }
+                }
+            });
             rsx!(
                 div {
                     class: "file-transfer-file",
@@ -111,12 +100,12 @@ pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> 
                         class: "file-transfer-buttons",
                         Button {
                             aria_label: "pause-upload".into(),
-                            disabled: matches!(f.progress, TransferProgress::Paused | TransferProgress::Progress(100)),
+                            disabled: matches!(f.progress, TransferProgress::Progress(100)),
                             appearance: Appearance::Primary,
                             small: true,
-                            icon: Icon::Pause,
+                            icon: if matches!(f.progress, TransferProgress::Paused(_)) { Icon::Play } else { Icon::Pause },
                             onpress: move |_| {
-                                cx.props.on_pause.call(f.file.to_string());
+                                ch.send(false);
                             },
                         },
                         Button {
@@ -126,7 +115,7 @@ pub fn FileTransferElement<'a>(cx: Scope<'a, TransferProps<'a>>) -> Element<'a> 
                             icon: Icon::XMark,
                             small: true,
                             onpress: move |_| {
-                                cx.props.on_cancel.call(f.file.to_string());
+                                ch.send(true);
                             },
                         }
                     }

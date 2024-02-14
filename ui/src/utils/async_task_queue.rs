@@ -1,20 +1,26 @@
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text_with_args,
-    state::pending_message::PendingMessage,
+    state::{
+        data_transfer::{TransferState, TransferStates},
+        pending_message::PendingMessage,
+    },
     warp_runner::{ui_adapter::MessageEvent, WarpEvent},
     WARP_EVENT_CH,
 };
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_ref, UseRef};
 use futures::{Future, StreamExt};
-use tokio::sync::{
-    mpsc::{UnboundedReceiver, UnboundedSender},
-    Mutex,
+use tokio::{
+    sync::{
+        mpsc::{UnboundedReceiver, UnboundedSender},
+        Mutex,
+    },
+    time::sleep,
 };
 
 use once_cell::sync::Lazy;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use uuid::Uuid;
 use warp::{
     constellation::Progression,
@@ -31,6 +37,14 @@ pub enum ListenerAction {
     TransferProgress {
         id: Uuid,
         progression: Progression,
+        download: bool,
+    },
+    PauseTransfer {
+        id: Uuid,
+        download: bool,
+    },
+    CancelTransfer {
+        id: Uuid,
         download: bool,
     },
     FinishTransfer {
@@ -140,35 +154,51 @@ pub fn chat_upload_stream_handler(
     )
 }
 
-pub fn download_stream_handler(
-    cx: &ScopeState,
-) -> &UseRef<
-    AsyncRef<(
-        warp::constellation::ConstellationProgressStream,
-        String,
-        Uuid,
-        std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
-        bool,
-    )>,
-> {
+pub struct DownloadStreamData {
+    pub stream: warp::constellation::ConstellationProgressStream,
+    pub file: String,
+    pub id: Uuid,
+    pub on_finish: std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+    pub show_toast: bool,
+    pub file_state: TransferState,
+}
+
+pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStreamData>> {
     async_queue(
         cx,
-        |(mut stream, file, id, on_finish, should_show_toast_notification): (
-            warp::constellation::ConstellationProgressStream,
-            String,
-            Uuid,
-            std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
-            bool,
-        )| {
+        |DownloadStreamData {
+             mut stream,
+             file,
+             id,
+             on_finish,
+             show_toast,
+             file_state,
+         }| {
             async move {
                 while let Some(progress) = stream.next().await {
+                    let mut first = true;
+                    while file_state.matches(TransferStates::Pause).await {
+                        if first {
+                            first = false;
+                            let _ = ACTION_LISTENER
+                                .tx
+                                .send(ListenerAction::PauseTransfer { id, download: true });
+                        }
+                        sleep(Duration::from_secs(1)).await;
+                    }
+                    if file_state.matches(TransferStates::Cancel).await {
+                        let _ = ACTION_LISTENER
+                            .tx
+                            .send(ListenerAction::CancelTransfer { id, download: true });
+                        break;
+                    }
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
                         id,
                         progression: progress,
                         download: true,
                     });
                 }
-                if should_show_toast_notification {
+                if show_toast {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
                         title: "".into(),
                         content: get_local_text_with_args(

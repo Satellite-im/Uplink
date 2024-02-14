@@ -1,17 +1,75 @@
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 use uuid::Uuid;
 use warp::constellation::Progression;
 
 use crate::language::get_local_text;
 
-#[derive(Debug, Clone)]
+// Struct to ease updating/reading from it
+#[derive(Debug, Clone, Default)]
+pub struct TransferState {
+    inner: Arc<Mutex<TransferStates>>,
+}
+
+impl TransferState {
+    pub fn new() -> TransferState {
+        TransferState {
+            inner: Arc::new(Mutex::new(TransferStates::default())),
+        }
+    }
+
+    pub async fn matches(&self, state: TransferStates) -> bool {
+        *self.inner.lock().await == state
+    }
+
+    pub async fn update(&self, cancel: bool) {
+        let mut v = self.inner.lock().await;
+        *v = v.swap(cancel);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TransferProgress {
     Starting,
     Progress(u8),
     Finishing,
-    Paused,
+    Paused(u8),
     Cancelling,
     Error,
 }
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum TransferStates {
+    #[default]
+    Normal,
+    Cancel,
+    Pause,
+}
+
+impl TransferStates {
+    pub fn swap(&self, cancel: bool) -> TransferStates {
+        match self {
+            TransferStates::Normal => {
+                if cancel {
+                    TransferStates::Cancel
+                } else {
+                    TransferStates::Pause
+                }
+            }
+            TransferStates::Cancel => TransferStates::Cancel,
+            TransferStates::Pause => {
+                if cancel {
+                    TransferStates::Cancel
+                } else {
+                    TransferStates::Normal
+                }
+            }
+        }
+    }
+}
+
+unsafe impl Send for TransferStates {}
 
 #[derive(Debug, Clone)]
 pub enum TrackerType {
@@ -26,6 +84,17 @@ pub struct FileProgress {
     pub file: String,
     pub progress: TransferProgress,
     pub description: Option<String>,
+    // Flag used to pause or cancel this transfer
+    pub state: TransferState,
+}
+
+impl PartialEq for FileProgress {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.file == other.file
+            && self.progress == other.progress
+            && self.description == other.description
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -35,19 +104,27 @@ pub struct TransferTracker {
 }
 
 impl TransferTracker {
-    pub fn start_file_transfer(&mut self, id: Uuid, file: String, tracker: TrackerType) {
+    pub fn start_file_transfer(
+        &mut self,
+        id: Uuid,
+        file: String,
+        state: TransferState,
+        tracker: TrackerType,
+    ) {
         match tracker {
             TrackerType::FileUpload => self.file_progress_upload.push(FileProgress {
                 id,
                 file,
                 progress: TransferProgress::Starting,
                 description: None,
+                state,
             }),
             TrackerType::FileDownload => self.file_progress_download.push(FileProgress {
                 id,
                 file,
                 progress: TransferProgress::Starting,
                 description: None,
+                state,
             }),
         }
     }
@@ -99,6 +176,21 @@ impl TransferTracker {
         }
     }
 
+    pub fn pause_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+        if let Some(f) = self
+            .get_tracker_from(tracker)
+            .iter_mut()
+            .find(|p| file_id.eq(&p.id))
+        {
+            let current = if let TransferProgress::Progress(p) = f.progress {
+                p
+            } else {
+                0
+            };
+            f.progress = TransferProgress::Paused(current);
+        }
+    }
+
     pub fn cancel_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
         if let Some(f) = self
             .get_tracker_from(tracker)
@@ -141,20 +233,20 @@ impl TransferTracker {
     }
 
     pub fn total_progress(&self) -> i8 {
-        let upload = self.file_progress_upload.iter().filter_map(|f| {
-            if let TransferProgress::Progress(p) = f.progress {
-                Some(p as u32)
-            } else {
-                None
-            }
-        });
-        let download = self.file_progress_download.iter().filter_map(|f| {
-            if let TransferProgress::Progress(p) = f.progress {
-                Some(p as u32)
-            } else {
-                None
-            }
-        });
+        let upload = self
+            .file_progress_upload
+            .iter()
+            .filter_map(|f| match f.progress {
+                TransferProgress::Progress(p) | TransferProgress::Paused(p) => Some(p as u32),
+                _ => None,
+            });
+        let download = self
+            .file_progress_download
+            .iter()
+            .filter_map(|f| match f.progress {
+                TransferProgress::Progress(p) | TransferProgress::Paused(p) => Some(p as u32),
+                _ => None,
+            });
         let count = (upload.clone().count() + download.clone().count()) as f64 * 100.;
         let sum = (upload.sum::<u32>() + download.sum::<u32>()) as f64;
         if count > 0. {

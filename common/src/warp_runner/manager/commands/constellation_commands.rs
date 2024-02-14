@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::mpsc,
+    time::Duration,
 };
 
 use derive_more::Display;
@@ -12,12 +13,16 @@ use futures::{channel::oneshot, stream, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
+use tokio::time::sleep;
 use uuid::Uuid;
 
 use crate::{
     language::get_local_text,
-    state::storage::Storage as uplink_storage,
-    upload_file_channel::{UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER},
+    state::{
+        data_transfer::{TransferState, TransferStates},
+        storage::Storage as uplink_storage,
+    },
+    upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
     ROOT_DIR_NAME, VIDEO_FILE_EXTENSIONS,
 };
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
@@ -417,8 +422,13 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         let file = PathBuf::from(&original);
         // Generate uuid for tracking
         let file_id = Uuid::new_v4();
+        let file_state = TransferState::new();
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
-        let _ = tx_upload_file.send(UploadFileAction::Starting(file_id, filename.clone()));
+        let _ = tx_upload_file.send(UploadFileAction::Starting(
+            file_id,
+            file_state.clone(),
+            filename.clone(),
+        ));
 
         match warp_storage.put(&filename, &local_path).await {
             Ok(upload_progress) => {
@@ -431,6 +441,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         upload_progress,
                         filename,
                         file_id,
+                        file_state,
                         file_path.clone(),
                     )
                     .await;
@@ -464,6 +475,7 @@ async fn handle_upload_progress(
     mut upload_progress: ConstellationProgressStream,
     filename: String,
     file_id: Uuid,
+    file_state: TransferState,
     file_path: PathBuf,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
@@ -481,18 +493,18 @@ async fn handle_upload_progress(
                 total,
             } => {
                 log::trace!("starting upload file action listener");
-                if let Ok(received_tx) = CANCEL_FILE_UPLOADLISTENER
-                    .rx
-                    .clone()
-                    .lock()
-                    .await
-                    .try_recv()
-                {
-                    if received_tx {
-                        let _ = tx_upload_file
-                            .send(UploadFileAction::Cancelling(file_path.clone(), file_id));
-                        break;
+                let mut first = true;
+                while file_state.matches(TransferStates::Pause).await {
+                    if first {
+                        let _ = tx_upload_file.send(UploadFileAction::Pausing(file_id));
+                        first = false;
                     }
+                    sleep(Duration::from_secs(1)).await;
+                }
+                if file_state.matches(TransferStates::Cancel).await {
+                    let _ = tx_upload_file
+                        .send(UploadFileAction::Cancelling(file_path.clone(), file_id));
+                    break;
                 }
                 if !upload_process_started {
                     upload_process_started = true;

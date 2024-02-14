@@ -3,7 +3,7 @@ use std::time::Duration;
 use common::{
     language::get_local_text_with_args,
     state::{
-        data_transfer::{TrackerType, TransferTracker},
+        data_transfer::{TrackerType, TransferState, TransferTracker},
         Action, State, ToastNotification,
     },
     warp_runner::{FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd},
@@ -24,7 +24,10 @@ use crate::{
         data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         scripts,
     },
-    utils::{async_task_queue::download_stream_handler, download::get_download_path},
+    utils::{
+        async_task_queue::{download_stream_handler, DownloadStreamData},
+        download::get_download_path,
+    },
 };
 
 use super::{DownloadTracker, MessagesCommand};
@@ -543,16 +546,18 @@ pub fn handle_warp_commands(
 
                         // Unique id to track this download
                         let file_id = Uuid::new_v4();
+                        let file_state = TransferState::new();
                         let res = rx.await.expect("command canceled");
                         match res {
                             Ok(stream) => {
-                                download_streams.write().append((
+                                download_streams.write().append(DownloadStreamData {
                                     stream,
-                                    file.name(),
-                                    file_id,
+                                    file: file.name(),
+                                    id: file_id,
                                     on_finish,
-                                    true,
-                                ));
+                                    show_toast: true,
+                                    file_state: file_state.clone(),
+                                });
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(
@@ -572,6 +577,7 @@ pub fn handle_warp_commands(
                         file_tracker.write().start_file_transfer(
                             file_id,
                             file.name(),
+                            file_state,
                             TrackerType::FileDownload,
                         );
                         if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {

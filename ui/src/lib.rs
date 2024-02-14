@@ -15,7 +15,6 @@ use common::state::data_transfer::{TrackerType, TransferTracker};
 use common::state::settings::GlobalShortcut;
 use common::state::ui::Layout;
 use common::state::ToastNotification;
-use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -586,6 +585,15 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
             let channel = ACTION_LISTENER.rx.clone();
             let mut ch = channel.lock().await;
             while let Some(action) = ch.recv().await {
+                let transfer = !matches!(
+                    action,
+                    ListenerAction::ToastAction {
+                        title: _,
+                        content: _,
+                        icon: _,
+                        timeout: _
+                    }
+                );
                 match action {
                     ListenerAction::ToastAction {
                         title,
@@ -611,12 +619,6 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                                 TrackerType::FileUpload
                             },
                         );
-                        if let Some(v) = state.read().scope_ids.file_transfer {
-                            schedule(ScopeId(v))
-                        }
-                        if let Some(v) = state.read().scope_ids.file_transfer_icon {
-                            schedule(ScopeId(v))
-                        }
                     }
                     ListenerAction::FinishTransfer { id, download } => {
                         file_tracker.write_silent().remove_file_upload(
@@ -627,12 +629,34 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                                 TrackerType::FileUpload
                             },
                         );
-                        if let Some(v) = state.read().scope_ids.file_transfer {
-                            schedule(ScopeId(v))
-                        }
-                        if let Some(v) = state.read().scope_ids.file_transfer_icon {
-                            schedule(ScopeId(v))
-                        }
+                    }
+                    ListenerAction::PauseTransfer { id, download } => {
+                        file_tracker.write_silent().pause_file_upload(
+                            &id,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        )
+                    }
+                    ListenerAction::CancelTransfer { id, download } => {
+                        file_tracker.write_silent().cancel_file_upload(
+                            &id,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        )
+                    }
+                }
+                if transfer {
+                    if let Some(v) = state.read().scope_ids.file_transfer {
+                        schedule(ScopeId(v))
+                    }
+                    if let Some(v) = state.read().scope_ids.file_transfer_icon {
+                        schedule(ScopeId(v))
                     }
                 }
             }
@@ -1240,7 +1264,6 @@ fn AppNav<'a>(
         .sum();
     let file_progress = tracker.read().total_progress();
     let file_progress_ctx = file_progress >= 0 && state.read().ui.current_layout != Layout::Storage;
-    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     let chat_route = UIRoute {
         to: "/chat",
@@ -1285,24 +1308,8 @@ fn AppNav<'a>(
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         progress_bar: Some(file_progress),
-        context_items: file_progress_ctx.then(|| {
-            cx.render(rsx!(FileTransferModal {
-                state: state,
-                on_upload_pause: move |_| {
-                    // TODO
-                },
-                on_upload_cancel: move |_| {
-                    let _ = tx_cancel_file_upload.send(true);
-                    let _ = tx_cancel_file_upload.send(false);
-                },
-                on_download_pause: move |_| {
-                    // TODO
-                },
-                on_download_cancel: move |_| {
-                    // TODO
-                },
-            }))
-        }),
+        context_items: file_progress_ctx
+            .then(|| cx.render(rsx!(FileTransferModal { state: state }))),
         ..UIRoute::default()
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];

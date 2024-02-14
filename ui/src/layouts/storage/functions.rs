@@ -3,7 +3,7 @@ use crate::utils::get_drag_event;
 use common::{
     language::{get_local_text, get_local_text_with_args},
     state::{
-        data_transfer::{TrackerType, TransferTracker},
+        data_transfer::{TrackerType, TransferState, TransferTracker},
         storage::Storage,
         Action, State, ToastNotification,
     },
@@ -25,7 +25,10 @@ use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::utils::{async_task_queue::download_stream_handler, download::get_download_path};
+use crate::utils::{
+    async_task_queue::{download_stream_handler, DownloadStreamData},
+    download::get_download_path,
+};
 
 use super::files_layout::controller::{StorageController, UploadFileController};
 
@@ -385,16 +388,18 @@ pub fn init_coroutine<'a>(
 
                         // Unique id to track this download
                         let file_id = Uuid::new_v4();
+                        let file_state = TransferState::new();
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(stream) => {
-                                download_queue.write().append((
+                                download_queue.write().append(DownloadStreamData {
                                     stream,
-                                    file_name.clone(),
-                                    file_id,
+                                    file: file_name.clone(),
+                                    id: file_id,
                                     on_finish,
-                                    notification_download_status,
-                                ));
+                                    show_toast: notification_download_status,
+                                    file_state: file_state.clone(),
+                                });
                             }
                             Err(error) => {
                                 if notification_download_status {
@@ -417,6 +422,7 @@ pub fn init_coroutine<'a>(
                         file_tracker.write().start_file_transfer(
                             file_id,
                             file_name,
+                            file_state,
                             TrackerType::FileDownload,
                         );
                     }
@@ -533,13 +539,19 @@ pub fn start_upload_file_listener(
                                 ),
                             ));
                     }
-                    UploadFileAction::Starting(id, file_name) => {
+                    UploadFileAction::Starting(id, file_state, file_name) => {
                         *files_been_uploaded.write_silent() = true;
                         file_tracker.write().start_file_transfer(
                             id,
                             file_name,
+                            file_state,
                             TrackerType::FileUpload,
                         );
+                    }
+                    UploadFileAction::Pausing(id) => {
+                        file_tracker
+                            .write()
+                            .pause_file_upload(&id, TrackerType::FileUpload);
                     }
                     UploadFileAction::Cancelling(path, id) => {
                         file_tracker
