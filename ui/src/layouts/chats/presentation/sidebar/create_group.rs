@@ -23,7 +23,7 @@ use kit::{
 };
 use tracing::log;
 use uuid::Uuid;
-use warp::crypto::DID;
+use warp::{crypto::DID, raygun::GroupSettings};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -78,6 +78,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else {
                         group_name
                     },
+                    settings: GroupSettings::default(),
                     rsp: tx,
                 };
 

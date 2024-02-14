@@ -64,6 +64,11 @@ pub enum MessageEvent {
     RecipientRemoved { conversation: raygun::Conversation },
     #[display(fmt = "ConversationNameUpdated")]
     ConversationNameUpdated { conversation: raygun::Conversation },
+    #[display(fmt = "ConversationNameUpdated")]
+    ConversationSettingsUpdated {
+        conversation: raygun::Conversation,
+        settings: raygun::ConversationSettings,
+    },
     #[display(fmt = "AttachmentProgress")]
     AttachmentProgress {
         progress: Progression,
@@ -171,9 +176,16 @@ pub async fn convert_message_event(
         } => MessageEvent::MessageUnpinned {
             message: messaging.get_message(conversation_id, message_id).await?,
         },
-        _ => {
-            todo!();
+        MessageEventKind::EventCancelled { .. } => {
+            todo!("Handle EventCancelled");
         }
+        MessageEventKind::ConversationSettingsUpdated {
+            conversation_id,
+            settings,
+        } => MessageEvent::ConversationSettingsUpdated {
+            conversation: messaging.get_conversation(conversation_id).await?,
+            settings,
+        },
     };
 
     Ok(evt)

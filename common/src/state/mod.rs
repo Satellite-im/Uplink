@@ -663,7 +663,15 @@ impl State {
                     chat.conversation_name = conversation.name();
                 }
             }
-            _ => {}
+            MessageEvent::ConversationSettingsUpdated {
+                conversation,
+                settings,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.settings = settings;
+                }
+            }
+            MessageEvent::AttachmentProgress { .. } => todo!(),
         }
     }
 

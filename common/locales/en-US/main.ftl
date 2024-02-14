@@ -124,6 +124,7 @@ friends = Friends
     .all = All Friends
     .remove = Unfriend
     .edit-group = Edit Group
+    .manage-group-members = Manage Members
     .view-group = View Group
     .cannot-add-self = Can't add yourself, silly!
     .incoming_requests = Incoming Requests
