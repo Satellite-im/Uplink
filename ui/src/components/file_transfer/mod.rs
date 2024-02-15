@@ -1,5 +1,5 @@
 use common::icons::outline::Shape as Icon;
-use common::state::data_transfer::{TransferProgress, TransferTracker};
+use common::state::data_transfer::{TrackerType, TransferProgress, TransferTracker};
 use common::state::State;
 use common::{language::get_local_text, state::data_transfer::FileProgress};
 use dioxus::prelude::*;
@@ -16,8 +16,10 @@ pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let file_tracker = use_shared_state::<TransferTracker>(cx)?;
     cx.props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
     let tracker = file_tracker.read();
-    let (file_progress_upload, file_progress_download) =
-        (tracker.get_tracker(true), tracker.get_tracker(false));
+    let (file_progress_upload, file_progress_download) = (
+        tracker.get_tracker(TrackerType::FileUpload),
+        tracker.get_tracker(TrackerType::FileDownload),
+    );
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
         return cx.render(rsx!(()));
     }

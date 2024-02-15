@@ -224,11 +224,10 @@ impl TransferTracker {
         }
     }
 
-    pub fn get_tracker(&self, upload: bool) -> &Vec<FileProgress> {
-        if upload {
-            &self.file_progress_upload
-        } else {
-            &self.file_progress_download
+    pub fn get_tracker(&self, tracker: TrackerType) -> &Vec<FileProgress> {
+        match tracker {
+            TrackerType::FileUpload => &self.file_progress_upload,
+            TrackerType::FileDownload => &self.file_progress_download,
         }
     }
 
