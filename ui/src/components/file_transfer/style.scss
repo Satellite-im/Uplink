@@ -6,26 +6,37 @@
 }
 
 .file-transfer-modal {
-    z-index: 1000;
+    width: 300px;
+}
+
+.file-icon-container > div {
+    width: 40px;
+    height: 40px;
+    svg {
+        width: 100%;
+        height: 100%;
+        transition: stroke var(--animation-time); 
+        fill: transparent; 
+        stroke: var(--text-color);
+    }
 }
 
 .file-transfer-label-container {
-    margin: var(--padding-less); 
+    margin: var(--padding-lesser); 
     margin-bottom: 0;
 }
 
 .file-transfer-file {
     display: flex;
     background: #8c8c8c;
-    margin: var(--gap);
-    padding: var(--padding-less);
+    margin: var(--padding-lesser);
+    padding: var(--padding-less) var(--padding-lesser);
     border-radius: var(--border-radius);
 }
 
 .progress-container {
     display: flex;
     flex-direction: column;
-    min-width: 150px;
     width: 100%;
     gap: var(--gap-less);
     color: var(--text-color-dark);
@@ -34,19 +45,23 @@
 .progress-bar-filename-container {
     display: flex;
     flex-direction: row;
+    gap: var(--gap);
+    p {
+        font-size: var(--text-size-less);
+    }
 }
 
 .file-transfer-buttons {
     display: flex; 
     margin-top: auto; 
     margin-bottom: auto;
-    margin-left: var(--padding-less);
+    margin-left: var(--padding-lesser);
     gap: var(--gap-less);
 }
 
 .progress-indicator-wrap {
     width: 100%;
-    height: var(--text-size-more);
+    height: var(--text-size);
     position: relative;
 }
 

@@ -1,4 +1,6 @@
 use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use common::return_correct_icon;
 use common::state::data_transfer::{TrackerType, TransferProgress, TransferTracker};
 use common::state::State;
 use common::{language::get_local_text, state::data_transfer::FileProgress};
@@ -76,6 +78,11 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
                     class: "file-transfer-file",
                     div {
                         class: "file-icon-container",
+                        div {
+                            IconElement {
+                                icon: return_correct_icon(&f.file)
+                            }
+                        }
                     }
                     div {
                         class: "progress-container",

@@ -1308,8 +1308,12 @@ fn AppNav<'a>(
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         progress_bar: Some(file_progress),
-        context_items: file_progress_ctx
-            .then(|| cx.render(rsx!(FileTransferModal { state: state }))),
+        context_items: file_progress_ctx.then(|| {
+            cx.render(rsx!(FileTransferModal {
+                state: state,
+                modal: true
+            }))
+        }),
         ..UIRoute::default()
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
