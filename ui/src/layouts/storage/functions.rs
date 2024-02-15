@@ -551,19 +551,19 @@ pub fn start_upload_file_listener(
                     UploadFileAction::Pausing(id) => {
                         file_tracker
                             .write()
-                            .pause_file_upload(&id, TrackerType::FileUpload);
+                            .pause_file_upload(id, TrackerType::FileUpload);
                     }
                     UploadFileAction::Cancelling(path, id) => {
                         file_tracker
                             .write()
-                            .cancel_file_upload(&id, TrackerType::FileUpload);
+                            .cancel_file_upload(id, TrackerType::FileUpload);
                         files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
                         sleep(Duration::from_millis(500)).await;
                         *files_been_uploaded.write_silent() =
                             file_tracker.read().file_progress_upload.is_empty();
                         file_tracker
                             .write()
-                            .remove_file_upload(&id, TrackerType::FileUpload);
+                            .remove_file_upload(id, TrackerType::FileUpload);
                     }
                     UploadFileAction::Uploading((progress, msg, file)) => {
                         if !*files_been_uploaded.read() && controller.read().first_render {
@@ -571,13 +571,13 @@ pub fn start_upload_file_listener(
                         }
                         if let Some(progress) = progress {
                             file_tracker.write().update_file_upload(
-                                &file,
+                                file,
                                 progress,
                                 TrackerType::FileUpload,
                             );
                         }
                         file_tracker.write().update_file_description(
-                            &file,
+                            file,
                             msg,
                             TrackerType::FileUpload,
                         );
@@ -590,7 +590,7 @@ pub fn start_upload_file_listener(
                             files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
                             file_tracker
                                 .write()
-                                .remove_file_upload(&file, TrackerType::FileUpload);
+                                .remove_file_upload(file, TrackerType::FileUpload);
                         }
                     }
                     UploadFileAction::Finished(storage) => {
@@ -609,7 +609,7 @@ pub fn start_upload_file_listener(
                         if let Some(file) = file {
                             file_tracker
                                 .write()
-                                .error_file_upload(&file, TrackerType::FileUpload);
+                                .error_file_upload(file, TrackerType::FileUpload);
                             sleep(Duration::from_millis(500)).await;
                             if file_tracker.read().file_progress_upload.is_empty() {
                                 *files_been_uploaded.write_silent() =
@@ -617,7 +617,7 @@ pub fn start_upload_file_listener(
                             }
                             file_tracker
                                 .write()
-                                .remove_file_upload(&file, TrackerType::FileUpload);
+                                .remove_file_upload(file, TrackerType::FileUpload);
                             continue;
                         }
                         state

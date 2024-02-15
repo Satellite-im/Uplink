@@ -611,7 +611,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                         progression,
                     } => {
                         file_tracker.write_silent().update_file_upload(
-                            &id,
+                            id,
                             progression,
                             if download {
                                 TrackerType::FileDownload
@@ -622,7 +622,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     }
                     ListenerAction::FinishTransfer { id, download } => {
                         file_tracker.write_silent().remove_file_upload(
-                            &id,
+                            id,
                             if download {
                                 TrackerType::FileDownload
                             } else {
@@ -632,7 +632,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     }
                     ListenerAction::PauseTransfer { id, download } => {
                         file_tracker.write_silent().pause_file_upload(
-                            &id,
+                            id,
                             if download {
                                 TrackerType::FileDownload
                             } else {
@@ -642,7 +642,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     }
                     ListenerAction::CancelTransfer { id, download } => {
                         file_tracker.write_silent().cancel_file_upload(
-                            &id,
+                            id,
                             if download {
                                 TrackerType::FileDownload
                             } else {

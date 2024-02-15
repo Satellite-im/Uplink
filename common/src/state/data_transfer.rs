@@ -131,7 +131,7 @@ impl TransferTracker {
 
     pub fn update_file_upload(
         &mut self,
-        file_id: &Uuid,
+        file_id: Uuid,
         progression: Progression,
         tracker: TrackerType,
     ) {
@@ -163,7 +163,7 @@ impl TransferTracker {
 
     pub fn update_file_description(
         &mut self,
-        file_id: &Uuid,
+        file_id: Uuid,
         description: String,
         tracker: TrackerType,
     ) {
@@ -176,7 +176,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn pause_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+    pub fn pause_file_upload(&mut self, file_id: Uuid, tracker: TrackerType) {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
@@ -191,7 +191,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn cancel_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+    pub fn cancel_file_upload(&mut self, file_id: Uuid, tracker: TrackerType) {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
@@ -201,7 +201,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn error_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+    pub fn error_file_upload(&mut self, file_id: Uuid, tracker: TrackerType) {
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
@@ -212,7 +212,7 @@ impl TransferTracker {
         }
     }
 
-    pub fn remove_file_upload(&mut self, file_id: &Uuid, tracker: TrackerType) {
+    pub fn remove_file_upload(&mut self, file_id: Uuid, tracker: TrackerType) {
         self.get_tracker_from(tracker)
             .retain(|p| !file_id.eq(&p.id))
     }
