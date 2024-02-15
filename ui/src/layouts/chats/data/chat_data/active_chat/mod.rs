@@ -8,7 +8,7 @@ use kit::components::indicator::Platform;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
-    raygun::{self, ConversationType},
+    raygun::{self, ConversationSettings, ConversationType},
 };
 
 mod messages;
@@ -116,6 +116,9 @@ impl ActiveChat {
         self.metadata
             .conversation_type
             .unwrap_or(ConversationType::Direct)
+    }
+    pub fn conversation_settings(&self) -> ConversationSettings {
+        self.metadata.conversation_settings
     }
     pub fn creator(&self) -> Option<DID> {
         self.metadata.creator.clone()

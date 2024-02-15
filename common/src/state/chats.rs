@@ -3,12 +3,12 @@ use std::{
     time::Instant,
 };
 
-use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{
     constellation::Progression,
     crypto::DID,
-    raygun::{self, ConversationType, Location},
+    raygun::{self, ConversationSettings, ConversationType, Location},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
@@ -28,7 +28,7 @@ use super::pending_message::{progress_file, PendingMessage};
 // }
 
 // warning: Chat implements Serialize
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
@@ -39,6 +39,9 @@ pub struct Chat {
     // this makes it easier to tell direct conversations from group conversations. There should be no group conversations with only 2 participants.
     #[serde(default = "default_conversation_type")]
     pub conversation_type: ConversationType,
+    // Conversation settings.
+    #[serde(default)]
+    pub settings: ConversationSettings,
     // only Some for group chats
     #[serde(default)]
     pub conversation_name: Option<String>,
@@ -48,7 +51,7 @@ pub struct Chat {
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "skip_chat_messages")]
     pub messages: VecDeque<ui_adapter::Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
@@ -80,6 +83,11 @@ pub struct Chat {
     pub pinned_messages: Vec<raygun::Message>,
 }
 
+fn skip_chat_messages(_messages: &VecDeque<ui_adapter::Message>) -> bool {
+    // don't skip messages and participants when using mock data
+    !STATIC_ARGS.use_mock
+}
+
 // can't derive default because there is no default conversation_type
 impl Default for Chat {
     fn default() -> Self {
@@ -87,6 +95,7 @@ impl Default for Chat {
             id: Default::default(),
             participants: Default::default(),
             conversation_type: ConversationType::Direct,
+            settings: ConversationSettings::Direct(Default::default()),
             conversation_name: Default::default(),
             creator: Default::default(),
             messages: Default::default(),
@@ -108,16 +117,21 @@ impl Chat {
     pub fn new(
         id: Uuid,
         participants: HashSet<DID>,
-        conversation_type: ConversationType,
+        settings: ConversationSettings,
         conversation_name: Option<String>,
         creator: Option<DID>,
         messages: VecDeque<ui_adapter::Message>,
         pinned_messages: Vec<raygun::Message>,
     ) -> Self {
+        let conversation_type = match settings {
+            ConversationSettings::Direct(_) => ConversationType::Direct,
+            ConversationSettings::Group(_) => ConversationType::Group,
+        };
         Self {
             id,
             participants,
             conversation_type,
+            settings,
             conversation_name,
             creator,
             messages,
@@ -184,7 +198,7 @@ impl Chat {
 }
 
 // warning: Chats implements Serialize
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Serialize, Debug, Default, Deserialize)]
 pub struct Chats {
     // All active chats from warp.
     pub all: HashMap<Uuid, Chat>,
@@ -233,45 +247,4 @@ impl Chats {
 
 fn default_conversation_type() -> ConversationType {
     ConversationType::Direct
-}
-
-impl Serialize for Chats {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Chats", 5)?;
-
-        state.serialize_field("all", &self.all)?;
-        state.serialize_field("active", &self.active)?;
-        state.skip_field("active_media")?;
-        state.serialize_field("in_sidebar", &self.in_sidebar)?;
-        state.serialize_field("favorites", &self.favorites)?;
-
-        state.end()
-    }
-}
-
-// don't skip messages and participants when using mock data
-impl Serialize for Chat {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Chat", 6)?;
-        state.serialize_field("id", &self.id)?;
-        state.serialize_field("participants", &self.participants)?;
-        state.serialize_field("conversation_type", &self.conversation_type)?;
-        state.serialize_field("creator", &self.creator)?;
-
-        if STATIC_ARGS.use_mock {
-            state.serialize_field("messages", &self.messages)?;
-        } else {
-            state.skip_field("messages")?;
-        }
-
-        state.serialize_field("unreads", &self.unreads)?;
-        state.skip_field("replying_to")?;
-        state.end()
-    }
 }

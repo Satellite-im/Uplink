@@ -18,6 +18,7 @@ pub struct Props<'a> {
     children: Element<'a>,
     onclose: EventHandler<'a, ()>,
     class: Option<&'a str>,
+    right: Option<&'a str>,
 }
 
 #[allow(non_snake_case)]
@@ -54,6 +55,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 class: "modal {cx.props.class.unwrap_or_default()} {horizontal_position_class}",
+                right: if cx.props.right.is_some() { cx.props.right.unwrap_or_default() } else { "unset" },
                 onclick: move |e| {
                     if !close_on_click_inside_modal {
                         e.stop_propagation();
