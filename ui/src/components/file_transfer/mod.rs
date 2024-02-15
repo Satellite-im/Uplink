@@ -15,10 +15,9 @@ pub struct Props<'a> {
 pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let file_tracker = use_shared_state::<TransferTracker>(cx)?;
     cx.props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
-    let (file_progress_upload, file_progress_download) = (
-        file_tracker.read().get_tracker(true),
-        file_tracker.read().get_tracker(false),
-    );
+    let tracker = file_tracker.read();
+    let (file_progress_upload, file_progress_download) =
+        (tracker.get_tracker(true), tracker.get_tracker(false));
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
         return cx.render(rsx!(()));
     }
@@ -27,13 +26,13 @@ pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         class: format_args!("file-transfer-wrap {}", if modal {"file-transfer-modal"} else {""}),
         (!file_progress_upload.is_empty()).then(||
             rsx!(FileTransferElement {
-                transfers: file_progress_upload,
+                transfers: file_progress_upload.clone(),
                 label: get_local_text("uplink.upload-queue"),
             })
         ),
         (!file_progress_download.is_empty()).then(||
             rsx!(FileTransferElement {
-                transfers: file_progress_download,
+                transfers: file_progress_download.clone(),
                 label: get_local_text("uplink.download-queue"),
             })
         ),

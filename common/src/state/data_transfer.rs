@@ -224,11 +224,11 @@ impl TransferTracker {
         }
     }
 
-    pub fn get_tracker(&self, upload: bool) -> Vec<FileProgress> {
+    pub fn get_tracker(&self, upload: bool) -> &Vec<FileProgress> {
         if upload {
-            self.file_progress_upload.clone()
+            &self.file_progress_upload
         } else {
-            self.file_progress_download.clone()
+            &self.file_progress_download
         }
     }
 
