@@ -173,6 +173,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let is_typing = !cx.props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
     let selected_suggestion: &UseRef<Option<usize>> = use_ref(cx, || None);
+    let arrow_selected = use_ref(cx, || false);
     let is_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
     let eval = use_eval(cx);
 
@@ -261,6 +262,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             };
                             *current = Some(selected_idx);
+                            *arrow_selected.write() = true;
                             let _ = eval(&include_str!("./suggestion_scroll.js").replace("$NUM", &selected_idx.to_string()));
                         }
                 },
@@ -280,6 +282,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 suggestions: cx.props.suggestions,
                 on_close: move |_| {
                     is_suggestion_modal_closed.with_mut(|i| *i = true);
+                    *selected_suggestion.write() = None;
                 },
                 on_click: move |(emoji, pattern)| {
                     if let Some(e) = cx.props.on_suggestion_click.as_ref() {
@@ -289,6 +292,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 selected: selected_suggestion.clone(),
+                arrow_selected: arrow_selected.clone(),
             })),
         }
     ))
@@ -300,6 +304,7 @@ pub struct SuggestionProps<'a> {
     on_click: EventHandler<'a, (String, String)>,
     on_close: EventHandler<'a, ()>,
     selected: UseRef<Option<usize>>,
+    arrow_selected: UseRef<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -307,11 +312,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }
-    // use_effect(cx, cx.props.selected, |_|{
-    //     async move {
 
-    //     }
-    // });
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {
@@ -328,6 +329,14 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
                     },
                     onclick: move |_| {
                         cx.props.on_click.call((emoji.clone(), pattern.clone()))
+                    },
+                    onmouseover: move |_| {
+                        cx.props.arrow_selected.with_mut(|arrow|{
+                            if !*arrow {
+                                *cx.props.selected.write() = Some(num);
+                            }
+                            *arrow = false
+                        });
                     },
                     format_args!("{emoji}  :{alias}:"),
                 })
@@ -350,6 +359,14 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
                     onclick: move |_| {
                         cx.props.on_click.call((username.clone(), pattern.clone()))
                     },
+                    onmouseover: move |_| {
+                        cx.props.arrow_selected.with_mut(|arrow|{
+                            if !*arrow {
+                                *cx.props.selected.write() = Some(num);
+                            }
+                            *arrow = false
+                        });
+                    },
                     div {
                         class: "user-suggestion-profile",
                         UserImage {
@@ -368,10 +385,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
         id: "chatbar-suggestions",
         aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {
-            *cx.props.selected.write() = None;
-        },
-        onmouseleave: move |_| {
-            *cx.props.selected.write() = None;
+            *cx.props.arrow_selected.write() = false;
         },
         div {
             class: "chatbar-suggestions-header",
