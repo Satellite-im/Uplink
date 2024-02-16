@@ -192,7 +192,17 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     show_char_counter: true,
                     value: if cx.props.is_disabled { get_local_text("messages.loading")} else { cx.props.value.clone().unwrap_or_default()},
                     onkeyup: move |keycode| {
-                        if !*is_suggestion_modal_closed.read() && keycode == Code::Escape {
+                        if !*is_suggestion_modal_closed.read() && (keycode == Code::Escape || keycode == Code::Tab) {
+                            if keycode == Code::Tab {
+                                if let Some(i) = selected_suggestion.write_silent().take() {
+                                    if let Some(e) = cx.props.on_suggestion_click.as_ref() {
+                                        if let Some(p) = cursor_position.read().as_ref() {
+                                            let (pattern, replacement) = cx.props.suggestions.get_replacement_for_index(i);
+                                            e.call((replacement, pattern,*p));
+                                        }
+                                    }
+                                }
+                            }
                             is_suggestion_modal_closed.with_mut(|i| *i = true);
                         }
                     },

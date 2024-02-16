@@ -29,12 +29,25 @@ function forwardevent(e) {
     return newEvent.defaultPrevented
 }
 
+function forwardeventDown(e) {
+    if (e.key == 'Tab') {
+        e.preventDefault();
+        newEvent = new e.constructor(e.type, e)
+        newEvent.preventDefault()
+        text.dispatchEvent(newEvent)
+        return true
+    }
+    newEvent = new e.constructor(e.type, e)
+    text.dispatchEvent(newEvent)
+    return newEvent.defaultPrevented
+}
+
 var editor = new MarkdownEditor(
     document.getElementById('$EDITOR_ID'), {
     keys: keys,
     listeners: {
         //Forward key events to underlying text area
-        "keydown": forwardevent,
+        "keydown": forwardeventDown,
         "keyup": forwardevent,
         "keypress": forwardevent,
         "onblue": (e) => {
