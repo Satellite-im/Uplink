@@ -307,6 +307,11 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }
+    // use_effect(cx, cx.props.selected, |_|{
+    //     async move {
+
+    //     }
+    // });
     let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {
@@ -360,7 +365,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
         }
     };
     cx.render(rsx!(div {
-        class: "chatbar-suggestions",
+        id: "chatbar-suggestions",
         aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {
             *cx.props.selected.write() = None;
@@ -368,19 +373,22 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
         onmouseleave: move |_| {
             *cx.props.selected.write() = None;
         },
-        Button {
-            small: true,
-            aria_label: "chatbar-suggestion-close-button".into(),
-            appearance: Appearance::Secondary,
-            icon: icons::outline::Shape::XMark,
-            onpress: move |_| cx.props.on_close.call(()),
-        },
         div {
             class: "chatbar-suggestions-header",
             Label {
                 text: label,
             },
+            Button {
+                small: true,
+                aria_label: "chatbar-suggestion-close-button".into(),
+                appearance: Appearance::Secondary,
+                icon: icons::outline::Shape::XMark,
+                onpress: move |_| cx.props.on_close.call(()),
+            },
         }
-        suggestions.into_iter()
+        div {
+            class: "chatbar-suggestion-list",
+            suggestions.into_iter()
+        }
     }))
 }
