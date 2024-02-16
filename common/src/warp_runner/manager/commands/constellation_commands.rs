@@ -4,7 +4,6 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::mpsc,
-    time::Duration,
 };
 
 use derive_more::Display;
@@ -13,7 +12,6 @@ use futures::{channel::oneshot, stream, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
-use tokio::time::sleep;
 use uuid::Uuid;
 
 use crate::{
@@ -482,88 +480,92 @@ async fn handle_upload_progress(
     let mut previous_percentage: usize = 0;
     let mut upload_process_started = false;
     let mut last_progress = None;
+    let mut paused = false;
 
-    while let Some(upload_progress) = upload_progress.next().await {
-        last_progress = Some(upload_progress.clone());
-        let current_progress = upload_progress.clone();
-        match upload_progress {
-            Progression::CurrentProgress {
-                name,
-                current,
-                total,
-            } => {
-                log::trace!("starting upload file action listener");
-                let mut first = true;
-                while file_state.matches(TransferStates::Pause).await {
-                    if first {
-                        let _ = tx_upload_file.send(UploadFileAction::Pausing(file_id));
-                        first = false;
-                    }
-                    sleep(Duration::from_secs(1)).await;
+    loop {
+        tokio::select! {
+            biased;
+            _ = async {}, if file_state.matches(TransferStates::Cancel).await => break,
+            _ = async {}, if file_state.matches(TransferStates::Pause).await => {
+                if !paused {
+                    let _ = tx_upload_file.send(UploadFileAction::Pausing(file_id));
+                    paused = true;
                 }
-                if file_state.matches(TransferStates::Cancel).await {
-                    let _ = tx_upload_file
-                        .send(UploadFileAction::Cancelling(file_path.clone(), file_id));
+            },
+            upload_progress = upload_progress.next() => {
+                paused = false;
+                let Some(upload_progress) = upload_progress else {
                     break;
-                }
-                if !upload_process_started {
-                    upload_process_started = true;
-                    log::info!("Starting upload for {name}");
-                    log::info!("0% completed -> written 0 bytes")
                 };
+                last_progress = Some(upload_progress.clone());
+                let current_progress = upload_progress.clone();
+                match upload_progress {
+                    Progression::CurrentProgress {
+                        name,
+                        current,
+                        total,
+                    } => {
+                        log::trace!("starting upload file action listener");
+                        if !upload_process_started {
+                            upload_process_started = true;
+                            log::info!("Starting upload for {name}");
+                            log::info!("0% completed -> written 0 bytes")
+                        };
 
-                if let Some(total) = total {
-                    let current_percentage = (((current as f64) / (total as f64)) * 100.) as usize;
-                    if previous_percentage != current_percentage {
-                        previous_percentage = current_percentage;
-                        let readable_current = format_size(current, DECIMAL);
-                        let percentage_number = ((current as f64) / (total as f64)) * 100.;
+                        if let Some(total) = total {
+                            let current_percentage = (((current as f64) / (total as f64)) * 100.) as usize;
+                            if previous_percentage != current_percentage {
+                                previous_percentage = current_percentage;
+                                let readable_current = format_size(current, DECIMAL);
+                                let percentage_number = ((current as f64) / (total as f64)) * 100.;
+                                let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                    Some(current_progress), //format!("{}%", percentage_number as usize),
+                                    get_local_text("files.uploading-file"),
+                                    file_id,
+                                )));
+                                log::info!(
+                                    "{}% completed -> written {readable_current}",
+                                    percentage_number as usize
+                                )
+                            }
+                            // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
+                            // This causes pending file count to not be updated which is way we send a message here too
+                            if current_percentage == 100 {
+                                let _ = tx_upload_file.send(UploadFileAction::Finishing(
+                                    file_path.clone(),
+                                    file_id,
+                                    false,
+                                ));
+                            }
+                        }
+                    }
+                    Progression::ProgressComplete { name, total } => {
+                        let total = total.unwrap_or_default();
+                        let readable_total = format_size(total, DECIMAL);
                         let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                            Some(current_progress), //format!("{}%", percentage_number as usize),
+                            Some(current_progress), //"100%".into(),
                             get_local_text("files.uploading-file"),
                             file_id,
                         )));
-                        log::info!(
-                            "{}% completed -> written {readable_current}",
-                            percentage_number as usize
-                        )
+                        log::info!("{name} has been uploaded with {}", readable_total);
                     }
-                    // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
-                    // This causes pending file count to not be updated which is way we send a message here too
-                    if current_percentage == 100 {
-                        let _ = tx_upload_file.send(UploadFileAction::Finishing(
-                            file_path.clone(),
-                            file_id,
-                            false,
+                    Progression::ProgressFailed {
+                        name,
+                        last_size,
+                        error,
+                    } => {
+                        log::info!(
+                            "{name} failed to upload at {} MB due to: {}",
+                            last_size.unwrap_or_default(),
+                            error.unwrap_or_default()
+                        );
+                        let _ = tx_upload_file.send(UploadFileAction::Error(
+                            Some(file_path.clone()),
+                            Some(file_id),
                         ));
+                        break;
                     }
                 }
-            }
-            Progression::ProgressComplete { name, total } => {
-                let total = total.unwrap_or_default();
-                let readable_total = format_size(total, DECIMAL);
-                let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                    Some(current_progress), //"100%".into(),
-                    get_local_text("files.uploading-file"),
-                    file_id,
-                )));
-                log::info!("{name} has been uploaded with {}", readable_total);
-            }
-            Progression::ProgressFailed {
-                name,
-                last_size,
-                error,
-            } => {
-                log::info!(
-                    "{name} failed to upload at {} MB due to: {}",
-                    last_size.unwrap_or_default(),
-                    error.unwrap_or_default()
-                );
-                let _ = tx_upload_file.send(UploadFileAction::Error(
-                    Some(file_path.clone()),
-                    Some(file_id),
-                ));
-                break;
             }
         }
     }
