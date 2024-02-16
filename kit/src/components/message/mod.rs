@@ -551,6 +551,7 @@ fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
     if emojis {
         let r = replace_emojis(txt);
+        log::debug!("r {}, {:?}", r, r.chars());
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
@@ -916,6 +917,9 @@ use unic_emoji_char::{
 // matches strings conssisting of emojis and whitespace
 fn is_only_emojis(input: &str) -> bool {
     let input = input.trim();
+    if emojis::get(input).is_some() {
+        return true;
+    }
     let mut indices = unic_segment::GraphemeIndices::new(input);
     indices.all(|(_, grapheme)| {
         grapheme.trim().chars().all(|c| {
@@ -926,11 +930,6 @@ fn is_only_emojis(input: &str) -> bool {
             || is_emoji_presentation(c)
             // some emojis are multiple emojis joined by this character
             || c == '\u{200d}'
-            // some emojis have a so called variation selector
-            || c == '\u{fe0e}'
-            || c == '\u{fe0f}'
-            // failsafe
-            || emojis::get(&String::from(c)).is_some()
         })
     })
 }
