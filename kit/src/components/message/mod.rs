@@ -926,6 +926,9 @@ fn is_only_emojis(input: &str) -> bool {
             || is_emoji_presentation(c)
             // some emojis are multiple emojis joined by this character
             || c == '\u{200d}'
+            // some emojis have a so called variation selector
+            || c == '\u{fe0e}'
+            || c == '\u{fe0f}'
             // failsafe
             || emojis::get(&String::from(c)).is_some()
         })
