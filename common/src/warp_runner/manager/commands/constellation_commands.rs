@@ -567,7 +567,7 @@ async fn handle_upload_progress(
                             Some(file_path.clone()),
                             Some(file_id),
                         ));
-                        break;
+                        return;
                     }
                 }
             }
