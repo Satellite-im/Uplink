@@ -551,7 +551,6 @@ fn markdown(text: &str, emojis: bool) -> String {
     let txt = text.trim();
     if emojis {
         let r = replace_emojis(txt);
-        log::debug!("r {}, {:?}", r, r.chars());
         // TODO: Watch this issue for a fix: https://github.com/open-i18n/rust-unic/issues/280
         // This is a temporary workaround for some characters unic-emoji-char thinks are emojis
         if !r.chars().all(char::is_alphanumeric) // for any numbers, eg 1, 11, 111
