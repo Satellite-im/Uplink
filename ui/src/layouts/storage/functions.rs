@@ -558,7 +558,7 @@ pub fn start_upload_file_listener(
                             .write()
                             .cancel_file_upload(id, TrackerType::FileUpload);
                         files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
-                        sleep(Duration::from_millis(500)).await;
+                        sleep(Duration::from_secs(5)).await;
                         *files_been_uploaded.write_silent() =
                             file_tracker.read().file_progress_upload.is_empty();
                         file_tracker
@@ -610,7 +610,7 @@ pub fn start_upload_file_listener(
                             file_tracker
                                 .write()
                                 .error_file_upload(file, TrackerType::FileUpload);
-                            sleep(Duration::from_millis(500)).await;
+                            sleep(Duration::from_secs(5)).await;
                             if file_tracker.read().file_progress_upload.is_empty() {
                                 *files_been_uploaded.write_silent() =
                                     file_tracker.read().file_progress_upload.is_empty();

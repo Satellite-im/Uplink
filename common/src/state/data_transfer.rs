@@ -135,6 +135,7 @@ impl TransferTracker {
         progression: Progression,
         tracker: TrackerType,
     ) {
+        let mut txt = None;
         let progress = match progression {
             Progression::CurrentProgress {
                 name: _,
@@ -149,8 +150,11 @@ impl TransferTracker {
             Progression::ProgressFailed {
                 name: _,
                 last_size: _,
-                error: _,
-            } => TransferProgress::Error,
+                error,
+            } => {
+                txt = error;
+                TransferProgress::Error
+            }
         };
         if let Some(f) = self
             .get_tracker_from(tracker)
@@ -158,6 +162,9 @@ impl TransferTracker {
             .find(|p| file_id.eq(&p.id))
         {
             f.progress = progress;
+            if txt.is_some() {
+                f.description = txt;
+            }
         }
     }
 

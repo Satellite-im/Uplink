@@ -572,6 +572,7 @@ pub fn handle_warp_commands(
                                     ),
                                 ));
                                 log::error!("failed to download attachment: {}", e);
+                                continue;
                             }
                         }
                         file_tracker.write().start_file_transfer(

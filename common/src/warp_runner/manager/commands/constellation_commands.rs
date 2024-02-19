@@ -485,8 +485,12 @@ async fn handle_upload_progress(
     loop {
         tokio::select! {
             biased;
-            _ = async {}, if file_state.matches(TransferStates::Cancel).await => break,
-            _ = async {}, if file_state.matches(TransferStates::Pause).await => {
+            true = file_state.matches(TransferStates::Cancel) => {
+                log::info!("{:?} file cancelled!", filename);
+                let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_path, file_id));
+                return;
+            },
+            true = file_state.matches(TransferStates::Pause) => {
                 if !paused {
                     let _ = tx_upload_file.send(UploadFileAction::Pausing(file_id));
                     paused = true;

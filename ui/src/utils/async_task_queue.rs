@@ -27,6 +27,8 @@ use warp::{
     raygun::{AttachmentEventStream, AttachmentKind, Location},
 };
 
+use super::download::DownloadComplete;
+
 pub enum ListenerAction {
     ToastAction {
         title: String,
@@ -158,7 +160,7 @@ pub struct DownloadStreamData {
     pub stream: warp::constellation::ConstellationProgressStream,
     pub file: String,
     pub id: Uuid,
-    pub on_finish: std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
+    pub on_finish: DownloadComplete,
     pub show_toast: bool,
     pub file_state: TransferState,
 }
@@ -175,28 +177,49 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
              file_state,
          }| {
             async move {
-                while let Some(progress) = stream.next().await {
-                    let mut first = true;
-                    while file_state.matches(TransferStates::Pause).await {
-                        if first {
-                            first = false;
+                let mut paused = false;
+                loop {
+                    tokio::select! {
+                        biased;
+                        true = file_state.matches(TransferStates::Cancel) => {
+                            log::info!("{:?} file cancelled!", file);
                             let _ = ACTION_LISTENER
                                 .tx
+                                .send(ListenerAction::CancelTransfer { id, download: true });
+                            on_finish(true).await;
+                            return;
+                        },
+                        true = file_state.matches(TransferStates::Pause) => {
+                            if !paused {
+                                let _ = ACTION_LISTENER
+                                .tx
                                 .send(ListenerAction::PauseTransfer { id, download: true });
+                                paused = true;
+                            }
+                        },
+                        progress = stream.next() => {
+                            let Some(progress) = progress else {
+                                break;
+                            };
+                            let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
+                                id,
+                                progression: progress.clone(),
+                                download: true,
+                            });
+                            match progress {
+                                Progression::ProgressComplete { name: _, total: _ } => break,
+                                Progression::ProgressFailed { name: _, last_size: _ ,error: _ } => {
+                                    sleep(Duration::from_secs(5)).await;
+                                    let _ = ACTION_LISTENER
+                                        .tx
+                                        .send(ListenerAction::FinishTransfer { id, download: true });
+                                    on_finish(true).await;
+                                    return;
+                                }
+                                _ => {}
+                            }
                         }
-                        sleep(Duration::from_secs(1)).await;
                     }
-                    if file_state.matches(TransferStates::Cancel).await {
-                        let _ = ACTION_LISTENER
-                            .tx
-                            .send(ListenerAction::CancelTransfer { id, download: true });
-                        break;
-                    }
-                    let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
-                        id,
-                        progression: progress,
-                        download: true,
-                    });
                 }
                 if show_toast {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
@@ -212,7 +235,7 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
                 let _ = ACTION_LISTENER
                     .tx
                     .send(ListenerAction::FinishTransfer { id, download: true });
-                on_finish.await
+                on_finish(false).await
             }
         },
     )
