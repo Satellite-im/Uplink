@@ -14,10 +14,8 @@ pub fn get_download_path(path: PathBuf) -> (PathBuf, DownloadComplete) {
         async move {
             if err {
                 let _ = tokio::fs::remove_file(&temp2).await;
-            } else {
-                if let Err(e) = tokio::fs::rename(&temp2, &path).await {
-                    log::error!("Unable to rename downloaded file: {e}");
-                }
+            } else if let Err(e) = tokio::fs::rename(&temp2, &path).await {
+                log::error!("Unable to rename downloaded file: {e}");
             }
         }
         .boxed()
