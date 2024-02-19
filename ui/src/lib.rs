@@ -649,15 +649,6 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                                 TrackerType::FileUpload
                             },
                         );
-                        sleep(Duration::from_secs(5)).await;
-                        file_tracker.write_silent().remove_file_upload(
-                            id,
-                            if download {
-                                TrackerType::FileDownload
-                            } else {
-                                TrackerType::FileUpload
-                            },
-                        );
                     }
                 }
                 if transfer {

@@ -35,8 +35,20 @@ pub enum TransferProgress {
     Progress(u8),
     Finishing,
     Paused(u8),
-    Cancelling,
-    Error,
+    Cancelling(u8),
+    Error(u8),
+}
+
+impl TransferProgress {
+    pub fn get_progress(&self) -> u8 {
+        match self {
+            TransferProgress::Progress(p)
+            | TransferProgress::Paused(p)
+            | TransferProgress::Cancelling(p)
+            | TransferProgress::Error(p) => *p,
+            _ => 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -83,6 +95,8 @@ pub struct FileProgress {
     pub id: Uuid,
     pub file: String,
     pub progress: TransferProgress,
+    pub size: usize,
+    pub total_size: usize,
     pub description: Option<String>,
     // Flag used to pause or cancel this transfer
     pub state: TransferState,
@@ -116,6 +130,8 @@ impl TransferTracker {
                 id,
                 file,
                 progress: TransferProgress::Starting,
+                size: 0,
+                total_size: 0,
                 description: None,
                 state,
             }),
@@ -123,6 +139,8 @@ impl TransferTracker {
                 id,
                 file,
                 progress: TransferProgress::Starting,
+                size: 0,
+                total_size: 0,
                 description: None,
                 state,
             }),
@@ -135,36 +153,46 @@ impl TransferTracker {
         progression: Progression,
         tracker: TrackerType,
     ) {
-        let mut txt = None;
-        let progress = match progression {
-            Progression::CurrentProgress {
-                name: _,
-                current,
-                total,
-            } => TransferProgress::Progress(
-                total
-                    .map(|total| current as f64 / total as f64 * 100.)
-                    .unwrap_or_default() as u8,
-            ),
-            Progression::ProgressComplete { name: _, total: _ } => TransferProgress::Finishing,
-            Progression::ProgressFailed {
-                name: _,
-                last_size: _,
-                error,
-            } => {
-                txt = error;
-                TransferProgress::Error
-            }
-        };
         if let Some(f) = self
             .get_tracker_from(tracker)
             .iter_mut()
             .find(|p| file_id.eq(&p.id))
         {
+            let progress = match progression {
+                Progression::CurrentProgress {
+                    name: _,
+                    current,
+                    total,
+                } => {
+                    f.size = current;
+                    if let Some(total) = total {
+                        f.total_size = total;
+                    }
+                    TransferProgress::Progress(
+                        total
+                            .map(|total| current as f64 / total as f64 * 100.)
+                            .unwrap_or_default() as u8,
+                    )
+                }
+                Progression::ProgressComplete { name: _, total } => {
+                    if let Some(total) = total {
+                        f.total_size = total;
+                    }
+                    TransferProgress::Finishing
+                }
+                Progression::ProgressFailed {
+                    name: _,
+                    last_size,
+                    error,
+                } => {
+                    f.description = error;
+                    if let Some(last_size) = last_size {
+                        f.total_size = last_size;
+                    }
+                    TransferProgress::Error(f.progress.get_progress())
+                }
+            };
             f.progress = progress;
-            if txt.is_some() {
-                f.description = txt;
-            }
         }
     }
 
@@ -189,12 +217,7 @@ impl TransferTracker {
             .iter_mut()
             .find(|p| file_id.eq(&p.id))
         {
-            let current = if let TransferProgress::Progress(p) = f.progress {
-                p
-            } else {
-                0
-            };
-            f.progress = TransferProgress::Paused(current);
+            f.progress = TransferProgress::Paused(f.progress.get_progress());
         }
     }
 
@@ -204,7 +227,7 @@ impl TransferTracker {
             .iter_mut()
             .find(|p| file_id.eq(&p.id))
         {
-            f.progress = TransferProgress::Cancelling;
+            f.progress = TransferProgress::Cancelling(f.progress.get_progress());
         }
     }
 
@@ -214,7 +237,7 @@ impl TransferTracker {
             .iter_mut()
             .find(|p| file_id.eq(&p.id))
         {
-            f.progress = TransferProgress::Error;
+            f.progress = TransferProgress::Error(f.progress.get_progress());
             f.description = Some(get_local_text("files.error-to-upload"));
         }
     }

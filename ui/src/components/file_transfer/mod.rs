@@ -59,11 +59,7 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
             },
         },
         cx.props.transfers.iter().map(|f| {
-            let progress = match f.progress {
-                TransferProgress::Progress(p) => p,
-                TransferProgress::Paused(p) => p,
-                _ => 0
-            };
+            let progress = f.progress.get_progress();
             let state = f.state.clone();
             let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<bool>| {
                 to_owned![state];
@@ -118,7 +114,7 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
                         },
                         Button {
                             aria_label: "cancel-upload".into(),
-                            disabled: matches!(f.progress, TransferProgress::Cancelling | TransferProgress::Progress(100)),
+                            disabled: matches!(f.progress, TransferProgress::Cancelling(_) | TransferProgress::Progress(100)),
                             appearance: Appearance::Primary,
                             icon: Icon::XMark,
                             small: true,

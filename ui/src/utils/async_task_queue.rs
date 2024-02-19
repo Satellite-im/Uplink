@@ -186,6 +186,10 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
                             let _ = ACTION_LISTENER
                                 .tx
                                 .send(ListenerAction::CancelTransfer { id, download: true });
+                            sleep(Duration::from_secs(5)).await;
+                            let _ = ACTION_LISTENER
+                                .tx
+                                .send(ListenerAction::FinishTransfer { id, download: true });
                             on_finish(true).await;
                             return;
                         },
