@@ -14,9 +14,7 @@ jobs:
         uses: reviewdog/action-misspell@v1.14.1
         with:
           github_token: ${{ secrets.github_token }}
-          locale: |
-           - US
-           - UK
+          locale: "US, UK"
           reporter: github-pr-review
           level: error
           exclude: "*.css, *.js"
