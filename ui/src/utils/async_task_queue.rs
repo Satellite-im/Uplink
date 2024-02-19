@@ -186,7 +186,7 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
                             let _ = ACTION_LISTENER
                                 .tx
                                 .send(ListenerAction::CancelTransfer { id, download: true });
-                            sleep(Duration::from_secs(5)).await;
+                            sleep(Duration::from_secs(3)).await;
                             let _ = ACTION_LISTENER
                                 .tx
                                 .send(ListenerAction::FinishTransfer { id, download: true });
@@ -213,7 +213,7 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
                             match progress {
                                 Progression::ProgressComplete { name: _, total: _ } => break,
                                 Progression::ProgressFailed { name: _, last_size: _ ,error: _ } => {
-                                    sleep(Duration::from_secs(5)).await;
+                                    sleep(Duration::from_secs(3)).await;
                                     let _ = ACTION_LISTENER
                                         .tx
                                         .send(ListenerAction::FinishTransfer { id, download: true });
