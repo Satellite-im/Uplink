@@ -150,6 +150,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                 aria_label: "upload-progress-bar-container",
                 div {
                     class: "progress-percentage-description-container",
+                    aria_label: "progress-percentage-description-container",
                     p {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
@@ -165,14 +166,18 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     p {
                         id: "upload-progress-drop-files",
                         class: "upload-progress-drop-files",
+                        aria_label: "upload-progress-drop-files",
                     },
                 },
                 div {
                     class: "progress-bar-button-container",
+                    aria_label: "progress-bar-button-container",
                     div {
                         class: "progress-bar-filename-container",
+                        aria_label: "progress-bar-filename-container",
                         div {
                             class: "progress-bar",
+                            aria_label: "progress-bar",
                             div {
                                 id: "progress-percentage",
                                 class: "progress-percentage",
@@ -181,6 +186,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                         }
                         div {
                             class: "filaname-and-queue-container",
+                            aria_label: "filaname-and-queue-container",
                             p {
                                 id: "upload-progress-filename",
                                 class: "filename-and-file-queue-text",
@@ -218,9 +224,11 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     cx.render(rsx!(
                 div {
                     class: "upload-progress-bar-container-file-count",
+                    aria_label: "upload-progress-bar-container-file-count",
                     p {
                         id: "upload-file-count",
                         class: "upload-file-count",
+                        aria_label: "upload-file-count",
                     }
                 },
     ))
