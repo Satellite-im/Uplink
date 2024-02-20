@@ -916,6 +916,9 @@ use unic_emoji_char::{
 // matches strings conssisting of emojis and whitespace
 fn is_only_emojis(input: &str) -> bool {
     let input = input.trim();
+    if emojis::get(input).is_some() {
+        return true;
+    }
     let mut indices = unic_segment::GraphemeIndices::new(input);
     indices.all(|(_, grapheme)| {
         grapheme.trim().chars().all(|c| {
@@ -926,8 +929,6 @@ fn is_only_emojis(input: &str) -> bool {
             || is_emoji_presentation(c)
             // some emojis are multiple emojis joined by this character
             || c == '\u{200d}'
-            // failsafe
-            || emojis::get(&String::from(c)).is_some()
         })
     })
 }
