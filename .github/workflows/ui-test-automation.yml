@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths-ignore:
-      - "!.github/workflows/ui-test-automation.yml"
       - ".github/workflows/**"
+      - "!.github/workflows/ui-test-automation.yml"
       - ".idea/**"
       - ".vscode/**"
       - "common/locales/**"
