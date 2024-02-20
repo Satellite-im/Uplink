@@ -48,6 +48,7 @@
     gap: var(--gap);
     p {
         font-size: var(--text-size-less);
+        overflow-wrap: anywhere;
     }
 }
 
