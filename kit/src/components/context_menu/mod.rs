@@ -214,6 +214,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: icons::outline::Shape::CommandLine,
                         text: get_local_text("uplink.open-devtools"),
                         onpress: move |_| window.webview.open_devtools(),
+                        aria_label: "open-devtools-context".into(),
                     }
                 ))
             },

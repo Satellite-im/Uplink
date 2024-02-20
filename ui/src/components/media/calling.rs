@@ -347,6 +347,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             rsx!(
                 div {
                     class: "recording-active",
+                    aria_label: "recording-active",
                     common::icons::Icon {
                         ..common::icons::IconProps {
                             class: None,
@@ -375,6 +376,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 if other_participants.is_empty() {
                     rsx!(div {
                         class: "lonely-call",
+                        aria_label: "lonely-call",
                         get_local_text("remote-controls.empty")
                     })
                 } else if cx.props.in_chat {
@@ -446,6 +448,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             (!outgoing).then(||{
                 if *recording.read() {
                     rsx!(Button {
+                        aria_label: "stop-recording-button".into(),
                         icon: Icon::StopCircle,
                         appearance: Appearance::Danger,
                         tooltip: cx.render(rsx!(
@@ -460,6 +463,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                   })
                 } else {
                     rsx!(Button {
+            aria_label: "start-recording-button".into(),
             icon: Icon::RadioSelected,
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(
@@ -593,6 +597,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         icon: Icon::PhoneArrowDownLeft,
         description: get_local_text("remote-controls.incoming-call"),
         with_accept_btn: cx.render(rsx!(Button {
+            aria_label: "accept-call-button".into(),
             icon: Icon::Phone,
             appearance: Appearance::Success,
             onpress: move |_| {
@@ -600,6 +605,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
             }
         })),
         with_deny_btn: cx.render(rsx!(Button {
+            aria_label: "deny-call-button".into(),
             icon: Icon::PhoneXMark,
             appearance: Appearance::Danger,
             onpress: move |_| {
@@ -637,8 +643,10 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
     cx.render(rsx! (
         div {
             class:format_args!("call-dialog {}", if cx.props.in_chat {"in-chat"} else {""}),
+            aria_label: format_args!("call-dialog-{}", if cx.props.in_chat {"in-chat"} else {""}),
             div {
                 class: "call-information",
+                aria_label: "call-information",
                 rsx!(
                     common::icons::Icon {
                         ..common::icons::IconProps {
@@ -652,18 +660,22 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
                     },
                 )
                 p {
+                    aria_label: "incoming-call",
                     "{cx.props.description}",
                 },
             },
             div {
+                aria_label: "calling-users",
                 class: "calling-users",
                 &cx.props.caller,
             },
             (!cx.props.in_chat).then(||rsx!(div {
                 class: "users",
+                class: "call-users",
                 "{cx.props.usernames}",
             }))
             div {
+                aria_label: "controls",
                 class: "controls",
                 with_accept_btn,
                 with_deny_btn,
