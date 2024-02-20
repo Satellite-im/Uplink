@@ -15,8 +15,10 @@ pub fn YouTubePlayer(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "youtube-player",
+            aria_label: "youtube-player",
             iframe {
                 src: "{src_video}",
+                aria_label: "{src_video}",
                 allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
                 allowfullscreen: true,
             },
