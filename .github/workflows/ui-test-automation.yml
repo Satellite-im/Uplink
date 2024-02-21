@@ -3,6 +3,27 @@ name: UI Tests on Windows and MacOS 🧪
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
+    paths-ignore:
+      - ".github/workflows/**"
+      - "!.github/workflows/ui-test-automation.yml"
+      - ".idea/**"
+      - ".vscode/**"
+      - "common/locales/**"
+      - "docs/**"
+      - "ui/docs/**"
+      - "utils/**"
+      - "README.md"
+      - ".gitignore"
+      - "LICENSE"
+      - "PULL_REQUEST_TEMPLATE.md"
+      - ".prettierignore"
+      - ".prettierrc"
+      - ".scss-lint.yml"
+      - "assistant.sh"
+      - "build_linux_installer.sh"
+      - "launch_docker.sh"
+      - "macos-install_dependencies.sh"
+      - "quick_build.sh"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
