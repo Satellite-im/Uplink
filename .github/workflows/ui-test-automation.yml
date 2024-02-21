@@ -8,7 +8,6 @@ on:
       - "!.github/workflows/ui-test-automation.yml"
       - ".idea/**"
       - ".vscode/**"
-      - "common/locales/**"
       - "docs/**"
       - "ui/docs/**"
       - "utils/**"
