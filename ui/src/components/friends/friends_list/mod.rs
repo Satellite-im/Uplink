@@ -431,6 +431,18 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
             }
         },
     );
+    let chats: Vec<_> = state
+        .read()
+        .chats_sidebar()
+        .iter()
+        .filter(|c| {
+            cx.props
+                .excluded_chat
+                .map(|id| !c.id.eq(&id))
+                .unwrap_or(true)
+        })
+        .cloned()
+        .collect();
     cx.render(rsx!(Modal {
         open: cx.props.did.get().is_some(),
         onclose: move |_| cx.props.did.set(None),
@@ -461,15 +473,21 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                     },
                 }
             }
-            state.read().chats_sidebar().iter().filter(|c|cx.props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
+            chats.is_empty().then(||{
+                rsx!(div {
+                    class: "modal-share-friend-empty",
+                    get_local_text("messages.no-chats")
+                })
+            }),
+            chats.iter().map(|chat| {
                 let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let other_participants =  state.read().remove_self(&participants);
                 let user: Identity = other_participants.first().cloned().unwrap_or_default();
                 let platform = user.platform().into();
                 // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
-                let participants_name = match chat.conversation_name {
-                    Some(name) => name,
+                let participants_name = match &chat.conversation_name {
+                    Some(name) => name.clone(),
                     None => State::join_usernames(&other_participants)
                 };
                 let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
@@ -491,9 +509,6 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                 let selected = chats_selected.read().contains(&id);
                 rsx!(div {
                     class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
-                    height: "80px",
-                    padding: "16px",
-                    display: "inline-flex",
                     Checkbox {
                         disabled: false,
                         width: "1em".into(),
