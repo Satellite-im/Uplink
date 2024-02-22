@@ -52,9 +52,12 @@ pub struct TransferProps {
 pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
     cx.render(rsx!(div {
         class: "file-transfer-container",
+        aria_label: "file-transfer-container",
         div {
             class: "file-transfer-label-container",
+            aria_label: "file-transfer-label-container",
             label {
+                aria_label: "file-transfer-label",
                 cx.props.label.clone(),
             },
         },
@@ -72,8 +75,10 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
             rsx!(
                 div {
                     class: "file-transfer-file",
+                    aria_label: "file-transfer-file",
                     div {
                         class: "file-icon-container",
+                        aria_label: "file-icon-container",
                         div {
                             IconElement {
                                 icon: return_correct_icon(&f.file)
@@ -82,8 +87,10 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
                     }
                     div {
                         class: "progress-container",
+                        aria_label: "progress-container",
                         div {
                             class: "progress-bar-filename-container",
+                            aria_label: "progress-bar-filename-container",
                             p {
                                 class: "filename-and-file-queue-text",
                                 aria_label: "filename-and-file-queue-text",
