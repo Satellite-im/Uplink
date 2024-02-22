@@ -248,8 +248,8 @@ fn app_layout(cx: Scope) -> Element {
             KeyboardShortcuts {
                 on_global_shortcut: move |shortcut| {
                     match shortcut {
-                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(state.clone()),
-                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(state.clone()),
+                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(state.clone(), cx),
+                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(state.clone(), cx),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
                         GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx),
