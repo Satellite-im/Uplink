@@ -97,9 +97,11 @@ pub fn FileHoverHandler<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     cx.render(rsx!(
                 div {
                     class: "upload-progress-bar-container-file-count",
+                    aria_label: "upload-progress-bar-container-file-count",
                     p {
                         id: "upload-file-count",
                         class: "upload-file-count",
+                        aria_label: "upload-file-count",
                     }
                 },
     ))
