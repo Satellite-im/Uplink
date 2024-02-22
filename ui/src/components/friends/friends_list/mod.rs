@@ -481,7 +481,7 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
             }),
             chats.iter().map(|chat| {
                 let id = chat.id;
-                let participants = state.read().chat_participants(&chat);
+                let participants = state.read().chat_participants(chat);
                 let other_participants =  state.read().remove_self(&participants);
                 let user: Identity = other_participants.first().cloned().unwrap_or_default();
                 let platform = user.platform().into();
