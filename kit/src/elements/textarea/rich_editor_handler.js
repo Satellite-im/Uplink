@@ -56,7 +56,8 @@ var editor = new MarkdownEditor(
         }
     },
     editable: !text.disabled,
-    highlightmap: MarkdownEditor.PrismMap
+    highlightmap: MarkdownEditor.PrismMap,
+    only_autolink: true
 });
 
 editor.value('$INIT');
