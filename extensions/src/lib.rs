@@ -16,7 +16,7 @@ pub static FILE_EXT: &str = "dll";
 pub trait Extension {
     fn details(&self) -> Details;
     fn stylesheet(&self) -> String;
-    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a>;
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element;
     fn rustc_version(&self) -> &'static str {
         RUSTC_VERSION
     }
@@ -100,7 +100,7 @@ impl UplinkExtension {
     }
 
     // todo: can an element be converted to an HTML string and have the string be returned instead?
-    pub fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+    pub fn render<'a>(&self, cx: &'a ScopeState) -> Element {
         unsafe {
             let res = self
                 .lib

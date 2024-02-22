@@ -54,11 +54,11 @@ pub struct Props<'a> {
     size: Size,
     #[props(default = "".to_owned())]
     aria_label: String,
-    onchange: EventHandler<'a, (String, bool)>,
-    onreturn: EventHandler<'a, (String, bool, Code)>,
-    oncursor_update: Option<EventHandler<'a, (String, i64)>>,
-    onkeyup: Option<EventHandler<'a, Code>>,
-    on_paste_keydown: Option<EventHandler<'a, Event<KeyboardData>>>,
+    onchange: EventHandler<(String, bool)>,
+    onreturn: EventHandler<(String, bool, Code)>,
+    oncursor_update: Option<EventHandler<(String, i64)>>,
+    onkeyup: Option<EventHandler<Code>>,
+    on_paste_keydown: Option<EventHandler<Event<KeyboardData>>>,
     value: String,
     #[props(default = false)]
     is_disabled: bool,
@@ -66,11 +66,11 @@ pub struct Props<'a> {
     show_char_counter: bool,
     #[props(default = false)]
     prevent_up_down_arrows: bool,
-    onup_down_arrow: Option<EventHandler<'a, Code>>,
+    onup_down_arrow: Option<EventHandler<Code>>,
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
     let left_shift_pressed = use_ref(cx, || false);
@@ -297,7 +297,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
 // Input using a rich editor making markdown changes visible
 #[allow(non_snake_case)]
-pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
     let listener_data = use_ref(cx, || None);

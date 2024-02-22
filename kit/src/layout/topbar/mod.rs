@@ -13,9 +13,9 @@ pub struct Props<'a> {
     #[props(optional)]
     onclick: Option<EventHandler<'a>>,
     #[props(optional)]
-    controls: Option<Element<'a>>,
+    controls: Option<Element>,
     #[props(optional)]
-    children: Option<Element<'a>>,
+    children: Option<Element>,
 }
 
 /// If enabled, it will render the bool
@@ -32,7 +32,7 @@ pub fn emit(cx: &Scope<Props>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     log::trace!("rendering topbar");
     cx.render(rsx!(
         div {

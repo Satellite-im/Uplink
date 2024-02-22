@@ -15,14 +15,14 @@ pub struct Props<'a> {
     show_close_button: Option<bool>,
     close_on_click_inside_modal: Option<bool>,
     change_horizontal_position: Option<bool>,
-    children: Element<'a>,
-    onclose: EventHandler<'a, ()>,
+    children: Element,
+    onclose: EventHandler<()>,
     class: Option<&'a str>,
     right: Option<&'a str>,
 }
 
 #[allow(non_snake_case)]
-pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let transparent_class = if cx.props.transparent {
         "transparent"
     } else {

@@ -29,7 +29,7 @@ pub struct Props<'a> {
     // Status message from friend
     status_message: String,
     // The user image element to display
-    user_image: Element<'a>,
+    user_image: Element,
     // An optional event handler for the "onchat" event
     onchat: Option<EventHandler<'a>>,
     // An optional event handler for the "onremove" event
@@ -44,7 +44,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();

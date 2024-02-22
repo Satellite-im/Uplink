@@ -16,7 +16,7 @@ pub mod card;
 #[derive(Props)]
 pub struct Props<'a> {
     username: String,
-    user_image: Element<'a>,
+    user_image: Element,
     subtext: String,
     timestamp: Option<DateTime<Utc>>,
     aria_label: Option<String>,
@@ -27,7 +27,7 @@ pub struct Props<'a> {
     #[props(optional)]
     active: Option<bool>,
     #[props(optional)]
-    onpress: Option<EventHandler<'a, MouseEvent>>,
+    onpress: Option<EventHandler<MouseEvent>>,
 }
 
 pub fn get_time_ago(cx: &Scope<Props>) -> String {
@@ -58,7 +58,7 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();

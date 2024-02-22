@@ -104,7 +104,7 @@ pub struct MinimalProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
+pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = cx.props.route;
@@ -159,7 +159,7 @@ fn render_route<T>(cx: Scope<T>, route: FriendRoute) -> Element {
     }))
 }
 
-fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Element<'a> {
+fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let pending_friends = state.read().friends().incoming_requests.len();
 

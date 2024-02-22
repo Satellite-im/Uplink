@@ -38,12 +38,12 @@ pub enum SendFilesStartLocation {
 pub struct SendFilesProps<'a> {
     send_files_from_storage_state: UseState<bool>,
     send_files_start_location: SendFilesStartLocation,
-    on_files_attached: EventHandler<'a, (Vec<Location>, Vec<Uuid>)>,
+    on_files_attached: EventHandler<(Vec<Location>, Vec<Uuid>)>,
     files_pre_selected_to_send: Vec<Location>,
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
+pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let send_files_start_location = cx.props.send_files_start_location.clone();
     let send_files_from_storage_state = cx.props.send_files_from_storage_state.clone();
@@ -117,7 +117,7 @@ struct ChatsToSelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
+fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let storage_controller = cx.props.storage_controller.clone();
 

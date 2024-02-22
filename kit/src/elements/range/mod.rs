@@ -13,7 +13,7 @@ pub struct Props<'a> {
     max: f32,
     step: Option<f32>,
     with_buttons: Option<bool>,
-    onchange: EventHandler<'a, f32>,
+    onchange: EventHandler<f32>,
     no_num: Option<bool>,
     icon_left: Option<Icon>,
     icon_right: Option<Icon>,
@@ -22,7 +22,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let internal_state = use_state(cx, || cx.props.initial_value);
     use_effect(cx, &cx.props.initial_value, |val| {
         to_owned![internal_state];

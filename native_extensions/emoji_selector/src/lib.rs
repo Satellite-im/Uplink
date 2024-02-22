@@ -145,11 +145,7 @@ enum Command {
 }
 
 #[component(no_case_check)]
-fn render_selector<'a>(
-    cx: Scope,
-    mouse_over_emoji_button: UseRef<bool>,
-    nav: Element<'a>,
-) -> Element<'a> {
+fn render_selector<'a>(cx: Scope, mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_selector = use_ref(cx, || false);
     let emoji_suggestions = use_state(cx, Vec::new);
@@ -371,7 +367,7 @@ impl Extension for EmojiSelector {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element<'a> {
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
         cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
         cx.render(rsx!(

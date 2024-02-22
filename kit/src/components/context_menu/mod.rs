@@ -12,7 +12,7 @@ use crate::components::indicator::Indicator;
 #[derive(Props)]
 pub struct ItemProps<'a> {
     #[props(optional)]
-    onpress: Option<EventHandler<'a, MouseEvent>>,
+    onpress: Option<EventHandler<MouseEvent>>,
     text: String,
     disabled: Option<bool>,
     #[props(optional)]
@@ -22,9 +22,9 @@ pub struct ItemProps<'a> {
     should_render: Option<bool>,
     aria_label: Option<String>,
     #[props(optional)]
-    children: Option<Element<'a>>,
+    children: Option<Element>,
     #[props(optional)]
-    tooltip: Option<Element<'a>>,
+    tooltip: Option<Element>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -35,7 +35,7 @@ pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
+pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element {
     let should_render = cx.props.should_render.unwrap_or(true);
 
     if !should_render {
@@ -162,16 +162,16 @@ pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
 #[derive(Props)]
 pub struct Props<'a> {
     id: String,
-    items: Element<'a>,
-    children: Element<'a>,
+    items: Element,
+    children: Element,
     #[props(optional)]
     devmode: Option<bool>,
-    on_mouseenter: Option<EventHandler<'a, MouseEvent>>,
+    on_mouseenter: Option<EventHandler<MouseEvent>>,
     left_click_trigger: Option<bool>,
 }
 
 #[allow(non_snake_case)]
-pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let id = &cx.props.id;
     let window = use_window(cx);
 

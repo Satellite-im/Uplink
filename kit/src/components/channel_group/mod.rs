@@ -16,11 +16,11 @@ pub struct ChannelGroup {
 pub struct Props<'a> {
     group_name: String,
     channels: Vec<Channel>,
-    onpress: EventHandler<'a, &'a Channel>,
+    onpress: EventHandler<&'a Channel>,
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelGroupElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn ChannelGroupElement(cx: Scope<'a, Props<'a>>) -> Element {
     cx.render(rsx!(
         div {
             class: "channel-group",

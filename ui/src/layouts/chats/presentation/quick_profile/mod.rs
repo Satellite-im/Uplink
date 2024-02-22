@@ -39,7 +39,7 @@ pub struct QuickProfileProps<'a> {
     id: &'a String,
     did_key: &'a DID,
     update_script: &'a UseState<String>,
-    children: Element<'a>,
+    children: Element,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -56,7 +56,7 @@ enum QuickProfileCmd {
 
 // Create a quick profile context menu
 #[allow(non_snake_case)]
-pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
+pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let settings_page = use_shared_state::<Page>(cx)?;
     let id = cx.props.id;

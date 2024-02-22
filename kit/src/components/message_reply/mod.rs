@@ -24,7 +24,7 @@ pub enum Order {
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    user_image: Option<Element<'a>>,
+    user_image: Option<Element>,
     #[props(optional)]
     loading: Option<bool>,
     #[props(optional)]
@@ -48,7 +48,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let text = format_text(
         &cx.props.with_text.clone().unwrap_or_default(),
         cx.props.markdown.unwrap_or_default(),

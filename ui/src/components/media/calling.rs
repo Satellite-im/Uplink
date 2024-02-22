@@ -617,21 +617,21 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
 
 #[derive(Props)]
 pub struct CallDialogProps<'a> {
-    caller: Element<'a>,
+    caller: Element,
     icon: Icon,
     description: String,
     usernames: String,
     in_chat: bool,
     #[props(optional)]
-    with_accept_btn: Option<Element<'a>>,
+    with_accept_btn: Option<Element>,
     #[props(optional)]
-    with_deny_btn: Option<Element<'a>>,
+    with_deny_btn: Option<Element>,
 }
 
 // todo: remove this
 #[allow(unused)]
 #[allow(non_snake_case)]
-pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element<'a> {
+pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element {
     let with_accept_btn = match cx.props.with_accept_btn.clone() {
         Some(w_a_b) => w_a_b,
         None => None,

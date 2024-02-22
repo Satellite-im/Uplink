@@ -16,12 +16,12 @@ const NAVIGATE_AND_HIGHLIGHT_KEYBINDS: &str = include_str!("./navigate_and_highl
 #[derive(Props)]
 pub struct Props<'a> {
     is_on_auth_pages: Option<bool>,
-    on_global_shortcut: EventHandler<'a, GlobalShortcut>,
+    on_global_shortcut: EventHandler<GlobalShortcut>,
     // TODO: overrides: Vec<(String, String)> allow for overriding the default bindings
 }
 
 #[allow(non_snake_case)]
-pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }
@@ -94,11 +94,11 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 struct GlobalShortcutProps<'a> {
     keys: Vec<KeyCode>,
     modifiers: Vec<ModifiersState>,
-    on_global_shortcut: EventHandler<'a, GlobalShortcut>,
+    on_global_shortcut: EventHandler<GlobalShortcut>,
     global_shortcut: GlobalShortcut,
 }
 
-fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element<'a> {
+fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element {
     let command_pressed = use_ref(cx, || false);
 
     if *command_pressed.read() {

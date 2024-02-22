@@ -10,11 +10,11 @@ pub struct SendFilesLayoutModalProps<'a> {
     send_files_from_storage: &'a UseState<bool>,
     send_files_start_location: SendFilesStartLocation,
     files_pre_selected_to_send: Option<Vec<Location>>,
-    on_send: EventHandler<'a, (Vec<Location>, Vec<Uuid>)>,
+    on_send: EventHandler<(Vec<Location>, Vec<Uuid>)>,
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) -> Element<'a> {
+pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) -> Element {
     let send_files_from_storage = cx.props.send_files_from_storage;
     let send_files_start_location = cx.props.send_files_start_location.clone();
     let files_pre_selected_to_send = cx

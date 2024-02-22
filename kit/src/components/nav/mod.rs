@@ -19,8 +19,8 @@ pub struct Route<'a> {
     pub name: String,
     pub with_badge: Option<String>,
     pub loading: Option<bool>,
-    pub child: Option<Element<'a>>,
-    pub context_items: Option<Element<'a>>,
+    pub child: Option<Element>,
+    pub context_items: Option<Element>,
 }
 
 impl Default for Route<'_> {
@@ -40,7 +40,7 @@ impl Default for Route<'_> {
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    onnavigate: Option<EventHandler<'a, To>>,
+    onnavigate: Option<EventHandler<To>>,
     routes: Vec<Route<'a>>,
     #[props(optional)]
     active: Option<To>,
@@ -100,7 +100,7 @@ pub fn get_active(cx: &Scope<Props>) -> To {
 /// )
 /// ```
 #[allow(non_snake_case)]
-pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let active = use_state(cx, || get_active(&cx));
     let bubble = cx.props.bubble.unwrap_or_default();
     let tooltip_direction = cx.props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);

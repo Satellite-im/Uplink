@@ -35,11 +35,11 @@ pub struct Channel {
 #[derive(Props)]
 pub struct Props<'a> {
     channel: Channel,
-    onpress: EventHandler<'a, Channel>,
+    onpress: EventHandler<Channel>,
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelElement<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn ChannelElement(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(

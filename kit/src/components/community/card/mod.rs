@@ -8,11 +8,11 @@ use common::language::get_local_text;
 pub struct Props<'a> {
     joined: bool,
     name: String,
-    onjoin: EventHandler<'a, ()>,
+    onjoin: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     cx.render(
         rsx!(
             div {

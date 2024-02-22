@@ -29,12 +29,12 @@ struct ImageDimensions {
 #[derive(Props)]
 pub struct Props<'a> {
     pub large_thumbnail: (Vec<u8>, String),
-    pub on_cancel: EventHandler<'a, ()>,
-    pub on_crop: EventHandler<'a, PathBuf>,
+    pub on_cancel: EventHandler<()>,
+    pub on_crop: EventHandler<PathBuf>,
 }
 
 #[allow(non_snake_case)]
-pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);

@@ -12,7 +12,7 @@ use dioxus::{events::MouseEvent, prelude::*};
 pub struct Props<'a> {
     loading: Option<bool>,
     participants: Vec<User>,
-    onpress: Option<EventHandler<'a, MouseEvent>>,
+    onpress: Option<EventHandler<MouseEvent>>,
     typing: Option<bool>,
     with_username: Option<String>,
     use_tooltip: Option<bool>,
@@ -20,7 +20,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let is_pressable = cx.props.onpress.is_some();
     let is_using_tooltip = cx.props.use_tooltip.unwrap_or_default();
     // this is "participants.len() - 3" because:

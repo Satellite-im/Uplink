@@ -8,11 +8,11 @@ pub struct Props<'a> {
     friends: bool,
     name: String,
     status: String,
-    onjoin: EventHandler<'a, ()>,
+    onjoin: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn UserCard<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn UserCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     cx.render(
         rsx!(
             div {

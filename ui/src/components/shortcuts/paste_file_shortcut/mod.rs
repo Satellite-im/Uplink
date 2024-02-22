@@ -28,7 +28,7 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
 
 #[derive(Props)]
 pub struct ShortCutProps<'a> {
-    on_paste: EventHandler<'a, Vec<PathBuf>>,
+    on_paste: EventHandler<Vec<PathBuf>>,
 }
 
 // HACK: It is not allowed to put hooks inside conditional,
@@ -51,7 +51,7 @@ pub struct ShortCutProps<'a> {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
+pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }

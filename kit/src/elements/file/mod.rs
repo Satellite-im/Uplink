@@ -22,7 +22,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
-    onrename: Option<EventHandler<'a, (String, Code)>>,
+    onrename: Option<EventHandler<(String, Code)>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
@@ -55,7 +55,7 @@ pub fn get_file_extension(file_name: String) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let file_extension = get_file_extension(cx.props.text.clone());
     let file_name = cx.props.text.clone();
     let file_name2 = file_name.clone();

@@ -7,8 +7,8 @@ use crate::components::{
 
 #[derive(Props)]
 pub struct Props<'a> {
-    children: Element<'a>,
-    user_image: Element<'a>,
+    children: Element,
+    user_image: Element,
     sender: String,
     #[props(optional)]
     remote: Option<bool>,
@@ -17,7 +17,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let remote = cx.props.remote.unwrap_or_default();
     let time_ago = cx.props.timestamp.clone().unwrap_or_default();
 

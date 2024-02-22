@@ -19,7 +19,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
-    onrename: Option<EventHandler<'a, (String, Code)>>,
+    onrename: Option<EventHandler<(String, Code)>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
@@ -43,7 +43,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let open = cx.props.open.unwrap_or_default();
     let folder_name = cx.props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(&cx);

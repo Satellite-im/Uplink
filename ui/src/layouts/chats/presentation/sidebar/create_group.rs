@@ -27,11 +27,11 @@ use warp::{crypto::DID, raygun::GroupSettings};
 
 #[derive(Props)]
 pub struct Props<'a> {
-    oncreate: EventHandler<'a, MouseEvent>,
+    oncreate: EventHandler<MouseEvent>,
 }
 
 #[allow(non_snake_case)]
-pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     log::trace!("rendering create_group");
     let state = use_shared_state::<State>(cx)?;
     let router = use_navigator(cx);

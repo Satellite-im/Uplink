@@ -10,7 +10,7 @@ pub struct Props<'a> {
     #[props(optional)]
     default_value: Option<i32>,
     #[props(optional)]
-    _onflipped: Option<EventHandler<'a, i32>>,
+    _onflipped: Option<EventHandler<i32>>,
 }
 
 pub fn get_default(cx: &Scope<Props>) -> i32 {
@@ -18,7 +18,7 @@ pub fn get_default(cx: &Scope<Props>) -> i32 {
 }
 
 #[allow(non_snake_case)]
-pub fn Slider<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn Slider<'a>(cx: Scope<'a, Props>) -> Element {
     let _slider_value = use_state(cx, || get_default(&cx));
     // TODO: Pending dioxus update for eval returning values
     cx.render(rsx! {

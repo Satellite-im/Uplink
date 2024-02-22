@@ -53,7 +53,7 @@ pub struct Route {
 
 #[derive(Default)]
 pub struct ReplyInfo<'a> {
-    pub user_image: Element<'a>,
+    pub user_image: Element,
     pub message: String,
 }
 
@@ -62,21 +62,21 @@ pub struct Props<'a> {
     id: String,
     placeholder: String,
     typing_users: Vec<String>,
-    with_replying_to: Option<Element<'a>>,
-    with_file_upload: Option<Element<'a>>,
-    extensions: Option<Element<'a>>,
-    controls: Option<Element<'a>>,
+    with_replying_to: Option<Element>,
+    with_file_upload: Option<Element>,
+    extensions: Option<Element>,
+    controls: Option<Element>,
     value: Option<String>,
     loading: Option<bool>,
-    onchange: EventHandler<'a, String>,
-    on_paste_keydown: Option<EventHandler<'a, Event<KeyboardData>>>,
-    onreturn: EventHandler<'a, String>,
+    onchange: EventHandler<String>,
+    on_paste_keydown: Option<EventHandler<Event<KeyboardData>>>,
+    onreturn: EventHandler<String>,
     #[props(default = false)]
     is_disabled: bool,
     ignore_focus: bool,
     suggestions: &'a SuggestionType,
-    oncursor_update: Option<EventHandler<'a, (String, i64)>>,
-    on_suggestion_click: Option<EventHandler<'a, (String, String, i64)>>,
+    oncursor_update: Option<EventHandler<(String, i64)>>,
+    on_suggestion_click: Option<EventHandler<(String, String, i64)>>,
 }
 
 #[derive(Props)]
@@ -86,7 +86,7 @@ pub struct ReplyProps<'a> {
     message: String,
     attachments: Option<Vec<File>>,
     onclose: EventHandler<'a>,
-    children: Element<'a>,
+    children: Element,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
     state: &'a UseSharedState<State>,
@@ -94,7 +94,7 @@ pub struct ReplyProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
+pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
     let remote = cx.props.remote.unwrap_or_default();
     let message = format_text(
         &cx.props.message,
@@ -168,7 +168,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let controlled_input_id = &cx.props.id;
     let is_typing = !cx.props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
@@ -287,13 +287,13 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 #[derive(Props)]
 pub struct SuggestionProps<'a> {
     suggestions: &'a SuggestionType,
-    on_click: EventHandler<'a, (String, String)>,
-    on_close: EventHandler<'a, ()>,
+    on_click: EventHandler<(String, String)>,
+    on_close: EventHandler<()>,
     selected: UseRef<Option<usize>>,
 }
 
 #[allow(non_snake_case)]
-fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element<'a> {
+fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
     if cx.props.selected.read().is_none() {
         *cx.props.selected.write_silent() = Some(0);
     }

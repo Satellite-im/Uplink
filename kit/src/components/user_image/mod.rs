@@ -20,9 +20,9 @@ pub struct Props<'a> {
     #[props(optional)]
     with_username: Option<String>,
     #[props(optional)]
-    on_press: Option<EventHandler<'a, MouseEvent>>,
+    on_press: Option<EventHandler<MouseEvent>>,
     #[props(optional)]
-    oncontextmenu: Option<EventHandler<'a, MouseEvent>>,
+    oncontextmenu: Option<EventHandler<MouseEvent>>,
     status: Option<Status>,
     platform: Platform,
 }
@@ -47,7 +47,7 @@ pub fn emit_context(cx: &Scope<Props>, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let image_data: String = get_image(&cx);
     let status = cx.props.status;
     let platform = cx.props.platform;

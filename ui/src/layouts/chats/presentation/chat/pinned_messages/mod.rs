@@ -182,13 +182,13 @@ pub struct PinnedMessageProp<'a> {
     chat: Uuid,
     #[props(!optional)]
     sender: Option<Identity>,
-    onremove: EventHandler<'a, (Event<MouseData>, warp::raygun::Message)>,
+    onremove: EventHandler<(Event<MouseData>, warp::raygun::Message)>,
     time: String,
-    onclick: EventHandler<'a, ()>,
+    onclick: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
+pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let message = &cx.props.message;
     let attachments = message.attachments();

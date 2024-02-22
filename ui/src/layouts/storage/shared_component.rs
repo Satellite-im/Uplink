@@ -27,7 +27,7 @@ pub struct FilesBreadcumbsProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'a> {
+pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element {
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;
     let ch = cx.props.ch;
@@ -79,12 +79,12 @@ pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element<'
 pub struct FilesAndFoldersProps<'a> {
     storage_controller: &'a UseRef<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
-    on_click_share_files: Option<EventHandler<'a, Vec<Location>>>,
+    on_click_share_files: Option<EventHandler<Vec<Location>>>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element<'a> {
+pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let send_files_mode = cx.props.send_files_mode;
     let storage_controller = cx.props.storage_controller;

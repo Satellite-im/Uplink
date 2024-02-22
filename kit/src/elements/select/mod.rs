@@ -11,7 +11,7 @@ pub struct Props<'a> {
     _loading: Option<bool>,
     options: Vec<String>,
     #[props(optional)]
-    onselect: Option<EventHandler<'a, String>>,
+    onselect: Option<EventHandler<String>>,
     initial_value: String,
 }
 
@@ -42,7 +42,7 @@ fn remove_duplicates_fancy(values: Vec<(String, Element<'_>)>) -> Vec<(String, E
 }
 
 #[allow(non_snake_case)]
-pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let initial_value = cx.props.initial_value.clone();
     let mut options = remove_duplicates(cx.props.options.clone());
     options.retain(|value| value != &initial_value);
@@ -70,16 +70,16 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 pub struct FancySelectProps<'a> {
     #[props(optional)]
     _loading: Option<bool>,
-    options: Vec<(String, Element<'a>)>,
+    options: Vec<(String, Element)>,
     #[props(optional)]
-    onselect: Option<EventHandler<'a, String>>,
-    initial_value: (String, Element<'a>),
+    onselect: Option<EventHandler<String>>,
+    initial_value: (String, Element),
     current_to_top: Option<bool>,
     width: i32,
 }
 
 #[allow(non_snake_case)]
-pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element<'a> {
+pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element {
     let (initial_value, initial_element) = cx.props.initial_value.clone();
     let mut options = remove_duplicates_fancy(cx.props.options.clone());
     if cx.props.current_to_top.unwrap_or_default() {

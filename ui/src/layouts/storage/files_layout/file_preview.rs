@@ -29,10 +29,10 @@ const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
 #[component(no_case_check)]
 pub fn open_file_preview_modal<'a>(
     cx: Scope<'a>,
-    on_dismiss: EventHandler<'a, ()>,
-    on_download: EventHandler<'a, Option<PathBuf>>,
+    on_dismiss: EventHandler<()>,
+    on_download: EventHandler<Option<PathBuf>>,
     file: File,
-) -> Element<'a> {
+) -> Element {
     cx.render(rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
@@ -52,12 +52,12 @@ pub fn open_file_preview_modal<'a>(
 #[derive(Props)]
 struct Props<'a> {
     file: &'a File,
-    on_download: EventHandler<'a, Option<PathBuf>>,
-    on_dismiss: EventHandler<'a, ()>,
+    on_download: EventHandler<Option<PathBuf>>,
+    on_dismiss: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let file_path_in_local_disk = use_ref(cx, PathBuf::new);
 

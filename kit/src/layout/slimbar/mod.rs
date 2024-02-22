@@ -7,10 +7,10 @@ use common::icons;
 pub struct Props<'a> {
     with_back_button: Option<bool>,
     onback: Option<EventHandler<'a>>,
-    with_nav: Option<Element<'a>>,
+    with_nav: Option<Element>,
     navbar_visible: bool,
-    top_children: Option<Element<'a>>,
-    children: Option<Element<'a>>,
+    top_children: Option<Element>,
+    children: Option<Element>,
 }
 
 /// If enabled, it will render the bool
@@ -27,7 +27,7 @@ pub fn emit(cx: &Scope<Props>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Slimbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Slimbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     cx.render(rsx!(div {
         class: "slimbar",
         aria_label: "slimbar",

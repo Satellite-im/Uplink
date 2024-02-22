@@ -16,7 +16,7 @@ pub fn FileCheckbox(
     file_path: String,
     storage_controller: UseRef<StorageController>,
     is_selecting_files: bool,
-) -> Element<'a> {
+) -> Element {
     if *is_selecting_files {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return cx.render(rsx!( div {
@@ -43,9 +43,9 @@ pub fn SendFilesTopbar<'a>(
     send_files_from_storage_state: UseState<bool>,
     send_files_start_location: SendFilesStartLocation,
     storage_controller: UseRef<StorageController>,
-    on_send: EventHandler<'a, Vec<Location>>,
+    on_send: EventHandler<Vec<Location>>,
     in_files: bool,
-) -> Element<'a> {
+) -> Element {
     let router = use_navigator(cx);
 
     return cx.render(rsx! (

@@ -7,9 +7,9 @@ use common::icons::outline::Shape as Icon;
 #[derive(Props)]
 pub struct Props<'a> {
     loading: Option<bool>,
-    onpress: Option<EventHandler<'a, MouseEvent>>,
+    onpress: Option<EventHandler<MouseEvent>>,
     text: Option<String>,
-    tooltip: Option<Element<'a>>,
+    tooltip: Option<Element>,
     aria_label: Option<String>,
     icon: Option<Icon>,
     disabled: Option<bool>,
@@ -49,7 +49,7 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 /// },
 /// ```
 #[allow(non_snake_case)]
-pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let text = cx.props.text.clone().unwrap_or_default();
     let text2 = text.clone();
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();

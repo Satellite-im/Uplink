@@ -8,18 +8,18 @@ use common::icons::outline::Shape as Icon;
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    with_search: Option<Element<'a>>,
+    with_search: Option<Element>,
     #[props(optional)]
-    with_nav: Option<Element<'a>>,
-    with_call_controls: Option<Element<'a>>,
+    with_nav: Option<Element>,
+    with_call_controls: Option<Element>,
     #[props(optional)]
     hidden: Option<bool>,
     #[props(optional)]
-    children: Option<Element<'a>>,
+    children: Option<Element>,
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let hidden = cx.props.hidden.unwrap_or(false);
 

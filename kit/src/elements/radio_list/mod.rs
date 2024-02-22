@@ -7,11 +7,11 @@ use dioxus::prelude::*;
 pub struct Props<'a> {
     initial_value: String,
     values: Vec<String>,
-    onchange: EventHandler<'a, String>,
+    onchange: EventHandler<String>,
 }
 
 #[allow(non_snake_case)]
-pub fn RadioList<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn RadioList<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let internal_state = use_state(cx, || cx.props.initial_value.clone());
 
     cx.render(rsx!(

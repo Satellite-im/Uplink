@@ -10,7 +10,7 @@ pub struct Props<'a> {
     #[props(optional)]
     active: Option<bool>,
     #[props(optional)]
-    onflipped: Option<EventHandler<'a, bool>>,
+    onflipped: Option<EventHandler<bool>>,
 }
 
 /// Tells the parent the switch was interacted with.
@@ -30,7 +30,7 @@ pub fn default_state(cx: &Scope<Props>) -> bool {
 }
 
 #[allow(non_snake_case)]
-pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element {
     let checked_state = default_state(&cx);
     let disabled = cx.props.disabled.unwrap_or_default();
 

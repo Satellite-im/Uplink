@@ -77,7 +77,7 @@ pub struct Props<'a> {
     loading: Option<bool>,
 
     // An optional field that, if set, will be used as the content of a nested div element with a class of "content".
-    with_content: Option<Element<'a>>,
+    with_content: Option<Element>,
 
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
@@ -100,16 +100,16 @@ pub struct Props<'a> {
     attachments_pending_download: Option<HashSet<File>>,
 
     /// called when an attachment is downloaded
-    on_download: EventHandler<'a, (File, Option<PathBuf>)>,
+    on_download: EventHandler<(File, Option<PathBuf>)>,
 
     /// called when editing is completed
-    on_edit: EventHandler<'a, String>,
+    on_edit: EventHandler<String>,
 
     /// If true, the markdown parser will be rendered
     parse_markdown: bool,
     transform_ascii_emojis: bool,
     // called when a reaction is clicked
-    on_click_reaction: EventHandler<'a, String>,
+    on_click_reaction: EventHandler<String>,
 
     // Indicates whether this message is pending to be uploaded or not
     pending: bool,
@@ -175,7 +175,7 @@ fn wrap_links_with_a_tags(text: &str) -> (String, Vec<String>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     //  log::trace!("render Message");
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
@@ -364,11 +364,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 struct EditProps<'a> {
     id: String,
     text: String,
-    on_enter: EventHandler<'a, String>,
+    on_enter: EventHandler<String>,
 }
 
 #[allow(non_snake_case)]
-fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
+fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element {
     log::trace!("rendering EditMsg");
 
     cx.render(rsx!(textarea::InputRich {
@@ -399,7 +399,7 @@ pub struct ChatMessageProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element<'a> {
+pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
     if cx.props.text.len() > 2 {
         if let Ok(id) = DID::from_str(&cx.props.text) {

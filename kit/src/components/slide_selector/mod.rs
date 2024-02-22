@@ -16,11 +16,11 @@ pub struct Props<'a, T> {
     initial_index: usize,
     #[props(default)]
     buttons_format: Option<ButtonsFormat>,
-    onset: EventHandler<'a, T>,
+    onset: EventHandler<T>,
 }
 
 #[allow(non_snake_case)]
-pub fn SlideSelector<'a, T>(cx: Scope<'a, Props<'a, T>>) -> Element<'a>
+pub fn SlideSelector<'a, T>(cx: Scope<'a, Props<'a, T>>) -> Element
 where
     T: std::fmt::Display + Clone,
 {

@@ -90,7 +90,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
     aria_label: String,
     /// An optional onclick handler for the button.
     #[props(default, strip_option)]
-    pub onclick: Option<EventHandler<'a, MouseEvent>>,
+    pub onclick: Option<EventHandler<MouseEvent>>,
     #[props(default, strip_option)]
     /// An optional class for the *button itself*.
     pub class: Option<String>,
@@ -122,7 +122,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
     pub icon_class: Option<&'a str>,
     /// These are the child elements of the `IconButton` component.
     #[props(!optional)]
-    pub children: Option<Element<'a>>,
+    pub children: Option<Element>,
 }
 
 /// Renders a `<button>` containing an SVG icon.
@@ -144,7 +144,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
 /// The child elements are optional, and are there so you can add some
 /// additional text or other HTML to the button.
 #[allow(non_snake_case)]
-pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> Element<'a> {
+pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> Element {
     cx.render(rsx! {
         button {
             aria_label: "{cx.props.aria_label}",
@@ -211,7 +211,7 @@ pub struct IconProps<'a, S: IconShape> {
 /// See the [`IconProps`] field documentation for details on the properties it
 /// accepts.
 #[allow(non_snake_case)]
-pub fn Icon<'a, S: IconShape>(cx: Scope<'a, IconProps<S>>) -> Element<'a> {
+pub fn Icon<'a, S: IconShape>(cx: Scope<'a, IconProps<S>>) -> Element {
     let fill = if cx.props.disabled {
         cx.props.disabled_fill
     } else {

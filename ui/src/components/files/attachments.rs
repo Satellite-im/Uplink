@@ -13,11 +13,11 @@ use warp::raygun::Location;
 pub struct AttachmentProps<'a> {
     pub chat_id: Uuid,
     pub files_to_attach: Vec<Location>,
-    pub on_remove: EventHandler<'a, Vec<Location>>,
+    pub on_remove: EventHandler<Vec<Location>>,
 }
 
 #[allow(non_snake_case)]
-pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
+pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let files_attached_to_send = cx.props.files_to_attach.clone();
     let files_attached_to_send3 = files_attached_to_send;

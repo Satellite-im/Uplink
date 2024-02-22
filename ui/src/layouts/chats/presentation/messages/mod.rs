@@ -202,12 +202,12 @@ pub fn get_messages(
 pub struct AllMessageGroupsProps<'a> {
     groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element {
     log::trace!("render message groups");
     cx.render(rsx!(cx.props.groups.iter().map(|_group| {
         rsx!(render_message_group {
@@ -222,11 +222,11 @@ pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) ->
 struct MessageGroupProps<'a> {
     group: &'a data::MessageGroup,
     active_chat_id: Uuid,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
     pending: Option<bool>,
 }
 
-fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
+fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let MessageGroupProps {
@@ -339,7 +339,7 @@ struct MessagesProps<'a> {
     is_remote: bool,
     pending: bool,
 }
-fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
+fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
@@ -523,7 +523,7 @@ struct MessageProps<'a> {
     edit_msg: UseState<Option<Uuid>>,
     pending: bool,
 }
-fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
+fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
     //log::trace!("render message {}", &cx.props.message.message.key);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
@@ -692,13 +692,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 pub struct PendingMessagesListenerProps<'a> {
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
 //The component that listens for upload events
 pub fn render_pending_messages_listener<'a>(
     cx: Scope<'a, PendingMessagesListenerProps>,
-) -> Element<'a> {
+) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
     let chat = match state.read().get_active_chat() {
@@ -714,11 +714,11 @@ pub fn render_pending_messages_listener<'a>(
 #[derive(Props)]
 struct PendingWrapperProps<'a> {
     msg: Vec<PendingMessage>,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
 //We need to do it this way due to reference ownership
-fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
+fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let data = chat_data.read();
     cx.render(rsx!(render_pending_messages {
@@ -737,10 +737,10 @@ struct PendingMessagesProps<'a> {
     #[props(!optional)]
     pending_outgoing_message: Option<data::MessageGroup>,
     active: Uuid,
-    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
-fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'a> {
+fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element {
     cx.render(rsx!(cx.props.pending_outgoing_message.as_ref().map(
         |group| {
             rsx!(render_message_group {

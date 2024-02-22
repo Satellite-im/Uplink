@@ -8,7 +8,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ColorSwatch<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn ColorSwatch<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let active = cx
         .props
         .active

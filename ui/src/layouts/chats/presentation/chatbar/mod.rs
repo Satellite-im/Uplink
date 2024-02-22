@@ -57,7 +57,7 @@ use crate::{
     },
 };
 
-pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
+pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;

@@ -948,9 +948,9 @@ fn get_update_icon(cx: Scope) -> Element {
 #[component(no_case_check)]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
-    //on_submit: EventHandler<'a, PathBuf>,
-    on_dismiss: EventHandler<'a, ()>,
-) -> Element<'a> {
+    //on_submit: EventHandler<PathBuf>,
+    on_dismiss: EventHandler<()>,
+) -> Element {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
 
     let dl = download_location.current();
@@ -1178,9 +1178,9 @@ fn scaled_window_position(
 fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,
-    onnavigate: Option<EventHandler<'a, ()>>,
+    onnavigate: Option<EventHandler<()>>,
     tooltip_direction: Option<ArrowPosition>,
-) -> Element<'a> {
+) -> Element {
     use kit::components::nav::Route as UIRoute;
 
     let state = use_shared_state::<State>(cx)?;

@@ -9,12 +9,12 @@ use kit::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
-    onselect: EventHandler<'a, String>,
+    onselect: EventHandler<String>,
     apply_to: EmojiDestination,
 }
 
 #[allow(non_snake_case)]
-pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let emojis = state.read().ui.emojis.clone();
     let sorted_list = emojis.get_sorted_vec(Some(4));

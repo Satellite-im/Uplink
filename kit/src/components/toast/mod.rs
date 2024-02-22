@@ -11,8 +11,8 @@ use uuid::Uuid;
 #[derive(Props)]
 pub struct Props<'a> {
     id: Uuid,
-    on_hover: EventHandler<'a, Uuid>,
-    on_close: EventHandler<'a, Uuid>,
+    on_hover: EventHandler<Uuid>,
+    on_close: EventHandler<Uuid>,
     #[props(!optional)]
     icon: Option<Icon>,
     #[props(!optional)]
@@ -35,7 +35,7 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 }
 
 #[allow(non_snake_case)]
-pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let content = cx.props.with_content.clone().unwrap_or_default();
     let title = cx.props.with_title.clone().unwrap_or_default();
 

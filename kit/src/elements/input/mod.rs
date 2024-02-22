@@ -149,8 +149,8 @@ pub struct Props<'a> {
     value: Option<String>,
     options: Option<Options>,
     select_on_focus: Option<bool>,
-    onchange: Option<EventHandler<'a, (String, bool)>>,
-    onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
+    onchange: Option<EventHandler<(String, bool)>>,
+    onreturn: Option<EventHandler<(String, bool, Code)>>,
     reset: Option<UseState<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
@@ -301,7 +301,7 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     // Input element needs an id. Create a new one if an id wasn't specified
     let input_id = if cx.props.id.is_empty() {
         Uuid::new_v4().to_string()

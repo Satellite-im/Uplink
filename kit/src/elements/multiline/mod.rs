@@ -17,13 +17,13 @@ pub struct Props<'a> {
     #[props(optional)]
     options: Option<super::input::Options>,
     #[props(optional)]
-    _onchange: Option<EventHandler<'a, String>>,
+    _onchange: Option<EventHandler<String>>,
     #[props(optional)]
-    _onreturn: Option<EventHandler<'a, String>>,
+    _onreturn: Option<EventHandler<String>>,
 }
 
 #[allow(non_snake_case)]
-pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let default_text = cx
         .props
         .default_text

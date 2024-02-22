@@ -73,7 +73,7 @@ impl FromStr for Page {
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    onpress: Option<EventHandler<'a, Page>>,
+    onpress: Option<EventHandler<Page>>,
 }
 
 pub fn emit(cx: &Scope<Props>, e: Page) {
@@ -84,7 +84,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let page = use_shared_state::<Page>(cx)?;
     let _router = dioxus_router::hooks::use_navigator(cx);

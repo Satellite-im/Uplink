@@ -103,12 +103,12 @@ pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     files_been_uploaded: &'a UseRef<bool>,
     disable_cancel_upload_button: &'a UseRef<bool>,
-    on_update: EventHandler<'a, Vec<PathBuf>>,
-    on_cancel: EventHandler<'a, ()>,
+    on_update: EventHandler<Vec<PathBuf>>,
+    on_cancel: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
+pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element {
     let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
     let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
     let called_drag_and_drop_function: &UseRef<bool> = use_ref(cx, || false);

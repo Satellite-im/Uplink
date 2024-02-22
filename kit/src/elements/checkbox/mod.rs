@@ -12,12 +12,12 @@ pub struct Props<'a> {
     // please don't create the hook on the fly. Creating Elements, which define a single hook, on the fly is OK.
     is_checked: bool,
     // returns true if the box is selected, false otherwise
-    on_click: EventHandler<'a, ()>,
+    on_click: EventHandler<()>,
     aria_label: Option<String>,
 }
 
 #[allow(non_snake_case)]
-pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let disabled_class = if cx.props.disabled { "disabled" } else { "" };
     let checked_class = if cx.props.is_checked { "checked" } else { "" };
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();

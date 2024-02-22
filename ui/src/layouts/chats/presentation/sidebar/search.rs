@@ -17,10 +17,10 @@ pub struct SearchProps<'a> {
     identities: UseState<Vec<identity_search_result::Entry>>,
     friends_identities: UseState<Vec<Identity>>,
     chats: UseState<Vec<Chat>>,
-    onclick: EventHandler<'a, identity_search_result::Identifier>,
+    onclick: EventHandler<identity_search_result::Identifier>,
 }
 
-pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
+pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;

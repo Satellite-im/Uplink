@@ -58,13 +58,13 @@ pub struct Props<'a> {
     download_pending: Option<bool>,
 
     // called shen the icon is clicked
-    on_press: EventHandler<'a, Option<PathBuf>>,
+    on_press: EventHandler<Option<PathBuf>>,
 
     progress: Option<&'a Progression>,
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     //log::trace!("rendering file embed: {}", cx.props.filename);
     let file_extension = std::path::Path::new(&cx.props.filename)
         .extension()
@@ -327,7 +327,7 @@ fn show_download_or_minus_button_if_enabled<'a>(
     cx: Scope<'a, Props<'a>>,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,
-) -> Element<'a> {
+) -> Element {
     if with_download_button {
         cx.render(rsx!(
             div {
