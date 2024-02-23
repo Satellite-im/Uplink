@@ -65,7 +65,7 @@ pub fn User<'a>(props: 'a, Props<'a>) -> Element {
     let active = props.active.unwrap_or_default();
     let loading = props.loading.unwrap_or_default();
 
-    cx.render(rsx! (
+    rsx! (
         if loading {
             rsx!(
                 UserLoading {
@@ -118,7 +118,7 @@ pub fn User<'a>(props: 'a, Props<'a>) -> Element {
 
 #[allow(non_snake_case)]
 fn UserLoading() -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "skeletal-user",
             aria_label: "skeletal-user",

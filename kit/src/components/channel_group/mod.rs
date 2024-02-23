@@ -21,7 +21,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ChannelGroupElement(props: Props<'a>) -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "channel-group",
             div {

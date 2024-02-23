@@ -129,7 +129,7 @@ fn build_nav(props: '_) -> Element<'_> {
     "#;
     let eval = use_eval(cx);
 
-    cx.render(rsx!(Nav {
+    rsx!(Nav {
         routes: routes.clone(),
         active: routes[0].to,
         onnavigate: move |r| {
@@ -186,7 +186,7 @@ fn render_selector<'a>( mouse_over_emoji_button: UseRef<bool>, nav: Element) -> 
         }
     });
 
-    cx.render(rsx! (
+    rsx! (
         InvisibleCloser {
             onclose: |_|{
                 state.write().mutate(Action::SetEmojiDestination(
@@ -326,9 +326,9 @@ fn render_1( _unused: bool) -> Element {
         }
     });
 
-    cx.render(rsx! (
+    rsx! (
         // If enabled, render the selector popup.
-        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
+        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{}))})),
         div {
             onmouseenter: |_| {
                 *mouse_over_emoji_button.write_silent() = true;
@@ -368,9 +368,9 @@ impl Extension for EmojiSelector {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
-        cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
+        use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
-        cx.render(rsx!(
+        rsx!(
             style { "{styles}" },
             rsx!(
                render_1{_unused: true}

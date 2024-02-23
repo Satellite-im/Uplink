@@ -21,7 +21,7 @@ pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
     let remote = props.remote.unwrap_or_default();
     let time_ago = props.timestamp.clone().unwrap_or_default();
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "message-group-wrap",
             aria_label: {
@@ -61,7 +61,7 @@ pub struct SkeletalProps {
 pub fn MessageGroupSkeletal(props: SkeletalProps) -> Element {
     let alt = props.alt.unwrap_or_default();
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: format_args!("message-group-skeletal {}", if alt { "alt" } else { "" }),
             UserImage {

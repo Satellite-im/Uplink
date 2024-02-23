@@ -20,7 +20,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn Toast(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    cx.render(rsx!(kit::components::toast::Toast {
+    rsx!(kit::components::toast::Toast {
         id: props.id,
         on_hover: move |_| state.write_silent().reset_toast_timer(&props.id),
         on_close: move |_| state.write().remove_toast(&props.id),

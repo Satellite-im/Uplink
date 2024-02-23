@@ -12,7 +12,7 @@ pub fn YouTubePlayer(props: Props) -> Element {
         None => props.video_url.clone(),
     };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "youtube-player",
             aria_label: "youtube-player",

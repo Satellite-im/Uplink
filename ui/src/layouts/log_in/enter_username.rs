@@ -107,7 +107,7 @@ pub fn Layout(
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",

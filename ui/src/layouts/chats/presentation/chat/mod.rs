@@ -52,7 +52,7 @@ pub fn Compose() -> Element {
     let show_rename_group: &UseState<bool> = use_state(cx, || false);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let quick_profile_uuid = &*use_hook(|| Uuid::new_v4().to_string());
     let quickprofile_data: &UseRef<Option<(f64, f64, Identity, bool)>> = use_ref(cx, || None);
     let update_script = use_state(cx, String::new);
     let identity_profile = use_state(cx, DID::default);
@@ -123,7 +123,7 @@ pub fn Compose() -> Element {
         }
     }
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "compose",
             Topbar {
@@ -132,7 +132,7 @@ pub fn Compose() -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                controls: cx.render(rsx!(controls::get_controls{
+                controls: rsx!(controls::get_controls{
                     show_manage_members: show_manage_members.clone(),
                     show_rename_group: show_rename_group.clone(),
                     show_group_settings: show_group_settings.clone(),

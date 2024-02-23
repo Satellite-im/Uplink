@@ -4,7 +4,7 @@ use crate::extension_browser::ExtensionsBrowser;
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings() -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "settings-extensions",
         aria_label: "settings-extensions",
         ExtensionsBrowser {},

@@ -14,7 +14,7 @@ pub struct Props<'a> {
 pub fn RadioList<'a>(props: Props<'a>) -> Element {
     let internal_state = use_state(cx, || props.initial_value.clone());
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "radio-list",
             for option in &props.values {

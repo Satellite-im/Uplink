@@ -245,7 +245,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
         .then_some("message-pending")
         .unwrap_or_default();
 
-    cx.render(rsx! (
+    rsx! (
         props.pinned.then(|| {
             rsx!(div {
                 class: "pin-indicator",
@@ -371,7 +371,7 @@ struct EditProps<'a> {
 fn EditMsg<'a>(props: EditProps<'a>) -> Element {
     log::trace!("rendering EditMsg");
 
-    cx.render(rsx!(textarea::InputRich {
+    rsx!(textarea::InputRich {
         id: props.id.clone(),
         aria_label: "edit-message-input".into(),
         ignore_focus: false,
@@ -403,7 +403,7 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
     if props.text.len() > 2 {
         if let Ok(id) = DID::from_str(&props.text) {
-            return cx.render(rsx!(IdentityMessage { id: id }));
+            return rsx!(IdentityMessage { id: id }));
         }
     }
 
@@ -421,7 +421,7 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
         "text"
     };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: text_type_class,
             p {
@@ -429,7 +429,7 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
                 aria_label: "message-text",
                 dangerous_inner_html: "{formatted_text}",
             },
-            links.first().and_then(|l| cx.render(rsx!(
+            links.first().and_then(|l| rsx!(
                 EmbedLinks {
                     link: l.to_string(),
                     remote: props.remote
@@ -767,12 +767,12 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
             let short_name = format!("{}#{}", username, short_id);
             let random_uuid = Uuid::new_v4().to_string();
 
-            return cx.render(rsx!(
+            return rsx!(
                 ContextMenu {
                     key: "{short_id}-{random_uuid}",
                     id: format!("{short_id}-{random_uuid}"),
                     devmode: state.read().configuration.developer.developer_mode,
-                    items: cx.render(rsx!(
+                    items: rsx!(
                         ContextItem {
                             icon: Icon::UserCircle,
                             aria_label: "copy-user-id-from-user-identity-on-chat".into(),
@@ -826,7 +826,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                             tooltip: None,
                         }
                     )),
-                   children: cx.render(rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
+                   children: rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
                         class: "embed-identity",
                         IdentityHeader {
                             sender_did: identity.did_key(),
@@ -844,7 +844,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                                 }
                             }
                             identity.status_message().and_then(|s|{
-                                cx.render(rsx!(
+                                rsx!(
                                     div {
                                         id: "profile-status",
                                         aria_label: "profile-status",
@@ -881,7 +881,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
             ));
         }
         None => {
-            return cx.render(rsx!(div {
+            return rsx!(div {
                 class: "embed-identity",
                 div {
                     class: "profile-container empty-profile",

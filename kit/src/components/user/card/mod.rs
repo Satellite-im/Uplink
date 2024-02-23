@@ -13,7 +13,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn UserCard<'a>(props: Props<'a>) -> Element {
-    cx.render(
+    
         rsx!(
             div {
                 class: "user-card",

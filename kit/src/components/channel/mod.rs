@@ -42,12 +42,12 @@ pub struct Props<'a> {
 pub fn ChannelElement(props: 'a, Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    cx.render(rsx!(
+    rsx!(
         ContextMenu {
             id: format!("{}-channel", props.channel.id),
             key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
-            items: cx.render(rsx!(
+            items: rsx!(
                 ContextItem {
                     icon: Icon::PencilSquare,
                     text: "Rename".into(),

@@ -20,7 +20,7 @@ pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
     // Run the script after the component is mounted
     let eval = use_eval(cx);
 
-    cx.render(
+    
         rsx! (
         div {
             onmounted: move |_| { _ = eval(SCRIPT); },
@@ -46,7 +46,7 @@ pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
                     Button {
                         icon: Icon::XMark,
                         appearance: Appearance::Transparent,
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Left,
                                 text: String::from("Close")
@@ -61,7 +61,7 @@ pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
                     Button {
                         icon: Icon::ArrowsPointingOut,
                         appearance: Appearance::Transparent,
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Right,
                                 text: String::from("Fullscreen")

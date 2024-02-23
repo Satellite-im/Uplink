@@ -48,7 +48,7 @@ pub fn GeneralSettings() -> Element {
         (210, 218, 226), // Gray
     ];
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-general",
             aria_label: "settings-general",
@@ -103,7 +103,7 @@ pub fn GeneralSettings() -> Element {
                     onpress: move |_| {
                         let _ = opener::open(&STATIC_ARGS.fonts_path);
                     },
-                    tooltip: cx.render(rsx!(Tooltip {
+                    tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-developer.open-cache-folder"),
                     }))
@@ -166,7 +166,7 @@ pub fn GeneralSettings() -> Element {
                     onpress: move |_| {
                         let _ = opener::open(&STATIC_ARGS.themes_path);
                     },
-                    tooltip: cx.render(rsx!(Tooltip {
+                    tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-developer.open-cache-folder"),
                     }))
@@ -181,7 +181,7 @@ pub fn GeneralSettings() -> Element {
                         onpress: move |_| {
                             state.write().mutate(Action::ClearAccentColor);
                         },
-                        tooltip: cx.render(rsx!(Tooltip {
+                        tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("settings-general.clear-accent"),
                         }))

@@ -100,13 +100,13 @@ impl UplinkExtension {
     }
 
     // todo: can an element be converted to an HTML string and have the string be returned instead?
-    pub fn render<'a>(&self, cx: &'a ScopeState) -> Element {
+    pub fn render<'a>(&self) -> Element {
         unsafe {
             let res = self
                 .lib
-                .get::<unsafe extern "C" fn( runtime: std::rc::Rc<Runtime>) -> Element>(b"render\0");
+                .get::<unsafe extern "C" fn(runtime: std::rc::Rc<Runtime>) -> Element>(b"render\0");
             match res {
-                Ok(f) => f(cx, Runtime::current().unwrap()),
+                Ok(f) => f(Runtime::current().unwrap()),
                 Err(_) => None,
             }
         }

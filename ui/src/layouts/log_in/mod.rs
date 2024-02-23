@@ -48,7 +48,7 @@ pub fn AuthGuard( page: UseState<AuthPages>) -> Element {
         });
     }
 
-    cx.render(rsx! (
+    rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",

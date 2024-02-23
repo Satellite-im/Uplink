@@ -67,7 +67,7 @@ pub struct Props {
 pub fn CallControl(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
     match state.read().ui.call_info.active_call() {
-        Some(call) => cx.render(rsx!(ActiveCallControl {
+        Some(call) => rsx!(ActiveCallControl {
             active_call: call,
             in_chat: props.in_chat,
             mute_text: get_local_text("remote-controls.mute"),
@@ -78,11 +78,11 @@ pub fn CallControl(props: Props) -> Element {
             stop_recording_text: get_local_text("remote-controls.stop-recording"),
         })),
         None => match state.read().ui.call_info.pending_calls().first() {
-            Some(call) => cx.render(rsx!(PendingCallDialog {
+            Some(call) => rsx!(PendingCallDialog {
                 call: call.clone(),
                 in_chat: props.in_chat,
             })),
-            None => cx.render(rsx!(())),
+            None => rsx!(())),
         },
     }
 }
@@ -311,12 +311,12 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return cx.render(rsx!(()));
+                    return rsx!(()));
                 }
             }
             Some(c) => {
                 if active_call.call.conversation_id.eq(&c.id) != props.in_chat {
-                    return cx.render(rsx!(()));
+                    return rsx!(()));
                 }
             }
         };
@@ -339,7 +339,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
         }
     });
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "remote-controls",
         aria_label: "remote-controls",
         class: format_args!("{}", if props.in_chat {"in-chat"} else {""}),
@@ -421,7 +421,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                 icon: Icon::Microphone,
                 aria_label: "call-mic-button".into(),
                 appearance: if call.self_muted { Appearance::Danger } else { Appearance::Secondary },
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
                         text: if call.self_muted { props.unmute_text.clone() } else { props.mute_text.clone() }
@@ -435,7 +435,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                 icon: if call.call_silenced { Icon::HeadphonesSlash } else { Icon::Headphones },
                 aria_label: "call-speaker-button".into(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
                         text: if call.call_silenced { props.listen_text.clone() } else { props.silence_text.clone() }
@@ -451,7 +451,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                         aria_label: "stop-recording-button".into(),
                         icon: Icon::StopCircle,
                         appearance: Appearance::Danger,
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: props.stop_recording_text.clone()
@@ -466,7 +466,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             aria_label: "start-recording-button".into(),
             icon: Icon::RadioSelected,
             appearance: Appearance::Secondary,
-            tooltip: cx.render(rsx!(
+            tooltip: rsx!(
                 Tooltip {
                     arrow_position: ArrowPosition::Bottom,
                     text: props.start_recording_text.clone()
@@ -563,12 +563,12 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return cx.render(rsx!(()));
+                    return rsx!(()));
                 }
             }
             Some(c) => {
                 if call.conversation_id.eq(&c.id) != props.in_chat {
-                    return cx.render(rsx!(()));
+                    return rsx!(()));
                 }
             }
         };
@@ -588,15 +588,15 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
         None => State::join_usernames(&participants),
     };
 
-    cx.render(rsx!(CallDialog {
-        caller: cx.render(rsx!(UserImageGroup {
+    rsx!(CallDialog {
+        caller: rsx!(UserImageGroup {
             participants: build_participants(&participants),
         },)),
         in_chat: props.in_chat,
         usernames: usernames,
         icon: Icon::PhoneArrowDownLeft,
         description: get_local_text("remote-controls.incoming-call"),
-        with_accept_btn: cx.render(rsx!(Button {
+        with_accept_btn: rsx!(Button {
             aria_label: "accept-call-button".into(),
             icon: Icon::Phone,
             appearance: Appearance::Success,
@@ -604,7 +604,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
                 ch.send(PendingCallDialogCmd::Accept(call.id));
             }
         })),
-        with_deny_btn: cx.render(rsx!(Button {
+        with_deny_btn: rsx!(Button {
             aria_label: "deny-call-button".into(),
             icon: Icon::PhoneXMark,
             appearance: Appearance::Danger,
@@ -640,7 +640,7 @@ pub fn CallDialog<'a>(props: CallDialogProps<'a>) -> Element {
         Some(w_d_b) => w_d_b,
         None => None,
     };
-    cx.render(rsx! (
+    rsx! (
         div {
             class:format_args!("call-dialog {}", if props.in_chat {"in-chat"} else {""}),
             aria_label: format_args!("call-dialog-{}", if props.in_chat {"in-chat"} else {""}),
@@ -759,7 +759,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
         })
     };
 
-    cx.render(rsx!(
+    rsx!(
         visible.iter().map(|(speaking, user_state, user)| {
             rsx!(div {
                 class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
@@ -778,7 +778,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                     ContextMenu {
                         id: format!("{}", id),
                         left_click_trigger: true,
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ctx.iter().map(|(speaking, user_state, user)|{
                                 rsx!(div {
                                         class: "additional-participant",

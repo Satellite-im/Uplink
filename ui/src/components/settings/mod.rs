@@ -24,7 +24,7 @@ pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
         .then_some("no-border")
         .unwrap_or_default();
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "settings-section disable-select {no_border}",
             aria_label: "{aria_label}",
@@ -57,7 +57,7 @@ pub struct SectionSimpleProps<'a> {
 #[allow(non_snake_case)]
 pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "settings-section simple disable-select",
             aria_label: "{aria_label}",
@@ -82,7 +82,7 @@ pub struct ExtensionProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn ExtensionSetting<'a>(props: ExtensionProps<'a>) -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "extension-setting",
             aria_label: "extension-setting-element",

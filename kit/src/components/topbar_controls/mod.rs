@@ -9,7 +9,7 @@ pub fn TopbarControls() -> Element {
     let desktop = use_window(cx);
     let first_resize = use_ref(cx, || true);
     if cfg!(not(target_os = "macos")) {
-        cx.render(rsx!(
+        rsx!(
             div {
                 class: "controls",
                 Button {
@@ -46,6 +46,6 @@ pub fn TopbarControls() -> Element {
             }
         ))
     } else {
-        cx.render(rsx!({}))
+        rsx!({}))
     }
 }

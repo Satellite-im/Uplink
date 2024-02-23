@@ -42,7 +42,7 @@ where
         }
     };
 
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "slide-selector",
         aria_label: "slide-selector",
         Button {

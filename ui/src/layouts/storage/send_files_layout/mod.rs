@@ -65,7 +65,7 @@ pub fn SendFilesLayout<'a>(props: 'a, SendFilesProps<'a>) -> Element {
         .write_silent()
         .update_current_dir_path(state.clone());
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "send-files-layout",
         aria_label: "send-files-layout",
         div {
@@ -117,11 +117,11 @@ struct ChatsToSelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn ChatsToSelect<'a>(props: 'a, ChatsToSelectProps<'a>) -> Element {
+fn ChatsToSelect<'a>(props: ChatsToSelectProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let storage_controller = props.storage_controller.clone();
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "all_chats",
         div {
             padding_top: "16px",
@@ -181,7 +181,7 @@ fn ChatsToSelect<'a>(props: 'a, ChatsToSelectProps<'a>) -> Element {
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
-                        user_image: cx.render(rsx!(
+                        user_image: rsx!(
                             if chat.conversation_type == ConversationType::Direct {rsx! (
                                 UserImage {
                                     platform: platform,

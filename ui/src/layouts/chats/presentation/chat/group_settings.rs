@@ -67,7 +67,7 @@ pub fn GroupSettings() -> Element {
             GroupSettings::default()
         }
     };
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "group-settings",
             aria_label: "group-settings",

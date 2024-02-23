@@ -113,10 +113,10 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
 
-    cx.render(rsx!(
+    rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,
-            with_search: cx.render(rsx!(
+            with_search: rsx!(
                 div {
                     class: "search-input disable-select",
                     Input {
@@ -165,7 +165,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                     }
                 }
             )),
-            with_nav: cx.render(rsx!(
+            with_nav: rsx!(
                 crate::AppNav {
                     active: match state.read().ui.current_layout {
                         state::ui::Layout::Welcome => UplinkRoute::ChatLayout{},
@@ -184,7 +184,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                     }
                 }
             )),
-            with_call_controls: cx.render(rsx!(
+            with_call_controls: rsx!(
                 CallControl {
                     in_chat: false
                 }
@@ -223,7 +223,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
                             aria_label: "create-group-chat".into(),
                             icon: Icon::ChatPlus,
-                            tooltip: cx.render(rsx!(
+                            tooltip: rsx!(
                                 Tooltip {
                                     arrow_position: ArrowPosition::Right,
                                     text: get_local_text("messages.create-group-chat")
@@ -324,7 +324,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             key: "{key}-chat",
                             id: format!("{key}-chat"),
                             devmode: state.read().configuration.developer.developer_mode,
-                            items: cx.render(rsx!(
+                            items: rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,
                                     aria_label: "chats-clear-unreads".into(),
@@ -366,7 +366,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 subtext: subtext_val,
                                 timestamp: datetime,
                                 active: is_active,
-                                user_image: cx.render(rsx!(
+                                user_image: rsx!(
                                     if chat.conversation_type == ConversationType::Direct {rsx! (
                                         UserImage {
                                             platform: platform,
@@ -403,7 +403,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             username: "Loading".into(),
                             aria_label: "Loading".into(),
                             subtext: "loading".into(),
-                            user_image: cx.render(rsx!(
+                            user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,
                                     status: Status::Online,
@@ -416,7 +416,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             username: "Loading".into(),
                             aria_label: "Loading".into(),
                             subtext: "loading".into(),
-                            user_image: cx.render(rsx!(
+                            user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,
                                     status: Status::Online,
@@ -429,7 +429,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             username: "Loading".into(),
                             aria_label: "Loading".into(),
                             subtext: "loading".into(),
-                            user_image: cx.render(rsx!(
+                            user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,
                                     status: Status::Online,

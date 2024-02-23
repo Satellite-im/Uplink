@@ -27,15 +27,15 @@ pub fn EmojiGroup<'a>(props: Props<'a>) -> Element {
         .enabled_extension(emoji_selector_extension);
 
     let picker_tooltip = if has_extension {
-        cx.render(rsx!(()))
+        rsx!(()))
     } else {
-        cx.render(rsx!(Tooltip {
+        rsx!(Tooltip {
             arrow_position: ArrowPosition::Bottom,
             text: get_local_text("messages.missing-emoji-picker")
         }))
     };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "emoji-group",
             for emoji in sorted_list {

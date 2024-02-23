@@ -29,7 +29,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
     if props.is_on_auth_pages.unwrap_or(false) {
         let state = use_ref(cx, State::load);
         let keybinds = state.read().settings.keybinds.clone();
-        return cx.render(rsx! {
+        return rsx! {
             for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {
@@ -51,7 +51,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
 
     if !state.read().settings.pause_global_keybinds {
         let keybinds = state.read().settings.keybinds.clone();
-        return cx.render(rsx! {
+        return rsx! {
             for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {
@@ -68,7 +68,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
         });
     } else if !state.read().settings.is_recording_new_keybind {
         let keybinds = state.read().settings.keybinds.clone();
-        return cx.render(rsx! {
+        return rsx! {
             for (global_shortcut, shortcut) in keybinds {
                 rsx!{
                     RenderGlobalShortCuts {

@@ -42,7 +42,7 @@ pub fn OverlayDom() -> Element {
     let window = use_window(cx);
     let _ = window.set_ignore_cursor_events(true);
 
-    cx.render(rsx! {
+    rsx! {
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
             class: "overlay-wrap",

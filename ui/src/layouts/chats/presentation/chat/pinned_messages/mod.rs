@@ -130,7 +130,7 @@ pub fn PinnedMessages(props: '_, Props) -> Element<'_> {
     let eval = use_eval(cx);
     let _ = eval(MARKDOWN_FOR_CODE_BLOCK);
 
-    cx.render(rsx!(
+    rsx!(
         script {
             MARKDOWN_FOR_CODE_BLOCK
         }
@@ -209,7 +209,7 @@ pub fn PinnedMessage<'a>(props: 'a, PinnedMessageProp<'a>) -> Element {
     });
     let has_attachments = !attachments.is_empty();
 
-    cx.render(rsx!(div {
+    rsx!(div {
             class: "pinned-message-wrap",
             aria_label: "pinned-message-wrap",
             props.sender.as_ref().map(|sender| {

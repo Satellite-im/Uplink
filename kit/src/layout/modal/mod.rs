@@ -46,7 +46,7 @@ pub fn Modal<'a>(props: Props<'a>) -> Element {
 
     let close_on_click_inside_modal = props.close_on_click_inside_modal.unwrap_or_default();
 
-    cx.render(rsx!(props.open.then(|| rsx!(
+    rsx!(props.open.then(|| rsx!(
         div {
             class: "modal-wrap {transparent_class} {no_padding_class}",
             aria_label: "modal",

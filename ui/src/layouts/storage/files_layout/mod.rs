@@ -147,7 +147,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
         },
     );
 
-    cx.render(rsx!(
+    rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(open_file_preview_modal {
@@ -171,7 +171,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                     if keyboard_data.code() == Code::KeyV
                         && (keyboard_data.modifiers() == Modifiers::CONTROL || keyboard_data.modifiers() == Modifiers::META)
                     {
-                        cx.spawn({
+                        spawn({
                             to_owned![files_been_uploaded2, files_in_queue_to_upload2, eval];
                             async move {
                                 let files_local_path = tokio::task::spawn_blocking(|| {
@@ -198,7 +198,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                 storage_controller.write().finish_renaming_item(false);
             },
             if show_slimbar {
-                cx.render(rsx!(
+                rsx!(
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
                     },
@@ -216,13 +216,13 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                             let current = state.read().ui.sidebar_hidden;
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
-                        controls: cx.render(
+                        controls: 
                             rsx! (Button {
                                     icon: Icon::FolderPlus,
                                     disabled: *upload_file_controller.files_been_uploaded.read(),
                                     appearance: Appearance::Secondary,
                                     aria_label: "add-folder".into(),
-                                    tooltip: cx.render(rsx!(
+                                    tooltip: rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::Top,
                                             text: get_local_text("files.new-folder"),
@@ -238,7 +238,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                                     icon: Icon::Plus,
                                     appearance: Appearance::Secondary,
                                     aria_label: "upload-file".into(),
-                                    tooltip: cx.render(rsx!(
+                                    tooltip: rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::TopRight,
                                             text: get_local_text("files.upload"),

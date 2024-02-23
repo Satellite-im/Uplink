@@ -16,7 +16,7 @@ pub fn PrismScripts() -> Element {
 }
 
 fn use_prism_path() -> &str {
-    cx.use_hook(|| {
+    use_hook(|| {
         format!(
             r"Prism.plugins.autoloader.languages_path = '{}';",
             get_prism_path().to_string_lossy()

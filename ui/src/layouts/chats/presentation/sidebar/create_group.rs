@@ -101,7 +101,7 @@ pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "create-group",
             aria_label: "Create Group",
@@ -198,7 +198,7 @@ pub struct FriendsProps {
 
 fn render_friends(props: FriendsProps) -> Element {
     let name_prefix = props.name_prefix.get();
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
@@ -261,7 +261,7 @@ fn render_friend(props: FriendProps) -> Element {
         props.selected_friends.set(friends);
     };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",

@@ -17,7 +17,7 @@ pub fn Welcome() -> Element {
     let cta_text = get_local_text("friends.cta-text");
     let image_path = use_image_path(cx);
 
-    cx.render(rsx! {
+    rsx! {
         div {
             id: "welcome",
             aria_label: "welcome-screen",
@@ -64,7 +64,7 @@ pub fn Welcome() -> Element {
 }
 
 fn use_image_path() -> &str {
-    cx.use_hook(|| {
+    use_hook(|| {
         get_images_dir()
             .unwrap_or_default()
             .join("mascot")

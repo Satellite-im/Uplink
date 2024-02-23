@@ -33,7 +33,7 @@ pub fn UserImageGroup<'a>(props: Props<'a>) -> Element {
     let tooltip_visible = use_state(cx, || false);
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    cx.render(rsx! (
+    rsx! (
         if loading {
             rsx! (
                 div {

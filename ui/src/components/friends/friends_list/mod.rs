@@ -194,7 +194,7 @@ pub fn Friends() -> Element {
         .map(|x| x.to_string())
         .unwrap_or_default();
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "friends-list",
             aria_label: "Friends List",
@@ -264,7 +264,7 @@ pub fn Friends() -> Element {
                                     id: format!("{did}-friend-listing"),
                                     key: "{did}-friend-listing",
                                     devmode: state.read().configuration.developer.developer_mode,
-                                    items: cx.render(rsx!(
+                                    items: rsx!(
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
@@ -340,7 +340,7 @@ pub fn Friends() -> Element {
                                         relationship: relationship,
                                         block_button_disabled: block_in_progress.current().contains(&friend.did_key()),
                                         remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
-                                        user_image: cx.render(rsx! (
+                                        user_image: rsx! (
                                             UserImage {
                                                 platform: platform,
                                                 status: friend.identity_status().into(),
@@ -384,7 +384,7 @@ pub fn Friends() -> Element {
 #[allow(unused)]
 #[allow(non_snake_case)]
 pub fn FriendsSkeletal() -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friends-list",
             Label {
@@ -431,7 +431,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
             }
         },
     );
-    cx.render(rsx!(Modal {
+    rsx!(Modal {
         open: props.did.get().is_some(),
         onclose: move |_| props.did.set(None),
         show_close_button: false,
@@ -514,7 +514,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
-                        user_image: cx.render(rsx!(
+                        user_image: rsx!(
                             match chat.conversation_type {
                                 ConversationType::Direct => rsx!(UserImage {
                                     platform: platform,

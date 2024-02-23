@@ -327,7 +327,7 @@ pub fn ProfileSettings() -> Element {
         first_render.set(false);
     }
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-profile",
             class: "disable-select",
@@ -376,7 +376,7 @@ pub fn ProfileSettings() -> Element {
                 // ideally this ContextItem would appear when right clicking the profile-banner div.
                 ContextMenu {
                     id: String::from("profile-banner-context-menu"),
-                    items: cx.render(rsx!(
+                    items: rsx!(
                         ContextItem {
                             icon: Icon::Trash,
                             disabled: no_banner_picture,
@@ -401,7 +401,7 @@ pub fn ProfileSettings() -> Element {
                 },
                 ContextMenu {
                     id: String::from("profile-picture-context-menu"),
-                    items: cx.render(rsx!(
+                    items: rsx!(
                         ContextItem {
                             icon: Icon::Trash,
                             disabled: no_profile_picture,
@@ -463,7 +463,7 @@ pub fn ProfileSettings() -> Element {
                             class: "profile-id-btn",
                             ContextMenu {
                                 id: String::from("copy-id-context-menu"),
-                                items: cx.render(rsx!(
+                                items: rsx!(
                                     ContextItem {
                                         icon: Icon::UserCircle,
                                         text: get_local_text("settings-profile.copy-id"),
@@ -519,7 +519,7 @@ pub fn ProfileSettings() -> Element {
                                     appearance: Appearance::SecondaryLess,
                                     aria_label: "copy-id-button".into(),
                                     text: did_short.to_string(),
-                                    tooltip: cx.render(rsx!(
+                                    tooltip: rsx!(
                                         Tooltip{
                                             text: get_local_text("settings-profile.copy-id")
                                         }
@@ -827,7 +827,7 @@ fn get_status_option<'a>(props: 'a, status: &IdentityStatus) -> (String, Element
     let indicator = Status::from(*status);
     (
         serde_json::to_string::<IdentityStatus>(status).unwrap_or_default(),
-        cx.render(rsx!(div {
+        rsx!(div {
                 class: "settings-online-status",
                 Indicator {
                     status: indicator,

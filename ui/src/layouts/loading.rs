@@ -4,7 +4,7 @@ use dioxus_desktop::wry::application::dpi::LogicalPosition;
 use dioxus_desktop::LogicalSize;
 
 pub fn LoadingWash() -> Element {
-    let img_path = cx.use_hook(|| {
+    let img_path = use_hook(|| {
         common::get_images_dir()
             .unwrap_or_default()
             .join("uplink.gif")

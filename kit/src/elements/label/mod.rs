@@ -29,7 +29,7 @@ pub fn Label(props: Props) -> Element {
             (false, 0)
         };
 
-    cx.render(rsx!(
+    rsx!(
         label {
             aria_label: "{aria_label}",
             class: if apply_ellipsis {"wrap-text"} else {""},

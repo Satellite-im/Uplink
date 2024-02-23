@@ -116,7 +116,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
 
     if *props.are_files_hovering_app.read() && !*called_drag_and_drop_function.read() {
         *called_drag_and_drop_function.write_silent() = true;
-        cx.spawn({
+        spawn({
             to_owned![
                 are_files_hovering_app,
                 window,
@@ -144,7 +144,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
     }
 
     if *props.files_been_uploaded.read() {
-        return cx.render(rsx!(
+        return rsx!(
             div {
                 class: "upload-progress-bar-container",
                 aria_label: "upload-progress-bar-container",
@@ -221,7 +221,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
         return None;
     }
 
-    cx.render(rsx!(
+    rsx!(
                 div {
                     class: "upload-progress-bar-container-file-count",
                     aria_label: "upload-progress-bar-container-file-count",

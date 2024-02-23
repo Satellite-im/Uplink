@@ -21,7 +21,7 @@ pub fn get_default(cx: &Scope<Props>) -> i32 {
 pub fn Slider<'a>(props: Props) -> Element {
     let _slider_value = use_state(cx, || get_default(&cx));
     // TODO: Pending dioxus update for eval returning values
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "slider",
         }

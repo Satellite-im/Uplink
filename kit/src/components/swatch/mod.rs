@@ -15,7 +15,7 @@ pub fn ColorSwatch<'a>(props: Props<'a>) -> Element {
         .then(|| "active".to_string())
         .unwrap_or_default();
 
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "color-swatch {active}",
         style: "background-color: rgb({props.color.0}, {props.color.1}, {props.color.2})",
         onclick: |_| props.onpress.call(()),

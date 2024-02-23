@@ -27,7 +27,7 @@ pub fn SendFilesLayoutModal<'a>(props: SendFilesLayoutModalProps<'a>) -> Element
         return None;
     }
 
-    cx.render(rsx!( div {
+    rsx!( div {
                 class: "send-files-to-several-chats-div",
                 Modal {
                     open: *send_files_from_storage.clone(),

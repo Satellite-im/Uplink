@@ -115,9 +115,9 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
         |txt, arrow| {
             if minimal {
-                cx.render(rsx!(()))
+                rsx!(()))
             } else {
-                cx.render(rsx!(Tooltip {
+                rsx!(Tooltip {
                     arrow_position: arrow,
                     text: get_local_text(txt)
                 }))
@@ -135,7 +135,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         ConversationSettings::Group(_) => props.is_owner,
         ConversationSettings::Direct(_) => false,
     };
-    let buttons = cx.render(rsx!(
+    let buttons = rsx!(
         if show_edit_members() {
             rsx!(Button {
                 icon: Icon::Users,
@@ -250,7 +250,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
     ));
 
-    let pinned = cx.render(rsx!(show_pinned.then(|| rsx!(
+    let pinned = rsx!(show_pinned.then(|| rsx!(
         Modal {
             open: true,
             transparent: true,
@@ -266,7 +266,7 @@ pub fn get_controls(props: ChatProps) -> Element {
     )),));
 
     if minimal {
-        return cx.render(rsx!(
+        return rsx!(
             div {
                 z_index: 100,
                 Button {
@@ -274,9 +274,9 @@ pub fn get_controls(props: ChatProps) -> Element {
                     aria_label: "control-group".into(),
                     appearance: Appearance::Primary,
                     tooltip: if *show_more.get() {
-                        cx.render(rsx!(()))
+                        rsx!(()))
                     } else {
-                        cx.render(rsx!(Tooltip {
+                        rsx!(Tooltip {
                             arrow_position: ArrowPosition::TopRight,
                             text: get_local_text("messages.control-group")
                         }))
@@ -302,5 +302,5 @@ pub fn get_controls(props: ChatProps) -> Element {
             pinned
         ));
     }
-    cx.render(rsx!(buttons, pinned))
+    rsx!(buttons, pinned))
 }

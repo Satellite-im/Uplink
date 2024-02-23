@@ -32,7 +32,7 @@ pub fn FilesBreadcumbs<'a>(props: 'a, FilesBreadcumbsProps<'a>) -> Element {
     let storage_controller = props.storage_controller;
     let ch = props.ch;
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "files-breadcrumbs",
         class: "files-breadcrumbs",
         aria_label: "files-breadcrumbs",
@@ -89,7 +89,7 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
     let ch = props.ch;
-    cx.render(rsx!(span {
+    rsx!(span {
         class: "file-parent",
         background: format_args!("{}", if send_files_mode {"var(--secondary)"} else {""}),
         div {
@@ -133,7 +133,7 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
                     ContextMenu {
                         key: "{key}-menu",
                         id: dir.id().to_string(),
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ContextItem {
                                 icon: Icon::Pencil,
                                 aria_label: "folder-rename".into(),
@@ -207,7 +207,7 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
                     ContextMenu {
                         key: "{key}-menu",
                         id: file.id().to_string(),
-                        items: cx.render(rsx!(
+                        items: rsx!(
                         if !send_files_mode && !state.read().chats_sidebar().is_empty() {
                             rsx!(
                             ContextItem {

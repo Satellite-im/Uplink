@@ -40,7 +40,7 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 /// Button {
 ///     appearance: Appearance::Primary,
 ///     icon: Icon::Cog6Tooth,
-///     tooltip: cx.render(rsx!(
+///     tooltip: rsx!(
 ///         Tooltip {
 ///             arrow_position: ArrowPosition::Bottom,
 ///             text: String::from("Settings")
@@ -77,7 +77,7 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
         }
     );
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: {
                 format_args!("btn-wrap {}", if small { "small" } else { "" })

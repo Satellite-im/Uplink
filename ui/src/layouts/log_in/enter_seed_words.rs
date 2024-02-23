@@ -95,7 +95,7 @@ pub fn Layout( pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         style {get_app_style(&state.read())},
         div {
             id: "enter-seed-words-layout",

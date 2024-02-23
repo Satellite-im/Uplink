@@ -233,7 +233,7 @@ fn app_layout() -> Element {
     log::trace!("rendering app");
 
     // terminate the logger thread when the app exits.
-    cx.use_hook(|| LogDropper {});
+    use_hook(|| LogDropper {});
 
     use_auto_updater(cx)?;
     use_app_coroutines(cx)?;
@@ -840,7 +840,7 @@ fn get_update_icon() -> Element {
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
-        None => return cx.render(rsx!("")),
+        None => return rsx!("")),
     };
 
     let update_msg =
@@ -853,12 +853,12 @@ fn get_update_icon() -> Element {
 
     let stage = download_state.read().stage;
     match stage {
-        DownloadProgress::Idle => cx.render(rsx!(
+        DownloadProgress::Idle => rsx!(
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
                 devmode: state.read().configuration.developer.developer_mode,
-                items: cx.render(rsx!(
+                items: rsx!(
                     ContextItem {
                         aria_label: "update-menu-dismiss".into(),
                         text: get_local_text("uplink.update-menu-dismiss"),
@@ -889,7 +889,7 @@ fn get_update_icon() -> Element {
                 }
             }
         )),
-        DownloadProgress::PickFolder => cx.render(rsx!(get_download_modal {
+        DownloadProgress::PickFolder => rsx!(get_download_modal {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
             },
@@ -900,14 +900,14 @@ fn get_update_icon() -> Element {
             //     download_ch.send(SoftwareDownloadCmd(dest));
             // }
         })),
-        DownloadProgress::_Pending => cx.render(rsx!(div {
+        DownloadProgress::_Pending => rsx!(div {
             id: "update-available",
             class: "topbar-item",
             aria_label: "update-available",
             "{downloading_msg}"
         })),
         DownloadProgress::Finished => {
-            cx.render(rsx!(div {
+            rsx!(div {
                 id: "update-available",
                 class: "topbar-item",
                 aria_label: "update-available",
@@ -960,12 +960,12 @@ pub fn get_download_modal<'a>(
         .map(|x| x.to_string_lossy().to_string())
         .unwrap_or_default();
 
-    cx.render(rsx!(Modal {
+    rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
         transparent: false,
         close_on_click_inside_modal: true,
-        children: cx.render(rsx!(
+        children: rsx!(
             div {
             class: "download-modal disp-flex col",
             h1 {
@@ -1016,10 +1016,10 @@ fn AppLogger() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     if !state.read().initialized {
-        return cx.render(rsx!(()));
+        return rsx!(()));
     }
 
-    cx.render(rsx!(state
+    rsx!(state
         .read()
         .configuration
         .developer
@@ -1029,7 +1029,7 @@ fn AppLogger() -> Element {
 
 fn Toasts() -> Element {
     let state = use_shared_state::<State>(cx)?;
-    cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
+    rsx!(state.read().ui.toast_notifications.iter().map(
         |(id, toast)| {
             rsx!(Toast {
                 id: *id,
@@ -1045,7 +1045,7 @@ fn Toasts() -> Element {
 fn Titlebar() -> Element {
     let desktop = use_window(cx);
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "titlebar disable-select",
             Release_Info{},
@@ -1203,7 +1203,7 @@ fn AppNav<'a>(
             None
         },
         context_items: (unreads > 0).then(|| {
-            cx.render(rsx!(ContextItem {
+            rsx!(ContextItem {
                 aria_label: "clear-unreads".into(),
                 text: get_local_text("uplink.clear-unreads"),
                 onpress: move |_| {

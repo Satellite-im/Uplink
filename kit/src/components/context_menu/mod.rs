@@ -55,7 +55,7 @@ pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
     let tooltip_visible = use_state(cx, || false);
 
     if let Some(children) = &props.children {
-        cx.render(rsx!(
+        rsx!(
             div {
                 onmouseenter: move |_| {
                     if props.tooltip.is_some() {
@@ -79,7 +79,7 @@ pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
             }
         ))
     } else {
-        cx.render(rsx!(
+        rsx!(
             div {
                 onmouseenter: move |_| {
                     if props.tooltip.is_some() {
@@ -135,7 +135,7 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
     let image = sender.profile_picture();
     let banner = sender.profile_banner();
     let with_status = props.with_status.unwrap_or(true);
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "identity-header",
             aria_label: "identity-header",
@@ -190,7 +190,7 @@ pub fn ContextMenu<'a>(props: 'a, Props<'a>) -> Element {
         }
     });
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "context-wrap",
             onmouseenter: |e| {

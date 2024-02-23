@@ -20,7 +20,7 @@ pub fn NothingHere(props: Props) -> Element {
         _ => false,
     };
 
-    cx.render(rsx!(if show_warning {
+    rsx!(if show_warning {
         rsx!(div {
             class: "friends-list",
             aria_label: "no-requests",

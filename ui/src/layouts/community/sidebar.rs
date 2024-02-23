@@ -19,9 +19,9 @@ pub struct Props {
 pub fn Sidebar(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    cx.render(rsx!(ReusableSidebar {
+    rsx!(ReusableSidebar {
         hidden: state.read().ui.sidebar_hidden,
-        with_search: cx.render(rsx!(
+        with_search: rsx!(
             div {
                 class: "search-input",
                 Input {
@@ -36,7 +36,7 @@ pub fn Sidebar(props: Props) -> Element {
                 }
             }
         )),
-        with_nav: cx.render(rsx!(
+        with_nav: rsx!(
             crate::AppNav {
                 active: props.active.clone(),
                 tooltip_direction: ArrowPosition::Left,

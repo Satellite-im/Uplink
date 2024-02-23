@@ -195,10 +195,10 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
         .cloned()
         .unwrap_or(routes[0].clone());
 
-    cx.render(rsx!(
+    rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,
-            with_search: cx.render(rsx!(
+            with_search: rsx!(
                 div {
                     class: "search-input",
                     Input {
@@ -213,12 +213,12 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                     }
                 }
             )),
-            with_call_controls: cx.render(rsx!(
+            with_call_controls: rsx!(
                 CallControl {
                     in_chat: false
                 }
             )),
-            with_nav: cx.render(rsx!(
+            with_nav: rsx!(
                 crate::AppNav {
                     active: crate::UplinkRoute::SettingsLayout{},
                     onnavigate: move |_| {

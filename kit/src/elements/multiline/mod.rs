@@ -30,7 +30,7 @@ pub fn Multiline<'a>(props: Props<'a>) -> Element {
         .clone()
         .unwrap_or_else(|| "Placeholder...".to_owned());
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "multiline",
             Input {

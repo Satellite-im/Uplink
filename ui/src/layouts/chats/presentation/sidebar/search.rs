@@ -31,7 +31,7 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
 
     friends_identities.sort_by_key(|identity| identity.username());
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",

@@ -145,7 +145,7 @@ pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
         }
     }
 
-    cx.render(rsx! (
+    rsx! (
         div {
             id: "input-group-{id}",
             class: "input-group",
@@ -430,7 +430,7 @@ pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
         });
     }
 
-    cx.render(rsx! (
+    rsx! (
         div {
             id: "input-group-{id}",
             class: "input-group",

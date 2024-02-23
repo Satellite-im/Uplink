@@ -13,7 +13,7 @@ use overlay::OverlayDom;
 use warp::multipass;
 
 pub fn use_warp_runner() {
-    cx.use_hook(|| {
+    use_hook(|| {
         // Now turn on the warp runner and save it to the hook so it doesn't get dropped
         let mut runner = warp_runner::WarpRunner::new();
         runner.run();

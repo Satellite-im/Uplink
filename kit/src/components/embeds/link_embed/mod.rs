@@ -83,7 +83,7 @@ pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
         None
     };
 
-    cx.render(rsx! {
+    rsx! {
         if meta.title.is_empty() {
             rsx! { span {""} }
         } else {

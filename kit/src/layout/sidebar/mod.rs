@@ -23,7 +23,7 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let hidden = props.hidden.unwrap_or(false);
 
-    let hamburger = cx.render(rsx!(Button {
+    let hamburger = rsx!(Button {
         aria_label: "hamburger-button".into(),
         icon: Icon::SidebarArrowLeft,
         appearance: Appearance::Transparent,
@@ -32,7 +32,7 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
         }
     }));
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: {
                 format_args!("sidebar resize-horiz-right {}", if hidden { "hidden" } else { "" })

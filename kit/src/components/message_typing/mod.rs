@@ -30,7 +30,7 @@ pub fn MessageTyping(props: Props) -> Element {
         get_local_text_with_args(translation, vec![(key, users)])
     };
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "message-typing-wrap",
             // TODO: Support a vec of user images in case multiple are typing

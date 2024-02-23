@@ -33,14 +33,14 @@ pub fn SlimbarLayout(props: Props) -> Element {
         vec![]
     };
 
-    cx.render(rsx!(
+    rsx!(
         Slimbar { // TODO: This should hide when the sidebar is hidden if the view is minimal (mobile).
             with_back_button: !state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
             onback: move |_| {
                 let current = state.read().ui.sidebar_hidden;
                 state.write().mutate(Action::SidebarHidden(!current));
             },
-            top_children: cx.render(rsx!(
+            top_children: rsx!(
                 // Only display favorites if we have some.
                 (!favorites.is_empty()).then(|| rsx!(
                     div {
@@ -62,7 +62,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
                                     id: chat_id.to_string(),
-                                    items: cx.render(rsx!(
+                                    items: rsx!(
                                         ContextItem {
                                             aria_label: "favorites-chat".into(),
                                             icon: Icon::ChatBubbleBottomCenterText,
@@ -105,7 +105,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                 )),
             )),
             navbar_visible: state.read().ui.sidebar_hidden,
-            with_nav: cx.render(rsx!(
+            with_nav: rsx!(
                 crate::AppNav {
                     active: props.active.clone(),
                     tooltip_direction: ArrowPosition::Left,
@@ -122,7 +122,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
             state.read().configuration.developer.experimental_features.then(|| rsx!(
                 Button {
                     icon: Icon::Plus,
-                    tooltip: cx.render(rsx!(
+                    tooltip: rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Left,
                             text: "Create Community".into()

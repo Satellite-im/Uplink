@@ -36,7 +36,7 @@ impl Extension for ExampleExtension {
     fn render<'a>(&self, cx: &'a ScopeState) -> Element {
         let styles = self.stylesheet();
 
-        cx.render(rsx! {
+        rsx! {
             style { "{styles}" },
             Button {
                 icon: Icon::Truck

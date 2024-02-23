@@ -34,7 +34,7 @@ pub fn emit(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn Topbar<'a>(props: Props<'a>) -> Element {
     log::trace!("rendering topbar");
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "topbar",
             aria_label: "Topbar",

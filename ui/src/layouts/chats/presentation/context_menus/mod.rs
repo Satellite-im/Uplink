@@ -30,10 +30,10 @@ pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
 
     let are_files_been_uploaded = !state.read().storage.files_in_queue_to_upload.is_empty();
 
-    cx.render(rsx!(ContextMenu {
+    rsx!(ContextMenu {
         id: format!("{id}"),
         devmode: state.read().configuration.developer.developer_mode,
-        items: cx.render(rsx!(
+        items: rsx!(
             ContextItem {
                 icon: Icon::Plus,
                 aria_label: "attach-files-from-local-disk-into-chat".into(),
@@ -51,7 +51,7 @@ pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
                     props.on_press_storage.call(());
                 },
                 tooltip: if are_files_been_uploaded {
-                    cx.render(rsx!(Tooltip {
+                    rsx!(Tooltip {
                         arrow_position: kit::elements::tooltip::ArrowPosition::Right,
                         text: get_local_text("files.upload-in-progress-please-wait"),
                     }))

@@ -45,7 +45,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
 
     let router = use_navigator(cx);
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "media-player",
         div {
             id: "handle",
@@ -55,12 +55,12 @@ pub fn _MediaPlayer(props: Props) -> Element {
             },
         },
         Topbar {
-            controls: cx.render(
+            controls: 
                 rsx! (
                     Button {
                         icon: Icon::ArrowsPointingOut,
                         appearance: Appearance::Secondary,
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
                                 text: props.fullscreen_text.clone(),
@@ -78,7 +78,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
                 Button {
                     icon: Icon::Square2Stack,
                     appearance: Appearance::Transparent,
-                    tooltip: cx.render(rsx!(
+                    tooltip: rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: props.popout_player_text.clone(),
@@ -125,7 +125,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
             Button {
                 icon: Icon::VideoCamera,
                 appearance: Appearance::Secondary,
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.enable_camera_text.clone(),
@@ -135,7 +135,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
             Button {
                 icon: Icon::Window,
                 appearance: Appearance::Secondary,
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.screenshare_text.clone(),
@@ -155,7 +155,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
             Button {
                 icon: Icon::Cog6Tooth,
                 appearance: Appearance::Secondary,
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.settings_text.clone(),

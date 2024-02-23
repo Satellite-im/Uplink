@@ -321,11 +321,11 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
         }
     });
 
-    cx.render(rsx!(div{
+    rsx!(div{
         class: "quick-profile-context",
         ContextMenu {
         id: format!("{id}"),
-        items: cx.render(rsx!(
+        items: rsx!(
             IdentityHeader {
                 sender_did: identity.did_key()
             },
@@ -341,7 +341,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                     }
                 }
                 identity.status_message().and_then(|s|{
-                    cx.render(rsx!(
+                    rsx!(
                         div {
                             id: "profile-status",
                             aria_label: "profile-status",

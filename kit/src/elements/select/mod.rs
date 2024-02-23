@@ -51,7 +51,7 @@ pub fn Select<'a>(props: 'a, Props<'a>) -> Element {
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "select",
             aria_label: "Selector",
@@ -91,7 +91,7 @@ pub fn FancySelect<'a>(props: 'a, FancySelectProps<'a>) -> Element {
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "select",
             aria_label: "Selector",

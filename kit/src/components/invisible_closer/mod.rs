@@ -9,7 +9,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn InvisibleCloser<'a>(props: Props<'a>) -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         class: format_args!(
             "close-handler-behind {}",
             props.classes.clone().unwrap_or_default()

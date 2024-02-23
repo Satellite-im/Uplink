@@ -183,7 +183,7 @@ pub fn AddFriend() -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "add-friend",
             Label {
@@ -196,7 +196,7 @@ pub fn AddFriend() -> Element {
                     key: "{context_key}",
                     id: "add-friend-input-context-menu".into(),
                     devmode: state.read().configuration.developer.developer_mode,
-                    children: cx.render(rsx!(
+                    children: rsx!(
                         Input {
                             placeholder: get_local_text("friends.placeholder"),
                             icon: Icon::MagnifyingGlass,
@@ -237,7 +237,7 @@ pub fn AddFriend() -> Element {
                             aria_label: "Add Someone Input".into()
                         }
                     )),
-                    items: cx.render(rsx!(
+                    items: rsx!(
                         ContextItem {
                             icon: Icon::ClipboardDocument,
                             aria_label: "friend-add-input-copy".into(),
@@ -298,7 +298,7 @@ pub fn AddFriend() -> Element {
                 div {
                     ContextMenu {
                         id: String::from("copy-id-context-menu"),
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ContextItem {
                                 icon: Icon::UserCircle,
                                 text: get_local_text("settings-profile.copy-id"),
@@ -375,7 +375,7 @@ pub fn AddFriend() -> Element {
                                         )));
                                 }
                             },
-                            tooltip: cx.render(rsx!(Tooltip{
+                            tooltip: rsx!(Tooltip{
                                 text: get_local_text("settings-profile.copy-id")
                             }))
                         }

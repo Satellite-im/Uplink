@@ -39,7 +39,7 @@ pub fn Toast<'a>(props: Props<'a>) -> Element {
     let content = props.with_content.clone().unwrap_or_default();
     let title = props.with_title.clone().unwrap_or_default();
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "toast",
             aria_label: "Toast Notification",

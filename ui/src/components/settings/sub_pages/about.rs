@@ -102,7 +102,7 @@ pub fn AboutPage() -> Element {
             .unwrap_or_default()
     }
 
-    let about_button = cx.render(rsx!(match opt {
+    let about_button = rsx!(match opt {
         None if stage == DownloadProgress::Idle => {
             rsx!(Button {
                 key: "btn-start",
@@ -190,7 +190,7 @@ pub fn AboutPage() -> Element {
         },
     }));
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-about",
             SettingSection {

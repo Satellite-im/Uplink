@@ -10,7 +10,7 @@ use crate::components::settings::SettingSection;
 #[allow(non_snake_case)]
 pub fn FilesSettings() -> Element {
     log::trace!("Files settings page rendered.");
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-files",
             aria_label: "settings-files",

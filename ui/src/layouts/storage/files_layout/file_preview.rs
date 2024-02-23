@@ -33,13 +33,13 @@ pub fn open_file_preview_modal<'a>(
     on_download: EventHandler<Option<PathBuf>>,
     file: File,
 ) -> Element {
-    cx.render(rsx!(Modal {
+    rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
         transparent: false,
         dont_pad: true,
         close_on_click_inside_modal: true,
-        children: cx.render(rsx!(FilePreview {
+        children: rsx!(FilePreview {
             file: file,
             on_download: |temp_path| {
                 on_download.call(temp_path);
@@ -149,11 +149,11 @@ fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
         props.on_dismiss.call(());
     }
 
-    cx.render(rsx!(
+    rsx!(
         ContextMenu {
             id: "file-preview-context-menu".into(),
             devmode: state.read().configuration.developer.developer_mode,
-            items: cx.render(rsx!(
+            items: rsx!(
                 ContextItem {
                     icon: Icon::ArrowDownCircle,
                     aria_label: "files-download-preview".into(),
@@ -229,7 +229,7 @@ fn FileTypeTag(props: FileTypeTagProps) -> Element {
     let code_content = props.code_content.clone();
     let code_class = get_language_class(&source_path);
 
-    cx.render(match file_type {
+    match file_type {
         FileType::Video => rsx!(video {
             id: "file_preview_img",
             aria_label: "file-preview-image",

@@ -19,7 +19,7 @@ pub fn Layout( page: UseState<AuthPages>) -> Element {
             height: 250.0,
         });
     }
-    cx.render(rsx!(
+    rsx!(
         style {get_app_style(&state.read())},
         div {
             id: "create-or-recover-layout",

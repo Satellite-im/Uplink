@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 pub fn Release_Info() -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "pre-release",
             class : if cfg!(target_os = "macos") {"topbar-item mac-spacer"}  else {"topbar-item"},

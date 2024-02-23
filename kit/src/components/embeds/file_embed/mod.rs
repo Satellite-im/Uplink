@@ -167,7 +167,7 @@ pub fn FileEmbed<'a>(props: 'a, Props<'a>) -> Element {
     let is_file_available_to_preview = is_file_available_to_preview(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: {
                 format_args!(
@@ -329,7 +329,7 @@ fn show_download_or_minus_button_if_enabled<'a>(
     btn_icon: common::icons::outline::Shape,
 ) -> Element {
     if with_download_button {
-        cx.render(rsx!(
+        rsx!(
             div {
                 id: "file-embed-action-button",
                 Button {

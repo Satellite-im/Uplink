@@ -64,7 +64,7 @@ pub fn Keybind(props: KeybindProps) -> Element {
         })
     });
 
-    cx.render(rsx!(keys_rendered))
+    rsx!(keys_rendered))
 }
 
 #[derive(PartialEq, Props)]
@@ -164,7 +164,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
     if has_conflicts {
         keybind_class.push_str(" conflicting");
     }
-    cx.render(rsx!(
+    rsx!(
         div {
             id: format_args!("{}", keybind_section_id),
             class: "keybind-section",
@@ -225,7 +225,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                 },
                 if has_conflicts {
                     rsx!(TooltipWrap {
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
                                 text: get_local_text("settings-keybinds.conflicting-keybinds")
@@ -250,7 +250,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
 
                 },
                 appearance: kit::elements::Appearance::Secondary,
-                tooltip: cx.render(rsx!(
+                tooltip: rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-keybinds.reset")
@@ -278,7 +278,7 @@ pub fn KeybindSettings() -> Element {
         },
     );
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-keybinds",
             aria_label: "settings-keybinds",

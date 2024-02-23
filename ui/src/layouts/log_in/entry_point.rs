@@ -176,7 +176,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
         .map(|x| x.to_string())
         .unwrap_or_default();
 
-    cx.render(rsx!(
+    rsx!(
         style {get_app_style(&state.read())},
         div {
             id: "unlock-layout",
@@ -289,7 +289,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
                         key: "{key}-menu",
                         id: "unlock-context-menu".into(),
                         devmode: state.read().configuration.developer.developer_mode,
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ContextItem {
                                 icon: Icon::Trash,
                                 danger: true,
@@ -310,7 +310,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
                                 aria_label: "help-button".into(),
                                 appearance: kit::elements::Appearance::Secondary,
                                 icon: Icon::QuestionMarkCircle,
-                                tooltip: cx.render(rsx!(
+                                tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Right,
                                         text: get_local_text("unlock.help"),

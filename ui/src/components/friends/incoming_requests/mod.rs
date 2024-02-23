@@ -88,7 +88,7 @@ pub fn PendingFriends() -> Element {
     if friends_list.is_empty() {
         return render!({});
     }
-    cx.render(rsx!(rsx!(div {
+    rsx!(rsx!(div {
         class: "friends-list",
         aria_label: "Incoming Requests List",
         Label {
@@ -115,7 +115,7 @@ pub fn PendingFriends() -> Element {
                     id: format!("{did}-friend-listing"),
                     key: "{did}-friend-listing",
                     devmode: state.read().configuration.developer.developer_mode,
-                    items: cx.render(rsx!(
+                    items: rsx!(
                         ContextItem {
                             danger: true,
                             icon: Icon::Check,
@@ -157,7 +157,7 @@ pub fn PendingFriends() -> Element {
                             relationship.set_received_friend_request(true);
                             relationship
                         },
-                        user_image: cx.render(rsx! (
+                        user_image: rsx! (
                             UserImage {
                                 platform: platform,
                                 status: friend2.identity_status().into(),

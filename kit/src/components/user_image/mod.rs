@@ -57,7 +57,7 @@ pub fn UserImage<'a>(props: Props<'a>) -> Element {
 
     let loading = props.loading.unwrap_or_default();
 
-    cx.render(rsx!(if loading {
+    rsx!(if loading {
         rsx!(UserImageLoading {})
     } else {
         rsx!(
@@ -105,7 +105,7 @@ pub fn UserImage<'a>(props: Props<'a>) -> Element {
 
 #[allow(non_snake_case)]
 pub fn UserImageLoading() -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "skeletal user-image-loading"
     }))
 }

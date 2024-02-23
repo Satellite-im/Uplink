@@ -98,7 +98,7 @@ pub fn ChatLayout() -> Element {
         state.write().ui.toast_notifications.clear();
     }
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
@@ -110,7 +110,7 @@ pub fn ChatLayout() -> Element {
                     if keyboard_data.code() == Code::KeyV
                         && keyboard_data.modifiers() == Modifiers::CONTROL
                     {
-                        cx.spawn({
+                        spawn({
                             to_owned![state];
                             async move {
                                 let files_local_path = tokio::task::spawn_blocking(|| {
@@ -138,7 +138,7 @@ pub fn ChatLayout() -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             if show_slimbar & !is_minimal_view {
-                cx.render(rsx!(
+                rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
                 ))
             },

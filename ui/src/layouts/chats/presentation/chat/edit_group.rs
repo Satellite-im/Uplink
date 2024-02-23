@@ -111,7 +111,7 @@ pub fn EditGroup() -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "edit-members",
             aria_label: "edit-members",
@@ -255,7 +255,7 @@ fn friend_row(props: FriendRowProps) -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",

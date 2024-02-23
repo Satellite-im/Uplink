@@ -13,7 +13,7 @@ use crate::components::settings::SettingSection;
 pub fn NotificationSettings() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-notifications",
             aria_label: "settings-notifications",

@@ -19,7 +19,7 @@ pub fn MessageDivider(props: Props) -> Element {
     let text = props.text.clone().unwrap_or_default();
     let time_ago = get_time_ago(&cx);
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "message-divider noselect defaultcursor",
             hr {},

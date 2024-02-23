@@ -70,9 +70,9 @@ pub fn File<'a>(props: 'a, Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     if loading {
-        cx.render(rsx!(FileSkeletal {}))
+        rsx!(FileSkeletal {}))
     } else {
-        cx.render(rsx!(
+        rsx!(
             div {
                 class: {
                     format_args!("file {}", if disabled { "disabled" } else { "" })
@@ -160,7 +160,7 @@ pub fn File<'a>(props: 'a, Props<'a>) -> Element {
 
 #[allow(non_snake_case)]
 pub fn FileSkeletal() -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "file alignment",
             div {

@@ -59,7 +59,7 @@ pub fn SidebarInner() -> Element {
         ],
     });
 
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "community-sidebar-innner",
         channel_groups.iter().map(|group| {
             rsx!(ChannelGroupElement {

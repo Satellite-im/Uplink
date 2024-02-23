@@ -54,7 +54,7 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
         || props.block_button_disabled.unwrap_or(false)
         || props.remove_button_disabled.unwrap_or(false);
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend",
             aria_label: "{aria_label}",
@@ -132,7 +132,7 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
                         }
                     },
                     aria_label: "Remove or Deny Friend".into(),
-                    tooltip: cx.render(rsx!(Tooltip {
+                    tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: if props.relationship.blocked() { get_local_text("friends.unblock") } else if props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
                     })),
@@ -148,7 +148,7 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
                             None    => {},
                         },
                         aria_label: "Block Friend".into(),
-                        tooltip: cx.render(rsx!(Tooltip {
+                        tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("friends.block"),
                         }))
@@ -163,7 +163,7 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
 #[allow(unused)]
 #[allow(non_snake_case)]
 pub fn SkeletalFriend() -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "skeletal-friend",
             UserImage {

@@ -81,7 +81,7 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
         },
     );
 
-    return cx.render(rsx!(div {
+    return rsx!(div {
         Modal {
             open: *crop_image.clone(),
             onclose: move |_| {
@@ -130,7 +130,7 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
                             appearance: Appearance::Success,
                             icon: Shape::Check,
                             onpress: move |_| {
-                                cx.spawn({
+                                spawn({
                                     to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                     async move {
                                         let save_image_cropped_js = SAVE_CROPPED_IMAGE_SCRIPT

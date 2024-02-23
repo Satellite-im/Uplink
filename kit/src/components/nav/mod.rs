@@ -106,7 +106,7 @@ pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
     // For some reason if you dont do this the first render will not have a context menu
     let uuid = use_ref(cx, || Uuid::new_v4().to_string());
-    cx.render(rsx!(
+    rsx!(
         div {
             aria_label: "button-nav",
             class: {
@@ -120,9 +120,9 @@ pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
                 let tooltip = if props.bubble.is_some() {
-                    cx.render(rsx!(""))
+                    rsx!(""))
                 } else {
-                    cx.render(rsx!(Tooltip {
+                    rsx!(Tooltip {
                         arrow_position: tooltip_direction,
                         text: route.name.clone(),
                     }))

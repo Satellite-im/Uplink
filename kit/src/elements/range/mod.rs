@@ -35,7 +35,7 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
 
     let with_buttons = props.with_buttons.unwrap_or_default();
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "range",
             aria_label: "{aria_label}",

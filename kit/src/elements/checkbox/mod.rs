@@ -33,7 +33,7 @@ pub fn Checkbox<'a>(props: Props<'a>) -> Element {
         .clone()
         .unwrap_or_else(|| "fit-content".into());
 
-    cx.render(rsx!(
+    rsx!(
             div {
             aria_label: "{aria_label}",
             class: "input-checkbox {checked_class} {disabled_class} ",

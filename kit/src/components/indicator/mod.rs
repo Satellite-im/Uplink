@@ -111,7 +111,7 @@ pub fn Indicator(props: Props) -> Element {
     let icon = props.platform.to_icon();
     let status = props.status;
 
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "indicator indicator-{status}",
         aria_label: "indicator-{status}",
         IconElement {

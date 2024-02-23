@@ -55,7 +55,7 @@ pub fn OutgoingRequests() -> Element {
     if friends_list.is_empty() {
         return render!({});
     }
-    cx.render(rsx! (
+    rsx! (
         rsx!(div {
             class: "friends-list",
             aria_label: "Outgoing Requests List",
@@ -74,7 +74,7 @@ pub fn OutgoingRequests() -> Element {
                         id: format!("{did}-friend-listing"),
                         key: "{did}-friend-listing",
                         devmode: state.read().configuration.developer.developer_mode,
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ContextItem {
                                 danger: true,
                                 icon: Icon::XMark,
@@ -101,7 +101,7 @@ pub fn OutgoingRequests() -> Element {
                                 relationship
                             },
                             remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
-                            user_image: cx.render(rsx! (
+                            user_image: rsx! (
                                 UserImage {
                                     platform: platform,
                                     status: friend.identity_status().into(),

@@ -58,12 +58,12 @@ pub fn SettingsLayout() -> Element {
         Page::Licenses => rsx!(Licenses {}),
     };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
             if show_slimbar {
-                cx.render(rsx!(
+                rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
                 ))
             },

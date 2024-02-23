@@ -38,7 +38,7 @@ pub fn FriendsLayout() -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return cx.render(rsx!(MinimalFriendsLayout { route: route }));
+        return rsx!(MinimalFriendsLayout { route: route }));
     }
     log::trace!("rendering FriendsLayout");
 
@@ -73,13 +73,13 @@ pub fn FriendsLayout() -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
             if show_slimbar {
-                cx.render(rsx!(
+                rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
                 ))
             },
@@ -133,7 +133,7 @@ pub fn MinimalFriendsLayout<'a>(props: 'a, MinimalProps) -> Element {
         )
     };
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "friends-layout",
         aria_label: "friends-layout",
         view
@@ -141,7 +141,7 @@ pub fn MinimalFriendsLayout<'a>(props: 'a, MinimalProps) -> Element {
 }
 
 fn render_route<T>(props: T, route: FriendRoute) -> Element {
-    cx.render(rsx!(match route {
+    rsx!(match route {
         FriendRoute::All => rsx!(Friends {}),
         FriendRoute::Pending => rsx!(
             PendingFriends {},
@@ -163,13 +163,13 @@ fn get_topbar<'a, T>(props: 'a, T>, route: &'a UseState<FriendRoute) -> Element 
     let state = use_shared_state::<State>(cx)?;
     let pending_friends = state.read().friends().incoming_requests.len();
 
-    cx.render(rsx!(Topbar {
+    rsx!(Topbar {
         with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
         onback: move |_| {
             let current = state.read().ui.sidebar_hidden;
             state.write().mutate(Action::SidebarHidden(!current));
         },
-        controls: cx.render(rsx!(
+        controls: rsx!(
             Button {
                 icon: Icon::Users,
                 text: if state.read().ui.is_minimal_view() {

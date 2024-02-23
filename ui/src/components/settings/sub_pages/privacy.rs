@@ -10,7 +10,7 @@ use crate::components::settings::SettingSection;
 #[allow(non_snake_case)]
 pub fn PrivacySettings() -> Element {
     log::trace!("Privacy settings page rendered.");
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-privacy",
             aria_label: "settings-privacy",

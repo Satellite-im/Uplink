@@ -10,7 +10,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn TooltipWrap<'a>(props: Props<'a>) -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "tooltip-parent",
         div {
             class: "tooltip-wrapper",

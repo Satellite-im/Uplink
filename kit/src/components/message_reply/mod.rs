@@ -84,7 +84,7 @@ pub fn MessageReply<'a>(props: Props<'a>) -> Element {
         })
     });
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: {
                 format_args!(

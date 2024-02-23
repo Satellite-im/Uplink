@@ -19,7 +19,7 @@ pub fn FileCheckbox(
 ) -> Element {
     if *is_selecting_files {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
-        return cx.render(rsx!( div {
+        return rsx!( div {
             class: "checkbox-position",
             Checkbox {
                 disabled: files_selected_to_send.len() >= MAX_FILES_PER_MESSAGE,
@@ -48,7 +48,7 @@ pub fn SendFilesTopbar<'a>(
 ) -> Element {
     let router = use_navigator(cx);
 
-    return cx.render(rsx! (
+    return rsx! (
             div {
                 class: "send-files-button",
                 Button {

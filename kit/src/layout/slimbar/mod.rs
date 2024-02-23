@@ -28,7 +28,7 @@ pub fn emit(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn Slimbar<'a>(props: Props<'a>) -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "slimbar",
         aria_label: "slimbar",
         (show_back_button(&cx)).then(|| rsx!(

@@ -55,9 +55,9 @@ pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     if loading {
-        cx.render(rsx!(FolderSkeletal {}))
+        rsx!(FolderSkeletal {}))
     } else {
-        cx.render(rsx!(
+        rsx!(
             div {
                 class: {
                     format_args!("folder {}", if disabled { "disabled" } else { "" })
@@ -114,7 +114,7 @@ pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
 
 #[allow(non_snake_case)]
 pub fn FolderSkeletal() -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "folder",
             div {

@@ -76,7 +76,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
     let update_script = use_state(cx, String::new);
-    let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let upload_button_menu_uuid = &*use_hook(|| Uuid::new_v4().to_string());
     let show_storage_modal = use_state(cx, || false);
 
     let suggestions = use_state(cx, || SuggestionType::None);
@@ -317,7 +317,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
 
     let typing_users: Vec<String> = users_typing.iter().map(|id| (*id).username()).collect();
 
-    let chatbar = cx.render(rsx!(
+    let chatbar = rsx!(
         Chatbar {
             key: "{active_chat_id}",
             id: format!("{}-chatbar", active_chat_id.to_string()),
@@ -350,7 +350,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
+            extensions: rsx!(for node in ext_renders { rsx!(node) })),
             suggestions: suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if !active_chat_id.is_nil() {
@@ -430,7 +430,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                     suggestions.set(SuggestionType::None);
                 }
             },
-            controls: cx.render(
+            controls: 
                 rsx!(
                     Button {
                         icon: icons::outline::Shape::ChevronDoubleRight,
@@ -438,7 +438,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                         appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
                         aria_label: "send-message-button".into(),
                         onpress: move |_| submit_fn2(),
-                        tooltip: cx.render(rsx!(Tooltip {
+                        tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Bottom,
                             text :get_local_text("uplink.send"),
                         })),
@@ -446,7 +446,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                 ),
             ),
             with_replying_to: (!disabled).then(|| {
-                cx.render(
+                
                     rsx!(
                         chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
                             let our_did = state.read().did_key();
@@ -482,7 +482,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                     ),
                 )
             }).unwrap_or(None),
-            with_file_upload: cx.render(
+            with_file_upload: 
                 rsx!(
                     Button {
                         icon: icons::outline::Shape::Plus,
@@ -498,7 +498,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                                 .replace("$SELF", "false");
                             update_script.set(script);
                         },
-                        tooltip: cx.render(rsx!(
+                        tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: get_local_text("files.upload"),
@@ -538,7 +538,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
         ))
     ));
 
-    cx.render(rsx!(
+    rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
                 rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
                     on_paste: move |files_local_path: Vec<PathBuf>| {

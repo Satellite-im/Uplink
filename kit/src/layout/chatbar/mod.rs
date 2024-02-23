@@ -125,7 +125,7 @@ pub fn Reply<'a>(props: 'a, ReplyProps<'a>) -> Element {
         })
     });
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "inline-reply",
             aria_label: "inline-reply",
@@ -176,7 +176,7 @@ pub fn Chatbar<'a>(props: 'a, Props<'a>) -> Element {
     let is_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
     let eval = use_eval(cx);
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "chatbar disable-select",
             props.with_replying_to.as_ref(),
@@ -298,7 +298,7 @@ fn SuggestionsMenu<'a>(props: 'a, SuggestionProps<'a>) -> Element {
         *props.selected.write_silent() = Some(0);
     }
     let (label, suggestions): (_, Vec<_>) = match props.suggestions {
-        SuggestionType::None => return cx.render(rsx!(())),
+        SuggestionType::None => return rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
@@ -349,7 +349,7 @@ fn SuggestionsMenu<'a>(props: 'a, SuggestionProps<'a>) -> Element {
             (get_local_text("messages.username-suggestion"), component)
         }
     };
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "chatbar-suggestions",
         aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {

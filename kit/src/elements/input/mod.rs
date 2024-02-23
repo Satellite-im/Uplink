@@ -381,7 +381,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
         || {},
     );
 
-    cx.render(rsx! (
+    rsx! (
         div {
             class: {
                 format_args!("input-group {}", if disabled { "disabled" } else { " "})

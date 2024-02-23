@@ -32,10 +32,10 @@ pub fn GroupUsers(props: Props) -> Element {
 
     let active_chat = match props.active_chat.as_ref() {
         Some(r) => r,
-        None => return cx.render(rsx!(div {})),
+        None => return rsx!(div {})),
     };
     if active_chat.participants.is_empty() {
-        return cx.render(rsx!(div {}));
+        return rsx!(div {}));
     }
 
     let participant_dids = Vec::from_iter(active_chat.participants.iter().cloned());
@@ -65,7 +65,7 @@ pub fn GroupUsers(props: Props) -> Element {
             );
         }
     });
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "group-users",
             aria_label: "group-users",
@@ -119,7 +119,7 @@ fn render_friends(props: FriendsProps) -> Element {
             .contains(&name_prefix.to_ascii_lowercase())
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
@@ -160,7 +160,7 @@ pub struct FriendProps {
     context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
 fn render_friend(props: FriendProps) -> Element {
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",

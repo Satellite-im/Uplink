@@ -54,7 +54,7 @@ pub fn DebugLogger() -> Element {
 
     let state_json = state.read().get_json();
 
-    cx.render(rsx!(
+    rsx!(
         style { STYLE }
         div {
             onmounted: move |_| { _ = eval(SCRIPT) },
@@ -76,7 +76,7 @@ pub fn DebugLogger() -> Element {
                             active_tab.set(Tab::Logs);
                         }
                     },
-                    (active_tab.get() == &Tab::Logs).then(|| cx.render(rsx!{
+                    (active_tab.get() == &Tab::Logs).then(|| rsx!{
                         div {
                             aria_label: "filter-section",
                             class: "section",
@@ -91,7 +91,7 @@ pub fn DebugLogger() -> Element {
                                 onpress: |_| {
                                     filter_level.set(Level::Debug);
                                 },
-                                tooltip: cx.render(rsx!(
+                                tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Debug".into()
@@ -105,7 +105,7 @@ pub fn DebugLogger() -> Element {
                                 onpress: |_| {
                                     filter_level.set(Level::Info);
                                 },
-                                tooltip: cx.render(rsx!(
+                                tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Info".into()
@@ -119,7 +119,7 @@ pub fn DebugLogger() -> Element {
                                 onpress: |_| {
                                     filter_level.set(Level::Error);
                                 },
-                                tooltip: cx.render(rsx!(
+                                tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Error".into()
@@ -133,7 +133,7 @@ pub fn DebugLogger() -> Element {
                                 onpress: |_| {
                                     filter_level.set(Level::Trace);
                                 },
-                                tooltip: cx.render(rsx!(
+                                tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Trace".into()

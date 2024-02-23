@@ -59,7 +59,7 @@ pub fn BlockedUsers() -> Element {
     if block_list.is_empty() {
         return render!({});
     }
-    cx.render(rsx! (
+    rsx! (
         rsx!(div {
             class: "friends-list",
             aria_label: "Blocked List",
@@ -80,7 +80,7 @@ pub fn BlockedUsers() -> Element {
                         id: format!("{did}-friend-listing"),
                         key: "{did}-friend-listing",
                         devmode: state.read().configuration.developer.developer_mode,
-                        items: cx.render(rsx!(
+                        items: rsx!(
                             ContextItem {
                                 danger: true,
                                 icon: Icon::XMark,
@@ -103,7 +103,7 @@ pub fn BlockedUsers() -> Element {
                             status_message: blocked_user.status_message().unwrap_or_default(),
                             relationship: relationship,
                             remove_button_disabled: unblock_in_progress.current().contains(&blocked_user.did_key()),
-                            user_image: cx.render(rsx! (
+                            user_image: rsx! (
                                 UserImage {
                                     platform: platform,
                                     status: blocked_user.identity_status().into(),

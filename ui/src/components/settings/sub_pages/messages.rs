@@ -12,7 +12,7 @@ use crate::components::settings::SettingSection;
 pub fn Messages() -> Element {
     log::trace!("Messages settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-messages",
             aria_label: "settings-messages",

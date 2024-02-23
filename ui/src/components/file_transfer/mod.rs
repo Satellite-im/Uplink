@@ -23,10 +23,10 @@ pub fn FileTransferModal<'a>(props: Props) -> Element {
         tracker.get_tracker(TrackerType::FileDownload),
     );
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
-        return cx.render(rsx!(()));
+        return rsx!(()));
     }
     let modal = props.modal.unwrap_or_default();
-    cx.render(rsx!(div {
+    rsx!(div {
         class: format_args!("file-transfer-wrap {}", if modal {"file-transfer-modal"} else {""}),
         (!file_progress_upload.is_empty()).then(||
             rsx!(FileTransferElement {
@@ -50,7 +50,7 @@ pub struct TransferProps {
 }
 
 pub fn FileTransferElement(props: TransferProps) -> Element {
-    cx.render(rsx!(div {
+    rsx!(div {
         class: "file-transfer-container",
         div {
             class: "file-transfer-label-container",
@@ -135,7 +135,7 @@ pub struct ProgressIndicatorProps {
 }
 
 pub fn ProgressIndicator(props: ProgressIndicatorProps) -> Element {
-    cx.render(rsx!(div{
+    rsx!(div{
         class: "progress-indicator-wrap",
         div {
             class: "progress-indicator",

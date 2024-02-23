@@ -44,7 +44,7 @@ pub fn Tooltip(props: Props) -> Element {
     let arrow_position = props.arrow_position.unwrap_or(ArrowPosition::Bottom);
     let text = props.text.clone().unwrap_or_default();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             aria_label: "tooltip",
             class: {

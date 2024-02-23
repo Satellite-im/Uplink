@@ -11,7 +11,7 @@ pub fn Licenses() -> Element {
     log::trace!("Licenses settings page rendered.");
     const MIT_URL: &str = "https://github.com/Satellite-im/Uplink/blob/dev/LICENSE";
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-licenses",
             aria_label: "settings-licenses",

@@ -56,7 +56,7 @@ pub fn DeveloperSettings() -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-developer",
             aria_label: "settings-developer",

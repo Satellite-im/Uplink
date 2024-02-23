@@ -10,7 +10,7 @@ pub fn CommunityLayout() -> Element {
     // TODO: Placeholder data
     let joined = use_state(cx, || false);
     let friends = use_state(cx, || false);
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "communities-layout",
             aria_label: "communities-layout",

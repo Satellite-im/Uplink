@@ -132,7 +132,7 @@ pub fn get_messages(
             )
         };
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "messages",
             // this is a hack to deal with the limitations of the message paging. On the first page, if a message comes in while the page
@@ -209,7 +209,7 @@ pub struct AllMessageGroupsProps<'a> {
 // temporary location
 pub fn loop_over_message_groups<'a>(props: 'a, AllMessageGroupsProps<'a>) -> Element {
     log::trace!("render message groups");
-    cx.render(rsx!(props.groups.iter().map(|_group| {
+    rsx!(props.groups.iter().map(|_group| {
         rsx!(render_message_group {
             group: _group,
             active_chat_id: props.active_chat_id,
@@ -248,7 +248,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
 
     let blocked_element = if blocked {
         if !show_blocked.get() {
-            return cx.render(rsx!(
+            return rsx!(
                 div {
                     class: "blocked-container",
                     p {
@@ -268,7 +268,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
                 }
             ));
         }
-        cx.render(rsx!(
+        rsx!(
             div {
                 class: "blocked-container",
                 p {
@@ -303,7 +303,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
         sender_status = Status::Online;
     }
 
-    cx.render(rsx!(
+    rsx!(
         blocked_element,
         MessageGroup {
             user_image: render!(UserImage {
@@ -322,7 +322,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
             timestamp: format_timestamp_timeago(last_message_date, active_language),
             sender: sender_name.clone(),
             remote: group.remote,
-            children: cx.render(rsx!(wrap_messages_in_context_menu {
+            children: rsx!(wrap_messages_in_context_menu {
                 messages: &group.messages,
                 active_chat_id: props.active_chat_id,
                 is_remote: group.remote,
@@ -354,7 +354,7 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
         .enabled_extension(emoji_selector_extension);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-    cx.render(rsx!(props.messages.iter().map(|grouped_message| {
+    rsx!(props.messages.iter().map(|grouped_message| {
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -384,14 +384,14 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
             key: "{context_key}",
             id: msg_uuid.to_string(),
             devmode: state.read().configuration.developer.developer_mode,
-            children: cx.render(rsx!(render_message {
+            children: rsx!(render_message {
                 message: grouped_message,
                 is_remote: props.is_remote,
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
                 pending: props.pending
             })),
-            items: cx.render(rsx!(
+            items: rsx!(
                 ContextItem {
                     text: "Emoji Group".into(),
                     EmojiGroup {
@@ -436,9 +436,9 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
                     text: get_local_text("messages.react"),
                     disabled: !has_extension,
                     tooltip:  if has_extension {
-                        cx.render(rsx!(()))
+                        rsx!(()))
                     } else {
-                        cx.render(rsx!(Tooltip {
+                        rsx!(Tooltip {
                             arrow_position: ArrowPosition::Top,
                             text: get_local_text("messages.missing-emoji-picker")
                         }))
@@ -584,7 +584,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
         reply_user = state.read().get_identity(&info.2).unwrap_or_default();
     }
 
-    cx.render(rsx!(
+    rsx!(
         div {
             class: "msg-wrapper",
             preview_file_in_the_message.0.then(|| {
@@ -631,7 +631,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
                     transform_ascii_emojis: should_transform_ascii_emojis,
                     state: state,
                     chat: chat_data.read().active_chat.id(),
-                    user_image: cx.render(rsx!(UserImage {
+                    user_image: rsx!(UserImage {
                         loading: false,
                         platform: reply_user.platform().into(),
                         status: reply_user.identity_status().into(),
@@ -703,9 +703,9 @@ pub fn render_pending_messages_listener<'a>(
     state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
-        None => return cx.render(rsx!(())),
+        None => return rsx!(())),
     };
-    cx.render(rsx!(pending_wrapper {
+    rsx!(pending_wrapper {
         msg: chat.pending_outgoing_messages,
         on_context_menu_action: move |e| props.on_context_menu_action.call(e)
     }))
@@ -721,7 +721,7 @@ struct PendingWrapperProps<'a> {
 fn pending_wrapper<'a>(props: 'a, PendingWrapperProps) -> Element {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let data = chat_data.read();
-    cx.render(rsx!(render_pending_messages {
+    rsx!(render_pending_messages {
         pending_outgoing_message: data::pending_group_messages(
             &props.msg,
             data.active_chat.other_participants(),
@@ -741,7 +741,7 @@ struct PendingMessagesProps<'a> {
 }
 
 fn render_pending_messages<'a>(props: 'a, PendingMessagesProps) -> Element {
-    cx.render(rsx!(props.pending_outgoing_message.as_ref().map(
+    rsx!(props.pending_outgoing_message.as_ref().map(
         |group| {
             rsx!(render_message_group {
                 group: group,

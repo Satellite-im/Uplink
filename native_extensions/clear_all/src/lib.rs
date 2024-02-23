@@ -29,10 +29,10 @@ impl Extension for ClearAll {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
-        cx.use_hook(|| RuntimeGuard::new(runtime.clone()));
+        use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
 
-        cx.render(rsx! (
+        rsx! (
             style { "{styles}" },
             // Render standard (required) button to fire action.
             div {

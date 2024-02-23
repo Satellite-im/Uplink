@@ -19,7 +19,7 @@ pub fn is_large(cx: &Scope<Props>) -> bool {
 
 #[allow(non_snake_case)]
 pub fn Loader(props: Props) -> Element {
-    cx.render(rsx!(
+    rsx!(
     div {
         class: if is_large(&cx) { "loader large" } else { "loader" },
         div {

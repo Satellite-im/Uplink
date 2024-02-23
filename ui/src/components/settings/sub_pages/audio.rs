@@ -243,7 +243,7 @@ pub fn AudioSettings() -> Element {
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-audio",
             aria_label: "settings-audio",
@@ -423,7 +423,7 @@ pub struct VolumeIndicatorProps {
 }
 
 pub fn VolumeIndicator(props: VolumeIndicatorProps) -> Element {
-    cx.render(rsx!(div{
+    rsx!(div{
         class: "volume-indicator-wrap",
         div {
             class: "volume-indicator volume-indicator-overlay",

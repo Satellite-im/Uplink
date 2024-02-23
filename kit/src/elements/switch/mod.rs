@@ -34,7 +34,7 @@ pub fn Switch<'a>(props: Props) -> Element {
     let checked_state = default_state(&cx);
     let disabled = props.disabled.unwrap_or_default();
 
-    cx.render(rsx! {
+    rsx! {
         label {
             class: {
                 format_args!("switch {}", if disabled { "disabled" } else { "" })

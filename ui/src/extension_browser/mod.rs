@@ -18,7 +18,7 @@ use kit::{
 pub fn Settings() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    cx.render(rsx! (
+    rsx! (
             div {
                 class: "extensions-settings",
                 SettingSection {
@@ -54,7 +54,7 @@ pub fn Settings() -> Element {
 
 #[allow(non_snake_case)]
 pub fn Explore() -> Element {
-    cx.render(rsx! (
+    rsx! (
         div {
             class: "extensions-explore",
             aria_label: "extensions-explore",
@@ -91,7 +91,7 @@ pub fn Installed() -> Element {
         .map(|(enabled, ext)| (enabled, ext.details().meta.clone()))
         .collect();
 
-    cx.render(rsx!(
+    rsx!(
         if metas.is_empty() {
             rsx!(
                 div {
@@ -152,7 +152,7 @@ pub fn ExtensionsBrowser() -> Element {
 
     let active_route = use_state(cx, || "installed");
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "extensions-browser",
             aria_label: "extensions-browser",

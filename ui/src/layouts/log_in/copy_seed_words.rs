@@ -36,7 +36,7 @@ pub fn Layout( page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element
         }
     });
 
-    cx.render(rsx!(
+    rsx!(
         style {get_app_style(&state.read())},
         div {
             id: "copy-seed-words-layout",

@@ -12,7 +12,7 @@ pub fn AccessibilitySettings() -> Element {
 
     log::trace!("Accessibility settings page rendered.");
 
-    cx.render(rsx!(
+    rsx!(
         div {
             id: "settings-general",
             aria_label: "settings-general",

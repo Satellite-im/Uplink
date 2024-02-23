@@ -70,7 +70,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
     // todo: get rid of this data variable
     let data = chat_data.read();
     if !data.active_chat.is_initialized {
-        return cx.render(rsx!(
+        return rsx!(
             UserImageGroup {
                 loading: true,
                 aria_label: "user-image-group".into(),
@@ -128,7 +128,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
         ConversationSettings::Direct(_) => false,
     };
 
-    cx.render(rsx!(
+    rsx!(
         if direct_message {rsx! (
             UserImage {
                 loading: false,
@@ -147,7 +147,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
             id: "chat_topbar_context".into(),
             key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
-            items: cx.render(rsx!(
+            items: rsx!(
                 if direct_message {rsx!(
                     ContextItem {
                         icon: Icon::XMark,

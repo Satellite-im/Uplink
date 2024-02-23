@@ -23,7 +23,7 @@ pub fn Attachments<'a>(props: AttachmentProps) -> Element {
     let files_attached_to_send3 = files_attached_to_send;
 
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(props.files_to_attach.iter().map(|location| {
+    let attachments = rsx!(props.files_to_attach.iter().map(|location| {
         let (filename, filepath, thumbnail) = match &location {
             Location::Constellation { path } => {
                 let filename = PathBuf::from(&path)
@@ -80,7 +80,7 @@ pub fn Attachments<'a>(props: AttachmentProps) -> Element {
         return None;
     }
 
-    cx.render(rsx!(div {
+    rsx!(div {
         id: "compose-attachments",
         aria_label: "compose-attachments",
             div {
