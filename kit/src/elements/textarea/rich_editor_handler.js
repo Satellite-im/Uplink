@@ -23,13 +23,13 @@ var keys = [{
     }
 }].concat(MarkdownEditor.ChatEditorKeys(() => dioxus.send(`\"Submit\"`)))
 
-function forwardevent(e) {
+function forwardEvent(e) {
     newEvent = new e.constructor(e.type, e)
     text.dispatchEvent(newEvent)
     return newEvent.defaultPrevented
 }
 
-function forwardeventDown(e) {
+function forwardEventDown(e) {
     if (e.key == 'Tab') {
         e.preventDefault();
         newEvent = new e.constructor(e.type, e)
@@ -47,9 +47,9 @@ var editor = new MarkdownEditor(
     keys: keys,
     listeners: {
         //Forward key events to underlying text area
-        "keydown": forwardeventDown,
-        "keyup": forwardevent,
-        "keypress": forwardevent,
+        "keydown": forwardEventDown,
+        "keyup": forwardEvent,
+        "keypress": forwardEvent,
         "onblue": (e) => {
             new_event = new e.constructor(e.type, e)
             text.dispatchEvent(new_event)
