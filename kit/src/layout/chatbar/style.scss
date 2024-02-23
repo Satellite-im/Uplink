@@ -121,7 +121,7 @@
   	}
 }
 
-.chatbar-suggestions {
+#chatbar-suggestions {
 	position: absolute; 
 	bottom: 100%;
 	color: var(--text-color); 
@@ -163,7 +163,6 @@
 	  }
 	  &:hover {
 		cursor: pointer;
-		background-color: var(--secondary-light); 
 	  }
 	}
 
