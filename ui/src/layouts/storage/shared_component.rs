@@ -27,10 +27,10 @@ pub struct FilesBreadcumbsProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FilesBreadcumbs<'a>(cx: Scope<'a, FilesBreadcumbsProps<'a>>) -> Element {
-    let send_files_mode = cx.props.send_files_mode;
-    let storage_controller = cx.props.storage_controller;
-    let ch = cx.props.ch;
+pub fn FilesBreadcumbs<'a>(props: 'a, FilesBreadcumbsProps<'a>) -> Element {
+    let send_files_mode = props.send_files_mode;
+    let storage_controller = props.storage_controller;
+    let ch = props.ch;
 
     cx.render(rsx!(div {
         id: "files-breadcrumbs",
@@ -84,11 +84,11 @@ pub struct FilesAndFoldersProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element {
+pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let send_files_mode = cx.props.send_files_mode;
-    let storage_controller = cx.props.storage_controller;
-    let ch = cx.props.ch;
+    let send_files_mode = props.send_files_mode;
+    let storage_controller = props.storage_controller;
+    let ch = props.ch;
     cx.render(rsx!(span {
         class: "file-parent",
         background: format_args!("{}", if send_files_mode {"var(--secondary)"} else {""}),
@@ -215,7 +215,7 @@ pub fn FilesAndFolders<'a>(cx: Scope<'a, FilesAndFoldersProps<'a>>) -> Element {
                                 aria_label: "files-share".into(),
                                 text: get_local_text("files.share-files"),
                                 onpress: move |_| {
-                                    if let Some(f) = &cx.props.on_click_share_files {
+                                    if let Some(f) = &props.on_click_share_files {
                                         f.call(vec![Location::Constellation { path: file_path3.clone() }]);
                                     }
                                 },

@@ -65,7 +65,7 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory(cx: &ScopeState, ch: &Coroutine<ChanCmd>) {
+pub fn get_items_from_current_directory( ch: &Coroutine<ChanCmd>) {
     use_future(cx, (), |_| {
         to_owned![ch];
         async move {
@@ -77,7 +77,7 @@ pub fn get_items_from_current_directory(cx: &ScopeState, ch: &Coroutine<ChanCmd>
 
 #[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(
-    cx: &ScopeState,
+    
     are_files_hovering_app: &UseRef<bool>,
 ) {
     use_future(cx, (), |_| {
@@ -192,7 +192,7 @@ pub fn add_files_in_queue_to_upload(
 }
 
 pub fn use_allow_block_folder_nav(
-    cx: &ScopeState,
+    
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
 ) {
     let eval: &UseEvalFn = use_eval(cx);
@@ -476,7 +476,7 @@ pub fn init_coroutine<'a>(
 /// and tries to upload a second file, then leaves and returns again,
 /// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
-    cx: &ScopeState,
+    
     window: &DesktopContext,
     state: &UseSharedState<State>,
     controller: &UseRef<StorageController>,

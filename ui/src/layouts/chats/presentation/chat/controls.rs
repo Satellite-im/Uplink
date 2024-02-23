@@ -37,7 +37,7 @@ enum ControlsCmd {
     },
 }
 
-pub fn get_controls(cx: Scope<ChatProps>) -> Element {
+pub fn get_controls(props: ChatProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let minimal = state.read().ui.metadata.minimal_view;
     let chat_data = use_shared_state::<ChatData>(cx)?;
@@ -127,12 +127,12 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
 
     let show_edit_members = || match chat_data.read().active_chat.conversation_settings() {
         ConversationSettings::Group(group_settings) => {
-            cx.props.is_owner || group_settings.members_can_add_participants()
+            props.is_owner || group_settings.members_can_add_participants()
         }
         ConversationSettings::Direct(_) => false,
     };
     let show_group_settings = || match chat_data.read().active_chat.conversation_settings() {
-        ConversationSettings::Group(_) => cx.props.is_owner,
+        ConversationSettings::Group(_) => props.is_owner,
         ConversationSettings::Direct(_) => false,
     };
     let buttons = cx.render(rsx!(
@@ -140,7 +140,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
             rsx!(Button {
                 icon: Icon::Users,
                 aria_label: "edit-group-members".into(),
-                appearance: if cx.props.show_manage_members.is_some() {
+                appearance: if props.show_manage_members.is_some() {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -149,12 +149,12 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 tooltip: tooltip_builder("friends.manage-group-members", arrow_top),
                 onpress: move |_| {
                     let active = &chat_data.read().active_chat;
-                    if cx.props.show_manage_members.is_some() {
-                        cx.props.show_manage_members.set(None);
+                    if props.show_manage_members.is_some() {
+                        props.show_manage_members.set(None);
                     } else if active.is_initialized {
-                        cx.props.show_manage_members.set(Some(active.id()));
-                        cx.props.show_group_users.set(None);
-                        cx.props.show_group_settings.set(false);
+                        props.show_manage_members.set(Some(active.id()));
+                        props.show_group_users.set(None);
+                        props.show_group_settings.set(false);
                     }
                     show_more.set(false);
                 }
@@ -168,12 +168,12 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
                 text: text_builder("settings"),
                 tooltip: tooltip_builder("settings", arrow_top),
                 onpress: move |_| {
-                    if *cx.props.show_group_settings.get() {
-                        cx.props.show_group_settings.set(false);
+                    if *props.show_group_settings.get() {
+                        props.show_group_settings.set(false);
                     } else if chat_data.read().active_chat.is_initialized {
-                        cx.props.show_group_settings.set(true);
-                        cx.props.show_manage_members.set(None);
-                        cx.props.show_group_users.set(None);
+                        props.show_group_settings.set(true);
+                        props.show_manage_members.set(None);
+                        props.show_group_users.set(None);
                     }
                 }
             })

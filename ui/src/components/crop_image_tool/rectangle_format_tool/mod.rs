@@ -34,8 +34,8 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let large_thumbnail = use_ref(cx, || cx.props.large_thumbnail.clone());
+pub fn CropRectImageModal<'a>(props: Props<'a>) -> Element {
+    let large_thumbnail = use_ref(cx, || props.large_thumbnail.clone());
 
     let image_scale: &UseRef<f32> = use_ref(cx, || 1.0);
     let crop_image = use_state(cx, || true);
@@ -48,7 +48,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     });
 
     if *clicked_button_to_crop.get() {
-        cx.props.on_crop.call(cropped_image_pathbuf.read().clone());
+        props.on_crop.call(cropped_image_pathbuf.read().clone());
         clicked_button_to_crop.set(false);
         crop_image.set(false);
     }
@@ -119,7 +119,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                             appearance: Appearance::DangerAlternative,
                             icon: Shape::XMark,
                             onpress: move |_| {
-                                cx.props.on_cancel.call(());
+                                props.on_cancel.call(());
                                 crop_image.set(false);
                             }
                         },

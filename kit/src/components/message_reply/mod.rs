@@ -48,19 +48,19 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn MessageReply<'a>(props: Props<'a>) -> Element {
     let text = format_text(
-        &cx.props.with_text.clone().unwrap_or_default(),
-        cx.props.markdown.unwrap_or_default(),
-        cx.props.transform_ascii_emojis.unwrap_or_default(),
-        Some((&cx.props.state.read(), &cx.props.chat, true)),
+        &props.with_text.clone().unwrap_or_default(),
+        props.markdown.unwrap_or_default(),
+        props.transform_ascii_emojis.unwrap_or_default(),
+        Some((&props.state.read(), &props.chat, true)),
     );
-    let prefix = cx.props.with_prefix.clone().unwrap_or_default();
-    let loading = cx.props.loading.unwrap_or_default();
-    let remote = cx.props.remote.unwrap_or_default();
-    let remote_message = cx.props.remote_message.unwrap_or_default();
-    let sender_did = cx.props.sender_did.as_ref().cloned();
-    let replier_did = cx.props.replier_did.as_ref().cloned();
+    let prefix = props.with_prefix.clone().unwrap_or_default();
+    let loading = props.loading.unwrap_or_default();
+    let remote = props.remote.unwrap_or_default();
+    let remote_message = props.remote_message.unwrap_or_default();
+    let sender_did = props.sender_did.as_ref().cloned();
+    let replier_did = props.replier_did.as_ref().cloned();
 
     let has_attachments = cx
         .props
@@ -69,7 +69,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         .map(|v| !v.is_empty())
         .unwrap_or(false);
 
-    let attachment_list = cx.props.with_attachments.as_ref().map(|vec| {
+    let attachment_list = props.with_attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
             rsx!(FileEmbed {
@@ -98,10 +98,10 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 )
             },
             aria_label: "message-reply",
-            (cx.props.user_image.is_some() && remote_message).then(|| rsx! (
-                cx.props.user_image.as_ref()
+            (props.user_image.is_some() && remote_message).then(|| rsx! (
+                props.user_image.as_ref()
             )),
-            (cx.props.with_text.is_some() || has_attachments).then(|| rsx! (
+            (props.with_text.is_some() || has_attachments).then(|| rsx! (
                 div {
                     class: "content",
                     (!prefix.is_empty()).then(|| rsx!(
@@ -126,12 +126,12 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     }
                 }
             )),
-            (cx.props.user_image.is_some() && !remote_message).then(|| rsx! (
-                cx.props.user_image.as_ref()
+            (props.user_image.is_some() && !remote_message).then(|| rsx! (
+                props.user_image.as_ref()
             )),
             div {
                 class: "connector",
-                if cx.props.remote.unwrap_or_default() {
+                if props.remote.unwrap_or_default() {
                     "┌"
                 } else {
                     "┐"

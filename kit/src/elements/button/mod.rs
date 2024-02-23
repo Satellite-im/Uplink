@@ -23,12 +23,12 @@ pub struct Props<'a> {
 /// This will be overwritten if the button is disabled.
 pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
     // If the button is disabled, we can short circuit this and just provide the disabled appearance.
-    if let Some(is_disabled) = cx.props.disabled {
+    if let Some(is_disabled) = props.disabled {
         if is_disabled {
             return Appearance::Disabled;
         }
     }
-    cx.props.appearance.unwrap_or(Appearance::Default)
+    props.appearance.unwrap_or(Appearance::Default)
 }
 
 /// Returns a button element generated based on given props.
@@ -49,15 +49,15 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 /// },
 /// ```
 #[allow(non_snake_case)]
-pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let text = cx.props.text.clone().unwrap_or_default();
+pub fn Button<'a>(props: Props<'a>) -> Element {
+    let text = props.text.clone().unwrap_or_default();
     let text2 = text.clone();
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
-    let badge = cx.props.with_badge.clone().unwrap_or_default();
-    let disabled = cx.props.disabled.unwrap_or_default();
+    let aria_label = props.aria_label.clone().unwrap_or_default();
+    let badge = props.with_badge.clone().unwrap_or_default();
+    let disabled = props.disabled.unwrap_or_default();
     let appearance = get_appearance(&cx);
-    let small = cx.props.small.unwrap_or_default();
-    let title = if cx.props.with_title.unwrap_or(true) {
+    let small = props.small.unwrap_or_default();
+    let title = if props.with_title.unwrap_or(true) {
         text.clone()
     } else {
         String::new()
@@ -70,7 +70,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         appearance,
         if disabled { "btn-disabled" } else { "" },
         if text.is_empty() { "no-text" } else { "" },
-        if cx.props.loading.unwrap_or(false) {
+        if props.loading.unwrap_or(false) {
             "progress"
         } else {
             ""
@@ -83,17 +83,17 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 format_args!("btn-wrap {}", if small { "small" } else { "" })
             },
             onmouseenter: move |_| {
-                if cx.props.tooltip.is_some() {
+                if props.tooltip.is_some() {
                      tooltip_visible.set(true);
                 }
             },
             onmouseleave: move |_| {
-                if cx.props.tooltip.is_some() {
+                if props.tooltip.is_some() {
                      tooltip_visible.set(false);
                 }
             },
             if *tooltip_visible.current() {
-                cx.props.tooltip.as_ref().map(|tooltip| {
+                props.tooltip.as_ref().map(|tooltip| {
                     rsx!(
                        tooltip
                     )
@@ -114,18 +114,18 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 class: "{button_class}",
                 // Optionally pass through click events.
                 onclick: move |e| {
-                    if !cx.props.disabled.unwrap_or_default() {
-                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
+                    if !props.disabled.unwrap_or_default() {
+                        let _ = props.onpress.as_ref().map(|f| f.call(e));
                     }
                 },
-                if let Some(loading) = cx.props.loading {
+                if let Some(loading) = props.loading {
                     loading.then(|| rsx!(
                         Loader {
                             spinning: true
                         }
                     ))
                 },
-                if let Some(_icon) = cx.props.icon {
+                if let Some(_icon) = props.icon {
                     rsx!(
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
@@ -134,7 +134,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                                 size: 20,
                                 fill:"currentColor",
                                 icon: _icon,
-                                disabled:  cx.props.disabled.unwrap_or_default(),
+                                disabled:  props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF"
                             },
                         },

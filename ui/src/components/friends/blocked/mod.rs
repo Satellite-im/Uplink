@@ -22,7 +22,7 @@ use warp::{crypto::DID, error::Error, multipass::identity::Relationship};
 use tracing::log;
 
 #[allow(non_snake_case)]
-pub fn BlockedUsers(cx: Scope) -> Element {
+pub fn BlockedUsers() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let block_list = state.read().blocked_fr_identities();
     let unblock_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);

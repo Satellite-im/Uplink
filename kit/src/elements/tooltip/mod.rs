@@ -40,9 +40,9 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn Tooltip(cx: Scope<Props>) -> Element {
-    let arrow_position = cx.props.arrow_position.unwrap_or(ArrowPosition::Bottom);
-    let text = cx.props.text.clone().unwrap_or_default();
+pub fn Tooltip(props: Props) -> Element {
+    let arrow_position = props.arrow_position.unwrap_or(ArrowPosition::Bottom);
+    let text = props.text.clone().unwrap_or_default();
 
     cx.render(rsx! {
         div {

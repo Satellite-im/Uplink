@@ -46,7 +46,7 @@ fn is_supported(unicode_version: UnicodeVersion) -> bool {
 }
 
 #[component(no_case_check)]
-fn build_nav(cx: Scope<'_>) -> Element<'_> {
+fn build_nav(props: '_) -> Element<'_> {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",
@@ -145,7 +145,7 @@ enum Command {
 }
 
 #[component(no_case_check)]
-fn render_selector<'a>(cx: Scope, mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
+fn render_selector<'a>( mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_selector = use_ref(cx, || false);
     let emoji_suggestions = use_state(cx, Vec::new);
@@ -297,7 +297,7 @@ fn render_selector<'a>(cx: Scope, mouse_over_emoji_button: UseRef<bool>, nav: El
 
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
 #[component(no_case_check)]
-fn render_1(cx: Scope, _unused: bool) -> Element {
+fn render_1( _unused: bool) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
@@ -380,7 +380,7 @@ impl Extension for EmojiSelector {
 }
 
 fn select_emoji_to_send(
-    cx: &ScopeState,
+    
     state: &UseSharedState<State>,
     emoji: String,
     ch: &Coroutine<Command>,

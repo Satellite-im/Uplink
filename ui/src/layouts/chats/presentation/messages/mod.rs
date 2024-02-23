@@ -83,7 +83,7 @@ pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File
 
 #[component(no_case_check)]
 pub fn get_messages(
-    cx: Scope,
+    
     quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 ) -> Element {
     log::trace!("get_messages");
@@ -207,13 +207,13 @@ pub struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-pub fn loop_over_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element {
+pub fn loop_over_message_groups<'a>(props: 'a, AllMessageGroupsProps<'a>) -> Element {
     log::trace!("render message groups");
-    cx.render(rsx!(cx.props.groups.iter().map(|_group| {
+    cx.render(rsx!(props.groups.iter().map(|_group| {
         rsx!(render_message_group {
             group: _group,
-            active_chat_id: cx.props.active_chat_id,
-            on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+            active_chat_id: props.active_chat_id,
+            on_context_menu_action: move |e| props.on_context_menu_action.call(e)
         },)
     })))
 }
@@ -226,7 +226,7 @@ struct MessageGroupProps<'a> {
     pending: Option<bool>,
 }
 
-fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element {
+fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let MessageGroupProps {
@@ -234,7 +234,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element {
         active_chat_id: _,
         on_context_menu_action: _,
         pending: _,
-    } = cx.props;
+    } = props;
 
     let messages = &group.messages;
     let last_message_date = messages
@@ -311,10 +311,10 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element {
                 platform: sender.platform().into(),
                 status: sender_status,
                 on_press: move |e| {
-                    cx.props.on_context_menu_action.call((e, sender.to_owned()));
+                    props.on_context_menu_action.call((e, sender.to_owned()));
                 },
                 oncontextmenu: move |e| {
-                    cx.props
+                    props
                         .on_context_menu_action
                         .call((e, sender_clone.to_owned()));
                 }
@@ -324,9 +324,9 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element {
             remote: group.remote,
             children: cx.render(rsx!(wrap_messages_in_context_menu {
                 messages: &group.messages,
-                active_chat_id: cx.props.active_chat_id,
+                active_chat_id: props.active_chat_id,
                 is_remote: group.remote,
-                pending: cx.props.pending.unwrap_or_default()
+                pending: props.pending.unwrap_or_default()
             }))
         },
     ))
@@ -339,7 +339,7 @@ struct MessagesProps<'a> {
     is_remote: bool,
     pending: bool,
 }
-fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element {
+fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
@@ -354,14 +354,14 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
         .enabled_extension(emoji_selector_extension);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-    cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
+    cx.render(rsx!(props.messages.iter().map(|grouped_message| {
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
         // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
         let is_editing = edit_msg
             .get()
-            .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+            .map(|id| !props.is_remote && (id == message.inner.id()))
             .unwrap_or(false);
         let message_key = format!("{}-{:?}", &message.key, is_editing);
         let message_id = format!("{}-{:?}", &message.inner.id(), is_editing);
@@ -369,13 +369,13 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
         let msg_uuid = message.inner.id();
         let conversation_id = message.inner.conversation_id();
 
-        if cx.props.pending {
+        if props.pending {
             return rsx!(render_message {
                 message: grouped_message,
-                is_remote: cx.props.is_remote,
+                is_remote: props.is_remote,
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
-                pending: cx.props.pending
+                pending: props.pending
             });
         }
 
@@ -386,10 +386,10 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
             devmode: state.read().configuration.developer.developer_mode,
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
-                is_remote: cx.props.is_remote,
+                is_remote: props.is_remote,
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
-                pending: cx.props.pending
+                pending: props.pending
             })),
             items: cx.render(rsx!(
                 ContextItem {
@@ -427,7 +427,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                     onpress: move |_| {
                         state
                             .write()
-                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
+                            .mutate(Action::StartReplying(&props.active_chat_id, message));
                     }
                 },
                 ContextItem {
@@ -479,7 +479,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                     icon: Icon::Pencil,
                     aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
-                    should_render: !cx.props.is_remote
+                    should_render: !props.is_remote
                         && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(msg_uuid));
@@ -490,7 +490,7 @@ fn wrap_messages_in_context_menu<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Elemen
                     icon: Icon::Pencil,
                     aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
-                    should_render: !cx.props.is_remote
+                    should_render: !props.is_remote
                         && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
@@ -523,8 +523,8 @@ struct MessageProps<'a> {
     edit_msg: UseState<Option<Uuid>>,
     pending: bool,
 }
-fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
-    //log::trace!("render message {}", &cx.props.message.message.key);
+fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
+    //log::trace!("render message {}", &props.message.message.key);
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
 
@@ -543,11 +543,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
         message_key,
         edit_msg,
         pending: _,
-    } = cx.props;
+    } = props;
     let message = &grouped_message.message;
     let is_editing = edit_msg
         .current()
-        .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+        .map(|id| !props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
 
     let reactions_list: Vec<ReactionAdapter> = message
@@ -623,8 +623,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
                     with_text: other_msg.to_string(),
                     with_attachments: other_msg_attachments.clone(),
                     // This remote should be true only if the reply itself is remove, not the message being replied to.
-                    remote: cx.props.is_remote,
-                    remote_message: cx.props.is_remote,
+                    remote: props.is_remote,
+                    remote_message: props.is_remote,
                     sender_did: sender_did.clone(),
                     replier_did: user_did_2.clone(),
                     markdown: render_markdown,
@@ -643,7 +643,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
                 id: message_key.clone(),
                 key: "{message_key}",
                 editing: is_editing,
-                remote: cx.props.is_remote,
+                remote: props.is_remote,
                 with_text: msg_lines,
                 is_mention: is_mention,
                 reactions: reactions_list,
@@ -657,7 +657,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element {
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
-                pending: cx.props.pending,
+                pending: props.pending,
                 pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
                 parse_markdown: render_markdown,
@@ -697,7 +697,7 @@ pub struct PendingMessagesListenerProps<'a> {
 
 //The component that listens for upload events
 pub fn render_pending_messages_listener<'a>(
-    cx: Scope<'a, PendingMessagesListenerProps>,
+    props: 'a, PendingMessagesListenerProps,
 ) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
@@ -707,7 +707,7 @@ pub fn render_pending_messages_listener<'a>(
     };
     cx.render(rsx!(pending_wrapper {
         msg: chat.pending_outgoing_messages,
-        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+        on_context_menu_action: move |e| props.on_context_menu_action.call(e)
     }))
 }
 
@@ -718,17 +718,17 @@ struct PendingWrapperProps<'a> {
 }
 
 //We need to do it this way due to reference ownership
-fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element {
+fn pending_wrapper<'a>(props: 'a, PendingWrapperProps) -> Element {
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let data = chat_data.read();
     cx.render(rsx!(render_pending_messages {
         pending_outgoing_message: data::pending_group_messages(
-            &cx.props.msg,
+            &props.msg,
             data.active_chat.other_participants(),
             data.active_chat.my_id(),
         ),
         active: data.active_chat.id(),
-        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+        on_context_menu_action: move |e| props.on_context_menu_action.call(e)
     }))
 }
 
@@ -740,13 +740,13 @@ struct PendingMessagesProps<'a> {
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
-fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element {
-    cx.render(rsx!(cx.props.pending_outgoing_message.as_ref().map(
+fn render_pending_messages<'a>(props: 'a, PendingMessagesProps) -> Element {
+    cx.render(rsx!(props.pending_outgoing_message.as_ref().map(
         |group| {
             rsx!(render_message_group {
                 group: group,
-                active_chat_id: cx.props.active,
-                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
+                active_chat_id: props.active,
+                on_context_menu_action: move |e| props.on_context_menu_action.call(e),
                 pending: true
             },)
         }

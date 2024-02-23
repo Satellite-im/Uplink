@@ -64,12 +64,12 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn CallControl(cx: Scope<Props>) -> Element {
+pub fn CallControl(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
     match state.read().ui.call_info.active_call() {
         Some(call) => cx.render(rsx!(ActiveCallControl {
             active_call: call,
-            in_chat: cx.props.in_chat,
+            in_chat: props.in_chat,
             mute_text: get_local_text("remote-controls.mute"),
             unmute_text: get_local_text("remote-controls.unmute"),
             listen_text: get_local_text("remote-controls.listen"),
@@ -80,7 +80,7 @@ pub fn CallControl(cx: Scope<Props>) -> Element {
         None => match state.read().ui.call_info.pending_calls().first() {
             Some(call) => cx.render(rsx!(PendingCallDialog {
                 call: call.clone(),
-                in_chat: cx.props.in_chat,
+                in_chat: props.in_chat,
             })),
             None => cx.render(rsx!(())),
         },
@@ -100,10 +100,10 @@ pub struct ActiveCallProps {
 }
 
 #[allow(non_snake_case)]
-fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
+fn ActiveCallControl(props: ActiveCallProps) -> Element {
     log::trace!("Rendering active call window");
     let state = use_shared_state::<State>(cx)?;
-    let active_call: &ActiveCall = &cx.props.active_call;
+    let active_call: &ActiveCall = &props.active_call;
     let active_call_id = active_call.call.id;
     let active_call_answer_time = active_call.answer_time;
     let scope_id = cx.scope_id();
@@ -310,12 +310,12 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     if state.read().ui.current_layout == Layout::Compose {
         match state.read().get_active_chat() {
             None => {
-                if cx.props.in_chat {
+                if props.in_chat {
                     return cx.render(rsx!(()));
                 }
             }
             Some(c) => {
-                if active_call.call.conversation_id.eq(&c.id) != cx.props.in_chat {
+                if active_call.call.conversation_id.eq(&c.id) != props.in_chat {
                     return cx.render(rsx!(()));
                 }
             }
@@ -342,7 +342,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
     cx.render(rsx!(div {
         id: "remote-controls",
         aria_label: "remote-controls",
-        class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
+        class: format_args!("{}", if props.in_chat {"in-chat"} else {""}),
         (*recording.read()).then(||{
             rsx!(
                 div {
@@ -362,7 +362,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             )
         }),
         div {
-            class: format_args!("call-label {}", if cx.props.in_chat {"in-chat"} else {""}),
+            class: format_args!("call-label {}", if props.in_chat {"in-chat"} else {""}),
             outgoing.then(|| rsx!(Label {
                 text: get_local_text("remote-controls.outgoing-call"),
                 aria_label: "outgoing-call-label".into(),
@@ -372,14 +372,14 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             class: "call-info",
             aria_label: "call-info",
             div {
-                class: format_args!("calling-users {}", if cx.props.in_chat {"in-chat"} else {""}),
+                class: format_args!("calling-users {}", if props.in_chat {"in-chat"} else {""}),
                 if other_participants.is_empty() {
                     rsx!(div {
                         class: "lonely-call",
                         aria_label: "lonely-call",
                         get_local_text("remote-controls.empty")
                     })
-                } else if cx.props.in_chat {
+                } else if props.in_chat {
                     let call_participants: Vec<_> = other_participants
                         .iter()
                         .map(|x| (call.participants_speaking.contains_key(&x.did_key()), call.participants_joined.get(&x.did_key()).cloned(), build_user_from_identity(x)))
@@ -393,7 +393,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                     })
                 }
             }
-            (!cx.props.in_chat).then(||rsx!(
+            (!props.in_chat).then(||rsx!(
                 p {
                     class: "call-name",
                     aria_label: "call-name",
@@ -401,11 +401,11 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 }
             )),
             p {
-                class: format_args!("call-time {}", if cx.props.in_chat {"in-chat"} else {""}),
+                class: format_args!("call-time {}", if props.in_chat {"in-chat"} else {""}),
                 aria_label: "call-time",
                 format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
             },
-            cx.props.in_chat.then(||rsx!(div {
+            props.in_chat.then(||rsx!(div {
                 class: "self-identity",
                 UserImage {
                     platform: self_id.platform,
@@ -424,7 +424,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if call.self_muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
+                        text: if call.self_muted { props.unmute_text.clone() } else { props.mute_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -438,7 +438,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if call.call_silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
+                        text: if call.call_silenced { props.listen_text.clone() } else { props.silence_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -454,7 +454,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Bottom,
-                                text: cx.props.stop_recording_text.clone()
+                                text: props.stop_recording_text.clone()
                         }
                       )),
                    onpress: move |_| {
@@ -469,7 +469,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             tooltip: cx.render(rsx!(
                 Tooltip {
                     arrow_position: ArrowPosition::Bottom,
-                    text: cx.props.start_recording_text.clone()
+                    text: props.start_recording_text.clone()
                 }
             )),
                         onpress: move |_| {
@@ -506,7 +506,7 @@ pub struct PendingCallProps {
 }
 
 #[allow(non_snake_case)]
-fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
+fn PendingCallDialog(props: PendingCallProps) -> Element {
     log::trace!("Rendering pending call window");
     let state = use_shared_state::<State>(cx)?;
     let ch = use_coroutine(cx, |mut rx| {
@@ -558,16 +558,16 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         }
     });
 
-    let call = &cx.props.call;
+    let call = &props.call;
     if state.read().ui.current_layout == Layout::Compose {
         match state.read().get_active_chat() {
             None => {
-                if cx.props.in_chat {
+                if props.in_chat {
                     return cx.render(rsx!(()));
                 }
             }
             Some(c) => {
-                if call.conversation_id.eq(&c.id) != cx.props.in_chat {
+                if call.conversation_id.eq(&c.id) != props.in_chat {
                     return cx.render(rsx!(()));
                 }
             }
@@ -592,7 +592,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         caller: cx.render(rsx!(UserImageGroup {
             participants: build_participants(&participants),
         },)),
-        in_chat: cx.props.in_chat,
+        in_chat: props.in_chat,
         usernames: usernames,
         icon: Icon::PhoneArrowDownLeft,
         description: get_local_text("remote-controls.incoming-call"),
@@ -631,19 +631,19 @@ pub struct CallDialogProps<'a> {
 // todo: remove this
 #[allow(unused)]
 #[allow(non_snake_case)]
-pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element {
-    let with_accept_btn = match cx.props.with_accept_btn.clone() {
+pub fn CallDialog<'a>(props: CallDialogProps<'a>) -> Element {
+    let with_accept_btn = match props.with_accept_btn.clone() {
         Some(w_a_b) => w_a_b,
         None => None,
     };
-    let with_deny_btn = match cx.props.with_deny_btn.clone() {
+    let with_deny_btn = match props.with_deny_btn.clone() {
         Some(w_d_b) => w_d_b,
         None => None,
     };
     cx.render(rsx! (
         div {
-            class:format_args!("call-dialog {}", if cx.props.in_chat {"in-chat"} else {""}),
-            aria_label: format_args!("call-dialog-{}", if cx.props.in_chat {"in-chat"} else {""}),
+            class:format_args!("call-dialog {}", if props.in_chat {"in-chat"} else {""}),
+            aria_label: format_args!("call-dialog-{}", if props.in_chat {"in-chat"} else {""}),
             div {
                 class: "call-information",
                 aria_label: "call-information",
@@ -653,7 +653,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element {
                             class: None,
                             size: 20,
                             fill:"currentColor",
-                            icon: cx.props.icon,
+                            icon: props.icon,
                             disabled: false,
                             disabled_fill: "#9CA3AF"
                         },
@@ -661,18 +661,18 @@ pub fn CallDialog<'a>(cx: Scope<'a, CallDialogProps<'a>>) -> Element {
                 )
                 p {
                     aria_label: "incoming-call",
-                    "{cx.props.description}",
+                    "{props.description}",
                 },
             },
             div {
                 aria_label: "calling-users",
                 class: "calling-users",
-                &cx.props.caller,
+                &props.caller,
             },
-            (!cx.props.in_chat).then(||rsx!(div {
+            (!props.in_chat).then(||rsx!(div {
                 class: "users",
                 class: "call-users",
-                "{cx.props.usernames}",
+                "{props.usernames}",
             }))
             div {
                 aria_label: "controls",
@@ -690,7 +690,7 @@ pub struct CallUserImageProps {
 }
 
 #[allow(non_snake_case)]
-pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
+pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
     let eval = use_eval(cx);
     let amount = use_state(cx, || 3);
     let id = use_state(cx, Uuid::new_v4);
@@ -717,10 +717,10 @@ pub fn CallUserImageGroup(cx: Scope<CallUserImageProps>) -> Element {
         }
     });
     let visible_amount = *amount.get() as usize;
-    let (visible, context) = if visible_amount >= cx.props.participants.len() {
-        (cx.props.participants.clone(), None)
+    let (visible, context) = if visible_amount >= props.participants.len() {
+        (props.participants.clone(), None)
     } else {
-        let (visible, context) = cx.props.participants.split_at(visible_amount.max(3) - 1);
+        let (visible, context) = props.participants.split_at(visible_amount.max(3) - 1);
         (visible.to_vec(), Some(context.to_vec()))
     };
 

@@ -44,30 +44,30 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Friend<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let relationship = cx.props.relationship;
-    let status_message = cx.props.status_message.clone();
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+    let relationship = props.relationship;
+    let status_message = props.status_message.clone();
+    let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
-        || cx.props.block_button_disabled.unwrap_or(false)
-        || cx.props.remove_button_disabled.unwrap_or(false);
+    let any_button_disabled = props.accept_button_disabled.unwrap_or(false)
+        || props.block_button_disabled.unwrap_or(false)
+        || props.remove_button_disabled.unwrap_or(false);
 
     cx.render(rsx!(
         div {
             class: "friend",
             aria_label: "{aria_label}",
-            &cx.props.user_image,
+            &props.user_image,
             div {
                 class: "request-info",
                 aria_label: "Friend Info",
                 p {
                     aria_label: "friend-username",
-                    "{cx.props.username}",
+                    "{props.username}",
                     (!state.read().ui.is_minimal_view()).then(|| rsx!(
                         span {
-                            "#{cx.props.suffix}"
+                            "#{props.suffix}"
                         }
                     )),
                 },
@@ -94,26 +94,26 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             },
             div {
                 class: "request-controls",
-                cx.props.onaccept.is_some().then(|| rsx!(
+                props.onaccept.is_some().then(|| rsx!(
                     Button {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
                         aria_label: "Accept Friend".into(),
-                        loading:  cx.props.accept_button_disabled.unwrap_or(false),
+                        loading:  props.accept_button_disabled.unwrap_or(false),
                         disabled:any_button_disabled,
-                        onpress: move |_| match &cx.props.onaccept {
+                        onpress: move |_| match &props.onaccept {
                             Some(f) => f.call(()),
                             None    => {},
                         }
                     }
                 )),
-                cx.props.onchat.is_some().then(|| rsx! (
+                props.onchat.is_some().then(|| rsx! (
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
                         aria_label: "Chat With Friend".into(),
                         disabled: any_button_disabled,
                         text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
-                        onpress: move |_| match &cx.props.onchat {
+                        onpress: move |_| match &props.onchat {
                             Some(f) => f.call(()),
                             None    => {},
                         }
@@ -122,11 +122,11 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 Button {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
-                    loading:  cx.props.remove_button_disabled.unwrap_or(false),
+                    loading:  props.remove_button_disabled.unwrap_or(false),
                     disabled: any_button_disabled,
                     onpress: move |_| {
                         // note that the blocked list uses the onremove callback to unblock the user.yes, it's kind of a hack
-                        match &cx.props.onremove {
+                        match &props.onremove {
                             Some(f) => f.call(()),
                             None => {},
                         }
@@ -134,16 +134,16 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     aria_label: "Remove or Deny Friend".into(),
                     tooltip: cx.render(rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
-                        text: if cx.props.relationship.blocked() { get_local_text("friends.unblock") } else if cx.props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
+                        text: if props.relationship.blocked() { get_local_text("friends.unblock") } else if props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
                     })),
                 },
-                (cx.props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
+                (props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
-                        loading:  cx.props.block_button_disabled.unwrap_or(false),
+                        loading:  props.block_button_disabled.unwrap_or(false),
                         disabled: any_button_disabled,
-                        onpress: move |_| match &cx.props.onblock {
+                        onpress: move |_| match &props.onblock {
                             Some(f) => f.call(()),
                             None    => {},
                         },
@@ -162,7 +162,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 // todo: remove this
 #[allow(unused)]
 #[allow(non_snake_case)]
-pub fn SkeletalFriend(cx: Scope) -> Element {
+pub fn SkeletalFriend() -> Element {
     cx.render(rsx!(
         div {
             class: "skeletal-friend",

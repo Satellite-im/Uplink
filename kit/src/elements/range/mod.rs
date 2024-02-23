@@ -22,18 +22,18 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let internal_state = use_state(cx, || cx.props.initial_value);
-    use_effect(cx, &cx.props.initial_value, |val| {
+pub fn Range<'a>(props: Props<'a>) -> Element {
+    let internal_state = use_state(cx, || props.initial_value);
+    use_effect(cx, &props.initial_value, |val| {
         to_owned![internal_state];
         async move {
             internal_state.set(val);
         }
     });
-    let step = cx.props.step.unwrap_or(1_f32);
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+    let step = props.step.unwrap_or(1_f32);
+    let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    let with_buttons = cx.props.with_buttons.unwrap_or_default();
+    let with_buttons = props.with_buttons.unwrap_or_default();
 
     cx.render(rsx!(
         div {
@@ -43,22 +43,22 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 rsx!(Button {
                     icon: Icon::Minus,
                     appearance: Appearance::PrimaryAlternative,
-                    disabled: cx.props.disabled.unwrap_or_default(),
+                    disabled: props.disabled.unwrap_or_default(),
                     aria_label: "decrease_range_value_button".into(),
                     onpress: move |_| {
-                        if internal_state.get() > &cx.props.min {
+                        if internal_state.get() > &props.min {
                             let value: f32 = internal_state.get() - step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            cx.props.onchange.call(*internal_state.get());
+                            props.onchange.call(*internal_state.get());
                         }
                     }
                 })
             } else {
                 rsx! {
-                    cx.props.icon_left.is_some().then(|| rsx! {
+                    props.icon_left.is_some().then(|| rsx! {
                         IconElement {
-                            icon: cx.props.icon_left.unwrap_or(Icon::NoSymbol),
+                            icon: props.icon_left.unwrap_or(Icon::NoSymbol),
                             size: 16,
                         }
                     }),
@@ -66,15 +66,15 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             }
             input {
                 "type": "range",
-                min: "{cx.props.min}",
-                max: "{cx.props.max}",
+                min: "{props.min}",
+                max: "{props.max}",
                 aria_label: "range-input",
                 step: "{step}",
                 value: "{internal_state}",
-                disabled: cx.props.disabled.unwrap_or_default(),
+                disabled: props.disabled.unwrap_or_default(),
                 oninput: move |event| {
                     internal_state.set(event.value.parse().unwrap_or_default());
-                    cx.props.onchange.call(event.value.parse().unwrap_or_default());
+                    props.onchange.call(event.value.parse().unwrap_or_default());
                 },
             },
             if with_buttons {
@@ -83,25 +83,25 @@ pub fn Range<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     appearance: Appearance::PrimaryAlternative,
                     aria_label: "increase_range_value_button".into(),
                     onpress: move |_| {
-                        if internal_state.get() < &cx.props.max {
+                        if internal_state.get() < &props.max {
                             let value: f32 = internal_state.get() + step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            cx.props.onchange.call(*internal_state.get());
+                            props.onchange.call(*internal_state.get());
                         }
                     }
                 })
             } else {
                 rsx! {
-                    cx.props.icon_right.is_some().then(|| rsx! {
+                    props.icon_right.is_some().then(|| rsx! {
                         IconElement {
-                            icon: cx.props.icon_right.unwrap_or(Icon::NoSymbol),
+                            icon: props.icon_right.unwrap_or(Icon::NoSymbol),
                             size: 16,
                         }
                     })
                 }
             }
-            (!cx.props.no_num.unwrap_or_default()).then(||rsx!(
+            (!props.no_num.unwrap_or_default()).then(||rsx!(
                 p {
                     aria_label: "range-value",
                     class: "range-value",

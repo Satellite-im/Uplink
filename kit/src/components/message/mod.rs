@@ -175,11 +175,11 @@ fn wrap_links_with_a_tags(text: &str) -> (String, Vec<String>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Message<'a>(props: Props<'a>) -> Element {
     //  log::trace!("render Message");
-    let loading = cx.props.loading.unwrap_or_default();
-    let is_remote = cx.props.remote.unwrap_or_default();
-    let order = cx.props.order.unwrap_or(Order::Last);
+    let loading = props.loading.unwrap_or_default();
+    let is_remote = props.remote.unwrap_or_default();
+    let order = props.order.unwrap_or(Order::Last);
 
     // note: the class "remote" will display the reaction at flex-start, which starts at the bottom left corner of the message.
     // omitting the class will display the reactions starting from the bottom right corner
@@ -195,7 +195,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 
     // todo: pick an icon based on the file extension
     // there's some weirdness here to avoid more nesting. this should make the code easier to read overall
-    let attachment_list = cx.props.attachments.as_ref().map(|vec| {
+    let attachment_list = props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
             rsx!(FileEmbed {
@@ -220,7 +220,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         })
     });
 
-    let pending_attachment_list = cx.props.attachments_pending_uploads.as_ref().map(|vec| {
+    let pending_attachment_list = props.attachments_pending_uploads.as_ref().map(|vec| {
         vec.iter().map(|prog| {
             let file = progress_file(prog);
             rsx!(FileEmbed {
@@ -237,7 +237,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 
     let loading_class = loading.then_some("loading").unwrap_or_default();
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
-    let mention_class = cx.props.is_mention.then_some("mention").unwrap_or_default();
+    let mention_class = props.is_mention.then_some("mention").unwrap_or_default();
     let order_class = order.to_string();
     let msg_pending_class = cx
         .props
@@ -246,7 +246,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         .unwrap_or_default();
 
     cx.render(rsx! (
-        cx.props.pinned.then(|| {
+        props.pinned.then(|| {
             rsx!(div {
                 class: "pin-indicator",
                 aria_label: "pin-indicator",
@@ -278,38 +278,38 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 )
             },
             white_space: "pre-wrap",
-            (cx.props.with_content.is_some()).then(|| rsx! (
+            (props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
-                    cx.props.with_content.as_ref(),
+                    props.with_content.as_ref(),
                 },
             )),
-            (cx.props.with_text.is_some() && cx.props.editing).then(||
+            (props.with_text.is_some() && props.editing).then(||
                 rsx! (
                     p {
                         class: "text",
                         aria_label: "message-text",
                         rsx! (
                             EditMsg {
-                                id: cx.props.id.clone(),
-                                text: cx.props.with_text.clone().unwrap_or_default(),
+                                id: props.id.clone(),
+                                text: props.with_text.clone().unwrap_or_default(),
                                 on_enter: move |update| {
-                                    cx.props.on_edit.call(update);
+                                    props.on_edit.call(update);
                                 }
                             }
                         )
                     }
                 )
             ),
-            (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
+            (props.with_text.is_some() && !props.editing).then(|| rsx!(
                 ChatText {
-                    text: cx.props.with_text.as_ref().cloned().unwrap_or_default(),
+                    text: props.with_text.as_ref().cloned().unwrap_or_default(),
                     remote: is_remote,
-                    pending: cx.props.pending,
-                    markdown: cx.props.parse_markdown,
-                    state: cx.props.state,
-                    chat: cx.props.chat,
-                    ascii_emoji: cx.props.transform_ascii_emojis,
+                    pending: props.pending,
+                    markdown: props.parse_markdown,
+                    state: props.state,
+                    chat: props.chat,
+                    ascii_emoji: props.transform_ascii_emojis,
                 }
             )),
             has_attachments.then(|| {
@@ -329,7 +329,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         div {
             class: "{reactions_class}",
             aria_label: "message-reaction-container",
-            cx.props.reactions.iter().map(|reaction| {
+            props.reactions.iter().map(|reaction| {
                 let reaction_count = reaction.reaction_count;
                 let emoji = &reaction.emoji;
                 let alt = &reaction.alt;
@@ -350,7 +350,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                             )
                         },
                         onclick: move |_| {
-                            cx.props.on_click_reaction.call(emoji.clone());
+                            props.on_click_reaction.call(emoji.clone());
                         },
                         "{emoji} {reaction_count}"
                     }
@@ -368,20 +368,20 @@ struct EditProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element {
+fn EditMsg<'a>(props: EditProps<'a>) -> Element {
     log::trace!("rendering EditMsg");
 
     cx.render(rsx!(textarea::InputRich {
-        id: cx.props.id.clone(),
+        id: props.id.clone(),
         aria_label: "edit-message-input".into(),
         ignore_focus: false,
-        value: cx.props.text.clone(),
+        value: props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
-                cx.props.on_enter.call(s);
+                props.on_enter.call(s);
             } else {
-                cx.props.on_enter.call(cx.props.text.clone());
+                props.on_enter.call(props.text.clone());
             }
         }
     }))
@@ -399,23 +399,23 @@ pub struct ChatMessageProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element {
+pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
-    if cx.props.text.len() > 2 {
-        if let Ok(id) = DID::from_str(&cx.props.text) {
+    if props.text.len() > 2 {
+        if let Ok(id) = DID::from_str(&props.text) {
             return cx.render(rsx!(IdentityMessage { id: id }));
         }
     }
 
     let formatted_text = format_text(
-        &cx.props.text,
-        cx.props.markdown,
-        cx.props.ascii_emoji,
-        Some((&cx.props.state.read(), &cx.props.chat, false)),
+        &props.text,
+        props.markdown,
+        props.ascii_emoji,
+        Some((&props.state.read(), &props.chat, false)),
     );
     let (formatted_text, links) = wrap_links_with_a_tags(&formatted_text);
 
-    let text_type_class = if cx.props.pending {
+    let text_type_class = if props.pending {
         "pending-text"
     } else {
         "text"
@@ -432,7 +432,7 @@ pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element {
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
                     link: l.to_string(),
-                    remote: cx.props.remote
+                    remote: props.remote
                 })
             ))
         }
@@ -676,7 +676,7 @@ pub struct IdentityMessageProps {
 }
 
 #[allow(non_snake_case)]
-pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
+pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let identity = use_state(cx, || None);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<IdentityCmd>| {
@@ -737,7 +737,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
             }
         }
     });
-    use_effect(cx, &cx.props.id, |id| {
+    use_effect(cx, &props.id, |id| {
         to_owned![ch];
         async move {
             ch.send(IdentityCmd::GetIdentity(id));
@@ -900,7 +900,7 @@ pub fn IdentityMessage(cx: Scope<IdentityMessageProps>) -> Element {
                         p {
                             class: "text",
                             aria_label: "unknown-user-did-value",
-                            cx.props.id.to_string()
+                            props.id.to_string()
                         }
                     }
                 }

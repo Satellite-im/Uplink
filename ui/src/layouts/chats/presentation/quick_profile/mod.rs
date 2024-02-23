@@ -56,15 +56,15 @@ enum QuickProfileCmd {
 
 // Create a quick profile context menu
 #[allow(non_snake_case)]
-pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element {
+pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let settings_page = use_shared_state::<Page>(cx)?;
-    let id = cx.props.id;
+    let id = props.id;
     let share_did = use_state(cx, || None);
 
     let identity = state
         .read()
-        .get_identity(cx.props.did_key)
+        .get_identity(props.did_key)
         .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
@@ -84,7 +84,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element 
     };
 
     let eval = use_eval(cx);
-    use_future(cx, cx.props.update_script, |update_script| {
+    use_future(cx, props.update_script, |update_script| {
         to_owned![eval];
         async move {
             if !update_script.is_empty() {
@@ -501,6 +501,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element 
                 })
             }
         }),
-        &cx.props.children
+        &props.children
     }}))
 }

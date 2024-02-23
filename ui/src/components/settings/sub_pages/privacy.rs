@@ -8,7 +8,7 @@ use tracing::log;
 use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
-pub fn PrivacySettings(cx: Scope) -> Element {
+pub fn PrivacySettings() -> Element {
     log::trace!("Privacy settings page rendered.");
     cx.render(rsx!(
         div {

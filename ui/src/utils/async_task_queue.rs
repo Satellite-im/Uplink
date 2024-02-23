@@ -61,7 +61,7 @@ impl<T> AsyncRef<T> {
 /// Create a handler for an async queue
 /// Everytime a value gets added to the queue the future will be spawned when it rerenders
 pub fn async_queue<T: 'static + Send, Fut>(
-    cx: &ScopeState,
+    
     fut: impl Fn(T) -> Fut,
 ) -> &UseRef<AsyncRef<T>>
 where
@@ -78,7 +78,7 @@ where
 }
 
 pub fn chat_upload_stream_handler(
-    cx: &ScopeState,
+    
 ) -> &UseRef<
     AsyncRef<(
         Uuid,
@@ -129,7 +129,7 @@ pub fn chat_upload_stream_handler(
 }
 
 pub fn download_stream_handler(
-    cx: &ScopeState,
+    
 ) -> &UseRef<
     AsyncRef<(
         warp::constellation::ConstellationProgressStream,

@@ -51,7 +51,7 @@ impl UnlockError {
 
 // todo: go to the auth page if no account has been created
 #[component]
-pub fn Layout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering login entry point");
     let validation_failure: &UseState<Option<UnlockError>> =
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.

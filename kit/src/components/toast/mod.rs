@@ -28,23 +28,23 @@ pub struct Props<'a> {
 /// Generates the optional icon providing a fallback.
 /// If there is no icon provided, the toast should not call this.
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
-    match &cx.props.icon {
+    match &props.icon {
         Some(icon) => icon.to_owned(),
         None => Icon::QuestionMarkCircle,
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let content = cx.props.with_content.clone().unwrap_or_default();
-    let title = cx.props.with_title.clone().unwrap_or_default();
+pub fn Toast<'a>(props: Props<'a>) -> Element {
+    let content = props.with_content.clone().unwrap_or_default();
+    let title = props.with_title.clone().unwrap_or_default();
 
     cx.render(rsx!(
         div {
             class: "toast",
             aria_label: "Toast Notification",
-            onmouseover: move |_| cx.props.on_hover.call(cx.props.id),
-            (cx.props.icon.is_some()).then(|| rsx!(
+            onmouseover: move |_| props.on_hover.call(props.id),
+            (props.icon.is_some()).then(|| rsx!(
                 span {
                     class: "toast-icon",
                     IconElement {
@@ -66,7 +66,7 @@ pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             Button {
                 icon: Icon::XMark,
                 appearance: Appearance::Secondary,
-                onpress: move |_| cx.props.on_close.call(cx.props.id),
+                onpress: move |_| props.on_close.call(props.id),
                 aria_label: "close-toast".into(),
             }
         }

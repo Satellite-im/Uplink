@@ -51,7 +51,7 @@ pub struct ShortCutProps<'a> {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element {
+pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }
@@ -66,7 +66,7 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element {
     };
 
     if !files_local_path_to_upload.read().is_empty() {
-        cx.props
+        props
             .on_paste
             .call(files_local_path_to_upload.read().clone());
         *files_local_path_to_upload.write_silent() = Vec::new();

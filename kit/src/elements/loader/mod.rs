@@ -11,14 +11,14 @@ pub struct Props {
 }
 
 pub fn is_large(cx: &Scope<Props>) -> bool {
-    if let Some(f) = cx.props.large.as_ref() {
+    if let Some(f) = props.large.as_ref() {
         return *f;
     }
     false
 }
 
 #[allow(non_snake_case)]
-pub fn Loader(cx: Scope<Props>) -> Element {
+pub fn Loader(props: Props) -> Element {
     cx.render(rsx!(
     div {
         class: if is_large(&cx) { "loader large" } else { "loader" },

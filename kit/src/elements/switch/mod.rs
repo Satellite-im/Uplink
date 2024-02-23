@@ -15,7 +15,7 @@ pub struct Props<'a> {
 
 /// Tells the parent the switch was interacted with.
 pub fn emit(cx: &Scope<Props>, state: bool) {
-    match &cx.props.onflipped {
+    match &props.onflipped {
         Some(f) => f.call(state),
         None => {}
     }
@@ -23,16 +23,16 @@ pub fn emit(cx: &Scope<Props>, state: bool) {
 
 /// Determines the default state
 pub fn default_state(cx: &Scope<Props>) -> bool {
-    match &cx.props.active {
+    match &props.active {
         Some(active) => *active,
         None => false,
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element {
+pub fn Switch<'a>(props: Props) -> Element {
     let checked_state = default_state(&cx);
-    let disabled = cx.props.disabled.unwrap_or_default();
+    let disabled = props.disabled.unwrap_or_default();
 
     cx.render(rsx! {
         label {

@@ -16,8 +16,8 @@ pub struct SectionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element {
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
+    let aria_label = props.aria_label.clone().unwrap_or_default();
     let no_border = cx
         .props
         .no_border
@@ -32,17 +32,17 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element {
                 class: "settings-info",
                 aria_label: "settings-info",
                 Label {
-                    text: cx.props.section_label.clone(),
+                    text: props.section_label.clone(),
                 },
                 p {
-                    "{cx.props.section_description}"
+                    "{props.section_description}"
                 }
             },
-            cx.props.children.is_some().then(|| rsx!(
+            props.children.is_some().then(|| rsx!(
                 div {
                     class: "settings-control",
                     aria_label: "settings-control",
-                    &cx.props.children
+                    &props.children
                 }
             ))
         }
@@ -55,17 +55,17 @@ pub struct SectionSimpleProps<'a> {
     children: Element,
 }
 #[allow(non_snake_case)]
-pub fn SettingSectionSimple<'a>(cx: Scope<'a, SectionSimpleProps<'a>>) -> Element {
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
+    let aria_label = props.aria_label.clone().unwrap_or_default();
     cx.render(rsx!(
         div {
             class: "settings-section simple disable-select",
             aria_label: "{aria_label}",
-            cx.props.children.is_some().then(|| rsx!(
+            props.children.is_some().then(|| rsx!(
                 div {
                     class: "settings-control",
                     aria_label: "settings-control",
-                    &cx.props.children
+                    &props.children
                 }
             ))
         }
@@ -81,7 +81,7 @@ pub struct ExtensionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ExtensionSetting<'a>(cx: Scope<'a, ExtensionProps<'a>>) -> Element {
+pub fn ExtensionSetting<'a>(props: ExtensionProps<'a>) -> Element {
     cx.render(rsx!(
         div {
             class: "extension-setting",
@@ -96,22 +96,22 @@ pub fn ExtensionSetting<'a>(cx: Scope<'a, ExtensionProps<'a>>) -> Element {
                     p {
                         aria_label: "extension-setting-title",
                         class: "title",
-                        "{cx.props.title}"
+                        "{props.title}"
                     },
                     Label {
                         aria_label: "extension-setting-author".into(),
-                        text: cx.props.author.clone(),
+                        text: props.author.clone(),
                     }
                 },
                 div {
                     class: "control",
-                    &cx.props.children
+                    &props.children
                 }
             },
             p {
                 class: "description",
                 aria_label: "extension-setting-description",
-                "{cx.props.description}"
+                "{props.description}"
             }
         }
     ))

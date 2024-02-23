@@ -9,7 +9,7 @@ use tracing::log;
 use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
-pub fn Messages(cx: Scope) -> Element {
+pub fn Messages() -> Element {
     log::trace!("Messages settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(

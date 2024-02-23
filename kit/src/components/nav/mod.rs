@@ -51,7 +51,7 @@ pub struct Props<'a> {
 
 /// Tells the parent the nav was interacted with.
 pub fn emit(cx: &Scope<Props>, to: &To) {
-    match &cx.props.onnavigate {
+    match &props.onnavigate {
         Some(f) => f.call(to.to_owned()),
         None => {}
     }
@@ -73,7 +73,7 @@ pub fn get_badge(route: &Route) -> String {
 
 /// Gets the active route, or returns a void one
 pub fn get_active(cx: &Scope<Props>) -> To {
-    cx.props.active.unwrap_or("!void")
+    props.active.unwrap_or("!void")
 }
 
 /// Returns a nav component generated based on given props.
@@ -100,10 +100,10 @@ pub fn get_active(cx: &Scope<Props>) -> To {
 /// )
 /// ```
 #[allow(non_snake_case)]
-pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
     let active = use_state(cx, || get_active(&cx));
-    let bubble = cx.props.bubble.unwrap_or_default();
-    let tooltip_direction = cx.props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
+    let bubble = props.bubble.unwrap_or_default();
+    let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
     // For some reason if you dont do this the first render will not have a context menu
     let uuid = use_ref(cx, || Uuid::new_v4().to_string());
     cx.render(rsx!(
@@ -112,14 +112,14 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             class: {
                 format_args!("nav {}", if bubble { "bubble" } else { "" })
             },
-            cx.props.routes.iter().map(|route| {
+            props.routes.iter().map(|route| {
                 let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
                 let name2: String = name.to_lowercase();
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
-                let tooltip = if cx.props.bubble.is_some() {
+                let tooltip = if props.bubble.is_some() {
                     cx.render(rsx!(""))
                 } else {
                     cx.render(rsx!(Tooltip {

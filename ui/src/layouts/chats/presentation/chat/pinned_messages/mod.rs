@@ -45,7 +45,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
+pub fn PinnedMessages(props: '_, Props) -> Element<'_> {
     log::trace!("rendering pinned_messages");
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
@@ -162,11 +162,11 @@ pub fn PinnedMessages(cx: Scope<'_, Props>) -> Element<'_> {
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
-                            ch.send(ChannelCommand::RemovePinnedMessage{ conversation_id: *conv, message_id: msg.id(), show_pinned: cx.props.show_pinned.clone() })
+                            ch.send(ChannelCommand::RemovePinnedMessage{ conversation_id: *conv, message_id: msg.id(), show_pinned: props.show_pinned.clone() })
                         },
                         time: time,
                         onclick: move |_| {
-                            ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date, show_pinned: cx.props.show_pinned.clone()});
+                            ch.send(ChannelCommand::GoToPinnedMessage{conversation_id, message_id, message_date, show_pinned: props.show_pinned.clone()});
                         }
                     },
      )
@@ -188,9 +188,9 @@ pub struct PinnedMessageProp<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
+pub fn PinnedMessage<'a>(props: 'a, PinnedMessageProp<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let message = &cx.props.message;
+    let message = &props.message;
     let attachments = message.attachments();
 
     let attachment_list = attachments.iter().map(|file| {
@@ -212,7 +212,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
     cx.render(rsx!(div {
             class: "pinned-message-wrap",
             aria_label: "pinned-message-wrap",
-            cx.props.sender.as_ref().map(|sender| {
+            props.sender.as_ref().map(|sender| {
                 rsx!(UserImage {
                     image: sender.profile_picture(),
                     platform: sender.platform().into(),
@@ -228,7 +228,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
                         class: "pinned-sender-container",
                         div {
                             class: "full-flex",
-                            cx.props.sender.as_ref().map(|sender| {
+                            props.sender.as_ref().map(|sender| {
                                 rsx!(
                                     p {
                                         class: "ellipsis-overflow",
@@ -240,7 +240,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
                             p {
                                 class: "pinned-sender-time",
                                 aria_label: "pinned-time",
-                                "{cx.props.time}"
+                                "{props.time}"
                             }
                         }
                         div {
@@ -250,7 +250,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
                                 class: "pinned-buttons",
                                 aria_label: "pin-button-go-to",
                                 onclick: move |_| {
-                                    cx.props.onclick.call(());
+                                    props.onclick.call(());
                                 },
                                 get_local_text("messages.pin-button-goto")
                             },
@@ -258,7 +258,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
                                 class: "pinned-buttons",
                                 aria_label: "pin-button-unpin",
                                 onclick: move |e| {
-                                    cx.props.onremove.call((e, cx.props.message.clone()));
+                                    props.onremove.call((e, props.message.clone()));
                                 },
                                 get_local_text("messages.pin-button-unpin"),
                             }
@@ -269,7 +269,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element {
                         remote: true,
                         pending: false,
                         state: &state,
-                        chat: cx.props.chat,
+                        chat: props.chat,
                         markdown: state.read().ui.should_transform_markdown_text(),
                         ascii_emoji: state.read().ui.should_transform_ascii_emojis(),
                     }

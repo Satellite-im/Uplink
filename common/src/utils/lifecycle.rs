@@ -8,7 +8,7 @@ pub struct LifeCycle<D: FnOnce()> {
 /// when the component is mounted
 /// and when the component is unmounted
 pub fn use_component_lifecycle<C: FnOnce() + 'static, D: FnOnce() + 'static>(
-    cx: &ScopeState,
+    
     create: C,
     destroy: D,
 ) -> &LifeCycle<D> {

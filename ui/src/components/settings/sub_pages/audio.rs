@@ -31,7 +31,7 @@ enum AudioCmd {
 }
 
 #[allow(non_snake_case)]
-pub fn AudioSettings(cx: Scope) -> Element {
+pub fn AudioSettings() -> Element {
     log::trace!("Audio settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
     let input_devices = use_ref(cx, Vec::new);
@@ -422,13 +422,13 @@ pub struct VolumeIndicatorProps {
     volume: UseRef<u8>,
 }
 
-pub fn VolumeIndicator(cx: Scope<VolumeIndicatorProps>) -> Element {
+pub fn VolumeIndicator(props: VolumeIndicatorProps) -> Element {
     cx.render(rsx!(div{
         class: "volume-indicator-wrap",
         div {
             class: "volume-indicator volume-indicator-overlay",
             z_index: 2,
-            width: format_args!("{}%", 100 - *cx.props.volume.read())
+            width: format_args!("{}%", 100 - *props.volume.read())
         },
         div {
             class: "volume-indicator",

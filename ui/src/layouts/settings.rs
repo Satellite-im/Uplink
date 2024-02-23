@@ -27,7 +27,7 @@ use common::state::{ui, Action, State};
 use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
-pub fn SettingsLayout(cx: Scope) -> Element {
+pub fn SettingsLayout() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_shared_state::<Page>(cx)?;
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();

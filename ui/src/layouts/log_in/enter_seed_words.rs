@@ -35,7 +35,7 @@ struct Cmd {
 
 // styles for this layout are in layouts/style.scss
 #[component]
-pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
+pub fn Layout( pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
     let state = use_ref(cx, State::load);
     let loading = use_state(cx, || false);
     let input = use_ref(cx, String::new);

@@ -42,8 +42,8 @@ pub struct KeybindProps {
 }
 
 #[allow(non_snake_case)]
-pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
-    let keys_rendered = cx.props.keys.iter().enumerate().map(|(idx, key)| {
+pub fn Keybind(props: KeybindProps) -> Element {
+    let keys_rendered = props.keys.iter().enumerate().map(|(idx, key)| {
         rsx!(div {
             class: "keybind-key",
             aria_label: "keybind-key",
@@ -53,7 +53,7 @@ pub fn Keybind(cx: Scope<KeybindProps>) -> Element {
                 "{key.to_uppercase()}",
             }
         },
-        if idx != cx.props.keys.len() - 1 {
+        if idx != props.keys.len() - 1 {
             rsx!(div {
                 class: "keybind-separator",
                 aria_label: "keybind-separator",
@@ -88,15 +88,15 @@ pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, S
     instances > 1
 }
 
-pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
+pub fn KeybindSection(props: KeybindSectionProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let keybind_section_id = cx.props.id.clone();
+    let keybind_section_id = props.id.clone();
     let is_recording = use_state(cx, || false);
     let update_keybind = use_ref(cx, || None);
-    let system_shortcut = Shortcut::get_system_shortcut(state, cx.props.shortcut.clone());
+    let system_shortcut = Shortcut::get_system_shortcut(state, props.shortcut.clone());
     let new_keybind_has_one_key = use_ref(cx, || false);
     let new_keybind_has_at_least_one_modifier = use_ref(cx, || false);
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+    let aria_label = props.aria_label.clone().unwrap_or_default();
 
     if update_keybind.read().is_some() && !is_recording.get() {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
@@ -104,9 +104,9 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             .write_silent()
             .settings
             .keybinds
-            .retain(|(gs, _)| *gs != cx.props.shortcut);
+            .retain(|(gs, _)| *gs != props.shortcut);
         state.write().settings.keybinds.push((
-            cx.props.shortcut.clone(),
+            props.shortcut.clone(),
             Shortcut {
                 keys,
                 modifiers,
@@ -120,7 +120,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .props
         .bindings
         .iter()
-        .find(|(gs, _)| *gs == cx.props.shortcut)
+        .find(|(gs, _)| *gs == props.shortcut)
         .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
         .unwrap_or_default();
 
@@ -128,7 +128,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         .props
         .bindings
         .iter()
-        .find(|(gs, _)| *gs == cx.props.shortcut)
+        .find(|(gs, _)| *gs == props.shortcut)
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
@@ -159,7 +159,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
         state.write().settings.is_recording_new_keybind = true;
     }
 
-    let has_conflicts = check_for_conflicts(sc, cx.props.bindings.clone());
+    let has_conflicts = check_for_conflicts(sc, props.bindings.clone());
 
     if has_conflicts {
         keybind_class.push_str(" conflicting");
@@ -179,7 +179,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
             div {
                 aria_label: "keybind-section-label",
                 class: "keybind-section-label",
-                "{cx.props.section_label}"
+                "{props.section_label}"
             },
             div {
                 class: "{keybind_class}",
@@ -245,7 +245,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
                 aria_label: "reset-single-keybind-button".into(),
                 icon: Icon::ArrowUturnDown,
                 onpress: move |_| {
-                    let (keys, modifiers) = get_keycode_and_modifier_from_a_shortcut(cx.props.shortcut.clone());
+                    let (keys, modifiers) = get_keycode_and_modifier_from_a_shortcut(props.shortcut.clone());
                     *update_keybind.write() = Some((keys, modifiers));
 
                 },
@@ -262,7 +262,7 @@ pub fn KeybindSection(cx: Scope<KeybindSectionProps>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn KeybindSettings(cx: Scope) -> Element {
+pub fn KeybindSettings() -> Element {
     let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
     let bindings = state.read().settings.keybinds.clone();
     let state2 = state.clone();

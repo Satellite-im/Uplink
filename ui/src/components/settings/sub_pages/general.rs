@@ -16,7 +16,7 @@ use crate::components::settings::{SettingSection, SettingSectionSimple};
 use crate::utils::get_font_sizes::FONT_SIZE_OPTIONS;
 
 #[allow(non_snake_case)]
-pub fn GeneralSettings(cx: Scope) -> Element {
+pub fn GeneralSettings() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
 

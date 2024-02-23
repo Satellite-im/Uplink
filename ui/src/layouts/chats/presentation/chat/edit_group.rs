@@ -34,7 +34,7 @@ enum ChanCmd {
 }
 
 #[allow(non_snake_case)]
-pub fn EditGroup(cx: Scope) -> Element {
+pub fn EditGroup() -> Element {
     log::trace!("rendering edit_group");
     let state = use_shared_state::<State>(cx)?;
     let minimal = state.read().ui.metadata.minimal_view;
@@ -202,10 +202,10 @@ pub struct FriendRowProps {
 }
 
 /* Friend Row with add/remove button functionality */
-fn friend_row(cx: Scope<FriendRowProps>) -> Element {
-    let _friend = cx.props.friend.clone();
+fn friend_row(props: FriendRowProps) -> Element {
+    let _friend = props.friend.clone();
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let conv_id = cx.props.conv_id;
+    let conv_id = props.conv_id;
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![selected_friends, conv_id];
         async move {
@@ -273,18 +273,18 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                 },
             },
             Button {
-                aria_label: if cx.props.add_or_remove == "add" {
+                aria_label: if props.add_or_remove == "add" {
                     get_local_text("uplink.add")
                 } else {
                     get_local_text("uplink.remove")
                 },
-                icon: if cx.props.add_or_remove == "add" {
+                icon: if props.add_or_remove == "add" {
                     Icon::UserPlus
                 } else {
                     Icon::UserMinus
                 },
-                text: if cx.props.minimal { String::new() }
-                    else if cx.props.add_or_remove == "add" {
+                text: if props.minimal { String::new() }
+                    else if props.add_or_remove == "add" {
                         get_local_text("uplink.add")
                     } else {
                         get_local_text("uplink.remove")
@@ -294,7 +294,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                     let mut friends = selected_friends.get().clone();
                     friends.clear();
                     selected_friends.set(vec![_friend.did_key()].into_iter().collect());
-                    if cx.props.add_or_remove == "add" {
+                    if props.add_or_remove == "add" {
                         ch.send(ChanCmd::AddParticipants);
                     } else {
                         ch.send(ChanCmd::RemoveParticipants);

@@ -11,7 +11,7 @@ use kit::elements::{button::Button, Appearance};
 use crate::UplinkRoute;
 
 #[allow(non_snake_case)]
-pub fn Welcome(cx: Scope) -> Element {
+pub fn Welcome() -> Element {
     let router = use_navigator(cx);
     let state = use_shared_state::<State>(cx)?;
     let cta_text = get_local_text("friends.cta-text");
@@ -63,7 +63,7 @@ pub fn Welcome(cx: Scope) -> Element {
     })
 }
 
-fn use_image_path(cx: &ScopeState) -> &str {
+fn use_image_path() -> &str {
     cx.use_hook(|| {
         get_images_dir()
             .unwrap_or_default()

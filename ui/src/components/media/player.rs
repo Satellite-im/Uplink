@@ -30,7 +30,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
+pub fn _MediaPlayer(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let window = use_window(cx);
     let silenced = state
@@ -63,7 +63,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
-                                text: cx.props.fullscreen_text.clone(),
+                                text: props.fullscreen_text.clone(),
                             }
                         )),
                     },
@@ -81,7 +81,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: cx.props.popout_player_text.clone(),
+                            text: props.popout_player_text.clone(),
                         }
                     )),
                     onpress: move |_| {
@@ -128,7 +128,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: cx.props.enable_camera_text.clone(),
+                        text: props.enable_camera_text.clone(),
                     }
                 )),
             },
@@ -138,7 +138,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: cx.props.screenshare_text.clone(),
+                        text: props.screenshare_text.clone(),
                     }
                 )),
                 // TODO: https://github.com/quadrupleslap/scrap
@@ -146,7 +146,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
-                text: cx.props.end_text.clone(),
+                text: props.end_text.clone(),
                 onpress: move |_| {
                     state.write().mutate(Action::ClearCallPopout(window.clone()));
                    // state.write().mutate(Action::DisableMedia);
@@ -158,7 +158,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: cx.props.settings_text.clone(),
+                        text: props.settings_text.clone(),
                     }
                 )),
                 // TODO: Navigate to media settings

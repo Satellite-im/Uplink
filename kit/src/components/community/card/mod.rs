@@ -12,7 +12,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn CommunityCard<'a>(props: Props<'a>) -> Element {
     cx.render(
         rsx!(
             div {
@@ -28,7 +28,7 @@ pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     }
                     div {
                         class: "title",
-                        h1 { cx.props.name.clone() }
+                        h1 { props.name.clone() }
                     }
                     div {
                         class: "subtitle",
@@ -40,11 +40,11 @@ pub fn CommunityCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 div {
                     class: "body",
                     Button {
-                        text: if cx.props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), cx.props.name) },
-                        appearance: if cx.props.joined { Appearance::Secondary } else { Appearance::Primary },
-                        icon: if cx.props.joined { Icon::Check } else { Icon::ArrowRight },
+                        text: if props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), props.name) },
+                        appearance: if props.joined { Appearance::Secondary } else { Appearance::Primary },
+                        icon: if props.joined { Icon::Check } else { Icon::ArrowRight },
                         onpress: |_| {
-                            cx.props.onjoin.call(());
+                            props.onjoin.call(());
                         }
                     }
                 }

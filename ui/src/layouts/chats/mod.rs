@@ -58,7 +58,7 @@ pub const OVERLAY_SCRIPT: &str = r#"
 "#;
 
 #[allow(non_snake_case)]
-pub fn ChatLayout(cx: Scope) -> Element {
+pub fn ChatLayout() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let first_render = use_state(cx, || true);
 

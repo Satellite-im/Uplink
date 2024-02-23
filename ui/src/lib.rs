@@ -191,7 +191,7 @@ pub enum UplinkRoute {
     CommunityLayout {},
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     // 1. Make sure the warp engine is turned on before doing anything
     bootstrap::use_warp_runner(cx);
 
@@ -229,7 +229,7 @@ fn app(cx: Scope) -> Element {
 
 // This needs to be in a layout since the notification listener needs a handle to the router
 // Eventually this restriction will be lifted once global contexts in dioxus are global accessible
-fn app_layout(cx: Scope) -> Element {
+fn app_layout() -> Element {
     log::trace!("rendering app");
 
     // terminate the logger thread when the app exits.
@@ -268,7 +268,7 @@ fn app_layout(cx: Scope) -> Element {
     }
 }
 
-fn AppStyle(cx: Scope) -> Element {
+fn AppStyle() -> Element {
     let state = use_shared_state::<State>(cx)?;
     render! {
         style { get_app_style(&state.read()) },
@@ -326,7 +326,7 @@ pub fn get_app_style(state: &State) -> String {
     format!("{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}")
 }
 
-fn use_auto_updater(cx: &ScopeState) -> Option<()> {
+fn use_auto_updater() -> Option<()> {
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
         to_owned![download_state];
@@ -363,7 +363,7 @@ fn use_auto_updater(cx: &ScopeState) -> Option<()> {
     Some(())
 }
 
-fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
+fn use_app_coroutines() -> Option<()> {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
 
@@ -831,7 +831,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
     Some(())
 }
 
-fn get_update_icon(cx: Scope) -> Element {
+fn get_update_icon() -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
@@ -947,7 +947,7 @@ fn get_update_icon(cx: Scope) -> Element {
 
 #[component(no_case_check)]
 pub fn get_download_modal<'a>(
-    cx: Scope<'a>,
+    props: 'a,
     //on_submit: EventHandler<PathBuf>,
     on_dismiss: EventHandler<()>,
 ) -> Element {
@@ -1012,7 +1012,7 @@ pub fn get_download_modal<'a>(
     }))
 }
 
-fn AppLogger(cx: Scope) -> Element {
+fn AppLogger() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     if !state.read().initialized {
@@ -1027,7 +1027,7 @@ fn AppLogger(cx: Scope) -> Element {
         .then(|| rsx!(DebugLogger {}))))
 }
 
-fn Toasts(cx: Scope) -> Element {
+fn Toasts() -> Element {
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
         |(id, toast)| {
@@ -1042,7 +1042,7 @@ fn Toasts(cx: Scope) -> Element {
     )))
 }
 
-fn Titlebar(cx: Scope) -> Element {
+fn Titlebar() -> Element {
     let desktop = use_window(cx);
 
     cx.render(rsx!(
@@ -1062,7 +1062,7 @@ fn Titlebar(cx: Scope) -> Element {
     ))
 }
 
-fn use_router_notification_listener(cx: &ScopeState) -> Option<()> {
+fn use_router_notification_listener() -> Option<()> {
     // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
     let navigator = use_navigator(cx);
@@ -1176,7 +1176,7 @@ fn scaled_window_position(
 
 #[component]
 fn AppNav<'a>(
-    cx: Scope,
+    
     active: UplinkRoute,
     onnavigate: Option<EventHandler<()>>,
     tooltip_direction: Option<ArrowPosition>,

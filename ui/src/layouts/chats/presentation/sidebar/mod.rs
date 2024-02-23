@@ -56,7 +56,7 @@ pub struct SidebarProps {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
+pub fn Sidebar(props: SidebarProps) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);

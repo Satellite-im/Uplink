@@ -8,7 +8,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ColorSwatch<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn ColorSwatch<'a>(props: Props<'a>) -> Element {
     let active = cx
         .props
         .active
@@ -17,7 +17,7 @@ pub fn ColorSwatch<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 
     cx.render(rsx!(div {
         class: "color-swatch {active}",
-        style: "background-color: rgb({cx.props.color.0}, {cx.props.color.1}, {cx.props.color.2})",
-        onclick: |_| cx.props.onpress.call(()),
+        style: "background-color: rgb({props.color.0}, {props.color.1}, {props.color.2})",
+        onclick: |_| props.onpress.call(()),
     }))
 }

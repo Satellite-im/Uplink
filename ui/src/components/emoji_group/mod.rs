@@ -14,7 +14,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn EmojiGroup<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let emojis = state.read().ui.emojis.clone();
     let sorted_list = emojis.get_sorted_vec(Some(4));
@@ -45,7 +45,7 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     text: emoji.0.clone(),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        cx.props.onselect.call(emoji.0.clone());
+                        props.onselect.call(emoji.0.clone());
                     }
                 }
             }
@@ -56,7 +56,7 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 appearance: Appearance::Secondary,
                 disabled: !has_extension,
                 onpress: move |_| {
-                    state.write().mutate(Action::SetEmojiDestination(Some(cx.props.apply_to.clone())));
+                    state.write().mutate(Action::SetEmojiDestination(Some(props.apply_to.clone())));
                     state.write().mutate(Action::SetEmojiPickerVisible(true));
                 },
                 tooltip: picker_tooltip

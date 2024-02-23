@@ -15,7 +15,7 @@ use kit::{
 };
 
 #[allow(non_snake_case)]
-pub fn Settings(cx: Scope) -> Element {
+pub fn Settings() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx! (
@@ -53,7 +53,7 @@ pub fn Settings(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn Explore(cx: Scope) -> Element {
+pub fn Explore() -> Element {
     cx.render(rsx! (
         div {
             class: "extensions-explore",
@@ -80,7 +80,7 @@ pub fn Explore(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn Installed(cx: Scope) -> Element {
+pub fn Installed() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let metas: Vec<_> = state
@@ -128,7 +128,7 @@ pub fn Installed(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn ExtensionsBrowser(cx: Scope) -> Element {
+pub fn ExtensionsBrowser() -> Element {
     let routes = vec![
         Route {
             name: get_local_text("settings-extensions.installed"),

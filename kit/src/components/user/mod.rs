@@ -33,7 +33,7 @@ pub struct Props<'a> {
 pub fn get_time_ago(cx: &Scope<Props>) -> String {
     let f = timeago::Formatter::new();
     let current_time = Utc::now();
-    let c: chrono::Duration = current_time - cx.props.timestamp.unwrap_or(current_time);
+    let c: chrono::Duration = current_time - props.timestamp.unwrap_or(current_time);
     let duration: std::time::Duration = match c.to_std() {
         // for the sidebar, don't want the timestamp to increment a few seconds every time the typing indicator comes over.
         // prevent this by rounding down and giving a duration in minutes only.
@@ -47,23 +47,23 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 /// Generates the optional badge for the user.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
-    cx.props.with_badge.clone().unwrap_or_default()
+    props.with_badge.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user was interacted with.
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
-    if let Some(f) = cx.props.onpress.as_ref() {
+    if let Some(f) = props.onpress.as_ref() {
         f.call(e)
     }
 }
 
 #[allow(non_snake_case)]
-pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn User<'a>(props: 'a, Props<'a>) -> Element {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
-    let active = cx.props.active.unwrap_or_default();
-    let loading = cx.props.loading.unwrap_or_default();
+    let aria_label = props.aria_label.clone().unwrap_or_default();
+    let active = props.active.unwrap_or_default();
+    let loading = props.loading.unwrap_or_default();
 
     cx.render(rsx! (
         if loading {
@@ -95,19 +95,19 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                             }
                         }
                     )),
-                    &cx.props.user_image,
+                    &props.user_image,
                     div {
                         class: "info",
                         aria_label: "User Info",
                         p {
                             class: "username",
                             aria_label: "Username",
-                            "{cx.props.username}"
+                            "{props.username}"
                         },
                         p {
                             class: "subtext",
                             aria_label: "User Status",
-                            dangerous_inner_html: "{cx.props.subtext}"
+                            dangerous_inner_html: "{props.subtext}"
                         }
                     }
                 }
@@ -117,7 +117,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn UserLoading(cx: Scope) -> Element {
+fn UserLoading() -> Element {
     cx.render(rsx!(
         div {
             class: "skeletal-user",

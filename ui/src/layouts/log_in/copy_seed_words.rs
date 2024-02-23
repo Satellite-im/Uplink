@@ -9,7 +9,7 @@ use super::AuthPages;
 
 // styles for this layout are in layouts/style.scss
 #[component]
-pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element {
+pub fn Layout( page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element {
     let state = use_ref(cx, State::load);
     let window = use_window(cx);
 
@@ -57,7 +57,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
 }
 
 #[component]
-fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Element {
+fn SeedWords( page: UseState<AuthPages>, words: Vec<String>) -> Element {
     render! {
         div {
             class: "seed-words",

@@ -5,7 +5,7 @@ use kit::components::{
 };
 
 #[allow(non_snake_case)]
-pub fn SidebarInner(cx: Scope) -> Element {
+pub fn SidebarInner() -> Element {
     let mut channel_groups = Vec::new();
     channel_groups.push(ChannelGroup {
         name: "Group One".into(),

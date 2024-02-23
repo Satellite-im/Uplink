@@ -7,7 +7,7 @@ use tracing::log;
 use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
-pub fn AccessibilitySettings(cx: Scope) -> Element {
+pub fn AccessibilitySettings() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     log::trace!("Accessibility settings page rendered.");

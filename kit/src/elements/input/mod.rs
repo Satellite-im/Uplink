@@ -159,13 +159,13 @@ pub struct Props<'a> {
 }
 
 fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
-    if let Some(f) = &cx.props.onchange {
+    if let Some(f) = &props.onchange {
         f.call((s, is_valid));
     }
 }
 
 fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
-    if let Some(f) = &cx.props.onreturn {
+    if let Some(f) = &props.onreturn {
         f.call((s, is_valid, key_code));
     }
 }
@@ -173,7 +173,7 @@ fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 #[allow(unused)]
 fn submit(cx: &Scope<Props>, s: String) {
-    if let Some(f) = &cx.props.onreturn {
+    if let Some(f) = &props.onreturn {
         f.call((s, true, Code::Enter));
     }
 }
@@ -257,22 +257,22 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
 }
 
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
-    cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
+    props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    cx.props.aria_label.clone().unwrap_or_default()
+    props.aria_label.clone().unwrap_or_default()
 }
 
 pub fn get_label(cx: &Scope<Props>) -> String {
-    let options = cx.props.options.clone().unwrap_or_default();
+    let options = props.options.clone().unwrap_or_default();
     options.with_label.unwrap_or_default()
 }
 
 pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
     let mut error: Option<ValidationError> = None;
 
-    let options = cx.props.options.clone().unwrap_or_default();
+    let options = props.options.clone().unwrap_or_default();
 
     let validation = options.with_validation.unwrap_or_default();
 
@@ -301,29 +301,29 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Input<'a>(props: Props<'a>) -> Element {
     // Input element needs an id. Create a new one if an id wasn't specified
-    let input_id = if cx.props.id.is_empty() {
+    let input_id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
     } else {
-        cx.props.id.clone()
+        props.id.clone()
     };
     let focus_script = include_str!("./script.js").replace("$UUID", &input_id);
     let focus_script2 = focus_script.clone();
     let error = use_state(cx, || String::from(""));
-    let val = use_ref(cx, || cx.props.default_text.clone().unwrap_or_default());
-    let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
-    let min_length = cx.props.max_length.unwrap_or(0);
-    let options = cx.props.options.clone().unwrap_or_default();
+    let val = use_ref(cx, || props.default_text.clone().unwrap_or_default());
+    let max_length = props.max_length.unwrap_or(std::i32::MAX);
+    let min_length = props.max_length.unwrap_or(0);
+    let options = props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
-    let onblur_active = !cx.props.disable_onblur;
+    let onblur_active = !props.disable_onblur;
 
-    let loading_class = match cx.props.loading.unwrap_or(false) {
+    let loading_class = match props.loading.unwrap_or(false) {
         true => "progress",
         false => "",
     };
-    if let Some(value) = &cx.props.value {
+    if let Some(value) = &props.value {
         if value.clone() != *val.read() {
             val.set(value.clone());
         }
@@ -334,7 +334,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         error.set("".into());
         valid.set(false);
     };
-    if let Some(hook) = &cx.props.reset {
+    if let Some(hook) = &props.reset {
         let should_reset = hook.get();
         if *should_reset {
             reset_fn();
@@ -346,7 +346,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
-    let disabled = cx.props.disabled.unwrap_or_default() || cx.props.loading.unwrap_or(false);
+    let disabled = props.disabled.unwrap_or_default() || props.loading.unwrap_or(false);
 
     let typ = cx
         .props
@@ -359,7 +359,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     let eval2 = eval.clone();
     use_effect(
         cx,
-        (&cx.props.focus, &focus_script),
+        (&props.focus, &focus_script),
         move |(focus, focus_script)| {
             to_owned![eval];
             async move {
@@ -370,7 +370,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         },
     );
 
-    let focus_just_on_render = cx.props.focus_just_on_render.unwrap_or_default();
+    let focus_just_on_render = props.focus_just_on_render.unwrap_or_default();
     use_component_lifecycle(
         cx,
         move || {
@@ -396,9 +396,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 class: {
                     format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
-                height: cx.props.size.get_height(),
+                height: props.size.get_height(),
                 // If an icon was provided, render it before the input.
-                (cx.props.icon.is_some()).then(|| rsx!(
+                (props.icon.is_some()).then(|| rsx!(
                     span {
                         class: "icon",
                         IconElement {
@@ -408,14 +408,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 )),
                 input {
                     id: "{input_id}",
-                    class: format_args!("{} {}", loading_class, if cx.props.select_on_focus.unwrap_or_default() {"select"} else {""}),
+                    class: format_args!("{} {}", loading_class, if props.select_on_focus.unwrap_or_default() {"select"} else {""}),
                     aria_label: "{aria_label}",
                     spellcheck: "{false}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{max_length}",
                     "type": "{typ}",
-                    placeholder: "{cx.props.placeholder}",
+                    placeholder: "{props.placeholder}",
                     onblur: move |_| {
                         if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
@@ -449,7 +449,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                         }
 
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
-                            if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
+                            if props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
                                     let validation_result = validate(&cx, "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
@@ -498,7 +498,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                         }
                     }
                 )),
-                cx.props.loading.unwrap_or(false).then(move || rsx!(
+                props.loading.unwrap_or(false).then(move || rsx!(
                     Loader { spinning: true },
                 )),
             },

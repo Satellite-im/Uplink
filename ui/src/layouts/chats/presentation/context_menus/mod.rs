@@ -14,11 +14,11 @@ pub struct FileLocationProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FileLocation<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element {
+pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let id = cx.props.id.clone();
+    let id = props.id.clone();
     let eval = use_eval(cx);
-    use_future(cx, cx.props.update_script, |update_script| {
+    use_future(cx, props.update_script, |update_script| {
         to_owned![eval];
         async move {
             let script = update_script.get();
@@ -39,7 +39,7 @@ pub fn FileLocation<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element {
                 aria_label: "attach-files-from-local-disk-into-chat".into(),
                 text: get_local_text("files.attach-files-from-local-disk"),
                 onpress: move |_| {
-                    cx.props.on_press_local_disk.call(());
+                    props.on_press_local_disk.call(());
                 }
             },
             ContextItem {
@@ -48,7 +48,7 @@ pub fn FileLocation<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element {
                 disabled: are_files_been_uploaded,
                 text: get_local_text("files.attach-files-from-storage"),
                 onpress: move |_| {
-                    cx.props.on_press_storage.call(());
+                    props.on_press_storage.call(());
                 },
                 tooltip: if are_files_been_uploaded {
                     cx.render(rsx!(Tooltip {

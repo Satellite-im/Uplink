@@ -14,9 +14,9 @@ pub struct Props<'a> {
     modal: Option<bool>,
 }
 
-pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element {
+pub fn FileTransferModal<'a>(props: Props) -> Element {
     let file_tracker = use_shared_state::<TransferTracker>(cx)?;
-    cx.props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
+    props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
     let tracker = file_tracker.read();
     let (file_progress_upload, file_progress_download) = (
         tracker.get_tracker(TrackerType::FileUpload),
@@ -25,7 +25,7 @@ pub fn FileTransferModal<'a>(cx: Scope<'a, Props>) -> Element {
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
         return cx.render(rsx!(()));
     }
-    let modal = cx.props.modal.unwrap_or_default();
+    let modal = props.modal.unwrap_or_default();
     cx.render(rsx!(div {
         class: format_args!("file-transfer-wrap {}", if modal {"file-transfer-modal"} else {""}),
         (!file_progress_upload.is_empty()).then(||
@@ -49,16 +49,16 @@ pub struct TransferProps {
     label: String,
 }
 
-pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
+pub fn FileTransferElement(props: TransferProps) -> Element {
     cx.render(rsx!(div {
         class: "file-transfer-container",
         div {
             class: "file-transfer-label-container",
             label {
-                cx.props.label.clone(),
+                props.label.clone(),
             },
         },
-        cx.props.transfers.iter().map(|f| {
+        props.transfers.iter().map(|f| {
             let progress = f.progress.get_progress();
             let state = f.state.clone();
             let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<bool>| {
@@ -134,14 +134,14 @@ pub struct ProgressIndicatorProps {
     progress: u8,
 }
 
-pub fn ProgressIndicator(cx: Scope<ProgressIndicatorProps>) -> Element {
+pub fn ProgressIndicator(props: ProgressIndicatorProps) -> Element {
     cx.render(rsx!(div{
         class: "progress-indicator-wrap",
         div {
             class: "progress-indicator",
             div {
                 class: "progress-indicator progress-indicator-overlay",
-                width: format_args!("{}%", cx.props.progress)
+                width: format_args!("{}%", props.progress)
             },
         }
     }))

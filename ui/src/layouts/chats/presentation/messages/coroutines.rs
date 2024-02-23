@@ -25,7 +25,7 @@ use crate::{
 use super::{DownloadTracker, MessagesCommand};
 
 pub fn handle_msg_scroll(
-    cx: &ScopeState,
+    
     eval_provider: &crate::utils::EvalProvider,
     chat_data: &UseSharedState<ChatData>,
     scroll_btn: &UseSharedState<ScrollBtn>,
@@ -350,7 +350,7 @@ pub fn handle_msg_scroll(
 }
 
 pub fn fetch_later_ch(
-    cx: &ScopeState,
+    
     chat_data: &UseSharedState<data::ChatData>,
     scroll_btn: &UseSharedState<ScrollBtn>,
 ) -> Coroutine<Uuid> {
@@ -438,7 +438,7 @@ pub fn fetch_later_ch(
 }
 
 pub fn handle_warp_commands(
-    cx: &ScopeState,
+    
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {

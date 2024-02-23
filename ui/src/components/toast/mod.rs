@@ -18,15 +18,15 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn Toast(cx: Scope<Props>) -> Element {
+pub fn Toast(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(kit::components::toast::Toast {
-        id: cx.props.id,
-        on_hover: move |_| state.write_silent().reset_toast_timer(&cx.props.id),
-        on_close: move |_| state.write().remove_toast(&cx.props.id),
-        icon: cx.props.icon,
-        with_title: cx.props.with_title.clone(),
-        with_content: cx.props.with_content.clone(),
-        appearance: cx.props.appearance
+        id: props.id,
+        on_hover: move |_| state.write_silent().reset_toast_timer(&props.id),
+        on_close: move |_| state.write().remove_toast(&props.id),
+        icon: props.icon,
+        with_title: props.with_title.clone(),
+        with_content: props.with_content.clone(),
+        appearance: props.appearance
     }))
 }

@@ -17,10 +17,10 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let disabled_class = if cx.props.disabled { "disabled" } else { "" };
-    let checked_class = if cx.props.is_checked { "checked" } else { "" };
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+pub fn Checkbox<'a>(props: Props<'a>) -> Element {
+    let disabled_class = if props.disabled { "disabled" } else { "" };
+    let checked_class = if props.is_checked { "checked" } else { "" };
+    let aria_label = props.aria_label.clone().unwrap_or_default();
 
     let height = cx
         .props
@@ -40,9 +40,9 @@ pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             height: "{height}",
             width: "{width}",
             onclick: move |_| {
-                cx.props.on_click.call(());
+                props.on_click.call(());
             },
-            cx.props.is_checked.then(|| {
+            props.is_checked.then(|| {
                 rsx!(
                     IconElement {
                         icon: Icon::Check

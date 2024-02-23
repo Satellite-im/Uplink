@@ -13,7 +13,7 @@ use crate::components::settings::SettingSectionSimple;
 use crate::layouts::chats::data::ChatData;
 
 #[allow(non_snake_case)]
-pub fn GroupSettings(cx: Scope) -> Element {
+pub fn GroupSettings() -> Element {
     log::trace!("rendering edit_group");
     let chat_data = use_shared_state::<ChatData>(cx)?;
 

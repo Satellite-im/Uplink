@@ -20,19 +20,19 @@ pub struct Props<'a> {
 
 /// If enabled, it will render the bool
 pub fn show_back_button(cx: &Scope<Props>) -> bool {
-    cx.props.with_back_button.unwrap_or(false)
+    props.with_back_button.unwrap_or(false)
 }
 
 /// Emit the back button event
 pub fn emit(cx: &Scope<Props>) {
-    match &cx.props.onback {
+    match &props.onback {
         Some(f) => f.call(()),
         None => {}
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Topbar<'a>(props: Props<'a>) -> Element {
     log::trace!("rendering topbar");
     cx.render(rsx!(
         div {
@@ -49,16 +49,16 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             div {
                 class: "children",
                 onclick: move |_| {
-                    if let Some(f) = &cx.props.onclick {
+                    if let Some(f) = &props.onclick {
                         f.call(())
                     }
                 },
-                cx.props.children.as_ref()
+                props.children.as_ref()
             },
-            cx.props.controls.is_some().then(|| rsx!(
+            props.controls.is_some().then(|| rsx!(
                 div {
                     class: "controls",
-                    cx.props.controls.as_ref()
+                    props.controls.as_ref()
                 }
             ))
         }

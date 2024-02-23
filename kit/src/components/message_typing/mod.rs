@@ -10,16 +10,16 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageTyping(cx: Scope<Props>) -> Element {
-    let typing_users = if cx.props.typing_users.len() > 3 {
+pub fn MessageTyping(props: Props) -> Element {
+    let typing_users = if props.typing_users.len() > 3 {
         get_local_text("messages.users-multiple-typing")
     } else {
-        let (translation, key) = if cx.props.typing_users.len() == 1 {
+        let (translation, key) = if props.typing_users.len() == 1 {
             ("messages.user-typing", "user")
         } else {
             ("messages.users-typing", "users")
         };
-        let mut users = cx.props.typing_users.join(", ");
+        let mut users = props.typing_users.join(", ");
         let users = if users.len() > MAX_LEN {
             let mut users: String = users.drain(..(MAX_LEN - 3)).collect();
             users.push_str("...");

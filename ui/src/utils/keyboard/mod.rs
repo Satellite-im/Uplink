@@ -21,12 +21,12 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element {
+pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }
 
-    if cx.props.is_on_auth_pages.unwrap_or(false) {
+    if props.is_on_auth_pages.unwrap_or(false) {
         let state = use_ref(cx, State::load);
         let keybinds = state.read().settings.keybinds.clone();
         return cx.render(rsx! {
@@ -37,7 +37,7 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element {
                         modifiers: shortcut.modifiers,
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
-                            cx.props.on_global_shortcut.call(global_shortcut);
+                            props.on_global_shortcut.call(global_shortcut);
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
@@ -59,7 +59,7 @@ pub fn KeyboardShortcuts<'a>(cx: Scope<'a, Props>) -> Element {
                         modifiers: shortcut.modifiers,
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
-                            cx.props.on_global_shortcut.call(global_shortcut);
+                            props.on_global_shortcut.call(global_shortcut);
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
@@ -98,14 +98,14 @@ struct GlobalShortcutProps<'a> {
     global_shortcut: GlobalShortcut,
 }
 
-fn RenderGlobalShortCuts<'a>(cx: Scope<'a, GlobalShortcutProps>) -> Element {
+fn RenderGlobalShortCuts<'a>(props: GlobalShortcutProps) -> Element {
     let command_pressed = use_ref(cx, || false);
 
     if *command_pressed.read() {
         *command_pressed.write_silent() = false;
-        cx.props
+        props
             .on_global_shortcut
-            .call(cx.props.global_shortcut.clone());
+            .call(props.global_shortcut.clone());
     }
 
     let key_code_strs: Vec<String> = cx

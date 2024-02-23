@@ -12,7 +12,7 @@ use overlay::make_config;
 use overlay::OverlayDom;
 use warp::multipass;
 
-pub fn use_warp_runner(cx: &ScopeState) {
+pub fn use_warp_runner() {
     cx.use_hook(|| {
         // Now turn on the warp runner and save it to the hook so it doesn't get dropped
         let mut runner = warp_runner::WarpRunner::new();

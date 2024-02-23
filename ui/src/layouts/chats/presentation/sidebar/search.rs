@@ -20,14 +20,14 @@ pub struct SearchProps<'a> {
     onclick: EventHandler<identity_search_result::Identifier>,
 }
 
-pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
+pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
+    if props.identities.get().is_empty() || !*props.search_friends_is_focused.read() {
         return None;
     }
 
-    let mut friends_identities = cx.props.friends_identities.get().clone();
-    let chats = cx.props.chats.get().clone();
+    let mut friends_identities = props.friends_identities.get().clone();
+    let chats = props.chats.get().clone();
 
     friends_identities.sort_by_key(|identity| identity.username());
 
@@ -36,13 +36,13 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
             onblur: |_| {
-                *cx.props.search_friends_is_focused.write() = false;
+                *props.search_friends_is_focused.write() = false;
             },
             onmouseenter: |_| {
-                *cx.props.search_dropdown_hover.write_silent() = true;
+                *props.search_dropdown_hover.write_silent() = true;
             },
             onmouseleave: |_| {
-                *cx.props.search_dropdown_hover.write_silent() = false;
+                *props.search_dropdown_hover.write_silent() = false;
             },
             if !friends_identities.is_empty() {
                 rsx!(
@@ -59,7 +59,7 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
                 let username = identity.username();
                 let did = identity.did_key();
                 let did2 = did.clone();
-                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let search_typed_chars = props.search_typed_chars.read().clone();
                 let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
                 let end = start + search_typed_chars.len();
                 let blocked_friends: Vec<DID> = state
@@ -78,8 +78,8 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
                         onclick: move |evt| {
                             if !blocked_friends.contains(&did2) {
                                 evt.stop_propagation();
-                                *cx.props.search_friends_is_focused.write_silent() = false;
-                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                *props.search_friends_is_focused.write_silent() = false;
+                                props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
                             }
                         },
                         UserImage {
@@ -145,7 +145,7 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
                     Some(n) => n.clone(),
                     None => other_participants_names,
                 };
-                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let search_typed_chars = props.search_typed_chars.read().clone();
                 let text_to_find = search_typed_chars.to_lowercase();
                 let search_typed_chars2 = search_typed_chars.clone();
 
@@ -156,8 +156,8 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
                         prevent_default: "onclick",
                         onclick: move |evt|  {
                                 evt.stop_propagation();
-                                *cx.props.search_friends_is_focused.write_silent() = false;
-                                cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
+                                *props.search_friends_is_focused.write_silent() = false;
+                                props.onclick.call(identity_search_result::Identifier::Uuid(id));
                         },
                         rsx! (
                             div {
@@ -245,8 +245,8 @@ pub fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element {
                                 onclick: move |evt| {
                                     if !blocked_friends.contains(&did2) {
                                         evt.stop_propagation();
-                                        *cx.props.search_friends_is_focused.write_silent() = false;
-                                        cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                        *props.search_friends_is_focused.write_silent() = false;
+                                        props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
                                     }
                                 },
                                 UserImage {

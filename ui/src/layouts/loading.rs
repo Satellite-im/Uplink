@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::wry::application::dpi::LogicalPosition;
 use dioxus_desktop::LogicalSize;
 
-pub fn LoadingWash(cx: Scope) -> Element {
+pub fn LoadingWash() -> Element {
     let img_path = cx.use_hook(|| {
         common::get_images_dir()
             .unwrap_or_default()
@@ -20,7 +20,7 @@ pub fn LoadingWash(cx: Scope) -> Element {
     }
 }
 
-pub fn use_loaded_assets(cx: &ScopeState) -> &UseFuture<Result<(), tokio::task::JoinError>> {
+pub fn use_loaded_assets() -> &UseFuture<Result<(), tokio::task::JoinError>> {
     let desktop = dioxus_desktop::use_window(cx);
     let state = use_shared_state::<State>(cx).unwrap();
 

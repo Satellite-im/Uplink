@@ -9,7 +9,7 @@ use dioxus_core::ScopeState;
 use dioxus_hooks::{to_owned, use_effect, Coroutine, UseSharedState};
 
 pub fn init_msg_scroll(
-    cx: &ScopeState,
+    
     chat_data: &UseSharedState<ChatData>,
     eval_provider: &utils::EvalProvider,
     ch: Coroutine<()>,

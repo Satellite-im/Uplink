@@ -17,9 +17,9 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let remote = cx.props.remote.unwrap_or_default();
-    let time_ago = cx.props.timestamp.clone().unwrap_or_default();
+pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
+    let remote = props.remote.unwrap_or_default();
+    let time_ago = props.timestamp.clone().unwrap_or_default();
 
     cx.render(rsx! (
         div {
@@ -28,7 +28,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 format_args!("message-group-wrap-{}", if remote { "remote" } else { "local" })
             },
             remote.then(|| rsx!(
-                &cx.props.user_image
+                &props.user_image
             ))
             div {
                 class: {
@@ -37,15 +37,15 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 aria_label: {
                     format_args!("message-group{}", if remote { "-remote" } else { "" })
                 },
-                &cx.props.children,
+                &props.children,
                 p {
                     class: "time-ago noselect defaultcursor",
                     aria_label: "time-ago",
-                    "{cx.props.sender} - {time_ago}"
+                    "{props.sender} - {time_ago}"
                 }
             }
             (!remote).then(|| rsx!(
-                &cx.props.user_image
+                &props.user_image
             ))
         }
     ))
@@ -58,8 +58,8 @@ pub struct SkeletalProps {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageGroupSkeletal(cx: Scope<SkeletalProps>) -> Element {
-    let alt = cx.props.alt.unwrap_or_default();
+pub fn MessageGroupSkeletal(props: SkeletalProps) -> Element {
+    let alt = props.alt.unwrap_or_default();
 
     cx.render(rsx!(
         div {

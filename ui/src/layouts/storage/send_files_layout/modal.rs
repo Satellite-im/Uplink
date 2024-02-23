@@ -14,9 +14,9 @@ pub struct SendFilesLayoutModalProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) -> Element {
-    let send_files_from_storage = cx.props.send_files_from_storage;
-    let send_files_start_location = cx.props.send_files_start_location.clone();
+pub fn SendFilesLayoutModal<'a>(props: SendFilesLayoutModalProps<'a>) -> Element {
+    let send_files_from_storage = props.send_files_from_storage;
+    let send_files_start_location = props.send_files_start_location.clone();
     let files_pre_selected_to_send = cx
         .props
         .files_pre_selected_to_send
@@ -40,7 +40,7 @@ pub fn SendFilesLayoutModal<'a>(cx: Scope<'a, SendFilesLayoutModalProps<'a>>) ->
                             send_files_from_storage_state: send_files_from_storage.clone(),
                             files_pre_selected_to_send: files_pre_selected_to_send,
                             on_files_attached: move |(files_location, convs_id): (Vec<Location>, Vec<Uuid>)| {
-                                cx.props.on_send.call((files_location, convs_id));
+                                props.on_send.call((files_location, convs_id));
                                 send_files_from_storage.set(false);
                             },
                         }

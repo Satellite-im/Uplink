@@ -14,11 +14,11 @@ pub struct Props<'a> {
 }
 
 pub fn get_default(cx: &Scope<Props>) -> i32 {
-    cx.props.default_value.unwrap_or_default()
+    props.default_value.unwrap_or_default()
 }
 
 #[allow(non_snake_case)]
-pub fn Slider<'a>(cx: Scope<'a, Props>) -> Element {
+pub fn Slider<'a>(props: Props) -> Element {
     let _slider_value = use_state(cx, || get_default(&cx));
     // TODO: Pending dioxus update for eval returning values
     cx.render(rsx! {

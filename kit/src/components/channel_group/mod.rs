@@ -20,13 +20,13 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelGroupElement(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn ChannelGroupElement(props: Props<'a>) -> Element {
     cx.render(rsx!(
         div {
             class: "channel-group",
             div {
                 class: "channel-group-header",
-                cx.props.group_name.clone(),
+                props.group_name.clone(),
                 div {
                     class: "controls",
                     IconElement {
@@ -39,12 +39,12 @@ pub fn ChannelGroupElement(cx: Scope<'a, Props<'a>>) -> Element {
             },
             div {
                 class: "channel-group-body",
-                cx.props.channels.iter().map(|channel| {
+                props.channels.iter().map(|channel| {
                     rsx!(
                         ChannelElement {
                             channel: channel.clone(),
                             onpress: move |_| {
-                                cx.props.onpress.call(channel);
+                                props.onpress.call(channel);
                             }
                         }
                     )

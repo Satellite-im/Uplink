@@ -17,7 +17,7 @@ pub struct Props<'a> {
 
 /// Tells the parent the button was interacted with.
 pub fn emit(cx: &Scope<Props>, s: String) {
-    match &cx.props.onselect {
+    match &props.onselect {
         Some(f) => f.call(s),
         None => {}
     }
@@ -42,9 +42,9 @@ fn remove_duplicates_fancy(values: Vec<(String, Element<'_>)>) -> Vec<(String, E
 }
 
 #[allow(non_snake_case)]
-pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let initial_value = cx.props.initial_value.clone();
-    let mut options = remove_duplicates(cx.props.options.clone());
+pub fn Select<'a>(props: 'a, Props<'a>) -> Element {
+    let initial_value = props.initial_value.clone();
+    let mut options = remove_duplicates(props.options.clone());
     options.retain(|value| value != &initial_value);
     options.insert(0, initial_value.clone());
     let iter = IntoIterator::into_iter(options.clone());
@@ -79,10 +79,10 @@ pub struct FancySelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element {
-    let (initial_value, initial_element) = cx.props.initial_value.clone();
-    let mut options = remove_duplicates_fancy(cx.props.options.clone());
-    if cx.props.current_to_top.unwrap_or_default() {
+pub fn FancySelect<'a>(props: 'a, FancySelectProps<'a>) -> Element {
+    let (initial_value, initial_element) = props.initial_value.clone();
+    let mut options = remove_duplicates_fancy(props.options.clone());
+    if props.current_to_top.unwrap_or_default() {
         options.retain(|(key, _)| key != &initial_value);
         options.insert(0, (initial_value.clone(), initial_element.clone()))
     };
@@ -98,7 +98,7 @@ pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element {
             div {
                 class: "fancy-select-wrap",
                 position: "relative",
-                width: format_args!("{}px", cx.props.width),
+                width: format_args!("{}px", props.width),
                 onclick: |e| {
                     let b = *visible.read();
                     *visible.write() = !b;
@@ -118,7 +118,7 @@ pub fn FancySelect<'a>(cx: Scope<'a, FancySelectProps<'a>>) -> Element {
                                     class: "fancy-select-option",
                                     aria_label: "selector-option",
                                     onclick: move |e| {
-                                        if let Some(f) = &cx.props.onselect {
+                                        if let Some(f) = &props.onselect {
                                             f.call(val.clone())
                                         }
                                         visible.set(false);

@@ -43,10 +43,10 @@ pub struct SendFilesProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element {
+pub fn SendFilesLayout<'a>(props: 'a, SendFilesProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let send_files_start_location = cx.props.send_files_start_location.clone();
-    let send_files_from_storage_state = cx.props.send_files_from_storage_state.clone();
+    let send_files_start_location = props.send_files_start_location.clone();
+    let send_files_from_storage_state = props.send_files_from_storage_state.clone();
     let storage_controller = StorageController::new(cx, state);
     let first_render = use_ref(cx, || true);
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
@@ -58,7 +58,7 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element {
     if *first_render.read() {
         *first_render.write_silent() = false;
         storage_controller.write_silent().files_selected_to_send =
-            cx.props.files_pre_selected_to_send.clone();
+            props.files_pre_selected_to_send.clone();
     }
 
     storage_controller
@@ -76,7 +76,7 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element {
                 send_files_from_storage_state: send_files_from_storage_state.clone(),
                 storage_controller: storage_controller.clone(),
                 on_send: move |files_location_path| {
-                    cx.props.on_files_attached.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
+                    props.on_files_attached.call((files_location_path, storage_controller.with(|f| f.chats_selected_to_send.clone())));
                 },
                 in_files: in_files
             }
@@ -117,9 +117,9 @@ struct ChatsToSelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element {
+fn ChatsToSelect<'a>(props: 'a, ChatsToSelectProps<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let storage_controller = cx.props.storage_controller.clone();
+    let storage_controller = props.storage_controller.clone();
 
     cx.render(rsx!(div {
         id: "all_chats",
@@ -170,9 +170,9 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element {
                         is_checked: is_checked,
                         on_click: move |_| {
                             if is_checked {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }
@@ -199,9 +199,9 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element {
                         with_badge: "".into(),
                         onpress: move |_| {
                             if is_checked {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }

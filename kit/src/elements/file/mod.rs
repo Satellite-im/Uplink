@@ -30,17 +30,17 @@ pub struct Props<'a> {
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    cx.props.aria_label.clone().unwrap_or_default()
+    props.aria_label.clone().unwrap_or_default()
 }
 
 pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
-    if let Some(f) = cx.props.onrename.as_ref() {
+    if let Some(f) = props.onrename.as_ref() {
         f.call((s, key_code))
     }
 }
 
 pub fn emit_press(cx: &Scope<Props>) {
-    if let Some(f) = cx.props.onpress.as_ref() {
+    if let Some(f) = props.onpress.as_ref() {
         f.call(())
     }
 }
@@ -55,19 +55,19 @@ pub fn get_file_extension(file_name: String) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let file_extension = get_file_extension(cx.props.text.clone());
-    let file_name = cx.props.text.clone();
+pub fn File<'a>(props: 'a, Props<'a>) -> Element {
+    let file_extension = get_file_extension(props.text.clone());
+    let file_name = props.text.clone();
     let file_name2 = file_name.clone();
 
     let aria_label = get_aria_label(&cx);
     let placeholder = file_name.clone();
-    let with_rename = cx.props.with_rename.unwrap_or_default();
-    let disabled = cx.props.disabled.unwrap_or_default();
-    let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
-    let is_video = is_video(&cx.props.text.clone());
+    let with_rename = props.with_rename.unwrap_or_default();
+    let disabled = props.disabled.unwrap_or_default();
+    let thumbnail = props.thumbnail.clone().unwrap_or_default();
+    let is_video = is_video(&props.text.clone());
 
-    let loading = cx.props.loading.unwrap_or_default();
+    let loading = props.loading.unwrap_or_default();
 
     if loading {
         cx.render(rsx!(FileSkeletal {}))
@@ -159,7 +159,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn FileSkeletal(cx: Scope) -> Element {
+pub fn FileSkeletal() -> Element {
     cx.render(rsx!(
         div {
             class: "file alignment",

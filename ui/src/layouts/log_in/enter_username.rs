@@ -31,7 +31,7 @@ struct CreateAccountCmd {
 
 #[component]
 pub fn Layout(
-    cx: Scope,
+    
     page: UseState<AuthPages>,
     pin: UseRef<String>,
     seed_words: UseRef<String>,

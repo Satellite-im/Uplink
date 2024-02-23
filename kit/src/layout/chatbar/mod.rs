@@ -94,13 +94,13 @@ pub struct ReplyProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
-    let remote = cx.props.remote.unwrap_or_default();
+pub fn Reply<'a>(props: 'a, ReplyProps<'a>) -> Element {
+    let remote = props.remote.unwrap_or_default();
     let message = format_text(
-        &cx.props.message,
-        cx.props.markdown.unwrap_or_default(),
-        cx.props.transform_ascii_emojis.unwrap_or_default(),
-        Some((&cx.props.state.read(), &cx.props.chat, true)),
+        &props.message,
+        props.markdown.unwrap_or_default(),
+        props.transform_ascii_emojis.unwrap_or_default(),
+        Some((&props.state.read(), &props.chat, true)),
     );
 
     let has_attachments = cx
@@ -110,7 +110,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
         .map(|v| !v.is_empty())
         .unwrap_or(false);
 
-    let attachment_list = cx.props.attachments.as_ref().map(|vec| {
+    let attachment_list = props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
             rsx!(FileEmbed {
@@ -130,7 +130,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
             class: "inline-reply",
             aria_label: "inline-reply",
             Label {
-                text: cx.props.label.clone(),
+                text: props.label.clone(),
                 aria_label: "inline-reply-header".into(),
             },
             Button {
@@ -138,12 +138,12 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
                 aria_label: "close-reply".into(),
                 appearance: Appearance::Secondary,
                 icon: icons::outline::Shape::XMark,
-                onpress: move |_| cx.props.onclose.call(()),
+                onpress: move |_| props.onclose.call(()),
             },
             div {
                 class: "content",
                 aria_label: "content",
-                remote.then(|| rsx!(&cx.props.children)),
+                remote.then(|| rsx!(&props.children)),
                 p {
                     class: {
                         format_args!("reply-text message {}", if remote { "remote" } else { "" })
@@ -160,7 +160,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
                         )
                     })
                 }
-                (!remote).then(|| rsx!(&cx.props.children)),
+                (!remote).then(|| rsx!(&props.children)),
             }
 
         }
@@ -168,9 +168,9 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let controlled_input_id = &cx.props.id;
-    let is_typing = !cx.props.typing_users.is_empty();
+pub fn Chatbar<'a>(props: 'a, Props<'a>) -> Element {
+    let controlled_input_id = &props.id;
+    let is_typing = !props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
     let selected_suggestion: &UseRef<Option<usize>> = use_ref(cx, || None);
     let is_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
@@ -179,57 +179,57 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     cx.render(rsx!(
         div {
             class: "chatbar disable-select",
-            cx.props.with_replying_to.as_ref(),
-            cx.props.with_file_upload.as_ref(),
+            props.with_replying_to.as_ref(),
+            props.with_file_upload.as_ref(),
             div{
                 class: "chatbar-group",
                 textarea::InputRich {
                     key: "{controlled_input_id}",
                     id: controlled_input_id.clone(),
-                    loading: cx.props.loading.unwrap_or_default(),
-                    placeholder: cx.props.placeholder.clone(),
-                    ignore_focus: cx.props.ignore_focus,
+                    loading: props.loading.unwrap_or_default(),
+                    placeholder: props.placeholder.clone(),
+                    ignore_focus: props.ignore_focus,
                     show_char_counter: true,
-                    value: if cx.props.is_disabled { get_local_text("messages.loading")} else { cx.props.value.clone().unwrap_or_default()},
+                    value: if props.is_disabled { get_local_text("messages.loading")} else { props.value.clone().unwrap_or_default()},
                     onkeyup: move |keycode| {
                         if !*is_suggestion_modal_closed.read() && keycode == Code::Escape {
                             is_suggestion_modal_closed.with_mut(|i| *i = true);
                         }
                     },
                     on_paste_keydown:  move |keyboard_event: Event<KeyboardData>| {
-                        if let Some(e) = cx.props.on_paste_keydown.as_ref() {
+                        if let Some(e) = props.on_paste_keydown.as_ref() {
                             e.call(keyboard_event);
                         }
                     },
                     onchange: move |(v, _)| {
-                        cx.props.onchange.call(v);
+                        props.onchange.call(v);
                         *is_suggestion_modal_closed.write_silent() = false;
                     },
                     onreturn: move |(v, is_valid, _)| {
                         if let Some(i) = selected_suggestion.write_silent().take() {
-                            if let Some(e) = cx.props.on_suggestion_click.as_ref() {
+                            if let Some(e) = props.on_suggestion_click.as_ref() {
                                 if let Some(p) = cursor_position.read().as_ref() {
-                                    let (pattern, replacement) = cx.props.suggestions.get_replacement_for_index(i);
+                                    let (pattern, replacement) = props.suggestions.get_replacement_for_index(i);
                                     e.call((replacement, pattern,*p));
                                     return;
                                 }
                             }
                         }
                         if is_valid {
-                            cx.props.onreturn.call(v);
+                            props.onreturn.call(v);
                         }
                     },
                     oncursor_update: move |(v,p)| {
-                        if let Some(e) = cx.props.oncursor_update.as_ref() {
+                        if let Some(e) = props.oncursor_update.as_ref() {
                             e.call((v,p))
                         }
                         *cursor_position.write_silent() = Some(p)
                     },
-                    is_disabled: cx.props.is_disabled,
-                    prevent_up_down_arrows: !cx.props.suggestions.is_empty(),
+                    is_disabled: props.is_disabled,
+                    prevent_up_down_arrows: !props.suggestions.is_empty(),
                     onup_down_arrow:
                         move |code| {
-                            let amount = match cx.props.suggestions {
+                            let amount = match props.suggestions {
                                 SuggestionType::None => 0,
                                 SuggestionType::Emoji(_, v) => v.len(),
                                 SuggestionType::Tag(_, v) => v.len(),
@@ -256,23 +256,23 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 },
                 is_typing.then(|| {
                     rsx!(MessageTyping {
-                        typing_users: cx.props.typing_users.clone()
+                        typing_users: props.typing_users.clone()
                     })
                 })
             }
-            cx.props.extensions.as_ref(),
+            props.extensions.as_ref(),
             div {
                 class: "controls",
-                cx.props.controls.as_ref()
+                props.controls.as_ref()
             },
-            (!cx.props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
+            (!props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
                 rsx!(SuggestionsMenu {
-                suggestions: cx.props.suggestions,
+                suggestions: props.suggestions,
                 on_close: move |_| {
                     is_suggestion_modal_closed.with_mut(|i| *i = true);
                 },
                 on_click: move |(emoji, pattern)| {
-                    if let Some(e) = cx.props.on_suggestion_click.as_ref() {
+                    if let Some(e) = props.on_suggestion_click.as_ref() {
                         if let Some(p) = cursor_position.read().as_ref() {
                             e.call((emoji, pattern, *p))
                         }
@@ -293,16 +293,16 @@ pub struct SuggestionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
-    if cx.props.selected.read().is_none() {
-        *cx.props.selected.write_silent() = Some(0);
+fn SuggestionsMenu<'a>(props: 'a, SuggestionProps<'a>) -> Element {
+    if props.selected.read().is_none() {
+        *props.selected.write_silent() = Some(0);
     }
-    let (label, suggestions): (_, Vec<_>) = match cx.props.suggestions {
+    let (label, suggestions): (_, Vec<_>) = match props.suggestions {
         SuggestionType::None => return cx.render(rsx!(())),
         SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
-                    class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
+                    class: format_args!("{} {}", "chatbar-suggestion", match props.selected.read().as_ref() {
                         Some(v) => if *v == num {"chatbar-selected"} else {""},
                         None => "",
                     }),
@@ -312,7 +312,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
                         )
                     },
                     onclick: move |_| {
-                        cx.props.on_click.call((emoji.clone(), pattern.clone()))
+                        props.on_click.call((emoji.clone(), pattern.clone()))
                     },
                     format_args!("{emoji}  :{alias}:"),
                 })
@@ -323,7 +323,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
             let component = identities.iter().enumerate().map(|(num, id)| {
                 let username = format!("{}#{}", id.username(), id.short_id());
                 rsx!(div {
-                    class: format_args!("{} {}", "chatbar-suggestion", match cx.props.selected.read().as_ref() {
+                    class: format_args!("{} {}", "chatbar-suggestion", match props.selected.read().as_ref() {
                         Some(v) => if *v == num {"chatbar-selected"} else {""},
                         None => ""
                     }),
@@ -333,7 +333,7 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
                         )
                     },
                     onclick: move |_| {
-                        cx.props.on_click.call((username.clone(), pattern.clone()))
+                        props.on_click.call((username.clone(), pattern.clone()))
                     },
                     div {
                         class: "user-suggestion-profile",
@@ -353,17 +353,17 @@ fn SuggestionsMenu<'a>(cx: Scope<'a, SuggestionProps<'a>>) -> Element {
         class: "chatbar-suggestions",
         aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {
-            *cx.props.selected.write() = None;
+            *props.selected.write() = None;
         },
         onmouseleave: move |_| {
-            *cx.props.selected.write() = None;
+            *props.selected.write() = None;
         },
         Button {
             small: true,
             aria_label: "chatbar-suggestion-close-button".into(),
             appearance: Appearance::Secondary,
             icon: icons::outline::Shape::XMark,
-            onpress: move |_| cx.props.on_close.call(()),
+            onpress: move |_| props.on_close.call(()),
         },
         div {
             class: "chatbar-suggestions-header",

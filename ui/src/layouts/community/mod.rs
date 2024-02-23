@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 use kit::components::{community::card::CommunityCard, user::card::UserCard};
 
 #[allow(non_snake_case)]
-pub fn CommunityLayout(cx: Scope) -> Element {
+pub fn CommunityLayout() -> Element {
     // TODO: Placeholder data
     let joined = use_state(cx, || false);
     let friends = use_state(cx, || false);

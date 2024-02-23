@@ -16,7 +16,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope<Props>) -> Element {
+pub fn Sidebar(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(ReusableSidebar {
@@ -38,7 +38,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         )),
         with_nav: cx.render(rsx!(
             crate::AppNav {
-                active: cx.props.active.clone(),
+                active: props.active.clone(),
                 tooltip_direction: ArrowPosition::Left,
                 onnavigate: move |_| {
                     if state.read().configuration.audiovideo.interface_sounds {

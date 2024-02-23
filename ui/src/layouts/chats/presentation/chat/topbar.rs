@@ -37,7 +37,7 @@ enum EditGroupCmd {
     UpdateGroupName((Uuid, String)),
 }
 
-pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
+pub fn get_topbar_children(props: ChatProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let chat_data = use_shared_state::<ChatData>(cx)?;
@@ -106,8 +106,8 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     let direct_message = data.active_chat.conversation_type() == ConversationType::Direct;
     let (show_manage_members, show_rename) = match data.active_chat.conversation_settings() {
         ConversationSettings::Group(group_settings) => (
-            cx.props.is_owner || group_settings.members_can_add_participants(),
-            cx.props.is_owner || group_settings.members_can_change_name(),
+            props.is_owner || group_settings.members_can_add_participants(),
+            props.is_owner || group_settings.members_can_change_name(),
         ),
         ConversationSettings::Direct(_) => (false, true),
     };
@@ -124,7 +124,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
     let subtext = data.active_chat.subtext();
 
     let show_group_settings = || match chat_data.read().active_chat.conversation_settings() {
-        ConversationSettings::Group(_) => cx.props.is_owner,
+        ConversationSettings::Group(_) => props.is_owner,
         ConversationSettings::Direct(_) => false,
     };
 
@@ -145,7 +145,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
         )}
         ContextMenu {
             id: "chat_topbar_context".into(),
-            key: "{cx.props.channel.id}-channel",
+            key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
             items: cx.render(rsx!(
                 if direct_message {rsx!(
@@ -164,7 +164,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             aria_label: "rename-group-context-option".into(),
                             text: "Rename".into(),
                             onpress: move |_| {
-                                cx.props.show_rename_group.set(true);
+                                props.show_rename_group.set(true);
                             }
                         }
                     )}
@@ -174,7 +174,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             aria_label: "manage-members-context-option".into(),
                             text: "Manage Members".into(),
                             onpress: move |_| {
-                                cx.props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
+                                props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
                             }
                         }
                     )}
@@ -185,7 +185,7 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                             aria_label: "group-settings-context-option".into(),
                             text: "Settings".into(),
                             onpress: move |_| {
-                                cx.props.show_group_settings.set(true);
+                                props.show_group_settings.set(true);
                             }
                         },
                     )}
@@ -197,13 +197,13 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                 aria_label: "user-info",
                 onclick: move |_| {
                     if show_group_list && !direct_message {
-                        cx.props.show_group_users.set(None);
+                        props.show_group_users.set(None);
                     } else if !direct_message {
-                        cx.props.show_group_users.set(Some(chat_data.read().active_chat.id()));
-                        cx.props.show_rename_group.set(false);
+                        props.show_group_users.set(Some(chat_data.read().active_chat.id()));
+                        props.show_rename_group.set(false);
                     }
                 },
-                if *cx.props.show_rename_group.get() {rsx! (
+                if *props.show_rename_group.get() {rsx! (
                     div {
                         id: "edit-group-name",
                         class: "edit-group-name",
@@ -222,13 +222,13 @@ pub fn get_topbar_children(cx: Scope<ChatProps>) -> Element {
                                 if v != conversation_title.clone() {
                                     ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
                                 }
-                                cx.props.show_rename_group.set(false);
+                                props.show_rename_group.set(false);
                             },
                         },
                         Button {
                             icon: Icon::XMark,
                             appearance: Appearance::Secondary,
-                            onpress: move |_| cx.props.show_rename_group.set(false),
+                            onpress: move |_| props.show_rename_group.set(false),
                             aria_label: "close-rename-group".into(),
                         }
                     })

@@ -8,7 +8,7 @@ use crate::components::settings::SettingSection;
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub fn FilesSettings(cx: Scope) -> Element {
+pub fn FilesSettings() -> Element {
     log::trace!("Files settings page rendered.");
     cx.render(rsx!(
         div {

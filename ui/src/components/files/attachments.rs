@@ -17,13 +17,13 @@ pub struct AttachmentProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element {
+pub fn Attachments<'a>(props: AttachmentProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let files_attached_to_send = cx.props.files_to_attach.clone();
+    let files_attached_to_send = props.files_to_attach.clone();
     let files_attached_to_send3 = files_attached_to_send;
 
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(cx.props.files_to_attach.iter().map(|location| {
+    let attachments = cx.render(rsx!(props.files_to_attach.iter().map(|location| {
         let (filename, filepath, thumbnail) = match &location {
             Location::Constellation { path } => {
                 let filename = PathBuf::from(&path)
@@ -66,9 +66,9 @@ pub fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element {
             button_icon: icons::outline::Shape::Minus,
             on_press: move |pathbuf: Option<PathBuf>| {
                 if pathbuf.is_none() {
-                    let mut attachments = cx.props.files_to_attach.clone();
+                    let mut attachments = props.files_to_attach.clone();
                     attachments.retain(|location2| location2 != location);
-                    cx.props.on_remove.call(attachments);
+                    props.on_remove.call(attachments);
                 }
             },
         })

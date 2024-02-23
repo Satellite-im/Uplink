@@ -31,7 +31,7 @@ pub enum FriendRoute {
 }
 
 #[allow(non_snake_case)]
-pub fn FriendsLayout(cx: Scope) -> Element {
+pub fn FriendsLayout() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
@@ -104,10 +104,10 @@ pub struct MinimalProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element {
+pub fn MinimalFriendsLayout<'a>(props: 'a, MinimalProps) -> Element {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
-    let route = cx.props.route;
+    let route = props.route;
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {
@@ -140,7 +140,7 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element {
     }))
 }
 
-fn render_route<T>(cx: Scope<T>, route: FriendRoute) -> Element {
+fn render_route<T>(props: T, route: FriendRoute) -> Element {
     cx.render(rsx!(match route {
         FriendRoute::All => rsx!(Friends {}),
         FriendRoute::Pending => rsx!(
@@ -159,7 +159,7 @@ fn render_route<T>(cx: Scope<T>, route: FriendRoute) -> Element {
     }))
 }
 
-fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Element {
+fn get_topbar<'a, T>(props: 'a, T>, route: &'a UseState<FriendRoute) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let pending_friends = state.read().friends().incoming_requests.len();
 

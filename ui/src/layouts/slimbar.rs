@@ -23,7 +23,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
+pub fn SlimbarLayout(props: Props) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_navigator(cx);
 
@@ -107,7 +107,7 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
             navbar_visible: state.read().ui.sidebar_hidden,
             with_nav: cx.render(rsx!(
                 crate::AppNav {
-                    active: cx.props.active.clone(),
+                    active: props.active.clone(),
                     tooltip_direction: ArrowPosition::Left,
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {

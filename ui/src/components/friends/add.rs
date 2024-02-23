@@ -27,7 +27,7 @@ use common::{
 };
 
 #[allow(non_snake_case)]
-pub fn AddFriend(cx: Scope) -> Element {
+pub fn AddFriend() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let clear_input = use_state(cx, || false);
     let friend_input = use_state(cx, String::new);

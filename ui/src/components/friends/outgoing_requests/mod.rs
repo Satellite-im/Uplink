@@ -22,7 +22,7 @@ use warp::{crypto::DID, multipass::identity::Relationship};
 use tracing::log;
 
 #[allow(non_snake_case)]
-pub fn OutgoingRequests(cx: Scope) -> Element {
+pub fn OutgoingRequests() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let friends_list = state.read().outgoing_fr_identities();
     let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);

@@ -10,7 +10,7 @@ use kit::elements::{button::Button, switch::Switch};
 use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
-pub fn NotificationSettings(cx: Scope) -> Element {
+pub fn NotificationSettings() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(

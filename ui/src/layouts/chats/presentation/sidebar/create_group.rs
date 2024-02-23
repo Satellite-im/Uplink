@@ -31,7 +31,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
     log::trace!("rendering create_group");
     let state = use_shared_state::<State>(cx)?;
     let router = use_navigator(cx);
@@ -170,7 +170,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     log::info!("create dm button");
                     if group_name.get().is_some() {
                         ch.send(());
-                        cx.props.oncreate.call(e);
+                        props.oncreate.call(e);
                     } else {
                         state
                         .write()
@@ -196,13 +196,13 @@ pub struct FriendsProps {
     selected_friends: UseState<HashSet<DID>>,
 }
 
-fn render_friends(cx: Scope<FriendsProps>) -> Element {
-    let name_prefix = cx.props.name_prefix.get();
+fn render_friends(props: FriendsProps) -> Element {
+    let name_prefix = props.name_prefix.get();
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
-            cx.props.friends.iter().map(
+            props.friends.iter().map(
                 |(letter, sorted_friends)| {
                     let group_letter = letter.to_string();
                     rsx!(
@@ -220,7 +220,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 rsx!(
                                 render_friend {
                                     friend: _friend.clone(),
-                                    selected_friends: cx.props.selected_friends.clone()
+                                    selected_friends: props.selected_friends.clone()
                                 }
                             )})
                         }
@@ -236,29 +236,29 @@ pub struct FriendProps {
     friend: Identity,
     selected_friends: UseState<HashSet<DID>>,
 }
-fn render_friend(cx: Scope<FriendProps>) -> Element {
+fn render_friend(props: FriendProps) -> Element {
     let is_checked = use_state(cx, || false);
     if !*is_checked.current()
         && cx
             .props
             .selected_friends
             .current()
-            .contains(&cx.props.friend.did_key())
+            .contains(&props.friend.did_key())
     {
         is_checked.set(true);
     }
 
     let update_fn = || {
-        let friend_did = cx.props.friend.did_key();
+        let friend_did = props.friend.did_key();
         let new_value = !*is_checked.get();
         is_checked.set(new_value);
-        let mut friends = cx.props.selected_friends.get().clone();
+        let mut friends = props.selected_friends.get().clone();
         if new_value {
             friends.insert(friend_did);
         } else {
             friends.remove(&friend_did);
         }
-        cx.props.selected_friends.set(friends);
+        props.selected_friends.set(friends);
     };
 
     cx.render(rsx!(
@@ -266,9 +266,9 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             class: "friend-container",
             aria_label: "Friend Container",
             UserImage {
-                platform: cx.props.friend.platform().into(),
-                status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture(),
+                platform: props.friend.platform().into(),
+                status: props.friend.identity_status().into(),
+                image: props.friend.profile_picture(),
                 on_press: move |_| {
                     update_fn();
                 },
@@ -281,7 +281,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     onclick: move |_| {
                         update_fn();
                     },
-                    cx.props.friend.username(),
+                    props.friend.username(),
                 },
             },
             Checkbox {

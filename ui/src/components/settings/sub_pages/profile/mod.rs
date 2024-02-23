@@ -46,7 +46,7 @@ enum ChanCmd {
 }
 
 #[allow(non_snake_case)]
-pub fn ProfileSettings(cx: Scope) -> Element {
+pub fn ProfileSettings() -> Element {
     log::trace!("rendering ProfileSettings");
     let state = use_shared_state::<State>(cx)?;
     let first_render = use_state(cx, || true);
@@ -823,7 +823,7 @@ fn get_input_options(validation_options: Validation) -> Options {
     }
 }
 
-fn get_status_option<'a>(cx: Scope<'a>, status: &IdentityStatus) -> (String, Element) {
+fn get_status_option<'a>(props: 'a, status: &IdentityStatus) -> (String, Element) {
     let indicator = Status::from(*status);
     (
         serde_json::to_string::<IdentityStatus>(status).unwrap_or_default(),

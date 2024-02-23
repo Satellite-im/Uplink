@@ -23,14 +23,14 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 
-pub fn GroupUsers(cx: Scope<Props>) -> Element {
+pub fn GroupUsers(props: Props) -> Element {
     log::trace!("rendering group_users");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
 
-    let quickprofile_data = &cx.props.quickprofile_data;
+    let quickprofile_data = &props.quickprofile_data;
 
-    let active_chat = match cx.props.active_chat.as_ref() {
+    let active_chat = match props.active_chat.as_ref() {
         Some(r) => r,
         None => return cx.render(rsx!(div {})),
     };
@@ -108,9 +108,9 @@ pub struct FriendsProps {
     context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
 
-fn render_friends(cx: Scope<FriendsProps>) -> Element {
-    let name_prefix = cx.props.name_prefix.get();
-    let mut group_participants = cx.props.group_participants.clone();
+fn render_friends(props: FriendsProps) -> Element {
+    let name_prefix = props.name_prefix.get();
+    let mut group_participants = props.group_participants.clone();
     // reduce group participants vector to just the name_prefix matched
     group_participants.retain(|friend| {
         friend
@@ -130,12 +130,12 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                         class: "friend-group",
                         group_participants.iter().map(|_friend| {
                             let friendid = _friend.did_key();
-                            let creator = cx.props.creator.clone();
+                            let creator = props.creator.clone();
                             rsx!(render_friend {
                                 friend: _friend.clone(),
                                 is_creator: friendid == creator,
-                                is_dev: cx.props.is_dev,
-                                context_data: cx.props.context_data.clone(),
+                                is_dev: props.is_dev,
+                                context_data: props.context_data.clone(),
                             }
                         )})
                     }
@@ -159,22 +159,22 @@ pub struct FriendProps {
     is_dev: bool,
     context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
 }
-fn render_friend(cx: Scope<FriendProps>) -> Element {
+fn render_friend(props: FriendProps) -> Element {
     cx.render(rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",
             oncontextmenu: move |e| {
-                cx.props
-                    .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, cx.props.friend.to_owned(), true)));
+                props
+                    .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, props.friend.to_owned(), true)));
             },
             UserImage {
-                platform: cx.props.friend.platform().into(),
-                status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture(),
+                platform: props.friend.platform().into(),
+                status: props.friend.identity_status().into(),
+                image: props.friend.profile_picture(),
                 oncontextmenu: move |e: Event<MouseData>| {
-                    cx.props
-                        .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, cx.props.friend.to_owned(), true)));
+                    props
+                        .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, props.friend.to_owned(), true)));
                 }
             },
             div {
@@ -182,10 +182,10 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                 p {
                     class: "ellipsis-overflow",
                     aria_label: "friend-username",
-                    cx.props.friend.username(),
+                    props.friend.username(),
                 },
             },
-            if cx.props.is_creator {
+            if props.is_creator {
                 rsx!(
                     div {
                         class: "group-creator-container",

@@ -14,7 +14,7 @@ use crate::{utils::WindowDropHandler, window_manager::WindowManagerCmd, WINDOW_C
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[component]
-pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
+pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
     let cmd_tx = WINDOW_CMD_CH.tx.clone();
 
     // Run the script after the component is mounted

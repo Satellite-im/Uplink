@@ -11,13 +11,13 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn RadioList<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let internal_state = use_state(cx, || cx.props.initial_value.clone());
+pub fn RadioList<'a>(props: Props<'a>) -> Element {
+    let internal_state = use_state(cx, || props.initial_value.clone());
 
     cx.render(rsx!(
         div {
             class: "radio-list",
-            for option in &cx.props.values {
+            for option in &props.values {
                 Button {
                     icon: if internal_state.get() == option { Icon::RadioSelected } else { Icon::Radio },
                     appearance: if internal_state.get() == option { Appearance::Primary } else { Appearance::Secondary },
@@ -25,7 +25,7 @@ pub fn RadioList<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     aria_label: format!("radio-option-{}", option),
                     onpress: move |_| {
                         internal_state.set(option.clone());
-                        cx.props.onchange.call(option.clone());
+                        props.onchange.call(option.clone());
                     },
                 }
             }

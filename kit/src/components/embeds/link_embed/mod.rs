@@ -55,8 +55,8 @@ pub struct LinkEmbedProps {
 }
 
 #[allow(non_snake_case)]
-pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
-    let fetch_meta = use_future(cx, &cx.props.link, |link| async move {
+pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
+    let fetch_meta = use_future(cx, &props.link, |link| async move {
         get_meta(link.as_str()).await
     });
 
@@ -77,8 +77,8 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
         meta.description.clone()
     };
 
-    let youtube_video = if cx.props.link.contains("youtube.com/watch?v=") {
-        Some(cx.props.link.replace("watch?v=", "embed/"))
+    let youtube_video = if props.link.contains("youtube.com/watch?v=") {
+        Some(props.link.replace("watch?v=", "embed/"))
     } else {
         None
     };
@@ -89,7 +89,7 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
         } else {
             rsx! {
                 div {
-                    class: format_args!("link-embed-container {}", if cx.props.remote {"link-embed-remote"} else {""}),
+                    class: format_args!("link-embed-container {}", if props.remote {"link-embed-remote"} else {""}),
                     div {
                         class: "link-embed",
                         aria_label: "link-embed",
@@ -106,7 +106,7 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                                 rsx!(a {
                                     class: "link-title",
                                     aria_label: "link-title",
-                                    href: "{cx.props.link}",
+                                    href: "{props.link}",
                                     "{title}"
                                 })
                             }

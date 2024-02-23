@@ -15,19 +15,19 @@ pub struct Props<'a> {
 
 /// If enabled, it will render the bool
 pub fn show_back_button(cx: &Scope<Props>) -> bool {
-    cx.props.with_back_button.unwrap_or(false)
+    props.with_back_button.unwrap_or(false)
 }
 
 /// Emit the back button event
 pub fn emit(cx: &Scope<Props>) {
-    match &cx.props.onback {
+    match &props.onback {
         Some(f) => f.call(()),
         None => {}
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Slimbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Slimbar<'a>(props: Props<'a>) -> Element {
     cx.render(rsx!(div {
         class: "slimbar",
         aria_label: "slimbar",
@@ -46,17 +46,17 @@ pub fn Slimbar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             class: "slimbar-scroll",
             div {
                 class: "slimbar-top",
-                cx.props.top_children.clone(),
+                props.top_children.clone(),
             }
             div {
                 class: "slimbar-inner",
-                cx.props.children.clone(),
+                props.children.clone(),
             }
         }
 
-        cx.props.navbar_visible.then(|| rsx!(div {
+        props.navbar_visible.then(|| rsx!(div {
             class: "nav-vertical-wrapper",
-            cx.props.with_nav.clone(),
+            props.with_nav.clone(),
         })),
     }))
 }

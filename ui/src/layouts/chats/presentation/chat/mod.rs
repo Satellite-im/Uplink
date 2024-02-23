@@ -35,7 +35,7 @@ use uuid::Uuid;
 use warp::crypto::DID;
 
 #[allow(non_snake_case)]
-pub fn Compose(cx: Scope) -> Element {
+pub fn Compose() -> Element {
     log::trace!("rendering compose");
     use_shared_state_provider(cx, ChatData::default);
     use_shared_state_provider(cx, ScrollBtn::new);

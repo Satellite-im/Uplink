@@ -12,7 +12,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn UserCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn UserCard<'a>(props: Props<'a>) -> Element {
     cx.render(
         rsx!(
             div {
@@ -28,21 +28,21 @@ pub fn UserCard<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     }
                     div {
                         class: "title",
-                        h1 { cx.props.name.clone() }
+                        h1 { props.name.clone() }
                     }
                     div {
                         class: "subtitle",
-                        p { cx.props.status.clone() }
+                        p { props.status.clone() }
                     }
                 }
                 div {
                     class: "body",
                     Button {
-                        text: if cx.props.friends { get_local_text("uplink.added") } else { format!("{} {}", get_local_text("uplink.add"), cx.props.name) },
-                        appearance: if cx.props.friends { Appearance::Secondary } else { Appearance::Primary },
-                        icon: if cx.props.friends { Icon::Check } else { Icon::Plus },
+                        text: if props.friends { get_local_text("uplink.added") } else { format!("{} {}", get_local_text("uplink.add"), props.name) },
+                        appearance: if props.friends { Appearance::Secondary } else { Appearance::Primary },
+                        icon: if props.friends { Icon::Check } else { Icon::Plus },
                         onpress: |_| {
-                            cx.props.onjoin.call(());
+                            props.onjoin.call(());
                         }
                     }
                 }

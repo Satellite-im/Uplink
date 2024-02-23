@@ -28,7 +28,7 @@ const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
 
 #[component(no_case_check)]
 pub fn open_file_preview_modal<'a>(
-    cx: Scope<'a>,
+    props: 'a,
     on_dismiss: EventHandler<()>,
     on_download: EventHandler<Option<PathBuf>>,
     file: File,
@@ -57,30 +57,30 @@ struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let file_path_in_local_disk = use_ref(cx, PathBuf::new);
 
-    let thumbnail = thumbnail_to_base64(cx.props.file);
-    let temp_dir = STATIC_ARGS.temp_files.join(cx.props.file.name());
+    let thumbnail = thumbnail_to_base64(props.file);
+    let temp_dir = STATIC_ARGS.temp_files.join(props.file.name());
 
     let file_loading_counter = use_ref(cx, || 0);
     // Using id to change file name in case of duplicate files and avoid
     // open different file from that user clicked
     let temp_dir_with_file_id = STATIC_ARGS.temp_files.join(format!(
         "{}.{}",
-        cx.props.file.id(),
+        props.file.id(),
         temp_dir.extension().unwrap_or_default().to_string_lossy()
     ));
     let should_download = use_state(cx, || true);
 
-    let is_video = is_video(&cx.props.file.name());
-    let is_audio = is_audio(&cx.props.file.name());
-    let is_code = is_lang_file(&cx.props.file.name());
+    let is_video = is_video(&props.file.name());
+    let is_audio = is_audio(&props.file.name());
+    let is_code = is_lang_file(&props.file.name());
 
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
         if !temp_dir_with_file_id.exists() && *should_download.get() {
-            cx.props.on_download.call(Some(temp_dir.clone()));
+            props.on_download.call(Some(temp_dir.clone()));
             should_download.set(false);
         }
         if temp_dir_with_file_id.exists() {
@@ -132,7 +132,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         .flatten()
         .unwrap_or_default();
 
-    let file_type = get_file_type(&cx.props.file.name());
+    let file_type = get_file_type(&props.file.name());
     let should_dismiss_on_error = use_ref(cx, || false);
 
     if file_type == FileType::Unkwnown {
@@ -146,7 +146,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     3,
                 ),
             ));
-        cx.props.on_dismiss.call(());
+        props.on_dismiss.call(());
     }
 
     cx.render(rsx!(
@@ -159,7 +159,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     aria_label: "files-download-preview".into(),
                     text: get_local_text("files.download"),
                     onpress: move |_| {
-                        cx.props.on_download.call(None);
+                        props.on_download.call(None);
                     }
                 },
             )),
@@ -192,7 +192,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 })
             } else if *file_loading_counter.read() <  TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD {
                 if *should_dismiss_on_error.read() {
-                    cx.props.on_dismiss.call(());
+                    props.on_dismiss.call(());
                 }
                 rsx!(Loader {
                     spinning: true
@@ -208,7 +208,7 @@ fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                         3,
                     ),
                 ));
-                cx.props.on_dismiss.call(());
+                props.on_dismiss.call(());
                 rsx!(div {})
             }
         },
@@ -223,10 +223,10 @@ struct FileTypeTagProps {
 }
 
 #[allow(non_snake_case)]
-fn FileTypeTag(cx: Scope<FileTypeTagProps>) -> Element {
-    let file_type = cx.props.file_type.clone();
-    let source_path = cx.props.source.clone();
-    let code_content = cx.props.code_content.clone();
+fn FileTypeTag(props: FileTypeTagProps) -> Element {
+    let file_type = props.file_type.clone();
+    let source_path = props.source.clone();
+    let code_content = props.code_content.clone();
     let code_class = get_language_class(&source_path);
 
     cx.render(match file_type {

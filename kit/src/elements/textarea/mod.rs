@@ -70,7 +70,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
     let left_shift_pressed = use_ref(cx, || false);
@@ -97,16 +97,16 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         show_char_counter,
         prevent_up_down_arrows,
         onup_down_arrow,
-    } = &cx.props;
+    } = &props;
 
-    let id = if cx.props.id.is_empty() {
+    let id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
     } else {
-        cx.props.id.clone()
+        props.id.clone()
     };
     let id2 = id.clone();
     let id_char_counter = id.clone();
-    let focus_script = if cx.props.ignore_focus {
+    let focus_script = if props.ignore_focus {
         String::new()
     } else {
         include_str!("./focus.js").replace("$UUID", &id)
@@ -297,7 +297,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 
 // Input using a rich editor making markdown changes visible
 #[allow(non_snake_case)]
-pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
     let listener_data = use_ref(cx, || None);
@@ -320,12 +320,12 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         show_char_counter,
         prevent_up_down_arrows,
         onup_down_arrow,
-    } = &cx.props;
+    } = &props;
 
-    let id = if cx.props.id.is_empty() {
+    let id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
     } else {
-        cx.props.id.clone()
+        props.id.clone()
     };
     let id2 = id.clone();
     let id_char_counter = id.clone();
@@ -367,7 +367,7 @@ pub fn InputRich<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         to_owned![listener_data, eval, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)
-            .replace("$AUTOFOCUS", &(!cx.props.ignore_focus).to_string())
+            .replace("$AUTOFOCUS", &(!props.ignore_focus).to_string())
             .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
         async move {
             if let Ok(eval) = eval(&rich_editor) {

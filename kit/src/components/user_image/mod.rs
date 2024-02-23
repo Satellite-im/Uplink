@@ -28,34 +28,34 @@ pub struct Props<'a> {
 }
 
 pub fn get_image(cx: &Scope<Props>) -> String {
-    cx.props.image.clone().unwrap_or_default()
+    props.image.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user_image was interacted with.
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
-    match &cx.props.on_press {
+    match &props.on_press {
         Some(f) => f.call(e),
         None => {}
     }
 }
 
 pub fn emit_context(cx: &Scope<Props>, e: Event<MouseData>) {
-    match &cx.props.oncontextmenu {
+    match &props.oncontextmenu {
         Some(f) => f.call(e),
         None => {}
     }
 }
 
 #[allow(non_snake_case)]
-pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn UserImage<'a>(props: Props<'a>) -> Element {
     let image_data: String = get_image(&cx);
-    let status = cx.props.status;
-    let platform = cx.props.platform;
-    let typing = cx.props.typing.unwrap_or_default();
-    let username = cx.props.with_username.clone().unwrap_or_default();
-    let pressable = cx.props.on_press.is_some();
+    let status = props.status;
+    let platform = props.platform;
+    let typing = props.typing.unwrap_or_default();
+    let username = props.with_username.clone().unwrap_or_default();
+    let pressable = props.on_press.is_some();
 
-    let loading = cx.props.loading.unwrap_or_default();
+    let loading = props.loading.unwrap_or_default();
 
     cx.render(rsx!(if loading {
         rsx!(UserImageLoading {})
@@ -64,7 +64,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element {
             div {
                 class: {
                     format_args!("user-image-wrap {} {}", if pressable { "pressable" } else { "" },
-                    if cx.props.oncontextmenu.is_some() {"has-context-handler"} else {""})
+                    if props.oncontextmenu.is_some() {"has-context-handler"} else {""})
                 },
                 aria_label: "user-image-wrap",
                 onclick: move |e| emit(&cx, e),
@@ -93,7 +93,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                         })
                     })
                 },
-                (cx.props.with_username.is_some()).then(|| rsx!(
+                (props.with_username.is_some()).then(|| rsx!(
                     Label {
                         text: username
                     }
@@ -104,7 +104,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn UserImageLoading(cx: Scope) -> Element {
+pub fn UserImageLoading() -> Element {
     cx.render(rsx!(div {
         class: "skeletal user-image-loading"
     }))

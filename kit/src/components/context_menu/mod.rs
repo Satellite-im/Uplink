@@ -29,47 +29,47 @@ pub struct ItemProps<'a> {
 
 /// Tells the parent the menu was interacted with.
 pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
-    if let Some(f) = cx.props.onpress.as_ref() {
+    if let Some(f) = props.onpress.as_ref() {
         f.call(e)
     }
 }
 
 #[allow(non_snake_case)]
-pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element {
-    let should_render = cx.props.should_render.unwrap_or(true);
+pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
+    let should_render = props.should_render.unwrap_or(true);
 
     if !should_render {
         return None;
     }
 
-    let class = if cx.props.danger.unwrap_or_default() {
+    let class = if props.danger.unwrap_or_default() {
         "context-item danger"
     } else {
         "context-item"
     };
 
-    let disabled: bool = cx.props.disabled.unwrap_or(false);
+    let disabled: bool = props.disabled.unwrap_or(false);
 
-    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
+    let aria_label = props.aria_label.clone().unwrap_or_default();
 
     let tooltip_visible = use_state(cx, || false);
 
-    if let Some(children) = &cx.props.children {
+    if let Some(children) = &props.children {
         cx.render(rsx!(
             div {
                 onmouseenter: move |_| {
-                    if cx.props.tooltip.is_some() {
+                    if props.tooltip.is_some() {
                          tooltip_visible.set(true);
                     }
                 },
                 onmouseleave: move |_| {
-                    if cx.props.tooltip.is_some() {
+                    if props.tooltip.is_some() {
                          tooltip_visible.set(false);
                     }
                 },
                 class: "context-item simple-context-item",
                 if *tooltip_visible.current() {
-                    cx.props.tooltip.as_ref().map(|tooltip| {
+                    props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
                            tooltip
                         )
@@ -82,12 +82,12 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element {
         cx.render(rsx!(
             div {
                 onmouseenter: move |_| {
-                    if cx.props.tooltip.is_some() {
+                    if props.tooltip.is_some() {
                          tooltip_visible.set(true);
                     }
                 },
                 onmouseleave: move |_| {
-                    if cx.props.tooltip.is_some() {
+                    if props.tooltip.is_some() {
                          tooltip_visible.set(false);
                     }
                 },
@@ -99,16 +99,16 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element {
                             emit(&cx, e);
                         }
                     },
-                    (cx.props.icon.is_some()).then(|| {
-                        let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
+                    (props.icon.is_some()).then(|| {
+                        let icon = props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
                         rsx! {
                             icons::Icon { icon: icon }
                         }
                     }),
-                    div {"{cx.props.text}"},
+                    div {"{props.text}"},
                 }
                 if *tooltip_visible.current() {
-                    cx.props.tooltip.as_ref().map(|tooltip| {
+                    props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
                            tooltip
                         )
@@ -126,15 +126,15 @@ pub struct IdentityProps {
 }
 
 #[allow(non_snake_case)]
-pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
+pub fn IdentityHeader(props: IdentityProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let sender = state
         .read()
-        .get_identity(&cx.props.sender_did)
+        .get_identity(&props.sender_did)
         .unwrap_or_default();
     let image = sender.profile_picture();
     let banner = sender.profile_banner();
-    let with_status = cx.props.with_status.unwrap_or(true);
+    let with_status = props.with_status.unwrap_or(true);
     cx.render(rsx!(
         div {
             class: "identity-header",
@@ -171,12 +171,12 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let id = &cx.props.id;
+pub fn ContextMenu<'a>(props: 'a, Props<'a>) -> Element {
+    let id = &props.id;
     let window = use_window(cx);
 
-    let devmode = cx.props.devmode.unwrap_or(false);
-    let with_click = cx.props.left_click_trigger.unwrap_or_default();
+    let devmode = props.devmode.unwrap_or(false);
+    let with_click = props.left_click_trigger.unwrap_or_default();
 
     // Handles the hiding and showing of the context menu
     let eval = use_eval(cx);
@@ -194,18 +194,18 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         div {
             class: "context-wrap",
             onmouseenter: |e| {
-                if let Some(f) = cx.props.on_mouseenter.as_ref() { f.call(e) }
+                if let Some(f) = props.on_mouseenter.as_ref() { f.call(e) }
             },
             div {
                 id: "{id}",
                 class: "context-inner",
-                &cx.props.children,
+                &props.children,
             },
             div {
                 id: "{id}-context-menu",
                 class: "context-menu hidden",
                 aria_label: "Context Menu",
-                &cx.props.items,
+                &props.items,
                 devmode.then(|| rsx!(
                     br {},
                     hr {},

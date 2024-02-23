@@ -77,14 +77,14 @@ pub struct Props<'a> {
 }
 
 pub fn emit(cx: &Scope<Props>, e: Page) {
-    match &cx.props.onpress {
+    match &props.onpress {
         Some(f) => f.call(e),
         None => {}
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Sidebar<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let page = use_shared_state::<Page>(cx)?;
     let _router = dioxus_router::hooks::use_navigator(cx);

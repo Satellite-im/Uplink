@@ -39,13 +39,13 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelElement(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn ChannelElement(props: 'a, Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
         ContextMenu {
-            id: format!("{}-channel", cx.props.channel.id),
-            key: "{cx.props.channel.id}-channel",
+            id: format!("{}-channel", props.channel.id),
+            key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
             items: cx.render(rsx!(
                 ContextItem {
@@ -68,9 +68,9 @@ pub fn ChannelElement(cx: Scope<'a, Props<'a>>) -> Element {
             div {
                 class: "channel",
                 onclick: |_| {
-                    cx.props.onpress.call(cx.props.channel.clone());
+                    props.onpress.call(props.channel.clone());
                 },
-                match &cx.props.channel.kind {
+                match &props.channel.kind {
                     ChannelType::Text => rsx!(IconElement {
                         icon: Icon::ChatBubbleBottomCenterText
                     }),
@@ -95,13 +95,13 @@ pub fn ChannelElement(cx: Scope<'a, Props<'a>>) -> Element {
                 },
                 div {
                     class: "channel-info",
-                    match &cx.props.channel.kind {
+                    match &props.channel.kind {
                         ChannelType::Voice(_) => rsx!(
                             div {
                                 class: "channel-type-voice",
                                 p {
                                     class: "channel-name",
-                                    cx.props.channel.name.clone()
+                                    props.channel.name.clone()
                                 }
                             }
                         ),
@@ -110,7 +110,7 @@ pub fn ChannelElement(cx: Scope<'a, Props<'a>>) -> Element {
                                 class: "channel-type-text",
                                 p {
                                     class: "channel-name",
-                                    cx.props.channel.name.clone()
+                                    props.channel.name.clone()
                                 }
                             }
                         ),

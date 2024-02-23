@@ -34,7 +34,7 @@
 // use dioxus_heroicons::{Icon, IconButton, solid::Shape};
 //
 // #[component]
-// fn DeleteButton(cx: Scope, foo: u8) -> Element {
+// fn DeleteButton( foo: u8) -> Element {
 //     let onclick = move |evt| {
 //         // Delete a thing
 //     };
@@ -51,7 +51,7 @@
 //     })
 // }
 //
-// fn PointsRight(cx: Scope) -> Element {
+// fn PointsRight() -> Element {
 //     cx.render(rsx! {
 //         Icon {
 //             icon: Shape::ArrowRight,
@@ -144,33 +144,33 @@ pub struct IconButtonProps<'a, S: IconShape> {
 /// The child elements are optional, and are there so you can add some
 /// additional text or other HTML to the button.
 #[allow(non_snake_case)]
-pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> Element {
+pub fn IconButton<'a, S: IconShape>(props: IconButtonProps<'a, S>) -> Element {
     cx.render(rsx! {
         button {
-            aria_label: "{cx.props.aria_label}",
-            class: format_args!("{}", cx.props.class.clone().unwrap_or_default()),
-            title: format_args!("{}", cx.props.title.unwrap_or("")),
-            disabled: format_args!("{}", if cx.props.disabled { "true" } else { "false" }),
-            onclick: move |evt| if !cx.props.disabled {
-                if let Some(oc) = &cx.props.onclick {
+            aria_label: "{props.aria_label}",
+            class: format_args!("{}", props.class.clone().unwrap_or_default()),
+            title: format_args!("{}", props.title.unwrap_or("")),
+            disabled: format_args!("{}", if props.disabled { "true" } else { "false" }),
+            onclick: move |evt| if !props.disabled {
+                if let Some(oc) = &props.onclick {
                     oc.call(evt);
                 }
             },
             Icon {
                 ..IconProps {
-                    class: cx.props.icon_class,
-                    size: cx.props.size,
-                    fill: cx.props.fill,
-                    icon: cx.props.icon.clone(),
-                    disabled: cx.props.disabled,
-                    disabled_fill: cx.props.disabled_fill
+                    class: props.icon_class,
+                    size: props.size,
+                    fill: props.fill,
+                    icon: props.icon.clone(),
+                    disabled: props.disabled,
+                    disabled_fill: props.disabled_fill
                 },
             },
-            (cx.props.children.is_some()).then(|| {
+            (props.children.is_some()).then(|| {
                 rsx!(
                     span {
-                        class: format_args!("{}", cx.props.span_class.unwrap_or("")),
-                        cx.props.children.as_ref(),
+                        class: format_args!("{}", props.span_class.unwrap_or("")),
+                        props.children.as_ref(),
                     },
                 )
             })
@@ -211,20 +211,20 @@ pub struct IconProps<'a, S: IconShape> {
 /// See the [`IconProps`] field documentation for details on the properties it
 /// accepts.
 #[allow(non_snake_case)]
-pub fn Icon<'a, S: IconShape>(cx: Scope<'a, IconProps<S>>) -> Element {
-    let fill = if cx.props.disabled {
-        cx.props.disabled_fill
+pub fn Icon<'a, S: IconShape>(props: IconProps<S>) -> Element {
+    let fill = if props.disabled {
+        props.disabled_fill
     } else {
-        cx.props.fill
+        props.fill
     };
     cx.render(rsx! {
         svg {
-            class: format_args!("{}", cx.props.class.unwrap_or("")),
-            height: format_args!("{}", cx.props.size),
-            width: format_args!("{}", cx.props.size),
-            view_box: format_args!("{}", cx.props.icon.view_box()),
+            class: format_args!("{}", props.class.unwrap_or("")),
+            height: format_args!("{}", props.size),
+            width: format_args!("{}", props.size),
+            view_box: format_args!("{}", props.icon.view_box()),
             fill: "{fill}",
-            cx.props.icon.path(),
+            props.icon.path(),
         }
     })
 }

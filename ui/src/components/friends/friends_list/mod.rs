@@ -53,7 +53,7 @@ enum ChanCmd {
 }
 
 #[allow(non_snake_case)]
-pub fn Friends(cx: Scope) -> Element {
+pub fn Friends() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let reset_filter = use_state(cx, || false);
     let friend_filter = use_state(cx, String::new);
@@ -383,7 +383,7 @@ pub fn Friends(cx: Scope) -> Element {
 // todo: remove this
 #[allow(unused)]
 #[allow(non_snake_case)]
-pub fn FriendsSkeletal(cx: Scope) -> Element {
+pub fn FriendsSkeletal() -> Element {
     cx.render(rsx!(
         div {
             class: "friends-list",
@@ -403,7 +403,7 @@ pub struct FriendProps {
     excluded_chat: Option<Uuid>,
 }
 
-pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
+pub fn ShareFriendsModal(props: FriendProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let chats_selected = use_ref(cx, Vec::new);
     let ch = use_coroutine(
@@ -432,8 +432,8 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
         },
     );
     cx.render(rsx!(Modal {
-        open: cx.props.did.get().is_some(),
-        onclose: move |_| cx.props.did.set(None),
+        open: props.did.get().is_some(),
+        onclose: move |_| props.did.set(None),
         show_close_button: false,
         transparent: false,
         close_on_click_inside_modal: false,
@@ -455,13 +455,13 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                         appearance: Appearance::Secondary,
                         disabled: chats_selected.read().is_empty(),
                         onpress: move |_| {
-                            ch.send((cx.props.did.as_ref().unwrap().clone(), chats_selected.read().clone()));
-                            cx.props.did.set(None);
+                            ch.send((props.did.as_ref().unwrap().clone(), chats_selected.read().clone()));
+                            props.did.set(None);
                         },
                     },
                 }
             }
-            state.read().chats_sidebar().iter().filter(|c|cx.props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
+            state.read().chats_sidebar().iter().filter(|c|props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
                 let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let other_participants =  state.read().remove_self(&participants);

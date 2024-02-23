@@ -23,7 +23,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Multiline<'a>(props: Props<'a>) -> Element {
     let default_text = cx
         .props
         .default_text
@@ -34,10 +34,10 @@ pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         div {
             class: "multiline",
             Input {
-                placeholder: cx.props.placeholder.clone(),
+                placeholder: props.placeholder.clone(),
                 default_text: default_text,
-                icon: cx.props.icon.unwrap_or(Icon::QuestionMarkCircle),
-                options: cx.props.options.clone().unwrap_or_default(),
+                icon: props.icon.unwrap_or(Icon::QuestionMarkCircle),
+                options: props.options.clone().unwrap_or_default(),
 
             }
         }

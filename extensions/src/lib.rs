@@ -44,7 +44,7 @@ macro_rules! export_extension {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn render(cx: &ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
+        pub extern "C" fn render( runtime: std::rc::Rc<Runtime>) -> Element {
             $a.render(cx, runtime)
         }
 
@@ -104,7 +104,7 @@ impl UplinkExtension {
         unsafe {
             let res = self
                 .lib
-                .get::<unsafe extern "C" fn(cx: &ScopeState, runtime: std::rc::Rc<Runtime>) -> Element>(b"render\0");
+                .get::<unsafe extern "C" fn( runtime: std::rc::Rc<Runtime>) -> Element>(b"render\0");
             match res {
                 Ok(f) => f(cx, Runtime::current().unwrap()),
                 Err(_) => None,

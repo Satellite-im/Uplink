@@ -30,7 +30,7 @@ pub enum Tab {
 
 #[component]
 #[allow(non_snake_case)]
-pub fn DebugLogger(cx: Scope) -> Element {
+pub fn DebugLogger() -> Element {
     let window = use_window(cx);
 
     let logs_to_show = use_state(cx, logger::load_debug_log);

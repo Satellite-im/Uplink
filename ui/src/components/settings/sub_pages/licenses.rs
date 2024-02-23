@@ -7,7 +7,7 @@ use tracing::log;
 use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
-pub fn Licenses(cx: Scope) -> Element {
+pub fn Licenses() -> Element {
     log::trace!("Licenses settings page rendered.");
     const MIT_URL: &str = "https://github.com/Satellite-im/Uplink/blob/dev/LICENSE";
 

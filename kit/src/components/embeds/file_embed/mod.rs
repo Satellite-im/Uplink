@@ -64,9 +64,9 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    //log::trace!("rendering file embed: {}", cx.props.filename);
-    let file_extension = std::path::Path::new(&cx.props.filename)
+pub fn FileEmbed<'a>(props: 'a, Props<'a>) -> Element {
+    //log::trace!("rendering file embed: {}", props.filename);
+    let file_extension = std::path::Path::new(&props.filename)
         .extension()
         .and_then(OsStr::to_str)
         .map(|s| {
@@ -78,28 +78,28 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
         })
         .unwrap_or_default();
     let file_extension_is_empty = file_extension.is_empty();
-    let filename = &cx.props.filename;
-    let download_pending = cx.props.download_pending.unwrap_or(false);
-    let is_from_attachments = cx.props.is_from_attachments.unwrap_or(false);
+    let filename = &props.filename;
+    let download_pending = props.download_pending.unwrap_or(false);
+    let is_from_attachments = props.is_from_attachments.unwrap_or(false);
     let btn_icon = if !download_pending {
-        cx.props.button_icon.unwrap_or(Icon::ArrowDown)
+        props.button_icon.unwrap_or(Icon::ArrowDown)
     } else {
         Icon::DocumentArrowDown // TODO: Should this be an animated download icon? What is the purpose of this?
     };
 
-    let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
+    let with_download_button = if let Some(with_download_button) = props.with_download_button {
         with_download_button
-    } else if let Some(is_from_attachments) = cx.props.is_from_attachments {
+    } else if let Some(is_from_attachments) = props.is_from_attachments {
         is_from_attachments
     } else {
         false
     };
 
-    let is_pending = cx.props.progress.is_some();
+    let is_pending = props.progress.is_some();
 
     let mut file_size_pending = String::new();
 
-    let perc = if let Some(p) = cx.props.progress {
+    let perc = if let Some(p) = props.progress {
         match p {
             Progression::CurrentProgress {
                 name: _,
@@ -141,26 +141,26 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
     // kind
     // kind - size
     // size
-    let file_description = match cx.props.filesize {
+    let file_description = match props.filesize {
         Some(filesize) => {
             let size = format_size(filesize, DECIMAL);
-            match cx.props.kind.as_ref() {
+            match props.kind.as_ref() {
                 Some(kind) => format!("{kind} - {size}"),
                 None => size,
             }
         }
         None => {
             if file_size_pending.is_empty() {
-                cx.props.kind.clone().unwrap_or_default()
+                props.kind.clone().unwrap_or_default()
             } else {
                 file_size_pending
             }
         }
     };
-    let remote = cx.props.remote.unwrap_or_default();
-    let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
+    let remote = props.remote.unwrap_or_default();
+    let thumbnail = props.thumbnail.clone().unwrap_or_default();
     let has_thumbnail = !thumbnail.is_empty();
-    let file_name_with_extension = cx.props.filename.to_string();
+    let file_name_with_extension = props.filename.to_string();
     let temp_dir = STATIC_ARGS
         .temp_files
         .join(file_name_with_extension.clone());
@@ -175,7 +175,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                     if remote {
                         "remote"
                     } else { "" },
-                    if cx.props.big.unwrap_or_default() {
+                    if props.big.unwrap_or_default() {
                         "big"
                     } else { "" }
                 )
@@ -201,11 +201,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                                         aria_label: "message-image",
                                         onclick: move |mouse_event_data: Event<MouseData>|
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && !is_from_attachments {
-                                            cx.props.on_press.call(Some(temp_dir.clone()));
+                                            props.on_press.call(Some(temp_dir.clone()));
                                         },
                                         class: format_args!(
                                             "image {} expandable-image",
-                                            if cx.props.big.unwrap_or_default() {
+                                            if props.big.unwrap_or_default() {
                                                 "big"
                                             } else { "" }
                                         ),
@@ -214,7 +214,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                                     show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
                                    }
                                     )
-                        } else if let Some(filepath) = cx.props.filepath.clone() {
+                        } else if let Some(filepath) = props.filepath.clone() {
                             let is_image_or_video = is_image(filename.clone()) || is_video;
                             if is_image_or_video && filepath.exists() {
                                 let fixed_path = get_fixed_path_to_load_local_file(filepath.clone());
@@ -231,7 +231,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                                         width: "60px",
                                         margin: "30px 0",
                                         IconElement {
-                                            icon: cx.props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
+                                            icon: props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                         }
                                         if !file_extension_is_empty {
                                             rsx!( label {
@@ -249,11 +249,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                                     height: "60px",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && is_file_available_to_preview && !is_from_attachments {
-                                            cx.props.on_press.call(Some(temp_dir.clone()));
+                                            props.on_press.call(Some(temp_dir.clone()));
                                         }
                                     },
                                     IconElement {
-                                        icon: cx.props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
+                                        icon: props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                     }
                                     if !file_extension_is_empty {
                                         rsx!( label {
@@ -324,7 +324,7 @@ fn is_image(filename: String) -> bool {
 }
 
 fn show_download_or_minus_button_if_enabled<'a>(
-    cx: Scope<'a, Props<'a>>,
+    props: 'a, Props<'a>,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,
 ) -> Element {
@@ -336,7 +336,7 @@ fn show_download_or_minus_button_if_enabled<'a>(
                     icon: btn_icon,
                     appearance: Appearance::Primary,
                     aria_label: "attachment-button".into(),
-                    onpress: move |_| cx.props.on_press.call(None),
+                    onpress: move |_| props.on_press.call(None),
                 }
             }
         ))

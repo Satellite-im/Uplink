@@ -15,7 +15,7 @@ use uuid::Uuid;
 use crate::layouts::chats::data::{self, ChatBehavior, ChatData};
 
 pub fn handle_warp_events(
-    cx: Scope,
+    
     state: &UseSharedState<State>,
     chat_data: &UseSharedState<ChatData>,
 ) {

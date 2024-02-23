@@ -5,7 +5,7 @@ pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
 pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
 pub const MARKDOWN_EDITOR: &str = include_str!("../extra/assets/scripts/editor.js");
 
-pub fn PrismScripts(cx: Scope) -> Element {
+pub fn PrismScripts() -> Element {
     let prism_path = use_prism_path(cx);
 
     render! {
@@ -15,7 +15,7 @@ pub fn PrismScripts(cx: Scope) -> Element {
     }
 }
 
-fn use_prism_path(cx: &ScopeState) -> &str {
+fn use_prism_path() -> &str {
     cx.use_hook(|| {
         format!(
             r"Prism.plugins.autoloader.languages_path = '{}';",

@@ -48,7 +48,7 @@ use self::controller::{StorageController, UploadFileController};
 use super::functions::{self, ChanCmd, UseEvalFn};
 
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
+pub fn FilesLayout(props: '_) -> Element<'_> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);

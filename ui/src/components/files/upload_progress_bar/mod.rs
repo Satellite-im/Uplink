@@ -108,13 +108,13 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element {
-    let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
+pub fn UploadProgressBar<'a>(props: Props) -> Element {
+    let are_files_hovering_app = props.are_files_hovering_app.clone();
     let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
     let called_drag_and_drop_function: &UseRef<bool> = use_ref(cx, || false);
     let window = use_window(cx);
 
-    if *cx.props.are_files_hovering_app.read() && !*called_drag_and_drop_function.read() {
+    if *props.are_files_hovering_app.read() && !*called_drag_and_drop_function.read() {
         *called_drag_and_drop_function.write_silent() = true;
         cx.spawn({
             to_owned![
@@ -136,14 +136,14 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element {
     }
 
     if files_ready_to_upload.with(|i| !i.is_empty()) {
-        *cx.props.files_been_uploaded.write_silent() = true;
-        cx.props
+        *props.files_been_uploaded.write_silent() = true;
+        props
             .on_update
             .call(files_ready_to_upload.read().clone());
         *files_ready_to_upload.write_silent() = Vec::new();
     }
 
-    if *cx.props.files_been_uploaded.read() {
+    if *props.files_been_uploaded.read() {
         return cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container",
@@ -203,10 +203,10 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element {
                         class: "cancel-button",
                         Button {
                             aria_label: "cancel-upload".into(),
-                            disabled: *cx.props.disable_cancel_upload_button.read(),
+                            disabled: *props.disable_cancel_upload_button.read(),
                             appearance: Appearance::Primary,
                             onpress: move |_| {
-                                cx.props.on_cancel.call(());
+                                props.on_cancel.call(());
                             },
                             text: get_local_text("uplink.cancel"),
                         }
@@ -217,7 +217,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element {
         ));
     }
 
-    if !*cx.props.are_files_hovering_app.read() {
+    if !*props.are_files_hovering_app.read() {
         return None;
     }
 

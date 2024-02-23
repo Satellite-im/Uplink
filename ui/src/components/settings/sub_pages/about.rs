@@ -19,7 +19,7 @@ use crate::{
 };
 
 #[allow(non_snake_case)]
-pub fn AboutPage(cx: Scope) -> Element {
+pub fn AboutPage() -> Element {
     let version = env!("CARGO_PKG_VERSION");
     let app_name = env!("CARGO_PKG_NAME");
     let state = use_shared_state::<State>(cx)?;

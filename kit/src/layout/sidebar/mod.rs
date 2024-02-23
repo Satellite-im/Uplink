@@ -19,9 +19,9 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
+pub fn Sidebar<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let hidden = cx.props.hidden.unwrap_or(false);
+    let hidden = props.hidden.unwrap_or(false);
 
     let hamburger = cx.render(rsx!(Button {
         aria_label: "hamburger-button".into(),
@@ -42,7 +42,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 div {
                     class: "search",
                     aria_label: "sidebar-search",
-                    cx.props.with_search.as_ref(),
+                    props.with_search.as_ref(),
                     div {
                         class: "hamburger",
                         hamburger
@@ -51,10 +51,10 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element {
                 div {
                     class: "children disable-select",
                     aria_label: "sidebar-children",
-                    cx.props.children.as_ref()
+                    props.children.as_ref()
                 },
-                cx.props.with_call_controls.as_ref(),
-                cx.props.with_nav.as_ref(),
+                props.with_call_controls.as_ref(),
+                props.with_nav.as_ref(),
             )
         },
     ))

@@ -12,7 +12,7 @@ use super::SendFilesStartLocation;
 
 #[component]
 pub fn FileCheckbox(
-    cx: Scope<'a>,
+    props: 'a,
     file_path: String,
     storage_controller: UseRef<StorageController>,
     is_selecting_files: bool,
@@ -39,7 +39,7 @@ pub fn FileCheckbox(
 
 #[component]
 pub fn SendFilesTopbar<'a>(
-    cx: Scope<'a>,
+    props: 'a,
     send_files_from_storage_state: UseState<bool>,
     send_files_start_location: SendFilesStartLocation,
     storage_controller: UseRef<StorageController>,

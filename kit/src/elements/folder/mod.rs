@@ -27,32 +27,32 @@ pub struct Props<'a> {
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    cx.props.aria_label.clone().unwrap_or_default()
+    props.aria_label.clone().unwrap_or_default()
 }
 
 pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
-    if let Some(f) = cx.props.onrename.as_ref() {
+    if let Some(f) = props.onrename.as_ref() {
         f.call((s, key_code))
     }
 }
 
 pub fn emit_press(cx: &Scope<Props>) {
-    if let Some(f) = cx.props.onpress.as_ref() {
+    if let Some(f) = props.onpress.as_ref() {
         f.call(())
     }
 }
 
 #[allow(non_snake_case)]
-pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element {
-    let open = cx.props.open.unwrap_or_default();
-    let folder_name = cx.props.text.clone().unwrap_or_default();
+pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
+    let open = props.open.unwrap_or_default();
+    let folder_name = props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(&cx);
     let placeholder = folder_name.clone();
-    let with_rename = cx.props.with_rename.unwrap_or_default();
+    let with_rename = props.with_rename.unwrap_or_default();
     let icon = if open { Icon::FolderOpen } else { Icon::Folder };
-    let disabled = cx.props.disabled.unwrap_or_default();
+    let disabled = props.disabled.unwrap_or_default();
 
-    let loading = cx.props.loading.unwrap_or_default();
+    let loading = props.loading.unwrap_or_default();
 
     if loading {
         cx.render(rsx!(FolderSkeletal {}))
@@ -113,7 +113,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn FolderSkeletal(cx: Scope) -> Element {
+pub fn FolderSkeletal() -> Element {
     cx.render(rsx!(
         div {
             class: "folder",

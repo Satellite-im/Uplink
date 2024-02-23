@@ -6,10 +6,10 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn YouTubePlayer(cx: Scope<Props>) -> Element {
-    let src_video = match extract_video_id_from_embed_url(&cx.props.video_url) {
+pub fn YouTubePlayer(props: Props) -> Element {
+    let src_video = match extract_video_id_from_embed_url(&props.video_url) {
         Some(embed_path) => embed_path,
-        None => cx.props.video_url.clone(),
+        None => props.video_url.clone(),
     };
 
     cx.render(rsx!(
