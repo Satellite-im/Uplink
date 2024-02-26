@@ -160,9 +160,6 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
 
             rsx!(div {
                     id: "chat-selector-to-send-files",
-                    height: "80px",
-                    padding: "16px",
-                    display: "inline-flex",
                     Checkbox {
                         disabled: false,
                         width: "1em".into(),
