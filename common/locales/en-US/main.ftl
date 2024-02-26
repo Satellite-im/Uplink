@@ -106,6 +106,7 @@ messages = Messages
     .emoji-suggestion = Suggested Emoji
     .username-suggestion = Suggested Users
     .control-group = More
+    .no-chats = No chats available
     
 favorites = Favorites
     .favorites = Favorites
