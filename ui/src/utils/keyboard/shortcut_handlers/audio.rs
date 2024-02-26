@@ -9,11 +9,11 @@ use futures::channel::oneshot;
 
 use crate::components::media::calling::CallDialogCmd;
 
-pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
+pub fn toggle_mute(state: UseSharedState<State>, call_state: UseSharedState<Call>, cx: Scope) {
     let recording = use_ref(cx, || false);
-    let call_state = use_shared_state::<Call>(cx).expect("REASON");
-    if call_state.read().self_muted {
-        println!("{:?} is muted", call_state.read().self_muted);
+    let call_state_copy = call_state.clone();
+    if call_state_copy.read().self_muted {
+        println!("{:?} is muted", call_state_copy.read().self_muted);
         use_coroutine(cx, |mut rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state];
             async move {
@@ -35,7 +35,7 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
             }
         });
     }
-    if !call_state.read().self_muted {
+    if !call_state_copy.read().self_muted {
         use_coroutine(cx, |mut rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state, recording];
             async move {
@@ -59,12 +59,12 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
     }
 }
 
-pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
+pub fn toggle_deafen(state: UseSharedState<State>, call_state: UseSharedState<Call>, cx: Scope) {
     let recording = use_ref(cx, || false);
-    let call_state = use_shared_state::<Call>(cx).expect("call_state is None");
+    let call_state_copy = call_state.clone();
 
-    if !call_state.read().call_silenced {
-        println!("{:?} is silence", call_state.read().call_silenced);
+    if !call_state_copy.read().call_silenced {
+        println!("{:?} is silence", call_state_copy.read().call_silenced);
         let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
             to_owned![state, recording];
             async move {
@@ -87,7 +87,7 @@ pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
                 }
             }
         });
-    } else if call_state.read().call_silenced {
+    } else if call_state_copy.read().call_silenced {
         let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
             to_owned![state, recording];
             async move {
