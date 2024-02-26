@@ -1,6 +1,7 @@
 mod controls;
 pub mod coroutines;
 mod edit_group;
+mod group_settings;
 mod group_users;
 mod pinned_messages;
 mod topbar;
@@ -17,7 +18,7 @@ use crate::{
     layouts::chats::{
         data::{self, ChatData, ScrollBtn},
         presentation::{
-            chat::{edit_group::EditGroup, group_users::GroupUsers},
+            chat::{edit_group::EditGroup, group_settings::GroupSettings, group_users::GroupUsers},
             chatbar::get_chatbar,
             messages::get_messages,
         },
@@ -46,7 +47,9 @@ pub fn Compose(cx: Scope) -> Element {
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
 
-    let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let show_manage_members: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let show_group_settings: &UseState<bool> = use_state(cx, || false);
+    let show_rename_group: &UseState<bool> = use_state(cx, || false);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
@@ -102,7 +105,6 @@ pub fn Compose(cx: Scope) -> Element {
     let creator = chat_data.read().active_chat.creator();
 
     let chat_id = chat_data.read().active_chat.id();
-    let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
     let user_did: DID = state.read().did_key();
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
 
@@ -110,6 +112,12 @@ pub fn Compose(cx: Scope) -> Element {
         if let Some(chat) = state.read().get_active_chat() {
             let metadata = data::Metadata::new(&state.read(), &chat);
             if chat_data.read().active_chat.metadata_changed(&metadata) {
+                // If the metadata has changed, we should cancel out all actions to modify it.
+                show_rename_group.set(false);
+                show_group_users.set(None);
+                show_group_settings.set(false);
+                show_manage_members.set(None);
+                // Now we can continue
                 chat_data.write().active_chat.set_metadata(metadata);
             }
         }
@@ -125,18 +133,20 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 controls: cx.render(rsx!(controls::get_controls{
-                    show_edit_group: show_edit_group.clone(),
+                    show_manage_members: show_manage_members.clone(),
+                    show_rename_group: show_rename_group.clone(),
+                    show_group_settings: show_group_settings.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
-                    is_edit_group: is_edit_group,
                 })),
                 topbar::get_topbar_children {
-                    show_edit_group: show_edit_group.clone(),
+                    show_manage_members: show_manage_members.clone(),
+                    show_rename_group: show_rename_group.clone(),
+                    show_group_settings: show_group_settings.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
-                    is_edit_group: is_edit_group,
                 }
             },
             // may need this later when video calling is possible.
@@ -150,22 +160,36 @@ pub fn Compose(cx: Scope) -> Element {
             //         end_text: get_local_text("uplink.end"),
             //     },
             // ))),
-        show_edit_group
+        show_manage_members
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
-                    open: show_edit_group.is_some(),
+                    open: show_manage_members.is_some(),
                     transparent: true,
-                    with_title: get_local_text("friends.edit-group"),
+                    with_title: get_local_text("friends.manage-group-members"),
                     onclose: move |_| {
-                        show_edit_group.set(None);
+                        show_manage_members.set(None);
                     },
+                    right: "var(--gap)",
                     EditGroup {}
+                }
+            )),
+        show_group_settings.then(|| rsx!(
+                Modal {
+                    open: *show_group_settings.get(),
+                    transparent: true,
+                    with_title: get_local_text("settings"),
+                    onclose: move |_| {
+                        show_group_settings.set(false);
+                    },
+                    right: "var(--gap)",
+                    GroupSettings {}
                 }
             )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
                     open: show_group_users.is_some(),
+                    right: "calc(100% - (var(--width-sidebar) * 2 ) - var(--padding-more))",
                     transparent: true,
                     with_title: get_local_text("friends.view-group"),
                     onclose: move |_| {
@@ -193,11 +217,12 @@ pub fn Compose(cx: Scope) -> Element {
             rsx!(get_messages{quickprofile_data: quickprofile_data.clone()})
         },
         get_chatbar {
-            show_edit_group: show_edit_group.clone(),
+            show_manage_members: show_manage_members.clone(),
+            show_rename_group: show_rename_group.clone(), // TODO: wire this to a context item when right clicking the topbar.
+            show_group_settings: show_group_settings.clone(),
             show_group_users: show_group_users.clone(),
             ignore_focus: should_ignore_focus,
             is_owner: is_owner,
-            is_edit_group: is_edit_group,
         },
         super::quick_profile::QuickProfileContext{
             id: quick_profile_uuid,

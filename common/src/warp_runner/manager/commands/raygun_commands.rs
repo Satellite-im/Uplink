@@ -12,8 +12,8 @@ use warp::{
     crypto::DID,
     error::Error,
     raygun::{
-        self, AttachmentEventStream, ConversationType, GroupSettings, Location, PinState,
-        ReactionState,
+        self, AttachmentEventStream, ConversationSettings, ConversationType, GroupSettings,
+        Location, PinState, ReactionState,
     },
 };
 
@@ -48,6 +48,7 @@ pub enum RayGunCmd {
     CreateGroupConversation {
         recipients: Vec<DID>,
         group_name: Option<String>,
+        settings: GroupSettings,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "AddGroupParticipants")]
@@ -71,6 +72,12 @@ pub enum RayGunCmd {
     #[display(fmt = "DeleteConversation")]
     DeleteConversation {
         conv_id: Uuid,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateConversationSettings")]
+    UpdateConversationSettings {
+        conv_id: Uuid,
+        settings: ConversationSettings,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "FetchMessages")]
@@ -207,9 +214,11 @@ pub async fn handle_raygun_cmd(
         RayGunCmd::CreateGroupConversation {
             recipients,
             group_name,
+            settings,
             rsp,
         } => {
-            let r = raygun_create_group_conversation(messaging, recipients, group_name).await;
+            let r =
+                raygun_create_group_conversation(messaging, recipients, group_name, settings).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::AddGroupParticipants {
@@ -235,6 +244,17 @@ pub async fn handle_raygun_cmd(
         } => {
             let r = messaging
                 .update_conversation_name(conv_id, &new_conversation_name)
+                .await
+                .map(|_| conv_id);
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::UpdateConversationSettings {
+            conv_id,
+            settings,
+            rsp,
+        } => {
+            let r = messaging
+                .update_conversation_settings(conv_id, settings)
                 .await
                 .map(|_| conv_id);
             let _ = rsp.send(r);
@@ -552,9 +572,10 @@ async fn raygun_create_group_conversation(
     messaging: &mut Messaging,
     recipients: Vec<DID>,
     group_name: Option<String>,
+    settings: GroupSettings,
 ) -> Result<Uuid, Error> {
     match messaging
-        .create_group_conversation(group_name, recipients, GroupSettings::default())
+        .create_group_conversation(group_name, recipients, settings)
         .await
     {
         Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
