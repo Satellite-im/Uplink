@@ -3,10 +3,12 @@
     border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .file-transfer-modal {
     width: 300px;
+    position: unset;
 }
 
 .file-icon-container > div {

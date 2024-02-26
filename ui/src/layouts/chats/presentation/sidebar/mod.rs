@@ -115,6 +115,11 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
         .map(|(_, ext)| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
+    let transfer = if storage {
+        cx.render(rsx!(FileTransferModal { state: state }))
+    } else {
+        cx.render(rsx!(()))
+    };
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -192,6 +197,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     in_chat: false
                 }
             )),
+            with_file_transfer: transfer,
             if *search_friends_is_focused.read() {
                 render! { search::search_friends {
                     search_typed_chars: search_typed_chars.clone(),
@@ -442,12 +448,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         },
                     }
                 ))
-            },
-            storage.then(||
-                rsx!(FileTransferModal {
-                    state: state,
-                })
-            )
+            }
         }
     ))
 }
