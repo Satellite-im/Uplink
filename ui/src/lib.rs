@@ -240,8 +240,8 @@ fn app_layout(cx: Scope) -> Element {
     use_app_coroutines(cx)?;
     use_router_notification_listener(cx)?;
 
-    let state = use_shared_state::<State>(cx)?;
     let call_state = use_shared_state::<Call>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
 
     render! {
         AppStyle {}
