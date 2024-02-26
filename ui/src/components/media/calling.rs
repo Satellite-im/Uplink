@@ -53,7 +53,7 @@ pub enum CallDialogCmd {
     UnsilenceCall,
 }
 
-enum PendingCallDialogCmd {
+pub enum PendingCallDialogCmd {
     Accept(Uuid),
     Reject(Uuid),
 }

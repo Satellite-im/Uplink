@@ -10,14 +10,14 @@ use common::{
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 
-use crate::components::media::calling::CallDialogCmd;
+use crate::components::media::calling::{CallDialogCmd, PendingCallDialogCmd};
 
 pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
     // CallInfo::mute_self(CallInfo);
     let recording = use_ref(cx, || false);
     let call_state = use_shared_state::<Call>(cx).expect("call_state is None");
     if !call_state.read().self_muted {
-        let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
+        use_coroutine(cx, |mut rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state, recording];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -29,7 +29,6 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
 
                 match rx.await {
                     Ok(_) => {
-                        // disaster waiting to happen if State ever gets out of sync with blink.
                         state.write().mutate(Action::ToggleMute);
                     }
                     Err(e) => {
@@ -40,7 +39,7 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
         });
     }
     if call_state.read().self_muted {
-        let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
+        use_coroutine(cx, |mut rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state, recording];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -52,7 +51,6 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
 
                 match rx.await {
                     Ok(_) => {
-                        // disaster waiting to happen if State ever gets out of sync with blink.
                         state.write().mutate(Action::ToggleMute);
                     }
                     Err(e) => {
@@ -68,7 +66,7 @@ pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
     let recording = use_ref(cx, || false);
     let call_state = use_shared_state::<Call>(cx).expect("call_state is None");
 
-    if !call_state.read().self_muted {
+    if !call_state.read().call_silenced {
         let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
             to_owned![state, recording];
             async move {
@@ -83,7 +81,7 @@ pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
 
                 match rx.await {
                     Ok(_) => {
-                        state.write().mutate(Action::ToggleMute);
+                        state.write().mutate(Action::ToggleSilence);
                     }
                     Err(e) => {
                         log::error!("warp_runner failed to mute self: {}", e);
@@ -91,7 +89,7 @@ pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
                 }
             }
         });
-    } else if call_state.read().self_muted {
+    } else if call_state.read().call_silenced {
         let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
             to_owned![state, recording];
             async move {
@@ -107,7 +105,7 @@ pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
 
                 match rx.await {
                     Ok(_) => {
-                        state.write().mutate(Action::ToggleMute);
+                        state.write().mutate(Action::ToggleSilence);
                     }
                     Err(e) => {
                         log::error!("warp_runner failed to mute self: {}", e);
