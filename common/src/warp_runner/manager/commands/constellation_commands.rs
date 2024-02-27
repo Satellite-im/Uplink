@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     ffi::OsStr,
     io::{Read, Write},
     path::{Path, PathBuf},
@@ -378,6 +379,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     let max_size_ipfs = warp_storage.max_size();
     let (tx, rx) = mpsc::channel();
 
+    let mut uploaded_files = HashSet::new();
     for file_path in files_path.clone() {
         let mut filename = match file_path
             .file_name()
@@ -421,7 +423,13 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         // Generate uuid for tracking
         let file_id = Uuid::new_v4();
         let file_state = TransferState::new();
-        filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
+        uploaded_files.insert(file.clone());
+        filename = rename_if_duplicate(
+            current_directory.clone(),
+            filename.clone(),
+            &uploaded_files,
+            file,
+        );
         let _ = tx_upload_file.send(UploadFileAction::Starting(
             file_id,
             file_state.clone(),
@@ -631,13 +639,14 @@ async fn handle_upload_progress(
 fn rename_if_duplicate(
     current_directory: Directory,
     filename: String,
+    uploaded: &HashSet<PathBuf>,
     file_pathbuf: PathBuf,
 ) -> String {
     let mut count_index_for_duplicate_filename = 1;
     let mut new_file_name = filename.clone();
     let original = filename;
     loop {
-        if !current_directory.has_item(&new_file_name) {
+        if !current_directory.has_item(&new_file_name) && !uploaded.contains(&file_pathbuf) {
             break;
         }
         let file_extension = file_pathbuf
