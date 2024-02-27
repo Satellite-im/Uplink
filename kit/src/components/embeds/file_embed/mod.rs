@@ -7,6 +7,8 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::is_file_available_to_preview;
 use common::is_video;
+use common::language::get_local_text;
+use common::language::get_local_text_with_args;
 use common::return_correct_icon;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
@@ -127,9 +129,15 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             Progression::ProgressFailed {
                 name: _,
                 last_size: _,
-                error: _,
+                error,
             } => {
-                file_size_pending.push_str("Failed");
+                match error.as_ref() {
+                    Some(err) => file_size_pending.push_str(&get_local_text_with_args(
+                        "attachments-fail-msg",
+                        vec![("reason", err)],
+                    )),
+                    None => file_size_pending.push_str(&get_local_text("attachments-fail")),
+                }
                 0
             }
         }

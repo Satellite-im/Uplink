@@ -1263,6 +1263,25 @@ impl State {
         msg: PendingMessage,
         progress: Progression,
     ) {
+        if let Progression::ProgressFailed {
+            name,
+            last_size: _,
+            error,
+        } = &progress
+        {
+            let err = match error.as_ref() {
+                Some(err) => {
+                    get_local_text_with_args("attachments-fail-msg", vec![("reason", err)])
+                }
+                None => get_local_text("attachments-fail"),
+            };
+            self.mutate(Action::AddToastNotification(ToastNotification::init(
+                name.clone(),
+                err,
+                None,
+                2,
+            )));
+        }
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.update_pending_msg(msg, progress);
         }
