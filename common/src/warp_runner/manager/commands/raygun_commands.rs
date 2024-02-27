@@ -61,7 +61,7 @@ pub enum RayGunCmd {
     RemoveGroupParticipants {
         conv_id: Uuid,
         recipients: Vec<DID>,
-        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Uuid, Vec<(DID, warp::error::Error)>>>,
     },
     #[display(fmt = "UpdateConversationName")]
     UpdateConversationName {
@@ -533,7 +533,8 @@ async fn raygun_remove_recipients_from_a_group(
     conv_id: Uuid,
     recipients: Vec<DID>,
     messaging: &mut Messaging,
-) -> Result<Uuid, Error> {
+) -> Result<Uuid, Vec<(DID, Error)>> {
+    let mut errs = vec![];
     for recipient in recipients {
         if let Err(e) = messaging.remove_recipient(conv_id, &recipient).await {
             log::error!(
@@ -542,9 +543,14 @@ async fn raygun_remove_recipients_from_a_group(
                 conv_id,
                 e
             );
+            errs.push((recipient, e));
         }
     }
-    Ok(conv_id)
+    if errs.is_empty() {
+        Ok(conv_id)
+    } else {
+        Err(errs)
+    }
 }
 
 async fn raygun_remove_direct_convs(

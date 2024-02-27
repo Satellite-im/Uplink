@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
-    state::{Identity, State},
+    state::{Action, Identity, State, ToastNotification},
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -205,9 +205,10 @@ pub struct FriendRowProps {
 fn friend_row(cx: Scope<FriendRowProps>) -> Element {
     let _friend = cx.props.friend.clone();
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let state = use_shared_state::<State>(cx)?;
     let conv_id = cx.props.conv_id;
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![selected_friends, conv_id];
+        to_owned![state, selected_friends, conv_id];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -247,7 +248,30 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                         }
                         let res = rx.await.expect("command canceled");
                         if let Err(e) = res {
-                            log::error!("failed to remove recipients from a group: {}", e);
+                            let err = if e.len() == 1 {
+                                let (_, e) = &e[0];
+                                log::error!("failed to remove recipients from a group: {}", e);
+                                match e {
+                                    warp::error::Error::InvalidConversation => {
+                                        get_local_text("messages.group-remove-fail-chat")
+                                    }
+                                    warp::error::Error::PublicKeyInvalid => {
+                                        get_local_text("messages.group-remove-fail-owner")
+                                    }
+                                    warp::error::Error::IdentityDoesntExist => {
+                                        get_local_text("messages.group-remove-fail-id")
+                                    }
+                                    _ => get_local_text("messages.group-remove-fail"),
+                                }
+                            } else {
+                                for (_, e) in e {
+                                    log::error!("failed to remove recipients from a group: {}", e);
+                                }
+                                get_local_text("messages.group-remove-fail-multi")
+                            };
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init("".into(), err, None, 2),
+                            ));
                         }
                     }
                 }
