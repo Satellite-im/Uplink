@@ -9,9 +9,17 @@ use futures::channel::oneshot;
 
 use crate::components::media::calling::CallDialogCmd;
 
-pub fn toggle_mute(state: UseSharedState<State>, call_state: UseSharedState<Call>, cx: Scope) {
-    if !call_state.read().self_muted {
-        println!("{:?} is muted", call_state.read().self_muted);
+pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
+    let call_state = match state.read().ui.call_info.active_call() {
+        Some(c) => c.call,
+        None => {
+            log::error!("call not in progress");
+            return;
+        }
+    };
+
+    if !call_state.self_muted {
+        println!("{:?} is muted", call_state.self_muted);
         use_coroutine(cx, |rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state];
             async move {
@@ -57,7 +65,7 @@ pub fn toggle_mute(state: UseSharedState<State>, call_state: UseSharedState<Call
     // }
 }
 
-pub fn toggle_deafen(state: UseSharedState<State>, call_state: UseSharedState<Call>, cx: Scope) {
+pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
     // let recording = use_ref(cx, || false);
     // let call_state_copy = call_state.clone();
 

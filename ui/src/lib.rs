@@ -241,7 +241,6 @@ fn app_layout(cx: Scope) -> Element {
     use_router_notification_listener(cx)?;
 
     let state = use_shared_state::<State>(cx)?;
-    let call_state = use_shared_state::<Call>(cx)?;
 
     render! {
         AppStyle {}
@@ -250,8 +249,8 @@ fn app_layout(cx: Scope) -> Element {
             KeyboardShortcuts {
                 on_global_shortcut: move |shortcut| {
                     match shortcut {
-                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(state.clone(), call_state.clone(), cx),
-                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(state.clone(), call_state.clone(), cx),
+                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(state.clone(), cx),
+                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(state.clone(), cx),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
                         GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx),
