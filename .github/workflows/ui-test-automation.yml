@@ -170,10 +170,8 @@ jobs:
 
       - name: Get Warp Peer ID and Build app 🚀
         run: |
-          $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
-          echo "localPeerId=$localPeerId" >> $env:GITHUB_ENV
-          $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
-          cargo build --release
+          ./utils/replace_node.ps1
+          cargo build --release -F production_mode
 
       - name: Build Installer
         run: cargo wix --package uplink --no-build --nocapture
