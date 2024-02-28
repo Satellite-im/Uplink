@@ -13,7 +13,14 @@ let click = (toggle) => function (ev) {
     context_menu.classList.add("hidden")
     return
   } else {
-    context_menu.classList.remove("hidden")
+    // Check if the context menu has any elements in the first place
+    // Children can be <pre hidden></pre> so simply checking if children > 0 doesn't work
+    for (var child of context_menu.children) {
+        if (child.tagName.toLocaleLowerCase() !== "pre" || !child.attributes.getNamedItem("hidden")) {
+          context_menu.classList.remove("hidden")
+          break
+        }
+    }
   }
   const { width, height } = context_menu.getBoundingClientRect()
   let offsetX = ev.pageX
