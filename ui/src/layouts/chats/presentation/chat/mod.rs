@@ -26,10 +26,7 @@ use crate::{
     },
 };
 
-use common::{
-    state::{ui, Action, Identity, State},
-    utils::lifecycle::use_component_lifecycle,
-};
+use common::state::{ui, Action, Identity, State};
 
 use common::language::get_local_text;
 
