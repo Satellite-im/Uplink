@@ -26,7 +26,10 @@ use crate::{
     },
 };
 
-use common::state::{ui, Action, Identity, State};
+use common::{
+    state::{ui, Action, Identity, State},
+    utils::lifecycle::use_component_lifecycle,
+};
 
 use common::language::get_local_text;
 
@@ -108,18 +111,19 @@ pub fn Compose(cx: Scope) -> Element {
     let user_did: DID = state.read().did_key();
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
 
-    // if init.value().is_some() {
-    //     if let Some(chat) = state.read().get_active_chat() {
-    //         let metadata = data::Metadata::new(&state.read(), &chat);
-    //         if chat_data.read().active_chat.metadata_changed(&metadata) {
-    //             // If the metadata has changed, we should cancel out all actions to modify it.
-    //             show_rename_group.set(false);
-    //             show_group_users.set(None);
-    //             // Now we can continue
-    //             chat_data.write().active_chat.set_metadata(metadata);
-    //         }
-    //     }
-    // }
+    if init.value().is_some() {
+        if let Some(chat) = state.read().get_active_chat() {
+            let metadata = data::Metadata::new(&state.read(), &chat);
+            if chat_data.read().active_chat.metadata_changed(&metadata) {
+                // If the metadata has changed, we should cancel out all actions to modify it.
+                if *show_rename_group.get() {
+                    show_rename_group.set(false);
+                    chat_data.write().active_chat.set_metadata(metadata);
+                }
+                // Now we can continue
+            }
+        }
+    }
 
     cx.render(rsx!(
         div {
