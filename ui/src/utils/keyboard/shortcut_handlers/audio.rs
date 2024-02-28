@@ -17,12 +17,12 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
             return;
         }
     };
-
-    if !call_state.self_muted {
-        println!("{:?} is muted", call_state.self_muted);
-        use_coroutine(cx, |rx: UnboundedReceiver<CallDialogCmd>| {
+    println!("{:?}", call_state.self_muted.to_string());
+    if call_state.self_muted == false {
+        use_coroutine(cx, |_rx: UnboundedReceiver<CallDialogCmd>| {
             to_owned![state];
             async move {
+                print!("inside false coroutine");
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
                 let (tx, rx) = oneshot::channel();
@@ -32,6 +32,30 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
 
                 match rx.await {
                     Ok(_) => {
+                        print!("inside false await");
+                        state.write().mutate(Action::ToggleMute);
+                    }
+                    Err(e) => {
+                        log::error!("warp_runner failed to mute self: {e}");
+                    }
+                }
+            }
+        });
+    } else if call_state.self_muted {
+        use_coroutine(cx, |mut _rx: UnboundedReceiver<CallDialogCmd>| {
+            to_owned![state];
+            async move {
+                print!("inside true coroutine");
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx })) {
+                    log::error!("failed to send blink command: {e}");
+                }
+
+                match rx.await {
+                    Ok(_) => {
+                        print!("inside true await");
                         state.write().mutate(Action::ToggleMute);
                     }
                     Err(e) => {
@@ -41,81 +65,63 @@ pub fn toggle_mute(state: UseSharedState<State>, cx: Scope) {
             }
         });
     }
-    // if !call_state.read().self_muted {
-    //     use_coroutine(cx, |mut rx: UnboundedReceiver<CallDialogCmd>| {
-    //         to_owned![state, call_state];
-    //         async move {
-    //             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-
-    //             let (tx, rx) = oneshot::channel();
-    //             if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx })) {
-    //                 log::error!("failed to send blink command: {e}");
-    //             }
-
-    //             match rx.await {
-    //                 Ok(_) => {
-    //                     state.write().mutate(Action::ToggleMute);
-    //                 }
-    //                 Err(e) => {
-    //                     log::error!("warp_runner failed to mute self: {e}");
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
 }
 
 pub fn toggle_deafen(state: UseSharedState<State>, cx: Scope) {
-    // let recording = use_ref(cx, || false);
-    // let call_state_copy = call_state.clone();
+    let call_state = match state.read().ui.call_info.active_call() {
+        Some(c) => c.call,
+        None => {
+            log::error!("call not in progress");
+            return;
+        }
+    };
+    if !call_state.call_silenced {
+        use_coroutine(cx, |_rx: UnboundedReceiver<CallDialogCmd>| {
+            to_owned![state];
+            async move {
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
-    // if !call_state_copy.read().call_silenced {
-    //     println!("{:?} is silence", call_state_copy.read().call_silenced);
-    //     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
-    //         to_owned![state, recording];
-    //         async move {
-    //             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SilenceCall { rsp: tx }))
+                {
+                    log::error!("failed to send blink command: {e}");
+                }
 
-    //             let (tx, rx) = oneshot::channel();
-    //             if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::SilenceCall { rsp: tx }))
-    //             {
-    //                 log::error!("failed to send blink command: {}", e);
-    //                 return; // Return early to avoid further processing
-    //             }
+                match rx.await {
+                    Ok(_) => {
+                        print!("hitttssssssss");
+                        state.write().mutate(Action::ToggleSilence);
+                    }
+                    Err(e) => {
+                        log::error!("warp_runner failed to mute self: {e}");
+                    }
+                }
+            }
+        });
+    }
+    if call_state.call_silenced {
+        use_coroutine(cx, |mut _rx: UnboundedReceiver<CallDialogCmd>| {
+            to_owned![state];
+            async move {
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
-    //             match rx.await {
-    //                 Ok(_) => {
-    //                     state.write().mutate(Action::ToggleSilence);
-    //                 }
-    //                 Err(e) => {
-    //                     log::error!("warp_runner failed to mute self: {}", e);
-    //                 }
-    //             }
-    //         }
-    //     });
-    // } else if call_state_copy.read().call_silenced {
-    //     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
-    //         to_owned![state, recording];
-    //         async move {
-    //             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnsilenceCall { rsp: tx }))
+                {
+                    log::error!("failed to send blink command: {e}");
+                }
 
-    //             let (tx, rx) = oneshot::channel();
-    //             if let Err(e) =
-    //                 warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnsilenceCall { rsp: tx }))
-    //             {
-    //                 log::error!("failed to send blink command: {}", e);
-    //                 return; // Return early to avoid further processing
-    //             }
-
-    //             match rx.await {
-    //                 Ok(_) => {
-    //                     state.write().mutate(Action::ToggleSilence);
-    //                 }
-    //                 Err(e) => {
-    //                     log::error!("warp_runner failed to mute self: {}", e);
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
+                match rx.await {
+                    Ok(_) => {
+                        print!("hitttssssssss");
+                        state.write().mutate(Action::ToggleSilence);
+                    }
+                    Err(e) => {
+                        log::error!("warp_runner failed to mute self: {e}");
+                    }
+                }
+            }
+        });
+    }
 }
