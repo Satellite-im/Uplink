@@ -115,7 +115,6 @@ pub fn Compose(cx: Scope) -> Element {
                 // If the metadata has changed, we should cancel out all actions to modify it.
                 show_rename_group.set(false);
                 show_group_users.set(None);
-                show_manage_members.set(None);
                 // Now we can continue
                 chat_data.write().active_chat.set_metadata(metadata);
             }
