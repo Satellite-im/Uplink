@@ -231,6 +231,15 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 with_download_button: false,
                 progress: prog,
                 on_press: move |_| {},
+                on_resend_msg: move |_| {
+                    // cx.props.state.write().decrement_outgoing_messages(
+                    //     cx.props.chat,
+                    //     msg,
+                    //     progress,
+                    //     None,
+                    // )
+                },
+                on_delete_msg: move |_| {},
             })
         })
     });
