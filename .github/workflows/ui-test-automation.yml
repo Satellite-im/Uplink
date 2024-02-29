@@ -447,6 +447,15 @@ jobs:
           name: appium-log-macos-chats
           path: ./appium.log
 
+      - name: Upload Uplink Logs if test fails 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: uplink-logs
+          path: |
+            ~/.uplink/.user/debug.log
+            ~/.uplinkUserB/.user/debug.log
+
       - name: Add label if any of test jobs failed
         if: failure()
         uses: buildsville/add-remove-label@v2.0.0
@@ -730,6 +739,7 @@ jobs:
             test-allure-macos-ci
             test-allure-windows-ci
             test-allure-macos-chats
+            uplink-logs
 
       - name: Remove label if all test jobs succeeded
         uses: buildsville/add-remove-label@v2.0.0
