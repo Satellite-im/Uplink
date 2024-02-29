@@ -57,6 +57,9 @@
 	min-height: fit-content;
 	min-width: fit-content;
 	display: inline-flex;
+	&.context-wrap-fit {
+		min-width: unset;
+	}
 }
 .context-menu.hidden {
 	display: none;
