@@ -115,9 +115,11 @@ pub fn Compose(cx: Scope) -> Element {
                 // If the metadata has changed, we should cancel out all actions to modify it.
                 if *show_rename_group.get() {
                     show_rename_group.set(false);
-                    chat_data.write().active_chat.set_metadata(metadata);
                 }
                 // Now we can continue
+                if !*show_group_settings.get() && show_manage_members.get().is_none() {
+                    chat_data.write().active_chat.set_metadata(metadata);
+                }
             }
         }
     }
