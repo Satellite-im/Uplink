@@ -426,7 +426,7 @@ pub fn ChatText<'a>(cx: Scope<'a, ChatMessageProps<'a>>) -> Element<'a> {
             class: text_type_class,
             p {
                 class: text_type_class,
-                aria_label: "message-text",
+                aria_label: "message-text-{cx.props.text}",
                 dangerous_inner_html: "{formatted_text}",
             },
             links.first().and_then(|l| cx.render(rsx!(
