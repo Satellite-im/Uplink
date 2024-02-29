@@ -16,6 +16,7 @@ pub enum UploadFileAction<T> {
     Uploading((Option<Progression>, String, Uuid)),
     Finishing(PathBuf, Uuid, bool),
     Finished(T),
+    Remove(PathBuf, Uuid),
     Error(Option<PathBuf>, Option<Uuid>),
 }
 pub struct UploadFileChannel<T> {

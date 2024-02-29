@@ -558,12 +558,6 @@ pub fn start_upload_file_listener(
                             .write()
                             .cancel_file_upload(id, TrackerType::FileUpload);
                         files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
-                        sleep(Duration::from_secs(3)).await;
-                        *files_been_uploaded.write_silent() =
-                            file_tracker.read().file_progress_upload.is_empty();
-                        file_tracker
-                            .write()
-                            .remove_file_upload(id, TrackerType::FileUpload);
                     }
                     UploadFileAction::Uploading((progress, msg, file)) => {
                         if !*files_been_uploaded.read() && controller.read().first_render {
@@ -599,6 +593,14 @@ pub fn start_upload_file_listener(
                         }
                         controller.with_mut(|i| i.storage_state = Some(storage));
                     }
+                    UploadFileAction::Remove(path, file) => {
+                        files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                        file_tracker
+                            .write()
+                            .remove_file_upload(file, TrackerType::FileUpload);
+                        *files_been_uploaded.write_silent() =
+                            file_tracker.read().file_progress_upload.is_empty();
+                    }
                     UploadFileAction::Error(path, file) => {
                         match path {
                             Some(path) => {
@@ -610,14 +612,6 @@ pub fn start_upload_file_listener(
                             file_tracker
                                 .write()
                                 .error_file_upload(file, TrackerType::FileUpload);
-                            sleep(Duration::from_secs(3)).await;
-                            if file_tracker.read().file_progress_upload.is_empty() {
-                                *files_been_uploaded.write_silent() =
-                                    file_tracker.read().file_progress_upload.is_empty();
-                            }
-                            file_tracker
-                                .write()
-                                .remove_file_upload(file, TrackerType::FileUpload);
                             continue;
                         }
                         state

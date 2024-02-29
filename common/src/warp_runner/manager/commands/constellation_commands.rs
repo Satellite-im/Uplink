@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::mpsc,
+    time::Duration,
 };
 
 use derive_more::Display;
@@ -12,6 +13,7 @@ use futures::{channel::oneshot, stream, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
+use tokio::time::sleep;
 use uuid::Uuid;
 
 use crate::{
@@ -487,7 +489,9 @@ async fn handle_upload_progress(
             biased;
             true = file_state.matches(TransferStates::Cancel) => {
                 log::info!("{:?} file cancelled!", filename);
-                let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_path, file_id));
+                let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_path.clone(), file_id));
+                sleep(Duration::from_secs(3)).await;
+                let _ = tx_upload_file.send(UploadFileAction::Remove(file_path, file_id));
                 return;
             },
             true = file_state.matches(TransferStates::Pause) => {
@@ -567,6 +571,8 @@ async fn handle_upload_progress(
                             Some(file_path.clone()),
                             Some(file_id),
                         ));
+                        sleep(Duration::from_secs(3)).await;
+                        let _ = tx_upload_file.send(UploadFileAction::Remove(file_path, file_id));
                         return;
                     }
                 }
