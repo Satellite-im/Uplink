@@ -168,6 +168,7 @@ pub struct Props<'a> {
     devmode: Option<bool>,
     on_mouseenter: Option<EventHandler<'a, MouseEvent>>,
     left_click_trigger: Option<bool>,
+    fit_parent: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -192,7 +193,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx! {
         div {
-            class: "context-wrap",
+            class: format_args!("context-wrap {}", if cx.props.fit_parent.unwrap_or_default() {"context-wrap-fit"} else {""}),
             onmouseenter: |e| {
                 if let Some(f) = cx.props.on_mouseenter.as_ref() { f.call(e) }
             },
