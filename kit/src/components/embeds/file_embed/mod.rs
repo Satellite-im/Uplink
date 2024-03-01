@@ -102,6 +102,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let is_pending = cx.props.progress.is_some();
 
     let mut file_size_pending = String::new();
+    let mut failed = false;
 
     let perc = if let Some(p) = cx.props.progress {
         match p {
@@ -133,6 +134,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 last_size: _,
                 error: _,
             } => {
+                failed = true;
                 file_size_pending.push_str("Failed");
                 0
             }
@@ -192,7 +194,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" }
                 )
             },
-            div {
+            cx.props.progress.is_some().then(|| rsx!(div {
                 class: "control-btn",
                 Button {
                     icon: Icon::Trash,
@@ -205,7 +207,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                 },
-                Button {
+                failed.then(|| rsx!(Button {
                     icon: Icon::ArrowRightCircle,
                     small: true,
                     appearance: Appearance::Primary,
@@ -215,8 +217,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             e.call(())
                         }
                     },
-                }
-            },
+                }))
+            })),
             div {
                 class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                 aria_label: "file-icon",

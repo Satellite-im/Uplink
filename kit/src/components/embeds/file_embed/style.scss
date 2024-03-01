@@ -17,6 +17,7 @@
   color: var(--text-color-dark);
   align-content: center;
   align-self: flex-end;
+  position: relative;
 
   .image-container {
     display: flex;
@@ -155,7 +156,7 @@
 
 .control-btn {
   position: absolute;
-  right: var(--padding-less);
+  right: 0;
   display: flex;
   gap: var(--gap-less);
   bottom: calc(var(--padding-less));
