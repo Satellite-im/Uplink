@@ -538,7 +538,7 @@ async fn handle_upload_progress(
                 log::info!(
                     "{name} failed to upload at {} MB due to: {}",
                     last_size.unwrap_or_default(),
-                    error.unwrap_or_default()
+                    error
                 );
                 let _ = tx_upload_file.send(UploadFileAction::Error);
                 break;
@@ -783,7 +783,7 @@ async fn download_file(
             Err(e) => Progression::ProgressFailed {
                 name: file_name.clone(),
                 last_size: file.metadata().map(|d| d.len() as usize).ok(),
-                error: Some(format!("{}", e)),
+                error: e,
             },
         })
         .chain(stream::once(async move {

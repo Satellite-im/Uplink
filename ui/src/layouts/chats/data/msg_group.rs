@@ -4,10 +4,13 @@
 use std::collections::VecDeque;
 
 use common::{
-    state::{pending_message::PendingMessage, Identity},
+    state::{
+        pending_message::{FileProgression, PendingMessage},
+        Identity,
+    },
     warp_runner::ui_adapter,
 };
-use warp::{constellation::Progression, crypto::DID};
+use warp::crypto::DID;
 
 // Define a struct to represent a group of messages from the same sender.
 #[derive(Clone)]
@@ -35,7 +38,7 @@ pub struct MessageGroupMsg {
     pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
-    pub file_progress: Option<Vec<Progression>>,
+    pub file_progress: Option<Vec<FileProgression>>,
 }
 
 impl MessageGroupMsg {
