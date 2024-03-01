@@ -49,7 +49,7 @@ enum QuickProfileCmd {
     BlockFriend(DID),
     UnBlockFriend(DID),
     RemoveDirectConvs(DID),
-    Chat(Option<Chat>, Vec<String>, Option<Uuid>),
+    Chat(Option<Chat>, Vec<String>),
     AdjustVolume(DID, f32),
     SendFriendRequest(DID, Vec<Identity>),
 }
@@ -225,7 +225,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             );
                         }
                     }
-                    QuickProfileCmd::Chat(chat, msg, uuid) => {
+                    QuickProfileCmd::Chat(chat, msg) => {
                         let c = match chat {
                             Some(c) => c.id,
                             None => return,
@@ -240,18 +240,22 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                             log::error!("failed to send warp command: {}", e);
-                            state
-                                .write_silent()
-                                .decrement_outgoing_messagess(c, msg_vec, uuid);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-                        if let Err(e) = rsp {
-                            log::error!("failed to send message: {}", e);
-                            state
-                                .write_silent()
-                                .decrement_outgoing_messagess(c, msg_vec, uuid);
+                        match rsp {
+                            Ok((id, _)) => {
+                                state.write_silent().increment_outgoing_messages_for(
+                                    c,
+                                    id,
+                                    msg_vec,
+                                    &[],
+                                );
+                            }
+                            Err(e) => {
+                                log::error!("failed to send message: {}", e);
+                            }
                         }
                         chat_with.set(Some(c));
                     }
@@ -476,10 +480,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 placeholder: get_local_text("quickprofile.chat-placeholder"),
                                 disable_onblur: true,
                                 onreturn: move |(val, _,_): (String,bool,Code)|{
-                                    let ui_id = chat_send.as_ref().and_then(|chat|state
-                                        .write_silent()
-                                        .increment_outgoing_messages_for(vec![val.clone()], &[], chat.id));
-                                    ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
+                                    ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val]));
                                     let script = format!(r#"document.getElementById("{id}-context-menu").classList.add("hidden")"#);
                                     let _ = eval(&script);
                                 }

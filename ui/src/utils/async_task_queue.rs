@@ -1,7 +1,6 @@
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text_with_args,
-    state::pending_message::PendingMessage,
     warp_runner::{ui_adapter::MessageEvent, WarpEvent},
     WARP_EVENT_CH,
 };
@@ -16,7 +15,7 @@ use tokio::sync::{
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use uuid::Uuid;
-use warp::raygun::{AttachmentEventStream, AttachmentKind, Location};
+use warp::raygun::{AttachmentEventStream, AttachmentKind};
 
 pub enum ListenerAction {
     ToastAction {
@@ -79,47 +78,27 @@ where
 
 pub fn chat_upload_stream_handler(
     cx: &ScopeState,
-) -> &UseRef<
-    AsyncRef<(
-        Uuid,
-        Vec<String>,
-        Vec<Location>,
-        Option<Uuid>,
-        AttachmentEventStream,
-    )>,
-> {
+) -> &UseRef<AsyncRef<(Uuid, Uuid, AttachmentEventStream)>> {
     async_queue(
         cx,
-        |(conv_id, msg, attachments, appended_msg_id, mut stream): (
-            Uuid,
-            Vec<String>,
-            Vec<Location>,
-            Option<Uuid>,
-            AttachmentEventStream,
-        )| {
-            async move {
-                while let Some(kind) = stream.next().await {
-                    match kind {
-                        AttachmentKind::Pending(res) => {
-                            if let Err(e) = res {
-                                log::debug!("Error uploading file {}", e);
-                            }
-                            return;
+        |(conv_id, message_id, mut stream): (Uuid, Uuid, AttachmentEventStream)| async move {
+            while let Some(kind) = stream.next().await {
+                match kind {
+                    AttachmentKind::Pending(res) => {
+                        if let Err(e) = res {
+                            log::debug!("Error uploading file {}", e);
                         }
-                        AttachmentKind::AttachedProgress(progress) => {
-                            if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
-                                MessageEvent::AttachmentProgress {
-                                    progress,
-                                    conversation_id: conv_id,
-                                    msg: PendingMessage::for_compare(
-                                        msg.clone(),
-                                        &attachments,
-                                        appended_msg_id,
-                                    ),
-                                },
-                            )) {
-                                log::error!("failed to send warp_event: {e}");
-                            }
+                        return;
+                    }
+                    AttachmentKind::AttachedProgress(progress) => {
+                        if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
+                            MessageEvent::AttachmentProgress {
+                                progress,
+                                conversation_id: conv_id,
+                                msg: message_id,
+                            },
+                        )) {
+                            log::error!("failed to send warp_event: {e}");
                         }
                     }
                 }

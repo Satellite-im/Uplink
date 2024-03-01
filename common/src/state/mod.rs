@@ -523,17 +523,7 @@ impl State {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
-                self.decrement_outgoing_messages(
-                    conversation_id,
-                    message_clone.inner.lines(),
-                    message_clone
-                        .inner
-                        .attachments()
-                        .iter()
-                        .map(|f| f.name())
-                        .collect(),
-                    None,
-                );
+                self.decrement_outgoing_messages(conversation_id, message_clone.inner.id());
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -1232,60 +1222,47 @@ impl State {
     }
 
     // indicates that a conversation has a pending outgoing message
-    // can only send messages to the active chat
+    // sends it to the active chat
     pub fn increment_outgoing_messages(
         &mut self,
+        message_id: Uuid,
         msg: Vec<String>,
         attachments: &[Location],
-    ) -> Option<Uuid> {
+    ) {
         if let Some(id) = self.chats.active {
-            return self.increment_outgoing_messages_for(msg, attachments, id);
+            self.increment_outgoing_messages_for(id, message_id, msg, attachments);
         }
-        None
     }
 
     pub fn increment_outgoing_messages_for(
         &mut self,
+        chat_id: Uuid,
+        message_id: Uuid,
         msg: Vec<String>,
         attachments: &[Location],
-        id: Uuid,
-    ) -> Option<Uuid> {
+    ) {
         let did = self.get_own_identity().did_key();
-        if let Some(chat) = self.chats.all.get_mut(&id) {
-            return Some(chat.append_pending_msg(id, did, msg, attachments));
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            if !chat.append_pending_msg(chat_id, message_id, did, msg, attachments) {
+                log::debug!("attempted to add an already existing pending message");
+            }
         }
-        None
     }
 
     pub fn update_outgoing_messages(
         &mut self,
         conv_id: Uuid,
-        msg: PendingMessage,
+        message_id: Uuid,
         progress: Progression,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.update_pending_msg(msg, progress);
+            chat.update_pending_msg(message_id, progress);
         }
     }
 
-    pub fn decrement_outgoing_messagess(
-        &mut self,
-        conv_id: Uuid,
-        msg: Vec<String>,
-        uuid: Option<Uuid>,
-    ) {
-        self.decrement_outgoing_messages(conv_id, msg, vec![], uuid);
-    }
-
-    pub fn decrement_outgoing_messages(
-        &mut self,
-        conv_id: Uuid,
-        msg: Vec<String>,
-        attachments: Vec<String>,
-        uuid: Option<Uuid>,
-    ) {
+    pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid, message_id: Uuid) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.remove_pending_msg(msg, attachments, uuid);
+            chat.remove_pending_msg(message_id);
         }
     }
 

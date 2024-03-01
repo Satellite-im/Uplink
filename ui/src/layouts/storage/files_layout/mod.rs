@@ -111,17 +111,16 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let send_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
-            to_owned![upload_streams, send_files_from_storage];
+            to_owned![state, upload_streams, send_files_from_storage];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some((files_location, convs_id)) = rx.next().await {
                     let (tx, rx) = oneshot::channel();
-                    let msg = vec!["".to_owned()];
                     let attachments = files_location;
                     if let Err(e) =
                         warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
                             convs_id,
-                            msg,
+                            msg: vec!["".to_owned()],
                             attachments: attachments.clone(),
                             rsp: tx,
                         }))
@@ -131,14 +130,15 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                     }
                     if let Ok(Ok(streams)) = rx.await {
                         let mut to_append = upload_streams.write();
-                        for (chat, stream) in streams {
-                            to_append.append((
-                                chat,
+                        for (chat, (id, stream)) in streams {
+                            state.write().increment_outgoing_messages(
+                                id,
                                 vec!["".to_owned()],
-                                attachments.clone(),
-                                None,
-                                stream,
-                            ))
+                                &attachments,
+                            );
+                            if let Some(stream) = stream {
+                                to_append.append((chat, id, stream))
+                            }
                         }
                     }
                     send_files_from_storage.set(false);

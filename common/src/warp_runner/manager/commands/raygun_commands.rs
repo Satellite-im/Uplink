@@ -113,14 +113,16 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        rsp: oneshot::Sender<Result<Option<AttachmentEventStream>, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<(Uuid, Option<AttachmentEventStream>), warp::error::Error>>,
     },
     #[display(fmt = "SendMessageForSeveralChats")]
     SendMessageForSeveralChats {
         convs_id: Vec<Uuid>,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        rsp: oneshot::Sender<Result<Vec<(Uuid, AttachmentEventStream)>, warp::error::Error>>,
+        rsp: oneshot::Sender<
+            Result<Vec<(Uuid, (Uuid, Option<AttachmentEventStream>))>, warp::error::Error>,
+        >,
     },
     #[display(fmt = "EditMessage")]
     EditMessage {
@@ -149,7 +151,7 @@ pub enum RayGunCmd {
         reply_to: Uuid,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        rsp: oneshot::Sender<Result<Option<AttachmentEventStream>, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<(Uuid, Option<AttachmentEventStream>), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
     #[display(fmt = "RemoveDirectConvs")]
@@ -295,14 +297,14 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = if attachments.is_empty() {
-                messaging.send(conv_id, msg).await.map(|_| None)
+                messaging.send(conv_id, msg).await.map(|id| (id, None))
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
                     .attach(conv_id, None, attachments.clone(), msg.clone())
                     .await
                 {
-                    Ok(stream) => Result::Ok(Some(stream)),
+                    Ok((id, stream)) => Result::Ok((id, Some(stream))),
                     Err(e) => Err(e),
                 }
             };
@@ -315,25 +317,26 @@ pub async fn handle_raygun_cmd(
             attachments,
             rsp,
         } => {
-            let mut streams = vec![];
+            let mut results = vec![];
             for chat_id in convs_id {
                 if attachments.is_empty() {
-                    let _ = messaging.send(chat_id, msg.clone()).await;
+                    match messaging.send(chat_id, msg.clone()).await {
+                        Ok(id) => results.push((chat_id, (id, None))),
+                        Err(e) => log::error!("Raygun: Send files to several chats: {}", e),
+                    }
                 } else {
                     //TODO: Pass stream off to attachment events
                     match messaging
                         .attach(chat_id, None, attachments.clone(), msg.clone())
                         .await
                     {
-                        Ok(stream) => streams.push((chat_id, stream)),
-                        Err(e) => {
-                            log::error!("Raygun: Send files to several chats: {}", e);
-                        }
+                        Ok((id, stream)) => results.push((chat_id, (id, Some(stream)))),
+                        Err(e) => log::error!("Raygun: Send files to several chats: {}", e),
                     }
                 };
             }
 
-            let _ = rsp.send(Ok(streams));
+            let _ = rsp.send(Ok(results));
         }
         RayGunCmd::EditMessage {
             conv_id,
@@ -372,13 +375,16 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = if attachments.is_empty() {
-                messaging.reply(conv_id, reply_to, msg).await.map(|_| None)
+                messaging
+                    .reply(conv_id, reply_to, msg)
+                    .await
+                    .map(|id| (id, None))
             } else {
                 match messaging
                     .attach(conv_id, Some(reply_to), attachments, msg)
                     .await
                 {
-                    Ok(stream) => Result::Ok(Some(stream)),
+                    Ok((id, stream)) => Result::Ok((id, Some(stream))),
                     Err(e) => Err(e),
                 }
             };
