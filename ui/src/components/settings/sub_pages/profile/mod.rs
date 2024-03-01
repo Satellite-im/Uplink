@@ -14,6 +14,7 @@ use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::indicator::{Indicator, Platform, Status};
 use kit::elements::checkbox::Checkbox;
+use kit::elements::loader::Loader;
 use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
@@ -321,6 +322,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let change_banner_text = get_local_text("settings-profile.change-banner");
 
     let store_phrase = use_state(cx, || true);
+    let loading_indicator = use_state(cx, || false);
 
     if *first_render.get() {
         seed_phrase_exists.send(());
@@ -328,6 +330,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     }
 
     cx.render(rsx!(
+        loading_indicator.get().then(|| rsx!(
+            div {
+                id: "overlay-load-shadow",
+                class: "overlay-load-shadow",
+                div {
+                    class: "overlay-loader-spinner",
+                    Loader { spinning: true },
+                }
+            },
+        )),
+ 
         div {
             id: "settings-profile",
             class: "disable-select",
@@ -455,6 +468,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     return;
                                 }
                                 if v != username {
+                                    loading_indicator.set(true);
+                                    println!("loading indicator set to: {:?}", loading_indicator.get());
                                     ch.send(ChanCmd::Username(v));
                                 }
                             },
