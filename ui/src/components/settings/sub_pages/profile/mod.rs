@@ -220,14 +220,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             ));
         update_failed.set(None);
     }
+    let loading_indicator = use_state(cx, || false);
+
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![should_update, update_failed];
+        to_owned![should_update, update_failed, loading_indicator];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 // this is lazy but I can get away with it for now
                 let (tx, rx) = oneshot::channel();
+                loading_indicator.set(true);
                 let warp_cmd = match cmd {
                     ChanCmd::Profile(pfp) => MultiPassCmd::UpdateProfilePicture { pfp, rsp: tx },
                     ChanCmd::ClearProfile => MultiPassCmd::ClearProfilePicture { rsp: tx },
@@ -249,6 +252,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(warp_cmd)) {
                     log::error!("failed to send warp command: {}", e);
+                    loading_indicator.set(false);
                     continue;
                 }
 
@@ -256,6 +260,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));
+                        loading_indicator.set(false);
                     }
                     Err(e) => {
                         let msg = match e {
@@ -264,6 +269,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                             _ => get_local_text("settings-profile.failed"),
                         };
+                        loading_indicator.set(false);
                         update_failed.set(Some(msg));
                     }
                 }
@@ -322,7 +328,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let change_banner_text = get_local_text("settings-profile.change-banner");
 
     let store_phrase = use_state(cx, || true);
-    let loading_indicator = use_state(cx, || false);
 
     if *first_render.get() {
         seed_phrase_exists.send(());
@@ -468,8 +473,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     return;
                                 }
                                 if v != username {
-                                    loading_indicator.set(true);
-                                    println!("loading indicator set to: {:?}", loading_indicator.get());
                                     ch.send(ChanCmd::Username(v));
                                 }
                             },

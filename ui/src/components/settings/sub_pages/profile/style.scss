@@ -288,8 +288,7 @@
   background-color: rgba(0, 0, 0, 0.5); 
   z-index: 999; 
   text-align: center;
-  padding-top: 20%;
-  pointer-events: none;
+  pointer-events: all;
 }
 
 .overlay-loader-spinner {
