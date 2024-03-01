@@ -36,6 +36,10 @@
     border-radius: var(--border-radius);
 }
 
+.file-progress-description {
+    font-size: var(--text-size-less);
+}
+
 .progress-container {
     display: flex;
     flex-direction: column;

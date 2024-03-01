@@ -552,7 +552,7 @@ async fn handle_upload_progress(
                         let readable_total = format_size(total, DECIMAL);
                         let _ = tx_upload_file.send(UploadFileAction::Uploading((
                             Some(current_progress), //"100%".into(),
-                            get_local_text("files.uploading-file"),
+                            get_local_text("files.finishing-upload"),
                             file_id,
                         )));
                         log::info!("{name} has been uploaded with {}", readable_total);

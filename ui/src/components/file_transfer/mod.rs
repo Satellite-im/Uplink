@@ -106,6 +106,11 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
                         ProgressIndicator {
                             progress: progress
                         },
+                        f.description.as_ref().map(|desc|rsx!(div {
+                            class: "file-progress-description",
+                            aria_label: "file-progress-description",
+                            format!("{}", desc)
+                        })),
                     },
                     div {
                         class: "file-transfer-buttons",

@@ -578,13 +578,19 @@ pub fn start_upload_file_listener(
                     }
                     UploadFileAction::Finishing(path, file, finish) => {
                         *files_been_uploaded.write_silent() = true;
-                        if !files_in_queue_to_upload.read().is_empty()
-                            && (finish || files_in_queue_to_upload.read().len() > 1)
-                        {
-                            files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                        if finish {
+                            if !files_in_queue_to_upload.read().is_empty() {
+                                files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                            }
                             file_tracker
                                 .write()
                                 .remove_file_upload(file, TrackerType::FileUpload);
+                        } else {
+                            file_tracker.write().update_file_description(
+                                file,
+                                get_local_text("files.finishing-upload"),
+                                TrackerType::FileUpload,
+                            );
                         }
                     }
                     UploadFileAction::Finished(storage) => {
