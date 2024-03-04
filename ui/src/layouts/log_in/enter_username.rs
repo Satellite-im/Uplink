@@ -129,7 +129,7 @@ pub fn Layout(
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),
                 disable_onblur: true,
-                disabled: false,
+                disabled: *loading.get(),
                 placeholder: get_local_text("auth.enter-username"),
                 options: Options {
                     with_validation: Some(username_validation),
@@ -159,7 +159,6 @@ pub fn Layout(
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 loading: *loading.get(),
-                icon: Icon::Check,
                 disabled: *button_disabled.get() || *loading.get(),
                 onpress: move |_| {
                     ch.send(CreateAccountCmd {
