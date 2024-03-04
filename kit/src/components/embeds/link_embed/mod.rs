@@ -2,7 +2,6 @@ use crate::components::embeds::youtube::YouTubePlayer;
 use dioxus::prelude::*;
 use dioxus::prelude::{rsx, Props};
 use dioxus_core::{Element, Scope};
-use dioxus_hooks::use_future;
 use scraper::{Html, Selector};
 
 use self::get_link_data::*;
@@ -56,15 +55,13 @@ pub struct LinkEmbedProps {
 
 #[allow(non_snake_case)]
 pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
-    let fetch_meta = use_future(cx, &cx.props.link, |link| async move {
-        get_meta(link.as_str()).await
+    let meta = use_ref(cx, || SiteMeta::default());
+    use_effect(cx, &cx.props.link, |link| {
+        to_owned![meta];
+        async move { *meta.write() = get_meta(link.as_str()).await.unwrap_or_default() }
     });
 
-    let meta = match fetch_meta.value() {
-        Some(Ok(val)) => val.clone(),
-        Some(Err(_)) => SiteMeta::default(),
-        None => SiteMeta::default(),
-    };
+    let meta = meta.read();
     let title = if meta.title.chars().count() > 100 {
         meta.title[0..97].to_string() + "..."
     } else {
