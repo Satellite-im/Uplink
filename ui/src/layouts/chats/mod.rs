@@ -92,12 +92,6 @@ pub fn ChatLayout(cx: Scope) -> Element {
         }
     });
 
-    // HACK: When enter in chats with notification, for some reason app is crashing
-    // this a hack solution to clear notifications and not crash app if user change to chats page
-    if !state.read().ui.toast_notifications.is_empty() {
-        state.write().ui.toast_notifications.clear();
-    }
-
     cx.render(rsx!(
         div {
             id: "chat-layout",
