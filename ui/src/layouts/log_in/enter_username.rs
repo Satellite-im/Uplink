@@ -38,6 +38,7 @@ pub fn Layout(
 ) -> Element {
     log::trace!("rendering enter username layout");
     let window = use_window(cx);
+    let loading = use_state(cx, || false);
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -67,7 +68,7 @@ pub fn Layout(
     };
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<CreateAccountCmd>| {
-        to_owned![page];
+        to_owned![page, loading];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -77,6 +78,7 @@ pub fn Layout(
                 seed_words,
             }) = rx.next().await
             {
+                loading.set(true);
                 let (tx, rx) =
                     oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
@@ -110,6 +112,7 @@ pub fn Layout(
     cx.render(rsx!(
         div {
             id: "unlock-layout",
+            class: format_args!("{}", if *loading.get() {"progress"} else {""}),
             aria_label: "unlock-layout",
             Label {
                 text: get_local_text("auth.enter-username")
@@ -155,8 +158,9 @@ pub fn Layout(
                 text:  get_local_text("unlock.create-account"),
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
+                loading: *loading.get(),
                 icon: Icon::Check,
-                disabled: *button_disabled.get(),
+                disabled: *button_disabled.get() || *loading.get(),
                 onpress: move |_| {
                     ch.send(CreateAccountCmd {
                         username: username.get().to_string(),
