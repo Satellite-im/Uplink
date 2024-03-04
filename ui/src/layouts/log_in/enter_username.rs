@@ -11,6 +11,7 @@ use dioxus_desktop::{use_window, LogicalSize};
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::label::Label;
+use kit::elements::loader::Loader;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -49,6 +50,7 @@ pub fn Layout(
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
+    let loading_create_account = use_state(cx, || false);
 
     let username_validation = Validation {
         // The input should have a maximum length of 32
@@ -108,6 +110,15 @@ pub fn Layout(
     });
 
     cx.render(rsx!(
+        loading_create_account.get().then(|| rsx!(
+            div {
+                class: "overlay-load-shadow",
+                div {
+                    class: "overlay-loader-spinner",
+                    Loader { spinning: true },
+                }
+            },
+        )),
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -158,6 +169,7 @@ pub fn Layout(
                 icon: Icon::Check,
                 disabled: *button_disabled.get(),
                 onpress: move |_| {
+                    loading_create_account.set(true);
                     ch.send(CreateAccountCmd {
                         username: username.get().to_string(),
                         passphrase: pin.read().to_string(),
