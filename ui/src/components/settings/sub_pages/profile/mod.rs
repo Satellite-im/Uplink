@@ -222,7 +222,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     }
     let loading_indicator = use_state(cx, || false);
 
-
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![should_update, update_failed, loading_indicator];
         async move {
@@ -345,7 +344,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 }
             },
         )),
- 
+
         div {
             id: "settings-profile",
             class: "disable-select",
