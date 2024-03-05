@@ -14,6 +14,7 @@ use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::indicator::{Indicator, Platform, Status};
 use kit::elements::checkbox::Checkbox;
+use kit::elements::loader::Loader;
 use kit::elements::select::FancySelect;
 use kit::elements::tooltip::Tooltip;
 use kit::elements::Appearance;
@@ -219,14 +220,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             ));
         update_failed.set(None);
     }
+    let loading_indicator = use_state(cx, || false);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![should_update, update_failed];
+        to_owned![should_update, update_failed, loading_indicator];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 // this is lazy but I can get away with it for now
                 let (tx, rx) = oneshot::channel();
+                loading_indicator.set(true);
                 let warp_cmd = match cmd {
                     ChanCmd::Profile(pfp) => MultiPassCmd::UpdateProfilePicture { pfp, rsp: tx },
                     ChanCmd::ClearProfile => MultiPassCmd::ClearProfilePicture { rsp: tx },
@@ -248,10 +251,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(warp_cmd)) {
                     log::error!("failed to send warp command: {}", e);
+                    loading_indicator.set(false);
                     continue;
                 }
 
                 let res = rx.await.expect("command canceled");
+                loading_indicator.set(false);
+
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));
@@ -328,6 +334,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     }
 
     cx.render(rsx!(
+        loading_indicator.get().then(|| rsx!(
+            div {
+                id: "overlay-load-shadow",
+                class: "overlay-load-shadow",
+                div {
+                    class: "overlay-loader-spinner",
+                    Loader { spinning: true },
+                }
+            },
+        )),
+
         div {
             id: "settings-profile",
             class: "disable-select",
