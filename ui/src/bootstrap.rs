@@ -4,6 +4,7 @@ use super::*;
 
 use crate::utils::auto_updater::DownloadState;
 use chrono::Local;
+use common::state::data_transfer::TransferTracker;
 use common::state::ui::WindowMeta;
 use common::state::State;
 use common::STATIC_ARGS;
@@ -28,6 +29,7 @@ pub(crate) fn use_bootstrap<'a>(
     let desktop = use_window(cx);
     use_shared_state_provider(cx, DownloadState::default);
     use_shared_state_provider(cx, || components::settings::sidebar::Page::Profile);
+    use_shared_state_provider(cx, TransferTracker::default);
     use_shared_state_provider(cx, || {
         let mut state = State::load();
 

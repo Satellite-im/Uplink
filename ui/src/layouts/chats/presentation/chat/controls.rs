@@ -253,6 +253,7 @@ pub fn get_controls(cx: Scope<ChatProps>) -> Element {
     let pinned = cx.render(rsx!(show_pinned.then(|| rsx!(
         Modal {
             open: true,
+            right: "8px",
             transparent: true,
             change_horizontal_position: true,
             with_title: get_local_text("messages.pin-view"),
