@@ -2,13 +2,18 @@ use std::time::Duration;
 
 use common::{
     language::get_local_text_with_args,
-    state::{Action, State, ToastNotification},
+    state::{
+        data_transfer::{TrackerType, TransferState, TransferTracker},
+        Action, State, ToastNotification,
+    },
     warp_runner::{FetchMessagesConfig, FetchMessagesResponse, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
+use dioxus_hooks::{
+    to_owned, use_coroutine, use_shared_state, Coroutine, UnboundedReceiver, UseSharedState,
+};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
@@ -19,7 +24,10 @@ use crate::{
         data::{self, ChatBehavior, ChatData, JsMsg, ScrollBtn, DEFAULT_MESSAGES_TO_TAKE},
         scripts,
     },
-    utils::{async_task_queue::download_stream_handler, download::get_download_path},
+    utils::{
+        async_task_queue::{download_stream_handler, DownloadStreamData},
+        download::get_download_path,
+    },
 };
 
 use super::{DownloadTracker, MessagesCommand};
@@ -442,9 +450,10 @@ pub fn handle_warp_commands(
     state: &UseSharedState<State>,
     pending_downloads: &UseSharedState<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
+    let file_tracker = use_shared_state::<TransferTracker>(cx).unwrap();
     let download_streams = download_stream_handler(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![state, pending_downloads, download_streams];
+        to_owned![state, file_tracker, pending_downloads, download_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -535,15 +544,20 @@ pub fn handle_warp_commands(
                             continue;
                         }
 
+                        // Unique id to track this download
+                        let file_id = Uuid::new_v4();
+                        let file_state = TransferState::new();
                         let res = rx.await.expect("command canceled");
                         match res {
                             Ok(stream) => {
-                                download_streams.write().append((
+                                download_streams.write().append(DownloadStreamData {
                                     stream,
-                                    file.name(),
+                                    file: file.name(),
+                                    id: file_id,
                                     on_finish,
-                                    true,
-                                ));
+                                    show_toast: true,
+                                    file_state: file_state.clone(),
+                                });
                             }
                             Err(e) => {
                                 state.write().mutate(Action::AddToastNotification(
@@ -558,8 +572,15 @@ pub fn handle_warp_commands(
                                     ),
                                 ));
                                 log::error!("failed to download attachment: {}", e);
+                                continue;
                             }
                         }
+                        file_tracker.write().start_file_transfer(
+                            file_id,
+                            file.name(),
+                            file_state,
+                            TrackerType::FileDownload,
+                        );
                         if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
                             conv.remove(&file);
                         }

@@ -113,11 +113,13 @@ pub fn Compose(cx: Scope) -> Element {
             let metadata = data::Metadata::new(&state.read(), &chat);
             if chat_data.read().active_chat.metadata_changed(&metadata) {
                 // If the metadata has changed, we should cancel out all actions to modify it.
-                show_rename_group.set(false);
-                show_group_users.set(None);
-                show_manage_members.set(None);
+                if *show_rename_group.get() {
+                    show_rename_group.set(false);
+                }
                 // Now we can continue
-                chat_data.write().active_chat.set_metadata(metadata);
+                if !*show_group_settings.get() && show_manage_members.get().is_none() {
+                    chat_data.write().active_chat.set_metadata(metadata);
+                }
             }
         }
     }

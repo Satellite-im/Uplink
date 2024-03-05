@@ -2,6 +2,7 @@ mod create_group;
 mod search;
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::state::ui::Layout;
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
@@ -38,6 +39,7 @@ use warp::{
 
 use tracing::log;
 
+use crate::components::file_transfer::FileTransferModal;
 use crate::components::media::calling::CallControl;
 
 use crate::layouts::chats::presentation::sidebar::create_group::CreateGroup;
@@ -68,6 +70,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
     let search_friends_is_focused = use_ref(cx, || false);
+    let storage = state.read().ui.current_layout == Layout::Storage;
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -112,6 +115,11 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
         .map(|(_, ext)| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
     let search_typed_chars = use_ref(cx, String::new);
+    let transfer = if storage {
+        cx.render(rsx!(FileTransferModal { state: state }))
+    } else {
+        cx.render(rsx!(()))
+    };
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -189,6 +197,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                     in_chat: false
                 }
             )),
+            with_file_transfer: transfer,
             if *search_friends_is_focused.read() {
                 render! { search::search_friends {
                     search_typed_chars: search_typed_chars.clone(),
@@ -439,7 +448,7 @@ pub fn Sidebar(cx: Scope<SidebarProps>) -> Element {
                         },
                     }
                 ))
-            },
+            }
         }
     ))
 }
