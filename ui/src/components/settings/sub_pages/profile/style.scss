@@ -264,3 +264,41 @@
   margin-bottom: auto;
   padding-left: var(--gap-less);
 }
+
+.overlay-shadow {
+  display: block; /* Initially hidden */
+  position: fixed; /* Fixed position to cover the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  z-index: 999; /* Ensure it's above other content */
+  text-align: center;
+  padding-top: 20%; /* Adjust to center loading message vertically */
+}
+
+.overlay-load-shadow {
+  display: block;
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8); 
+  z-index: 999; 
+  text-align: center;
+  pointer-events: all;
+}
+
+.overlay-loader-spinner {
+  position: fixed;
+  display: block;
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  background-color: transparent;
+}
