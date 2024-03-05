@@ -256,10 +256,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 }
 
                 let res = rx.await.expect("command canceled");
+                loading_indicator.set(false);
+
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));
-                        loading_indicator.set(false);
                     }
                     Err(e) => {
                         let msg = match e {
@@ -268,7 +269,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                             _ => get_local_text("settings-profile.failed"),
                         };
-                        loading_indicator.set(false);
                         update_failed.set(Some(msg));
                     }
                 }
