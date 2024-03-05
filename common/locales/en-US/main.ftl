@@ -108,6 +108,7 @@ messages = Messages
     .control-group = More
     .no-chats = No chats available
     .group-remove-fail-owner = You can't remove the owner of the group!
+    .group-remove-fail-invalid = Invalid public key for user!
     .group-remove-fail-chat = Invalid chat! Could not remove user.
     .group-remove-fail-id = User is not in the group!
     .group-remove-fail-multi = Could not all selected users from the group!

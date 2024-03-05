@@ -47,6 +47,7 @@ pub fn EditGroup(cx: Scope) -> Element {
 
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
 
+    let creator = state.read().get_active_chat().map(|c| c.creator).flatten();
     let friends_list: HashMap<DID, Identity> = HashMap::from_iter(
         state
             .read()
@@ -161,7 +162,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                                     class: "friend-group",
                                     aria_label: "friend-group",
                                     friends.iter().map(
-                                        |_friend| {
+                                        |friend| {
                                             rsx!(
                                                 friend_row {
                                                     add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
@@ -169,9 +170,10 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                     } else {
                                                         "remove".into()
                                                     },
-                                                    friend: _friend.clone(),
+                                                    friend: friend.clone(),
                                                     minimal: minimal,
                                                     conv_id: conv_id,
+                                                    creator: friend.did_key().eq(&creator)
                                                 }
                                             )
                                         }
@@ -199,6 +201,7 @@ pub struct FriendRowProps {
     minimal: bool,
     friend: Identity,
     conv_id: Uuid,
+    creator: bool,
 }
 
 /* Friend Row with add/remove button functionality */
@@ -207,6 +210,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let state = use_shared_state::<State>(cx)?;
     let conv_id = cx.props.conv_id;
+    let creator = cx.props.creator;
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![state, selected_friends, conv_id];
         async move {
@@ -256,7 +260,11 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                                         get_local_text("messages.group-remove-fail-chat")
                                     }
                                     warp::error::Error::PublicKeyInvalid => {
-                                        get_local_text("messages.group-remove-fail-owner")
+                                        if creator {
+                                            get_local_text("messages.group-remove-fail-owner")
+                                        } else {
+                                            get_local_text("messages.group-remove-fail-invalid")
+                                        }
                                     }
                                     warp::error::Error::IdentityDoesntExist => {
                                         get_local_text("messages.group-remove-fail-id")
