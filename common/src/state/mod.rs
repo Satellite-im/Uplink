@@ -1263,10 +1263,32 @@ impl State {
         conv_id: Uuid,
         msg: PendingMessage,
         progress: Progression,
-    ) {
+    ) -> bool {
+        let mut update = false;
+        if let Progression::ProgressFailed {
+            name,
+            last_size: _,
+            error,
+        } = &progress
+        {
+            let err = match error.as_ref() {
+                Some(err) => {
+                    get_local_text_with_args("messages.attachments-fail-msg", vec![("reason", err)])
+                }
+                None => get_local_text("messages.attachments-fail"),
+            };
+            self.mutate(Action::AddToastNotification(ToastNotification::init(
+                name.clone(),
+                err,
+                None,
+                2,
+            )));
+            update = true;
+        }
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.update_pending_msg(msg, progress);
         }
+        update
     }
 
     pub fn decrement_outgoing_messagess(
