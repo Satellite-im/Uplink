@@ -109,6 +109,8 @@ messages = Messages
     .username-suggestion = Suggested Users
     .control-group = More
     .no-chats = No chats available
+    .attachments-fail = Upload Failed!
+    .attachments-fail-msg = Upload failed: { $reason }
     
 favorites = Favorites
     .favorites = Favorites
