@@ -1,0 +1,101 @@
+.file-transfer-wrap {
+    background: var(--background-light);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-height: 40%;
+    overflow: hidden;
+    overflow-y: auto;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.file-transfer-modal {
+    width: 300px;
+    position: unset;
+}
+
+.file-icon-container > div {
+    width: 40px;
+    height: 40px;
+    svg {
+        width: 100%;
+        height: 100%;
+        transition: stroke var(--animation-time); 
+        fill: transparent; 
+        stroke: var(--text-color);
+    }
+}
+
+.file-transfer-label-container {
+    margin: var(--padding-lesser); 
+    margin-bottom: 0;
+}
+
+.file-transfer-file {
+    display: flex;
+    background: #8c8c8c;
+    margin: var(--padding-lesser);
+    padding: var(--padding-less) var(--padding-lesser);
+    border-radius: var(--border-radius);
+}
+
+.file-progress-description {
+    font-size: var(--text-size-less);
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    gap: var(--gap-less);
+    color: var(--text-color-dark);
+}
+
+.progress-bar-filename-container {
+    display: flex;
+    flex-direction: row;
+    gap: var(--gap);
+    .filename-and-file-queue-text {
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        overflow: hidden;
+    }
+    p {
+        font-size: var(--text-size-less);
+    }
+}
+
+.file-transfer-buttons {
+    display: flex; 
+    margin-top: auto; 
+    margin-bottom: auto;
+    margin-left: var(--padding-lesser);
+    gap: var(--gap-less);
+}
+
+.progress-indicator-wrap {
+    width: 100%;
+    height: var(--text-size);
+    position: relative;
+}
+
+.progress-indicator {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius);
+    background: var(--background-light);
+    overflow: hidden;
+}
+
+.progress-indicator-overlay {
+    left: 0;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--primary) 70%, transparent);
+}
