@@ -12,6 +12,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_nav: Option<Element<'a>>,
     with_call_controls: Option<Element<'a>>,
+    with_file_transfer: Option<Element<'a>>,
     #[props(optional)]
     hidden: Option<bool>,
     #[props(optional)]
@@ -53,6 +54,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "sidebar-children",
                     cx.props.children.as_ref()
                 },
+                cx.props.with_file_transfer.as_ref(),
                 cx.props.with_call_controls.as_ref(),
                 cx.props.with_nav.as_ref(),
             )

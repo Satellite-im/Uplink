@@ -1,6 +1,6 @@
 use common::{
     language::{get_local_text, get_local_text_with_args},
-    state::{self, State},
+    state::{self, data_transfer::TransferTracker, State},
 };
 use dioxus::prelude::*;
 use kit::{
@@ -49,7 +49,9 @@ pub fn SendFilesLayout<'a>(cx: Scope<'a, SendFilesProps<'a>>) -> Element<'a> {
     let send_files_from_storage_state = cx.props.send_files_from_storage_state.clone();
     let storage_controller = StorageController::new(cx, state);
     let first_render = use_ref(cx, || true);
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
+    let file_tracker = use_shared_state::<TransferTracker>(cx)?;
+    let ch: &Coroutine<ChanCmd> =
+        functions::init_coroutine(cx, storage_controller, state, file_tracker);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
     functions::get_items_from_current_directory(cx, ch);
 
