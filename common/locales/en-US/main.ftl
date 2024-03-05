@@ -46,6 +46,8 @@ uplink = Uplink
     .copy = Copy
     .paste = Paste
     .go-back = Go Back
+    .upload-queue = Upload queue
+    .download-queue = Download Queue
     
 community = Community
     .invited = You're Invited!
