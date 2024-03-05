@@ -47,7 +47,7 @@ pub fn EditGroup(cx: Scope) -> Element {
 
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
 
-    let creator = state.read().get_active_chat().map(|c| c.creator).flatten();
+    let creator = state.read().get_active_chat().and_then(|c| c.creator);
     let friends_list: HashMap<DID, Identity> = HashMap::from_iter(
         state
             .read()
@@ -161,8 +161,9 @@ pub fn EditGroup(cx: Scope) -> Element {
                                     key: "friend-group",
                                     class: "friend-group",
                                     aria_label: "friend-group",
-                                    friends.iter().map(
-                                        |friend| {
+                                    friends.iter().map({
+                                        move |friend| {
+                                            let creator = creator.clone();
                                             rsx!(
                                                 friend_row {
                                                     add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
@@ -173,11 +174,11 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                     friend: friend.clone(),
                                                     minimal: minimal,
                                                     conv_id: conv_id,
-                                                    creator: friend.did_key().eq(&creator)
+                                                    creator: creator.map(|did|did.eq(&friend.did_key())).unwrap_or_default()
                                                 }
                                             )
                                         }
-                                    ),
+                                }),
                                 }
                             }
                         )
