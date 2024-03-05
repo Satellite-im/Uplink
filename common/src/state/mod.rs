@@ -2,6 +2,7 @@ pub mod action;
 pub mod call;
 pub mod chats;
 pub mod configuration;
+pub mod data_transfer;
 pub mod default_keybinds;
 pub mod friends;
 pub mod identity;
