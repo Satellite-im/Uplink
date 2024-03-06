@@ -305,7 +305,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                     }
                 )
             }
-            if cx.props.am_i_group_creator {
+            if cx.props.am_i_group_creator || cx.props.add_or_remove == "add" {
                 rsx!(Button {
                     aria_label: if cx.props.add_or_remove == "add" {
                         get_local_text("uplink.add")
