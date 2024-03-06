@@ -99,6 +99,13 @@
         .user {
             height: calc(3.5 * var(--text-size));
         }
+        .modal-share-friend-image-group {
+            display: flex; 
+            flex-direction: row; 
+            gap: var(--gap); 
+            height: fit-content; 
+            align-items: center;
+        }
     }
 }
 
