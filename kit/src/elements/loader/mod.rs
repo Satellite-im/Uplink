@@ -24,6 +24,7 @@ pub fn Loader(cx: Scope<Props>) -> Element {
         class: if is_large(&cx) { "loader large" } else { "loader" },
         div {
             class: "spin",
+            aria_label: "loader",
             IconElement { icon: Icon::Loader }
         }
     }))
