@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::{
     icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
     language::get_local_text,
     state::{Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
@@ -44,6 +45,16 @@ pub fn EditGroup(cx: Scope) -> Element {
     // show the ADD or REMOVE components, default to Remove
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
+    let creator_id_vector = Vec::from_iter(
+        state
+            .read()
+            .get_active_chat()
+            .unwrap()
+            .creator
+            .iter()
+            .cloned(),
+    );
+    let creator_id = creator_id_vector.first().cloned()?;
 
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
 
@@ -111,6 +122,8 @@ pub fn EditGroup(cx: Scope) -> Element {
         }
     });
 
+    let creator_did2 = creator_id.clone();
+
     cx.render(rsx!(
         div {
             id: "edit-members",
@@ -162,6 +175,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                                     aria_label: "friend-group",
                                     friends.iter().map(
                                         |_friend| {
+                                            let is_group_creator = creator_did2.clone() == _friend.clone().did_key();
                                             rsx!(
                                                 friend_row {
                                                     add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
@@ -169,6 +183,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                     } else {
                                                         "remove".into()
                                                     },
+                                                    is_group_creator: is_group_creator,
                                                     friend: _friend.clone(),
                                                     minimal: minimal,
                                                     conv_id: conv_id,
@@ -196,6 +211,7 @@ pub fn EditGroup(cx: Scope) -> Element {
 #[derive(Props, Eq, PartialEq)]
 pub struct FriendRowProps {
     add_or_remove: String,
+    is_group_creator: bool,
     minimal: bool,
     friend: Identity,
     conv_id: Uuid,
@@ -272,34 +288,49 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                     _friend.username(),
                 },
             },
-            Button {
-                aria_label: if cx.props.add_or_remove == "add" {
-                    get_local_text("uplink.add")
-                } else {
-                    get_local_text("uplink.remove")
-                },
-                icon: if cx.props.add_or_remove == "add" {
-                    Icon::UserPlus
-                } else {
-                    Icon::UserMinus
-                },
-                text: if cx.props.minimal { String::new() }
-                    else if cx.props.add_or_remove == "add" {
+            if cx.props.is_group_creator {
+                rsx!(
+                    div {
+                        class: "group-creator-container",
+                        IconElement {
+                            icon: Icon::Satellite
+                        }
+                        span {
+                            class: "group-creator-text",
+                            get_local_text("messages.group-creator-label")
+                        }
+                    }
+                )
+            } else {
+                rsx!(Button {
+                    aria_label: if cx.props.add_or_remove == "add" {
                         get_local_text("uplink.add")
                     } else {
                         get_local_text("uplink.remove")
-                    }
-                ,
-                onpress: move |_| {
-                    let mut friends = selected_friends.get().clone();
-                    friends.clear();
-                    selected_friends.set(vec![_friend.did_key()].into_iter().collect());
-                    if cx.props.add_or_remove == "add" {
-                        ch.send(ChanCmd::AddParticipants);
+                    },
+                    icon: if cx.props.add_or_remove == "add" {
+                        Icon::UserPlus
                     } else {
-                        ch.send(ChanCmd::RemoveParticipants);
+                        Icon::UserMinus
+                    },
+                    text: if cx.props.minimal { String::new() }
+                        else if cx.props.add_or_remove == "add" {
+                            get_local_text("uplink.add")
+                        } else {
+                            get_local_text("uplink.remove")
+                        }
+                    ,
+                    onpress: move |_| {
+                        let mut friends = selected_friends.get().clone();
+                        friends.clear();
+                        selected_friends.set(vec![_friend.did_key()].into_iter().collect());
+                        if cx.props.add_or_remove == "add" {
+                            ch.send(ChanCmd::AddParticipants);
+                        } else {
+                            ch.send(ChanCmd::RemoveParticipants);
+                        }
                     }
-                }
+                })
             }
         }
     ))
