@@ -3,7 +3,7 @@ use common::{
     language::get_local_text_with_args,
     state::{
         data_transfer::{TransferState, TransferStates},
-        pending_message::PendingMessage,
+        pending_message::{FileProgression, PendingMessage},
     },
     warp_runner::{ui_adapter::MessageEvent, WarpEvent},
     WARP_EVENT_CH,
@@ -22,10 +22,7 @@ use tokio::{
 use once_cell::sync::Lazy;
 use std::{sync::Arc, time::Duration};
 use uuid::Uuid;
-use warp::{
-    constellation::Progression,
-    raygun::{AttachmentEventStream, AttachmentKind, Location},
-};
+use warp::raygun::{AttachmentEventStream, AttachmentKind, Location};
 
 use super::download::DownloadComplete;
 
@@ -38,7 +35,7 @@ pub enum ListenerAction {
     },
     TransferProgress {
         id: Uuid,
-        progression: Progression,
+        progression: FileProgression,
         download: bool,
     },
     PauseTransfer {
@@ -135,6 +132,7 @@ pub fn chat_upload_stream_handler(
                             return;
                         }
                         AttachmentKind::AttachedProgress(progress) => {
+                            let progress = progress.into();
                             if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
                                 MessageEvent::AttachmentProgress {
                                     progress,
@@ -169,7 +167,7 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
     async_queue(
         cx,
         |DownloadStreamData {
-             mut stream,
+             stream,
              file,
              id,
              on_finish,
@@ -177,6 +175,7 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
              file_state,
          }| {
             async move {
+                let mut stream = stream.map(FileProgression::from);
                 let mut paused = false;
                 loop {
                     tokio::select! {
@@ -211,8 +210,8 @@ pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStre
                                 download: true,
                             });
                             match progress {
-                                Progression::ProgressComplete { name: _, total: _ } => break,
-                                Progression::ProgressFailed { name: _, last_size: _ ,error: _ } => {
+                                FileProgression::ProgressComplete { name: _, total: _ } => break,
+                                FileProgression::ProgressFailed { name: _, last_size: _ ,error: _ } => {
                                     sleep(Duration::from_secs(3)).await;
                                     let _ = ACTION_LISTENER
                                         .tx

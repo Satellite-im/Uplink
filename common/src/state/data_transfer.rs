@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use tokio::sync::Mutex;
 use uuid::Uuid;
-use warp::constellation::Progression;
 
 use crate::language::get_local_text;
+
+use super::pending_message::FileProgression;
 
 // Struct to ease updating/reading from it
 #[derive(Debug, Clone, Default)]
@@ -150,7 +151,7 @@ impl TransferTracker {
     pub fn update_file_upload(
         &mut self,
         file_id: Uuid,
-        progression: Progression,
+        progression: FileProgression,
         tracker: TrackerType,
     ) {
         if let Some(f) = self
@@ -159,7 +160,7 @@ impl TransferTracker {
             .find(|p| file_id.eq(&p.id))
         {
             let progress = match progression {
-                Progression::CurrentProgress {
+                FileProgression::CurrentProgress {
                     name: _,
                     current,
                     total,
@@ -174,18 +175,18 @@ impl TransferTracker {
                             .unwrap_or_default() as u8,
                     )
                 }
-                Progression::ProgressComplete { name: _, total } => {
+                FileProgression::ProgressComplete { name: _, total } => {
                     if let Some(total) = total {
                         f.total_size = total;
                     }
                     TransferProgress::Finishing
                 }
-                Progression::ProgressFailed {
+                FileProgression::ProgressFailed {
                     name: _,
                     last_size,
                     error,
                 } => {
-                    f.description = error;
+                    f.description = Some(error.to_string());
                     if let Some(last_size) = last_size {
                         f.total_size = last_size;
                     }

@@ -6,14 +6,13 @@ use std::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use warp::{
-    constellation::Progression,
     crypto::DID,
     raygun::{self, ConversationSettings, ConversationType, Location},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::pending_message::{progress_file, PendingMessage};
+use super::pending_message::{progress_file, FileProgression, PendingMessage};
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -152,7 +151,7 @@ impl Chat {
         uuid
     }
 
-    pub fn update_pending_msg(&mut self, msg: PendingMessage, progress: Progression) {
+    pub fn update_pending_msg(&mut self, msg: PendingMessage, progress: FileProgression) {
         let file = progress_file(&progress);
         for m in &mut self.pending_outgoing_messages {
             if msg.eq(m) {

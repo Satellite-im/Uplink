@@ -20,6 +20,7 @@ use crate::{
     language::get_local_text,
     state::{
         data_transfer::{TransferState, TransferStates},
+        pending_message::FileProgression,
         storage::Storage as uplink_storage,
     },
     upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
@@ -472,7 +473,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
 
 async fn handle_upload_progress(
     warp_storage: &mut warp_storage,
-    mut upload_progress: ConstellationProgressStream,
+    upload_progress: ConstellationProgressStream,
     filename: String,
     file_id: Uuid,
     file_state: TransferState,
@@ -483,6 +484,8 @@ async fn handle_upload_progress(
     let mut upload_process_started = false;
     let mut last_progress = None;
     let mut paused = false;
+
+    let mut upload_progress = upload_progress.map(FileProgression::from);
 
     loop {
         tokio::select! {
@@ -508,7 +511,7 @@ async fn handle_upload_progress(
                 last_progress = Some(upload_progress.clone());
                 let current_progress = upload_progress.clone();
                 match upload_progress {
-                    Progression::CurrentProgress {
+                    FileProgression::CurrentProgress {
                         name,
                         current,
                         total,
@@ -547,7 +550,7 @@ async fn handle_upload_progress(
                             }
                         }
                     }
-                    Progression::ProgressComplete { name, total } => {
+                    FileProgression::ProgressComplete { name, total } => {
                         let total = total.unwrap_or_default();
                         let readable_total = format_size(total, DECIMAL);
                         let _ = tx_upload_file.send(UploadFileAction::Uploading((
@@ -557,7 +560,7 @@ async fn handle_upload_progress(
                         )));
                         log::info!("{name} has been uploaded with {}", readable_total);
                     }
-                    Progression::ProgressFailed {
+                    FileProgression::ProgressFailed {
                         name,
                         last_size,
                         error,
@@ -565,7 +568,7 @@ async fn handle_upload_progress(
                         log::info!(
                             "{name} failed to upload at {} MB due to: {}",
                             last_size.unwrap_or_default(),
-                            error.unwrap_or_default()
+                            error
                         );
                         let _ = tx_upload_file.send(UploadFileAction::Error(
                             Some(file_path.clone()),
@@ -817,7 +820,7 @@ async fn download_file(
             Err(e) => Progression::ProgressFailed {
                 name: file_name.clone(),
                 last_size: file.metadata().map(|d| d.len() as usize).ok(),
-                error: Some(format!("{}", e)),
+                error: e,
             },
         })
         .chain(stream::once(async move {

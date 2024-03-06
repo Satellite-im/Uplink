@@ -302,7 +302,7 @@ pub async fn handle_raygun_cmd(
                     .attach(conv_id, None, attachments.clone(), msg.clone())
                     .await
                 {
-                    Ok(stream) => Result::Ok(Some(stream)),
+                    Ok((_, stream)) => Result::Ok(Some(stream)),
                     Err(e) => Err(e),
                 }
             };
@@ -325,7 +325,7 @@ pub async fn handle_raygun_cmd(
                         .attach(chat_id, None, attachments.clone(), msg.clone())
                         .await
                     {
-                        Ok(stream) => streams.push((chat_id, stream)),
+                        Ok((_, stream)) => streams.push((chat_id, stream)),
                         Err(e) => {
                             log::error!("Raygun: Send files to several chats: {}", e);
                         }
@@ -378,7 +378,7 @@ pub async fn handle_raygun_cmd(
                     .attach(conv_id, Some(reply_to), attachments, msg)
                     .await
                 {
-                    Ok(stream) => Result::Ok(Some(stream)),
+                    Ok((_, stream)) => Result::Ok(Some(stream)),
                     Err(e) => Err(e),
                 }
             };
