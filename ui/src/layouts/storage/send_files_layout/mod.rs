@@ -162,38 +162,41 @@ fn ChatsToSelect<'a>(cx: Scope<'a, ChatsToSelectProps<'a>>) -> Element<'a> {
 
             rsx!(div {
                     id: "chat-selector-to-send-files",
-                    Checkbox {
-                        disabled: false,
-                        width: "1em".into(),
-                        height: "1em".into(),
-                        is_checked: is_checked,
-                        on_click: move |_| {
-                            if is_checked {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                            } else {
-                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                            }
-                        }
-                    }
                     User {
                         username: participants_name,
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
                         user_image: cx.render(rsx!(
-                            if chat.conversation_type == ConversationType::Direct {rsx! (
-                                UserImage {
-                                    platform: platform,
-                                    status:  user.identity_status().into(),
-                                    image: user.profile_picture(),
-                                    typing: false,
+                            div {
+                                class: "chat-selector-to-send-image-group",
+                                Checkbox {
+                                    disabled: false,
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    is_checked: is_checked,
+                                    on_click: move |_| {
+                                        if is_checked {
+                                            cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                        } else {
+                                            cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                        }
+                                    }
                                 }
-                            )} else {rsx! (
-                                UserImageGroup {
-                                    participants: build_participants(&participants),
-                                    typing: false,
-                                }
-                            )}
+                                if chat.conversation_type == ConversationType::Direct {rsx! (
+                                    UserImage {
+                                        platform: platform,
+                                        status:  user.identity_status().into(),
+                                        image: user.profile_picture(),
+                                        typing: false,
+                                    }
+                                )} else {rsx! (
+                                    UserImageGroup {
+                                        participants: build_participants(&participants),
+                                        typing: false,
+                                    }
+                                )}
+                            }
                         )),
                         with_badge: "".into(),
                         onpress: move |_| {

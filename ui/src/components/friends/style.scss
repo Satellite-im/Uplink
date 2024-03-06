@@ -88,8 +88,7 @@
     .modal-share-friend {
         padding: var(--padding-less);
         display: inline-flex;
-        gap: var(--gap);
-        align-items: center;
+        gap: var(--gap-less);
         &:hover {
 			background: color-mix(in srgb, transparent 90%, black);
 			cursor: pointer;
@@ -99,6 +98,13 @@
         }
         .user {
             height: calc(3.5 * var(--text-size));
+        }
+        .modal-share-friend-image-group {
+            display: flex; 
+            flex-direction: row; 
+            gap: var(--gap); 
+            height: fit-content; 
+            align-items: center;
         }
     }
 }

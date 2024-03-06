@@ -1,9 +1,15 @@
 #chat-selector-to-send-files {
     padding: 16px;
     display: inline-flex;
-    gap: var(--gap);
-    align-items: center;
+    gap: var(--gap-less);
     .user {
         height: calc(3.5 * var(--text-size));
+    }
+    .chat-selector-to-send-image-group {
+        display: flex; 
+        flex-direction: row; 
+        gap: var(--gap); 
+        height: fit-content; 
+        align-items: center;
     }
   }
