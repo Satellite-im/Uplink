@@ -509,18 +509,22 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     msg,
                 }) = evt
                 {
-                    state
+                    if state
                         .write_silent()
-                        .update_outgoing_messages(conversation_id, msg, progress);
-                    let read = state.read();
-                    if read
-                        .get_active_chat()
-                        .map(|c| c.id.eq(&conversation_id))
-                        .unwrap_or_default()
+                        .update_outgoing_messages(conversation_id, msg, progress)
                     {
-                        //Update the component only instead of whole state
-                        if let Some(v) = read.scope_ids.pending_message_component {
-                            schedule(ScopeId(v))
+                        state.write();
+                    } else {
+                        let read = state.read();
+                        if read
+                            .get_active_chat()
+                            .map(|c| c.id.eq(&conversation_id))
+                            .unwrap_or_default()
+                        {
+                            //Update the component only instead of whole state
+                            if let Some(v) = read.scope_ids.pending_message_component {
+                                schedule(ScopeId(v))
+                            }
                         }
                     }
                 } else {

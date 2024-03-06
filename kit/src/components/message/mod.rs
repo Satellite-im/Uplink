@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::state::pending_message::FileProgression;
 use common::state::utils::{mention_replacement_pattern, parse_mentions};
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
@@ -17,10 +18,7 @@ use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
-use warp::{
-    constellation::{file::File, Progression},
-    crypto::DID,
-};
+use warp::{constellation::file::File, crypto::DID};
 
 use tracing::log;
 
@@ -116,7 +114,7 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     #[props(!optional)]
-    attachments_pending_uploads: Option<&'a Vec<Progression>>,
+    attachments_pending_uploads: Option<&'a Vec<FileProgression>>,
 
     pinned: bool,
 
