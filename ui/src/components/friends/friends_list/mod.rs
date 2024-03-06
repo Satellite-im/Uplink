@@ -509,38 +509,41 @@ pub fn ShareFriendsModal(cx: Scope<FriendProps>) -> Element {
                 let selected = chats_selected.read().contains(&id);
                 rsx!(div {
                     class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
-                    Checkbox {
-                        disabled: false,
-                        width: "1em".into(),
-                        height: "1em".into(),
-                        is_checked: selected,
-                        on_click: move |_| {
-                            chats_selected.with_mut(|v|{
-                                if !selected {
-                                    v.push(id);
-                                } else {
-                                    v.retain(|c|!c.eq(&id));
-                                }
-                            });
-                        }
-                    }
                     User {
                         username: participants_name,
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
                         user_image: cx.render(rsx!(
-                            match chat.conversation_type {
-                                ConversationType::Direct => rsx!(UserImage {
-                                    platform: platform,
-                                    status:  user.identity_status().into(),
-                                    image: user.profile_picture(),
-                                    typing: false,
-                                }),
-                                _ => rsx!(UserImageGroup {
-                                    participants: build_participants(&participants),
-                                    typing: false,
-                                })
+                            div {
+                                class: "modal-share-friend-image-group",
+                                Checkbox {
+                                    disabled: false,
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    is_checked: selected,
+                                    on_click: move |_| {
+                                        chats_selected.with_mut(|v|{
+                                            if !selected {
+                                                v.push(id);
+                                            } else {
+                                                v.retain(|c|!c.eq(&id));
+                                            }
+                                        });
+                                    }
+                                },
+                                match chat.conversation_type {
+                                    ConversationType::Direct => rsx!(UserImage {
+                                        platform: platform,
+                                        status:  user.identity_status().into(),
+                                        image: user.profile_picture(),
+                                        typing: false,
+                                    }),
+                                    _ => rsx!(UserImageGroup {
+                                        participants: build_participants(&participants),
+                                        typing: false,
+                                    })
+                                }
                             }
                         )),
                         onpress: move |_| {
