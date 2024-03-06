@@ -115,7 +115,9 @@ messages = Messages
     .group-remove-fail-id = User is not in the group!
     .group-remove-fail-multi = Could not all selected users from the group!
     .group-remove-fail = Could not remove user from the group!
-
+    .attachments-fail = Upload Failed!
+    .attachments-fail-msg = Upload failed: { $reason }
+    
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
