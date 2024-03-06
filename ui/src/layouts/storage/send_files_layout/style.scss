@@ -1,7 +1,8 @@
 #chat-selector-to-send-files {
     padding: 16px;
     display: inline-flex;
-    gap: var(--gap-less);
+    gap: var(--gap);
+    align-items: center;
     .user {
         height: calc(3.5 * var(--text-size));
     }
