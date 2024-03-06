@@ -3904,12 +3904,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hash_hasher"
-version = "2.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74721d007512d0cb3338cd20f0654ac913920061a4c4d0d8708edb3f2a698c0c"
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5242,24 +5236,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libp2p-nat"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca76c3243804e69554e3c0f441d31add3b7a076de1ed1a931386229430711a8f"
-dependencies = [
- "anyhow",
- "futures",
- "futures-timer",
- "igd-next",
- "libp2p",
- "log",
- "natpmp",
- "thiserror",
- "tokio",
- "void",
-]
-
-[[package]]
 name = "libp2p-noise"
 version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6094,17 +6070,6 @@ checksum = "7bddcd3bf5144b6392de80e04c347cd7fab2508f6df16a85fc496ecd5cec39bc"
 dependencies = [
  "clap 3.2.25",
  "rand 0.8.5",
-]
-
-[[package]]
-name = "natpmp"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af64b35cc5e1edfc808060c64d399d483c5269b6af3c357f43ee07234d5fa787"
-dependencies = [
- "async-trait",
- "cc",
- "tokio",
 ]
 
 [[package]]
@@ -7847,9 +7812,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.9.0"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "653a18ea3bcbf83f52df754386611d8ccbb6bac840199492953544aaca7a345d"
+checksum = "813881f831ea701eef584df60c7637ac24f9570af8653cf8076ea81370fcf9bf"
 dependencies = [
  "anyhow",
  "async-broadcast 0.6.0",
@@ -7863,13 +7828,11 @@ dependencies = [
  "fs2",
  "futures",
  "futures-timer",
- "hash_hasher",
  "hickory-resolver",
  "libipld",
  "libp2p",
  "libp2p-allow-block-list",
  "libp2p-bitswap-next",
- "libp2p-nat",
  "libp2p-relay-manager",
  "parking_lot 0.12.1",
  "rand 0.8.5",
@@ -7893,16 +7856,16 @@ dependencies = [
 
 [[package]]
 name = "rust-ipns"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "655c10934d3e723a32781f12636e5ebef66ca85ebe6ffbde97a5f01e94dd8c50"
+checksum = "4039dcecfde6b2abd5068ad0e3b602ebf2a855687de238cf244c32e7b14e21cc"
 dependencies = [
+ "cbor4ii",
  "chrono",
  "cid",
  "derive_more",
- "libipld",
  "libp2p-identity",
- "multihash 0.19.1",
+ "multihash 0.18.1",
  "quick-protobuf",
  "serde",
  "sha2 0.10.8",
@@ -7910,9 +7873,9 @@ dependencies = [
 
 [[package]]
 name = "rust-unixfs"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e16da15fda72166d21729ab671d2b4d6cbc34293537622f854f14f0fbbc3df4a"
+checksum = "198604a043cb63265579ed131ea740bc11679fb0e5936489f429f5fec24d9e43"
 dependencies = [
  "either",
  "filetime",
@@ -8497,7 +8460,7 @@ checksum = "a7cee0529a6d40f580e7a5e6c495c8fbfe21b7b52795ed4bb5e62cdf92bc6380"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
+source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9898,7 +9861,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
+source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -9953,7 +9916,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
+source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9986,7 +9949,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=0a216237cb9c965754df444b80ea983879831396#0a216237cb9c965754df444b80ea983879831396"
+source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",
