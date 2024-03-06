@@ -1,5 +1,5 @@
 #chat-selector-to-send-files {
-    padding: 16px;
+    padding: var(--padding-less) 16px;
     display: inline-flex;
     gap: var(--gap-less);
     .user {
