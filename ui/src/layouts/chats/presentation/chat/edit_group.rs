@@ -123,6 +123,7 @@ pub fn EditGroup(cx: Scope) -> Element {
     });
 
     let creator_did2 = creator_id.clone();
+    let am_i_group_creator = creator_id == state.read().did_key();
 
     cx.render(rsx!(
         div {
@@ -183,7 +184,8 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                     } else {
                                                         "remove".into()
                                                     },
-                                                    is_group_creator: is_group_creator,
+                                                    friend_is_group_creator: is_group_creator,
+                                                    am_i_group_creator: am_i_group_creator,
                                                     friend: _friend.clone(),
                                                     minimal: minimal,
                                                     conv_id: conv_id,
@@ -211,7 +213,8 @@ pub fn EditGroup(cx: Scope) -> Element {
 #[derive(Props, Eq, PartialEq)]
 pub struct FriendRowProps {
     add_or_remove: String,
-    is_group_creator: bool,
+    friend_is_group_creator: bool,
+    am_i_group_creator: bool,
     minimal: bool,
     friend: Identity,
     conv_id: Uuid,
@@ -288,7 +291,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                     _friend.username(),
                 },
             },
-            if cx.props.is_group_creator {
+            if cx.props.friend_is_group_creator {
                 rsx!(
                     div {
                         class: "group-creator-container",
@@ -301,7 +304,8 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                         }
                     }
                 )
-            } else {
+            }
+            if cx.props.am_i_group_creator {
                 rsx!(Button {
                     aria_label: if cx.props.add_or_remove == "add" {
                         get_local_text("uplink.add")
