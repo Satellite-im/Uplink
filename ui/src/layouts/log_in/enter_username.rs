@@ -110,6 +110,11 @@ pub fn Layout(
     });
 
     cx.render(rsx!(
+        loading.get().then(|| rsx!(
+            div {
+                class: "overlay-load-shadow",
+            },
+        )),
         div {
             id: "unlock-layout",
             class: format_args!("{}", if *loading.get() {"progress"} else {""}),
