@@ -54,7 +54,7 @@ use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun};
 
 use tracing::log;
 
-use self::call::{ActiveCall, Call, CallInfo};
+use self::call::Call;
 use self::pending_message::{FileProgression, PendingMessage};
 
 use self::storage::Storage;
