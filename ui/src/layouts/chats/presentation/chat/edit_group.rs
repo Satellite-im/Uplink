@@ -45,16 +45,8 @@ pub fn EditGroup(cx: Scope) -> Element {
     // show the ADD or REMOVE components, default to Remove
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
-    let creator_id_vector = Vec::from_iter(
-        state
-            .read()
-            .get_active_chat()
-            .unwrap()
-            .creator
-            .iter()
-            .cloned(),
-    );
-    let creator_id = creator_id_vector.first().cloned()?;
+
+    let creator_id = state.read().get_active_chat()?.creator.clone()?;
 
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
 
