@@ -7,19 +7,19 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::is_file_available_to_preview;
 use common::is_video;
+use common::language::get_local_text_with_args;
 use common::return_correct_icon;
+use common::state::pending_message::FileProgression;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
-use dioxus_html::input_data::keyboard_types::Modifiers;
-
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use humansize::format_size;
 use humansize::DECIMAL;
 use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
-use warp::constellation::Progression;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -60,7 +60,7 @@ pub struct Props<'a> {
     // called shen the icon is clicked
     on_press: EventHandler<'a, Option<PathBuf>>,
 
-    progress: Option<&'a Progression>,
+    progress: Option<&'a FileProgression>,
 }
 
 #[allow(non_snake_case)]
@@ -101,7 +101,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let perc = if let Some(p) = cx.props.progress {
         match p {
-            Progression::CurrentProgress {
+            FileProgression::CurrentProgress {
                 name: _,
                 current,
                 total,
@@ -117,19 +117,22 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
                 None => 0,
             },
-            Progression::ProgressComplete { name: _, total } => {
+            FileProgression::ProgressComplete { name: _, total } => {
                 if let Some(size) = total {
                     file_size_pending
                         .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
                 };
                 100
             }
-            Progression::ProgressFailed {
+            FileProgression::ProgressFailed {
                 name: _,
                 last_size: _,
-                error: _,
+                error,
             } => {
-                file_size_pending.push_str("Failed");
+                file_size_pending.push_str(&get_local_text_with_args(
+                    "messages.attachments-fail-msg",
+                    vec![("reason", error.to_string())],
+                ));
                 0
             }
         }

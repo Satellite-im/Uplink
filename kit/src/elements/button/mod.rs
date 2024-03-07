@@ -17,6 +17,7 @@ pub struct Props<'a> {
     with_badge: Option<String>,
     small: Option<bool>,
     with_title: Option<bool>,
+    with_progress: Option<i8>,
 }
 
 /// Generates the appearance for the button.
@@ -64,6 +65,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
 
     let tooltip_visible = use_state(cx, || false);
+    let progress = cx.props.with_progress.unwrap_or(-1);
 
     let button_class = format!(
         "btn appearance-{} btn-{} {} {}",
@@ -125,6 +127,14 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     ))
                 },
+                if progress >= 0 {
+                    rsx!(
+                        div {
+                            class: "circular-progress",
+                            background: format_args!("conic-gradient(var(--circular-indicator) calc({} * 1%), var(--circular-bar) 0)", progress),
+                        }
+                    )
+                }
                 if let Some(_icon) = cx.props.icon {
                     rsx!(
                         // for props, copy the defaults passed in by IconButton

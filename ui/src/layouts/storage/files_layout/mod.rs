@@ -5,12 +5,11 @@ use std::time::Duration;
 
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::data_transfer::TransferTracker;
 use common::state::{ui, Action, State};
-use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
@@ -30,7 +29,7 @@ use warp::raygun::Location;
 pub mod controller;
 pub mod file_preview;
 
-use crate::components::files::upload_progress_bar::UploadProgressBar;
+use crate::components::files::upload_progress_bar::FileHoverHandler;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_preview::open_file_preview_modal;
@@ -52,8 +51,8 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);
+
     let upload_file_controller = UploadFileController::new(cx, state.clone());
-    let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
@@ -61,12 +60,15 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     let send_files_from_storage = use_state(cx, || false);
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
     let _router = use_navigator(cx);
+
     let eval: &UseEvalFn = use_eval(cx);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
+    let file_tracker = use_shared_state::<TransferTracker>(cx)?;
 
     functions::use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
+    let ch: &Coroutine<ChanCmd> =
+        functions::init_coroutine(cx, storage_controller, state, file_tracker);
 
     use_future(cx, (), |_| {
         to_owned![files_been_uploaded, files_in_queue_to_upload];
@@ -99,13 +101,11 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
     );
     functions::start_upload_file_listener(
         cx,
-        window,
         state,
         storage_controller,
         upload_file_controller.clone(),
+        file_tracker,
     );
-
-    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     let upload_streams = chat_upload_stream_handler(cx);
     let send_ch = use_coroutine(
@@ -301,17 +301,12 @@ pub fn FilesLayout(cx: Scope<'_>) -> Element<'_> {
                                 )
                             }
                         }
-                    }
-                    UploadProgressBar {
+                    },
+                    FileHoverHandler {
                         are_files_hovering_app: upload_file_controller.are_files_hovering_app,
                         files_been_uploaded: upload_file_controller.files_been_uploaded,
-                        disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
                         on_update: move |files_to_upload: Vec<PathBuf>|  {
                             functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
-                        },
-                        on_cancel: move |_| {
-                            let _ = tx_cancel_file_upload.send(true);
-                            let _ = tx_cancel_file_upload.send(false);
                         },
                     },
             SendFilesLayoutModal {

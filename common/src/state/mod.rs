@@ -2,6 +2,7 @@ pub mod action;
 pub mod call;
 pub mod chats;
 pub mod configuration;
+pub mod data_transfer;
 pub mod default_keybinds;
 pub mod friends;
 pub mod identity;
@@ -28,7 +29,6 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::blink::BlinkEventKind;
-use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Location};
 
@@ -55,7 +55,7 @@ use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun};
 use tracing::log;
 
 use self::call::Call;
-use self::pending_message::PendingMessage;
+use self::pending_message::{FileProgression, PendingMessage};
 use self::storage::Storage;
 use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
@@ -1253,11 +1253,31 @@ impl State {
         &mut self,
         conv_id: Uuid,
         message_id: Uuid,
-        progress: Progression,
-    ) {
+        progress: FileProgression,
+    ) -> bool {
+        let mut update = false;
+        if let FileProgression::ProgressFailed {
+            name,
+            last_size: _,
+            error,
+        } = &progress
+        {
+            let err = get_local_text_with_args(
+                "messages.attachments-fail-msg",
+                vec![("reason", error.to_string())],
+            );
+            self.mutate(Action::AddToastNotification(ToastNotification::init(
+                name.clone(),
+                err,
+                None,
+                2,
+            )));
+            update = true;
+        }
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.update_pending_msg(message_id, progress);
         }
+        update
     }
 
     pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid, message_id: Uuid) {
@@ -1811,7 +1831,7 @@ impl<'a> MessageGroup<'a> {
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
-    pub attachment_progress: Option<&'a HashMap<String, Progression>>,
+    pub attachment_progress: Option<&'a HashMap<String, FileProgression>>,
     pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,

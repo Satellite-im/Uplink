@@ -2,7 +2,6 @@ use derive_more::Display;
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use uuid::Uuid;
 use warp::{
-    constellation::Progression,
     crypto::DID,
     error::Error,
     raygun::{self, MessageEventKind, MessageOptions},
@@ -10,7 +9,7 @@ use warp::{
 
 use super::Message;
 use crate::{
-    state::{self},
+    state::{self, pending_message::FileProgression},
     warp_runner::{
         ui_adapter::{convert_raygun_message, did_to_identity},
         Messaging,
@@ -71,7 +70,7 @@ pub enum MessageEvent {
     },
     #[display(fmt = "AttachmentProgress")]
     AttachmentProgress {
-        progress: Progression,
+        progress: FileProgression,
         conversation_id: Uuid,
         msg: Uuid,
     },

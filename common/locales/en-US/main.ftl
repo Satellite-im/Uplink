@@ -46,6 +46,8 @@ uplink = Uplink
     .copy = Copy
     .paste = Paste
     .go-back = Go Back
+    .upload-queue = Upload queue
+    .download-queue = Download Queue
     
 community = Community
     .invited = You're Invited!
@@ -107,6 +109,8 @@ messages = Messages
     .username-suggestion = Suggested Users
     .control-group = More
     .no-chats = No chats available
+    .attachments-fail = Upload Failed!
+    .attachments-fail-msg = Upload failed: { $reason }
     
 favorites = Favorites
     .favorites = Favorites
@@ -168,7 +172,7 @@ files = Files
     .one-file-to-upload = File to Upload 1!
     .files-to-upload = Files to Upload { $num }!
     .no-thumbnail-preview = No Thumbnail available for preview
-    .not-possible-to-preview-file = It was not possible to preview this file
+    .not-possible-to-preview-file = This file type is currently not supported in preview
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .no-size-available = No size available for file: { $file }
