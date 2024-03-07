@@ -31,6 +31,8 @@ use crate::{
     },
 };
 
+pub type MultiChatResult = Vec<(Uuid, (Uuid, Option<AttachmentEventStream>))>;
+
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
 pub enum RayGunCmd {
@@ -120,9 +122,7 @@ pub enum RayGunCmd {
         convs_id: Vec<Uuid>,
         msg: Vec<String>,
         attachments: Vec<Location>,
-        rsp: oneshot::Sender<
-            Result<Vec<(Uuid, (Uuid, Option<AttachmentEventStream>))>, warp::error::Error>,
-        >,
+        rsp: oneshot::Sender<Result<MultiChatResult, warp::error::Error>>,
     },
     #[display(fmt = "EditMessage")]
     EditMessage {

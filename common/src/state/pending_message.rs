@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use uuid::Uuid;
-use warp::{constellation::Progression, crypto::DID, raygun::Location};
+use warp::{constellation::Progression, crypto::DID};
 
 use crate::warp_runner::ui_adapter::Message;
 // We can improve message equality detection if warp e.g. can send us their assigned uuid.
@@ -13,13 +13,7 @@ pub struct PendingMessage {
 }
 
 impl PendingMessage {
-    pub fn new(
-        chat_id: Uuid,
-        did: DID,
-        message_id: Uuid,
-        text: Vec<String>,
-        attachments: &[Location],
-    ) -> Self {
+    pub fn new(chat_id: Uuid, did: DID, message_id: Uuid, text: Vec<String>) -> Self {
         // Create a dummy message
         let mut inner = warp::raygun::Message::default();
         inner.set_id(message_id);

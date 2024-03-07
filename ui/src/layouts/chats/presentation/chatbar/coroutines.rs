@@ -53,11 +53,6 @@ pub fn get_msg_ch(
                         rsp: tx,
                     },
                 };
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
                 state
                     .write_silent()
                     .mutate(Action::ClearChatAttachments(conv_id));
@@ -69,9 +64,7 @@ pub fn get_msg_ch(
                 let rsp = rx.await.expect("command canceled");
                 match rsp {
                     Ok((id, stream)) => {
-                        state
-                            .write()
-                            .increment_outgoing_messages(id, msg.clone(), &attachments);
+                        state.write().increment_outgoing_messages(id, msg.clone());
                         if let Some(stream) = stream {
                             upload_streams.write().append((conv_id, id, stream));
                         }

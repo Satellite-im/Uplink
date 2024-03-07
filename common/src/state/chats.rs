@@ -144,7 +144,6 @@ impl Chat {
         message_id: Uuid,
         did: DID,
         msg: Vec<String>,
-        attachments: &[Location],
     ) -> bool {
         if self
             .pending_outgoing_messages
@@ -153,13 +152,8 @@ impl Chat {
         {
             return false;
         }
-        self.pending_outgoing_messages.push(PendingMessage::new(
-            chat_id,
-            did,
-            message_id,
-            msg,
-            attachments,
-        ));
+        self.pending_outgoing_messages
+            .push(PendingMessage::new(chat_id, did, message_id, msg));
         true
     }
 

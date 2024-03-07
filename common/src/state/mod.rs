@@ -1223,14 +1223,9 @@ impl State {
 
     // indicates that a conversation has a pending outgoing message
     // sends it to the active chat
-    pub fn increment_outgoing_messages(
-        &mut self,
-        message_id: Uuid,
-        msg: Vec<String>,
-        attachments: &[Location],
-    ) {
+    pub fn increment_outgoing_messages(&mut self, message_id: Uuid, msg: Vec<String>) {
         if let Some(id) = self.chats.active {
-            self.increment_outgoing_messages_for(id, message_id, msg, attachments);
+            self.increment_outgoing_messages_for(id, message_id, msg);
         }
     }
 
@@ -1239,11 +1234,10 @@ impl State {
         chat_id: Uuid,
         message_id: Uuid,
         msg: Vec<String>,
-        attachments: &[Location],
     ) {
         let did = self.get_own_identity().did_key();
         if let Some(chat) = self.chats.all.get_mut(&chat_id) {
-            if !chat.append_pending_msg(chat_id, message_id, did, msg, attachments) {
+            if !chat.append_pending_msg(chat_id, message_id, did, msg) {
                 log::debug!("attempted to add an already existing pending message");
             }
         }

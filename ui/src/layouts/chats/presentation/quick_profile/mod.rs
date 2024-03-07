@@ -246,12 +246,9 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok((id, _)) => {
-                                state.write_silent().increment_outgoing_messages_for(
-                                    c,
-                                    id,
-                                    msg_vec,
-                                    &[],
-                                );
+                                state
+                                    .write_silent()
+                                    .increment_outgoing_messages_for(c, id, msg_vec);
                             }
                             Err(e) => {
                                 log::error!("failed to send message: {}", e);
