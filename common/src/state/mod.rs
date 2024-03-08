@@ -1271,10 +1271,7 @@ impl State {
             error,
         } = &progress
         {
-            let err = get_local_text_with_args(
-                "messages.attachments-fail-msg",
-                vec![("reason", error.to_string())],
-            );
+            let err = get_upload_error_text(error);
             self.mutate(Action::AddToastNotification(ToastNotification::init(
                 name.clone(),
                 err,
@@ -1960,4 +1957,22 @@ pub fn pending_group_messages<'a>(
         remote: false,
         messages,
     })
+}
+
+pub fn get_upload_error_text(err: &warp::error::Error) -> String {
+    match err {
+        warp::error::Error::InvalidLength {
+            context: _,
+            current: _,
+            minimum: _,
+            maximum: _,
+        } => get_local_text_with_args(
+            "messages.attachments-fail-msg",
+            vec![(
+                "reason",
+                get_local_text("messages.attachments-fail-no-storage"),
+            )],
+        ),
+        _ => get_local_text("messages.attachments-fail"),
+    }
 }

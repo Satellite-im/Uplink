@@ -7,8 +7,8 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::is_file_available_to_preview;
 use common::is_video;
-use common::language::get_local_text_with_args;
 use common::return_correct_icon;
+use common::state::get_upload_error_text;
 use common::state::pending_message::FileProgression;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
@@ -129,10 +129,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 last_size: _,
                 error,
             } => {
-                file_size_pending.push_str(&get_local_text_with_args(
-                    "messages.attachments-fail-msg",
-                    vec![("reason", error.to_string())],
-                ));
+                file_size_pending.push_str(&get_upload_error_text(error));
                 0
             }
         }
