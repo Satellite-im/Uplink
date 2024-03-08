@@ -111,6 +111,7 @@ messages = Messages
     .no-chats = No chats available
     .attachments-fail = Upload Failed!
     .attachments-fail-msg = Upload failed: { $reason }
+    .attachments-fail-no-storage = No more storage left!
     
 favorites = Favorites
     .favorites = Favorites
