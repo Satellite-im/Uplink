@@ -455,6 +455,7 @@ pub fn init_coroutine<'a>(
                         }
                     }
                     ChanCmd::DeleteItems(item) => {
+                        controller.with_mut(|i| i.deleting.push(item.clone()));
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -470,7 +471,25 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                controller.with_mut(|i| i.storage_state = Some(storage));
+                                controller.with_mut(|i| {
+                                    i.storage_state = Some(storage);
+                                    i.deleting.retain(|i| match i {
+                                        Item::File(f) => {
+                                            if let Item::File(f2) = &item {
+                                                !f.id().eq(&f2.id())
+                                            } else {
+                                                true
+                                            }
+                                        }
+                                        Item::Directory(d) => {
+                                            if let Item::File(d2) = &item {
+                                                !d.id().eq(&d2.id())
+                                            } else {
+                                                true
+                                            }
+                                        }
+                                    });
+                                });
                             }
                             Err(e) => {
                                 log::error!("failed to delete items {}, item {:?}", e, item.name());
