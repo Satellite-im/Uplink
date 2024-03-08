@@ -639,7 +639,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                    class: "num", ((idx * 2) + 1).to_string() 
+                                                    class: "num disable-select", ((idx * 2) + 1).to_string() 
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
@@ -650,7 +650,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                                                    class: "num", ((idx * 2) + 2).to_string() 
+                                                    class: "num disable-select", ((idx * 2) + 2).to_string() 
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",

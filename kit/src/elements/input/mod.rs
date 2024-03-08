@@ -9,7 +9,6 @@ use uuid::Uuid;
 pub type ValidationError = String;
 use crate::elements::label::Label;
 use crate::elements::loader::Loader;
-
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
@@ -151,6 +150,7 @@ pub struct Props<'a> {
     select_on_focus: Option<bool>,
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
+    onfocus: Option<EventHandler<'a, ()>>,
     reset: Option<UseState<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
@@ -416,6 +416,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
+                    onfocus: move |_| {
+                        if let Some(e) = &cx.props.onfocus {
+                            e.call(())
+                        }
+                    },
                     onblur: move |_| {
                         if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
