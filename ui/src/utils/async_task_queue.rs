@@ -1,22 +1,30 @@
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text_with_args,
-    state::pending_message::PendingMessage,
+    state::{
+        data_transfer::{TransferState, TransferStates},
+        pending_message::{FileProgression, PendingMessage},
+    },
     warp_runner::{ui_adapter::MessageEvent, WarpEvent},
     WARP_EVENT_CH,
 };
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_ref, UseRef};
 use futures::{Future, StreamExt};
-use tokio::sync::{
-    mpsc::{UnboundedReceiver, UnboundedSender},
-    Mutex,
+use tokio::{
+    sync::{
+        mpsc::{UnboundedReceiver, UnboundedSender},
+        Mutex,
+    },
+    time::sleep,
 };
 
 use once_cell::sync::Lazy;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use uuid::Uuid;
 use warp::raygun::{AttachmentEventStream, AttachmentKind, Location};
+
+use super::download::DownloadComplete;
 
 pub enum ListenerAction {
     ToastAction {
@@ -24,6 +32,23 @@ pub enum ListenerAction {
         content: String,
         icon: Option<Icon>,
         timeout: u32,
+    },
+    TransferProgress {
+        id: Uuid,
+        progression: FileProgression,
+        download: bool,
+    },
+    PauseTransfer {
+        id: Uuid,
+        download: bool,
+    },
+    CancelTransfer {
+        id: Uuid,
+        download: bool,
+    },
+    FinishTransfer {
+        id: Uuid,
+        download: bool,
     },
 }
 
@@ -107,6 +132,7 @@ pub fn chat_upload_stream_handler(
                             return;
                         }
                         AttachmentKind::AttachedProgress(progress) => {
+                            let progress = progress.into();
                             if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
                                 MessageEvent::AttachmentProgress {
                                     progress,
@@ -128,29 +154,77 @@ pub fn chat_upload_stream_handler(
     )
 }
 
-pub fn download_stream_handler(
-    cx: &ScopeState,
-) -> &UseRef<
-    AsyncRef<(
-        warp::constellation::ConstellationProgressStream,
-        String,
-        std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
-        bool,
-    )>,
-> {
+pub struct DownloadStreamData {
+    pub stream: warp::constellation::ConstellationProgressStream,
+    pub file: String,
+    pub id: Uuid,
+    pub on_finish: DownloadComplete,
+    pub show_toast: bool,
+    pub file_state: TransferState,
+}
+
+pub fn download_stream_handler(cx: &ScopeState) -> &UseRef<AsyncRef<DownloadStreamData>> {
     async_queue(
         cx,
-        |(mut stream, file, on_finish, should_show_toast_notification): (
-            warp::constellation::ConstellationProgressStream,
-            String,
-            std::pin::Pin<Box<dyn Future<Output = ()> + Send>>,
-            bool,
-        )| {
+        |DownloadStreamData {
+             stream,
+             file,
+             id,
+             on_finish,
+             show_toast,
+             file_state,
+         }| {
             async move {
-                while let Some(p) = stream.next().await {
-                    log::debug!("download progress: {p:?}");
+                let mut stream = stream.map(FileProgression::from);
+                let mut paused = false;
+                loop {
+                    tokio::select! {
+                        biased;
+                        true = file_state.matches(TransferStates::Cancel) => {
+                            log::info!("{:?} file cancelled!", file);
+                            let _ = ACTION_LISTENER
+                                .tx
+                                .send(ListenerAction::CancelTransfer { id, download: true });
+                            sleep(Duration::from_secs(3)).await;
+                            let _ = ACTION_LISTENER
+                                .tx
+                                .send(ListenerAction::FinishTransfer { id, download: true });
+                            on_finish(true).await;
+                            return;
+                        },
+                        true = file_state.matches(TransferStates::Pause) => {
+                            if !paused {
+                                let _ = ACTION_LISTENER
+                                .tx
+                                .send(ListenerAction::PauseTransfer { id, download: true });
+                                paused = true;
+                            }
+                        },
+                        progress = stream.next() => {
+                            let Some(progress) = progress else {
+                                break;
+                            };
+                            let _ = ACTION_LISTENER.tx.send(ListenerAction::TransferProgress {
+                                id,
+                                progression: progress.clone(),
+                                download: true,
+                            });
+                            match progress {
+                                FileProgression::ProgressComplete { name: _, total: _ } => break,
+                                FileProgression::ProgressFailed { name: _, last_size: _ ,error: _ } => {
+                                    sleep(Duration::from_secs(3)).await;
+                                    let _ = ACTION_LISTENER
+                                        .tx
+                                        .send(ListenerAction::FinishTransfer { id, download: true });
+                                    on_finish(true).await;
+                                    return;
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
                 }
-                if should_show_toast_notification {
+                if show_toast {
                     let _ = ACTION_LISTENER.tx.send(ListenerAction::ToastAction {
                         title: "".into(),
                         content: get_local_text_with_args(
@@ -161,7 +235,10 @@ pub fn download_stream_handler(
                         timeout: 2,
                     });
                 }
-                on_finish.await
+                let _ = ACTION_LISTENER
+                    .tx
+                    .send(ListenerAction::FinishTransfer { id, download: true });
+                on_finish(false).await
             }
         },
     )

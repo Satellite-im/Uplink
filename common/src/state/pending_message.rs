@@ -9,7 +9,7 @@ use crate::warp_runner::ui_adapter::Message;
 #[derive(Clone, Debug)]
 pub struct PendingMessage {
     attachments: Vec<String>,
-    pub attachments_progress: HashMap<String, Progression>,
+    pub attachments_progress: HashMap<String, FileProgression>,
     pub message: Message,
 }
 
@@ -94,15 +94,74 @@ impl PartialEq for PendingMessage {
 
 impl Eq for PendingMessage {}
 
-pub fn progress_file(progress: &Progression) -> String {
+#[derive(Debug, Clone)]
+pub enum FileProgression {
+    CurrentProgress {
+        /// name of the file
+        name: String,
+
+        /// size of the progression
+        current: usize,
+
+        /// total size of the file, if any is supplied
+        total: Option<usize>,
+    },
+    ProgressComplete {
+        /// name of the file
+        name: String,
+
+        /// total size of the file, if any is supplied
+        total: Option<usize>,
+    },
+    ProgressFailed {
+        /// name of the file that failed
+        name: String,
+
+        /// last known size, if any, of where it failed
+        last_size: Option<usize>,
+
+        /// error of why it failed, if any
+        error: std::sync::Arc<warp::error::Error>,
+    },
+}
+
+impl From<Progression> for FileProgression {
+    fn from(progress: Progression) -> Self {
+        match progress {
+            Progression::CurrentProgress {
+                name,
+                current,
+                total,
+            } => FileProgression::CurrentProgress {
+                name,
+                current,
+                total,
+            },
+            Progression::ProgressComplete { name, total } => {
+                FileProgression::ProgressComplete { name, total }
+            }
+            Progression::ProgressFailed {
+                name,
+                last_size,
+                error,
+            } => FileProgression::ProgressFailed {
+                name,
+                last_size,
+                error: std::sync::Arc::new(error),
+            },
+        }
+    }
+}
+
+pub fn progress_file(progress: &FileProgression) -> String {
     match progress {
-        Progression::CurrentProgress {
+        FileProgression::CurrentProgress {
             name,
             current: _,
             total: _,
         } => name.clone(),
-        Progression::ProgressComplete { name, total: _ } => name.clone(),
-        Progression::ProgressFailed {
+        FileProgression::ProgressComplete { name, total: _ } => name.clone(),
+        FileProgression::ProgressFailed {
             name,
             last_size: _,
             error: _,

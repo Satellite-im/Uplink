@@ -24,7 +24,7 @@ opt-level = 3
 codegen-units = 1
 
 [workspace.package]
-version = "0.2.3"
+version = "0.2.4"
 rust-version = "1.75"
 
 [workspace.dependencies]
@@ -44,9 +44,9 @@ arboard = "3.2"
 humansize = "2.1.3"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "0a216237cb9c965754df444b80ea983879831396" }
-warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "0a216237cb9c965754df444b80ea983879831396" }
-warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "0a216237cb9c965754df444b80ea983879831396" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
+warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
+warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
 rfd = "0.11.3"
 mime = "0.3.16"
 serde = "1.0"
