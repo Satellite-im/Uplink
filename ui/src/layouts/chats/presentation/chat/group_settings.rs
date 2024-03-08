@@ -31,7 +31,7 @@ pub fn GroupSettings(cx: Scope) -> Element {
         }
     };
 
-    let group_settings_state = use_ref(cx, || get_group_settings());
+    let group_settings_state = use_ref(cx, get_group_settings);
 
     let group_settings_changed_channel =
         use_coroutine(cx, |mut rx: UnboundedReceiver<GroupSettingsChange>| {
@@ -65,7 +65,7 @@ pub fn GroupSettings(cx: Scope) -> Element {
                     let (tx, rx) = oneshot::channel();
                     let cmd = RayGunCmd::UpdateConversationSettings {
                         conv_id: chat_data.read().active_chat.id(),
-                        settings: ConversationSettings::Group(group_settings_state.read().clone()),
+                        settings: ConversationSettings::Group(*group_settings_state.read()),
                         rsp: tx,
                     };
 
