@@ -1,6 +1,6 @@
 use dioxus::{events::MouseEvent, prelude::*};
 
-use crate::elements::{loader::Loader, Appearance};
+use crate::elements::Appearance;
 
 use common::icons::outline::Shape as Icon;
 
@@ -79,6 +79,8 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     );
 
+    let show_icon = cx.props.loading.unwrap_or(false) || cx.props.icon.is_some();
+
     cx.render(rsx!(
         div {
             class: {
@@ -120,13 +122,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
                     }
                 },
-                if let Some(loading) = cx.props.loading {
-                    loading.then(|| rsx!(
-                        Loader {
-                            spinning: true
-                        }
-                    ))
-                },
                 if progress >= 0 {
                     rsx!(
                         div {
@@ -135,15 +130,15 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     )
                 }
-                if let Some(_icon) = cx.props.icon {
+                if show_icon {
                     rsx!(
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: None,
+                                class: if cx.props.loading.unwrap_or(false) {Some("spin-container-for-button")} else {None},
                                 size: 20,
                                 fill:"currentColor",
-                                icon: _icon,
+                                icon: if cx.props.loading.unwrap_or(false) {Icon::Loader} else {cx.props.icon.unwrap()},
                                 disabled:  cx.props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF"
                             },

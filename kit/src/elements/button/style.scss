@@ -178,3 +178,13 @@
   mask-image: radial-gradient(farthest-side, transparent calc(100% - 2px), black 0);
   animation: progress 2s 1 forwards;
 }
+
+.spin-container-for-button {
+  display: inline-block;
+  animation: spin 1s infinite ease-out;
+  position: relative;
+  overflow: hidden;
+  top: 0.6em;
+  left: 0.6em;
+}
+
