@@ -1,5 +1,6 @@
 use std::{collections::HashMap, slice, str::FromStr};
 
+use base64::{engine::general_purpose, Engine};
 use derive_more::Display;
 
 use futures::channel::oneshot;
@@ -497,7 +498,7 @@ pub fn identity_image_to_base64(image: &IdentityImage) -> String {
     };
 
     let prefix = format!("data:image/{mime};base64,");
-    let base64_image = base64::encode(image_data);
+    let base64_image = general_purpose::STANDARD.encode(image_data);
 
     prefix + &base64_image
 }

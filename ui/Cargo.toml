@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.70"
+anyhow = "1.0.80"
 async-stream = "0.3"
 dioxus = { workspace = true }
 dioxus-hooks = { workspace = true }
@@ -60,14 +60,14 @@ image = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 walkdir = { workspace = true }
 zip = { workspace = true }
-filetime = "0.2.20"
+filetime = "0.2.23"
 reqwest = { workspace = true, default-features = false, features = [
     "json",
     "rustls-tls",
     "stream",
 ] }
 log = { workspace = true }
-env_logger = { version = "0.10" }
+env_logger = { version = "0.11.3" }
 dotenv = { version = "0.15.0" }
 
 [features]
@@ -77,21 +77,21 @@ transparent = ["dioxus-desktop/transparent"]
 production_mode = ["common/production_mode"]
 
 [build-dependencies]
-glob = "0.3.0"
+glob = "0.3.1"
 rustc_version = "0.4.0"
-rsass = "0.26.0"
+rsass = "0.28.8"
 zip = { workspace = true }
 walkdir = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.24.1"
+cocoa = "0.25.0"
 objc = "0.2.7"
-core-foundation = "0.9.3"
+core-foundation = "0.9.4"
 objc-foundation = "0.1.1"
 objc_id = "0.1.1"
 
 [target.'cfg(windows)'.dependencies]
-clipboard-win = "4.5.0"
+clipboard-win = "5.2.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
