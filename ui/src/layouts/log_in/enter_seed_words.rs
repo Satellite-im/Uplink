@@ -63,10 +63,14 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
             if let Ok(eval) = eval(include_str!("./enter_seed_handler.js")) {
                 loop {
                     if let Ok(val) = eval.recv().await {
-                        let paste = val.to_string();
+                        let paste = val
+                            .to_string()
+                            .replace("\\\\", "\\")
+                            .replace("\\r", "\r")
+                            .replace("\\n", "\n");
                         let paste = &paste[1..(paste.len() - 1)]; // Trim the apostrophes from the input
                         if !paste.is_empty() {
-                            let phrases = paste.split("\\n").collect::<Vec<_>>();
+                            let phrases = paste.lines().collect::<Vec<_>>();
                             for i in 0..12 {
                                 if i < phrases.len() {
                                     input.with_mut(|v: &mut Vec<String>| v[i] = phrases[i].into());
