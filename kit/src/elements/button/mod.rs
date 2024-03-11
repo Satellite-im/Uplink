@@ -135,7 +135,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: cx.props.loading.unwrap_or_default().then(||"spin-container-for-button"),
+                                class: cx.props.loading.unwrap_or_default().then_some("spin-container-for-button"),
                                 size: 20,
                                 fill:"currentColor",
                                 icon: if cx.props.loading.unwrap_or_default() {Icon::Loader} else {cx.props.icon.unwrap()},
