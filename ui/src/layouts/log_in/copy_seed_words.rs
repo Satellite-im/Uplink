@@ -1,7 +1,11 @@
+use std::time::Duration;
+
+use arboard::Clipboard;
 use common::{icons, language::get_local_text, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use kit::elements::{button::Button, label::Label, Appearance};
+use tokio::time::sleep;
 
 use crate::get_app_style;
 
@@ -16,7 +20,7 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
-            height: 460.0,
+            height: 480.0,
         });
     }
 
@@ -58,6 +62,13 @@ pub fn Layout(cx: Scope, page: UseState<AuthPages>, seed_words: UseRef<String>) 
 
 #[component]
 fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Element {
+    let copied = use_ref(cx, || false);
+    use_future(cx, copied, |current| async move {
+        if *current.read() {
+            sleep(Duration::from_secs(3)).await;
+            *current.write() = false;
+        }
+    });
     render! {
         div {
             class: "seed-words",
@@ -92,6 +103,28 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
         div {
             class: "controls",
             Button {
+                text: get_local_text("uplink.copy-seed"),
+                aria_label: "copy-seed-button".into(),
+                icon: icons::outline::Shape::BookmarkSquare,
+                onpress: move |_| {
+                    match Clipboard::new() {
+                        Ok(mut c) => {
+                            match c.set_text(words.join("\n").to_string()) {
+                                Ok(_) => *copied.write() = true,
+                                Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
+                            }
+                        },
+                        Err(e) => {
+                            log::warn!("Unable to create clipboard reference: {e}");
+                        }
+                    };
+                },
+                appearance: Appearance::Secondary
+            }
+        }
+        div {
+            class: "controls",
+            Button {
                 text: get_local_text("uplink.go-back"),
                 aria_label: "back-button".into(),
                 icon: icons::outline::Shape::ChevronLeft,
@@ -106,5 +139,11 @@ fn SeedWords(cx: Scope, page: UseState<AuthPages>, words: Vec<String>) -> Elemen
                 }
             }
         }
+        copied.read().then(||{
+            rsx!(div{
+                class: "copied-toast",
+                get_local_text("uplink.copied-seed")
+            })
+        })
     }
 }

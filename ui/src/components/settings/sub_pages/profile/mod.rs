@@ -627,7 +627,34 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                     if let Some(phrase) = seed_phrase.as_ref() {
                         let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                        let words2 = words.clone();
                         render!(
+                            Button {
+                                text: get_local_text("uplink.copy-seed"),
+                                aria_label: "copy-seed-button".into(),
+                                icon: Icon::BookmarkSquare,
+                                onpress: move |_| {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            match c.set_text(words2.clone().join("\n").to_string()) {
+                                                Ok(_) => state.write().mutate(Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("uplink.copied-seed"),
+                                                        None,
+                                                        2,
+                                                    ),
+                                                )),
+                                                Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
+                                },
+                                appearance: Appearance::Secondary
+                            },
                             SettingSectionSimple {
                                 aria_label: "seed-words-section".into(),
                                 div {

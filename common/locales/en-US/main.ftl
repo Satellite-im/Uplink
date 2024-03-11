@@ -48,6 +48,8 @@ uplink = Uplink
     .go-back = Go Back
     .upload-queue = Upload queue
     .download-queue = Download Queue
+    .copy-seed = Copy to Clipboard
+    .copied-seed = Copied to Clipboard
     
 community = Community
     .invited = You're Invited!
