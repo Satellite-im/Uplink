@@ -72,14 +72,14 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         appearance,
         if disabled { "btn-disabled" } else { "" },
         if text.is_empty() { "no-text" } else { "" },
-        if cx.props.loading.unwrap_or(false) {
+        if cx.props.loading.unwrap_or_default() {
             "progress"
         } else {
             ""
         }
     );
 
-    let show_icon = cx.props.loading.unwrap_or(false) || cx.props.icon.is_some();
+    let show_icon = cx.props.loading.unwrap_or_default() || cx.props.icon.is_some();
 
     cx.render(rsx!(
         div {
@@ -135,10 +135,10 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: if cx.props.loading.unwrap_or(false) {Some("spin-container-for-button")} else {None},
+                                class: cx.props.loading.unwrap_or_default().then(||"spin-container-for-button"),
                                 size: 20,
                                 fill:"currentColor",
-                                icon: if cx.props.loading.unwrap_or(false) {Icon::Loader} else {cx.props.icon.unwrap()},
+                                icon: if cx.props.loading.unwrap_or_default() {Icon::Loader} else {cx.props.icon.unwrap()},
                                 disabled:  cx.props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF"
                             },
