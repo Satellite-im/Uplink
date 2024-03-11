@@ -8,7 +8,7 @@ use common::{
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use uuid::Uuid;
-use warp::raygun::{self};
+use warp::raygun;
 
 use crate::{
     layouts::chats::data::{self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE},
