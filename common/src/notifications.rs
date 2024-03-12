@@ -128,7 +128,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
         );
 
         let toast_xml = windows::Data::Xml::Dom::XmlDocument::new().unwrap();
-        if let Err(err) = toast_xml.LoadXml(&windows::runtime::HSTRING::from(format!(
+        if let Err(err) = toast_xml.LoadXml(&windows::core::HSTRING::from(format!(
             "<toast {} {}>
                     <visual>
                         <binding template=\"{}\">
@@ -165,8 +165,10 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                     return;
                 }
             };
-        if let Err(err) = toast_notification.Activated(windows::Foundation::TypedEventHandler::new(
-            move |_sender, result: &Option<windows::core::IInspectable>| {
+
+        let handler = windows::Foundation::TypedEventHandler::new(
+            move |_sender: &Option<windows::UI::Notifications::ToastNotification>,
+                  result: &Option<windows::core::IInspectable>| {
                 let event: Option<
                     windows::core::Result<windows::UI::Notifications::ToastActivatedEventArgs>,
                 > = result.as_ref().map(windows::core::Interface::cast);
@@ -188,7 +190,8 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                 };
                 Ok(())
             },
-        )) {
+        );
+        if let Err(err) = toast_notification.Activated(&handler) {
             log::error!("Error creating windows toast action {}", err);
             return;
         };
