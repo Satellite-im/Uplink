@@ -60,6 +60,25 @@ impl Shortcut {
             .unwrap_or(false)
     }
 
+    pub fn reorder_keybind_string(mut keybinds: Vec<String>) -> Vec<String> {
+        keybinds.sort_by(|a, b| match (a.as_str(), b.as_str()) {
+            ("Command", "Shift")
+            | ("Command", "Alt")
+            | ("Ctrl", "Shift")
+            | ("Ctrl", "Alt")
+            | ("Ctrl", "Command") => std::cmp::Ordering::Less,
+            ("Shift", "Alt") => std::cmp::Ordering::Less,
+            ("Shift", "Command") => std::cmp::Ordering::Greater,
+            ("Shift", "Ctrl") => std::cmp::Ordering::Greater,
+            ("Alt", _) => std::cmp::Ordering::Less,
+            ("Ctrl", _) => std::cmp::Ordering::Less,
+            ("Command", _) => std::cmp::Ordering::Less,
+            ("Shift", _) => std::cmp::Ordering::Less,
+            _ => std::cmp::Ordering::Equal,
+        });
+        keybinds
+    }
+
     pub fn get_keys_and_modifiers_as_string(&self) -> Vec<String> {
         let key_code_strs: Vec<String> = self
             .keys
