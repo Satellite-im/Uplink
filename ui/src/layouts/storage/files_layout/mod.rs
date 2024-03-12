@@ -48,27 +48,27 @@ use self::controller::{StorageController, UploadFileController};
 use super::functions::{self, ChanCmd, UseEvalFn};
 
 #[allow(non_snake_case)]
-pub fn FilesLayout(props: '_) -> Element<'_> {
+pub fn FilesLayout() -> Element<'_> {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
-    let window = use_window(cx);
+    let window = use_window();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
     let files_been_uploaded2 = files_been_uploaded.clone();
     let send_files_from_storage = use_state(cx, || false);
     let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
-    let _router = use_navigator(cx);
+    let _router = use_navigator();
     let eval: &UseEvalFn = use_eval(cx);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
-    functions::use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
+    functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![files_been_uploaded, files_in_queue_to_upload];
         async move {
             // Remove load progress bar if anythings goes wrong
@@ -90,7 +90,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
             .clone(),
     );
 
-    functions::get_items_from_current_directory(cx, ch);
+    functions::get_items_from_current_directory(ch);
 
     #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(
@@ -98,8 +98,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
         upload_file_controller.are_files_hovering_app,
     );
     functions::start_upload_file_listener(
-        cx,
-        window,
+        &window,
         state,
         storage_controller,
         upload_file_controller.clone(),
@@ -107,45 +106,42 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
-    let upload_streams = chat_upload_stream_handler(cx);
-    let send_ch = use_coroutine(
-        cx,
-        |mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
-            to_owned![upload_streams, send_files_from_storage];
-            async move {
-                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                while let Some((files_location, convs_id)) = rx.next().await {
-                    let (tx, rx) = oneshot::channel();
-                    let msg = vec!["".to_owned()];
-                    let attachments = files_location;
-                    if let Err(e) =
-                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                            convs_id,
-                            msg,
-                            attachments: attachments.clone(),
-                            rsp: tx,
-                        }))
-                    {
-                        log::error!("Failed to send warp command: {}", e);
-                        return;
-                    }
-                    if let Ok(Ok(streams)) = rx.await {
-                        let mut to_append = upload_streams.write();
-                        for (chat, stream) in streams {
-                            to_append.append((
-                                chat,
-                                vec!["".to_owned()],
-                                attachments.clone(),
-                                None,
-                                stream,
-                            ))
-                        }
-                    }
-                    send_files_from_storage.set(false);
+    let upload_streams = chat_upload_stream_handler();
+    let send_ch = use_coroutine(|mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
+        to_owned![upload_streams, send_files_from_storage];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((files_location, convs_id)) = rx.next().await {
+                let (tx, rx) = oneshot::channel();
+                let msg = vec!["".to_owned()];
+                let attachments = files_location;
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                        convs_id,
+                        msg,
+                        attachments: attachments.clone(),
+                        rsp: tx,
+                    }))
+                {
+                    log::error!("Failed to send warp command: {}", e);
+                    return;
                 }
+                if let Ok(Ok(streams)) = rx.await {
+                    let mut to_append = upload_streams.write();
+                    for (chat, stream) in streams {
+                        to_append.append((
+                            chat,
+                            vec!["".to_owned()],
+                            attachments.clone(),
+                            None,
+                            stream,
+                        ))
+                    }
+                }
+                send_files_from_storage.set(false);
             }
-        },
-    );
+        }
+    });
 
     rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
@@ -202,7 +198,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
                     },
-                ))
+                )
             }
             ChatSidebar {
                 active_route: crate::UplinkRoute::FilesLayout {},
@@ -216,7 +212,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                             let current = state.read().ui.sidebar_hidden;
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
-                        controls: 
+                        controls:
                             rsx! (Button {
                                     icon: Icon::FolderPlus,
                                     disabled: *upload_file_controller.files_been_uploaded.read(),
@@ -227,7 +223,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                                             arrow_position: ArrowPosition::Top,
                                             text: get_local_text("files.new-folder"),
                                         }
-                                    )),
+                                    ),
                                     onpress: move |_| {
                                         if !*upload_file_controller.files_been_uploaded.read() {
                                             storage_controller.write().finish_renaming_item(true);
@@ -243,7 +239,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                                             arrow_position: ArrowPosition::TopRight,
                                             text: get_local_text("files.upload"),
                                         }
-                                    )),
+                                    ),
                                     onpress: move |_| {
                                         storage_controller.with_mut(|i|  i.is_renaming_map = None);
                                         let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
@@ -255,7 +251,7 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                                     },
                                 }
                             )
-                        ),
+                        ,
                         div {
                             class: "files-info",
                             aria_label: "files-info",
@@ -356,5 +352,5 @@ pub fn FilesLayout(props: '_) -> Element<'_> {
                 ))
             }
         }
-    ))
+    )
 }

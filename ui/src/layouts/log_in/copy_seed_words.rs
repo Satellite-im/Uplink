@@ -9,9 +9,9 @@ use super::AuthPages;
 
 // styles for this layout are in layouts/style.scss
 #[component]
-pub fn Layout( page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element {
+pub fn Layout(page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element {
     let state = use_ref(cx, State::load);
-    let window = use_window(cx);
+    let window = use_window();
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -20,7 +20,7 @@ pub fn Layout( page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element
         });
     }
 
-    let words = use_future(cx, (), |_| {
+    let words = use_resource(|| {
         to_owned![seed_words];
         async move {
             let mnemonic = warp::crypto::keypair::generate_mnemonic_phrase(
@@ -53,11 +53,11 @@ pub fn Layout( page: UseState<AuthPages>, seed_words: UseRef<String>) -> Element
                 rsx!{ SeedWords { page: page.clone(), words: words.clone() } }
             }
         }
-    ))
+    )
 }
 
 #[component]
-fn SeedWords( page: UseState<AuthPages>, words: Vec<String>) -> Element {
+fn SeedWords(page: UseState<AuthPages>, words: Vec<String>) -> Element {
     render! {
         div {
             class: "seed-words",

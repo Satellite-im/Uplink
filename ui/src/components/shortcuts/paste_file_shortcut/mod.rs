@@ -73,7 +73,7 @@ pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
     }
 
     // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![command_pressed, files_local_path_to_upload];
         async move {
             loop {
@@ -89,7 +89,7 @@ pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
         }
     });
 
-    use_global_shortcut(cx, (key, modifiers), {
+    use_global_shortcut(|| (key, modifiers), {
         to_owned![command_pressed];
         move || {
             // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time

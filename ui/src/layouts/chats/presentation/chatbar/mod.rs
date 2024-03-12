@@ -151,7 +151,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     let local_typing_ch1 = local_typing_ch.clone();
     let enable_paste_shortcut = use_ref(cx, || true);
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![enable_paste_shortcut];
         async move {
             loop {
@@ -178,11 +178,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
         }
     });
 
-    use_future(cx, &active_chat_id, |current_chat| async move {
+    let current_chat = use_signal(|| active_chat_id);
+
+    use_resource(|| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
-            if !current_chat.is_nil() {
-                local_typing_ch1.send(TypingIndicator::Refresh(current_chat));
+            if !current_chat.read().is_nil() {
+                local_typing_ch1.send(TypingIndicator::Refresh(current_chat.read()));
             }
         }
     });
@@ -350,7 +352,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            extensions: rsx!(for node in ext_renders { rsx!(node) })),
+            extensions: rsx!(for node in ext_renders { rsx!(node) }),
             suggestions: suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if !active_chat_id.is_nil() {
@@ -430,7 +432,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                     suggestions.set(SuggestionType::None);
                 }
             },
-            controls: 
+            controls:
                 rsx!(
                     Button {
                         icon: icons::outline::Shape::ChevronDoubleRight,
@@ -441,12 +443,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                         tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Bottom,
                             text :get_local_text("uplink.send"),
-                        })),
+                        }),
                     }
                 ),
-            ),
+
             with_replying_to: (!disabled).then(|| {
-                
+
                     rsx!(
                         chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
                             let our_did = state.read().did_key();
@@ -466,7 +468,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                                         state.write().mutate(Action::CancelReply(active_chat_id))
                                     },
                                     attachments: msg.attachments(),
-                                    message: msg.lines().join("\n"), 
+                                    message: msg.lines().join("\n"),
                                     markdown: state.read().ui.should_transform_markdown_text(),
                                     transform_ascii_emojis: state.read().ui.should_transform_ascii_emojis(),
                                     state: state,
@@ -480,9 +482,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                             )
                         })
                     ),
-                )
             }).unwrap_or(None),
-            with_file_upload: 
+            with_file_upload:
                 rsx!(
                     Button {
                         icon: icons::outline::Shape::Plus,
@@ -503,7 +504,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: get_local_text("files.upload"),
                             }
-                        )),
+                        ),
                     }
                     FileLocationContext {
                         id: upload_button_menu_uuid,
@@ -527,7 +528,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                         },
                     }
                 ),
-            )
         }
         error.0.then(|| rsx!(
             p {
@@ -536,7 +536,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                 get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])
             }
         ))
-    ));
+    );
 
     rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
@@ -572,9 +572,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
                     onclick: move |_| {
                         scroll_btn.write().clear(active_chat_id);
                         state.write().mutate(Action::ClearUnreads(active_chat_id));
-                        // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to 
-                        // fetch more messages - one could just use a regular javascript to scroll to the end of the page. 
-                        // however, this is easier and seems to work well enough. 
+                        // note that if scroll_behavior.on_scroll_end == ScrollBehavior::DoNothing then it isn't necessary to
+                        // fetch more messages - one could just use a regular javascript to scroll to the end of the page.
+                        // however, this is easier and seems to work well enough.
                         scroll_ch.send(active_chat_id);
                     },
                     get_local_text("messages.scroll-bottom"),
@@ -590,7 +590,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
             }
         },
         chatbar
-    ))
+    )
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {

@@ -73,13 +73,13 @@ pub fn ChatLayout() -> Element {
         first_render.set(false);
     }
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
-    let window = use_window(cx);
-    let eval: &UseEvalFn = use_eval(cx);
+    let window = use_window();
+    let eval: &UseEvalFn = use_eval();
 
     let show_slimbar = state.read().show_slimbar();
 
     // #[cfg(target_os = "windows")]
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state, window, drag_event, eval];
         async move {
             // ondragover function from div does not work on windows
@@ -94,9 +94,10 @@ pub fn ChatLayout() -> Element {
 
     // HACK: When enter in chats with notification, for some reason app is crashing
     // this a hack solution to clear notifications and not crash app if user change to chats page
-    if !state.read().ui.toast_notifications.is_empty() {
-        state.write().ui.toast_notifications.clear();
-    }
+    // TODO(Lucas): Uncomment this code later
+    // if !state.read().ui.toast_notifications.is_empty() {
+    //     state.write().ui.toast_notifications.clear();
+    // }
 
     rsx!(
         div {
@@ -140,7 +141,7 @@ pub fn ChatLayout() -> Element {
             if show_slimbar & !is_minimal_view {
                 rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
-                ))
+                )
             },
             // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
             // creating a new account on a mobile device.
@@ -150,7 +151,7 @@ pub fn ChatLayout() -> Element {
             show_welcome.then(|| rsx!(Welcome {})),
             (!show_welcome && (sidebar_hidden  || !state.read().ui.is_minimal_view())).then(|| rsx!(Compose {}))
         }
-    ))
+    )
 }
 
 async fn drop_and_attach_files(

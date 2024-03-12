@@ -51,14 +51,14 @@ impl UnlockError {
 
 // todo: go to the auth page if no account has been created
 #[component]
-pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+pub fn Layout(page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering login entry point");
     let validation_failure: &UseState<Option<UnlockError>> =
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
     let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
     let shown_error = use_state(cx, String::new);
-    let desktop = use_window(cx);
+    let desktop = use_window();
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
@@ -75,7 +75,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     }
 
     // this will be needed later
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![account_exists];
         async move {
             if account_exists.current().is_some() {
@@ -97,7 +97,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
         }
     });
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Option<bool>)>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<(String, Option<bool>)>| {
         to_owned![error, page, cmd_in_progress];
         async move {
             let config = Configuration::load_or_default();
@@ -269,7 +269,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
                         loading:  *cmd_in_progress.get(),
                         disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
                         onpress: move |_| {
-                            // these are only for testing. 
+                            // these are only for testing.
                             // page.set(AuthPages::CreateOrRecover);
                             // return;
 
@@ -303,7 +303,7 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
                                     create_uplink_dirs();
                                 }
                             },
-                        )),
+                        ),
                         div {
                             class: "help-button",
                             Button {
@@ -315,14 +315,14 @@ pub fn Layout( page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
                                         arrow_position: ArrowPosition::Right,
                                         text: get_local_text("unlock.help"),
                                     }
-                                )),
+                                ),
                             }
                         }
                     }
                 )
             }
         }
-    ))
+    )
 }
 
 fn get_welcome_message(state: &State) -> String {

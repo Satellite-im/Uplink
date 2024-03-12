@@ -40,7 +40,7 @@ pub fn AudioSettings() -> Element {
     let speaker_volume = use_ref(cx, || 0);
     let microphone_volume = use_ref(cx, || 0);
 
-    let ch = use_coroutine(cx, |mut rx| {
+    let ch = use_coroutine(|mut rx| {
         to_owned![
             state,
             input_devices,
@@ -232,7 +232,7 @@ pub fn AudioSettings() -> Element {
         }
     });
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![ch];
         async move {
             loop {
@@ -414,7 +414,7 @@ pub fn AudioSettings() -> Element {
                 Switch {}
             }
         }
-    ))
+    )
 }
 
 #[derive(Props, PartialEq)]
@@ -434,5 +434,5 @@ pub fn VolumeIndicator(props: VolumeIndicatorProps) -> Element {
             class: "volume-indicator",
             z_index: 1,
         }
-    }))
+    })
 }

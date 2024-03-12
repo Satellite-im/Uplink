@@ -65,8 +65,8 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory( ch: &Coroutine<ChanCmd>) {
-    use_future(cx, (), |_| {
+pub fn get_items_from_current_directory(ch: &Coroutine<ChanCmd>) {
+    use_resource(|| {
         to_owned![ch];
         async move {
             sleep(Duration::from_secs(1)).await;
@@ -76,11 +76,8 @@ pub fn get_items_from_current_directory( ch: &Coroutine<ChanCmd>) {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn allow_drag_event_for_non_macos_systems(
-    
-    are_files_hovering_app: &UseRef<bool>,
-) {
-    use_future(cx, (), |_| {
+pub fn allow_drag_event_for_non_macos_systems(are_files_hovering_app: &UseRef<bool>) {
+    use_resource(|| {
         to_owned![are_files_hovering_app];
         async move {
             // ondragover function from div does not work on windows
@@ -191,15 +188,12 @@ pub fn add_files_in_queue_to_upload(
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }
 
-pub fn use_allow_block_folder_nav(
-    
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
-) {
+pub fn use_allow_block_folder_nav(files_in_queue_to_upload: &UseRef<Vec<PathBuf>>) {
     let eval: &UseEvalFn = use_eval(cx);
 
     // Block directories navigation if there is a file been uploaded
     // use_future here to verify before render elements on first render
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![eval, files_in_queue_to_upload];
         async move {
             allow_folder_navigation(&eval, files_in_queue_to_upload.read().is_empty());
@@ -245,8 +239,8 @@ pub fn init_coroutine<'a>(
     controller: &'a UseRef<StorageController>,
     state: &'a UseSharedState<State>,
 ) -> &'a Coroutine<ChanCmd> {
-    let download_queue = download_stream_handler(cx);
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+    let download_queue = download_stream_handler();
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![controller, download_queue, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -466,7 +460,7 @@ pub fn init_coroutine<'a>(
             }
         }
     });
-    ch
+    &ch
 }
 
 /// Upload files has many states to manage
@@ -476,7 +470,6 @@ pub fn init_coroutine<'a>(
 /// and tries to upload a second file, then leaves and returns again,
 /// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
-    
     window: &DesktopContext,
     state: &UseSharedState<State>,
     controller: &UseRef<StorageController>,
@@ -485,7 +478,7 @@ pub fn start_upload_file_listener(
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let disable_cancel_upload_button = upload_file_controller.disable_cancel_upload_button.clone();
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![
             window,
             state,
@@ -509,7 +502,7 @@ pub fn start_upload_file_listener(
                             continue;
                         }
                     }
-                    UploadFileAction::SizeNotAvailable(file_name) => {
+                    UploadFileAction::SizeNotAvailable(file_name, _) => {
                         if !files_in_queue_to_upload.read().is_empty() {
                             files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
@@ -531,7 +524,7 @@ pub fn start_upload_file_listener(
                                 ),
                             ));
                     }
-                    UploadFileAction::Starting(filename) => {
+                    UploadFileAction::Starting(filename, _, _) => {
                         *files_been_uploaded.write_silent() = true;
                         upload_progress_bar::update_filename(&window, filename);
                         sleep(Duration::from_millis(500)).await;
@@ -573,7 +566,7 @@ pub fn start_upload_file_listener(
                         upload_progress_bar::change_progress_percentage(&window, progress.clone());
                         upload_progress_bar::change_progress_description(&window, msg);
                     }
-                    UploadFileAction::Finishing(file, finish) => {
+                    UploadFileAction::Finishing(file, finish, _) => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty()
                             && (finish || files_in_queue_to_upload.read().len() > 1)

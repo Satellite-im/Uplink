@@ -28,7 +28,6 @@ const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
 
 #[component(no_case_check)]
 pub fn open_file_preview_modal<'a>(
-    props: 'a,
     on_dismiss: EventHandler<()>,
     on_download: EventHandler<Option<PathBuf>>,
     file: File,
@@ -40,13 +39,13 @@ pub fn open_file_preview_modal<'a>(
         dont_pad: true,
         close_on_click_inside_modal: true,
         children: rsx!(FilePreview {
-            file: file,
+            file: &file,
             on_download: |temp_path| {
                 on_download.call(temp_path);
             },
             on_dismiss: move |_| on_dismiss.call(()),
-        }))
-    }))
+        })
+    })
 }
 
 #[derive(Props)]
@@ -57,7 +56,7 @@ struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
+fn FilePreview<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let file_path_in_local_disk = use_ref(cx, PathBuf::new);
 
@@ -88,7 +87,7 @@ fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
         }
     }
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![
             temp_dir,
             file_path_in_local_disk,
@@ -162,7 +161,7 @@ fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
                         props.on_download.call(None);
                     }
                 },
-            )),
+            ),
             if *file_loading_counter.read() > TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD
                 && (is_video || is_audio) {
                 // It will show a video player with error, because take much time
@@ -212,7 +211,7 @@ fn FilePreview<'a>(props: 'a, Props<'a>) -> Element {
                 rsx!(div {})
             }
         },
-    ))
+    )
 }
 
 #[derive(Props, PartialEq)]
@@ -287,7 +286,7 @@ fn FileTypeTag(props: FileTypeTagProps) -> Element {
             }
         ),
         _ => rsx!(div {}),
-    })
+    }
 }
 
 fn get_language_class(file_path: &str) -> String {

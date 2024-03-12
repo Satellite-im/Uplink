@@ -193,7 +193,7 @@ pub enum UplinkRoute {
 
 fn app() -> Element {
     // 1. Make sure the warp engine is turned on before doing anything
-    bootstrap::use_warp_runner(cx);
+    bootstrap::use_warp_runner();
 
     // 2. Guard the app with the auth
     let auth = use_state(cx, || AuthPages::EntryPoint);
@@ -203,7 +203,7 @@ fn app() -> Element {
             is_on_auth_pages: true,
             on_global_shortcut: move |shortcut| {
                 match shortcut {
-                    GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx.scope),
+                    GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(),
                     GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!"),
                     _ => log::info!("Just Open Dev Tools shortcut works on Auth Pages!"),
                 }
@@ -214,10 +214,10 @@ fn app() -> Element {
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
-    bootstrap::use_bootstrap(cx, identity)?;
+    bootstrap::use_bootstrap(cx, &identity)?;
 
     // 4. Throw up a loading screen until our assets are ready
-    if use_loaded_assets(cx).value().is_none() {
+    if use_loaded_assets().value().is_none() {
         return render! { LoadingWash {} };
     }
 
@@ -235,9 +235,9 @@ fn app_layout() -> Element {
     // terminate the logger thread when the app exits.
     use_hook(|| LogDropper {});
 
-    use_auto_updater(cx)?;
-    use_app_coroutines(cx)?;
-    use_router_notification_listener(cx)?;
+    use_auto_updater()?;
+    use_app_coroutines()?;
+    use_router_notification_listener()?;
 
     let state = use_shared_state::<State>(cx)?;
 
@@ -252,9 +252,9 @@ fn app_layout() -> Element {
                         GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
-                        GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx),
+                        GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(),
                         GlobalShortcut::ToggleDevmode => utils::keyboard::shortcut_handlers::dev::toggle_devmode(state.clone()),
-                        GlobalShortcut::SetAppVisible => utils::keyboard::shortcut_handlers::navigation::set_app_visible(cx),
+                        GlobalShortcut::SetAppVisible => utils::keyboard::shortcut_handlers::navigation::set_app_visible(),
                         GlobalShortcut::Unknown => log::error!("Unknown `Shortcut` called!")
                     }
                     log::debug!("shortcut called {:?}", shortcut);
@@ -328,7 +328,7 @@ pub fn get_app_style(state: &State) -> String {
 
 fn use_auto_updater() -> Option<()> {
     let download_state = use_shared_state::<DownloadState>(cx)?;
-    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
+    let updater_ch = use_coroutine(|mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
         to_owned![download_state];
         async move {
             while let Some(mut ch) = rx.next().await {
@@ -342,7 +342,7 @@ fn use_auto_updater() -> Option<()> {
         }
     });
 
-    let _download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
+    let _download_ch = use_coroutine(|mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
         to_owned![updater_ch];
         async move {
             while let Some(dest) = rx.next().await {
@@ -364,7 +364,7 @@ fn use_auto_updater() -> Option<()> {
 }
 
 fn use_app_coroutines() -> Option<()> {
-    let desktop = use_window(cx);
+    let desktop = use_window();
     let state = use_shared_state::<State>(cx)?;
 
     // don't fetch stuff from warp when using mock data
@@ -396,7 +396,7 @@ fn use_app_coroutines() -> Option<()> {
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
     let first_resize = use_ref(cx, || true);
-    use_wry_event_handler(cx, {
+    use_wry_event_handler({
         to_owned![state, desktop, first_resize];
         move |event, _| match event {
             WryEvent::WindowEvent {
@@ -485,7 +485,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // update state in response to warp events
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
         async move {
@@ -527,7 +527,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // focus handler for notifications
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![desktop];
         async move {
             let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
@@ -539,7 +539,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // Listen to profile updates
-    use_future(cx, (), |_| {
+    use_future(|| {
         to_owned![state];
         async move {
             while !state.read().initialized {
@@ -573,7 +573,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // Listen to async tasks actions that should be handled on main thread
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             let channel = ACTION_LISTENER.rx.clone();
@@ -590,13 +590,14 @@ fn use_app_coroutines() -> Option<()> {
                             ToastNotification::init(title, content, icon, timeout),
                         ));
                     }
+                    _ => (),
                 }
             }
         }
     });
 
     // clear toasts
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             loop {
@@ -611,7 +612,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     //Update active call
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             loop {
@@ -624,7 +625,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // clear typing indicator
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             loop {
@@ -638,7 +639,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // periodically refresh message timestamps and friend's status messages
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             loop {
@@ -651,7 +652,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // check for updates
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             loop {
@@ -680,7 +681,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // control child windows
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![desktop, state];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
@@ -693,7 +694,7 @@ fn use_app_coroutines() -> Option<()> {
 
     // init state from warp
     // also init extensions
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             if state.read().initialized {
@@ -746,7 +747,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // initialize files
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![items_init, state];
         async move {
             if *items_init.read() {
@@ -777,7 +778,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // detect when new extensions are placed in the "extensions" folder, and load them.
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![state];
         async move {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
@@ -835,12 +836,12 @@ fn get_update_icon() -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
-    let desktop = use_window(cx);
-    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let desktop = use_window();
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>()?;
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
-        None => return rsx!("")),
+        None => return rsx!(""),
     };
 
     let update_msg =
@@ -874,7 +875,7 @@ fn get_update_icon() -> Element {
 
                         }
                     }
-                )),
+                ),
                 div {
                     id: "update-available",
                     aria_label: "update-available",
@@ -888,7 +889,7 @@ fn get_update_icon() -> Element {
                     "{update_msg}",
                 }
             }
-        )),
+        ),
         DownloadProgress::PickFolder => rsx!(get_download_modal {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
@@ -899,13 +900,13 @@ fn get_update_icon() -> Element {
             //     download_state.write().destination = Some(dest.clone());
             //     download_ch.send(SoftwareDownloadCmd(dest));
             // }
-        })),
+        }),
         DownloadProgress::_Pending => rsx!(div {
             id: "update-available",
             class: "topbar-item",
             aria_label: "update-available",
             "{downloading_msg}"
-        })),
+        }),
         DownloadProgress::Finished => {
             rsx!(div {
                 id: "update-available",
@@ -940,14 +941,13 @@ fn get_update_icon() -> Element {
                     download_state.write().stage = DownloadProgress::Idle;
                 },
                 "{downloaded_msg}"
-            }))
+            })
         }
     }
 }
 
 #[component(no_case_check)]
 pub fn get_download_modal<'a>(
-    props: 'a,
     //on_submit: EventHandler<PathBuf>,
     on_dismiss: EventHandler<()>,
 ) -> Element {
@@ -1008,15 +1008,15 @@ pub fn get_download_modal<'a>(
             //     }
             // ))
         }
-        ))
-    }))
+        )
+    })
 }
 
 fn AppLogger() -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     if !state.read().initialized {
-        return rsx!(()));
+        return rsx!(());
     }
 
     rsx!(state
@@ -1024,13 +1024,17 @@ fn AppLogger() -> Element {
         .configuration
         .developer
         .developer_mode
-        .then(|| rsx!(DebugLogger {}))))
+        .then(|| rsx!(DebugLogger {})))
 }
 
 fn Toasts() -> Element {
     let state = use_shared_state::<State>(cx)?;
-    rsx!(state.read().ui.toast_notifications.iter().map(
-        |(id, toast)| {
+    rsx!(state
+        .read()
+        .ui
+        .toast_notifications
+        .iter()
+        .map(|(id, toast)| {
             rsx!(Toast {
                 id: *id,
                 with_title: toast.title.clone(),
@@ -1038,12 +1042,11 @@ fn Toasts() -> Element {
                 icon: toast.icon.unwrap_or(Icon::InformationCircle),
                 appearance: Appearance::Secondary,
             },)
-        }
-    )))
+        }))
 }
 
 fn Titlebar() -> Element {
-    let desktop = use_window(cx);
+    let desktop = use_window();
 
     rsx!(
         div {
@@ -1059,14 +1062,14 @@ fn Titlebar() -> Element {
                 TopbarControls {}
             },
         },
-    ))
+    )
 }
 
 fn use_router_notification_listener() -> Option<()> {
     // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
-    let navigator = use_navigator(cx);
-    use_future(cx, (), |_| {
+    let navigator = use_navigator();
+    use_resource(|| {
         to_owned![state, navigator];
         async move {
             let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
@@ -1176,7 +1179,6 @@ fn scaled_window_position(
 
 #[component]
 fn AppNav<'a>(
-    
     active: UplinkRoute,
     onnavigate: Option<EventHandler<()>>,
     tooltip_direction: Option<ArrowPosition>,
@@ -1184,7 +1186,7 @@ fn AppNav<'a>(
     use kit::components::nav::Route as UIRoute;
 
     let state = use_shared_state::<State>(cx)?;
-    let navigator = use_navigator(cx);
+    let navigator = use_navigator();
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state
         .read()
@@ -1209,7 +1211,7 @@ fn AppNav<'a>(
                 onpress: move |_| {
                     state.write().mutate(Action::ClearAllUnreads);
                 }
-            },))
+            },)
         }),
         ..UIRoute::default()
     };

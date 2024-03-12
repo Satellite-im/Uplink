@@ -20,8 +20,8 @@ pub fn GeneralSettings() -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
 
-    let themes_fut = use_future(cx, (), |_| async move { get_available_themes() });
-    let font_fut = use_future(cx, (), |_| async move { get_available_fonts() });
+    let themes_fut = use_resource(|| async move { get_available_themes() });
+    let font_fut = use_resource(|| async move { get_available_fonts() });
 
     log::trace!("General settings page rendered.");
 
@@ -106,7 +106,7 @@ pub fn GeneralSettings() -> Element {
                     tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-developer.open-cache-folder"),
-                    }))
+                    })
                 },
             },
             SettingSection {
@@ -169,7 +169,7 @@ pub fn GeneralSettings() -> Element {
                     tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-developer.open-cache-folder"),
-                    }))
+                    })
                 },
             },
             SettingSectionSimple {
@@ -184,7 +184,7 @@ pub fn GeneralSettings() -> Element {
                         tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("settings-general.clear-accent"),
-                        }))
+                        })
                     },
                     for color in available_colors {
                         ColorSwatch {
@@ -198,5 +198,5 @@ pub fn GeneralSettings() -> Element {
                 }
             },
         }
-    ))
+    )
 }

@@ -38,13 +38,13 @@ pub fn FriendsLayout() -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return rsx!(MinimalFriendsLayout { route: route }));
+        return rsx!(MinimalFriendsLayout { route: route });
     }
     log::trace!("rendering FriendsLayout");
 
     // this is a hack to deal with a change in how Dioxus routing works. The `route` hook used to be shared
     // between elements.
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![route];
         async move {
             let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
@@ -81,7 +81,7 @@ pub fn FriendsLayout() -> Element {
             if show_slimbar {
                 rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
-                ))
+                )
             },
             ChatSidebar {
                 active_route: crate::UplinkRoute::FriendsLayout {},
@@ -95,16 +95,16 @@ pub fn FriendsLayout() -> Element {
                 render_route(cx, route.get().clone()),
             }
         }
-    ))
+    )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct MinimalProps<'a> {
     route: &'a UseState<FriendRoute>,
 }
 
 #[allow(non_snake_case)]
-pub fn MinimalFriendsLayout<'a>(props: 'a, MinimalProps) -> Element {
+pub fn MinimalFriendsLayout<'a>(props: MinimalProps<'a>) -> Element {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = props.route;
@@ -137,7 +137,7 @@ pub fn MinimalFriendsLayout<'a>(props: 'a, MinimalProps) -> Element {
         id: "friends-layout",
         aria_label: "friends-layout",
         view
-    }))
+    })
 }
 
 fn render_route<T>(props: T, route: FriendRoute) -> Element {
@@ -156,11 +156,11 @@ fn render_route<T>(props: T, route: FriendRoute) -> Element {
                 friends_tab: "Blocked".into()
             }
         ),
-    }))
+    })
 }
 
-fn get_topbar<'a, T>(props: 'a, T>, route: &'a UseState<FriendRoute) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+fn get_topbar<'a, T>(route: &'a Signal<FriendRoute>) -> Element {
+    let state = use_shared_state::<State>()?;
     let pending_friends = state.read().friends().incoming_requests.len();
 
     rsx!(Topbar {
@@ -226,6 +226,6 @@ fn get_topbar<'a, T>(props: 'a, T>, route: &'a UseState<FriendRoute) -> Element 
                     route.set(FriendRoute::Blocked);
                 }
             },
-        ))
-    },))
+        )
+    },)
 }

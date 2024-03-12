@@ -31,11 +31,11 @@ pub enum Tab {
 #[component]
 #[allow(non_snake_case)]
 pub fn DebugLogger() -> Element {
-    let window = use_window(cx);
+    let window = use_window();
 
     let logs_to_show = use_state(cx, logger::load_debug_log);
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![logs_to_show];
         async move {
             let mut log_ch = logger::subscribe();
@@ -96,7 +96,7 @@ pub fn DebugLogger() -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Debug".into()
                                     }
-                                )),
+                                ),
                             },
                             Button {
                                 aria_label: "info-level-button".into(),
@@ -110,7 +110,7 @@ pub fn DebugLogger() -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Info".into()
                                     }
-                                )),
+                                ),
                             },
                             Button {
                                 aria_label: "error-level-button".into(),
@@ -124,7 +124,7 @@ pub fn DebugLogger() -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Error".into()
                                     }
-                                )),
+                                ),
                             },
                             Button {
                                 aria_label: "trace-level-button".into(),
@@ -138,10 +138,10 @@ pub fn DebugLogger() -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: "Trace".into()
                                     }
-                                )),
+                                ),
                             },
                         }
-                    })),
+                    }),
                     Button {
                         aria_label: "state-button".into(),
                         text: "State".into(),
@@ -248,5 +248,5 @@ pub fn DebugLogger() -> Element {
                 })
             }
         },
-    ))
+    )
 }

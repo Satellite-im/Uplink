@@ -56,9 +56,7 @@ pub struct LinkEmbedProps {
 
 #[allow(non_snake_case)]
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
-    let fetch_meta = use_future(cx, &props.link, |link| async move {
-        get_meta(link.as_str()).await
-    });
+    let fetch_meta = use_future(|| async move { get_meta(link.as_str()).await });
 
     let meta = match fetch_meta.value() {
         Some(Ok(val)) => val.clone(),
@@ -131,5 +129,5 @@ pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
                 }
             }
         }
-    })
+    }
 }

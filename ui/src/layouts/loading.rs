@@ -21,10 +21,10 @@ pub fn LoadingWash() -> Element {
 }
 
 pub fn use_loaded_assets() -> &UseFuture<Result<(), tokio::task::JoinError>> {
-    let desktop = dioxus_desktop::use_window(cx);
+    let desktop = dioxus_desktop::use_window();
     let state = use_shared_state::<State>(cx).unwrap();
 
-    use_future(cx, (), |_| {
+    use_resource(|| {
         to_owned![desktop, state];
         async move {
             let res = tokio::task::spawn_blocking(|| {
