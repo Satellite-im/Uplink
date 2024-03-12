@@ -336,8 +336,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         loading_indicator.get().then(|| rsx!(
             div {
-                id: "overlay-load-shadow",
-                class: "overlay-load-shadow",
+                id: "overlay-load-shadow-for-profile-page",
+                class: "overlay-load-shadow-for-profile-page",
                 div {
                     class: "overlay-loader-spinner",
                     Loader { spinning: true },
