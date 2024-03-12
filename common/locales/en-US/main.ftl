@@ -48,6 +48,8 @@ uplink = Uplink
     .go-back = Go Back
     .upload-queue = Upload queue
     .download-queue = Download Queue
+    .copy-seed = Copy to Clipboard
+    .copied-seed = Copied to Clipboard
     
 community = Community
     .invited = You're Invited!
@@ -408,7 +410,7 @@ copy-seed-words = Recovery Seed
     .finished = I Saved It
 
 enter-seed-words = Recovery Seed
-    .instructions = Type your recovery seed here. You may either enter one word at a time or all at once separated by spaces.
+    .instructions = Type your recovery seed here. Each phrase should go into their respective box. Alternatively you can simply copy past your recovery seed in here.
     .submit = Recover Account
     .placeholder = Enter Recovery Seed...
     .invalid-seed = Hmm, that seed didn't work.
