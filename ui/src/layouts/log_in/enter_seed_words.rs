@@ -156,7 +156,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                                 class: "num disable-select", (idx + 1).to_string()
                             },
                             input::Input {
-                                aria_label: ("recovery-seed-input-".to_string() + &(idx + 1).to_string()).into(),
+                                aria_label: "recovery-seed-input-".to_string() + &(idx + 1).to_string(),
                                 value: input.read()[idx].clone(),
                                 select_on_focus: *focus.read() == idx,
                                 focus: *focus.read() == idx, // select class gets removed on focus. this forces an update
@@ -192,7 +192,7 @@ pub fn Layout(cx: Scope, pin: UseRef<String>, page: UseState<AuthPages>) -> Elem
                                 class: "num disable-select", (other + 1).to_string()
                             },
                             input::Input {
-                                aria_label: ("recovery-seed-input-".to_string() + &(other + 1).to_string()).into(),
+                                aria_label: "recovery-seed-input-".to_string() + &(other + 1).to_string(),
                                 value: input.read()[other].clone(),
                                 focus: *focus.read() == other,
                                 select_on_focus: *focus.read() == other, // select class gets removed on focus. this forces an update
