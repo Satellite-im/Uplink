@@ -166,10 +166,10 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                 }
             };
         if let Err(err) = toast_notification.Activated(windows::Foundation::TypedEventHandler::new(
-            move |_sender, result: &Option<windows::runtime::IInspectable>| {
+            move |_sender, result: &Option<windows::core::IInspectable>| {
                 let event: Option<
-                    windows::runtime::Result<windows::UI::Notifications::ToastActivatedEventArgs>,
-                > = result.as_ref().map(windows::runtime::Interface::cast);
+                    windows::core::Result<windows::UI::Notifications::ToastActivatedEventArgs>,
+                > = result.as_ref().map(windows::core::Interface::cast);
                 let arguments = event
                     .and_then(|val| val.ok())
                     .and_then(|args| args.Arguments().ok());
@@ -194,7 +194,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
         };
 
         match windows::UI::Notifications::ToastNotificationManager::CreateToastNotifierWithId(
-            &windows::runtime::HSTRING::from(&app_id),
+            &windows::core::HSTRING::from(&app_id),
         ) {
             Ok(toast_notifier) => {
                 if let Err(err) = toast_notifier.Show(&toast_notification) {
