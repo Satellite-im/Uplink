@@ -19,7 +19,6 @@ dioxus-core = { workspace = true }
 kit = { workspace = true }
 common = { workspace = true }
 extensions = { workspace = true }
-tokio-util = { workspace = true }
 arboard = { workspace = true }
 humansize = { workspace = true }
 uuid = { workspace = true }
