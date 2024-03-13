@@ -1,5 +1,5 @@
 .file-transfer-wrap {
-    background: var(--background-light);
+    background: var(--secondary-dark);
     border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
@@ -38,7 +38,7 @@
 
 .file-transfer-file {
     display: flex;
-    background: #8c8c8c;
+    background: var(--secondary);
     margin: var(--padding-lesser);
     padding: var(--padding-less) var(--padding-lesser);
     border-radius: var(--border-radius);
@@ -54,7 +54,7 @@
     width: 100%;
     overflow: hidden;
     gap: var(--gap-less);
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 
 .filename-and-file-queue-text, .transfer-progress-percentage {
