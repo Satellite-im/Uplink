@@ -87,7 +87,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 pub fn Sidebar<'a>(props: Props<'a>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let page = use_shared_state::<Page>(cx)?;
-    let _router = dioxus_router::hooks::use_navigator(cx);
+    let _router = dioxus_router::hooks::use_navigator();
 
     let profile = UIRoute {
         to: "profile",
@@ -212,12 +212,12 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                         }
                     }
                 }
-            )),
+            ),
             with_call_controls: rsx!(
                 CallControl {
                     in_chat: false
                 }
-            )),
+            ),
             with_nav: rsx!(
                 crate::AppNav {
                     active: crate::UplinkRoute::SettingsLayout{},
@@ -227,7 +227,7 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                         }
                     }
                 }
-            )),
+            ),
             Nav {
                 routes: routes.clone(),
                 active: active_route.to,
@@ -241,5 +241,5 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                 }
             }
         }
-    ))
+    )
 }

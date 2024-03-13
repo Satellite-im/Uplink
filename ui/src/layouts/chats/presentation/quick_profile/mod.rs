@@ -57,15 +57,12 @@ enum QuickProfileCmd {
 // Create a quick profile context menu
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let settings_page = use_shared_state::<Page>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let settings_page = use_context::<Signal<Page>>();
     let id = props.id;
-    let share_did = use_state(cx, || None);
+    let share_did = use_signal(|| None);
 
-    let identity = state
-        .read()
-        .get_identity(props.did_key)
-        .unwrap_or_default();
+    let identity = state.read().get_identity(props.did_key).unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
@@ -83,13 +80,11 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
         None => false,
     };
 
-    let eval = use_eval(cx);
-    use_future(cx, props.update_script, |update_script| {
-        to_owned![eval];
-        async move {
-            if !update_script.is_empty() {
-                _ = eval(&update_script);
-            }
+    let update_script_signal = use_signal(|| props.update_script.clone());
+
+    use_resource(|| async move {
+        if !update_script_signal.read().is_empty() {
+            _ = eval(&update_script_signal.read());
         }
     });
 
@@ -109,10 +104,10 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
         .cloned()
         .unwrap_or(1.0);
 
-    let router = use_navigator(cx);
+    let router = use_navigator();
 
-    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
-    if let Some(id) = *chat_with.get() {
+    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
+    if let Some(id) = *chat_with.read() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -121,7 +116,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
         router.replace(UplinkRoute::ChatLayout {});
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<QuickProfileCmd>| {
         to_owned![chat_with, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -351,7 +346,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                 s
                             }
                         }
-                    ))
+                    )
                 }),
             }
             div {
@@ -488,8 +483,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                     })
                 }
             }
-        ))
-        ,
+        ),
         share_did.as_ref().map(|_|{
             match state.read().get_active_chat() {
                 Some(chat) => rsx!(ShareFriendsModal{
@@ -502,5 +496,5 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
             }
         }),
         &props.children
-    }}))
+    }})
 }

@@ -18,5 +18,5 @@ pub fn InvisibleCloser<'a>(props: Props<'a>) -> Element {
             props.onclose.call(());
         },
         props.children.as_ref()
-    }))
+    })
 }

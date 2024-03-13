@@ -48,8 +48,8 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn ProfileSettings() -> Element {
     log::trace!("rendering ProfileSettings");
-    let state = use_shared_state::<State>(cx)?;
-    let first_render = use_state(cx, || true);
+    let state = use_context::<Signal<State>>();
+    let first_render = use_signal(|| true);
 
     let identity = state.read().get_own_identity();
     let user_status = identity.status_message().unwrap_or_default();
@@ -61,23 +61,23 @@ pub fn ProfileSettings() -> Element {
         IdentityStatus::Offline,
     ];
     let username = identity.username();
-    let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
-    let update_failed: &UseState<Option<String>> = use_state(cx, || None);
+    let should_update = use_signal(|| None);
+    let update_failed = use_signal(|| None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
-    let open_crop_image_modal = use_state(cx, || (false, (Vec::new(), String::new())));
+    let open_crop_image_modal = use_signal(|| (false, (Vec::new(), String::new())));
     let open_crop_image_modal_for_banner_picture =
-        use_state(cx, || (false, (Vec::new(), String::new())));
+        use_signal(|| (false, (Vec::new(), String::new())));
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
         image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
-    let show_remove_seed = use_state(cx, || false);
-    let seed_phrase: &UseState<Option<String>> = use_state(cx, || None);
-    let seed_words_ch: &Coroutine<()> = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let show_remove_seed = use_signal(|| false);
+    let seed_phrase = use_signal(|| None);
+    let seed_words_ch: Coroutine<()> = use_coroutine(|mut rx: UnboundedReceiver<()>| {
         to_owned![seed_phrase];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -112,8 +112,8 @@ pub fn ProfileSettings() -> Element {
         }
     });
 
-    let phrase_exists: &UseState<bool> = use_state(cx, || false);
-    let seed_phrase_exists = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let phrase_exists = use_signal(|| false);
+    let seed_phrase_exists = use_coroutine(|mut rx: UnboundedReceiver<()>| {
         to_owned![phrase_exists];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -150,7 +150,7 @@ pub fn ProfileSettings() -> Element {
         }
     });
 
-    let remove_seed_words_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let remove_seed_words_ch = use_coroutine(|mut rx: UnboundedReceiver<()>| {
         to_owned![phrase_exists, show_remove_seed];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -220,7 +220,7 @@ pub fn ProfileSettings() -> Element {
         update_failed.set(None);
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![should_update, update_failed];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -386,7 +386,7 @@ pub fn ProfileSettings() -> Element {
                                 ch.send(ChanCmd::ClearBanner);
                             }
                         }
-                    )),
+                    ),
                     div {
                         class: "profile-banner",
                         aria_label: "profile-banner",
@@ -411,7 +411,7 @@ pub fn ProfileSettings() -> Element {
                                 ch.send(ChanCmd::ClearProfile);
                             }
                         }
-                    )),
+                    ),
                     div {
                         class: "profile-picture",
                         aria_label: "profile-picture",
@@ -514,7 +514,7 @@ pub fn ProfileSettings() -> Element {
                                                 )));
                                         }
                                     }
-                                )),
+                                ),
                                 Button {
                                     appearance: Appearance::SecondaryLess,
                                     aria_label: "copy-id-button".into(),
@@ -523,7 +523,7 @@ pub fn ProfileSettings() -> Element {
                                         Tooltip{
                                             text: get_local_text("settings-profile.copy-id")
                                         }
-                                    )),
+                                    ),
                                     onpress: move |mouse_event: MouseEvent| {
                                         if mouse_event.modifiers() != Modifiers::CONTROL {
                                             match Clipboard::new() {
@@ -622,22 +622,22 @@ pub fn ProfileSettings() -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                    class: "num", ((idx * 2) + 1).to_string() 
+                                                    class: "num", ((idx * 2) + 1).to_string()
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                                                    class: "val", vals.first().cloned().unwrap_or_default() 
+                                                    class: "val", vals.first().cloned().unwrap_or_default()
                                                 }
                                             },
                                             div {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                                                    class: "num", ((idx * 2) + 2).to_string() 
+                                                    class: "num", ((idx * 2) + 2).to_string()
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
-                                                    class: "val", vals.get(1).cloned().unwrap_or_default() 
+                                                    class: "val", vals.get(1).cloned().unwrap_or_default()
                                                 }
                                             }
                                         }
@@ -741,7 +741,7 @@ pub fn ProfileSettings() -> Element {
                 }
             }
         }
-    ))
+    )
 }
 
 fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))>) {
@@ -823,7 +823,7 @@ fn get_input_options(validation_options: Validation) -> Options {
     }
 }
 
-fn get_status_option<'a>(props: 'a, status: &IdentityStatus) -> (String, Element) {
+fn get_status_option<'a>(status: &IdentityStatus) -> (String, Element) {
     let indicator = Status::from(*status);
     (
         serde_json::to_string::<IdentityStatus>(status).unwrap_or_default(),
@@ -838,6 +838,6 @@ fn get_status_option<'a>(props: 'a, status: &IdentityStatus) -> (String, Element
                     get_local_text(&format!("settings-profile.status-{}", indicator))
                 }
             }
-        )),
+        ),
     )
 }

@@ -38,27 +38,27 @@ enum ControlsCmd {
 }
 
 pub fn get_controls(props: ChatProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let minimal = state.read().ui.metadata.minimal_view;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let chat_data = use_context::<Signal<ChatData>>();
     let favorite = chat_data.read().active_chat.is_favorite();
 
-    let call_pending = use_state(cx, || false);
-    let show_more = use_state(cx, || false);
+    let call_pending = use_signal(|| false);
+    let show_more = use_signal(|| false);
     let active_call = state.read().ui.call_info.active_call();
     let call_in_progress = active_call.is_some(); // active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
 
-    let show_pinned = use_state(cx, || false);
+    let show_pinned = use_signal(|| false);
 
-    use_effect(cx, &minimal, |_| {
+    use_effect(|| {
         to_owned![show_more];
         async move {
-            if *show_more.get() {
+            if *show_more.read() {
                 show_more.set(false);
             }
         }
     });
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ControlsCmd>| {
         to_owned![call_pending, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -115,12 +115,12 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
         |txt, arrow| {
             if minimal {
-                rsx!(()))
+                rsx!(())
             } else {
                 rsx!(Tooltip {
                     arrow_position: arrow,
                     text: get_local_text(txt)
-                }))
+                })
             }
         },
     );
@@ -248,7 +248,7 @@ pub fn get_controls(props: ChatProps) -> Element {
             text: text_builder("uplink.coming-soon"),
             tooltip: tooltip_builder("uplink.coming-soon", arrow_top_right),
         },
-    ));
+    );
 
     let pinned = rsx!(show_pinned.then(|| rsx!(
         Modal {
@@ -263,7 +263,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                 rsx!(PinnedMessages{ show_pinned: show_pinned.clone()})
             }
         }
-    )),));
+    )),);
 
     if minimal {
         return rsx!(
@@ -274,12 +274,12 @@ pub fn get_controls(props: ChatProps) -> Element {
                     aria_label: "control-group".into(),
                     appearance: Appearance::Primary,
                     tooltip: if *show_more.get() {
-                        rsx!(()))
+                        rsx!(())
                     } else {
                         rsx!(Tooltip {
                             arrow_position: ArrowPosition::TopRight,
                             text: get_local_text("messages.control-group")
-                        }))
+                        })
                     },
                     onpress: move |_| {
                         let current = show_more.get();
@@ -300,7 +300,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                     })
             }),
             pinned
-        ));
+        );
     }
-    rsx!(buttons, pinned))
+    rsx!(buttons, pinned)
 }

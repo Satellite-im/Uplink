@@ -106,7 +106,7 @@ pub struct MinimalProps<'a> {
 #[allow(non_snake_case)]
 pub fn MinimalFriendsLayout<'a>(props: MinimalProps<'a>) -> Element {
     log::trace!("rendering MinimalFriendsLayout");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let route = props.route;
 
     let view = if !state.read().ui.sidebar_hidden {

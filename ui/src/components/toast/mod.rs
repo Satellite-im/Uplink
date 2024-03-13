@@ -19,7 +19,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn Toast(props: Props) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     rsx!(kit::components::toast::Toast {
         id: props.id,
         on_hover: move |_| state.write_silent().reset_toast_timer(&props.id),
@@ -28,5 +28,5 @@ pub fn Toast(props: Props) -> Element {
         with_title: props.with_title.clone(),
         with_content: props.with_content.clone(),
         appearance: props.appearance
-    }))
+    })
 }

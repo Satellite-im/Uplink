@@ -70,5 +70,5 @@ pub fn Toast<'a>(props: Props<'a>) -> Element {
                 aria_label: "close-toast".into(),
             }
         }
-    ))
+    )
 }

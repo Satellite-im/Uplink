@@ -76,11 +76,11 @@ pub fn Friends() -> Element {
 
     let friends = State::get_friends_by_first_letter(friends_list);
 
-    let router = use_navigator(cx);
+    let router = use_navigator();
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    if let Some(id) = *chat_with.get() {
+    if let Some(id) = *chat_with.get(0) {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -89,7 +89,7 @@ pub fn Friends() -> Element {
         router.replace(UplinkRoute::ChatLayout {});
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![chat_with, block_in_progress, remove_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -331,7 +331,7 @@ pub fn Friends() -> Element {
                                                 }
                                             }
                                         },
-                                    )),
+                                    ),
                                     Friend {
                                         username: friend.username(),
                                         aria_label: friend.username(),
@@ -346,7 +346,7 @@ pub fn Friends() -> Element {
                                                 status: friend.identity_status().into(),
                                                 image: friend.profile_picture()
                                             }
-                                        )),
+                                        ),
                                         onchat: move |_| {
                                             // this works for mock data because the conversations already exist
                                            ch.send(ChanCmd::CreateConversation{recipient: chat_with_friend.did_key(), chat: chat3.clone()});
@@ -377,7 +377,7 @@ pub fn Friends() -> Element {
                 )
             })
         }
-    ))
+    )
 }
 
 // todo: remove this
@@ -394,7 +394,7 @@ pub fn FriendsSkeletal() -> Element {
             SkeletalFriend {},
             SkeletalFriend {},
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
@@ -404,33 +404,30 @@ pub struct FriendProps {
 }
 
 pub fn ShareFriendsModal(props: FriendProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let chats_selected = use_ref(cx, Vec::new);
-    let ch = use_coroutine(
-        cx,
-        |mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((id, uuid)) = rx.next().await {
-                let msg = vec![id.to_string()];
-                let (tx, rx) = oneshot::channel();
-                let cmd = RayGunCmd::SendMessageForSeveralChats {
-                    convs_id: uuid,
-                    msg,
-                    attachments: Vec::new(),
-                    rsp: tx,
-                };
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                    log::error!("failed to send warp command: {}", e);
-                    continue;
-                }
-
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send message: {}", e);
-                }
+    let state = use_context::<Signal<State>>();
+    let chats_selected = use_signal(|| Vec::new);
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some((id, uuid)) = rx.next().await {
+            let msg = vec![id.to_string()];
+            let (tx, rx) = oneshot::channel();
+            let cmd = RayGunCmd::SendMessageForSeveralChats {
+                convs_id: uuid,
+                msg,
+                attachments: Vec::new(),
+                rsp: tx,
+            };
+            if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                log::error!("failed to send warp command: {}", e);
+                continue;
             }
-        },
-    );
+
+            let rsp = rx.await.expect("command canceled");
+            if let Err(e) = rsp {
+                log::error!("failed to send message: {}", e);
+            }
+        }
+    });
     rsx!(Modal {
         open: props.did.get().is_some(),
         onclose: move |_| props.did.set(None),
@@ -527,7 +524,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                                     typing: false,
                                 })
                             }
-                        )),
+                        ),
                         onpress: move |_| {
                             chats_selected.with_mut(|v|{
                                 if !selected {
@@ -542,5 +539,5 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
             )
             })
         }
-    }))
+    })
 }

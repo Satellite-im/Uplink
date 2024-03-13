@@ -70,7 +70,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
+pub fn Input<'a>(props: Props<'a>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
     let left_shift_pressed = use_ref(cx, || false);
@@ -125,11 +125,13 @@ pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
 
     let cursor_script = include_str!("./cursor_script.js").replace("$ID", &id2);
 
-    let text_value = use_ref(cx, || value.clone());
-    use_future(cx, value, |val| {
+    let text_value = use_signal(|| value.clone());
+    let value_signal = use_signal(|| value.clone());
+
+    use_resource(|| {
         to_owned![cursor_position, text_value, eval, show_char_counter];
         async move {
-            *cursor_position.write_silent() = Some(val.chars().count() as i64);
+            *cursor_position.write_silent() = Some(value_signal.read().chars().count() as i64);
             *text_value.write_silent() = val;
             if show_char_counter {
                 let _ = eval(&sync.replace("$TEXT", &text_value.read()));
@@ -213,7 +215,7 @@ pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
                     onkeydown: {
                         to_owned![eval, cursor_script];
                         move |evt| {
-                            // HACK(Linux): Allow copy and paste files for Linux 
+                            // HACK(Linux): Allow copy and paste files for Linux
                             if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
                                 if let Some(e) = on_paste_keydown {
                                     e.call(evt.clone());
@@ -292,15 +294,14 @@ pub fn Input<'a>(props: 'a, Props<'a>) -> Element {
         }
         script { script },
         script { focus_script }
-    ))
+    )
 }
 
 // Input using a rich editor making markdown changes visible
 #[allow(non_snake_case)]
-pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
+pub fn InputRich<'a>(props: Props<'a>) -> Element {
     log::trace!("render input");
-    let eval = use_eval(cx);
-    let listener_data = use_ref(cx, || None);
+    let listener_data = use_signal(|| None);
 
     let Props {
         id: _,
@@ -335,36 +336,32 @@ pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
         .replace("$MULTI_LINE", &format!("{}", true));
     let disabled = *loading || *is_disabled;
 
-    let text_value = use_ref(cx, || value.clone());
+    let text_value = use_signal(|| value.clone());
     let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
 
     // Sync changed to the editor
-    use_future(
-        cx,
-        (value, placeholder, &disabled),
-        |(value, placeholder, disabled)| {
-            to_owned![eval, value, sync_script, text_value];
-            async move {
-                let update = !text_value.read().eq(&value);
-                let _ = eval(
-                    &sync_script
-                        .replace("$UPDATE", &update.to_string())
-                        .replace(
-                            "$TEXT",
-                            &value
-                                .replace('\\', "\\\\")
-                                .replace('"', "\\\"")
-                                .replace('\n', "\\n"),
-                        )
-                        .replace("$PLACEHOLDER", &placeholder)
-                        .replace("$DISABLED", &disabled.to_string()),
-                );
-            }
-        },
-    );
+    use_resource(|| {
+        to_owned![value, sync_script, text_value, placeholder, disabled];
+        async move {
+            let update = !text_value.read().eq(&value);
+            let _ = eval(
+                &sync_script
+                    .replace("$UPDATE", &update.to_string())
+                    .replace(
+                        "$TEXT",
+                        &value
+                            .replace('\\', "\\\\")
+                            .replace('"', "\\\"")
+                            .replace('\n', "\\n"),
+                    )
+                    .replace("$PLACEHOLDER", &placeholder)
+                    .replace("$DISABLED", &disabled.to_string()),
+            );
+        }
+    });
 
-    use_effect(cx, (), |_| {
-        to_owned![listener_data, eval, value];
+    use_effect(|| {
+        to_owned![listener_data, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)
             .replace("$AUTOFOCUS", &(!props.ignore_focus).to_string())
@@ -406,7 +403,7 @@ pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
         }
     });
 
-    if let Some(pending) = listener_data.write_silent().take() {
+    if let Some(pending) = listener_data.peek().take() {
         pending.iter().for_each(|val| match val.to_owned() {
             JSTextData::Input(txt) => {
                 *text_value.write_silent() = txt.clone();
@@ -456,7 +453,7 @@ pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
                     },
                     onkeydown: move |evt| {
                         // Note for some reason arrow key events are not forwarded to here
-                        // HACK(Linux): Allow copy and paste files for Linux 
+                        // HACK(Linux): Allow copy and paste files for Linux
                         if cfg!(target_os = "linux") && evt.code() == Code::KeyV && evt.modifiers() == Modifiers::CONTROL {
                             if let Some(e) = on_paste_keydown {
                                 e.call(evt.clone());
@@ -487,5 +484,5 @@ pub fn InputRich<'a>(props: 'a, Props<'a>) -> Element {
             },
         }
         script { script },
-    ))
+    )
 }

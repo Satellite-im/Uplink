@@ -43,7 +43,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
+pub fn Folder<'a>(props: Props<'a>) -> Element {
     let open = props.open.unwrap_or_default();
     let folder_name = props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(&cx);
@@ -55,7 +55,7 @@ pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     if loading {
-        rsx!(FolderSkeletal {}))
+        rsx!(FolderSkeletal {})
     } else {
         rsx!(
             div {
@@ -108,7 +108,7 @@ pub fn Folder<'a>(props: 'a, Props<'a>) -> Element {
                     }
                 ))
             }
-        ))
+        )
     }
 }
 
@@ -127,5 +127,5 @@ pub fn FolderSkeletal() -> Element {
                 class: "skeletal skeletal-bar"
             }
         }
-    ))
+    )
 }

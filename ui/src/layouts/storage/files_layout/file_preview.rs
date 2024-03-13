@@ -57,13 +57,13 @@ struct Props<'a> {
 
 #[allow(non_snake_case)]
 fn FilePreview<'a>(props: Props<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let file_path_in_local_disk = use_ref(cx, PathBuf::new);
+    let state = use_context::<Signal<State>>();
+    let file_path_in_local_disk = use_signal(|| PathBuf::new);
 
     let thumbnail = thumbnail_to_base64(props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(props.file.name());
 
-    let file_loading_counter = use_ref(cx, || 0);
+    let file_loading_counter = use_signal(|| 0);
     // Using id to change file name in case of duplicate files and avoid
     // open different file from that user clicked
     let temp_dir_with_file_id = STATIC_ARGS.temp_files.join(format!(
@@ -71,7 +71,7 @@ fn FilePreview<'a>(props: Props<'a>) -> Element {
         props.file.id(),
         temp_dir.extension().unwrap_or_default().to_string_lossy()
     ));
-    let should_download = use_state(cx, || true);
+    let should_download = use_signal(|| true);
 
     let is_video = is_video(&props.file.name());
     let is_audio = is_audio(&props.file.name());

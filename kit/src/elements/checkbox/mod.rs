@@ -50,5 +50,5 @@ pub fn Checkbox<'a>(props: Props<'a>) -> Element {
                 )
             }),
         }
-    ))
+    )
 }

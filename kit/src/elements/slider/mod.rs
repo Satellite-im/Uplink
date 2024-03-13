@@ -25,5 +25,5 @@ pub fn Slider<'a>(props: Props) -> Element {
         div {
             class: "slider",
         }
-    })
+    }
 }

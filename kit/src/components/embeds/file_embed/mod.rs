@@ -64,7 +64,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed<'a>(props: 'a, Props<'a>) -> Element {
+pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
     //log::trace!("rendering file embed: {}", props.filename);
     let file_extension = std::path::Path::new(&props.filename)
         .extension()
@@ -300,7 +300,7 @@ pub fn FileEmbed<'a>(props: 'a, Props<'a>) -> Element {
                     }
                 )
         }
-    ))
+    )
 }
 
 fn is_image(filename: String) -> bool {
@@ -324,7 +324,7 @@ fn is_image(filename: String) -> bool {
 }
 
 fn show_download_or_minus_button_if_enabled<'a>(
-    props: 'a, Props<'a>,
+    props: Props<'a>,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,
 ) -> Element {
@@ -339,7 +339,7 @@ fn show_download_or_minus_button_if_enabled<'a>(
                     onpress: move |_| props.on_press.call(None),
                 }
             }
-        ))
+        )
     } else {
         None
     }

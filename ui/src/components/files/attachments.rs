@@ -72,7 +72,7 @@ pub fn Attachments<'a>(props: AttachmentProps) -> Element {
                 }
             },
         })
-    })));
+    }));
 
     let attachments_vec = files_attached_to_send3;
 
@@ -100,5 +100,5 @@ pub fn Attachments<'a>(props: AttachmentProps) -> Element {
                 }
             attachments
             }
-    }))
+    })
 }

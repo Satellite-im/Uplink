@@ -5,23 +5,22 @@ use crate::{
     },
     utils,
 };
+use dioxus::{
+    events::eval,
+    signals::{Readable, Signal},
+};
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_effect, Coroutine, UseSharedState};
+use dioxus_hooks::{to_owned, use_effect, use_signal, Coroutine, UseSharedState};
 
-pub fn init_msg_scroll(
-    
-    chat_data: &UseSharedState<ChatData>,
-    eval_provider: &utils::EvalProvider,
-    ch: Coroutine<()>,
-) {
+pub fn init_msg_scroll(chat_data: &Signal<ChatData>, ch: Coroutine<()>) {
     let chat_key = chat_data.read().active_chat.key();
-    use_effect(cx, &chat_key, |_chat_key| {
-        to_owned![eval_provider, ch, chat_data];
+    let chat_key_signal = use_signal(|| chat_key);
+    use_effect(|| {
+        to_owned![ch, chat_data];
         async move {
             // replicate behavior from before refactor
-            if let Ok(eval) = eval_provider(SETUP_CONTEXT_PARENT) {
-                let _ = eval.join().await;
-            }
+            let eval_result = eval(SETUP_CONTEXT_PARENT);
+            let _ = eval_result.join().await;
 
             let chat_id = chat_data.read().active_chat.id();
             let chat_behavior = chat_data.read().get_chat_behavior(chat_id);
@@ -67,17 +66,10 @@ pub fn init_msg_scroll(
                 }
             };
 
-            match eval_provider(&scroll_script) {
-                Ok(eval) => {
-                    if let Err(e) = eval.join().await {
-                        log::error!("failed to join eval: {:?}", e);
-                        return;
-                    }
-                }
-                Err(e) => {
-                    log::error!("eval failed: {:?}", e);
-                    return;
-                }
+            let eval_result_scroll_script = eval(&scroll_script);
+            if let Err(e) = eval_result_scroll_script.join().await {
+                log::error!("failed to join eval: {:?}", e);
+                return;
             }
 
             ch.send(());

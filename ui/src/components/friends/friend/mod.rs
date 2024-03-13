@@ -45,7 +45,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friend<'a>(props: Props<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let relationship = props.relationship;
     let status_message = props.status_message.clone();
     let aria_label = props.aria_label.clone().unwrap_or_default();
@@ -135,7 +135,7 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
                     tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: if props.relationship.blocked() { get_local_text("friends.unblock") } else if props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
-                    })),
+                    }),
                 },
                 (props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
                     Button {
@@ -151,12 +151,12 @@ pub fn Friend<'a>(props: Props<'a>) -> Element {
                         tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("friends.block"),
-                        }))
+                        })
                     }
                 ))
             }
         }
-    ))
+    )
 }
 
 // todo: remove this
@@ -182,5 +182,5 @@ pub fn SkeletalFriend() -> Element {
             },
             // TODO: include the disabled controls, should show only controls relevant to parent props.
         }
-    ))
+    )
 }

@@ -27,7 +27,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
     }
 
     if props.is_on_auth_pages.unwrap_or(false) {
-        let state = use_ref(cx, State::load);
+        let state = use_signal(|| State::load);
         let keybinds = state.read().settings.keybinds.clone();
         return rsx! {
             for (global_shortcut, shortcut) in keybinds {
@@ -43,7 +43,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
                     }
                 }
             }
-        });
+        };
     }
 
     let state = use_shared_state::<State>(cx)?;
@@ -65,7 +65,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
                     }
                 }
             }
-        });
+        };
     } else if !state.read().settings.is_recording_new_keybind {
         let keybinds = state.read().settings.keybinds.clone();
         return rsx! {
@@ -82,7 +82,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
                     }
                 }
             }
-        });
+        };
     } else {
         println!("rendering keyboard shortcuts - 3");
 
@@ -99,24 +99,20 @@ struct GlobalShortcutProps<'a> {
 }
 
 fn RenderGlobalShortCuts<'a>(props: GlobalShortcutProps) -> Element {
-    let command_pressed = use_ref(cx, || false);
+    let command_pressed = use_signal(|| false);
 
     if *command_pressed.read() {
         *command_pressed.write_silent() = false;
-        props
-            .on_global_shortcut
-            .call(props.global_shortcut.clone());
+        props.on_global_shortcut.call(props.global_shortcut.clone());
     }
 
-    let key_code_strs: Vec<String> = cx
-        .props
+    let key_code_strs: Vec<String> = props
         .keys
         .iter()
         .map(|key_code| key_code_to_str(key_code).to_string())
         .collect();
 
-    let modifier_strs: Vec<String> = cx
-        .props
+    let modifier_strs: Vec<String> = props
         .modifiers
         .iter()
         .map(|modifier| modifier_state_to_string(*modifier))
@@ -128,7 +124,7 @@ fn RenderGlobalShortCuts<'a>(props: GlobalShortcutProps) -> Element {
         return None;
     }
 
-    use_global_shortcut(cx, modifiers_and_keys.as_str(), {
+    use_global_shortcut(modifiers_and_keys.as_str(), {
         to_owned![command_pressed];
         move || {
             *CALL_COUNT.write() += 1;

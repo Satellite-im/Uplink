@@ -148,5 +148,5 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
                 })),
             },
         },
-    ))
+    )
 }

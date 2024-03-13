@@ -36,24 +36,24 @@ pub enum SendFilesStartLocation {
 
 #[derive(Props)]
 pub struct SendFilesProps<'a> {
-    send_files_from_storage_state: UseState<bool>,
+    send_files_from_storage_state: Signal<bool>,
     send_files_start_location: SendFilesStartLocation,
     on_files_attached: EventHandler<(Vec<Location>, Vec<Uuid>)>,
     files_pre_selected_to_send: Vec<Location>,
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayout<'a>(props: 'a, SendFilesProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn SendFilesLayout<'a>(props: SendFilesProps<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
     let send_files_start_location = props.send_files_start_location.clone();
     let send_files_from_storage_state = props.send_files_from_storage_state.clone();
-    let storage_controller = StorageController::new(cx, state);
-    let first_render = use_ref(cx, || true);
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
+    let storage_controller = StorageController::new(&state);
+    let first_render = use_signal(|| true);
+    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(storage_controller, &state);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
-    functions::get_items_from_current_directory(cx, ch);
+    functions::get_items_from_current_directory(ch);
 
-    functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
+    functions::run_verifications_and_update_storage(&state, storage_controller, vec![]);
 
     if *first_render.read() {
         *first_render.write_silent() = false;
@@ -108,17 +108,17 @@ pub fn SendFilesLayout<'a>(props: 'a, SendFilesProps<'a>) -> Element {
                 })
                }
         }
-    }))
+    })
 }
 
 #[derive(PartialEq, Props)]
 struct ChatsToSelectProps<'a> {
-    storage_controller: &'a UseRef<StorageController>,
+    storage_controller: &'a Signal<StorageController>,
 }
 
 #[allow(non_snake_case)]
 fn ChatsToSelect<'a>(props: ChatsToSelectProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let storage_controller = props.storage_controller.clone();
 
     rsx!(div {
@@ -195,7 +195,7 @@ fn ChatsToSelect<'a>(props: ChatsToSelectProps<'a>) -> Element {
                                     typing: false,
                                 }
                             )}
-                        )),
+                        ),
                         with_badge: "".into(),
                         onpress: move |_| {
                             if is_checked {
@@ -208,5 +208,5 @@ fn ChatsToSelect<'a>(props: ChatsToSelectProps<'a>) -> Element {
                 }
             )
         }),
-    }))
+    })
 }

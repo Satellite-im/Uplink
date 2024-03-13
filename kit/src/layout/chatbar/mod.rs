@@ -94,7 +94,7 @@ pub struct ReplyProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Reply<'a>(props: 'a, ReplyProps<'a>) -> Element {
+pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
     let remote = props.remote.unwrap_or_default();
     let message = format_text(
         &props.message,
@@ -164,11 +164,11 @@ pub fn Reply<'a>(props: 'a, ReplyProps<'a>) -> Element {
             }
 
         }
-    ))
+    )
 }
 
 #[allow(non_snake_case)]
-pub fn Chatbar<'a>(props: 'a, Props<'a>) -> Element {
+pub fn Chatbar<'a>(props: Props<'a>) -> Element {
     let controlled_input_id = &props.id;
     let is_typing = !props.typing_users.is_empty();
     let cursor_position = use_ref(cx, || None);
@@ -281,7 +281,7 @@ pub fn Chatbar<'a>(props: 'a, Props<'a>) -> Element {
                 selected: selected_suggestion.clone(),
             })),
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -293,12 +293,12 @@ pub struct SuggestionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-fn SuggestionsMenu<'a>(props: 'a, SuggestionProps<'a>) -> Element {
+fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
     if props.selected.read().is_none() {
         *props.selected.write_silent() = Some(0);
     }
     let (label, suggestions): (_, Vec<_>) = match props.suggestions {
-        SuggestionType::None => return rsx!(())),
+        SuggestionType::None => return rsx!(()),
         SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
@@ -372,5 +372,5 @@ fn SuggestionsMenu<'a>(props: 'a, SuggestionProps<'a>) -> Element {
             },
         }
         suggestions.into_iter()
-    }))
+    })
 }

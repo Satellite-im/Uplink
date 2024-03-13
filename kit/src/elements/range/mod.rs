@@ -23,11 +23,13 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Range<'a>(props: Props<'a>) -> Element {
-    let internal_state = use_state(cx, || props.initial_value);
-    use_effect(cx, &props.initial_value, |val| {
+    let internal_state = use_signal(|| props.initial_value);
+    let value = use_signal(|| props.initial_value);
+
+    use_effect(|| {
         to_owned![internal_state];
         async move {
-            internal_state.set(val);
+            internal_state.set(value.read());
         }
     });
     let step = props.step.unwrap_or(1_f32);
@@ -109,5 +111,5 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
                 }
             ))
         }
-    ))
+    )
 }

@@ -58,5 +58,5 @@ pub fn Slimbar<'a>(props: Props<'a>) -> Element {
             class: "nav-vertical-wrapper",
             props.with_nav.clone(),
         })),
-    }))
+    })
 }

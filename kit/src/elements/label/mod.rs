@@ -36,5 +36,5 @@ pub fn Label(props: Props) -> Element {
             padding_right: "{padding_right}px",
             "{props.text}"
         }
-    ))
+    )
 }

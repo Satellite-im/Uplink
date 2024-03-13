@@ -74,7 +74,6 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
     });
 
     use_component_lifecycle(
-        cx,
         || {},
         move || {
             let _ = fs::remove_file(CROPPED_IMAGE_PATH.clone());

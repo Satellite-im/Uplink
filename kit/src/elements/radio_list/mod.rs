@@ -30,5 +30,5 @@ pub fn RadioList<'a>(props: Props<'a>) -> Element {
                 }
             }
         }
-    ))
+    )
 }

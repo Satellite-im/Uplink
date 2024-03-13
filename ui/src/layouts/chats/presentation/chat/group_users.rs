@@ -18,24 +18,24 @@ use warp::crypto::DID;
 pub struct Props {
     #[props(!optional)]
     active_chat: Option<Chat>,
-    quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
+    quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>>,
 }
 
 #[allow(non_snake_case)]
 
 pub fn GroupUsers(props: Props) -> Element {
     log::trace!("rendering group_users");
-    let state = use_shared_state::<State>(cx)?;
-    let friend_prefix = use_state(cx, String::new);
+    let state = use_context::<Signal<State>>();
+    let friend_prefix = use_signal(|| String::new);
 
     let quickprofile_data = &props.quickprofile_data;
 
     let active_chat = match props.active_chat.as_ref() {
         Some(r) => r,
-        None => return rsx!(div {})),
+        None => return rsx!(div {}),
     };
     if active_chat.participants.is_empty() {
-        return rsx!(div {}));
+        return rsx!(div {});
     }
 
     let participant_dids = Vec::from_iter(active_chat.participants.iter().cloned());
@@ -49,12 +49,9 @@ pub fn GroupUsers(props: Props) -> Element {
     let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
     let creator_id = creator_id_vector.first().cloned()?;
 
-    let eval = use_eval(cx);
-    use_effect(cx, (), |_| {
-        to_owned![eval];
-        async move {
-            let _ = eval(
-                r#"
+    use_effect(|| async move {
+        let _ = eval(
+            r#"
                 const right_clickable = document.getElementsByClassName("friend-container");
                 const prevent_default = function (ev) { ev.preventDefault(); };
                 for (var i = 0; i < right_clickable.length; i++) {
@@ -62,8 +59,7 @@ pub fn GroupUsers(props: Props) -> Element {
                     right_clickable.item(i).removeEventListener("contextmenu", prevent_default);
                     right_clickable.item(i).addEventListener("contextmenu", prevent_default);
                 }"#,
-            );
-        }
+        );
     });
     rsx!(
         div {
@@ -96,20 +92,20 @@ pub fn GroupUsers(props: Props) -> Element {
                 context_data: quickprofile_data.clone(),
             }
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
 pub struct FriendsProps {
     group_participants: Vec<Identity>,
-    name_prefix: UseState<String>,
+    name_prefix: Signal<String>,
     creator: DID,
     is_dev: bool,
-    context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
+    context_data: Signal<Option<(f64, f64, Identity, bool)>>,
 }
 
 fn render_friends(props: FriendsProps) -> Element {
-    let name_prefix = props.name_prefix.get();
+    let name_prefix = props.name_prefix.read();
     let mut group_participants = props.group_participants.clone();
     // reduce group participants vector to just the name_prefix matched
     group_participants.retain(|friend| {
@@ -149,7 +145,7 @@ fn render_friends(props: FriendsProps) -> Element {
                 )
             }
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
@@ -157,7 +153,7 @@ pub struct FriendProps {
     friend: Identity,
     is_creator: bool,
     is_dev: bool,
-    context_data: UseRef<Option<(f64, f64, Identity, bool)>>,
+    context_data: Signal<Option<(f64, f64, Identity, bool)>>,
 }
 fn render_friend(props: FriendProps) -> Element {
     rsx!(
@@ -201,5 +197,5 @@ fn render_friend(props: FriendProps) -> Element {
 
             }
         }
-    ))
+    )
 }

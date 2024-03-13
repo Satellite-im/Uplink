@@ -100,7 +100,7 @@ pub fn get_active(cx: &Scope<Props>) -> To {
 /// )
 /// ```
 #[allow(non_snake_case)]
-pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
+pub fn Nav<'a>(props: Props<'a>) -> Element {
     let active = use_state(cx, || get_active(&cx));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
@@ -120,12 +120,12 @@ pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
                 let tooltip = if props.bubble.is_some() {
-                    rsx!(""))
+                    rsx!("")
                 } else {
                     rsx!(Tooltip {
                         arrow_position: tooltip_direction,
                         text: route.name.clone(),
-                    }))
+                    })
                 };
 
                 let btn = rsx!(
@@ -163,5 +163,5 @@ pub fn Nav<'a>(props: 'a, Props<'a>) -> Element {
                 }
             })
         }
-    ))
+    )
 }

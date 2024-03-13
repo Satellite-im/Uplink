@@ -17,5 +17,5 @@ pub fn TooltipWrap<'a>(props: Props<'a>) -> Element {
             props.tooltip.as_ref()
         }
         props.children.as_ref()
-    }))
+    })
 }

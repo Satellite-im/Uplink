@@ -58,62 +58,57 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn User<'a>(props: 'a, Props<'a>) -> Element {
+pub fn User<'a>(props: Props<'a>) -> Element {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
     let aria_label = props.aria_label.clone().unwrap_or_default();
     let active = props.active.unwrap_or_default();
     let loading = props.loading.unwrap_or_default();
 
-    rsx! (
-        if loading {
-            rsx!(
-                UserLoading {
-                }
-            )
-        } else {
-            rsx!(
-                div {
-                    class: {
-                        format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
-                    },
-                    onclick: move |e| emit(&cx, e),
-                    aria_label: "{aria_label}",
-                    (!badge.is_empty()).then(|| rsx!(
+    rsx!(if loading {
+        rsx!(UserLoading {})
+    } else {
+        rsx!(
+            div {
+                class: {
+                    format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
+                },
+                onclick: move |e| emit(&cx, e),
+                aria_label: "{aria_label}",
+                (!badge.is_empty()).then(|| rsx!(
+                    span {
+                        class: "badge",
+                        aria_label: "User Badge",
                         span {
-                            class: "badge",
-                            aria_label: "User Badge",
-                            span {
-                                class: "badge-prefix",
-                                aria_label: "badge-prefix",
-                                "{time_ago}"
-                            }
-                            span {
-                                class: "badge-count",
-                                aria_label: "badge-count",
-                                "{badge}"
-                            }
+                            class: "badge-prefix",
+                            aria_label: "badge-prefix",
+                            "{time_ago}"
                         }
-                    )),
-                    &props.user_image,
-                    div {
-                        class: "info",
-                        aria_label: "User Info",
-                        p {
-                            class: "username",
-                            aria_label: "Username",
-                            "{props.username}"
-                        },
-                        p {
-                            class: "subtext",
-                            aria_label: "User Status",
-                            dangerous_inner_html: "{props.subtext}"
+                        span {
+                            class: "badge-count",
+                            aria_label: "badge-count",
+                            "{badge}"
                         }
                     }
+                )),
+                &props.user_image,
+                div {
+                    class: "info",
+                    aria_label: "User Info",
+                    p {
+                        class: "username",
+                        aria_label: "Username",
+                        "{props.username}"
+                    },
+                    p {
+                        class: "subtext",
+                        aria_label: "User Status",
+                        dangerous_inner_html: "{props.subtext}"
+                    }
                 }
-            )
-        }
-    ))
+            }
+        )
+    })
 }
 
 #[allow(non_snake_case)]
@@ -143,5 +138,5 @@ fn UserLoading() -> Element {
                 }
             }
         }
-    ))
+    )
 }

@@ -17,7 +17,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(props: Props) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     rsx!(ReusableSidebar {
         hidden: state.read().ui.sidebar_hidden,
@@ -35,7 +35,7 @@ pub fn Sidebar(props: Props) -> Element {
                     }
                 }
             }
-        )),
+        ),
         with_nav: rsx!(
             crate::AppNav {
                 active: props.active.clone(),
@@ -49,7 +49,7 @@ pub fn Sidebar(props: Props) -> Element {
                     }
                 },
             },
-        )),
+        ),
         SidebarInner {}
-    }))
+    })
 }

@@ -58,24 +58,24 @@ pub struct SidebarProps {
 #[allow(non_snake_case)]
 pub fn Sidebar(props: SidebarProps) -> Element {
     log::trace!("rendering chats sidebar layout");
-    let state = use_shared_state::<State>(cx)?;
-    let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
-    let search_results_friends_identities = use_state(cx, Vec::<Identity>::new);
-    let search_results_chats = use_state(cx, Vec::<Chat>::new);
-    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let reset_searchbar = use_state(cx, || false);
-    let router = use_navigator(cx);
-    let show_delete_conversation = use_ref(cx, || true);
-    let on_search_dropdown_hover = use_ref(cx, || false);
-    let search_friends_is_focused = use_ref(cx, || false);
+    let state = use_context::<Signal<State>>();
+    let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new);
+    let search_results_friends_identities = use_signal(|| Vec::<Identity>::new);
+    let search_results_chats = use_signal(|| Vec::<Chat>::new);
+    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
+    let reset_searchbar: Signal<_> = use_signal(|| false);
+    let router = use_navigator();
+    let show_delete_conversation = use_signal(|| true);
+    let on_search_dropdown_hover = use_signal(|| false);
+    let search_friends_is_focused = use_signal(|| false);
 
-    if let Some(chat) = *chat_with.get() {
+    if let Some(chat) = *chat_with.read() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
         router.replace(UplinkRoute::ChatLayout {});
     }
 
-    let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
+    let ch = use_coroutine(|rx: UnboundedReceiver<MessagesCommand>| {
         conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
@@ -103,7 +103,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         vec![]
     };
 
-    let show_create_group = use_state(cx, || false);
+    let show_create_group = use_signal(|| false);
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -164,7 +164,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         },
                     }
                 }
-            )),
+            ),
             with_nav: rsx!(
                 crate::AppNav {
                     active: match state.read().ui.current_layout {
@@ -183,12 +183,12 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         }
                     }
                 }
-            )),
+            ),
             with_call_controls: rsx!(
                 CallControl {
                     in_chat: false
                 }
-            )),
+            ),
             if *search_friends_is_focused.read() {
                 render! { search::search_friends {
                     search_typed_chars: search_typed_chars.clone(),
@@ -228,7 +228,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                     arrow_position: ArrowPosition::Right,
                                     text: get_local_text("messages.create-group-chat")
                                 }
-                            )),
+                            ),
                             onpress: move |_| {
                                 show_create_group.set(!show_create_group.get());
                             }
@@ -359,7 +359,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                         },
                                     )
                                 )
-                            )),
+                            ),
                             User {
                                 aria_label: participants_name.clone(),
                                 username: participants_name,
@@ -381,7 +381,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                             typing: users_typing,
                                         }
                                     )}
-                                )),
+                                ),
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
@@ -409,7 +409,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                     status: Status::Online,
                                     loading: true
                                 }
-                            ))
+                            )
                         },
                         User {
                             loading: true,
@@ -422,7 +422,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                     status: Status::Online,
                                     loading: true
                                 }
-                            ))
+                            )
                         },
                         User {
                             loading: true,
@@ -435,19 +435,19 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                     status: Status::Online,
                                     loading: true
                                 }
-                            ))
+                            )
                         },
                     }
                 ))
             },
         }
-    ))
+    )
 }
 
 async fn conversation_coroutine(
     mut rx: UnboundedReceiver<MessagesCommand>,
-    chat_with: UseState<Option<Uuid>>,
-    show_delete_conversation: UseRef<bool>,
+    chat_with: Signal<Option<Uuid>>,
+    show_delete_conversation: Signal<bool>,
 ) {
     let warp_cmd_tx = WARP_CMD_CH.tx.clone();
     while let Some(cmd) = rx.next().await {

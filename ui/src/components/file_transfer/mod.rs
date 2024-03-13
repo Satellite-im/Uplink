@@ -15,7 +15,7 @@ pub struct Props<'a> {
 }
 
 pub fn FileTransferModal<'a>(props: Props) -> Element {
-    let file_tracker = use_shared_state::<TransferTracker>(cx)?;
+    let file_tracker = use_context::<Signal<TransferTracker>>();
     props.state.write_silent().scope_ids.file_transfer = Some(cx.scope_id().0);
     let tracker = file_tracker.read();
     let (file_progress_upload, file_progress_download) = (
@@ -23,7 +23,7 @@ pub fn FileTransferModal<'a>(props: Props) -> Element {
         tracker.get_tracker(TrackerType::FileDownload),
     );
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
-        return rsx!(()));
+        return rsx!(());
     }
     let modal = props.modal.unwrap_or_default();
     rsx!(div {
@@ -40,7 +40,7 @@ pub fn FileTransferModal<'a>(props: Props) -> Element {
                 label: get_local_text("uplink.download-queue"),
             })
         ),
-    }))
+    })
 }
 
 #[derive(Props, PartialEq)]
@@ -126,7 +126,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                 }
             )
         })
-    }))
+    })
 }
 
 #[derive(Props, PartialEq)]
@@ -144,5 +144,5 @@ pub fn ProgressIndicator(props: ProgressIndicatorProps) -> Element {
                 width: format_args!("{}%", props.progress)
             },
         }
-    }))
+    })
 }

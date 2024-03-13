@@ -138,5 +138,5 @@ pub fn MessageReply<'a>(props: Props<'a>) -> Element {
                 }
             }
         }
-    ))
+    )
 }

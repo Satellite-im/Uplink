@@ -41,5 +41,5 @@ pub fn Multiline<'a>(props: Props<'a>) -> Element {
 
             }
         }
-    ))
+    )
 }

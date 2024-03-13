@@ -30,7 +30,7 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
         onpress: move |_| {
             state.write().mutate(Action::SidebarHidden(true));
         }
-    }));
+    });
 
     rsx!(
         div {
@@ -57,5 +57,5 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                 props.with_nav.as_ref(),
             )
         },
-    ))
+    )
 }

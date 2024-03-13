@@ -18,11 +18,7 @@ pub struct SectionProps<'a> {
 #[allow(non_snake_case)]
 pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
-    let no_border = cx
-        .props
-        .no_border
-        .then_some("no-border")
-        .unwrap_or_default();
+    let no_border = props.no_border.then_some("no-border").unwrap_or_default();
 
     rsx!(
         div {
@@ -46,7 +42,7 @@ pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
                 }
             ))
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -69,7 +65,7 @@ pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
                 }
             ))
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -114,5 +110,5 @@ pub fn ExtensionSetting<'a>(props: ExtensionProps<'a>) -> Element {
                 "{props.description}"
             }
         }
-    ))
+    )
 }

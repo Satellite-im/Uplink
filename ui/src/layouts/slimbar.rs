@@ -24,8 +24,8 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn SlimbarLayout(props: Props) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let router = use_navigator(cx);
+    let state = use_context::<Signal<State>>();
+    let router = use_navigator();
 
     let favorites = if state.read().initialized {
         state.read().chats_favorites()
@@ -83,7 +83,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                                                 state.write().mutate(Action::ToggleFavorite(&remove_favorite.id));
                                             }
                                         }
-                                    )),
+                                    ),
                                     UserImageGroup {
                                         participants: build_participants(&other_participants),
                                         aria_label: participants_name.clone(),
@@ -103,7 +103,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                         })
                     }
                 )),
-            )),
+            ),
             navbar_visible: state.read().ui.sidebar_hidden,
             with_nav: rsx!(
                 crate::AppNav {
@@ -118,7 +118,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                         }
                     },
                 },
-            )),
+            ),
             state.read().configuration.developer.experimental_features.then(|| rsx!(
                 Button {
                     icon: Icon::Plus,
@@ -127,12 +127,12 @@ pub fn SlimbarLayout(props: Props) -> Element {
                             arrow_position: ArrowPosition::Left,
                             text: "Create Community".into()
                         }
-                    )),
+                    ),
                     onpress: move |_| {
                         router.replace(UplinkRoute::CommunityLayout {});
                     }
                 }
             ))
         }
-    ))
+    )
 }

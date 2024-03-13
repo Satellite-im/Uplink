@@ -190,7 +190,7 @@ pub fn EditGroup() -> Element {
                 }
             )
         }
-    ))
+    )
 }
 
 #[derive(Props, Eq, PartialEq)]
@@ -204,9 +204,9 @@ pub struct FriendRowProps {
 /* Friend Row with add/remove button functionality */
 fn friend_row(props: FriendRowProps) -> Element {
     let _friend = props.friend.clone();
-    let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
     let conv_id = props.conv_id;
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![selected_friends, conv_id];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -302,5 +302,5 @@ fn friend_row(props: FriendRowProps) -> Element {
                 }
             }
         }
-    ))
+    )
 }

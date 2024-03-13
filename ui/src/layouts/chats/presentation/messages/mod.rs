@@ -82,24 +82,20 @@ pub enum MessagesCommand {
 pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
 
 #[component(no_case_check)]
-pub fn get_messages(
-    
-    quickprofile_data: UseRef<Option<(f64, f64, Identity, bool)>>,
-) -> Element {
+pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>>) -> Element {
     log::trace!("get_messages");
-    use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
-    let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
-    let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
-    let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
+    use_shared_state_provider(|| -> DownloadTracker { HashMap::new() });
+    let state = use_context::<Signal<State>>();
+    let chat_data = use_context::<Signal<ChatData>>();
+    let scroll_btn = use_context::<Signal<ScrollBtn>>();
+    let pending_downloads = use_context::<Signal<DownloadTracker>>();
 
-    let eval = use_eval(cx);
-    let ch = coroutines::handle_msg_scroll(cx, eval, chat_data, scroll_btn);
-    let fetch_later_ch = coroutines::fetch_later_ch(cx, chat_data, scroll_btn);
-    effects::init_msg_scroll(cx, chat_data, eval, ch);
+    let ch = coroutines::handle_msg_scroll(&chat_data, &scroll_btn);
+    let fetch_later_ch = coroutines::fetch_later_ch(chat_data, scroll_btn);
+    effects::init_msg_scroll(&chat_data, ch);
 
     // used by child Elements via use_coroutine_handle
-    let _ch = coroutines::handle_warp_commands(cx, state, pending_downloads);
+    let _ch = coroutines::handle_warp_commands(&state, &pending_downloads);
 
     let active_chat_id = chat_data.read().active_chat.id();
     // used by the intersection observer to terminate itself.
@@ -136,29 +132,27 @@ pub fn get_messages(
         div {
             id: "messages",
             // this is a hack to deal with the limitations of the message paging. On the first page, if a message comes in while the page
-            // is scrolled up, it won't be displayed when the user scrolls back down. need to trigger a "fetch more" response. 
+            // is scrolled up, it won't be displayed when the user scrolls back down. need to trigger a "fetch more" response.
             onscroll: move |_| {
-                to_owned![eval, active_chat_id, chat_data, fetch_later_ch, scroll_btn];
+                to_owned![ active_chat_id, chat_data, fetch_later_ch, scroll_btn];
                 async move {
                     let behavior = chat_data.read().get_chat_behavior(active_chat_id);
                     if behavior.on_scroll_end != data::ScrollBehavior::DoNothing {
                         return;
                     }
+                    let eval_result = eval(scripts::READ_SCROLL);
+                    if let Ok(result) = eval_result.join().await {
+                        let scroll = result.as_i64().unwrap_or_default();
+                        chat_data.write_silent().set_scroll_value(active_chat_id, scroll);
 
-                    if let Ok(val) = eval(scripts::READ_SCROLL) {
-                        if let Ok(result) = val.join().await {
-                            let scroll = result.as_i64().unwrap_or_default();
-                            chat_data.write_silent().set_scroll_value(active_chat_id, scroll);
-
-                            if scroll < -100  && !scroll_btn.read().get(active_chat_id) {
-                                log::debug!("triggering scroll button");
-                                scroll_btn.write().set(active_chat_id);
-                            } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
-                                if !behavior.message_received  {
-                                    scroll_btn.write().clear(active_chat_id);
-                                } else {
-                                     fetch_later_ch.send(active_chat_id);
-                                }
+                        if scroll < -100  && !scroll_btn.read().get(active_chat_id) {
+                            log::debug!("triggering scroll button");
+                            scroll_btn.write().set(active_chat_id);
+                        } else if scroll == 0 && scroll_btn.read().get(active_chat_id) {
+                            if !behavior.message_received  {
+                                scroll_btn.write().clear(active_chat_id);
+                            } else {
+                                 fetch_later_ch.send(active_chat_id);
                             }
                         }
                     }
@@ -195,7 +189,7 @@ pub fn get_messages(
                 )
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -207,7 +201,7 @@ pub struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-pub fn loop_over_message_groups<'a>(props: 'a, AllMessageGroupsProps<'a>) -> Element {
+pub fn loop_over_message_groups<'a>(props: AllMessageGroupsProps<'a>) -> Element {
     log::trace!("render message groups");
     rsx!(props.groups.iter().map(|_group| {
         rsx!(render_message_group {
@@ -215,7 +209,7 @@ pub fn loop_over_message_groups<'a>(props: 'a, AllMessageGroupsProps<'a>) -> Ele
             active_chat_id: props.active_chat_id,
             on_context_menu_action: move |e| props.on_context_menu_action.call(e)
         },)
-    })))
+    }))
 }
 
 #[derive(Props)]
@@ -226,8 +220,8 @@ struct MessageGroupProps<'a> {
     pending: Option<bool>,
 }
 
-fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
 
     let MessageGroupProps {
         group,
@@ -244,10 +238,10 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
         .unwrap_or_default();
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let blocked = group.remote && state.read().is_blocked(&sender.did_key());
-    let show_blocked = use_state(cx, || false);
+    let show_blocked = use_signal(|| false);
 
     let blocked_element = if blocked {
-        if !show_blocked.get() {
+        if !show_blocked.read() {
             return rsx!(
                 div {
                     class: "blocked-container",
@@ -266,7 +260,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
                         get_local_text("messages.view")
                     }
                 }
-            ));
+            );
         }
         rsx!(
             div {
@@ -286,7 +280,7 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
                     get_local_text("messages.hide")
                 }
             }
-        ))
+        )
     } else {
         Option::None
     };
@@ -327,9 +321,9 @@ fn render_message_group<'a>(props: 'a, MessageGroupProps<'a>) -> Element {
                 active_chat_id: props.active_chat_id,
                 is_remote: group.remote,
                 pending: props.pending.unwrap_or_default()
-            }))
+            })
         },
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -339,11 +333,11 @@ struct MessagesProps<'a> {
     is_remote: bool,
     pending: bool,
 }
-fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
+fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
+    let edit_msg: Signal<Option<Uuid>> = use_signal(|| None);
     // see comment in ContextMenu about this variable.
-    let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let reacting_to: Signal<Option<Uuid>> = use_signal(|| None);
 
     let emoji_selector_extension = "emoji_selector";
 
@@ -353,7 +347,7 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
         .extensions
         .enabled_extension(emoji_selector_extension);
 
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let ch = use_coroutine_handle::<MessagesCommand>();
     rsx!(props.messages.iter().map(|grouped_message| {
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
@@ -390,7 +384,7 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
                 pending: props.pending
-            })),
+            }),
             items: rsx!(
                 ContextItem {
                     text: "Emoji Group".into(),
@@ -436,12 +430,12 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
                     text: get_local_text("messages.react"),
                     disabled: !has_extension,
                     tooltip:  if has_extension {
-                        rsx!(()))
+                        rsx!(())
                     } else {
                         rsx!(Tooltip {
                             arrow_position: ArrowPosition::Top,
                             text: get_local_text("messages.missing-emoji-picker")
-                        }))
+                        })
                     },
                     onpress: move |_| {
                         if has_extension {
@@ -510,9 +504,9 @@ fn wrap_messages_in_context_menu<'a>(props: 'a, MessagesProps<'a>) -> Element {
                         });
                     }
                 },
-            )) // end of context menu items
+            ) // end of context menu items
         }) // end context menu
-    }))) // end outer cx.render
+    })) // end outer cx.render
 }
 
 #[derive(Props)]
@@ -520,22 +514,18 @@ struct MessageProps<'a> {
     message: &'a data::MessageGroupMsg,
     is_remote: bool,
     message_key: String,
-    edit_msg: UseState<Option<Uuid>>,
+    edit_msg: Signal<Option<Uuid>>,
     pending: bool,
 }
-fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
+fn render_message<'a>(props: MessageProps<'a>) -> Element {
     //log::trace!("render message {}", &props.message.message.key);
-    let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let chat_data = use_context::<Signal<ChatData>>();
 
-    let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
+    let pending_downloads = use_context::<Signal<DownloadTracker>>();
     let user_did = state.read().did_key();
 
-    // todo: why?
-    #[cfg(not(target_os = "macos"))]
-    let _eval = use_eval(cx);
-
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let ch = use_coroutine_handle::<MessagesCommand>();
 
     let MessageProps {
         message: grouped_message,
@@ -546,7 +536,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
     } = props;
     let message = &grouped_message.message;
     let is_editing = edit_msg
-        .current()
+        .read()
         .map(|id| !props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
 
@@ -576,8 +566,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
     let msg_lines = message.inner.lines().join("\n");
 
     let is_mention = message.clone().is_mention_self(&user_did);
-    let preview_file_in_the_message: &UseState<(bool, Option<File>)> =
-        use_state(cx, || (false, None));
+    let preview_file_in_the_message: Signal<(bool, Option<File>)> = use_signal(|| (false, None));
 
     let mut reply_user = Identity::default();
     if let Some(info) = &message.in_reply_to {
@@ -636,7 +625,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
                         platform: reply_user.platform().into(),
                         status: reply_user.identity_status().into(),
                         image: reply_user.profile_picture(),
-                    }))
+                    })
                 }
             )),
             Message {
@@ -687,7 +676,7 @@ fn render_message<'a>(props: 'a, MessageProps<'a>) -> Element {
                 "#
             } // Highlights Pre blocks
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -696,19 +685,17 @@ pub struct PendingMessagesListenerProps<'a> {
 }
 
 //The component that listens for upload events
-pub fn render_pending_messages_listener<'a>(
-    props: 'a, PendingMessagesListenerProps,
-) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps) -> Element {
+    let state = use_context::<Signal<State>>();
     state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
-        None => return rsx!(())),
+        None => return rsx!(()),
     };
     rsx!(pending_wrapper {
         msg: chat.pending_outgoing_messages,
         on_context_menu_action: move |e| props.on_context_menu_action.call(e)
-    }))
+    })
 }
 
 #[derive(Props)]
@@ -718,8 +705,8 @@ struct PendingWrapperProps<'a> {
 }
 
 //We need to do it this way due to reference ownership
-fn pending_wrapper<'a>(props: 'a, PendingWrapperProps) -> Element {
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+fn pending_wrapper<'a>(props: PendingWrapperProps) -> Element {
+    let chat_data = use_context::<Signal<ChatData>>();
     let data = chat_data.read();
     rsx!(render_pending_messages {
         pending_outgoing_message: data::pending_group_messages(
@@ -729,7 +716,7 @@ fn pending_wrapper<'a>(props: 'a, PendingWrapperProps) -> Element {
         ),
         active: data.active_chat.id(),
         on_context_menu_action: move |e| props.on_context_menu_action.call(e)
-    }))
+    })
 }
 
 #[derive(Props)]
@@ -740,24 +727,22 @@ struct PendingMessagesProps<'a> {
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
-fn render_pending_messages<'a>(props: 'a, PendingMessagesProps) -> Element {
-    rsx!(props.pending_outgoing_message.as_ref().map(
-        |group| {
-            rsx!(render_message_group {
-                group: group,
-                active_chat_id: props.active,
-                on_context_menu_action: move |e| props.on_context_menu_action.call(e),
-                pending: true
-            },)
-        }
-    )))
+fn render_pending_messages<'a>(props: PendingMessagesProps) -> Element {
+    rsx!(props.pending_outgoing_message.as_ref().map(|group| {
+        rsx!(render_message_group {
+            group: group,
+            active_chat_id: props.active,
+            on_context_menu_action: move |e| props.on_context_menu_action.call(e),
+            pending: true
+        },)
+    }))
 }
 
 fn download_file(
     file: &warp::constellation::file::File,
     conv_id: Uuid,
     msg_id: Uuid,
-    pending_downloads: &UseSharedState<HashMap<Uuid, HashSet<File>>>,
+    pending_downloads: &Signal<HashMap<Uuid, HashSet<File>>>,
     ch: &Coroutine<MessagesCommand>,
 ) {
     let file_name = file.name();

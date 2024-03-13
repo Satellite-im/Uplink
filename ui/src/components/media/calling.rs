@@ -65,7 +65,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn CallControl(props: Props) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     match state.read().ui.call_info.active_call() {
         Some(call) => rsx!(ActiveCallControl {
             active_call: call,
@@ -76,13 +76,13 @@ pub fn CallControl(props: Props) -> Element {
             silence_text: get_local_text("remote-controls.silence"),
             start_recording_text: get_local_text("remote-controls.start-recording"),
             stop_recording_text: get_local_text("remote-controls.stop-recording"),
-        })),
+        }),
         None => match state.read().ui.call_info.pending_calls().first() {
             Some(call) => rsx!(PendingCallDialog {
                 call: call.clone(),
                 in_chat: props.in_chat,
-            })),
-            None => rsx!(())),
+            }),
+            None => rsx!(()),
         },
     }
 }
@@ -102,42 +102,44 @@ pub struct ActiveCallProps {
 #[allow(non_snake_case)]
 fn ActiveCallControl(props: ActiveCallProps) -> Element {
     log::trace!("Rendering active call window");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let active_call: &ActiveCall = &props.active_call;
     let active_call_id = active_call.call.id;
     let active_call_answer_time = active_call.answer_time;
-    let scope_id = cx.scope_id();
+    let scope_id = current_scope_id();
     let outgoing = active_call.call.participants_joined.is_empty();
-    let update_fn = cx.schedule_update_any();
+    let update_fn = schedule_update_any();
 
-    let recording = use_ref(cx, || false);
+    let recording = use_signal(|| false);
 
-    use_future(
-        cx,
-        (&scope_id, &active_call_id, &active_call_answer_time),
-        |(scope_id, _, answer_time)| async move {
-            loop {
-                let dur_sec = Duration::from_secs(1);
-                let dur_min = Duration::from_secs(60);
+    let scope_id_signal = use_signal(|| scope_id);
+    let answer_time_signal = use_signal(|| active_call_answer_time);
 
-                let to_sleep = match Local::now().signed_duration_since(answer_time).to_std() {
-                    Ok(duration) => {
-                        if duration < dur_min {
-                            dur_sec
-                        } else {
-                            dur_min
-                        }
+    use_future(|| async move {
+        loop {
+            let dur_sec = Duration::from_secs(1);
+            let dur_min = Duration::from_secs(60);
+
+            let to_sleep = match Local::now()
+                .signed_duration_since(answer_time_signal.read())
+                .to_std()
+            {
+                Ok(duration) => {
+                    if duration < dur_min {
+                        dur_sec
+                    } else {
+                        dur_min
                     }
-                    Err(_) => dur_sec,
-                };
+                }
+                Err(_) => dur_sec,
+            };
 
-                tokio::time::sleep(to_sleep).await;
-                update_fn(scope_id);
-            }
-        },
-    );
+            tokio::time::sleep(to_sleep).await;
+            update_fn(scope_id_signal.read());
+        }
+    });
 
-    let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
+    let ch: Coroutine<CallDialogCmd> = use_coroutine(|mut rx| {
         to_owned![state, recording];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -311,12 +313,12 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return rsx!(()));
+                    return rsx!(());
                 }
             }
             Some(c) => {
                 if active_call.call.conversation_id.eq(&c.id) != props.in_chat {
-                    return rsx!(()));
+                    return rsx!(());
                 }
             }
         };
@@ -328,10 +330,12 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
     let participants_name = State::join_usernames(&other_participants);
     let self_id = build_user_from_identity(&state.read().get_own_identity());
 
-    use_effect(cx, &other_participants, |in_call| {
+    let other_participants_in_call = use_signal(|| other_participants.clone());
+
+    use_effect(|| {
         to_owned![ch, state];
         async move {
-            for id in in_call {
+            for id in other_participants_in_call.read() {
                 if let Some(vol) = state.read().settings.user_volumes.get(&id.did_key()) {
                     ch.send(CallDialogCmd::AdjustVolume(Box::new(id.did_key()), *vol))
                 }
@@ -426,7 +430,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                         arrow_position: ArrowPosition::Bottom,
                         text: if call.self_muted { props.unmute_text.clone() } else { props.mute_text.clone() }
                     }
-                )),
+                ),
                 onpress: move |_| {
                     if call.self_muted { ch.send(CallDialogCmd::UnmuteSelf); } else { ch.send(CallDialogCmd::MuteSelf); }
                 }
@@ -440,7 +444,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                         arrow_position: ArrowPosition::Bottom,
                         text: if call.call_silenced { props.listen_text.clone() } else { props.silence_text.clone() }
                     }
-                )),
+                ),
                 onpress: move |_| {
                     if call.call_silenced { ch.send(CallDialogCmd::UnsilenceCall); } else { ch.send(CallDialogCmd::SilenceCall); }
                 }
@@ -456,7 +460,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: props.stop_recording_text.clone()
                         }
-                      )),
+                      ),
                    onpress: move |_| {
                    ch.send(CallDialogCmd::StopRecording);
                     },
@@ -471,7 +475,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                     arrow_position: ArrowPosition::Bottom,
                     text: props.start_recording_text.clone()
                 }
-            )),
+            ),
                         onpress: move |_| {
                         ch.send(CallDialogCmd::RecordCall);
                },
@@ -496,7 +500,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             }*/
 
         }
-    }))
+    })
 }
 
 #[derive(PartialEq, Eq, Props)]
@@ -509,7 +513,7 @@ pub struct PendingCallProps {
 fn PendingCallDialog(props: PendingCallProps) -> Element {
     log::trace!("Rendering pending call window");
     let state = use_shared_state::<State>(cx)?;
-    let ch = use_coroutine(cx, |mut rx| {
+    let ch = use_coroutine(|mut rx| {
         to_owned![state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -563,18 +567,18 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return rsx!(()));
+                    return rsx!(());
                 }
             }
             Some(c) => {
                 if call.conversation_id.eq(&c.id) != props.in_chat {
-                    return rsx!(()));
+                    return rsx!(());
                 }
             }
         };
     }
     let alive = use_ref(cx, || Arc::new(AtomicBool::new(false)));
-    use_effect(cx, (), |_| {
+    use_effect(|| {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
     });
@@ -591,7 +595,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
     rsx!(CallDialog {
         caller: rsx!(UserImageGroup {
             participants: build_participants(&participants),
-        },)),
+        },),
         in_chat: props.in_chat,
         usernames: usernames,
         icon: Icon::PhoneArrowDownLeft,
@@ -603,7 +607,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
             onpress: move |_| {
                 ch.send(PendingCallDialogCmd::Accept(call.id));
             }
-        })),
+        }),
         with_deny_btn: rsx!(Button {
             aria_label: "deny-call-button".into(),
             icon: Icon::PhoneXMark,
@@ -611,8 +615,8 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
             onpress: move |_| {
                 ch.send(PendingCallDialogCmd::Reject(call.id));
             }
-        })),
-    }))
+        }),
+    })
 }
 
 #[derive(Props)]
@@ -681,7 +685,7 @@ pub fn CallDialog<'a>(props: CallDialogProps<'a>) -> Element {
                 with_deny_btn,
             }
         }
-    ))
+    )
 }
 
 #[derive(Props, PartialEq)]
@@ -691,21 +695,14 @@ pub struct CallUserImageProps {
 
 #[allow(non_snake_case)]
 pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
-    let eval = use_eval(cx);
-    let amount = use_state(cx, || 3);
-    let id = use_state(cx, Uuid::new_v4);
-    use_effect(cx, (), move |_| {
-        to_owned![eval, amount];
+    let amount = use_signal(|| 3);
+    let id = use_signal(|| Uuid::new_v4);
+    use_effect(|| {
+        to_owned![amount];
         async move {
-            let eval = match eval(include_str!("./resize_handler.js")) {
-                Ok(r) => r,
-                Err(e) => {
-                    log::error!("use eval failed: {:?}", e);
-                    return;
-                }
-            };
+            let eval_result = eval(include_str!("./resize_handler.js"));
             loop {
-                match eval.recv().await {
+                match eval_result.recv().await {
                     Ok(value) => {
                         amount.set(value.as_f64().unwrap_or(3_f64) as i64);
                     }
@@ -716,7 +713,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
             }
         }
     });
-    let visible_amount = *amount.get() as usize;
+    let visible_amount = *amount.read() as usize;
     let (visible, context) = if visible_amount >= props.participants.len() {
         (props.participants.clone(), None)
     } else {
@@ -796,7 +793,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                                         user_state_icons(user_state.clone())
                                 })
                             })
-                        )),
+                        ),
                         Button {
                             aria_label: "additional-participants-button".to_string(),
                             appearance: Appearance::Secondary,
@@ -806,5 +803,5 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                 }
             )
         }),
-    ))
+    )
 }

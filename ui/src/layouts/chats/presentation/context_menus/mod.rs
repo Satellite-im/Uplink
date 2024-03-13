@@ -8,23 +8,21 @@ use kit::{
 #[derive(Props)]
 pub struct FileLocationProps<'a> {
     id: &'a String,
-    update_script: &'a UseState<String>,
+    update_script: &'a Signal<String>,
     on_press_storage: EventHandler<()>,
     on_press_local_disk: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
 pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let id = props.id.clone();
-    let eval = use_eval(cx);
-    use_future(cx, props.update_script, |update_script| {
-        to_owned![eval];
-        async move {
-            let script = update_script.get();
-            if !script.is_empty() {
-                let _ = eval(script.to_string().as_str());
-            }
+    let update_script_signal = props.update_script.clone();
+
+    use_resource(|| async move {
+        let script = update_script_signal.read();
+        if !script.is_empty() {
+            let _ = eval(script.to_string().as_str());
         }
     });
 
@@ -54,11 +52,11 @@ pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
                     rsx!(Tooltip {
                         arrow_position: kit::elements::tooltip::ArrowPosition::Right,
                         text: get_local_text("files.upload-in-progress-please-wait"),
-                    }))
+                    })
                 } else {
                     None
                 },
             }
-        ))
-    }))
+        )
+    })
 }

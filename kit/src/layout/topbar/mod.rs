@@ -62,5 +62,5 @@ pub fn Topbar<'a>(props: Props<'a>) -> Element {
                 }
             ))
         }
-    ))
+    )
 }

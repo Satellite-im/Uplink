@@ -31,8 +31,8 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn _MediaPlayer(props: Props) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let window = use_window(cx);
+    let state = use_context::<Signal<State>>();
+    let window = use_window();
     let silenced = state
         .read()
         .ui
@@ -43,7 +43,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
 
     let _silenced_str = silenced.to_string();
 
-    let router = use_navigator(cx);
+    let router = use_navigator();
 
     rsx!(div {
         id: "media-player",
@@ -55,7 +55,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
             },
         },
         Topbar {
-            controls: 
+            controls:
                 rsx! (
                     Button {
                         icon: Icon::ArrowsPointingOut,
@@ -65,10 +65,9 @@ pub fn _MediaPlayer(props: Props) -> Element {
                                 arrow_position: ArrowPosition::Top,
                                 text: props.fullscreen_text.clone(),
                             }
-                        )),
+                        ),
                     },
                 )
-            )
         },
         div {
             id: "media-renderer",
@@ -130,7 +129,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.enable_camera_text.clone(),
                     }
-                )),
+                ),
             },
             Button {
                 icon: Icon::Window,
@@ -140,7 +139,7 @@ pub fn _MediaPlayer(props: Props) -> Element {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.screenshare_text.clone(),
                     }
-                )),
+                ),
                 // TODO: https://github.com/quadrupleslap/scrap
             },
             Button {
@@ -160,12 +159,12 @@ pub fn _MediaPlayer(props: Props) -> Element {
                         arrow_position: ArrowPosition::Bottom,
                         text: props.settings_text.clone(),
                     }
-                )),
+                ),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
                     router.replace(UplinkRoute::SettingsLayout {});
                 }
             },
         }
-    }))
+    })
 }

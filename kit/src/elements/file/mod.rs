@@ -55,7 +55,7 @@ pub fn get_file_extension(file_name: String) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn File<'a>(props: 'a, Props<'a>) -> Element {
+pub fn File<'a>(props: Props<'a>) -> Element {
     let file_extension = get_file_extension(props.text.clone());
     let file_name = props.text.clone();
     let file_name2 = file_name.clone();
@@ -70,7 +70,7 @@ pub fn File<'a>(props: 'a, Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     if loading {
-        rsx!(FileSkeletal {}))
+        rsx!(FileSkeletal {})
     } else {
         rsx!(
             div {
@@ -154,7 +154,7 @@ pub fn File<'a>(props: 'a, Props<'a>) -> Element {
                     }
                 ))
             }
-        ))
+        )
     }
 }
 
@@ -173,7 +173,7 @@ pub fn FileSkeletal() -> Element {
                 class: "skeletal skeletal-bar"
             }
         }
-    ))
+    )
 }
 
 #[cfg(test)]

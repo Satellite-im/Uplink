@@ -49,5 +49,5 @@ pub fn Switch<'a>(props: Props) -> Element {
             },
             span { class: "slider" }
         }
-    })
+    }
 }

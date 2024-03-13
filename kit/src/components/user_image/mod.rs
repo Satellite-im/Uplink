@@ -100,12 +100,12 @@ pub fn UserImage<'a>(props: Props<'a>) -> Element {
                 ))
             }
         )
-    }))
+    })
 }
 
 #[allow(non_snake_case)]
 pub fn UserImageLoading() -> Element {
     rsx!(div {
         class: "skeletal user-image-loading"
-    }))
+    })
 }

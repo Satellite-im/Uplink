@@ -11,23 +11,23 @@ use crate::utils::build_participants;
 
 #[derive(Props)]
 pub struct SearchProps<'a> {
-    search_typed_chars: UseRef<String>,
-    search_friends_is_focused: UseRef<bool>,
-    search_dropdown_hover: UseRef<bool>,
-    identities: UseState<Vec<identity_search_result::Entry>>,
-    friends_identities: UseState<Vec<Identity>>,
-    chats: UseState<Vec<Chat>>,
+    search_typed_chars: Signal<String>,
+    search_friends_is_focused: Signal<bool>,
+    search_dropdown_hover: Signal<bool>,
+    identities: Signal<Vec<identity_search_result::Entry>>,
+    friends_identities: Signal<Vec<Identity>>,
+    chats: Signal<Vec<Chat>>,
     onclick: EventHandler<identity_search_result::Identifier>,
 }
 
 pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    if props.identities.get().is_empty() || !*props.search_friends_is_focused.read() {
+    let state = use_context::<Signal<State>>();
+    if props.identities.read().is_empty() || !*props.search_friends_is_focused.read() {
         return None;
     }
 
-    let mut friends_identities = props.friends_identities.get().clone();
-    let chats = props.chats.get().clone();
+    let mut friends_identities = props.friends_identities.read().clone();
+    let chats = props.chats.read().clone();
 
     friends_identities.sort_by_key(|identity| identity.username());
 
@@ -290,5 +290,5 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                 )
             })
         }
-    ))
+    )
 }

@@ -23,11 +23,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Modal<'a>(props: Props<'a>) -> Element {
-    let transparent_class = if props.transparent {
-        "transparent"
-    } else {
-        ""
-    };
+    let transparent_class = if props.transparent { "transparent" } else { "" };
     let no_padding_class = if props.dont_pad.unwrap_or_default() {
         "no-padding"
     } else {
@@ -81,5 +77,5 @@ pub fn Modal<'a>(props: Props<'a>) -> Element {
                 &props.children
             }
         },
-    ))))
+    )))
 }

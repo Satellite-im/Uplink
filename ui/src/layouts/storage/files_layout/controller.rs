@@ -4,8 +4,9 @@ use common::{
     state::{storage::Storage, State},
     ROOT_DIR_NAME,
 };
+use dioxus::signals::Signal;
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_ref, UseRef, UseSharedState};
+use dioxus_hooks::use_signal;
 use uuid::Uuid;
 use warp::{constellation::directory::Directory, raygun::Location};
 
@@ -29,7 +30,7 @@ pub struct StorageController {
 }
 
 impl StorageController {
-    pub fn new<'a>(cx: &'a ScopeState, state: &'a UseSharedState<State>) -> &'a UseRef<Self> {
+    pub fn new<'a>(state: &'a Signal<State>) -> &'a Signal<Self> {
         let controller = Self {
             storage_state: None,
             directories_list: state.read().storage.directories.clone(),
@@ -105,23 +106,23 @@ impl StorageController {
 
 #[derive(PartialEq, Clone)]
 pub struct UploadFileController<'a> {
-    pub are_files_hovering_app: &'a UseRef<bool>,
-    pub files_been_uploaded: &'a UseRef<bool>,
-    pub files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
-    pub disable_cancel_upload_button: &'a UseRef<bool>,
+    pub are_files_hovering_app: Signal<bool>,
+    pub files_been_uploaded: Signal<bool>,
+    pub files_in_queue_to_upload: Signal<Vec<PathBuf>>,
+    pub disable_cancel_upload_button: Signal<bool>,
 }
 
 impl<'a> UploadFileController<'a> {
-    pub fn new(cx: &'a ScopeState, state: UseSharedState<State>) -> Self {
+    pub fn new(state: Signal<State>) -> Self {
         Self {
-            are_files_hovering_app: use_ref(cx, || false),
-            files_been_uploaded: use_ref(cx, || {
+            are_files_hovering_app: use_signal(|| false),
+            files_been_uploaded: use_signal(|| {
                 !state.read().storage.files_in_queue_to_upload.is_empty()
             }),
-            files_in_queue_to_upload: use_ref(cx, || {
+            files_in_queue_to_upload: use_signal(|| {
                 state.read().storage.files_in_queue_to_upload.clone()
             }),
-            disable_cancel_upload_button: use_ref(cx, || false),
+            disable_cancel_upload_button: use_signal(|| false),
         }
     }
 }

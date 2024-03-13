@@ -31,14 +31,14 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
+pub fn CreateGroup<'a>(props: Props<'a>) -> Element {
     log::trace!("rendering create_group");
-    let state = use_shared_state::<State>(cx)?;
-    let router = use_navigator(cx);
-    let friend_prefix = use_state(cx, String::new);
-    let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let group_name = use_state(cx, || Some(String::new()));
+    let state = use_context::<Signal<State>>();
+    let router = use_navigator();
+    let friend_prefix = use_signal(|| String::new);
+    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
+    let group_name = use_signal(|| Some(String::new()));
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -47,7 +47,7 @@ pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
             .map(|id| (id.did_key(), id.clone())),
     );
 
-    if let Some(id) = *chat_with.get() {
+    if let Some(id) = *chat_with.read() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -59,7 +59,7 @@ pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
     // the leading underscore is to pass this to a prop named "friends"
     let _friends = State::get_friends_by_first_letter(friends_list);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<()>| {
         to_owned![selected_friends, chat_with, group_name];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -186,18 +186,18 @@ pub fn CreateGroup<'a>(props: 'a, Props<'a>) -> Element {
                 }
             }
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
 pub struct FriendsProps {
     friends: BTreeMap<char, Vec<Identity>>,
-    name_prefix: UseState<String>,
-    selected_friends: UseState<HashSet<DID>>,
+    name_prefix: Signal<String>,
+    selected_friends: Signal<HashSet<DID>>,
 }
 
 fn render_friends(props: FriendsProps) -> Element {
-    let name_prefix = props.name_prefix.get();
+    let name_prefix = props.name_prefix.read();
     rsx!(
         div {
             class: "friend-list vertically-scrollable",
@@ -228,21 +228,20 @@ fn render_friends(props: FriendsProps) -> Element {
                 }
             ),
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
 pub struct FriendProps {
     friend: Identity,
-    selected_friends: UseState<HashSet<DID>>,
+    selected_friends: Signal<HashSet<DID>>,
 }
 fn render_friend(props: FriendProps) -> Element {
-    let is_checked = use_state(cx, || false);
-    if !*is_checked.current()
-        && cx
-            .props
+    let is_checked = use_signal(|| false);
+    if !*is_checked.read()
+        && props
             .selected_friends
-            .current()
+            .read()
             .contains(&props.friend.did_key())
     {
         is_checked.set(true);
@@ -294,5 +293,5 @@ fn render_friend(props: FriendProps) -> Element {
                 }
             }
         }
-    ))
+    )
 }

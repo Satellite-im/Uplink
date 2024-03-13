@@ -12,9 +12,8 @@ use super::SendFilesStartLocation;
 
 #[component]
 pub fn FileCheckbox(
-    props: 'a,
     file_path: String,
-    storage_controller: UseRef<StorageController>,
+    storage_controller: Signal<StorageController>,
     is_selecting_files: bool,
 ) -> Element {
     if *is_selecting_files {
@@ -32,50 +31,49 @@ pub fn FileCheckbox(
                 }),
                 on_click: move |_| {}
             }
-        },));
+        });
     }
     None
 }
 
 #[component]
 pub fn SendFilesTopbar<'a>(
-    props: 'a,
-    send_files_from_storage_state: UseState<bool>,
+    send_files_from_storage_state: Signal<bool>,
     send_files_start_location: SendFilesStartLocation,
-    storage_controller: UseRef<StorageController>,
+    storage_controller: Signal<StorageController>,
     on_send: EventHandler<Vec<Location>>,
     in_files: bool,
 ) -> Element {
-    let router = use_navigator(cx);
+    let router = use_navigator();
 
     return rsx! (
-            div {
-                class: "send-files-button",
-                Button {
-                    text: get_local_text("files.go-to-files"),
-                    icon: Icon::FolderPlus,
-                    aria_label: "go_to_files_btn".into(),
-                    appearance: Appearance::Secondary,
-                    onpress: move |_| {
-                        if send_files_start_location.eq(&SendFilesStartLocation::Storage) {
-                            send_files_from_storage_state.set(false);
-                        } else {
-                            router.replace(UplinkRoute::FilesLayout {});
-                        }
-                    },
-                },
-                Button {
-                    text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE))]),
-                    aria_label: "send_files_modal_send_button".into(),
-                    disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || (*in_files && f.chats_selected_to_send.is_empty())),
-                    appearance: Appearance::Primary,
-                    icon: Icon::ChevronRight,
-                    onpress: move |_| {
-                        on_send.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
+        div {
+            class: "send-files-button",
+            Button {
+                text: get_local_text("files.go-to-files"),
+                icon: Icon::FolderPlus,
+                aria_label: "go_to_files_btn".into(),
+                appearance: Appearance::Secondary,
+                onpress: move |_| {
+                    if send_files_start_location.eq(&SendFilesStartLocation::Storage) {
+                        send_files_from_storage_state.set(false);
+                    } else {
+                        router.replace(UplinkRoute::FilesLayout {});
                     }
                 },
-            }
-        ));
+            },
+            Button {
+                text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE))]),
+                aria_label: "send_files_modal_send_button".into(),
+                disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || (*in_files && f.chats_selected_to_send.is_empty())),
+                appearance: Appearance::Primary,
+                icon: Icon::ChevronRight,
+                onpress: move |_| {
+                    on_send.call(storage_controller.with(|f| f.files_selected_to_send.clone()));
+                }
+            },
+        }
+    );
 }
 
 pub fn toggle_selected_file(storage_controller: UseRef<StorageController>, file_path: String) {

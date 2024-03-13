@@ -13,42 +13,40 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn CommunityCard<'a>(props: Props<'a>) -> Element {
-    
-        rsx!(
+    rsx!(
+        div {
+            class: "community-card",
             div {
-                class: "community-card",
+                class: "header",
                 div {
-                    class: "header",
-                    div {
-                        class: "icon",
-                        img {
-                            src: "https://avatars.githubusercontent.com/u/5470909?s=200&v=4",
-                            alt: "Community icon"
-                        }
-                    }
-                    div {
-                        class: "title",
-                        h1 { props.name.clone() }
-                    }
-                    div {
-                        class: "subtitle",
-                        p {
-                            get_local_text("community.invited")
-                        },
+                    class: "icon",
+                    img {
+                        src: "https://avatars.githubusercontent.com/u/5470909?s=200&v=4",
+                        alt: "Community icon"
                     }
                 }
                 div {
-                    class: "body",
-                    Button {
-                        text: if props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), props.name) },
-                        appearance: if props.joined { Appearance::Secondary } else { Appearance::Primary },
-                        icon: if props.joined { Icon::Check } else { Icon::ArrowRight },
-                        onpress: |_| {
-                            props.onjoin.call(());
-                        }
+                    class: "title",
+                    h1 { props.name.clone() }
+                }
+                div {
+                    class: "subtitle",
+                    p {
+                        get_local_text("community.invited")
+                    },
+                }
+            }
+            div {
+                class: "body",
+                Button {
+                    text: if props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), props.name) },
+                    appearance: if props.joined { Appearance::Secondary } else { Appearance::Primary },
+                    icon: if props.joined { Icon::Check } else { Icon::ArrowRight },
+                    onpress: |_| {
+                        props.onjoin.call(());
                     }
                 }
             }
-        )
+        }
     )
 }

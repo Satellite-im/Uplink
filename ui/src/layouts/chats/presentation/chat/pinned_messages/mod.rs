@@ -35,23 +35,23 @@ pub enum ChannelCommand {
         conversation_id: Uuid,
         message_id: Uuid,
         message_date: DateTime<Utc>,
-        show_pinned: UseState<bool>,
+        show_pinned: Signal<bool>,
     },
 }
 
 #[derive(Props, PartialEq)]
 pub struct Props {
-    show_pinned: UseState<bool>,
+    show_pinned: Signal<bool>,
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessages(props: '_, Props) -> Element<'_> {
+pub fn PinnedMessages(props: Props) -> Element<'_> {
     log::trace!("rendering pinned_messages");
-    let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let chat_data = use_context::<Signal<ChatData>> - ();
     let minimal = state.read().ui.metadata.minimal_view;
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChannelCommand>| {
         to_owned![chat_data, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -173,7 +173,7 @@ pub fn PinnedMessages(props: '_, Props) -> Element<'_> {
                 }))
             }
         }
-    }))
+    })
 }
 
 #[derive(Props)]
@@ -188,8 +188,8 @@ pub struct PinnedMessageProp<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessage<'a>(props: 'a, PinnedMessageProp<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
     let message = &props.message;
     let attachments = message.attachments();
 
@@ -287,5 +287,5 @@ pub fn PinnedMessage<'a>(props: 'a, PinnedMessageProp<'a>) -> Element {
                 })
             }
         }
-    ))
+    )
 }

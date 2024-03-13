@@ -26,5 +26,5 @@ pub fn Loader(props: Props) -> Element {
             class: "spin",
             IconElement { icon: Icon::Loader }
         }
-    }))
+    })
 }

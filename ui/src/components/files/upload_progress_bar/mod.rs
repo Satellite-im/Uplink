@@ -110,9 +110,9 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn UploadProgressBar<'a>(props: Props) -> Element {
     let are_files_hovering_app = props.are_files_hovering_app.clone();
-    let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
-    let called_drag_and_drop_function: &UseRef<bool> = use_ref(cx, || false);
-    let window = use_window(cx);
+    let files_ready_to_upload: Signal<Vec<PathBuf>> = use_signal(|| Vec::new);
+    let called_drag_and_drop_function: Signal<bool> = use_signal(|| false);
+    let window = use_window();
 
     if *props.are_files_hovering_app.read() && !*called_drag_and_drop_function.read() {
         *called_drag_and_drop_function.write_silent() = true;
@@ -137,9 +137,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
 
     if files_ready_to_upload.with(|i| !i.is_empty()) {
         *props.files_been_uploaded.write_silent() = true;
-        props
-            .on_update
-            .call(files_ready_to_upload.read().clone());
+        props.on_update.call(files_ready_to_upload.read().clone());
         *files_ready_to_upload.write_silent() = Vec::new();
     }
 
@@ -214,7 +212,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
                 }
 
             },
-        ));
+        );
     }
 
     if !*props.are_files_hovering_app.read() {
@@ -231,7 +229,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
                         aria_label: "upload-file-count",
                     }
                 },
-    ))
+    )
 }
 
 fn count_files_to_show(files_to_upload_len: usize) -> String {

@@ -52,5 +52,5 @@ pub fn Tooltip(props: Props) -> Element {
             },
             span { aria_label: "tooltip-text", class: "tooltip-text", "{text}" }
         }
-    })
+    }
 }

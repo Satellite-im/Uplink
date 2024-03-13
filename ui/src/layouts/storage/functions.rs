@@ -7,7 +7,10 @@ use common::{
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
 };
-use dioxus::prelude::{use_eval, EvalError, UseEval};
+use dioxus::{
+    prelude::{use_eval, EvalError, UseEval},
+    signals::{Readable, Signal},
+};
 use dioxus_core::ScopeState;
 #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
@@ -42,8 +45,8 @@ static ALLOW_FOLDER_NAVIGATION: &str = r#"
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub fn run_verifications_and_update_storage(
-    state: &UseSharedState<State>,
-    controller: &UseRef<StorageController>,
+    state: &Signal<State>,
+    controller: &Signal<StorageController>,
     files_in_queue_to_upload: Vec<PathBuf>,
 ) {
     let files_in_queue_to_upload_list = files_in_queue_to_upload;
@@ -235,9 +238,8 @@ pub enum ChanCmd {
 }
 
 pub fn init_coroutine<'a>(
-    cx: &'a ScopeState,
-    controller: &'a UseRef<StorageController>,
-    state: &'a UseSharedState<State>,
+    controller: Signal<StorageController>,
+    state: &'a Signal<State>,
 ) -> &'a Coroutine<ChanCmd> {
     let download_queue = download_stream_handler();
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
@@ -502,7 +504,7 @@ pub fn start_upload_file_listener(
                             continue;
                         }
                     }
-                    UploadFileAction::SizeNotAvailable(file_name, _) => {
+                    UploadFileAction::SizeNotAvailable(file_name) => {
                         if !files_in_queue_to_upload.read().is_empty() {
                             files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
@@ -524,7 +526,7 @@ pub fn start_upload_file_listener(
                                 ),
                             ));
                     }
-                    UploadFileAction::Starting(filename, _, _) => {
+                    UploadFileAction::Starting(filenam) => {
                         *files_been_uploaded.write_silent() = true;
                         upload_progress_bar::update_filename(&window, filename);
                         sleep(Duration::from_millis(500)).await;
@@ -566,7 +568,7 @@ pub fn start_upload_file_listener(
                         upload_progress_bar::change_progress_percentage(&window, progress.clone());
                         upload_progress_bar::change_progress_description(&window, msg);
                     }
-                    UploadFileAction::Finishing(file, finish, _) => {
+                    UploadFileAction::Finishing(file, finish) => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty()
                             && (finish || files_in_queue_to_upload.read().len() > 1)

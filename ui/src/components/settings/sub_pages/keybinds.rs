@@ -64,7 +64,7 @@ pub fn Keybind(props: KeybindProps) -> Element {
         })
     });
 
-    rsx!(keys_rendered))
+    rsx!(keys_rendered)
 }
 
 #[derive(PartialEq, Props)]
@@ -89,19 +89,19 @@ pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, S
 }
 
 pub fn KeybindSection(props: KeybindSectionProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let keybind_section_id = props.id.clone();
-    let is_recording = use_state(cx, || false);
-    let update_keybind = use_ref(cx, || None);
-    let system_shortcut = Shortcut::get_system_shortcut(state, props.shortcut.clone());
-    let new_keybind_has_one_key = use_ref(cx, || false);
-    let new_keybind_has_at_least_one_modifier = use_ref(cx, || false);
+    let is_recording = use_signal(|| false);
+    let update_keybind = use_signal(|| None);
+    let system_shortcut = Shortcut::get_system_shortcut(&state, props.shortcut.clone());
+    let new_keybind_has_one_key = use_signal(|| false);
+    let new_keybind_has_at_least_one_modifier = use_signal(|| false);
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    if update_keybind.read().is_some() && !is_recording.get() {
+    if update_keybind.read().is_some() && !is_recording.read() {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
         state
-            .write_silent()
+            .write()
             .settings
             .keybinds
             .retain(|(gs, _)| *gs != props.shortcut);
@@ -113,41 +113,35 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                 system_shortcut,
             },
         ));
-        *update_keybind.write_silent() = None;
+        *update_keybind.write() = None;
     }
 
-    let bindings = cx
-        .props
+    let bindings = props
         .bindings
         .iter()
         .find(|(gs, _)| *gs == props.shortcut)
         .map(|(_, sc)| sc.get_keys_and_modifiers_as_string())
         .unwrap_or_default();
 
-    let sc = cx
-        .props
+    let sc = props
         .bindings
         .iter()
         .find(|(gs, _)| *gs == props.shortcut)
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
-    let recorded_bindings = use_state(cx, Vec::new);
+    let recorded_bindings = use_signal(|| Vec::new);
 
-    let eval = use_eval(cx);
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
     let keybind_section_id_clone = keybind_section_id.clone();
 
-    use_effect(cx, is_recording, |is_recording| {
-        to_owned![eval];
-        async move {
-            if *is_recording {
-                let unfocus_script =
-                    UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
-                let _ = eval(&unfocus_script);
-            };
-        }
+    use_effect(|| async move {
+        if *is_recording {
+            let unfocus_script =
+                UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
+            let _ = eval(&unfocus_script);
+        };
     });
 
     let mut keybind_class = "keybind-section-keys".to_owned();
@@ -189,7 +183,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                     is_recording.set(true);
                 },
                 onkeydown: move |evt| {
-                    // println!("evt: {:?}", evt); 
+                    // println!("evt: {:?}", evt);
 
                     if evt.data.code() == Code::Escape {
                         is_recording.set(false);
@@ -230,7 +224,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                                 arrow_position: ArrowPosition::Top,
                                 text: get_local_text("settings-keybinds.conflicting-keybinds")
                             }
-                        )),
+                        ),
                         Keybind {
                             keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
                         }
@@ -255,21 +249,20 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                         arrow_position: ArrowPosition::Right,
                         text: get_local_text("settings-keybinds.reset")
                     }
-                )),
+                ),
             },
         }
-    ))
+    )
 }
 
 #[allow(non_snake_case)]
 pub fn KeybindSettings() -> Element {
-    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let bindings = state.read().settings.keybinds.clone();
     let state2 = state.clone();
     let state3 = state.clone();
 
     use_component_lifecycle(
-        cx,
         move || {
             state2.write().mutate(Action::PauseGlobalKeybinds(true));
         },
@@ -357,7 +350,7 @@ pub fn KeybindSettings() -> Element {
                 shortcut: GlobalShortcut::SetAppVisible
             }
         }
-    ))
+    )
 }
 
 fn return_string_from_modifier(modifiers: Modifiers) -> Vec<String> {

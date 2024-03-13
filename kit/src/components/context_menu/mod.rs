@@ -35,7 +35,7 @@ pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
+pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
     let should_render = props.should_render.unwrap_or(true);
 
     if !should_render {
@@ -77,7 +77,7 @@ pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
                 }
                 children
             }
-        ))
+        )
     } else {
         rsx!(
             div {
@@ -115,7 +115,7 @@ pub fn ContextItem<'a>(props: 'a, ItemProps<'a>) -> Element {
                     })
                 }
             }
-        ))
+        )
     }
 }
 
@@ -156,7 +156,7 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
                 }
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -171,16 +171,16 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextMenu<'a>(props: 'a, Props<'a>) -> Element {
+pub fn ContextMenu<'a>(props: Props<'a>) -> Element {
     let id = &props.id;
-    let window = use_window(cx);
+    let window = use_window();
 
     let devmode = props.devmode.unwrap_or(false);
     let with_click = props.left_click_trigger.unwrap_or_default();
 
     // Handles the hiding and showing of the context menu
-    let eval = use_eval(cx);
-    use_effect(cx, (id,), |(id,)| {
+    let eval = use_eval();
+    use_effect(|(id,)| {
         to_owned![eval, with_click];
         async move {
             let script = include_str!("./context.js")
@@ -219,5 +219,5 @@ pub fn ContextMenu<'a>(props: 'a, Props<'a>) -> Element {
                 ))
             },
         },
-    })
+    }
 }

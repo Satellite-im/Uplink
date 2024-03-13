@@ -21,13 +21,13 @@ use warp::raygun::Location;
 
 #[derive(Props)]
 pub struct FilesBreadcumbsProps<'a> {
-    storage_controller: &'a UseRef<StorageController>,
+    storage_controller: &'a Signal<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesBreadcumbs<'a>(props: 'a, FilesBreadcumbsProps<'a>) -> Element {
+pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
     let ch = props.ch;
@@ -72,20 +72,20 @@ pub fn FilesBreadcumbs<'a>(props: 'a, FilesBreadcumbsProps<'a>) -> Element {
                 },)
             }
         })
-    },))
+    },)
 }
 
 #[derive(Props)]
 pub struct FilesAndFoldersProps<'a> {
-    storage_controller: &'a UseRef<StorageController>,
+    storage_controller: &'a Signal<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
     on_click_share_files: Option<EventHandler<Vec<Location>>>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
     let ch = props.ch;
@@ -153,7 +153,7 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
                                     ch.send(ChanCmd::DeleteItems(item));
                                 }
                             },
-                        )),
+                        ),
                         Folder {
                             key: "{key}-folder",
                             text: dir.name(),
@@ -251,7 +251,7 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
                                     }
                                 },)
                             }
-                        )),
+                        ),
                         div {
                             class: "file-wrap",
                             FileCheckbox {
@@ -332,5 +332,5 @@ pub fn FilesAndFolders<'a>(props: 'a, FilesAndFoldersProps<'a>) -> Element {
                 }
             }),
         },
-    }))
+    })
 }

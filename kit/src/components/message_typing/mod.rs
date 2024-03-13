@@ -51,5 +51,5 @@ pub fn MessageTyping(props: Props) -> Element {
                 }
             }
         }
-    ))
+    )
 }

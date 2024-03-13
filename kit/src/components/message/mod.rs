@@ -357,7 +357,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                 )
             })
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -384,7 +384,7 @@ fn EditMsg<'a>(props: EditProps<'a>) -> Element {
                 props.on_enter.call(props.text.clone());
             }
         }
-    }))
+    })
 }
 
 #[derive(Props)]
@@ -403,7 +403,7 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
     if props.text.len() > 2 {
         if let Ok(id) = DID::from_str(&props.text) {
-            return rsx!(IdentityMessage { id: id }));
+            return rsx!(IdentityMessage { id: id });
         }
     }
 
@@ -434,9 +434,9 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
                     link: l.to_string(),
                     remote: props.remote
                 })
-            ))
+            )
         }
-    ))
+    )
 }
 
 pub fn format_text(
@@ -679,7 +679,7 @@ pub struct IdentityMessageProps {
 pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let identity = use_state(cx, || None);
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<IdentityCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<IdentityCmd>| {
         to_owned![identity, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -737,12 +737,16 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
             }
         }
     });
-    use_effect(cx, &props.id, |id| {
+
+    let did = use_signal(|| props.id.clone());
+
+    use_effect(|| {
         to_owned![ch];
         async move {
-            ch.send(IdentityCmd::GetIdentity(id));
+            ch.send(IdentityCmd::GetIdentity(did.read()));
         }
     });
+
     match identity.as_ref() {
         Some(identity) => {
             let disabled = state
@@ -767,118 +771,116 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
             let short_name = format!("{}#{}", username, short_id);
             let random_uuid = Uuid::new_v4().to_string();
 
-            return rsx!(
-                ContextMenu {
-                    key: "{short_id}-{random_uuid}",
-                    id: format!("{short_id}-{random_uuid}"),
-                    devmode: state.read().configuration.developer.developer_mode,
-                    items: rsx!(
-                        ContextItem {
-                            icon: Icon::UserCircle,
-                            aria_label: "copy-user-id-from-user-identity-on-chat".into(),
-                            text: get_local_text("settings-profile.copy-id"),
-                            onpress: move |_| {
-                                match Clipboard::new() {
-                                    Ok(mut c) => {
-                                        if let Err(e) = c.set_text(short_name.clone()) {
-                                            log::warn!("Unable to set text to clipboard: {e}");
-                                        }
-                                    },
-                                    Err(e) => {
-                                        log::warn!("Unable to create clipboard reference: {e}");
+            return rsx!(ContextMenu {
+                key: "{short_id}-{random_uuid}",
+                id: format!("{short_id}-{random_uuid}"),
+                devmode: state.read().configuration.developer.developer_mode,
+                items: rsx!(
+                    ContextItem {
+                        icon: Icon::UserCircle,
+                        aria_label: "copy-user-id-from-user-identity-on-chat".into(),
+                        text: get_local_text("settings-profile.copy-id"),
+                        onpress: move |_| {
+                            match Clipboard::new() {
+                                Ok(mut c) => {
+                                    if let Err(e) = c.set_text(short_name.clone()) {
+                                        log::warn!("Unable to set text to clipboard: {e}");
                                     }
-                                };
-                                state
-                                    .write()
-                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                        "".into(),
-                                        get_local_text("friends.copied-did"),
-                                        None,
-                                        2,
-                                    )));
-                            }
-                        },
-                        ContextItem {
-                            icon: Icon::Key,
-                            aria_label: "copy-user-did-key-from-user-identity-on-chat".into(),
-                            disabled: false,
-                            text: get_local_text("settings-profile.copy-did"),
-                            onpress: move |_| {
-                                match Clipboard::new() {
-                                    Ok(mut c) => {
-                                        if let Err(e) = c.set_text(did_key.to_string()) {
-                                            log::warn!("Unable to set text to clipboard: {e}");
-                                        }
-                                    },
-                                    Err(e) => {
-                                        log::warn!("Unable to create clipboard reference: {e}");
-                                    }
-                                };
-                                state
-                                    .write()
-                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                        "".into(),
-                                        get_local_text("friends.copied-did"),
-                                        None,
-                                        2,
-                                    )));
-                            },
-                            tooltip: None,
-                        }
-                    )),
-                   children: rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
-                        class: "embed-identity",
-                        IdentityHeader {
-                            sender_did: identity.did_key(),
-                            with_status: false,
-                        },
-                        div {
-                            class: "profile-container",
-                            div {
-                                id: "profile-name",
-                                aria_label: "profile-name",
-                                p {
-                                    class: "text",
-                                    aria_label: "profile-name-value",
-                                    format!("{}", identity.username())
                                 }
-                            }
-                            identity.status_message().and_then(|s|{
-                                rsx!(
-                                    div {
-                                        id: "profile-status",
-                                        aria_label: "profile-status",
-                                        p {
-                                            class: "text",
-                                            aria_label: "profile-status-value",
-                                            s
-                                        }
-                                    }
-                                ))
-                            }),
-                        },
-                        Button {
-                            aria_label: String::from("embed-identity-button"),
-                            disabled: disabled,
-                            with_title: false,
-                            onpress: move |_| {
-                                ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
-                            },
-                            icon: if disabled {
-                                Icon::Check
-                            } else {
-                                Icon::Plus
-                            },
-                            text: if disabled {
-                                get_local_text("friends.already-friends")
-                            } else {
-                                get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
-                            },
-                            appearance: crate::elements::Appearance::Primary
+                                Err(e) => {
+                                    log::warn!("Unable to create clipboard reference: {e}");
+                                }
+                            };
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("friends.copied-did"),
+                                    None,
+                                    2,
+                                ),
+                            ));
                         }
-                    }))
-                }
-            ));
+                    },
+                    ContextItem {
+                        icon: Icon::Key,
+                        aria_label: "copy-user-did-key-from-user-identity-on-chat".into(),
+                        disabled: false,
+                        text: get_local_text("settings-profile.copy-did"),
+                        onpress: move |_| {
+                            match Clipboard::new() {
+                                Ok(mut c) => {
+                                    if let Err(e) = c.set_text(did_key.to_string()) {
+                                        log::warn!("Unable to set text to clipboard: {e}");
+                                    }
+                                }
+                                Err(e) => {
+                                    log::warn!("Unable to create clipboard reference: {e}");
+                                }
+                            };
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("friends.copied-did"),
+                                    None,
+                                    2,
+                                ),
+                            ));
+                        },
+                        tooltip: None,
+                    }
+                ),
+                children: rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
+                    class: "embed-identity",
+                    IdentityHeader {
+                        sender_did: identity.did_key(),
+                        with_status: false,
+                    },
+                    div {
+                        class: "profile-container",
+                        div {
+                            id: "profile-name",
+                            aria_label: "profile-name",
+                            p {
+                                class: "text",
+                                aria_label: "profile-name-value",
+                                format!("{}", identity.username())
+                            }
+                        }
+                        identity.status_message().and_then(|s|{
+                            rsx!(
+                                div {
+                                    id: "profile-status",
+                                    aria_label: "profile-status",
+                                    p {
+                                        class: "text",
+                                        aria_label: "profile-status-value",
+                                        s
+                                    }
+                                }
+                            )
+                        }),
+                    },
+                    Button {
+                        aria_label: String::from("embed-identity-button"),
+                        disabled: disabled,
+                        with_title: false,
+                        onpress: move |_| {
+                            ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
+                        },
+                        icon: if disabled {
+                            Icon::Check
+                        } else {
+                            Icon::Plus
+                        },
+                        text: if disabled {
+                            get_local_text("friends.already-friends")
+                        } else {
+                            get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                        },
+                        appearance: crate::elements::Appearance::Primary
+                    }
+                })
+            });
         }
         None => {
             return rsx!(div {
@@ -904,7 +906,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         }
                     }
                 }
-            }))
+            })
         }
     }
 }

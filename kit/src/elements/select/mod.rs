@@ -42,7 +42,7 @@ fn remove_duplicates_fancy(values: Vec<(String, Element<'_>)>) -> Vec<(String, E
 }
 
 #[allow(non_snake_case)]
-pub fn Select<'a>(props: 'a, Props<'a>) -> Element {
+pub fn Select<'a>(props: Props<'a>) -> Element {
     let initial_value = props.initial_value.clone();
     let mut options = remove_duplicates(props.options.clone());
     options.retain(|value| value != &initial_value);
@@ -63,7 +63,7 @@ pub fn Select<'a>(props: 'a, Props<'a>) -> Element {
                 )
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -79,7 +79,7 @@ pub struct FancySelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FancySelect<'a>(props: 'a, FancySelectProps<'a>) -> Element {
+pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
     let (initial_value, initial_element) = props.initial_value.clone();
     let mut options = remove_duplicates_fancy(props.options.clone());
     if props.current_to_top.unwrap_or_default() {
@@ -137,5 +137,5 @@ pub fn FancySelect<'a>(props: 'a, FancySelectProps<'a>) -> Element {
                 })
             }
         }
-    ))
+    )
 }

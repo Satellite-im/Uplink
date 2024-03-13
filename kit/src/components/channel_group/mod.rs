@@ -51,5 +51,5 @@ pub fn ChannelGroupElement(props: Props<'a>) -> Element {
                 })
             }
         }
-    ))
+    )
 }

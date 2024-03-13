@@ -46,7 +46,7 @@ fn is_supported(unicode_version: UnicodeVersion) -> bool {
 }
 
 #[component(no_case_check)]
-fn build_nav(props: '_) -> Element<'_> {
+fn build_nav() -> Element<'_> {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",
@@ -136,7 +136,7 @@ fn build_nav(props: '_) -> Element<'_> {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
             let _ = eval(&scroll_script);
         }
-    }))
+    })
 }
 
 #[derive(Debug)]
@@ -145,7 +145,7 @@ enum Command {
 }
 
 #[component(no_case_check)]
-fn render_selector<'a>( mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
+fn render_selector<'a>(mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_selector = use_ref(cx, || false);
     let emoji_suggestions = use_state(cx, Vec::new);
@@ -157,7 +157,7 @@ fn render_selector<'a>( mouse_over_emoji_button: UseRef<bool>, nav: Element) -> 
             emoji_selector.focus();
         "#;
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Command>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<Command>| {
         to_owned![state];
         async move {
             let warp_cmd_tx = state.read().get_warp_ch();
@@ -292,18 +292,18 @@ fn render_selector<'a>( mouse_over_emoji_button: UseRef<bool>, nav: Element) -> 
             nav
         },
         script { focus_script },
-    ))
+    )
 }
 
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
 #[component(no_case_check)]
-fn render_1( _unused: bool) -> Element {
+fn render_1(_unused: bool) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
     log::debug!("vis {}", visible);
 
-    use_effect(cx, (), |_| {
+    use_effect(|| {
         to_owned![state];
         async move {
             state.write_silent().ui.emojis.register_emoji_filter(
@@ -328,7 +328,7 @@ fn render_1( _unused: bool) -> Element {
 
     rsx! (
         // If enabled, render the selector popup.
-        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{}))})),
+        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{})}),
         div {
             onmouseenter: |_| {
                 *mouse_over_emoji_button.write_silent() = true;
@@ -367,7 +367,7 @@ impl Extension for EmojiSelector {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
+    fn render<'a>(&self, runtime: std::rc::Rc<Runtime>) -> Element {
         use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
         rsx!(
@@ -375,16 +375,11 @@ impl Extension for EmojiSelector {
             rsx!(
                render_1{_unused: true}
             )
-        ))
+        )
     }
 }
 
-fn select_emoji_to_send(
-    
-    state: &UseSharedState<State>,
-    emoji: String,
-    ch: &Coroutine<Command>,
-) {
+fn select_emoji_to_send(state: &UseSharedState<State>, emoji: String, ch: &Coroutine<Command>) {
     let destination = state
         .read()
         .ui

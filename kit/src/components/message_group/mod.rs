@@ -48,7 +48,7 @@ pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
                 &props.user_image
             ))
         }
-    ))
+    )
 }
 
 #[derive(PartialEq, Props)]
@@ -94,5 +94,5 @@ pub fn MessageGroupSkeletal(props: SkeletalProps) -> Element {
                 }
             }
         }
-    ))
+    )
 }

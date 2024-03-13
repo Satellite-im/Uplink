@@ -7,6 +7,10 @@ use common::{
     WARP_CMD_CH,
 };
 
+use dioxus::{
+    events::eval,
+    signals::{Readable, Signal},
+};
 use dioxus_core::ScopeState;
 use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseSharedState};
 use futures::{channel::oneshot, pin_mut, StreamExt};
@@ -25,13 +29,11 @@ use crate::{
 use super::{DownloadTracker, MessagesCommand};
 
 pub fn handle_msg_scroll(
-    
-    eval_provider: &crate::utils::EvalProvider,
-    chat_data: &UseSharedState<ChatData>,
-    scroll_btn: &UseSharedState<ScrollBtn>,
+    chat_data: &Signal<ChatData>,
+    scroll_btn: &Signal<ScrollBtn>,
 ) -> Coroutine<()> {
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![eval_provider, chat_data, scroll_btn];
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<()>| {
+        to_owned![chat_data, scroll_btn];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
 
@@ -49,23 +51,20 @@ pub fn handle_msg_scroll(
                     let behavior = chat_data.read().get_chat_behavior(conv_id);
 
                     // init the scroll button
-                    if let Ok(eval) = eval_provider(scripts::READ_SCROLL) {
-                        if let Ok(result) = eval.join().await {
-                            let scroll = result.as_i64().unwrap_or_default();
-                            chat_data.write_silent().set_scroll_value(conv_id, scroll);
+                    let eval_result = eval(scripts::READ_SCROLL);
+                    if let Ok(result) = eval_result.join().await {
+                        let scroll = result.as_i64().unwrap_or_default();
+                        chat_data.write_silent().set_scroll_value(conv_id, scroll);
 
-                            if (scroll < -100
-                                || behavior.on_scroll_end != data::ScrollBehavior::DoNothing)
-                                && !scroll_btn.read().get(conv_id)
-                            {
-                                log::debug!("triggering scroll button");
-                                scroll_btn.write().set(conv_id);
-                            } else if scroll >= -100 && scroll_btn.read().get(conv_id) {
-                                scroll_btn.write().clear(conv_id);
-                            }
+                        if (scroll < -100
+                            || behavior.on_scroll_end != data::ScrollBehavior::DoNothing)
+                            && !scroll_btn.read().get(conv_id)
+                        {
+                            log::debug!("triggering scroll button");
+                            scroll_btn.write().set(conv_id);
+                        } else if scroll >= -100 && scroll_btn.read().get(conv_id) {
+                            scroll_btn.write().clear(conv_id);
                         }
-                    } else {
-                        log::error!("failed to init scroll button");
                     }
 
                     chat_data
@@ -350,11 +349,10 @@ pub fn handle_msg_scroll(
 }
 
 pub fn fetch_later_ch(
-    
-    chat_data: &UseSharedState<data::ChatData>,
-    scroll_btn: &UseSharedState<ScrollBtn>,
+    chat_data: Signal<data::ChatData>,
+    scroll_btn: Signal<ScrollBtn>,
 ) -> Coroutine<Uuid> {
-    use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+    use_coroutine(|mut rx: UnboundedReceiver<Uuid>| {
         to_owned![chat_data, scroll_btn];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -438,12 +436,11 @@ pub fn fetch_later_ch(
 }
 
 pub fn handle_warp_commands(
-    
-    state: &UseSharedState<State>,
-    pending_downloads: &UseSharedState<DownloadTracker>,
+    state: &Signal<State>,
+    pending_downloads: &Signal<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
-    let download_streams = download_stream_handler(cx);
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
+    let download_streams = download_stream_handler();
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<MessagesCommand>| {
         to_owned![state, pending_downloads, download_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();

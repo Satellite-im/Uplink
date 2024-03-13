@@ -118,5 +118,5 @@ pub fn Indicator(props: Props) -> Element {
             icon: icon,
             class: "{props.platform.to_string()}"
         }
-    }))
+    })
 }

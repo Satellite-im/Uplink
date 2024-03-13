@@ -35,5 +35,5 @@ pub fn MessageDivider(props: Props) -> Element {
                 }
             }
         }
-    ))
+    )
 }

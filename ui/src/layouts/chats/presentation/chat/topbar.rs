@@ -38,11 +38,11 @@ enum EditGroupCmd {
 }
 
 pub fn get_topbar_children(props: ChatProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let chat_data = use_context::<Signal<ChatData>>();
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<EditGroupCmd>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         while let Some(cmd) = rx.next().await {
             match cmd {
@@ -89,15 +89,14 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                     },
                 }
             }
-        ));
+        );
     }
 
     let conversation_title = data
         .active_chat
         .conversation_name()
         .unwrap_or(data.active_chat.other_participants_names());
-    let show_group_list = cx
-        .props
+    let show_group_list = props
         .show_group_users
         .get()
         .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
@@ -191,7 +190,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                     )}
                     // TODO: `Delete` item
                 )}
-            )),
+            ),
             div {
                 class: "user-info",
                 aria_label: "user-info",
@@ -254,5 +253,5 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                 )}
             }
         }
-    ))
+    )
 }
