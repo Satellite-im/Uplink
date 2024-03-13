@@ -10,7 +10,7 @@ dioxus-html = { workspace = true }
 
 [build-dependencies]
 heck = "~0.4"
-itertools = "~0.10"
-scraper = "~0.12"
+itertools = "~0.12"
+scraper = "~0.19"
 walkdir = "~2"
 
