@@ -57,18 +57,11 @@
     color: var(--text-color-dark);
 }
 
-.progress-bar-filename-container {
-    display: flex;
-    flex-direction: row;
-    gap: var(--gap);
-    .filename-and-file-queue-text {
-        text-overflow: ellipsis; 
-        white-space: nowrap; 
-        overflow: hidden;
-    }
-    p {
-        font-size: var(--text-size-less);
-    }
+.filename-and-file-queue-text, .transfer-progress-percentage {
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    overflow: hidden;
+    font-size: var(--text-size-less);
 }
 
 .file-transfer-buttons {
@@ -81,7 +74,7 @@
 
 .progress-indicator-wrap {
     width: 100%;
-    height: var(--text-size);
+    height: var(--text-size-less);
     position: relative;
 }
 
@@ -89,7 +82,7 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-more);
     background: var(--background-light);
     overflow: hidden;
 }
