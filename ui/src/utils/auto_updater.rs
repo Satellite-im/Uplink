@@ -55,7 +55,7 @@ struct GitHubAsset {
 pub fn _get_download_dest() -> Option<PathBuf> {
     match FileDialog::new()
         .set_directory(dirs::home_dir().unwrap_or(".".into()))
-        .set_title(&get_local_text("uplink.pick-download-directory"))
+        .set_title(get_local_text("uplink.pick-download-directory"))
         .pick_folder()
     {
         Some(x) => Some(x),

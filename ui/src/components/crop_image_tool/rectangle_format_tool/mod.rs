@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose, Engine};
 use common::{
     icons::outline::Shape, language::get_local_text, utils::lifecycle::use_component_lifecycle,
     STATIC_ARGS,
@@ -140,7 +141,7 @@ pub fn CropRectImageModal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                             if let Ok(val) = r.join().await {
                                                 let thumbnail = val.as_str().unwrap_or_default();
                                                 let base64_string = thumbnail.trim_matches('\"');
-                                                let decoded_bytes = match base64::decode(base64_string) {
+                                                let decoded_bytes = match general_purpose::STANDARD.decode(base64_string) {
                                                     Ok(bytes) => bytes,
                                                     Err(e) => {
                                                         log::error!("Error decoding base64 string for cropped image: {}", e);
