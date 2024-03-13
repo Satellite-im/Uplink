@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::bail;
 use chrono::{DateTime, Local};
-use dioxus_desktop::wry::application::window::WindowId;
+use dioxus_desktop::tao::window::WindowId;
 use uuid::Uuid;
 use warp::{blink::ParticipantState, crypto::DID};
 
