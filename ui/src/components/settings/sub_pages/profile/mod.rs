@@ -336,8 +336,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         loading_indicator.get().then(|| rsx!(
             div {
-                id: "overlay-load-shadow",
-                class: "overlay-load-shadow",
+                id: "overlay-load-shadow-for-profile-page",
+                class: "overlay-load-shadow-for-profile-page",
                 div {
                     class: "overlay-loader-spinner",
                     Loader { spinning: true },
@@ -627,7 +627,34 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     }
                     if let Some(phrase) = seed_phrase.as_ref() {
                         let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                        let words2 = words.clone();
                         render!(
+                            Button {
+                                text: get_local_text("uplink.copy-seed"),
+                                aria_label: "copy-seed-button".into(),
+                                icon: Icon::BookmarkSquare,
+                                onpress: move |_| {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            match c.set_text(words2.clone().join("\n").to_string()) {
+                                                Ok(_) => state.write().mutate(Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("uplink.copied-seed"),
+                                                        None,
+                                                        2,
+                                                    ),
+                                                )),
+                                                Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
+                                },
+                                appearance: Appearance::Secondary
+                            },
                             SettingSectionSimple {
                                 aria_label: "seed-words-section".into(),
                                 div {
@@ -639,7 +666,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                    class: "num", ((idx * 2) + 1).to_string() 
+                                                    class: "num disable-select", ((idx * 2) + 1).to_string() 
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
@@ -650,7 +677,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                                                    class: "num", ((idx * 2) + 2).to_string() 
+                                                    class: "num disable-select", ((idx * 2) + 2).to_string() 
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
