@@ -37,8 +37,8 @@ use warp::crypto::DID;
 #[allow(non_snake_case)]
 pub fn Compose() -> Element {
     log::trace!("rendering compose");
-    use_shared_state_provider(cx, ChatData::default);
-    use_shared_state_provider(cx, ScrollBtn::new);
+    use_context_provider(|| ChatData::default);
+    use_context_provider(|| ScrollBtn::new);
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
 

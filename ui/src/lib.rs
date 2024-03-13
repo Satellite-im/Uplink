@@ -214,7 +214,7 @@ fn app() -> Element {
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
-    bootstrap::use_bootstrap(cx, &identity)?;
+    bootstrap::use_bootstrap(&identity)?;
 
     // 4. Throw up a loading screen until our assets are ready
     if use_loaded_assets().value().is_none() {

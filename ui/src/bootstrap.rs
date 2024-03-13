@@ -25,9 +25,9 @@ pub(crate) fn use_bootstrap<'a>(
     identity: &multipass::identity::Identity,
 ) -> Option<&'a UseSharedState<State>> {
     let desktop = use_window();
-    use_shared_state_provider(cx, DownloadState::default);
-    use_shared_state_provider(cx, || components::settings::sidebar::Page::Profile);
-    use_shared_state_provider(cx, || {
+    use_context_provider(|| DownloadState::default);
+    use_context_provider(|| components::settings::sidebar::Page::Profile);
+    use_context_provider(|| {
         let mut state = State::load();
 
         if STATIC_ARGS.use_mock {

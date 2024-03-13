@@ -84,7 +84,7 @@ pub type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File
 #[component(no_case_check)]
 pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>>) -> Element {
     log::trace!("get_messages");
-    use_shared_state_provider(|| -> DownloadTracker { HashMap::new() });
+    use_context_provider(|| -> DownloadTracker { HashMap::new() });
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
     let scroll_btn = use_context::<Signal<ScrollBtn>>();
