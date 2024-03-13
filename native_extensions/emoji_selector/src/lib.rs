@@ -127,7 +127,6 @@ fn build_nav() -> Element<'_> {
         const emoji_group_element = document.getElementById('$EMOJI_CONTAINER');
         emoji_group_element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     "#;
-    let eval = use_eval(cx);
 
     rsx!(Nav {
         routes: routes.clone(),
@@ -149,8 +148,6 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
     let state = use_context::<Signal<State>>();
     let mouse_over_emoji_selector = use_signal(|| false);
     let emoji_suggestions = use_signal(Vec::new);
-
-    let eval = use_eval(cx);
 
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
@@ -379,7 +376,7 @@ impl Extension for EmojiSelector {
     }
 }
 
-fn select_emoji_to_send(state: &UseSharedState<State>, emoji: String, ch: &Coroutine<Command>) {
+fn select_emoji_to_send(state: &Signal<State>, emoji: String, ch: &Coroutine<Command>) {
     let destination = state
         .read()
         .ui
@@ -402,7 +399,7 @@ fn select_emoji_to_send(state: &UseSharedState<State>, emoji: String, ch: &Corou
                 .write_silent()
                 .mutate(Action::SetChatDraft(c.id, new_draft));
             if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
-                cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+                needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
             };
         }
         EmojiDestination::Message(conversation_uuid, message_uuid) => {

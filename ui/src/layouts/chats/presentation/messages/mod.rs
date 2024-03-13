@@ -687,7 +687,7 @@ pub struct PendingMessagesListenerProps<'a> {
 //The component that listens for upload events
 pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps) -> Element {
     let state = use_context::<Signal<State>>();
-    state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
+    state.write_silent().scope_ids.pending_message_component = Some(current_scope_id().0);
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
         None => return rsx!(()),

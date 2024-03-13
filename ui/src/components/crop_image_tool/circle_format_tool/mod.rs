@@ -53,20 +53,17 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
         crop_image.set(false);
     }
 
-    let eval = use_eval(cx);
-
     use_resource(|| {
-        to_owned![eval, image_dimensions];
+        to_owned![image_dimensions];
         async move {
             while image_dimensions.read().width == 0 && image_dimensions.read().height == 0 {
-                if let Ok(r) = eval(GET_IMAGE_DIMENSIONS_SCRIPT) {
-                    if let Ok(val) = r.join().await {
-                        *image_dimensions.write_silent() = ImageDimensions {
-                            height: val["height"].as_i64().unwrap_or_default(),
-                            width: val["width"].as_i64().unwrap_or_default(),
-                        };
-                    }
-                };
+                let eval_result = eval(GET_IMAGE_DIMENSIONS_SCRIPT);
+                if let Ok(val) = eval_result.join().await {
+                    *image_dimensions.write_silent() = ImageDimensions {
+                        height: val["height"].as_i64().unwrap_or_default(),
+                        width: val["width"].as_i64().unwrap_or_default(),
+                    };
+                }
             }
             let _ = eval(ADJUST_CROP_CIRCLE_SIZE_SCRIPT);
             let _ = eval(MOVE_IMAGE_SCRIPT);

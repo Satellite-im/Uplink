@@ -14,14 +14,10 @@ use crate::{utils::WindowDropHandler, window_manager::WindowManagerCmd, WINDOW_C
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[component]
-pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
+pub fn PopoutPlayer(_drop_handler: WindowDropHandler) -> Element {
     let cmd_tx = WINDOW_CMD_CH.tx.clone();
 
-    // Run the script after the component is mounted
-    let eval = use_eval(cx);
-
-    
-        rsx! (
+    rsx! (
         div {
             onmounted: move |_| { _ = eval(SCRIPT); },
             id: "video-poped-out",
@@ -51,7 +47,7 @@ pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
                                 arrow_position: ArrowPosition::Left,
                                 text: String::from("Close")
                             }
-                        )),
+                        ),
                         onpress: move |_| {
                             if let Err(_e) = cmd_tx.send(WindowManagerCmd::ClosePopout) {
                                 //todo: log error
@@ -66,10 +62,10 @@ pub fn PopoutPlayer( _drop_handler: WindowDropHandler) -> Element {
                                 arrow_position: ArrowPosition::Right,
                                 text: String::from("Fullscreen")
                             }
-                        )),
+                        ),
                     }
                 }
             },
         },
-    ))
+    )
 }

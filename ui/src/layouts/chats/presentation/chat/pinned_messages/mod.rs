@@ -127,7 +127,6 @@ pub fn PinnedMessages(props: Props) -> Element<'_> {
         }
     });
     let pinned_messages = chat_data.read().active_chat.pinned_messages();
-    let eval = use_eval(cx);
     let _ = eval(MARKDOWN_FOR_CODE_BLOCK);
 
     rsx!(

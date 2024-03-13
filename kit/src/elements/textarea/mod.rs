@@ -72,7 +72,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(props: Props<'a>) -> Element {
     log::trace!("render input");
-    let eval = use_eval(cx);
     let left_shift_pressed = use_signal(|| false);
     let right_shift_pressed = use_signal(|| false);
     let enter_pressed = use_signal(|| false);
@@ -129,7 +128,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
     let value_signal = use_signal(|| value.clone());
 
     use_resource(|| {
-        to_owned![cursor_position, text_value, eval, show_char_counter];
+        to_owned![cursor_position, text_value, show_char_counter];
         async move {
             *cursor_position.write_silent() = Some(value_signal.read().chars().count() as i64);
             *text_value.write_silent() = val;

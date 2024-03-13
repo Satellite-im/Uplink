@@ -57,28 +57,24 @@ pub fn Compose() -> Element {
     let update_script = use_signal(String::new);
     let identity_profile = use_signal(DID::default);
 
-    let eval_provider = use_eval(cx);
     let script = DISABLE_RELOAD;
-    let _ = eval_provider(script);
+    let _ = eval(script);
     // Handle user tag click
     // We handle it here since user tags are not dioxus components
     use_effect(|| {
         to_owned![state, eval_provider, quickprofile_data];
         async move {
-            if let Ok(eval) = eval_provider(USER_TAG_SCRIPT) {
-                loop {
-                    if let Ok(s) = eval.recv().await {
-                        match serde_json::from_str::<(f64, f64, DID)>(
-                            s.as_str().unwrap_or_default(),
-                        ) {
-                            Ok((x, y, did)) => {
-                                if let Some(id) = state.read().get_identity(&did) {
-                                    quickprofile_data.set(Some((x, y, id, false)));
-                                }
+            let eval_result = eval(USER_TAG_SCRIPT);
+            loop {
+                if let Ok(s) = eval_result.recv().await {
+                    match serde_json::from_str::<(f64, f64, DID)>(s.as_str().unwrap_or_default()) {
+                        Ok((x, y, did)) => {
+                            if let Some(id) = state.read().get_identity(&did) {
+                                quickprofile_data.set(Some((x, y, id, false)));
                             }
-                            Err(e) => {
-                                log::error!("failed to deserialize message: {}: {}", s, e);
-                            }
+                        }
+                        Err(e) => {
+                            log::error!("failed to deserialize message: {}: {}", s, e);
                         }
                     }
                 }

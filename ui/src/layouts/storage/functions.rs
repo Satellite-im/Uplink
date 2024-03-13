@@ -8,7 +8,8 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::{
-    prelude::{use_eval, EvalError, UseEval},
+    events::eval,
+    prelude::{EvalError, UseEval},
     signals::{Readable, Signal},
 };
 use dioxus_core::ScopeState;
@@ -182,10 +183,9 @@ pub fn download_file(
 pub fn add_files_in_queue_to_upload(
     files_in_queue_to_upload: &Signal<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
-    eval: &UseEvalFn,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
-    allow_folder_navigation(eval, false);
+    allow_folder_navigation(false);
     files_in_queue_to_upload
         .write_silent()
         .extend(files_path.clone());
@@ -193,21 +193,19 @@ pub fn add_files_in_queue_to_upload(
 }
 
 pub fn use_allow_block_folder_nav(files_in_queue_to_upload: &Signal<Vec<PathBuf>>) {
-    let eval: &UseEvalFn = use_eval(cx);
-
     // Block directories navigation if there is a file been uploaded
     // use_future here to verify before render elements on first render
     use_resource(|| {
-        to_owned![eval, files_in_queue_to_upload];
+        to_owned![files_in_queue_to_upload];
         async move {
-            allow_folder_navigation(&eval, files_in_queue_to_upload.read().is_empty());
+            allow_folder_navigation(files_in_queue_to_upload.read().is_empty());
         }
     });
     // This is to run on all re-renders
-    allow_folder_navigation(eval, files_in_queue_to_upload.read().is_empty());
+    allow_folder_navigation(files_in_queue_to_upload.read().is_empty());
 }
 
-pub fn allow_folder_navigation(eval: &UseEvalFn, allow_navigation: bool) {
+pub fn allow_folder_navigation(allow_navigation: bool) {
     let new_script = if allow_navigation {
         ALLOW_FOLDER_NAVIGATION
             .replace("$POINTER_EVENT", "")

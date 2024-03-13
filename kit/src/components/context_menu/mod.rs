@@ -179,9 +179,8 @@ pub fn ContextMenu<'a>(props: Props<'a>) -> Element {
     let with_click = props.left_click_trigger.unwrap_or_default();
 
     // Handles the hiding and showing of the context menu
-    let eval = use_eval();
     use_effect(|(id,)| {
-        to_owned![eval, with_click];
+        to_owned![with_click];
         async move {
             let script = include_str!("./context.js")
                 .replace("UUID", &id)

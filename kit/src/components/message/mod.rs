@@ -11,6 +11,7 @@ use common::{state::pending_message::progress_file, WARP_CMD_CH};
 use arboard::Clipboard;
 use derive_more::Display;
 use dioxus::prelude::*;
+use dioxus::signals::Signal;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
 use pulldown_cmark::{CodeBlockKind, Options, Tag};

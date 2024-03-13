@@ -33,7 +33,7 @@ impl Extension for ExampleExtension {
         include_str!("./style.css").into()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element {
+    fn render<'a>(&self) -> Element {
         let styles = self.stylesheet();
 
         rsx! {
@@ -41,6 +41,6 @@ impl Extension for ExampleExtension {
             Button {
                 icon: Icon::Truck
             }
-        })
+        }
     }
 }

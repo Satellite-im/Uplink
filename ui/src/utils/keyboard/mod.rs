@@ -1,6 +1,7 @@
 use common::state::settings::{key_code_to_str, modifier_state_to_string, GlobalShortcut};
 use common::state::State;
 use dioxus::prelude::*;
+use dioxus_desktop::tao::keyboard::ModifiersState;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use once_cell::sync::Lazy;
@@ -47,7 +48,6 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
     }
 
     let state = use_context::<Signal<State>>();
-    let eval = use_eval(cx);
 
     if !state.read().settings.pause_global_keybinds {
         let keybinds = state.read().settings.keybinds.clone();

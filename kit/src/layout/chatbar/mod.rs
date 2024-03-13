@@ -174,7 +174,6 @@ pub fn Chatbar<'a>(props: Props<'a>) -> Element {
     let cursor_position = use_signal(|| None);
     let selected_suggestion: Signal<Option<usize>> = use_signal(|| None);
     let is_suggestion_modal_closed: Signal<bool> = use_signal(|| false);
-    let eval = use_eval(cx);
 
     rsx!(
         div {

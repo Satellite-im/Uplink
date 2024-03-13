@@ -335,8 +335,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
         valid.set(false);
     };
     if let Some(hook) = &props.reset {
-        // TODO(Lucas): Not sure about this index
-        let should_reset = hook.get(0);
+        let should_reset = *hook.read();
         if *should_reset {
             reset_fn();
             hook.set(false);
@@ -349,25 +348,17 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
 
     let disabled = props.disabled.unwrap_or_default() || props.loading.unwrap_or(false);
 
-    let typ = cx
-        .props
+    let typ = props
         .is_password
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    // Run the script after the component is mounted.
-    let eval = use_eval(cx);
-    let eval2 = eval.clone();
-
     let focus_signal = use_signal(|| props.focus);
     let focus_script_signal = use_signal(|| focus_script.clone());
 
-    use_effect(move || {
-        to_owned![eval];
-        async move {
-            if focus_signal.read() {
-                let _ = eval(&focus_script_signal.read());
-            }
+    use_effect(move || async move {
+        if focus_signal.read() {
+            let _ = eval(&focus_script_signal.read());
         }
     });
 
@@ -375,7 +366,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
     use_component_lifecycle(
         move || {
             if focus_just_on_render {
-                let _ = eval2(&focus_script2);
+                let _ = eval(&focus_script2);
             }
         },
         || {},

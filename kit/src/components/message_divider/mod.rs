@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
+use uuid::timestamp;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -9,7 +10,7 @@ pub struct Props {
     timestamp: Option<Duration>,
 }
 
-pub fn get_time_ago(cx: &Scope<Props>) -> String {
+pub fn get_time_ago(props: Props) -> String {
     let f = timeago::Formatter::new();
     props.timestamp.map(|d| f.convert(d)).unwrap_or_default()
 }
@@ -17,7 +18,7 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 #[allow(non_snake_case)]
 pub fn MessageDivider(props: Props) -> Element {
     let text = props.text.clone().unwrap_or_default();
-    let time_ago = get_time_ago(&cx);
+    let time_ago = get_time_ago(props);
 
     rsx! (
         div {

@@ -78,19 +78,17 @@ pub fn ChatLayout() -> Element {
     }
     let drag_event: Signal<Option<FileDropEvent>> = use_signal(|| None);
     let window = use_window();
-    let eval: &UseEvalFn = use_eval();
-
     let show_slimbar = state.read().show_slimbar();
 
     // #[cfg(target_os = "windows")]
     use_resource(|| {
-        to_owned![state, window, drag_event, eval];
+        to_owned![state, window, drag_event];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
-                    drop_and_attach_files(eval.clone(), &window, &drag_event, state.clone()).await;
+                    drop_and_attach_files(&window, &drag_event, state.clone()).await;
                 }
             }
         }
@@ -159,12 +157,11 @@ pub fn ChatLayout() -> Element {
 }
 
 async fn drop_and_attach_files(
-    eval: UseEvalFn,
     window: &DesktopContext,
     drag_event: &Signal<Option<FileDropEvent>>,
-    state: UseSharedState<State>,
+    state: Signal<State>,
 ) {
-    let new_files = drag_and_drop_function(eval, window, drag_event).await;
+    let new_files = drag_and_drop_function(window, drag_event).await;
     let chat_uuid = state
         .read()
         .get_active_chat()
@@ -177,7 +174,6 @@ async fn drop_and_attach_files(
 
 // Like ui::src:layout::storage::drag_and_drop_function
 async fn drag_and_drop_function(
-    eval: UseEvalFn,
     window: &DesktopContext,
     drag_event: &Signal<Option<FileDropEvent>>,
 ) -> Vec<PathBuf> {

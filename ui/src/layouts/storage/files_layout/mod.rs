@@ -61,7 +61,6 @@ pub fn FilesLayout() -> Element<'_> {
     let send_files_from_storage = use_signal(|| false);
     let files_pre_selected_to_send: Signal<Vec<Location>> = use_signal(Vec::new);
     let _router = use_navigator();
-    let eval: &UseEvalFn = use_eval(cx);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     functions::use_allow_block_folder_nav(&files_in_queue_to_upload);

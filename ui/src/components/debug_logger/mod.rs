@@ -45,8 +45,6 @@ pub fn DebugLogger() -> Element {
         }
     });
 
-    let eval = use_eval(cx);
-
     let active_tab: Signal<Tab> = use_signal(|| Tab::Logs);
     let filter_level: Signal<Level> = use_signal(|| Level::Error); // If debug is set, we will not filter at all
 

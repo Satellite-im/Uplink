@@ -62,7 +62,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
     let scroll_btn = use_context::<Signal<ScrollBtn>>();
-    state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
+    state.write_silent().scope_ids.chatbar = Some(current_scope_id().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
 

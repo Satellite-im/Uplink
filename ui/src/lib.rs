@@ -487,7 +487,7 @@ fn use_app_coroutines() -> Option<()> {
     // update state in response to warp events
     use_resource(|| {
         to_owned![state];
-        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
+        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = schedule_update_any();
         async move {
             // don't process warp events until friends and chats have been loaded
             while !state.read().initialized {
