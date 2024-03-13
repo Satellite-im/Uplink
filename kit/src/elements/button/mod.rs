@@ -1,6 +1,6 @@
 use dioxus::{events::MouseEvent, prelude::*};
 
-use crate::elements::{loader::Loader, Appearance};
+use crate::elements::Appearance;
 
 use common::icons::outline::Shape as Icon;
 
@@ -72,12 +72,14 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         appearance,
         if disabled { "btn-disabled" } else { "" },
         if text.is_empty() { "no-text" } else { "" },
-        if cx.props.loading.unwrap_or(false) {
+        if cx.props.loading.unwrap_or_default() {
             "progress"
         } else {
             ""
         }
     );
+
+    let show_icon = cx.props.loading.unwrap_or_default() || cx.props.icon.is_some();
 
     cx.render(rsx!(
         div {
@@ -120,13 +122,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
                     }
                 },
-                if let Some(loading) = cx.props.loading {
-                    loading.then(|| rsx!(
-                        Loader {
-                            spinning: true
-                        }
-                    ))
-                },
                 if progress >= 0 {
                     rsx!(
                         div {
@@ -135,15 +130,15 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     )
                 }
-                if let Some(_icon) = cx.props.icon {
+                if show_icon {
                     rsx!(
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: None,
+                                class: cx.props.loading.unwrap_or_default().then_some("spin-container-for-button"),
                                 size: 20,
                                 fill:"currentColor",
-                                icon: _icon,
+                                icon: if cx.props.loading.unwrap_or_default() {Icon::Loader} else {cx.props.icon.unwrap()},
                                 disabled:  cx.props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF"
                             },

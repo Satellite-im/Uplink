@@ -7,7 +7,10 @@ use common::{
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_ref, UseRef, UseSharedState};
 use uuid::Uuid;
-use warp::{constellation::directory::Directory, raygun::Location};
+use warp::{
+    constellation::{directory::Directory, item::Item},
+    raygun::Location,
+};
 
 use super::functions::{self, format_item_size};
 
@@ -26,6 +29,7 @@ pub struct StorageController {
     pub files_selected_to_send: Vec<Location>,
     pub current_dir_path_as_string: String,
     pub chats_selected_to_send: Vec<Uuid>,
+    pub deleting: Vec<Item>,
 }
 
 impl StorageController {
@@ -60,6 +64,7 @@ impl StorageController {
                 .collect::<Vec<_>>()
                 .join("/"),
             chats_selected_to_send: Vec::new(),
+            deleting: Vec::new(),
         };
         use_ref(cx, || controller)
     }
