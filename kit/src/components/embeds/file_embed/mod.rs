@@ -64,10 +64,6 @@ pub struct Props<'a> {
 
     on_delete_msg: Option<EventHandler<'a, ()>>,
 
-    on_resend_msg: Option<EventHandler<'a, ()>>,
-
-    on_delete_msg: Option<EventHandler<'a, ()>>,
-
     progress: Option<&'a FileProgression>,
 }
 
