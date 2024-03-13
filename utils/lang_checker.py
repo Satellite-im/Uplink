@@ -35,7 +35,7 @@ for line in lang.readlines():
         lang_key = root_key
         keys.append(root_key)
     lines.append((lang_key, line))
-print(lines)
+
 # Collect all rust files
 files = glob.glob('./**/*.rs', 
                    recursive = True)
