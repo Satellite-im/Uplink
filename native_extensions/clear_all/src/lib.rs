@@ -28,7 +28,7 @@ impl Extension for ClearAll {
         ".clear-all_container, .clear-all_container .btn-wrap, .clear-all_container .btn { width: 100% }".into()
     }
 
-    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element {
+    fn render<'a>(&self, runtime: std::rc::Rc<Runtime>) -> Element {
         use_hook(|| RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
 

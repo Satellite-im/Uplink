@@ -50,7 +50,7 @@ pub struct Props<'a> {
 }
 
 /// Tells the parent the nav was interacted with.
-pub fn emit(cx: &Scope<Props>, to: &To) {
+pub fn emit(props: Props, to: &To) {
     match &props.onnavigate {
         Some(f) => f.call(to.to_owned()),
         None => {}
@@ -72,7 +72,7 @@ pub fn get_badge(route: &Route) -> String {
 }
 
 /// Gets the active route, or returns a void one
-pub fn get_active(cx: &Scope<Props>) -> To {
+pub fn get_active(props: Props) -> To {
     props.active.unwrap_or("!void")
 }
 

@@ -30,7 +30,7 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<MouseEvent>>,
 }
 
-pub fn get_time_ago(cx: &Scope<Props>) -> String {
+pub fn get_time_ago(props: Props) -> String {
     let f = timeago::Formatter::new();
     let current_time = Utc::now();
     let c: chrono::Duration = current_time - props.timestamp.unwrap_or(current_time);
@@ -46,12 +46,12 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 
 /// Generates the optional badge for the user.
 /// If there is no badge provided, we'll return an empty string.
-pub fn get_badge(cx: &Scope<Props>) -> String {
+pub fn get_badge(props: Props) -> String {
     props.with_badge.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user was interacted with.
-pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
+pub fn emit(props: Props, e: Event<MouseData>) {
     if let Some(f) = props.onpress.as_ref() {
         f.call(e)
     }

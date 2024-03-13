@@ -27,19 +27,19 @@ pub struct Props<'a> {
     platform: Platform,
 }
 
-pub fn get_image(cx: &Scope<Props>) -> String {
+pub fn get_image(props: Props) -> String {
     props.image.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user_image was interacted with.
-pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
+pub fn emit(props: Props, e: Event<MouseData>) {
     match &props.on_press {
         Some(f) => f.call(e),
         None => {}
     }
 }
 
-pub fn emit_context(cx: &Scope<Props>, e: Event<MouseData>) {
+pub fn emit_context(props: Props, e: Event<MouseData>) {
     match &props.oncontextmenu {
         Some(f) => f.call(e),
         None => {}

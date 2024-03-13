@@ -16,7 +16,7 @@ pub struct Props<'a> {
 }
 
 /// Tells the parent the button was interacted with.
-pub fn emit(cx: &Scope<Props>, s: String) {
+pub fn emit(props: Props, s: String) {
     match &props.onselect {
         Some(f) => f.call(s),
         None => {}

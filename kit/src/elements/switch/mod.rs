@@ -14,7 +14,7 @@ pub struct Props<'a> {
 }
 
 /// Tells the parent the switch was interacted with.
-pub fn emit(cx: &Scope<Props>, state: bool) {
+pub fn emit(props: Props, state: bool) {
     match &props.onflipped {
         Some(f) => f.call(state),
         None => {}
@@ -22,7 +22,7 @@ pub fn emit(cx: &Scope<Props>, state: bool) {
 }
 
 /// Determines the default state
-pub fn default_state(cx: &Scope<Props>) -> bool {
+pub fn default_state(props: Props) -> bool {
     match &props.active {
         Some(active) => *active,
         None => false,

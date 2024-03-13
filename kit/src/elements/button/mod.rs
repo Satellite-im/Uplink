@@ -21,7 +21,7 @@ pub struct Props<'a> {
 
 /// Generates the appearance for the button.
 /// This will be overwritten if the button is disabled.
-pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
+pub fn get_appearance(props: Props) -> Appearance {
     // If the button is disabled, we can short circuit this and just provide the disabled appearance.
     if let Some(is_disabled) = props.disabled {
         if is_disabled {

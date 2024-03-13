@@ -13,7 +13,7 @@ pub struct Props<'a> {
     _onflipped: Option<EventHandler<i32>>,
 }
 
-pub fn get_default(cx: &Scope<Props>) -> i32 {
+pub fn get_default(props: Props) -> i32 {
     props.default_value.unwrap_or_default()
 }
 

@@ -158,13 +158,13 @@ pub struct Props<'a> {
     validate_on_return_with_val_empty: bool,
 }
 
-fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
+fn emit(props: Props, s: String, is_valid: bool) {
     if let Some(f) = &props.onchange {
         f.call((s, is_valid));
     }
 }
 
-fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
+fn emit_return(props: Props, s: String, is_valid: bool, key_code: Code) {
     if let Some(f) = &props.onreturn {
         f.call((s, is_valid, key_code));
     }
@@ -172,7 +172,7 @@ fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
 
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 #[allow(unused)]
-fn submit(cx: &Scope<Props>, s: String) {
+fn submit(props: Props, s: String) {
     if let Some(f) = &props.onreturn {
         f.call((s, true, Code::Enter));
     }
@@ -256,20 +256,20 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     None
 }
 
-pub fn get_icon(cx: &Scope<Props>) -> Icon {
+pub fn get_icon(props: Props) -> Icon {
     props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
-pub fn get_aria_label(cx: &Scope<Props>) -> String {
+pub fn get_aria_label(props: Props) -> String {
     props.aria_label.clone().unwrap_or_default()
 }
 
-pub fn get_label(cx: &Scope<Props>) -> String {
+pub fn get_label(props: Props) -> String {
     let options = props.options.clone().unwrap_or_default();
     options.with_label.unwrap_or_default()
 }
 
-pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
+pub fn validate(props: Props, val: &str) -> Option<ValidationError> {
     let mut error: Option<ValidationError> = None;
 
     let options = props.options.clone().unwrap_or_default();

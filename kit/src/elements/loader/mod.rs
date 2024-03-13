@@ -10,7 +10,7 @@ pub struct Props {
     large: Option<bool>,
 }
 
-pub fn is_large(cx: &Scope<Props>) -> bool {
+pub fn is_large(props: Props) -> bool {
     if let Some(f) = props.large.as_ref() {
         return *f;
     }

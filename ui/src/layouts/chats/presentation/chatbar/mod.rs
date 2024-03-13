@@ -57,7 +57,7 @@ use crate::{
     },
 };
 
-pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
+pub fn get_chatbar<'a>(props: ChatProps) -> Element {
     log::trace!("get_chatbar");
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();

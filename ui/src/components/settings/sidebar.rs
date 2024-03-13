@@ -76,7 +76,7 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<Page>>,
 }
 
-pub fn emit(cx: &Scope<Props>, e: Page) {
+pub fn emit(props: Props, e: Page) {
     match &props.onpress {
         Some(f) => f.call(e),
         None => {}

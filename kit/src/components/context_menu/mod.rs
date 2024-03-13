@@ -28,7 +28,7 @@ pub struct ItemProps<'a> {
 }
 
 /// Tells the parent the menu was interacted with.
-pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
+pub fn emit(props: ItemProps, e: Event<MouseData>) {
     if let Some(f) = props.onpress.as_ref() {
         f.call(e)
     }

@@ -14,12 +14,12 @@ pub struct Props<'a> {
 }
 
 /// If enabled, it will render the bool
-pub fn show_back_button(cx: &Scope<Props>) -> bool {
+pub fn show_back_button(props: Props) -> bool {
     props.with_back_button.unwrap_or(false)
 }
 
 /// Emit the back button event
-pub fn emit(cx: &Scope<Props>) {
+pub fn emit(props: Props) {
     match &props.onback {
         Some(f) => f.call(()),
         None => {}

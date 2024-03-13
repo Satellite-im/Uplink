@@ -27,7 +27,7 @@ pub struct Props<'a> {
 
 /// Generates the optional icon providing a fallback.
 /// If there is no icon provided, the toast should not call this.
-pub fn get_icon(cx: &Scope<Props>) -> Icon {
+pub fn get_icon(props: Props) -> Icon {
     match &props.icon {
         Some(icon) => icon.to_owned(),
         None => Icon::QuestionMarkCircle,

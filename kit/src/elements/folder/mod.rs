@@ -26,17 +26,17 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_aria_label(cx: &Scope<Props>) -> String {
+pub fn get_aria_label(props: Props) -> String {
     props.aria_label.clone().unwrap_or_default()
 }
 
-pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
+pub fn emit(props: Props, s: String, key_code: Code) {
     if let Some(f) = props.onrename.as_ref() {
         f.call((s, key_code))
     }
 }
 
-pub fn emit_press(cx: &Scope<Props>) {
+pub fn emit_press(props: Props) {
     if let Some(f) = props.onpress.as_ref() {
         f.call(())
     }

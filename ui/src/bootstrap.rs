@@ -22,7 +22,6 @@ pub fn use_warp_runner() {
 }
 
 pub(crate) fn use_bootstrap<'a>(
-    cx: &'a ScopeState,
     identity: &multipass::identity::Identity,
 ) -> Option<&'a UseSharedState<State>> {
     let desktop = use_window();
