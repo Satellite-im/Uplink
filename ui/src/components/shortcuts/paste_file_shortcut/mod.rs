@@ -8,7 +8,7 @@ use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
 use dioxus_desktop::wry::application::keyboard::ModifiersState;
-use dioxus_hooks::{to_owned, use_future, use_ref};
+use dioxus_hooks::{to_owned, use_future};
 use once_cell::sync::Lazy;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
@@ -56,8 +56,8 @@ pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
         return None;
     }
 
-    let files_local_path_to_upload = use_signal( Vec::new);
-    let command_pressed = use_signal( || false);
+    let files_local_path_to_upload = use_signal(Vec::new);
+    let command_pressed = use_signal(|| false);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER

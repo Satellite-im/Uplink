@@ -16,7 +16,8 @@ use dioxus_core::ScopeState;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
-    to_owned, use_coroutine, use_future, Coroutine, Signal, UnboundedReceiver, UseSharedState,
+    to_owned, use_coroutine, use_future, use_resource, Coroutine, Signal, UnboundedReceiver,
+    UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;

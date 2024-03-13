@@ -12,10 +12,10 @@ use crate::UplinkRoute;
 
 #[allow(non_snake_case)]
 pub fn Welcome() -> Element {
-    let router = use_navigator(cx);
+    let router = use_navigator();
     let state = use_context::<Signal<State>>();
     let cta_text = get_local_text("friends.cta-text");
-    let image_path = use_image_path(cx);
+    let image_path = use_image_path();
 
     rsx! {
         div {
@@ -60,11 +60,11 @@ pub fn Welcome() -> Element {
 
         }
         }
-    })
+    }
 }
 
 fn use_image_path() -> &str {
-    use_hook(|| {
+    &use_hook(|| {
         get_images_dir()
             .unwrap_or_default()
             .join("mascot")

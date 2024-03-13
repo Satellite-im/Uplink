@@ -142,9 +142,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     let users_typing = state.read().get_identities(&users_typing);
 
     // this is used to scroll to the bottom of the chat.
-    let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
-    let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(cx, state);
-    let local_typing_ch = coroutines::get_typing_ch(cx);
+    let scroll_ch = coroutines::get_scroll_ch(&chat_data, &state);
+    let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(&state);
+    let local_typing_ch = coroutines::get_typing_ch();
     let local_typing_ch2 = local_typing_ch.clone();
 
     // drives the sending of TypingIndicator
@@ -279,7 +279,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
         .filter(|(is_enabled, ext)| {
             ext.details().location == extensions::Location::Chatbar && *is_enabled
         })
-        .map(|(_, ext)| ext.render(cx.scope))
+        .map(|(_, ext)| ext.render())
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();

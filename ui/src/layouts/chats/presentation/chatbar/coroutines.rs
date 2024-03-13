@@ -20,12 +20,9 @@ use crate::{
 
 use super::TypingIndicator;
 
-pub fn get_msg_ch(
-    cx: &Scoped<'_, ChatProps>,
-    state: &UseSharedState<State>,
-) -> Coroutine<MsgChInput> {
-    let upload_streams = chat_upload_stream_handler(cx);
-    use_coroutine( |mut rx: UnboundedReceiver<MsgChInput>| {
+pub fn get_msg_ch(state: &Signal<State>) -> Coroutine<MsgChInput> {
+    let upload_streams = chat_upload_stream_handler();
+    use_coroutine(|mut rx: UnboundedReceiver<MsgChInput>| {
         to_owned![state, upload_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -115,12 +112,8 @@ pub fn get_msg_ch(
     .clone()
 }
 
-pub fn get_scroll_ch(
-    cx: &Scoped<'_, ChatProps>,
-    chat_data: &UseSharedState<data::ChatData>,
-    state: &UseSharedState<State>,
-) -> Coroutine<Uuid> {
-    use_coroutine( |mut rx: UnboundedReceiver<Uuid>| {
+pub fn get_scroll_ch(chat_data: &Signal<data::ChatData>, state: &Signal<State>) -> Coroutine<Uuid> {
+    use_coroutine(|mut rx: UnboundedReceiver<Uuid>| {
         to_owned![chat_data, state];
         async move {
             while let Some(conv_id) = rx.next().await {
@@ -156,8 +149,8 @@ pub fn get_scroll_ch(
 
 // tracks if the local participant is typing
 // re-sends typing indicator in response to the Refresh command
-pub fn get_typing_ch(cx: &Scoped<'_, ChatProps>) -> Coroutine<TypingIndicator> {
-    use_coroutine( |mut rx: UnboundedReceiver<TypingIndicator>| {
+pub fn get_typing_ch() -> Coroutine<TypingIndicator> {
+    use_coroutine(|mut rx: UnboundedReceiver<TypingIndicator>| {
         // to_owned![];
         async move {
             let mut typing_info: Option<TypingInfo> = None;

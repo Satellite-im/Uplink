@@ -15,8 +15,11 @@ use uuid::Uuid;
 use crate::layouts::chats::data::{self, ChatBehavior, ChatData};
 
 pub fn handle_warp_events(state: &Signal<State>, chat_data: &Signal<ChatData>) {
-    let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, &active_chat_id, |chat_id| {
+    let active_chat_id_signal = use_signal(move || {
+        let active_chat_id = state.read().get_active_chat().map(|x| x.id);
+        active_chat_id
+    });
+    use_resource(|| {
         to_owned![chat_data];
         async move {
             let mut ch = WARP_EVENT_CH.tx.subscribe();
@@ -25,7 +28,7 @@ pub fn handle_warp_events(state: &Signal<State>, chat_data: &Signal<ChatData>) {
                     WarpEvent::Message(evt) => evt,
                     _ => continue,
                 };
-                let chat_id = match chat_id.as_ref() {
+                let chat_id = match active_chat_id_signal.read().as_ref() {
                     Some(x) => *x,
                     None => continue,
                 };
@@ -96,15 +99,18 @@ pub fn init_chat_data<'a>(
     state: &'a Signal<State>,
     chat_data: &'a Signal<ChatData>,
 ) -> &'a UseFuture<()> {
-    let active_chat_id = state.read().get_active_chat().map(|x| x.id);
-    use_future(cx, &active_chat_id, |conv_id| {
+    let active_chat_id_signal = use_signal(move || {
+        let active_chat_id = state.read().get_active_chat().map(|x| x.id);
+        active_chat_id
+    });
+    use_resource(|| {
         to_owned![state, chat_data];
         async move {
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
 
-            let conv_id = match conv_id {
+            let conv_id = match active_chat_id_signal.read() {
                 None => return,
                 Some(x) => x,
             };

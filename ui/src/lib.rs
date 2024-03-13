@@ -539,7 +539,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // Listen to profile updates
-    use_future(|| {
+    use_resource(|| {
         to_owned![state];
         async move {
             while !state.read().initialized {
@@ -951,9 +951,9 @@ pub fn get_download_modal<'a>(
     //on_submit: EventHandler<PathBuf>,
     on_dismiss: EventHandler<()>,
 ) -> Element {
-    let download_location: &Signal<Option<PathBuf>> = use_signal(|| None);
+    let download_location: Signal<Option<PathBuf>> = use_signal(|| None);
 
-    let dl = download_location.current();
+    let dl = download_location.read();
     let _disp_download_location = dl
         .as_ref()
         .clone()
