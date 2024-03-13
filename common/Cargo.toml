@@ -40,7 +40,6 @@ regex = { workspace = true }
 futures = { workspace = true }
 # do we really want to pull in all of tokio?
 tokio = { workspace = true }
-tokio-util = { workspace = true }
 
 tempfile = { workspace = true }
 
