@@ -589,11 +589,13 @@ pub fn start_upload_file_listener(
                                 TrackerType::FileUpload,
                             );
                         }
-                        file_tracker.write().update_file_description(
-                            file,
-                            msg,
-                            TrackerType::FileUpload,
-                        );
+                        if let Some(msg) = msg {
+                            file_tracker.write().update_file_description(
+                                file,
+                                msg,
+                                TrackerType::FileUpload,
+                            );
+                        }
                     }
                     UploadFileAction::Finishing(path, file, finish) => {
                         *files_been_uploaded.write_silent() = true;
@@ -605,11 +607,11 @@ pub fn start_upload_file_listener(
                                 .write()
                                 .remove_file_upload(file, TrackerType::FileUpload);
                         } else {
-                            file_tracker.write().update_file_description(
-                                file,
-                                get_local_text("files.finishing-upload"),
-                                TrackerType::FileUpload,
-                            );
+                            // file_tracker.write().update_file_description(
+                            //     file,
+                            //     get_local_text("files.finishing-upload"),
+                            //     TrackerType::FileUpload,
+                            // );
                         }
                     }
                     UploadFileAction::Finished(storage) => {
