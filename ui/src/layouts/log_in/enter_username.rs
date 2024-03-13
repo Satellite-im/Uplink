@@ -30,14 +30,9 @@ struct CreateAccountCmd {
 }
 
 #[component]
-pub fn Layout(
-    
-    page: UseState<AuthPages>,
-    pin: UseRef<String>,
-    seed_words: UseRef<String>,
-) -> Element {
+pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<String>) -> Element {
     log::trace!("rendering enter username layout");
-    let window = use_window(cx);
+    let window = use_window();
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -46,9 +41,9 @@ pub fn Layout(
         });
     }
 
-    let username = use_state(cx, String::new);
-    //let error = use_state(cx, String::new);
-    let button_disabled = use_state(cx, || true);
+    let username = use_signal(String::new);
+    //let error = use_signal( String::new);
+    let button_disabled = use_signal(|| true);
 
     let username_validation = Validation {
         // The input should have a maximum length of 32
@@ -66,7 +61,7 @@ pub fn Layout(
         special_chars: None,
     };
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<CreateAccountCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<CreateAccountCmd>| {
         to_owned![page];
         async move {
             let config = Configuration::load_or_default();
@@ -166,5 +161,5 @@ pub fn Layout(
                 }
             }
         }
-    ))
+    )
 }

@@ -33,7 +33,7 @@ pub enum Tab {
 pub fn DebugLogger() -> Element {
     let window = use_window();
 
-    let logs_to_show = use_state(cx, logger::load_debug_log);
+    let logs_to_show = use_signal(logger::load_debug_log);
 
     use_resource(|| {
         to_owned![logs_to_show];
@@ -47,10 +47,10 @@ pub fn DebugLogger() -> Element {
 
     let eval = use_eval(cx);
 
-    let active_tab: &UseState<Tab> = use_state(cx, || Tab::Logs);
-    let filter_level: &UseState<Level> = use_state(cx, || Level::Error); // If debug is set, we will not filter at all
+    let active_tab: Signal<Tab> = use_signal(|| Tab::Logs);
+    let filter_level: Signal<Level> = use_signal(|| Level::Error); // If debug is set, we will not filter at all
 
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     let state_json = state.read().get_json();
 

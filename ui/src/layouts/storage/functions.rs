@@ -16,7 +16,7 @@ use dioxus_core::ScopeState;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
-    to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
+    to_owned, use_coroutine, use_future, Coroutine, Signal, UnboundedReceiver, UseSharedState,
 };
 use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
@@ -79,7 +79,7 @@ pub fn get_items_from_current_directory(ch: &Coroutine<ChanCmd>) {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn allow_drag_event_for_non_macos_systems(are_files_hovering_app: &UseRef<bool>) {
+pub fn allow_drag_event_for_non_macos_systems(are_files_hovering_app: &Signal<bool>) {
     use_resource(|| {
         to_owned![are_files_hovering_app];
         async move {
@@ -179,7 +179,7 @@ pub fn download_file(
 }
 
 pub fn add_files_in_queue_to_upload(
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+    files_in_queue_to_upload: &Signal<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
     eval: &UseEvalFn,
 ) {
@@ -191,7 +191,7 @@ pub fn add_files_in_queue_to_upload(
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }
 
-pub fn use_allow_block_folder_nav(files_in_queue_to_upload: &UseRef<Vec<PathBuf>>) {
+pub fn use_allow_block_folder_nav(files_in_queue_to_upload: &Signal<Vec<PathBuf>>) {
     let eval: &UseEvalFn = use_eval(cx);
 
     // Block directories navigation if there is a file been uploaded
@@ -474,7 +474,7 @@ pub fn init_coroutine<'a>(
 pub fn start_upload_file_listener(
     window: &DesktopContext,
     state: &UseSharedState<State>,
-    controller: &UseRef<StorageController>,
+    controller: &Signal<StorageController>,
     upload_file_controller: UploadFileController,
 ) {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();

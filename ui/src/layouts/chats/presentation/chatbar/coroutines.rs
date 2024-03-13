@@ -25,7 +25,7 @@ pub fn get_msg_ch(
     state: &UseSharedState<State>,
 ) -> Coroutine<MsgChInput> {
     let upload_streams = chat_upload_stream_handler(cx);
-    use_coroutine(cx, |mut rx: UnboundedReceiver<MsgChInput>| {
+    use_coroutine( |mut rx: UnboundedReceiver<MsgChInput>| {
         to_owned![state, upload_streams];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -120,7 +120,7 @@ pub fn get_scroll_ch(
     chat_data: &UseSharedState<data::ChatData>,
     state: &UseSharedState<State>,
 ) -> Coroutine<Uuid> {
-    use_coroutine(cx, |mut rx: UnboundedReceiver<Uuid>| {
+    use_coroutine( |mut rx: UnboundedReceiver<Uuid>| {
         to_owned![chat_data, state];
         async move {
             while let Some(conv_id) = rx.next().await {
@@ -157,7 +157,7 @@ pub fn get_scroll_ch(
 // tracks if the local participant is typing
 // re-sends typing indicator in response to the Refresh command
 pub fn get_typing_ch(cx: &Scoped<'_, ChatProps>) -> Coroutine<TypingIndicator> {
-    use_coroutine(cx, |mut rx: UnboundedReceiver<TypingIndicator>| {
+    use_coroutine( |mut rx: UnboundedReceiver<TypingIndicator>| {
         // to_owned![];
         async move {
             let mut typing_info: Option<TypingInfo> = None;

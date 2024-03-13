@@ -52,7 +52,7 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
 
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    let tooltip_visible = use_state(cx, || false);
+    let tooltip_visible = use_signal(|| false);
 
     if let Some(children) = &props.children {
         rsx!(
@@ -127,7 +127,7 @@ pub struct IdentityProps {
 
 #[allow(non_snake_case)]
 pub fn IdentityHeader(props: IdentityProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let sender = state
         .read()
         .get_identity(&props.sender_did)

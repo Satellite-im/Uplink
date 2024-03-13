@@ -14,11 +14,7 @@ use uuid::Uuid;
 
 use crate::layouts::chats::data::{self, ChatBehavior, ChatData};
 
-pub fn handle_warp_events(
-    
-    state: &UseSharedState<State>,
-    chat_data: &UseSharedState<ChatData>,
-) {
+pub fn handle_warp_events(state: &Signal<State>, chat_data: &Signal<ChatData>) {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, &active_chat_id, |chat_id| {
         to_owned![chat_data];
@@ -97,9 +93,8 @@ pub fn handle_warp_events(
 
 // any use_future should be in the coroutines file to prevent a naming conflict with the futures crate.
 pub fn init_chat_data<'a>(
-    cx: &Scoped<'a>,
-    state: &'a UseSharedState<State>,
-    chat_data: &'a UseSharedState<ChatData>,
+    state: &'a Signal<State>,
+    chat_data: &'a Signal<ChatData>,
 ) -> &'a UseFuture<()> {
     let active_chat_id = state.read().get_active_chat().map(|x| x.id);
     use_future(cx, &active_chat_id, |conv_id| {

@@ -2,7 +2,7 @@ use dioxus_core::ScopeState;
 use dioxus_desktop::use_window;
 
 pub fn set_app_visible() {
-    let window = use_window(cx);
+    let window = use_window();
 
     if !window.is_focused() && !window.is_minimized() {
         window.set_focus();

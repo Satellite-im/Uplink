@@ -35,13 +35,13 @@ struct Cmd {
 
 // styles for this layout are in layouts/style.scss
 #[component]
-pub fn Layout( pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
-    let state = use_ref(cx, State::load);
-    let loading = use_state(cx, || false);
-    let input = use_ref(cx, String::new);
-    let seed_error = use_state(cx, || None);
+pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
+    let state = use_signal(State::load);
+    let loading = use_signal(|| false);
+    let input = use_signal(String::new);
+    let seed_error = use_signal(|| None);
 
-    let window = use_window(cx);
+    let window = use_window();
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -50,7 +50,7 @@ pub fn Layout( pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
         });
     }
     // todo: show toasts to inform user of errors.
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Cmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<Cmd>| {
         to_owned![loading, page, seed_error];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -162,5 +162,5 @@ pub fn Layout( pin: UseRef<String>, page: UseState<AuthPages>) -> Element {
                 }
             }
         }
-    ))
+    )
 }

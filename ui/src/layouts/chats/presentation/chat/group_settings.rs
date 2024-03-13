@@ -15,7 +15,7 @@ use crate::layouts::chats::data::ChatData;
 #[allow(non_snake_case)]
 pub fn GroupSettings() -> Element {
     log::trace!("rendering edit_group");
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let chat_data = use_context::<Signal<ChatData>>();
 
     #[derive(Debug)]
     enum GroupSettingsChange {
@@ -24,7 +24,7 @@ pub fn GroupSettings() -> Element {
     }
 
     let group_settings_changed_channel =
-        use_coroutine(cx, |mut rx: UnboundedReceiver<GroupSettingsChange>| {
+        use_coroutine(|mut rx: UnboundedReceiver<GroupSettingsChange>| {
             to_owned![chat_data];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -99,5 +99,5 @@ pub fn GroupSettings() -> Element {
                 },
             }
         }
-    ))
+    )
 }

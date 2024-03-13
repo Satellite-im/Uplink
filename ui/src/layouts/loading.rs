@@ -22,7 +22,7 @@ pub fn LoadingWash() -> Element {
 
 pub fn use_loaded_assets() -> &UseFuture<Result<(), tokio::task::JoinError>> {
     let desktop = dioxus_desktop::use_window();
-    let state = use_shared_state::<State>(cx).unwrap();
+    let state = use_context::<Signal<State>>();
 
     use_resource(|| {
         to_owned![desktop, state];

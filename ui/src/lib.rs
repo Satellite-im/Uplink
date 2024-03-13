@@ -196,7 +196,7 @@ fn app() -> Element {
     bootstrap::use_warp_runner();
 
     // 2. Guard the app with the auth
-    let auth = use_state(cx, || AuthPages::EntryPoint);
+    let auth = use_signal(|| AuthPages::EntryPoint);
     let AuthPages::Success(identity) = auth.get() else {
         return render! {
         KeyboardShortcuts {
@@ -239,7 +239,7 @@ fn app_layout() -> Element {
     use_app_coroutines()?;
     use_router_notification_listener()?;
 
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     render! {
         AppStyle {}
@@ -269,7 +269,7 @@ fn app_layout() -> Element {
 }
 
 fn AppStyle() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     render! {
         style { get_app_style(&state.read()) },
     }
@@ -327,7 +327,7 @@ pub fn get_app_style(state: &State) -> String {
 }
 
 fn use_auto_updater() -> Option<()> {
-    let download_state = use_shared_state::<DownloadState>(cx)?;
+    let download_state = use_context::<Signal<DownloadState>>();
     let updater_ch = use_coroutine(|mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
         to_owned![download_state];
         async move {
@@ -365,10 +365,10 @@ fn use_auto_updater() -> Option<()> {
 
 fn use_app_coroutines() -> Option<()> {
     let desktop = use_window();
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     // don't fetch stuff from warp when using mock data
-    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let items_init = use_signal(|| STATIC_ARGS.use_mock);
 
     // `use_future`s
     // all of Uplinks periodic tasks are located here. it's a lot to read but
@@ -395,7 +395,7 @@ fn use_app_coroutines() -> Option<()> {
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
-    let first_resize = use_ref(cx, || true);
+    let first_resize = use_signal(|| true);
     use_wry_event_handler({
         to_owned![state, desktop, first_resize];
         move |event, _| match event {
@@ -834,8 +834,8 @@ fn use_app_coroutines() -> Option<()> {
 
 fn get_update_icon() -> Element {
     log::trace!("rendering get_update_icon");
-    let state = use_shared_state::<State>(cx)?;
-    let download_state = use_shared_state::<DownloadState>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let download_state = use_context::<Signal<DownloadState>>();
     let desktop = use_window();
     let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>()?;
 
@@ -951,7 +951,7 @@ pub fn get_download_modal<'a>(
     //on_submit: EventHandler<PathBuf>,
     on_dismiss: EventHandler<()>,
 ) -> Element {
-    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
+    let download_location: &Signal<Option<PathBuf>> = use_signal(|| None);
 
     let dl = download_location.current();
     let _disp_download_location = dl
@@ -1013,7 +1013,7 @@ pub fn get_download_modal<'a>(
 }
 
 fn AppLogger() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     if !state.read().initialized {
         return rsx!(());
@@ -1028,7 +1028,7 @@ fn AppLogger() -> Element {
 }
 
 fn Toasts() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     rsx!(state
         .read()
         .ui
@@ -1067,7 +1067,7 @@ fn Titlebar() -> Element {
 
 fn use_router_notification_listener() -> Option<()> {
     // this use_future replaces the notification_action_handler.
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
     use_resource(|| {
         to_owned![state, navigator];
@@ -1185,7 +1185,7 @@ fn AppNav<'a>(
 ) -> Element {
     use kit::components::nav::Route as UIRoute;
 
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state

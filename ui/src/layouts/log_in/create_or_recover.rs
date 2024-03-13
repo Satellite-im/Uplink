@@ -9,9 +9,9 @@ use super::AuthPages;
 
 // styles for this layout are in layouts/style.scss
 #[component]
-pub fn Layout( page: UseState<AuthPages>) -> Element {
-    let state = use_ref(cx, State::load);
-    let window = use_window(cx);
+pub fn Layout( page: Signal<AuthPages>) -> Element {
+    let state = use_signal( State::load);
+    let window = use_window();
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {

@@ -171,9 +171,9 @@ pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
 pub fn Chatbar<'a>(props: Props<'a>) -> Element {
     let controlled_input_id = &props.id;
     let is_typing = !props.typing_users.is_empty();
-    let cursor_position = use_ref(cx, || None);
-    let selected_suggestion: &UseRef<Option<usize>> = use_ref(cx, || None);
-    let is_suggestion_modal_closed: &UseRef<bool> = use_ref(cx, || false);
+    let cursor_position = use_signal(|| None);
+    let selected_suggestion: Signal<Option<usize>> = use_signal(|| None);
+    let is_suggestion_modal_closed: Signal<bool> = use_signal(|| false);
     let eval = use_eval(cx);
 
     rsx!(
@@ -289,7 +289,7 @@ pub struct SuggestionProps<'a> {
     suggestions: &'a SuggestionType,
     on_click: EventHandler<(String, String)>,
     on_close: EventHandler<()>,
-    selected: UseRef<Option<usize>>,
+    selected: Signal<Option<usize>>,
 }
 
 #[allow(non_snake_case)]

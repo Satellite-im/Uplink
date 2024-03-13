@@ -100,9 +100,9 @@ fn update_files_to_drop_while_upload_other_file(
 
 #[derive(Props)]
 pub struct Props<'a> {
-    are_files_hovering_app: &'a UseRef<bool>,
-    files_been_uploaded: &'a UseRef<bool>,
-    disable_cancel_upload_button: &'a UseRef<bool>,
+    are_files_hovering_app: &'a Signal<bool>,
+    files_been_uploaded: &'a Signal<bool>,
+    disable_cancel_upload_button: &'a Signal<bool>,
     on_update: EventHandler<Vec<PathBuf>>,
     on_cancel: EventHandler<()>,
 }
@@ -242,9 +242,9 @@ fn count_files_to_show(files_to_upload_len: usize) -> String {
 
 async fn drag_and_drop_function(
     window: &DesktopContext,
-    are_files_hovering_app: &UseRef<bool>,
-    files_ready_to_upload: &UseRef<Vec<PathBuf>>,
-    called_drag_and_drop_function: &UseRef<bool>,
+    are_files_hovering_app: &Signal<bool>,
+    files_ready_to_upload: &Signal<Vec<PathBuf>>,
+    called_drag_and_drop_function: &Signal<bool>,
 ) {
     *are_files_hovering_app.write_silent() = true;
     loop {

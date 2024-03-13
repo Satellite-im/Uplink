@@ -28,13 +28,13 @@ use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout() -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let to = use_shared_state::<Page>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let to = use_context::<Signal<Page>>();
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
-    let first_render = use_state(cx, || true);
+    let first_render = use_signal(|| true);
     if *first_render.get() {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(false));
@@ -65,7 +65,7 @@ pub fn SettingsLayout() -> Element {
             if show_slimbar {
                 rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
-                ))
+                )
             },
             Sidebar {
                 onpress: move |p| {
@@ -99,5 +99,5 @@ pub fn SettingsLayout() -> Element {
                  ))
             },
         }
-    ))
+    )
 }

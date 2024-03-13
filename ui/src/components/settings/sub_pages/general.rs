@@ -17,7 +17,7 @@ use crate::utils::get_font_sizes::FONT_SIZE_OPTIONS;
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let initial_lang_value = state.read().settings.language.clone();
 
     let themes_fut = use_resource(|| async move { get_available_themes() });

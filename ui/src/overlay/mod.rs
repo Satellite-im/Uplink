@@ -39,7 +39,7 @@ fn make_window() -> WindowBuilder {
 
 #[allow(non_snake_case)]
 pub fn OverlayDom() -> Element {
-    let window = use_window(cx);
+    let window = use_window();
     let _ = window.set_ignore_cursor_events(true);
 
     rsx! {

@@ -20,7 +20,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(props: Props<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let hidden = props.hidden.unwrap_or(false);
 
     let hamburger = rsx!(Button {

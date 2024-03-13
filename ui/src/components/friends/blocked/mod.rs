@@ -23,11 +23,11 @@ use tracing::log;
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let block_list = state.read().blocked_fr_identities();
-    let unblock_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let unblock_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<DID>| {
         to_owned![unblock_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -59,69 +59,67 @@ pub fn BlockedUsers() -> Element {
     if block_list.is_empty() {
         return render!({});
     }
-    rsx! (
-        rsx!(div {
-            class: "friends-list",
-            aria_label: "Blocked List",
-            Label {
-                text: get_local_text("friends.blocked"),
-                aria_label: "blocked-list-label".into(),
-            },
-            block_list.into_iter().map(|blocked_user| {
-                let did = blocked_user.did_key();
-                let did_suffix = blocked_user.short_id().to_string();
-                let unblock_user = blocked_user.clone();
-                let unblock_user_clone = unblock_user.clone();
-                let platform = blocked_user.platform().into();
-                let mut relationship = Relationship::default();
-                relationship.set_blocked(true);
-                rsx!(
-                    ContextMenu {
-                        id: format!("{did}-friend-listing"),
-                        key: "{did}-friend-listing",
-                        devmode: state.read().configuration.developer.developer_mode,
-                        items: rsx!(
-                            ContextItem {
-                                danger: true,
-                                icon: Icon::XMark,
-                                aria_label: "friends-unblock".into(),
-                                text: get_local_text("friends.unblock"),
-                                onpress: move |_| {
-                                    if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::Unblock(&unblock_user.did_key()));
-                                    } else {
-                                        unblock_in_progress.make_mut().insert(unblock_user.did_key());
-                                        ch.send(unblock_user.clone().did_key());
-                                    }
-                                }
-                            },
-                        )),
-                        Friend {
-                            username: blocked_user.username(),
-                            aria_label: blocked_user.username(),
-                            suffix: did_suffix,
-                            status_message: blocked_user.status_message().unwrap_or_default(),
-                            relationship: relationship,
-                            remove_button_disabled: unblock_in_progress.current().contains(&blocked_user.did_key()),
-                            user_image: rsx! (
-                                UserImage {
-                                    platform: platform,
-                                    status: blocked_user.identity_status().into(),
-                                    image: blocked_user.profile_picture()
-                                }
-                            )),
-                            onremove: move |_| {
+    rsx!(rsx!(div {
+        class: "friends-list",
+        aria_label: "Blocked List",
+        Label {
+            text: get_local_text("friends.blocked"),
+            aria_label: "blocked-list-label".into(),
+        },
+        block_list.into_iter().map(|blocked_user| {
+            let did = blocked_user.did_key();
+            let did_suffix = blocked_user.short_id().to_string();
+            let unblock_user = blocked_user.clone();
+            let unblock_user_clone = unblock_user.clone();
+            let platform = blocked_user.platform().into();
+            let mut relationship = Relationship::default();
+            relationship.set_blocked(true);
+            rsx!(
+                ContextMenu {
+                    id: format!("{did}-friend-listing"),
+                    key: "{did}-friend-listing",
+                    devmode: state.read().configuration.developer.developer_mode,
+                    items: rsx!(
+                        ContextItem {
+                            danger: true,
+                            icon: Icon::XMark,
+                            aria_label: "friends-unblock".into(),
+                            text: get_local_text("friends.unblock"),
+                            onpress: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::Unblock(&unblock_user_clone.did_key()));
+                                    state.write().mutate(Action::Unblock(&unblock_user.did_key()));
                                 } else {
-                                    unblock_in_progress.make_mut().insert(unblock_user_clone.did_key());
-                                    ch.send(unblock_user_clone.clone().did_key());
+                                    unblock_in_progress.make_mut().insert(unblock_user.did_key());
+                                    ch.send(unblock_user.clone().did_key());
                                 }
+                            }
+                        },
+                    ),
+                    Friend {
+                        username: blocked_user.username(),
+                        aria_label: blocked_user.username(),
+                        suffix: did_suffix,
+                        status_message: blocked_user.status_message().unwrap_or_default(),
+                        relationship: relationship,
+                        remove_button_disabled: unblock_in_progress.current().contains(&blocked_user.did_key()),
+                        user_image: rsx! (
+                            UserImage {
+                                platform: platform,
+                                status: blocked_user.identity_status().into(),
+                                image: blocked_user.profile_picture()
+                            }
+                        ),
+                        onremove: move |_| {
+                            if STATIC_ARGS.use_mock {
+                                state.write().mutate(Action::Unblock(&unblock_user_clone.did_key()));
+                            } else {
+                                unblock_in_progress.make_mut().insert(unblock_user_clone.did_key());
+                                ch.send(unblock_user_clone.clone().did_key());
                             }
                         }
                     }
-                )
-            })
+                }
+            )
         })
-    ))
+    }))
 }

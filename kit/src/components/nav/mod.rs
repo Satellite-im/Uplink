@@ -101,11 +101,11 @@ pub fn get_active(cx: &Scope<Props>) -> To {
 /// ```
 #[allow(non_snake_case)]
 pub fn Nav<'a>(props: Props<'a>) -> Element {
-    let active = use_state(cx, || get_active(&cx));
+    let active = use_signal(|| get_active(&cx));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
     // For some reason if you dont do this the first render will not have a context menu
-    let uuid = use_ref(cx, || Uuid::new_v4().to_string());
+    let uuid = use_signal(|| Uuid::new_v4().to_string());
     rsx!(
         div {
             aria_label: "button-nav",

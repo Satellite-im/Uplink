@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 
 pub fn open_close_dev_tools() {
-    let window = use_window(cx);
+    let window = use_window();
     if window.webview.is_devtools_open() {
         window.webview.close_devtools();
     } else {

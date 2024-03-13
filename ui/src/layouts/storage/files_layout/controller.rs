@@ -62,7 +62,7 @@ impl StorageController {
                 .join("/"),
             chats_selected_to_send: Vec::new(),
         };
-        use_ref(cx, || controller)
+        &use_signal(|| controller)
     }
 
     pub fn update_current_dir_path(&mut self, state: UseSharedState<State>) {

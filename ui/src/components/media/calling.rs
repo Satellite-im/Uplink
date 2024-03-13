@@ -512,7 +512,7 @@ pub struct PendingCallProps {
 #[allow(non_snake_case)]
 fn PendingCallDialog(props: PendingCallProps) -> Element {
     log::trace!("Rendering pending call window");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let ch = use_coroutine(|mut rx| {
         to_owned![state];
         async move {
@@ -577,7 +577,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
             }
         };
     }
-    let alive = use_ref(cx, || Arc::new(AtomicBool::new(false)));
+    let alive = use_signal(|| Arc::new(AtomicBool::new(false)));
     use_effect(|| {
         to_owned![alive];
         async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }

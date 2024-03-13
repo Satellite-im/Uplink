@@ -54,9 +54,9 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn Friends() -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let reset_filter = use_state(cx, || false);
-    let friend_filter = use_state(cx, String::new);
+    let state = use_context::<Signal<State>>();
+    let reset_filter = use_signal(|| false);
+    let friend_filter = use_signal(String::new);
     if *reset_filter.get() {
         friend_filter.set(String::new());
         reset_filter.set(false);
@@ -69,16 +69,16 @@ pub fn Friends() -> Element {
             .filter(|id| filter.is_empty() || id.username().to_lowercase().starts_with(&filter))
             .map(|id| (id.did_key(), id.clone())),
     );
-    let block_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let block_in_progress: Signal<HashSet<DID>> = use_signal(HashSet::new);
+    let remove_in_progress: Signal<HashSet<DID>> = use_signal(HashSet::new);
 
-    let share_did = use_state(cx, || None);
+    let share_did = use_signal(|| None);
 
     let friends = State::get_friends_by_first_letter(friends_list);
 
     let router = use_navigator();
 
-    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
 
     if let Some(id) = *chat_with.get(0) {
         chat_with.set(None);
@@ -399,7 +399,7 @@ pub fn FriendsSkeletal() -> Element {
 
 #[derive(PartialEq, Props)]
 pub struct FriendProps {
-    did: UseState<Option<DID>>,
+    did: Signal<Option<DID>>,
     excluded_chat: Option<Uuid>,
 }
 

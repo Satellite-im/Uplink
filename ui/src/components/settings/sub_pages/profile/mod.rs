@@ -320,7 +320,7 @@ pub fn ProfileSettings() -> Element {
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
 
-    let store_phrase = use_state(cx, || true);
+    let store_phrase = use_signal(|| true);
 
     if *first_render.get() {
         seed_phrase_exists.send(());
@@ -744,7 +744,7 @@ pub fn ProfileSettings() -> Element {
     )
 }
 
-fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))>) {
+fn set_profile_picture(mut open_crop_image_modal: Signal<(bool, (Vec<u8>, String))>) {
     match set_image() {
         Ok(img) => {
             open_crop_image_modal.set((true, img));
@@ -755,7 +755,7 @@ fn set_profile_picture(open_crop_image_modal: UseState<(bool, (Vec<u8>, String))
     };
 }
 
-fn set_banner(open_crop_image_modal_for_banner_picture: UseState<(bool, (Vec<u8>, String))>) {
+fn set_banner(mut open_crop_image_modal_for_banner_picture: Signal<(bool, (Vec<u8>, String))>) {
     match set_image() {
         Ok(img) => {
             open_crop_image_modal_for_banner_picture.set((true, img));

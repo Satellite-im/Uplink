@@ -32,13 +32,13 @@ pub enum FriendRoute {
 
 #[allow(non_snake_case)]
 pub fn FriendsLayout() -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let route = use_state(cx, || FriendRoute::All);
+    let state = use_context::<Signal<State>>();
+    let route = use_signal(|| FriendRoute::All);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return rsx!(MinimalFriendsLayout { route: route });
+        return rsx!(MinimalFriendsLayout { route: &route });
     }
     log::trace!("rendering FriendsLayout");
 
@@ -100,7 +100,7 @@ pub fn FriendsLayout() -> Element {
 
 #[derive(PartialEq, Props, Clone)]
 pub struct MinimalProps<'a> {
-    route: &'a UseState<FriendRoute>,
+    route: &'a Signal<FriendRoute>,
 }
 
 #[allow(non_snake_case)]
@@ -160,7 +160,7 @@ fn render_route<T>(props: T, route: FriendRoute) -> Element {
 }
 
 fn get_topbar<'a, T>(route: &'a Signal<FriendRoute>) -> Element {
-    let state = use_shared_state::<State>()?;
+    let state = use_context::<Signal<State>>();
     let pending_friends = state.read().friends().incoming_requests.len();
 
     rsx!(Topbar {

@@ -16,40 +16,40 @@ use kit::{
 
 #[allow(non_snake_case)]
 pub fn Settings() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     rsx! (
-            div {
-                class: "extensions-settings",
-                SettingSection {
-                    aria_label: "open-extensions-section".into(),
-                    section_label: get_local_text("settings-extensions.open-extensions-folder"),
-                    section_description: get_local_text("settings-extensions.open-folder-description"),
-                    Button {
-                        icon: Icon::FolderOpen,
-                        text: get_local_text("settings-extensions.open-extensions-folder"),
-                        aria_label: "open-extensions-folder-button".into(),
-                        onpress: move |_| {
-                            let _ = opener::open(&STATIC_ARGS.extensions_path);
-                        }
-                    },
-                },
-                SettingSection {
-                    aria_label: "auto-enable-section".into(),
-                    section_label: get_local_text("settings-extensions.auto-enable"),
-                    section_description: get_local_text("settings-extensions.auto-enable-description"),
-                    Switch {
-                        active: state.read().configuration.extensions.enable_automatically,
-                        onflipped: move |value| {
-                            if state.read().configuration.audiovideo.interface_sounds {
-                                sounds::Play(sounds::Sounds::Flip);
-                            }
-                            state.write().mutate(Action::Config(ConfigAction::SetAutoEnableExtensions(value)));
-                        },
+        div {
+            class: "extensions-settings",
+            SettingSection {
+                aria_label: "open-extensions-section".into(),
+                section_label: get_local_text("settings-extensions.open-extensions-folder"),
+                section_description: get_local_text("settings-extensions.open-folder-description"),
+                Button {
+                    icon: Icon::FolderOpen,
+                    text: get_local_text("settings-extensions.open-extensions-folder"),
+                    aria_label: "open-extensions-folder-button".into(),
+                    onpress: move |_| {
+                        let _ = opener::open(&STATIC_ARGS.extensions_path);
                     }
                 },
-            }
-        ))
+            },
+            SettingSection {
+                aria_label: "auto-enable-section".into(),
+                section_label: get_local_text("settings-extensions.auto-enable"),
+                section_description: get_local_text("settings-extensions.auto-enable-description"),
+                Switch {
+                    active: state.read().configuration.extensions.enable_automatically,
+                    onflipped: move |value| {
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::Flip);
+                        }
+                        state.write().mutate(Action::Config(ConfigAction::SetAutoEnableExtensions(value)));
+                    },
+                }
+            },
+        }
+    )
 }
 
 #[allow(non_snake_case)]
@@ -76,12 +76,12 @@ pub fn Explore() -> Element {
                 }
             }
         }
-    ))
+    )
 }
 
 #[allow(non_snake_case)]
 pub fn Installed() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
     let metas: Vec<_> = state
         .read()
@@ -91,20 +91,19 @@ pub fn Installed() -> Element {
         .map(|(enabled, ext)| (enabled, ext.details().meta.clone()))
         .collect();
 
-    rsx!(
-        if metas.is_empty() {
-            rsx!(
-                div {
-                    class: "extensions-not-installed",
-                    aria_label: "extensions-not-installed",
-                    Label {
-                        text: get_local_text("settings.no-extensions-installed"),
-                        aria_label: String::from("extensions-installed-label"),
-                    }
+    rsx!(if metas.is_empty() {
+        rsx!(
+            div {
+                class: "extensions-not-installed",
+                aria_label: "extensions-not-installed",
+                Label {
+                    text: get_local_text("settings.no-extensions-installed"),
+                    aria_label: String::from("extensions-installed-label"),
                 }
-            )
-        } else {
-            rsx!( metas.iter().cloned().map(|(enabled, meta)| {
+            }
+        )
+    } else {
+        rsx!( metas.iter().cloned().map(|(enabled, meta)| {
                 rsx!(
                     ExtensionSetting {
                         title: meta.pretty_name.to_owned(),
@@ -123,8 +122,7 @@ pub fn Installed() -> Element {
                     }
                 )
             }))
-        }
-        ))
+    })
 }
 
 #[allow(non_snake_case)]
@@ -150,7 +148,7 @@ pub fn ExtensionsBrowser() -> Element {
         },
     ];
 
-    let active_route = use_state(cx, || "installed");
+    let active_route = use_signal(|| "installed");
 
     rsx!(
         div {
@@ -174,5 +172,5 @@ pub fn ExtensionsBrowser() -> Element {
                 Settings {}
             ))
         }
-    ))
+    )
 }

@@ -677,8 +677,8 @@ pub struct IdentityMessageProps {
 
 #[allow(non_snake_case)]
 pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let identity = use_state(cx, || None);
+    let state = use_context::<Signal<State>>();
+    let identity = use_signal(|| None);
     let ch = use_coroutine(|mut rx: UnboundedReceiver<IdentityCmd>| {
         to_owned![identity, state];
         async move {

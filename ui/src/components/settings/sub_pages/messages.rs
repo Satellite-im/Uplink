@@ -11,7 +11,7 @@ use crate::components::settings::SettingSection;
 #[allow(non_snake_case)]
 pub fn Messages() -> Element {
     log::trace!("Messages settings page rendered.");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     rsx!(
         div {
             id: "settings-messages",
@@ -39,5 +39,5 @@ pub fn Messages() -> Element {
                 }
             }
         }
-    ))
+    )
 }

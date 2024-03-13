@@ -59,9 +59,9 @@ use crate::{
 
 pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
     log::trace!("get_chatbar");
-    let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
-    let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let chat_data = use_context::<Signal<ChatData>>();
+    let scroll_btn = use_context::<Signal<ScrollBtn>>();
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
@@ -74,13 +74,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
         .unwrap_or_default();
 
     let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
-    let can_send = use_state(cx, || state.read().active_chat_has_draft());
-    let update_script = use_state(cx, String::new);
+    let can_send = use_signal(|| state.read().active_chat_has_draft());
+    let update_script = use_signal(String::new);
     let upload_button_menu_uuid = &*use_hook(|| Uuid::new_v4().to_string());
-    let show_storage_modal = use_state(cx, || false);
+    let show_storage_modal = use_signal(|| false);
 
-    let suggestions = use_state(cx, || SuggestionType::None);
-    let mentions = use_ref(cx, Vec::new);
+    let suggestions = use_signal(|| SuggestionType::None);
+    let mentions = use_signal(Vec::new);
 
     let with_scroll_btn = scroll_btn.read().get(active_chat_id) && !is_loading;
 
@@ -149,7 +149,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
 
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
-    let enable_paste_shortcut = use_ref(cx, || true);
+    let enable_paste_shortcut = use_signal(|| true);
 
     use_resource(|| {
         to_owned![enable_paste_shortcut];
@@ -284,7 +284,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element {
 
     let disabled = !state.read().can_use_active_chat();
     // todo: don't define a hook so far down
-    let error = use_state(cx, || (false, active_chat_id));
+    let error = use_signal(|| (false, active_chat_id));
     let value_chatbar = state
         .read()
         .get_active_chat()

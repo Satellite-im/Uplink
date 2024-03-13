@@ -61,7 +61,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
         props.transfers.iter().map(|f| {
             let progress = f.progress.get_progress();
             let state = f.state.clone();
-            let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<bool>| {
+            let ch = use_coroutine( |mut rx: UnboundedReceiver<bool>| {
                 to_owned![state];
                 async move {
                     while let Some(cancel) = rx.next().await {

@@ -51,20 +51,20 @@ impl UnlockError {
 
 // todo: go to the auth page if no account has been created
 #[component]
-pub fn Layout(page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
     log::trace!("rendering login entry point");
-    let validation_failure: &UseState<Option<UnlockError>> =
-        use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
+    let validation_failure: &Signal<Option<UnlockError>> =
+        use_signal(|| Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
-    let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
-    let shown_error = use_state(cx, String::new);
+    let error: &Signal<Option<UnlockError>> = use_signal(|| None);
+    let shown_error = use_signal(String::new);
     let desktop = use_window();
 
-    let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
-    let cmd_in_progress = use_state(cx, || false);
-    let first_render = use_ref(cx, || true);
-    let state = use_ref(cx, State::load);
-    let reset_input = use_state(cx, || false);
+    let account_exists: &Signal<Option<bool>> = use_signal(|| None);
+    let cmd_in_progress = use_signal(|| false);
+    let first_render = use_signal(|| true);
+    let state = use_signal(State::load);
+    let reset_input = use_signal(|| false);
 
     // On windows, is necessary use state on topbar controls, without using use_shared_state
     // So state is loaded there to use window_maximized and offer better UX

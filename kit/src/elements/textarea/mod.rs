@@ -73,11 +73,11 @@ pub struct Props<'a> {
 pub fn Input<'a>(props: Props<'a>) -> Element {
     log::trace!("render input");
     let eval = use_eval(cx);
-    let left_shift_pressed = use_ref(cx, || false);
-    let right_shift_pressed = use_ref(cx, || false);
-    let enter_pressed = use_ref(cx, || false);
-    let numpad_enter_pressed = use_ref(cx, || false);
-    let cursor_position = use_ref(cx, || None);
+    let left_shift_pressed = use_signal(|| false);
+    let right_shift_pressed = use_signal(|| false);
+    let enter_pressed = use_signal(|| false);
+    let numpad_enter_pressed = use_signal(|| false);
+    let cursor_position = use_signal(|| None);
 
     let Props {
         id: _,

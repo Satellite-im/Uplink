@@ -132,7 +132,7 @@ fn FilePreview<'a>(props: Props<'a>) -> Element {
         .unwrap_or_default();
 
     let file_type = get_file_type(&props.file.name());
-    let should_dismiss_on_error = use_ref(cx, || false);
+    let should_dismiss_on_error = use_signal(|| false);
 
     if file_type == FileType::Unkwnown {
         state

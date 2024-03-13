@@ -39,8 +39,8 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelElement(props: 'a, Props<'a>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn ChannelElement(props: Props<'a>) -> Element {
+    let state = use_context::<Signal<State>>();
 
     rsx!(
         ContextMenu {
@@ -64,7 +64,7 @@ pub fn ChannelElement(props: 'a, Props<'a>) -> Element {
                     text: "Delete".into(),
                     onpress: move |_| {}
                 },
-            )),
+            ),
             div {
                 class: "channel",
                 onclick: |_| {
@@ -118,5 +118,5 @@ pub fn ChannelElement(props: 'a, Props<'a>) -> Element {
                 }
             }
         }
-    ))
+    )
 }

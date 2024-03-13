@@ -46,7 +46,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
         };
     }
 
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let eval = use_eval(cx);
 
     if !state.read().settings.pause_global_keybinds {

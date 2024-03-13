@@ -29,7 +29,7 @@ pub enum ChannelCommand {
     RemovePinnedMessage {
         conversation_id: Uuid,
         message_id: Uuid,
-        show_pinned: UseState<bool>,
+        show_pinned: Signal<bool>,
     },
     GoToPinnedMessage {
         conversation_id: Uuid,

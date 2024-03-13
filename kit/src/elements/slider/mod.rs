@@ -19,7 +19,7 @@ pub fn get_default(cx: &Scope<Props>) -> i32 {
 
 #[allow(non_snake_case)]
 pub fn Slider<'a>(props: Props) -> Element {
-    let _slider_value = use_state(cx, || get_default(&cx));
+    let _slider_value = use_signal(|| get_default(&cx));
     // TODO: Pending dioxus update for eval returning values
     rsx! {
         div {

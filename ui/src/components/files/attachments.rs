@@ -18,7 +18,7 @@ pub struct AttachmentProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn Attachments<'a>(props: AttachmentProps) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let files_attached_to_send = props.files_to_attach.clone();
     let files_attached_to_send3 = files_attached_to_send;
 

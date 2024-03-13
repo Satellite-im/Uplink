@@ -56,8 +56,8 @@ pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
         return None;
     }
 
-    let files_local_path_to_upload = use_ref(cx, Vec::new);
-    let command_pressed = use_ref(cx, || false);
+    let files_local_path_to_upload = use_signal( Vec::new);
+    let command_pressed = use_signal( || false);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER

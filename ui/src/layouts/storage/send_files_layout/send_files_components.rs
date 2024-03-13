@@ -76,7 +76,7 @@ pub fn SendFilesTopbar<'a>(
     );
 }
 
-pub fn toggle_selected_file(storage_controller: UseRef<StorageController>, file_path: String) {
+pub fn toggle_selected_file(mut storage_controller: Signal<StorageController>, file_path: String) {
     if let Some(index) = storage_controller.with(|f| {
         f.files_selected_to_send
             .iter()

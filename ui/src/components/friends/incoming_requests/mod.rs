@@ -30,12 +30,12 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn PendingFriends() -> Element {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let friends_list = state.read().incoming_fr_identities();
-    let deny_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let accept_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let deny_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let accept_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![deny_in_progress, accept_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -146,7 +146,7 @@ pub fn PendingFriends() -> Element {
                                 }
                             }
                         }
-                    )),
+                    ),
                     Friend {
                         aria_label: _username.clone(),
                         username: _username,
@@ -163,7 +163,7 @@ pub fn PendingFriends() -> Element {
                                 status: friend2.identity_status().into(),
                                 image: friend2.profile_picture()
                             }
-                        )),
+                        ),
                         accept_button_disabled: accept_in_progress.current().contains(&did2),
                         remove_button_disabled: deny_in_progress.current().contains(&did2),
                         onaccept: move |_| {
@@ -187,5 +187,5 @@ pub fn PendingFriends() -> Element {
                 }
             )
         })
-    })))
+    }))
 }

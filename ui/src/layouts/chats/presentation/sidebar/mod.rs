@@ -111,7 +111,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         .filter(|(_, ext)| ext.details().location == extensions::Location::Sidebar)
         .map(|(_, ext)| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
-    let search_typed_chars = use_ref(cx, String::new);
+    let search_typed_chars = use_signal(String::new);
 
     rsx!(
         ReusableSidebar {

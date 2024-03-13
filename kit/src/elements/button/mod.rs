@@ -63,7 +63,7 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
         String::new()
     };
 
-    let tooltip_visible = use_state(cx, || false);
+    let tooltip_visible = use_signal(|| false);
 
     let button_class = format!(
         "btn appearance-{} btn-{} {} {}",

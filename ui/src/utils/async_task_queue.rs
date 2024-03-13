@@ -6,7 +6,7 @@ use common::{
     WARP_EVENT_CH,
 };
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_ref, UseRef};
+use dioxus_hooks::{use_ref, Signal};
 use futures::{Future, StreamExt};
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
@@ -60,14 +60,11 @@ impl<T> AsyncRef<T> {
 
 /// Create a handler for an async queue
 /// Everytime a value gets added to the queue the future will be spawned when it rerenders
-pub fn async_queue<T: 'static + Send, Fut>(
-    
-    fut: impl Fn(T) -> Fut,
-) -> &UseRef<AsyncRef<T>>
+pub fn async_queue<T: 'static + Send, Fut>(fut: impl Fn(T) -> Fut) -> &Signal<AsyncRef<T>>
 where
     Fut: Future<Output = ()> + Send + 'static,
 {
-    let queue_ref: &UseRef<AsyncRef<T>> = use_ref(cx, || AsyncRef { inner_ref: None });
+    let queue_ref: &Signal<AsyncRef<T>> = use_signal(|| AsyncRef { inner_ref: None });
     if let Some(queue) = queue_ref.write_silent().inner_ref.take() {
         for entry in queue {
             let future = fut(entry);
@@ -77,9 +74,7 @@ where
     queue_ref
 }
 
-pub fn chat_upload_stream_handler(
-    
-) -> &UseRef<
+pub fn chat_upload_stream_handler() -> &Signal<
     AsyncRef<(
         Uuid,
         Vec<String>,
@@ -89,7 +84,6 @@ pub fn chat_upload_stream_handler(
     )>,
 > {
     async_queue(
-        cx,
         |(conv_id, msg, attachments, appended_msg_id, mut stream): (
             Uuid,
             Vec<String>,
@@ -128,9 +122,7 @@ pub fn chat_upload_stream_handler(
     )
 }
 
-pub fn download_stream_handler(
-    
-) -> &UseRef<
+pub fn download_stream_handler() -> &Signal<
     AsyncRef<(
         warp::constellation::ConstellationProgressStream,
         String,
@@ -139,7 +131,6 @@ pub fn download_stream_handler(
     )>,
 > {
     async_queue(
-        cx,
         |(mut stream, file, on_finish, should_show_toast_notification): (
             warp::constellation::ConstellationProgressStream,
             String,

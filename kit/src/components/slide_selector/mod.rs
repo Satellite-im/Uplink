@@ -24,7 +24,7 @@ pub fn SlideSelector<'a, T>(props: Props<'a, T>) -> Element
 where
     T: std::fmt::Display + Clone,
 {
-    let index = use_state(cx, || props.initial_index);
+    let index = use_signal(|| props.initial_index);
     if *index.get() != props.initial_index {
         index.set(props.initial_index);
     }

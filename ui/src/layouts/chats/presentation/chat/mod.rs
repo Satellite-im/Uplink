@@ -39,30 +39,30 @@ pub fn Compose() -> Element {
     log::trace!("rendering compose");
     use_shared_state_provider(cx, ChatData::default);
     use_shared_state_provider(cx, ScrollBtn::new);
-    let state = use_shared_state::<State>(cx)?;
-    let chat_data = use_shared_state::<ChatData>(cx)?;
+    let state = use_context::<Signal<State>>();
+    let chat_data = use_context::<Signal<ChatData>>();
 
-    let init = coroutines::init_chat_data(cx, state, chat_data);
-    coroutines::handle_warp_events(cx, state, chat_data);
+    let init = coroutines::init_chat_data(&state, &chat_data);
+    coroutines::handle_warp_events(&state, &chat_data);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
 
-    let show_manage_members: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let show_group_settings: &UseState<bool> = use_state(cx, || false);
-    let show_rename_group: &UseState<bool> = use_state(cx, || false);
-    let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let show_manage_members: Signal<Option<Uuid>> = use_signal(|| None);
+    let show_group_settings: Signal<bool> = use_signal(|| false);
+    let show_rename_group: Signal<bool> = use_signal(|| false);
+    let show_group_users: Signal<Option<Uuid>> = use_signal(|| None);
 
     let quick_profile_uuid = &*use_hook(|| Uuid::new_v4().to_string());
-    let quickprofile_data: &UseRef<Option<(f64, f64, Identity, bool)>> = use_ref(cx, || None);
-    let update_script = use_state(cx, String::new);
-    let identity_profile = use_state(cx, DID::default);
+    let quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>> = use_signal(|| None);
+    let update_script = use_signal(String::new);
+    let identity_profile = use_signal(DID::default);
 
     let eval_provider = use_eval(cx);
     let script = DISABLE_RELOAD;
     let _ = eval_provider(script);
     // Handle user tag click
     // We handle it here since user tags are not dioxus components
-    use_effect(cx, chat_data, |_| {
+    use_effect(|| {
         to_owned![state, eval_provider, quickprofile_data];
         async move {
             if let Ok(eval) = eval_provider(USER_TAG_SCRIPT) {
@@ -85,10 +85,10 @@ pub fn Compose() -> Element {
             }
         }
     });
-    use_effect(cx, quickprofile_data, |data| {
+    use_effect(|| {
         to_owned![quick_profile_uuid, update_script, identity_profile];
         async move {
-            if let Some((x, y, id, right)) = data.read().as_ref() {
+            if let Some((x, y, id, right)) = quickprofile_data.read().as_ref() {
                 let script = SHOW_CONTEXT
                     .replace("UUID", &quick_profile_uuid)
                     .replace("$PAGE_X", &x.to_string())
@@ -139,7 +139,7 @@ pub fn Compose() -> Element {
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
-                })),
+                }),
                 topbar::get_topbar_children {
                     show_manage_members: show_manage_members.clone(),
                     show_rename_group: show_rename_group.clone(),
@@ -230,5 +230,5 @@ pub fn Compose() -> Element {
             did_key: identity_profile,
         }
     }
-    ))
+    )
 }

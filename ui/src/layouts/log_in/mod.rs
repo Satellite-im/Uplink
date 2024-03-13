@@ -30,16 +30,16 @@ pub enum AuthPages {
 
 /// Guard the app's router with the login flow
 #[component]
-pub fn AuthGuard( page: UseState<AuthPages>) -> Element {
+pub fn AuthGuard( page: Signal<AuthPages>) -> Element {
     log::trace!("rendering auth guard");
 
-    let pin = use_ref(cx, String::new);
-    let seed_words = use_ref(cx, String::new);
-    let desktop = use_window(cx);
+    let pin = use_signal( String::new);
+    let seed_words = use_signal( String::new);
+    let desktop = use_window();
     let theme = "";
 
     // make the window smaller while the user authenticates
-    let window = use_window(cx);
+    let window = use_window();
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {

@@ -30,7 +30,7 @@ pub fn UserImageGroup<'a>(props: Props<'a>) -> Element {
     let is_group = props.participants.len() > 1;
 
     let loading = props.loading.unwrap_or_default() || props.participants.is_empty();
-    let tooltip_visible = use_state(cx, || false);
+    let tooltip_visible = use_signal(|| false);
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
     rsx!(if loading {

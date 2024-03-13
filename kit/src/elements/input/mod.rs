@@ -151,7 +151,7 @@ pub struct Props<'a> {
     select_on_focus: Option<bool>,
     onchange: Option<EventHandler<(String, bool)>>,
     onreturn: Option<EventHandler<(String, bool, Code)>>,
-    reset: Option<UseState<bool>>,
+    reset: Option<Signal<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
     #[props(default = false)]
@@ -310,13 +310,13 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
     };
     let focus_script = include_str!("./script.js").replace("$UUID", &input_id);
     let focus_script2 = focus_script.clone();
-    let error = use_state(cx, || String::from(""));
-    let val = use_ref(cx, || props.default_text.clone().unwrap_or_default());
+    let error = use_signal(|| String::from(""));
+    let val = use_signal(|| props.default_text.clone().unwrap_or_default());
     let max_length = props.max_length.unwrap_or(std::i32::MAX);
     let min_length = props.max_length.unwrap_or(0);
     let options = props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
-    let valid = use_state(cx, || false);
+    let valid = use_signal(|| false);
     let onblur_active = !props.disable_onblur;
 
     let loading_class = match props.loading.unwrap_or(false) {

@@ -28,15 +28,15 @@ use common::{
 
 #[allow(non_snake_case)]
 pub fn AddFriend() -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let clear_input = use_state(cx, || false);
-    let friend_input = use_state(cx, String::new);
-    let friend_input_valid = use_state(cx, || false);
-    let request_sent = use_state(cx, || false);
-    let error_toast: &UseState<Option<String>> = use_state(cx, || None);
-    let add_in_progress = use_state(cx, || false);
+    let state = use_context::<Signal<State>>();
+    let clear_input = use_signal(|| false);
+    let friend_input = use_signal(String::new);
+    let friend_input_valid = use_signal(|| false);
+    let request_sent = use_signal(|| false);
+    let error_toast: Signal<Option<String>> = use_signal(|| None);
+    let add_in_progress = use_signal(|| false);
     // used when copying the user's id to the clipboard
-    let my_id: &UseState<Option<String>> = use_state(cx, || None);
+    let my_id: Signal<Option<String>> = use_signal(|| None);
     // Set up validation options for the input field
     let friend_validation = Validation {
         max_length: Some(56),
@@ -117,7 +117,7 @@ pub fn AddFriend() -> Element {
         Icon::UserPlus
     };
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
         to_owned![
             request_sent,
             error_toast,
@@ -236,7 +236,7 @@ pub fn AddFriend() -> Element {
                             },
                             aria_label: "Add Someone Input".into()
                         }
-                    )),
+                    ),
                     items: rsx!(
                         ContextItem {
                             icon: Icon::ClipboardDocument,
@@ -275,7 +275,7 @@ pub fn AddFriend() -> Element {
                                 };
                             }
                         }
-                    ))
+                    )
                 }
                 Button {
                     icon: add_friend_icon,
@@ -349,7 +349,7 @@ pub fn AddFriend() -> Element {
                                         )));
                                 }
                             }
-                        )),
+                        ),
                         Button {
                             aria_label: "Copy ID".into(),
                             icon: Icon::ClipboardDocument,
@@ -377,11 +377,11 @@ pub fn AddFriend() -> Element {
                             },
                             tooltip: rsx!(Tooltip{
                                 text: get_local_text("settings-profile.copy-id")
-                            }))
+                            })
                         }
                     }
                 }
             }
         }
-    ))
+    )
 }

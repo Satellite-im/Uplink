@@ -145,10 +145,10 @@ enum Command {
 }
 
 #[component(no_case_check)]
-fn render_selector<'a>(mouse_over_emoji_button: UseRef<bool>, nav: Element) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let mouse_over_emoji_selector = use_ref(cx, || false);
-    let emoji_suggestions = use_state(cx, Vec::new);
+fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Element {
+    let state = use_context::<Signal<State>>();
+    let mouse_over_emoji_selector = use_signal(|| false);
+    let emoji_suggestions = use_signal(Vec::new);
 
     let eval = use_eval(cx);
 
@@ -298,8 +298,8 @@ fn render_selector<'a>(mouse_over_emoji_button: UseRef<bool>, nav: Element) -> E
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
 #[component(no_case_check)]
 fn render_1(_unused: bool) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let mouse_over_emoji_button = use_ref(cx, || false);
+    let state = use_context::<Signal<State>>();
+    let mouse_over_emoji_button = use_signal(|| false);
     let visible = state.read().ui.emoji_picker_visible;
     log::debug!("vis {}", visible);
 

@@ -49,24 +49,24 @@ use super::functions::{self, ChanCmd, UseEvalFn};
 
 #[allow(non_snake_case)]
 pub fn FilesLayout() -> Element<'_> {
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let storage_controller = StorageController::new(cx, state);
-    let upload_file_controller = UploadFileController::new(cx, state.clone());
+    let storage_controller = StorageController::new(&state);
+    let upload_file_controller = UploadFileController::new(state.clone());
     let window = use_window();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
     let files_been_uploaded2 = files_been_uploaded.clone();
-    let send_files_from_storage = use_state(cx, || false);
-    let files_pre_selected_to_send: &UseRef<Vec<Location>> = use_ref(cx, Vec::new);
+    let send_files_from_storage = use_signal(|| false);
+    let files_pre_selected_to_send: Signal<Vec<Location>> = use_signal(Vec::new);
     let _router = use_navigator();
     let eval: &UseEvalFn = use_eval(cx);
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
 
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller, state);
+    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(storage_controller, &state);
 
     use_resource(|| {
         to_owned![files_been_uploaded, files_in_queue_to_upload];
@@ -82,7 +82,7 @@ pub fn FilesLayout() -> Element<'_> {
     });
 
     functions::run_verifications_and_update_storage(
-        state,
+        &state,
         storage_controller,
         upload_file_controller
             .files_in_queue_to_upload
@@ -99,7 +99,7 @@ pub fn FilesLayout() -> Element<'_> {
     );
     functions::start_upload_file_listener(
         &window,
-        state,
+        &state,
         storage_controller,
         upload_file_controller.clone(),
     );

@@ -36,13 +36,13 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn EditGroup() -> Element {
     log::trace!("rendering edit_group");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let minimal = state.read().ui.metadata.minimal_view;
     // Search Input
-    let friend_prefix = use_state(cx, String::new);
+    let friend_prefix = use_signal(String::new);
 
     // show the ADD or REMOVE components, default to Remove
-    let edit_group_action = use_state(cx, || EditGroupAction::Remove);
+    let edit_group_action = use_signal(|| EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
 
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;

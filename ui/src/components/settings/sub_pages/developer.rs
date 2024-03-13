@@ -23,9 +23,9 @@ use crate::{components::settings::SettingSection, logger};
 #[allow(non_snake_case)]
 pub fn DeveloperSettings() -> Element {
     log::trace!("Developer settings page rendered.");
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<PathBuf>| {
         //to_owned![];
         async move {
             while let Some(cmd) = rx.next().await {
@@ -182,5 +182,5 @@ pub fn DeveloperSettings() -> Element {
                 }
             }
         }
-    ))
+    )
 }

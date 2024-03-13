@@ -22,15 +22,15 @@ use crate::{
 pub fn AboutPage() -> Element {
     let version = env!("CARGO_PKG_VERSION");
     let app_name = env!("CARGO_PKG_NAME");
-    let state = use_shared_state::<State>(cx)?;
-    let download_state = use_shared_state::<DownloadState>(cx)?;
-    let update_button_loading = use_state(cx, || false);
-    let download_available: &UseState<Option<GitHubRelease>> = use_state(cx, || None);
-    let desktop = use_window(cx);
+    let state = use_context::<Signal<State>>();
+    let download_state = use_context::<Signal<DownloadState>>();
+    let update_button_loading = use_signal(|| false);
+    let download_available: Signal<Option<GitHubRelease>> = use_signal(|| None);
+    let desktop = use_window();
 
-    let click_count = use_state(cx, || 0);
+    let click_count = use_signal(|| 0);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+    let ch = use_coroutine(|mut rx: UnboundedReceiver<()>| {
         to_owned![download_available, update_button_loading, state];
         async move {
             while rx.next().await.is_some() {
@@ -74,7 +74,7 @@ pub fn AboutPage() -> Element {
         }
     });
 
-    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>();
 
     let opt = download_available.get().clone();
     let stage = download_state.read().stage;
@@ -188,7 +188,7 @@ pub fn AboutPage() -> Element {
                 })
             }
         },
-    }));
+    });
 
     rsx!(
         div {
@@ -311,5 +311,5 @@ pub fn AboutPage() -> Element {
                 }
             }
         }
-    ))
+    )
 }

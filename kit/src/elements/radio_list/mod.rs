@@ -12,7 +12,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn RadioList<'a>(props: Props<'a>) -> Element {
-    let internal_state = use_state(cx, || props.initial_value.clone());
+    let internal_state = use_signal(|| props.initial_value.clone());
 
     rsx!(
         div {

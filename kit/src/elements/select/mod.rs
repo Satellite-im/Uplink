@@ -87,7 +87,7 @@ pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
         options.insert(0, (initial_value.clone(), initial_element.clone()))
     };
     let iter = IntoIterator::into_iter(options.clone());
-    let visible = use_ref(cx, || false);
+    let visible = use_signal(|| false);
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.

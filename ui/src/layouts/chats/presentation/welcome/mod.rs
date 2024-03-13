@@ -13,7 +13,7 @@ use crate::UplinkRoute;
 #[allow(non_snake_case)]
 pub fn Welcome() -> Element {
     let router = use_navigator(cx);
-    let state = use_shared_state::<State>(cx)?;
+    let state = use_context::<Signal<State>>();
     let cta_text = get_local_text("friends.cta-text");
     let image_path = use_image_path(cx);
 

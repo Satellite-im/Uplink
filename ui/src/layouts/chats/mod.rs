@@ -20,7 +20,11 @@ use common::{
     state::{ui, Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, wry::webview::FileDropEvent, DesktopContext};
+use dioxus_desktop::{
+    use_window,
+    wry::{webview::FileDropEvent, FileDropEvent},
+    DesktopContext,
+};
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -59,8 +63,8 @@ pub const OVERLAY_SCRIPT: &str = r#"
 
 #[allow(non_snake_case)]
 pub fn ChatLayout() -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let first_render = use_state(cx, || true);
+    let state = use_context::<Signal<State>>();
+    let first_render = use_signal(|| true);
 
     state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
@@ -72,7 +76,7 @@ pub fn ChatLayout() -> Element {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
-    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
+    let drag_event: Signal<Option<FileDropEvent>> = use_signal(|| None);
     let window = use_window();
     let eval: &UseEvalFn = use_eval();
 
@@ -157,7 +161,7 @@ pub fn ChatLayout() -> Element {
 async fn drop_and_attach_files(
     eval: UseEvalFn,
     window: &DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
+    drag_event: &Signal<Option<FileDropEvent>>,
     state: UseSharedState<State>,
 ) {
     let new_files = drag_and_drop_function(eval, window, drag_event).await;
@@ -175,7 +179,7 @@ async fn drop_and_attach_files(
 async fn drag_and_drop_function(
     eval: UseEvalFn,
     window: &DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
+    drag_event: &Signal<Option<FileDropEvent>>,
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
     let mut new_files_to_upload = Vec::new();

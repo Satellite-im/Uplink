@@ -33,12 +33,12 @@ enum AudioCmd {
 #[allow(non_snake_case)]
 pub fn AudioSettings() -> Element {
     log::trace!("Audio settings page rendered.");
-    let state = use_shared_state::<State>(cx)?;
-    let input_devices = use_ref(cx, Vec::new);
-    let output_devices = use_ref(cx, Vec::new);
+    let state = use_context::<Signal<State>>();
+    let input_devices = use_signal(Vec::new);
+    let output_devices = use_signal(Vec::new);
 
-    let speaker_volume = use_ref(cx, || 0);
-    let microphone_volume = use_ref(cx, || 0);
+    let speaker_volume = use_signal(|| 0);
+    let microphone_volume = use_signal(|| 0);
 
     let ch = use_coroutine(|mut rx| {
         to_owned![
@@ -419,7 +419,7 @@ pub fn AudioSettings() -> Element {
 
 #[derive(Props, PartialEq)]
 pub struct VolumeIndicatorProps {
-    volume: UseRef<u8>,
+    volume: Signal<u8>,
 }
 
 pub fn VolumeIndicator(props: VolumeIndicatorProps) -> Element {

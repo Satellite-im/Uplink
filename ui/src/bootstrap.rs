@@ -25,7 +25,7 @@ pub(crate) fn use_bootstrap<'a>(
     cx: &'a ScopeState,
     identity: &multipass::identity::Identity,
 ) -> Option<&'a UseSharedState<State>> {
-    let desktop = use_window(cx);
+    let desktop = use_window();
     use_shared_state_provider(cx, DownloadState::default);
     use_shared_state_provider(cx, || components::settings::sidebar::Page::Profile);
     use_shared_state_provider(cx, || {
@@ -44,7 +44,7 @@ pub(crate) fn use_bootstrap<'a>(
             state.ui.overlays.push(window);
         }
 
-        let size = scaled_window_size(desktop.webview.inner_size(), desktop);
+        let size = scaled_window_size(desktop.webview.inner_size(), &desktop);
         // Update the window metadata now that we've created a window
         let window_meta = WindowMeta {
             focused: desktop.is_focused(),
@@ -59,7 +59,7 @@ pub(crate) fn use_bootstrap<'a>(
         state
     });
 
-    use_shared_state::<State>(cx)
+    use_context::<Signal<State>>()
 }
 
 pub fn set_app_panic_hook() {
