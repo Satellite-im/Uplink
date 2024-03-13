@@ -580,9 +580,9 @@ pub fn ProfileSettings() -> Element {
                     section_label: get_local_text("settings-profile.online-status"),
                     section_description: get_local_text("settings-profile.online-status-description"),
                     FancySelect {
-                        initial_value: get_status_option(cx, &online_status),
+                        initial_value: get_status_option(&online_status),
                         width: 190,
-                        options: identity_status_values.iter().map(|status| get_status_option(cx, status)).collect(),
+                        options: identity_status_values.iter().map(|status| get_status_option(status)).collect(),
                         onselect: move |value: String| {
                             let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
                             ch.send(ChanCmd::Status(status));

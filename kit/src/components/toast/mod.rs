@@ -48,7 +48,7 @@ pub fn Toast<'a>(props: Props<'a>) -> Element {
                 span {
                     class: "toast-icon",
                     IconElement {
-                        icon: get_icon(&cx)
+                        icon: get_icon()
                     }
                 }
             )),

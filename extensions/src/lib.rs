@@ -16,7 +16,7 @@ pub static FILE_EXT: &str = "dll";
 pub trait Extension {
     fn details(&self) -> Details;
     fn stylesheet(&self) -> String;
-    fn render<'a>(&self, runtime: std::rc::Rc<Runtime>) -> Element;
+    fn render<'a>(&self, cx: &'a ScopeState, runtime: std::rc::Rc<Runtime>) -> Element;
     fn rustc_version(&self) -> &'static str {
         RUSTC_VERSION
     }

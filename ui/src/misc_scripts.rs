@@ -6,7 +6,7 @@ pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dar
 pub const MARKDOWN_EDITOR: &str = include_str!("../extra/assets/scripts/editor.js");
 
 pub fn PrismScripts() -> Element {
-    let prism_path = use_prism_path(cx);
+    let prism_path = use_prism_path();
 
     render! {
         script { "{PRISM_SCRIPT}" },
@@ -16,7 +16,7 @@ pub fn PrismScripts() -> Element {
 }
 
 fn use_prism_path() -> &str {
-    use_hook(|| {
+    &use_hook(|| {
         format!(
             r"Prism.plugins.autoloader.languages_path = '{}';",
             get_prism_path().to_string_lossy()

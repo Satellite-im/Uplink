@@ -343,8 +343,8 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
     }
 
     let apply_validation_class = should_validate;
-    let aria_label = get_aria_label(&cx);
-    let label = get_label(&cx);
+    let aria_label = get_aria_label(props);
+    let label = get_label(props);
 
     let disabled = props.disabled.unwrap_or_default() || props.loading.unwrap_or(false);
 
@@ -393,7 +393,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                     span {
                         class: "icon",
                         IconElement {
-                            icon: get_icon(&cx)
+                            icon: get_icon(props)
                         }
                     }
                 )),
@@ -409,7 +409,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                     placeholder: "{props.placeholder}",
                     onblur: move |_| {
                         if onblur_active {
-                            emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                            emit_return(props, val.read().to_string(), *valid.current(), Code::Enter);
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -423,7 +423,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
-                            let validation_result = validate(&cx, &current_val).unwrap_or_default();
+                            let validation_result = validate(props, &current_val).unwrap_or_default();
                             valid.set(validation_result.is_empty());
                             error.set(validation_result);
                             evt.stop_propagation();
@@ -431,7 +431,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                         } else {
                             true
                         };
-                        emit(&cx, current_val, is_valid);
+                        emit(props, current_val, is_valid);
                     },
                     // after a valid submission, don't keep the input box green.
                     onkeyup: move |evt| {
@@ -442,16 +442,16 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
-                                    let validation_result = validate(&cx, "").unwrap_or_default();
+                                    let validation_result = validate(props, "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
                                     error.set(validation_result);
                                     *valid.current()
                                 } else {
                                     true
                                 };
-                                emit(&cx, "".to_owned(), is_valid);
+                                emit(props, "".to_owned(), is_valid);
                             } else {
-                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            emit_return(props, val.read().to_string(), *valid.current(), evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -459,7 +459,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                             }
                         }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
+                            emit_return(props, "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                            }
@@ -472,7 +472,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                         onclick: move |_| {
                             *val.write_silent() = String::new();
                             if should_validate {
-                                let validation_result = validate(&cx, "").unwrap_or_default();
+                                let validation_result = validate(props, "").unwrap_or_default();
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }
@@ -482,7 +482,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                             }
                             // re-focus the input after clearing it
                             let _ = eval(&focus_script);
-                            emit(&cx, String::new(), *valid.get());
+                            emit(props, String::new(), *valid.get());
                         },
                         IconElement {
                             icon: options.clear_btn_icon

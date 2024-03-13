@@ -31,13 +31,13 @@ pub fn Slimbar<'a>(props: Props<'a>) -> Element {
     rsx!(div {
         class: "slimbar",
         aria_label: "slimbar",
-        (show_back_button(&cx)).then(|| rsx!(
+        (show_back_button(props)).then(|| rsx!(
             div {
                 class: "slimbar-back",
                 Button {
                     aria_label: "back-button".into(),
                     icon: icons::outline::Shape::Sidebar,
-                    onpress: move |_| emit(&cx),
+                    onpress: move |_| emit(props),
                     appearance: Appearance::Secondary
                 }
             }

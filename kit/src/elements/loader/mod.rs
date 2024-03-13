@@ -21,7 +21,7 @@ pub fn is_large(props: Props) -> bool {
 pub fn Loader(props: Props) -> Element {
     rsx!(
     div {
-        class: if is_large(&cx) { "loader large" } else { "loader" },
+        class: if is_large(props) { "loader large" } else { "loader" },
         div {
             class: "spin",
             IconElement { icon: Icon::Loader }

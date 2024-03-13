@@ -187,8 +187,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
     let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
 
-    let has_attachments = cx
-        .props
+    let has_attachments = props
         .attachments
         .as_ref()
         .map(|v| !v.is_empty())
@@ -207,14 +206,12 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                 big: true,
                 remote: is_remote,
                 with_download_button: true,
-                download_pending: cx
-                    .props
+                download_pending: props
                     .attachments_pending_download
                     .as_ref()
                     .map(|x| x.contains(file))
                     .unwrap_or(false),
-                on_press: move |temp_dir_option| cx
-                    .props
+                on_press: move |temp_dir_option| props
                     .on_download
                     .call((file.clone(), temp_dir_option)),
             })
@@ -240,8 +237,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
     let remote_class = is_remote.then_some("remote").unwrap_or_default();
     let mention_class = props.is_mention.then_some("mention").unwrap_or_default();
     let order_class = order.to_string();
-    let msg_pending_class = cx
-        .props
+    let msg_pending_class = props
         .pending
         .then_some("message-pending")
         .unwrap_or_default();

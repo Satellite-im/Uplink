@@ -1,6 +1,8 @@
 mod create_group;
 mod search;
 
+use std::thread::scope;
+
 use common::language::{get_local_text, get_local_text_with_args};
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};

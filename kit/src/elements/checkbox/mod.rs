@@ -22,16 +22,8 @@ pub fn Checkbox<'a>(props: Props<'a>) -> Element {
     let checked_class = if props.is_checked { "checked" } else { "" };
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    let height = cx
-        .props
-        .height
-        .clone()
-        .unwrap_or_else(|| "fit-content".into());
-    let width = cx
-        .props
-        .width
-        .clone()
-        .unwrap_or_else(|| "fit-content".into());
+    let height = props.height.clone().unwrap_or_else(|| "fit-content".into());
+    let width = props.width.clone().unwrap_or_else(|| "fit-content".into());
 
     rsx!(
             div {

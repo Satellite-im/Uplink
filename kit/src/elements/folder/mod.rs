@@ -46,7 +46,7 @@ pub fn emit_press(props: Props) {
 pub fn Folder<'a>(props: Props<'a>) -> Element {
     let open = props.open.unwrap_or_default();
     let folder_name = props.text.clone().unwrap_or_default();
-    let aria_label = get_aria_label(&cx);
+    let aria_label = get_aria_label(props);
     let placeholder = folder_name.clone();
     let with_rename = props.with_rename.unwrap_or_default();
     let icon = if open { Icon::FolderOpen } else { Icon::Folder };
@@ -65,7 +65,7 @@ pub fn Folder<'a>(props: Props<'a>) -> Element {
                 aria_label: "{aria_label}",
                 div {
                     class: "icon alignment",
-                    onclick: move |_| emit_press(&cx),
+                    onclick: move |_| emit_press(props),
                     IconElement {
                         icon: icon,
                     },
@@ -94,7 +94,7 @@ pub fn Folder<'a>(props: Props<'a>) -> Element {
                                 },
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape {
-                                        emit(&cx, s, key_code);
+                                        emit(props, s, key_code);
                                     }
                                 }
                             }

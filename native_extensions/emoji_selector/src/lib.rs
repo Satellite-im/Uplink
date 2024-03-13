@@ -253,7 +253,7 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
                             div {
                                 aria_label: emoji.as_str(),
                                 class: "emoji",
-                                onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
+                                onclick: move |_| select_emoji_to_send(state, emoji.to_string(), ch),
                                 emoji.as_str()
                             }
                         )
@@ -276,7 +276,7 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
                                         div {
                                             aria_label: emoji.as_str(),
                                             class: "emoji",
-                                            onclick: move |_| select_emoji_to_send(cx.scope, state, emoji.to_string(), ch),
+                                            onclick: move |_| select_emoji_to_send(state, emoji.to_string(), ch),
                                             emoji.as_str()
                                         }
                                     )

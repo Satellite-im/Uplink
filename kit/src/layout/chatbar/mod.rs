@@ -103,8 +103,7 @@ pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
         Some((&props.state.read(), &props.chat, true)),
     );
 
-    let has_attachments = cx
-        .props
+    let has_attachments = props
         .attachments
         .as_ref()
         .map(|v| !v.is_empty())

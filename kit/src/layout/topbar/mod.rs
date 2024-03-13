@@ -38,11 +38,11 @@ pub fn Topbar<'a>(props: Props<'a>) -> Element {
         div {
             class: "topbar",
             aria_label: "Topbar",
-            (show_back_button(&cx)).then(|| rsx!(
+            (show_back_button(props)).then(|| rsx!(
                 Button {
                     aria_label: "back-button".into(),
                     icon: icons::outline::Shape::Sidebar,
-                    onpress: move |_| emit(&cx),
+                    onpress: move |_| emit(props),
                     appearance: Appearance::Secondary
                 }
             )),

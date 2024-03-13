@@ -83,7 +83,6 @@ pub fn get_items_from_current_directory(ch: &Coroutine<ChanCmd>) {
 #[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(are_files_hovering_app: &Signal<bool>) {
     use_resource(|| {
-        to_owned![are_files_hovering_app];
         async move {
             // ondragover function from div does not work on windows
             loop {

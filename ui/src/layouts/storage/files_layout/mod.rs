@@ -93,7 +93,6 @@ pub fn FilesLayout() -> Element<'_> {
 
     #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(
-        cx,
         upload_file_controller.are_files_hovering_app,
     );
     functions::start_upload_file_listener(

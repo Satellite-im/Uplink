@@ -24,8 +24,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Multiline<'a>(props: Props<'a>) -> Element {
-    let default_text = cx
-        .props
+    let default_text = props
         .default_text
         .clone()
         .unwrap_or_else(|| "Placeholder...".to_owned());

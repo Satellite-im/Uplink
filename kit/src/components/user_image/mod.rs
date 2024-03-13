@@ -48,7 +48,7 @@ pub fn emit_context(props: Props, e: Event<MouseData>) {
 
 #[allow(non_snake_case)]
 pub fn UserImage<'a>(props: Props<'a>) -> Element {
-    let image_data: String = get_image(&cx);
+    let image_data: String = get_image(props);
     let status = props.status;
     let platform = props.platform;
     let typing = props.typing.unwrap_or_default();
@@ -67,8 +67,8 @@ pub fn UserImage<'a>(props: Props<'a>) -> Element {
                     if props.oncontextmenu.is_some() {"has-context-handler"} else {""})
                 },
                 aria_label: "user-image-wrap",
-                onclick: move |e| emit(&cx, e),
-                oncontextmenu: move |e| emit_context(&cx, e),
+                onclick: move |e| emit(props, e),
+                oncontextmenu: move |e| emit_context(props, e),
                 div {
                     class: "user-image",
                     aria_label: "User Image",

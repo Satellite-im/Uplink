@@ -101,7 +101,7 @@ pub fn get_active(props: Props) -> To {
 /// ```
 #[allow(non_snake_case)]
 pub fn Nav<'a>(props: Props<'a>) -> Element {
-    let active = use_signal(|| get_active(&cx));
+    let active = use_signal(|| get_active(props));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
     // For some reason if you dont do this the first render will not have a context menu
@@ -138,7 +138,7 @@ pub fn Nav<'a>(props: Props<'a>) -> Element {
                             icon: route.icon,
                             onpress: move |_| {
                                 active.set(route.to);
-                                emit(&cx, &route.to)
+                                emit(props, &route.to)
                             },
                             text: {
                                 if bubble { name } else { "".into() }

@@ -89,10 +89,10 @@ pub fn FriendsLayout() -> Element {
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
-                get_topbar(cx, route),
+                get_topbar(route),
                 AddFriend {},
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(cx, route.get().clone()),
+                render_route(props, route.get().clone()),
             }
         }
     )
@@ -118,14 +118,14 @@ pub fn MinimalFriendsLayout<'a>(props: MinimalProps<'a>) -> Element {
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
-                get_topbar(cx, route),
+                get_topbar(route),
                 AddFriend {},
                 div {
                     class: "friends-controls",
                     aria_label: "friends-controls",
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(cx, route.get().clone()),
+                render_route(props, route.get().clone()),
                 crate::AppNav {
                     active: crate::UplinkRoute::FriendsLayout{},
                 }

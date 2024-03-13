@@ -62,8 +62,7 @@ pub fn MessageReply<'a>(props: Props<'a>) -> Element {
     let sender_did = props.sender_did.as_ref().cloned();
     let replier_did = props.replier_did.as_ref().cloned();
 
-    let has_attachments = cx
-        .props
+    let has_attachments = props
         .with_attachments
         .as_ref()
         .map(|v| !v.is_empty())

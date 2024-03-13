@@ -31,7 +31,7 @@ pub fn default_state(props: Props) -> bool {
 
 #[allow(non_snake_case)]
 pub fn Switch<'a>(props: Props) -> Element {
-    let checked_state = default_state(&cx);
+    let checked_state = default_state(props);
     let disabled = props.disabled.unwrap_or_default();
 
     rsx! {
@@ -45,7 +45,7 @@ pub fn Switch<'a>(props: Props) -> Element {
                 disabled: "{disabled}",
                 "type": "checkbox",
                 checked: "{checked_state}",
-                oninput: move |e| emit(&cx, e.data.value == "true")
+                oninput: move |e| emit(props, e.data.value == "true")
             },
             span { class: "slider" }
         }

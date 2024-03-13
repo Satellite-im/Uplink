@@ -60,7 +60,7 @@ pub fn File<'a>(props: Props<'a>) -> Element {
     let file_name = props.text.clone();
     let file_name2 = file_name.clone();
 
-    let aria_label = get_aria_label(&cx);
+    let aria_label = get_aria_label(props);
     let placeholder = file_name.clone();
     let with_rename = props.with_rename.unwrap_or_default();
     let disabled = props.disabled.unwrap_or_default();
@@ -80,7 +80,7 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                 aria_label: "{aria_label}",
                 onclick: move |mouse_event_data| {
                     if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                        emit_press(&cx);
+                        emit_press(props);
                     }
                 },
                 div {
@@ -138,7 +138,7 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape  {
                                         let new_name = format!("{}{}", s, file_extension);
-                                        emit(&cx, new_name, key_code)
+                                        emit(props, new_name, key_code)
                                     }
                                 }
                             }

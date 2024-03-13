@@ -9,8 +9,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ColorSwatch<'a>(props: Props<'a>) -> Element {
-    let active = cx
-        .props
+    let active = props
         .active
         .then(|| "active".to_string())
         .unwrap_or_default();

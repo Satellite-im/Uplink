@@ -28,8 +28,7 @@ where
     if *index.get() != props.initial_index {
         index.set(props.initial_index);
     }
-    let buttons_format = cx
-        .props
+    let buttons_format = props
         .buttons_format
         .clone()
         .unwrap_or(ButtonsFormat::Arrows);

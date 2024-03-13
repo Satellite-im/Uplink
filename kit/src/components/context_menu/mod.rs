@@ -96,7 +96,7 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
                     aria_label: "{aria_label}",
                     onclick: move |e| {
                         if !disabled {
-                            emit(&cx, e);
+                            emit(props, e);
                         }
                     },
                     (props.icon.is_some()).then(|| {

@@ -55,7 +55,7 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
     let badge = props.with_badge.clone().unwrap_or_default();
     let disabled = props.disabled.unwrap_or_default();
-    let appearance = get_appearance(&cx);
+    let appearance = get_appearance(props);
     let small = props.small.unwrap_or_default();
     let title = if props.with_title.unwrap_or(true) {
         text.clone()

@@ -211,7 +211,7 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                                         ),
                                         src: "{thumbnail}",
                                     },
-                                    show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
+                                    show_download_or_minus_button_if_enabled(with_download_button, btn_icon),
                                    }
                                     )
                         } else if let Some(filepath) = props.filepath.clone() {
@@ -264,7 +264,7 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                                     if !is_from_attachments {
                                         rsx!( div {
                                             class: "button-position",
-                                            show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon),
+                                            show_download_or_minus_button_if_enabled(with_download_button, btn_icon),
                                         })
                                     }
                                 }
@@ -287,7 +287,7 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                             }
                         },
                         if !has_thumbnail && is_from_attachments {
-                            rsx!(show_download_or_minus_button_if_enabled(cx, with_download_button, btn_icon))
+                            rsx!(show_download_or_minus_button_if_enabled(with_download_button, btn_icon))
                         }
                     if is_pending {
                         rsx!(div {

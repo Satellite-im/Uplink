@@ -237,7 +237,7 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                        sounds::Play(sounds::Sounds::Interaction);
                     }
 
-                    emit(&cx, Page::from_str(route).unwrap());
+                    emit(props, Page::from_str(route).unwrap());
                 }
             }
         }
