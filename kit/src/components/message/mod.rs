@@ -18,6 +18,7 @@ use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
+use warp::raygun::Location;
 use warp::{constellation::file::File, crypto::DID};
 
 use tracing::log;
@@ -114,7 +115,9 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     #[props(!optional)]
-    attachments_pending_uploads: Option<&'a Vec<FileProgression>>,
+    attachments_pending_uploads: Option<&'a Vec<(FileProgression, Location)>>,
+    on_resend: Option<EventHandler<'a, (Option<String>, Location)>>,
+    on_delete: Option<EventHandler<'a, Location>>,
 
     pinned: bool,
 
@@ -218,8 +221,14 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
+    let single = cx
+        .props
+        .attachments_pending_uploads
+        .map(|v| v.len() < 2)
+        .unwrap_or_default();
+
     let pending_attachment_list = cx.props.attachments_pending_uploads.as_ref().map(|vec| {
-        vec.iter().map(|prog| {
+        vec.iter().map(|(prog, location)| {
             let file = progress_file(prog);
             rsx!(FileEmbed {
                 key: "{file}",
@@ -230,14 +239,31 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 progress: prog,
                 on_press: move |_| {},
                 on_resend_msg: move |_| {
-                    // cx.props.state.write().decrement_outgoing_messages(
-                    //     cx.props.chat,
-                    //     msg,
-                    //     progress,
-                    //     None,
-                    // )
+                    if single {
+                        // cx.props.state.write().decrement_outgoing_messages(
+                        //     cx.props.chat,
+                        //     msg,
+                        //     progress,
+                        //     None,
+                        // )
+
+                        if let Some(e) = &cx.props.on_resend {
+                            e.call((cx.props.with_text.clone(), location.clone()))
+                        }
+                    } else {
+                        if let Some(e) = &cx.props.on_delete {
+                            e.call(location.clone())
+                        }
+                        if let Some(e) = &cx.props.on_resend {
+                            e.call((None, location.clone()))
+                        }
+                    }
                 },
-                on_delete_msg: move |_| {},
+                on_delete_msg: move |_| {
+                    if let Some(e) = &cx.props.on_delete {
+                        e.call(location.clone())
+                    }
+                },
             })
         })
     });

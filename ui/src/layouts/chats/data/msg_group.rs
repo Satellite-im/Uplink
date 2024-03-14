@@ -10,7 +10,7 @@ use common::{
     },
     warp_runner::ui_adapter,
 };
-use warp::crypto::DID;
+use warp::{crypto::DID, raygun::Location};
 
 // Define a struct to represent a group of messages from the same sender.
 #[derive(Clone)]
@@ -38,7 +38,7 @@ pub struct MessageGroupMsg {
     pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
-    pub file_progress: Option<Vec<FileProgression>>,
+    pub file_progress: Option<Vec<(FileProgression, Location)>>,
 }
 
 impl MessageGroupMsg {
