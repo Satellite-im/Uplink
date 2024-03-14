@@ -7,20 +7,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.70"
-unic-langid = "0.9.1"
-fluent-templates = "0.8.0"
+anyhow = "1.0.80"
+unic-langid = "0.9.4"
+fluent-templates = "0.9.1"
 notify = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 once_cell = { workspace = true }
 clap = { workspace = true }
-rodio = "0.16"
+rodio = "0.17.3"
 uuid = { workspace = true }
 notify-rust = { workspace = true }
 dirs = { workspace = true }
 base64 = { workspace = true }
-lipsum = "0.8.2"
+lipsum = "0.9.0"
 chrono = { workspace = true }
 rand = { workspace = true }
 image = { workspace = true }
@@ -32,7 +32,7 @@ tracing.workspace = true
 parking_lot.workspace = true
 icons = { workspace = true }
 humansize = { workspace = true }
-zip = "0.6.4"
+zip = "0.6.6"
 walkdir = { workspace = true }
 extensions = { workspace = true }
 regex = { workspace = true }
@@ -54,13 +54,13 @@ derive_more = { workspace = true }
 either = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.24.1"
+cocoa = "0.25.0"
 objc = "0.2.7"
-core-foundation = "0.9.3"
-mac-notification-sys = "0.5.6"
+core-foundation = "0.9.4"
+mac-notification-sys = "0.6.1"
 
 [target.'cfg(target_env = "msvc")'.dependencies.windows]
-version = "0.24.0"
+version = "0.54.0"
 features = [
     "Win32_Foundation",
     "Foundation_Collections",
@@ -70,7 +70,7 @@ features = [
 ]
 
 [target.'cfg(target_env = "gnu")'.dependencies.windows]
-version = "0.24.0"
+version = "0.54.0"
 features = [
     "Win32_Foundation",
     "Foundation_Collections",

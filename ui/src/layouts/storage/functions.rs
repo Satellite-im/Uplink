@@ -163,7 +163,7 @@ pub fn download_file(
     let file_path_buf = if temp_path_to_download_file_to_preview.is_none() {
         match FileDialog::new()
             .set_directory(".")
-            .set_file_name(&file_stem)
+            .set_file_name(file_stem)
             .add_filter("", &[&file_extension])
             .save_file()
         {

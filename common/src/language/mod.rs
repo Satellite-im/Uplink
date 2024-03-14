@@ -68,7 +68,7 @@ pub fn get_available_languages() -> Vec<String> {
 }
 
 pub fn get_local_text(text: &str) -> String {
-    LOCALES.lookup(&APP_LANG.read().0, text).unwrap_or_default()
+    LOCALES.lookup(&APP_LANG.read().0, text)
 }
 
 // Looks and formats a local text using the given args
@@ -94,7 +94,5 @@ where
         builder(&mut map);
         map
     };
-    LOCALES
-        .lookup_with_args(&APP_LANG.read().0, text, &args)
-        .unwrap_or_default()
+    LOCALES.lookup_with_args(&APP_LANG.read().0, text, &args)
 }
