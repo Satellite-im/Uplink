@@ -10,9 +10,9 @@ pub enum ButtonsFormat {
     Arrows,
 }
 
-#[derive(Props)]
-pub struct Props<'a, T> {
-    values: Vec<T>,
+#[derive(Props, Clone)]
+pub struct Props<T> {
+    values: ReadOnlySignal<Vec<T>>,
     initial_index: usize,
     #[props(default)]
     buttons_format: Option<ButtonsFormat>,
@@ -20,7 +20,7 @@ pub struct Props<'a, T> {
 }
 
 #[allow(non_snake_case)]
-pub fn SlideSelector<'a, T>(props: Props<'a, T>) -> Element
+pub fn SlideSelector<T>(props: Props<T>) -> Element
 where
     T: std::fmt::Display + Clone,
 {

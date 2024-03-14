@@ -93,19 +93,19 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
                 }
             },
             if *tooltip_visible.current() {
-                props.tooltip.as_ref().map(|tooltip| {
+                {props.tooltip.as_ref().map(|tooltip| {
                     rsx!(
-                       tooltip
+                       {tooltip}
                     )
-                })
+                })}
             }
-            (!badge.is_empty()).then(|| rsx!(
+            {(!badge.is_empty()).then(|| rsx!(
                 span {
                     aria_label: "Button Badge",
                     class: "badge",
                     "{badge}"
                 }
-            )),
+            ))},
             button {
                 aria_label: "{aria_label}",
                 name: "{aria_label}",
@@ -119,14 +119,13 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
                     }
                 },
                 if let Some(loading) = props.loading {
-                    loading.then(|| rsx!(
+                    {loading.then(|| rsx!(
                         Loader {
                             spinning: true
                         }
-                    ))
+                    ))}
                 },
                 if let Some(_icon) = props.icon {
-                    rsx!(
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
@@ -137,15 +136,14 @@ pub fn Button<'a>(props: Props<'a>) -> Element {
                                 disabled:  props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF"
                             },
-                        },
-                    )
+                        }
                 }
                 // We only need to include the text if it contains something.
-                (!text.is_empty()).then(|| rsx!(div {
+                {(!text.is_empty()).then(|| rsx!(div {
                     class: "btn-text",
                     cursor: if disabled {"unset"} else {"pointer"},
                     "{text2}"
-                })),
+                }))},
             },
         },
     )

@@ -188,12 +188,10 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                     } else { "" }
                 )
             },
-                rsx!(
                     div {
                         class: format_args!("{}", if has_thumbnail {""} else {"icon"}),
                         aria_label: "file-icon",
                         if has_thumbnail {
-                            rsx!(
                                 div {
                                     class: "image-container",
                                     aria_label: "message-image-container",
@@ -211,11 +209,10 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                                         ),
                                         src: "{thumbnail}",
                                     },
-                                    show_download_or_minus_button_if_enabled(with_download_button, btn_icon),
+                                    {show_download_or_minus_button_if_enabled(props, with_download_button, btn_icon)},
                                    }
-                                    )
                         } else if let Some(filepath) = props.filepath.clone() {
-                            let is_image_or_video = is_image(filename.clone()) || is_video;
+                            {let is_image_or_video = is_image(filename.clone()) || is_video;
                             if is_image_or_video && filepath.exists() {
                                 let fixed_path = get_fixed_path_to_load_local_file(filepath.clone());
                                 rsx!(img {
@@ -234,16 +231,15 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                                             icon: props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                         }
                                         if !file_extension_is_empty {
-                                            rsx!( label {
+                                             label {
                                                 class: "file-embed-type",
                                                 "{file_extension}"
-                                            })
+                                            }
                                         }
                                     }
                                     )
-                            }
+                            }}
                         } else {
-                            rsx!(
                                 div {
                                     class: "document-container",
                                     height: "60px",
@@ -256,19 +252,18 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                                         icon: props.attachment_icon.unwrap_or(return_correct_icon(&file_name_with_extension.clone()))
                                     }
                                     if !file_extension_is_empty {
-                                        rsx!( label {
+                                         label {
                                             class: "file-embed-type",
                                             "{file_extension}"
-                                        })
+                                        }
                                     }
                                     if !is_from_attachments {
-                                        rsx!( div {
+                                        div {
                                             class: "button-position",
-                                            show_download_or_minus_button_if_enabled(with_download_button, btn_icon),
-                                        })
+                                            {show_download_or_minus_button_if_enabled(props, with_download_button, btn_icon)},
+                                        }
                                     }
                                 }
-                                )
                         }
                     }
                     div {
@@ -287,18 +282,17 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
                             }
                         },
                         if !has_thumbnail && is_from_attachments {
-                            rsx!(show_download_or_minus_button_if_enabled(with_download_button, btn_icon))
+                            {show_download_or_minus_button_if_enabled(props, with_download_button, btn_icon)}
                         }
                     if is_pending {
-                        rsx!(div {
+                        div {
                             class: "upload-bar",
                             div {
                                 class: "upload-progress",
                                 style: format_args!("width: {}%", perc)
                             }
-                        })
+                        }
                     }
-                )
         }
     )
 }

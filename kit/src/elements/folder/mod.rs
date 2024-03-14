@@ -7,7 +7,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     #[props(optional)]
     open: Option<bool>,
     #[props(optional)]
@@ -21,7 +21,7 @@ pub struct Props<'a> {
     #[props(optional)]
     onrename: Option<EventHandler<(String, Code)>>,
     #[props(optional)]
-    onpress: Option<EventHandler<'a>>,
+    onpress: Option<EventHandler>,
     #[props(optional)]
     loading: Option<bool>,
 }
@@ -43,7 +43,7 @@ pub fn emit_press(props: Props) {
 }
 
 #[allow(non_snake_case)]
-pub fn Folder<'a>(props: Props<'a>) -> Element {
+pub fn Folder(props: Props) -> Element {
     let open = props.open.unwrap_or_default();
     let folder_name = props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(props);
@@ -70,7 +70,7 @@ pub fn Folder<'a>(props: Props<'a>) -> Element {
                         icon: icon,
                     },
                 },
-                with_rename.then(||
+                {with_rename.then(||
                         rsx! (
                             Input {
                                 aria_label: "folder-name-input".into(),
@@ -99,14 +99,14 @@ pub fn Folder<'a>(props: Props<'a>) -> Element {
                                 }
                             }
                     )
-                  ),
-                (!with_rename).then(|| rsx! (
+                  )},
+                {(!with_rename).then(|| rsx! (
                     label {
                         class: "folder-name item-alignment",
                         title: "{&folder_name}",
                         "{folder_name}"
                     }
-                ))
+                ))}
             }
         )
     }

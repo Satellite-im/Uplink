@@ -123,7 +123,7 @@ pub struct Props<'a> {
 
     is_mention: bool,
 
-    state: &'a UseSharedState<State>,
+    state: &'a Signal<State>,
 
     chat: Uuid,
 }
@@ -243,7 +243,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
         .unwrap_or_default();
 
     rsx! (
-        props.pinned.then(|| {
+        {props.pinned.then(|| {
             rsx!(div {
                 class: "pin-indicator",
                 aria_label: "pin-indicator",
@@ -258,7 +258,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                     },
                 },
             })
-        }),
+        })},
         div {
             class: {
                 format_args!(
@@ -275,18 +275,18 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                 )
             },
             white_space: "pre-wrap",
-            (props.with_content.is_some()).then(|| rsx! (
+            {(props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
-                    props.with_content.as_ref(),
+                    {props.with_content.as_ref()},
                 },
-            )),
-            (props.with_text.is_some() && props.editing).then(||
+            ))},
+            {(props.with_text.is_some() && props.editing).then(||
                 rsx! (
                     p {
                         class: "text",
                         aria_label: "message-text",
-                        rsx! (
+                        {rsx! (
                             EditMsg {
                                 id: props.id.clone(),
                                 text: props.with_text.clone().unwrap_or_default(),
@@ -294,11 +294,11 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                                     props.on_edit.call(update);
                                 }
                             }
-                        )
+                        )}
                     }
                 )
-            ),
-            (props.with_text.is_some() && !props.editing).then(|| rsx!(
+            )},
+            {(props.with_text.is_some() && !props.editing).then(|| rsx!(
                 ChatText {
                     text: props.with_text.as_ref().cloned().unwrap_or_default(),
                     remote: is_remote,
@@ -308,25 +308,25 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                     chat: props.chat,
                     ascii_emoji: props.transform_ascii_emojis,
                 }
-            )),
-            has_attachments.then(|| {
+            ))},
+            {has_attachments.then(|| {
                 rsx!(
                     div {
                         class: "attachment-list",
-                        attachment_list.map(|list| {
-                            rsx!( list )
-                        })
+                        {attachment_list.map(|list| {
+                            rsx!( {list} )
+                        })}
                     }
                 )
-            })
-            pending_attachment_list.map(|node| {
-                rsx!(node)
-            })
+            })}
+            {pending_attachment_list.map(|node| {
+                rsx!({node})
+            })}
         },
         div {
             class: "{reactions_class}",
             aria_label: "message-reaction-container",
-            props.reactions.iter().map(|reaction| {
+            {props.reactions.iter().map(|reaction| {
                 let reaction_count = reaction.reaction_count;
                 let emoji = &reaction.emoji;
                 let alt = &reaction.alt;
@@ -352,20 +352,20 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
                         "{emoji} {reaction_count}"
                     }
                 )
-            })
+            })}
         }
     )
 }
 
 #[derive(Props)]
-struct EditProps<'a> {
+struct EditProps {
     id: String,
     text: String,
     on_enter: EventHandler<String>,
 }
 
 #[allow(non_snake_case)]
-fn EditMsg<'a>(props: EditProps<'a>) -> Element {
+fn EditMsg(props: EditProps) -> Element {
     log::trace!("rendering EditMsg");
 
     rsx!(textarea::InputRich {
@@ -385,18 +385,18 @@ fn EditMsg<'a>(props: EditProps<'a>) -> Element {
 }
 
 #[derive(Props)]
-pub struct ChatMessageProps<'a> {
+pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
     markdown: bool,
     ascii_emoji: bool,
-    state: &'a UseSharedState<State>,
+    state: Signal<State>,
     chat: Uuid,
 }
 
 #[allow(non_snake_case)]
-pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
+pub fn ChatText(props: ChatMessageProps) -> Element {
     // DID::from_str panics if text is 'z'. simple fix is to ensure string is long enough.
     if props.text.len() > 2 {
         if let Ok(id) = DID::from_str(&props.text) {
@@ -426,12 +426,12 @@ pub fn ChatText<'a>(props: ChatMessageProps<'a>) -> Element {
                 aria_label: "message-text",
                 dangerous_inner_html: "{formatted_text}",
             },
-            links.first().and_then(|l| rsx!(
+            {links.first().and_then(|l| rsx!(
                 EmbedLinks {
                     link: l.to_string(),
                     remote: props.remote
                 })
-            )
+            )}
         }
     )
 }
@@ -840,10 +840,10 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                             p {
                                 class: "text",
                                 aria_label: "profile-name-value",
-                                format!("{}", identity.username())
+                                {format!("{}", identity.username())}
                             }
                         }
-                        identity.status_message().and_then(|s|{
+                        {identity.status_message().and_then(|s|{
                             rsx!(
                                 div {
                                     id: "profile-status",
@@ -855,7 +855,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                                     }
                                 }
                             )
-                        }),
+                        })},
                     },
                     Button {
                         aria_label: String::from("embed-identity-button"),
@@ -890,7 +890,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         p {
                             class: "text",
                             aria_label: "unknown-user-value",
-                            get_local_text("messages.unknown-identity")
+                            {get_local_text("messages.unknown-identity")}
                         }
                     },
                     div {
@@ -899,7 +899,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         p {
                             class: "text",
                             aria_label: "unknown-user-did-value",
-                            props.id.to_string()
+                            {props.id.to_string()}
                         }
                     }
                 }

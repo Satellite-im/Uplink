@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     tooltip: Element,
     children: Element,
 }
@@ -9,7 +9,7 @@ pub struct Props<'a> {
 // TODO: Right now this component only displays tooltips below the wrapped component, in the future we should expand this component to support tooltip positions.
 
 #[allow(non_snake_case)]
-pub fn TooltipWrap<'a>(props: Props<'a>) -> Element {
+pub fn TooltipWrap(props: Props) -> Element {
     let tooltip = props.tooltip.as_ref().clone();
     let children = props.children.as_ref();
 

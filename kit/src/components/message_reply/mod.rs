@@ -43,7 +43,7 @@ pub struct Props<'a> {
     replier_did: Option<DID>,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
-    state: &'a UseSharedState<State>,
+    state: &'a Signal<State>,
     chat: Uuid,
 }
 
@@ -97,37 +97,36 @@ pub fn MessageReply<'a>(props: Props<'a>) -> Element {
                 )
             },
             aria_label: "message-reply",
-            (props.user_image.is_some() && remote_message).then(|| rsx! (
-                props.user_image.as_ref()
-            )),
-            (props.with_text.is_some() || has_attachments).then(|| rsx! (
+            {(props.user_image.is_some() && remote_message).then(|| rsx! (
+                {props.user_image.as_ref()}
+            ))},
+            {(props.with_text.is_some() || has_attachments).then(|| rsx! (
                 div {
                     class: "content",
-                    (!prefix.is_empty()).then(|| rsx!(
+                    {(!prefix.is_empty()).then(|| rsx!(
                         p {
                             class: "prefix",
                             "{prefix}"
                         },
-                    )),
+                    ))},
                     p {
                         class: {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
                         background: if replier_did == sender_did {"var(--secondary)"} else {"var(--secondary-dark)"},
                         dangerous_inner_html: "{text}",
-                        has_attachments.then(|| {
-                            rsx!(
+                        {has_attachments.then(|| {
                                 attachment_list.map(|list| {
-                                    rsx!( list )
+                                    rsx!( {list} )
                                 })
-                            )
-                        })
+
+                        })}
                     }
                 }
-            )),
-            (props.user_image.is_some() && !remote_message).then(|| rsx! (
-                props.user_image.as_ref()
-            )),
+            ))},
+            {(props.user_image.is_some() && !remote_message).then(|| rsx! (
+                {props.user_image.as_ref()}
+            ))},
             div {
                 class: "connector",
                 if props.remote.unwrap_or_default() {

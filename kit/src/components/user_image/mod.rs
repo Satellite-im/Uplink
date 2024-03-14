@@ -1,5 +1,4 @@
 use dioxus::{
-    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
@@ -10,7 +9,7 @@ use crate::{
 };
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     #[props(optional)]
     loading: Option<bool>,
     #[props(optional)]
@@ -47,7 +46,7 @@ pub fn emit_context(props: Props, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn UserImage<'a>(props: Props<'a>) -> Element {
+pub fn UserImage(props: Props) -> Element {
     let image_data: String = get_image(props);
     let status = props.status;
     let platform = props.platform;
@@ -58,48 +57,52 @@ pub fn UserImage<'a>(props: Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     rsx!(if loading {
-        rsx!(UserImageLoading {})
+        {
+            rsx!(UserImageLoading {})
+        }
     } else {
-        rsx!(
-            div {
-                class: {
-                    format_args!("user-image-wrap {} {}", if pressable { "pressable" } else { "" },
-                    if props.oncontextmenu.is_some() {"has-context-handler"} else {""})
-                },
-                aria_label: "user-image-wrap",
-                onclick: move |e| emit(props, e),
-                oncontextmenu: move |e| emit_context(props, e),
+        {
+            rsx!(
                 div {
-                    class: "user-image",
-                    aria_label: "User Image",
-                    div {
-                        class: "image",
-                        aria_label: "user-image-profile",
-                        style: "background-image: url('{image_data}');"
+                    class: {
+                        format_args!("user-image-wrap {} {}", if pressable { "pressable" } else { "" },
+                        if props.oncontextmenu.is_some() {"has-context-handler"} else {""})
                     },
-                    typing.then(|| rsx!(
+                    aria_label: "user-image-wrap",
+                    onclick: move |e| emit(props, e),
+                    oncontextmenu: move |e| emit_context(props, e),
+                    div {
+                        class: "user-image",
+                        aria_label: "User Image",
                         div {
-                            class: "profile-typing",
-                            aria_label: "profile-typing",
-                            div { class: "dot dot-1" },
-                            div { class: "dot dot-2" },
-                            div { class: "dot dot-3" }
+                            class: "image",
+                            aria_label: "user-image-profile",
+                            style: "background-image: url('{image_data}');"
+                        },
+                        {typing.then(|| rsx!(
+                            div {
+                                class: "profile-typing",
+                                aria_label: "profile-typing",
+                                div { class: "dot dot-1" },
+                                div { class: "dot dot-2" },
+                                div { class: "dot dot-3" }
+                            }
+                        ))}
+                        {status.map(|s| {
+                            rsx!(Indicator {
+                                status: s,
+                                platform: platform,
+                            })
+                        })}
+                    },
+                    {(props.with_username.is_some()).then(|| rsx!(
+                        Label {
+                            text: username
                         }
-                    ))
-                    status.map(|s| {
-                        rsx!(Indicator {
-                            status: s,
-                            platform: platform,
-                        })
-                    })
-                },
-                (props.with_username.is_some()).then(|| rsx!(
-                    Label {
-                        text: username
-                    }
-                ))
-            }
-        )
+                    ))}
+                }
+            )
+        }
     })
 }
 

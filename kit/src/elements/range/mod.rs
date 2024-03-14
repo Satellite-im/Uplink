@@ -42,7 +42,7 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
             class: "range",
             aria_label: "{aria_label}",
             if with_buttons {
-                rsx!(Button {
+                Button {
                     icon: Icon::Minus,
                     appearance: Appearance::PrimaryAlternative,
                     disabled: props.disabled.unwrap_or_default(),
@@ -55,16 +55,14 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
                             props.onchange.call(*internal_state.get());
                         }
                     }
-                })
+                }
             } else {
-                rsx! {
-                    props.icon_left.is_some().then(|| rsx! {
+                    {props.icon_left.is_some().then(|| rsx! {
                         IconElement {
                             icon: props.icon_left.unwrap_or(Icon::NoSymbol),
                             size: 16,
                         }
-                    }),
-                }
+                    })}
             }
             input {
                 "type": "range",
@@ -80,7 +78,7 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
                 },
             },
             if with_buttons {
-                rsx!(Button {
+                Button {
                     icon: Icon::Plus,
                     appearance: Appearance::PrimaryAlternative,
                     aria_label: "increase_range_value_button".into(),
@@ -92,9 +90,9 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
                             props.onchange.call(*internal_state.get());
                         }
                     }
-                })
+                }
             } else {
-                rsx! {
+                {
                     props.icon_right.is_some().then(|| rsx! {
                         IconElement {
                             icon: props.icon_right.unwrap_or(Icon::NoSymbol),
@@ -103,13 +101,13 @@ pub fn Range<'a>(props: Props<'a>) -> Element {
                     })
                 }
             }
-            (!props.no_num.unwrap_or_default()).then(||rsx!(
+            {(!props.no_num.unwrap_or_default()).then(||rsx!(
                 p {
                     aria_label: "range-value",
                     class: "range-value",
                     "{internal_state.get()}"
                 }
-            ))
+            ))}
         }
     )
 }

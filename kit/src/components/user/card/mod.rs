@@ -4,7 +4,7 @@ use crate::elements::{button::Button, Appearance};
 use common::{icons::outline::Shape as Icon, language::get_local_text};
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     friends: bool,
     name: String,
     status: String,
@@ -12,7 +12,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn UserCard<'a>(props: Props<'a>) -> Element {
+pub fn UserCard(props: Props) -> Element {
     rsx!(
         div {
             class: "user-card",

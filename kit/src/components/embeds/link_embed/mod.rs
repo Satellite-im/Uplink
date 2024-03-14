@@ -1,7 +1,7 @@
 use crate::components::embeds::youtube::YouTubePlayer;
 use dioxus::prelude::*;
 use dioxus::prelude::{rsx, Props};
-use dioxus_core::{Element, Scope};
+use dioxus_core::Element;
 use dioxus_hooks::use_future;
 use scraper::{Html, Selector};
 
@@ -56,7 +56,7 @@ pub struct LinkEmbedProps {
 
 #[allow(non_snake_case)]
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
-    let fetch_meta = use_future(|| async move { get_meta(link.as_str()).await });
+    let fetch_meta = use_future(|| async move { get_meta(props.link.as_str()).await });
 
     let meta = match fetch_meta.value() {
         Some(Ok(val)) => val.clone(),
@@ -83,9 +83,8 @@ pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
 
     rsx! {
         if meta.title.is_empty() {
-            rsx! { span {""} }
+            span {""}
         } else {
-            rsx! {
                 div {
                     class: format_args!("link-embed-container {}", if props.remote {"link-embed-remote"} else {""}),
                     div {
@@ -95,39 +94,38 @@ pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
                             class: "embed-icon",
                             aria_label: "embed-icon",
                             if !meta.icon.is_empty() {
-                                rsx!(  img {
+                                 img {
                                     src: "{meta.icon}",
                                     alt: "Website Icon",
-                                },)
+                                }
                             }
                             if !title.is_empty() {
-                                rsx!(a {
+                                a {
                                     class: "link-title",
                                     aria_label: "link-title",
                                     href: "{props.link}",
                                     "{title}"
-                                })
+                                }
                             }
                         },
                         if desc.is_empty() && youtube_video.is_none() {
-                           rsx!(div {})
+                           div {}
                         } else {
-                            rsx!( div {
+                            div {
                                 class: "embed-details",
                                 aria_label: "embed-details",
-                                youtube_video.is_some().then(|| rsx!(
+                                {youtube_video.is_some().then(|| rsx!(
                                     YouTubePlayer {
                                         video_url: youtube_video.unwrap(),
                                     }
-                                ))
+                                ))}
                                 p {
                                     "{desc}"
                                 }
-                            })
+                            }
                         }
                     }
                 }
-            }
         }
     }
 }

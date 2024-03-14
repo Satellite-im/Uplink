@@ -27,12 +27,12 @@ pub fn CommunityCard<'a>(props: Props<'a>) -> Element {
                 }
                 div {
                     class: "title",
-                    h1 { props.name.clone() }
+                    h1 { {props.name.clone()} }
                 }
                 div {
                     class: "subtitle",
                     p {
-                        get_local_text("community.invited")
+                        {get_local_text("community.invited")}
                     },
                 }
             }

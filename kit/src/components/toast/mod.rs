@@ -8,8 +8,8 @@ use uuid::Uuid;
 
 #[allow(dead_code)]
 //TODO: Remove for appearance when it is used
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     id: Uuid,
     on_hover: EventHandler<Uuid>,
     on_close: EventHandler<Uuid>,
@@ -35,7 +35,7 @@ pub fn get_icon(props: Props) -> Icon {
 }
 
 #[allow(non_snake_case)]
-pub fn Toast<'a>(props: Props<'a>) -> Element {
+pub fn Toast(props: Props) -> Element {
     let content = props.with_content.clone().unwrap_or_default();
     let title = props.with_title.clone().unwrap_or_default();
 

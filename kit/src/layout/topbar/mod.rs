@@ -5,13 +5,13 @@ use tracing::log;
 use crate::elements::{button::Button, Appearance};
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     #[props(optional)]
     with_back_button: Option<bool>,
     #[props(optional)]
-    onback: Option<EventHandler<'a>>,
+    onback: Option<EventHandler>,
     #[props(optional)]
-    onclick: Option<EventHandler<'a>>,
+    onclick: Option<EventHandler>,
     #[props(optional)]
     controls: Option<Element>,
     #[props(optional)]
@@ -32,20 +32,20 @@ pub fn emit(props: Props) {
 }
 
 #[allow(non_snake_case)]
-pub fn Topbar<'a>(props: Props<'a>) -> Element {
+pub fn Topbar(props: Props) -> Element {
     log::trace!("rendering topbar");
     rsx!(
         div {
             class: "topbar",
             aria_label: "Topbar",
-            (show_back_button(props)).then(|| rsx!(
+            {(show_back_button(props)).then(|| rsx!(
                 Button {
                     aria_label: "back-button".into(),
                     icon: icons::outline::Shape::Sidebar,
                     onpress: move |_| emit(props),
                     appearance: Appearance::Secondary
                 }
-            )),
+            ))},
             div {
                 class: "children",
                 onclick: move |_| {
@@ -53,14 +53,14 @@ pub fn Topbar<'a>(props: Props<'a>) -> Element {
                         f.call(())
                     }
                 },
-                props.children.as_ref()
+                {props.children.as_ref()}
             },
-            props.controls.is_some().then(|| rsx!(
+            {props.controls.is_some().then(|| rsx!(
                 div {
                     class: "controls",
-                    props.controls.as_ref()
+                    {props.controls.as_ref()}
                 }
-            ))
+            ))}
         }
     )
 }

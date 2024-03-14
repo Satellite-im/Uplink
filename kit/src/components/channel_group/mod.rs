@@ -42,7 +42,7 @@ pub fn ChannelGroupElement(props: Props) -> Element {
             },
             div {
                 class: "channel-group-body",
-                channels.iter().map(|channel| {
+                {channels.iter().map(|channel| {
                     rsx!(
                         ChannelElement {
                             channel: channel.clone(),
@@ -50,8 +50,8 @@ pub fn ChannelGroupElement(props: Props) -> Element {
                                 props.onpress.call(channel);
                             }
                         }
-                    ),
-                },),
+                    )
+                },)},
             }
         }
     )

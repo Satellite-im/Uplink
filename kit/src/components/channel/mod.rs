@@ -33,13 +33,13 @@ pub struct Channel {
 }
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     channel: Channel,
     onpress: EventHandler<Channel>,
 }
 
 #[allow(non_snake_case)]
-pub fn ChannelElement(props: Props<'a>) -> Element {
+pub fn ChannelElement(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
 
     rsx!(
@@ -101,7 +101,7 @@ pub fn ChannelElement(props: Props<'a>) -> Element {
                                 class: "channel-type-voice",
                                 p {
                                     class: "channel-name",
-                                    props.channel.name.clone()
+                                    {props.channel.name.clone()}
                                 }
                             }
                         ),
@@ -110,7 +110,7 @@ pub fn ChannelElement(props: Props<'a>) -> Element {
                                 class: "channel-type-text",
                                 p {
                                     class: "channel-name",
-                                    props.channel.name.clone()
+                                   { props.channel.name.clone()}
                                 }
                             }
                         ),

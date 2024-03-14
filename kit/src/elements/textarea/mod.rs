@@ -38,8 +38,8 @@ impl Size {
     }
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(default = "".to_owned())]
     id: String,
     #[props(default = false)]
@@ -70,7 +70,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(props: Props<'a>) -> Element {
+pub fn Input(props: Props) -> Element {
     log::trace!("render input");
     let left_shift_pressed = use_signal(|| false);
     let right_shift_pressed = use_signal(|| false);
@@ -270,7 +270,6 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                     }
                 }
                 if *show_char_counter {
-                    rsx!(
                         div {
                             class: "input-char-counter",
                             p {
@@ -278,27 +277,26 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                                 id: "{id_char_counter}-char-counter",
                                 aria_label: "input-char-counter",
                                 class: "char-counter-p-element",
-                                format!("{}", text_value.read().len()),
+                                {format!("{}", text_value.read().len())},
                             },
                             p {
                                 key: "{id_char_counter}-char-max-length",
                                 id: "{id_char_counter}-char-max-length",
                                 class: "char-counter-p-element",
-                                format!("/{}", max_length - 1),
+                               { format!("/{}", max_length - 1)},
                             }
                         }
-                        )
                 }
             },
         }
-        script { script },
-        script { focus_script }
+        script { {script} },
+        script { {focus_script} }
     )
 }
 
 // Input using a rich editor making markdown changes visible
 #[allow(non_snake_case)]
-pub fn InputRich<'a>(props: Props<'a>) -> Element {
+pub fn InputRich(props: Props) -> Element {
     log::trace!("render input");
     let listener_data = use_signal(|| None);
 
@@ -461,7 +459,6 @@ pub fn InputRich<'a>(props: Props<'a>) -> Element {
                     }
                 }
                 if *show_char_counter {
-                    rsx!(
                         div {
                             class: "input-char-counter",
                             p {
@@ -469,16 +466,15 @@ pub fn InputRich<'a>(props: Props<'a>) -> Element {
                                 id: "{id_char_counter}-char-counter",
                                 aria_label: "input-char-counter",
                                 class: "char-counter-p-element",
-                                format!("{}", text_value.read().chars().count()),
+                                {format!("{}", text_value.read().chars().count())},
                             },
                             p {
                                 key: "{id_char_counter}-char-max-length",
                                 id: "{id_char_counter}-char-max-length",
                                 class: "char-counter-p-element",
-                                format!("/{}", max_length - 1),
+                                {format!("/{}", max_length - 1)},
                             }
                         }
-                    )
                 }
             },
         }

@@ -27,9 +27,9 @@ pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
             aria_label: {
                 format_args!("message-group-wrap-{}", if remote { "remote" } else { "local" })
             },
-            remote.then(|| rsx!(
-                &props.user_image
-            ))
+            {remote.then(|| rsx!(
+                {&props.user_image}
+            ))}
             div {
                 class: {
                     format_args!("message-group {}", if remote { "remote" } else { "" })
@@ -37,16 +37,16 @@ pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
                 aria_label: {
                     format_args!("message-group{}", if remote { "-remote" } else { "" })
                 },
-                &props.children,
+                {&props.children},
                 p {
                     class: "time-ago noselect defaultcursor",
                     aria_label: "time-ago",
                     "{props.sender} - {time_ago}"
                 }
             }
-            (!remote).then(|| rsx!(
-                &props.user_image
-            ))
+            {(!remote).then(|| rsx!(
+                {&props.user_image}
+            ))}
         }
     )
 }

@@ -85,11 +85,11 @@ pub struct ReplyProps<'a> {
     remote: Option<bool>,
     message: String,
     attachments: Option<Vec<File>>,
-    onclose: EventHandler<'a>,
+    onclose: EventHandler,
     children: Element,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
-    state: &'a UseSharedState<State>,
+    state: &'a Signal<State>,
     chat: Uuid,
 }
 
@@ -142,7 +142,7 @@ pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
             div {
                 class: "content",
                 aria_label: "content",
-                remote.then(|| rsx!(&props.children)),
+                {remote.then(|| rsx!({&props.children}))},
                 p {
                     class: {
                         format_args!("reply-text message {}", if remote { "remote" } else { "" })
@@ -151,15 +151,15 @@ pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
                         format_args!("reply-text-message{}", if remote { "-remote" } else { "" })
                     },
                     dangerous_inner_html: "{message}",
-                    has_attachments.then(|| {
+                    {has_attachments.then(|| {
                         rsx!(
-                            attachment_list.map(|list| {
-                                rsx!( list )
-                            })
+                            {attachment_list.map(|list| {
+                                rsx!( {list} )
+                            })}
                         )
-                    })
+                    })}
                 }
-                (!remote).then(|| rsx!(&props.children)),
+                {(!remote).then(|| rsx!({&props.children}))},
             }
 
         }
@@ -177,8 +177,8 @@ pub fn Chatbar<'a>(props: Props<'a>) -> Element {
     rsx!(
         div {
             class: "chatbar disable-select",
-            props.with_replying_to.as_ref(),
-            props.with_file_upload.as_ref(),
+            {props.with_replying_to.as_ref()},
+            {props.with_file_upload.as_ref()},
             div{
                 class: "chatbar-group",
                 textarea::InputRich {
@@ -252,18 +252,18 @@ pub fn Chatbar<'a>(props: Props<'a>) -> Element {
                             let _ = eval(&include_str!("./suggestion_scroll.js").replace("$NUM", &selected_idx.to_string()));
                         }
                 },
-                is_typing.then(|| {
+                {is_typing.then(|| {
                     rsx!(MessageTyping {
                         typing_users: props.typing_users.clone()
                     })
-                })
+                })}
             }
-            props.extensions.as_ref(),
+            {props.extensions.as_ref()},
             div {
                 class: "controls",
-                props.controls.as_ref()
+                {props.controls.as_ref()}
             },
-            (!props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
+            {(!props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
                 rsx!(SuggestionsMenu {
                 suggestions: props.suggestions,
                 on_close: move |_| {
@@ -277,7 +277,7 @@ pub fn Chatbar<'a>(props: Props<'a>) -> Element {
                     }
                 },
                 selected: selected_suggestion.clone(),
-            })),
+            }))},
         }
     )
 }
@@ -296,7 +296,7 @@ fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
         *props.selected.write_silent() = Some(0);
     }
     let (label, suggestions): (_, Vec<_>) = match props.suggestions {
-        SuggestionType::None => return rsx!(()),
+        SuggestionType::None => return (),
         SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
@@ -312,7 +312,7 @@ fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
                     onclick: move |_| {
                         props.on_click.call((emoji.clone(), pattern.clone()))
                     },
-                    format_args!("{emoji}  :{alias}:"),
+                    {format_args!("{emoji}  :{alias}:")},
                 })
             }).collect();
             (get_local_text("messages.emoji-suggestion"), component)
@@ -341,7 +341,7 @@ fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
                             image: id.profile_picture()
                         }
                     }
-                    format_args!("{username}"),
+                    {format_args!("{username}")},
                 })
             }).collect();
             (get_local_text("messages.username-suggestion"), component)
@@ -369,6 +369,6 @@ fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
                 text: label,
             },
         }
-        suggestions.into_iter()
+        {suggestions.into_iter()}
     })
 }

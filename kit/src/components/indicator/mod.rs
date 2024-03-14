@@ -93,7 +93,7 @@ impl From<identity::IdentityStatus> for Status {
     }
 }
 
-#[derive(Eq, PartialEq, Props)]
+#[derive(Eq, PartialEq, Props, Clone)]
 pub struct Props {
     // Whether the indicator is in a loading state
     #[props(optional)]

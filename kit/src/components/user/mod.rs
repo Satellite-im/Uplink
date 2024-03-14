@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 
 use dioxus::{
-    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
@@ -13,8 +12,8 @@ use crate::components::{
 
 pub mod card;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     username: String,
     user_image: Element,
     subtext: String,
@@ -58,7 +57,7 @@ pub fn emit(props: Props, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn User<'a>(props: Props<'a>) -> Element {
+pub fn User(props: Props) -> Element {
     let time_ago = get_time_ago(props);
     let badge = get_badge(props);
     let aria_label = props.aria_label.clone().unwrap_or_default();
@@ -66,16 +65,15 @@ pub fn User<'a>(props: Props<'a>) -> Element {
     let loading = props.loading.unwrap_or_default();
 
     rsx!(if loading {
-        rsx!(UserLoading {})
+        UserLoading {}
     } else {
-        rsx!(
             div {
                 class: {
                     format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
                 },
                 onclick: move |e| emit(props, e),
                 aria_label: "{aria_label}",
-                (!badge.is_empty()).then(|| rsx!(
+                {(!badge.is_empty()).then(|| rsx!(
                     span {
                         class: "badge",
                         aria_label: "User Badge",
@@ -90,8 +88,8 @@ pub fn User<'a>(props: Props<'a>) -> Element {
                             "{badge}"
                         }
                     }
-                )),
-                &props.user_image,
+                ))},
+                {&props.user_image},
                 div {
                     class: "info",
                     aria_label: "User Info",
@@ -107,7 +105,6 @@ pub fn User<'a>(props: Props<'a>) -> Element {
                     }
                 }
             }
-        )
     })
 }
 

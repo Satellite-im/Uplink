@@ -17,6 +17,6 @@ pub fn InvisibleCloser<'a>(props: Props<'a>) -> Element {
         onclick: move |_| {
             props.onclose.call(());
         },
-        props.children.as_ref()
+        {props.children.as_ref()}
     })
 }

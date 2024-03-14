@@ -11,7 +11,7 @@ use common::icons::Icon as IconElement;
 use common::{icons::outline::Shape as Icon, is_video};
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     text: String,
     #[props(optional)]
     thumbnail: Option<String>,
@@ -24,7 +24,7 @@ pub struct Props<'a> {
     #[props(optional)]
     onrename: Option<EventHandler<(String, Code)>>,
     #[props(optional)]
-    onpress: Option<EventHandler<'a>>,
+    onpress: Option<EventHandler>,
     #[props(optional)]
     loading: Option<bool>,
 }
@@ -55,7 +55,7 @@ pub fn get_file_extension(file_name: String) -> String {
 }
 
 #[allow(non_snake_case)]
-pub fn File<'a>(props: Props<'a>) -> Element {
+pub fn File(props: Props) -> Element {
     let file_extension = get_file_extension(props.text.clone());
     let file_name = props.text.clone();
     let file_name2 = file_name.clone();
@@ -86,7 +86,7 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                 div {
                     class: "icon alignment",
                     if thumbnail.is_empty() {
-                        let file_extension = file_extension.clone().replace('.', "");
+                      {  let file_extension = file_extension.clone().replace('.', "");
                         rsx!(
                             label {
                                 class: "file-type",
@@ -100,17 +100,17 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                                     icon: return_correct_icon(&file_name2.clone())
                                 }
                             }
-                        )
+                        )}
                     } else {
-                        rsx!(img {
+                        img {
                             class: "thumbnail-container",
                             height: if is_video {"50px"} else {""},
                             width: if is_video {"100px"} else {""},
                             src: "{thumbnail}",
-                        })
+                        }
                     }
                 },
-                with_rename.then(||
+                {with_rename.then(||
                     rsx! (
                         div {
                             margin_top: "12px",
@@ -143,8 +143,8 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                                 }
                             }
                         )
-                  ),
-                (!with_rename).then(|| rsx! (
+                  )},
+                {(!with_rename).then(|| rsx! (
                     label {
                         class: "file-name item-alignment",
                         padding_top: "8px",
@@ -152,7 +152,7 @@ pub fn File<'a>(props: Props<'a>) -> Element {
                         title: "{&file_name}",
                         "{file_name}"
                     }
-                ))
+                ))}
             }
         )
     }

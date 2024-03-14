@@ -4,9 +4,9 @@ use crate::elements::{button::Button, Appearance};
 use common::icons;
 
 #[derive(Props)]
-pub struct Props<'a> {
+pub struct Props {
     with_back_button: Option<bool>,
-    onback: Option<EventHandler<'a>>,
+    onback: Option<EventHandler>,
     with_nav: Option<Element>,
     navbar_visible: bool,
     top_children: Option<Element>,
@@ -27,11 +27,11 @@ pub fn emit(props: Props) {
 }
 
 #[allow(non_snake_case)]
-pub fn Slimbar<'a>(props: Props<'a>) -> Element {
+pub fn Slimbar(props: Props) -> Element {
     rsx!(div {
         class: "slimbar",
         aria_label: "slimbar",
-        (show_back_button(props)).then(|| rsx!(
+        {(show_back_button(props)).then(|| rsx!(
             div {
                 class: "slimbar-back",
                 Button {
@@ -41,22 +41,21 @@ pub fn Slimbar<'a>(props: Props<'a>) -> Element {
                     appearance: Appearance::Secondary
                 }
             }
-        )),
+        ))},
         div {
             class: "slimbar-scroll",
             div {
                 class: "slimbar-top",
-                props.top_children.clone(),
+                {props.top_children.clone()},
             }
             div {
                 class: "slimbar-inner",
-                props.children.clone(),
+                {props.children.clone()},
             }
         }
-
-        props.navbar_visible.then(|| rsx!(div {
+        {props.navbar_visible.then(|| rsx!(div {
             class: "nav-vertical-wrapper",
-            props.with_nav.clone(),
-        })),
+            {props.with_nav.clone()},
+        }))},
     })
 }

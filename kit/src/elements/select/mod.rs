@@ -32,7 +32,7 @@ fn remove_duplicates(values: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn remove_duplicates_fancy(values: Vec<(String, Element<'_>)>) -> Vec<(String, Element<'_>)> {
+fn remove_duplicates_fancy(values: Vec<(String, Element)>) -> Vec<(String, Element)> {
     let mut set = HashSet::new();
     values
         .iter()
@@ -58,9 +58,9 @@ pub fn Select<'a>(props: Props<'a>) -> Element {
             select {
                 value: "{initial_value}",
                 onchange: move |e| emit(props, e.value.clone()),
-                iter.map(|val|
+                {iter.map(|val|
                     rsx!(option {key: "{val}", label: "{val}", value: "{val}", aria_label: "Selector Option"})
-                )
+                )}
             }
         }
     )
@@ -87,7 +87,7 @@ pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
         options.insert(0, (initial_value.clone(), initial_element.clone()))
     };
     let iter = IntoIterator::into_iter(options.clone());
-    let visible = use_signal(|| false);
+    let mut visible = use_signal(|| false);
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
@@ -106,14 +106,14 @@ pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
                 },
                 div {
                     class: "fancy-select",
-                    initial_element
+                    {initial_element}
                 },
-                visible.read().then(||{
+                {visible.read().then(||{
                     rsx!(
                         div {
                             class: "fancy-select-options",
                             aria_label: "selector-options-list",
-                            iter.map(|(val, element)|
+                            {iter.map(|(val, element)|
                                 rsx!(div {
                                     class: "fancy-select-option",
                                     aria_label: "selector-option",
@@ -124,9 +124,9 @@ pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
                                         visible.set(false);
                                         e.stop_propagation()
                                     },
-                                    element
+                                    {element}
                                 })
-                            )
+                            )}
                         },
                         InvisibleCloser {
                             onclose: |_| {
@@ -134,7 +134,7 @@ pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
                             }
                         }
                     )
-                })
+                })}
             }
         }
     )

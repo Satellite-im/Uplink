@@ -377,26 +377,26 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
             class: {
                 format_args!("input-group {}", if disabled { "disabled" } else { " "})
             },
-            (!label.is_empty()).then(|| rsx! (
+            {(!label.is_empty()).then(|| rsx! (
                 Label {
                     text: label,
                     label_with_ellipsis: options.ellipsis_on_label.unwrap_or_default(),
                 }
-            ))
+            ))}
             div {
                 class: {
                     format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
                 height: props.size.get_height(),
                 // If an icon was provided, render it before the input.
-                (props.icon.is_some()).then(|| rsx!(
+                {(props.icon.is_some()).then(|| rsx!(
                     span {
                         class: "icon",
                         IconElement {
                             icon: get_icon(props)
                         }
                     }
-                )),
+                ))},
                 input {
                     id: "{input_id}",
                     class: format_args!("{} {}", loading_class, if props.select_on_focus.unwrap_or_default() {"select"} else {""}),
@@ -466,7 +466,7 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                         }
                     }
                 },
-                (options.with_clear_btn && !val.read().is_empty() && !disabled).then(move || rsx!(
+                {(options.with_clear_btn && !val.read().is_empty() && !disabled).then(move || rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
@@ -488,18 +488,18 @@ pub fn Input<'a>(props: Props<'a>) -> Element {
                             icon: options.clear_btn_icon
                         }
                     }
-                )),
-                props.loading.unwrap_or(false).then(move || rsx!(
+                ))},
+                {props.loading.unwrap_or(false).then(move || rsx!(
                     Loader { spinning: true },
-                )),
+                ))},
             },
-            (!error.is_empty()).then(|| rsx!(
+            {(!error.is_empty()).then(|| rsx!(
                 p {
                     class: "error",
                     aria_label: "input-error",
                     "{error}"
                 }
-            ))
+            ))}
         }
     )
 }

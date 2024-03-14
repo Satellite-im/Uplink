@@ -38,24 +38,22 @@ pub fn Sidebar<'a>(props: Props<'a>) -> Element {
                 format_args!("sidebar resize-horiz-right {}", if hidden { "hidden" } else { "" })
             },
             aria_label: "sidebar",
-            rsx!(
                 div {
                     class: "search",
                     aria_label: "sidebar-search",
-                    props.with_search.as_ref(),
+                    {props.with_search.as_ref()},
                     div {
                         class: "hamburger",
-                        hamburger
+                        {hamburger}
                     }
                 },
                 div {
                     class: "children disable-select",
                     aria_label: "sidebar-children",
-                    props.children.as_ref()
+                    {props.children.as_ref()}
                 },
-                props.with_call_controls.as_ref(),
-                props.with_nav.as_ref(),
-            )
+                {props.with_call_controls.as_ref()},
+                {props.with_nav.as_ref()},
         },
     )
 }

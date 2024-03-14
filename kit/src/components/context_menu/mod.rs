@@ -1,6 +1,5 @@
 use common::{icons, language::get_local_text, state::State};
 use dioxus::{
-    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
@@ -69,13 +68,13 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
                 },
                 class: "context-item simple-context-item",
                 if *tooltip_visible.current() {
-                    props.tooltip.as_ref().map(|tooltip| {
+                    {props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
-                           tooltip
+                           {tooltip}
                         )
-                    })
+                    })}
                 }
-                children
+                {children}
             }
         )
     } else {
@@ -99,20 +98,20 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
                             emit(props, e);
                         }
                     },
-                    (props.icon.is_some()).then(|| {
+                    {(props.icon.is_some()).then(|| {
                         let icon = props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
                         rsx! {
                             icons::Icon { icon: icon }
                         }
-                    }),
+                    })},
                     div {"{props.text}"},
                 }
                 if *tooltip_visible.current() {
-                    props.tooltip.as_ref().map(|tooltip| {
+                    {props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
-                           tooltip
+                           {tooltip}
                         )
-                    })
+                    })}
                 }
             }
         )
@@ -147,12 +146,12 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
                     id: "profile-image",
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
-                    with_status.then(||{
+                    {with_status.then(||{
                         rsx!(Indicator {
                             status: sender.identity_status().into(),
                             platform: sender.platform().into(),
                         })
-                    })
+                    })}
                 }
             }
         }
@@ -198,14 +197,14 @@ pub fn ContextMenu<'a>(props: Props<'a>) -> Element {
             div {
                 id: "{id}",
                 class: "context-inner",
-                &props.children,
+                {&props.children},
             },
             div {
                 id: "{id}-context-menu",
                 class: "context-menu hidden",
                 aria_label: "Context Menu",
-                &props.items,
-                devmode.then(|| rsx!(
+                {&props.items},
+                {devmode.then(|| rsx!(
                     br {},
                     hr {},
                     br {},
@@ -215,7 +214,7 @@ pub fn ContextMenu<'a>(props: Props<'a>) -> Element {
                         onpress: move |_| window.webview.open_devtools(),
                         aria_label: "open-devtools-context".into(),
                     }
-                ))
+                ))}
             },
         },
     }

@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 
-#[derive(Props)]
-pub struct Props<'a> {
-    onpress: EventHandler<'a>,
+#[derive(Props, Clone)]
+pub struct Props {
+    onpress: EventHandler,
     active: bool,
     color: (u8, u8, u8),
 }
 
 #[allow(non_snake_case)]
-pub fn ColorSwatch<'a>(props: Props<'a>) -> Element {
+pub fn ColorSwatch(props: Props) -> Element {
     let active = props
         .active
         .then(|| "active".to_string())

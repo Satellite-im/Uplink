@@ -34,13 +34,13 @@ pub fn Checkbox<'a>(props: Props<'a>) -> Element {
             onclick: move |_| {
                 props.on_click.call(());
             },
-            props.is_checked.then(|| {
+            {props.is_checked.then(|| {
                 rsx!(
                     IconElement {
                         icon: Icon::Check
                     }
                 )
-            }),
+            })},
         }
     )
 }
