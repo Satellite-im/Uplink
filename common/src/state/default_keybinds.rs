@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_desktop::tao::keyboard::ModifiersState;
 
-use super::settings::{GlobalShortcut, Shortcut};
+use super::settings::{GlobalShortcut, ModifiersStateDef, Shortcut};
 
 pub fn get_default_keybinds() -> Vec<(GlobalShortcut, Shortcut)> {
     let alt_or_command_modifierstate = if cfg!(target_os = "macos") {
@@ -85,5 +85,8 @@ pub fn get_keycode_and_modifier_from_a_shortcut(
             break;
         }
     }
-    (keycodes, modifiers)
+
+    let modifiers_state_vec = ModifiersStateDef::to_modifiers_state_vec(modifiers);
+
+    (keycodes, modifiers_state_vec)
 }

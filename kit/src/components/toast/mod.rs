@@ -44,14 +44,14 @@ pub fn Toast<'a>(props: Props<'a>) -> Element {
             class: "toast",
             aria_label: "Toast Notification",
             onmouseover: move |_| props.on_hover.call(props.id),
-            (props.icon.is_some()).then(|| rsx!(
+            {(props.icon.is_some()).then(|| rsx!(
                 span {
                     class: "toast-icon",
                     IconElement {
-                        icon: get_icon()
+                        icon: get_icon(props)
                     }
                 }
-            )),
+            ))},
             div {
                 class: "toast-content",
                 aria_label: "toast-content",

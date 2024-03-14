@@ -104,6 +104,7 @@ pub fn Nav<'a>(props: Props<'a>) -> Element {
     let active = use_signal(|| get_active(props));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
+    let routes_in_app = props.routes.clone();
     // For some reason if you dont do this the first render will not have a context menu
     let uuid = use_signal(|| Uuid::new_v4().to_string());
     rsx!(
@@ -112,7 +113,7 @@ pub fn Nav<'a>(props: Props<'a>) -> Element {
             class: {
                 format_args!("nav {}", if bubble { "bubble" } else { "" })
             },
-            props.routes.iter().map(|route| {
+            {routes_in_app.iter().map(|route| {
                 let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
@@ -147,7 +148,7 @@ pub fn Nav<'a>(props: Props<'a>) -> Element {
                             tooltip: tooltip,
                             appearance: get_appearance(active, route.to)
                         },
-                        route.child.as_ref()
+                        {route.child.as_ref()}
                     }
                 );
                 match route.context_items.as_ref() {
@@ -161,7 +162,7 @@ pub fn Nav<'a>(props: Props<'a>) -> Element {
                         })
                     }
                 }
-            })
+            })}
         }
     )
 }

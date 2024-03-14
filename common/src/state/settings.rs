@@ -9,6 +9,74 @@ use serde::{Deserialize, Serialize};
 use warp::crypto::DID;
 
 use super::State;
+use bitflags::bitflags;
+
+bitflags! {
+
+    #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+    pub struct ModifiersStateDef: u32 {
+        const SHIFT = 0b100 << 0;
+        const CONTROL = 0b100 << 3;
+        const ALT = 0b100 << 6;
+        const SUPER = 0b100 << 9;
+    }
+}
+
+impl ModifiersStateDef {
+    pub fn from_modifiers_state(modifiers_state: ModifiersState) -> ModifiersStateDef {
+        let mut modifiers_state_def = ModifiersStateDef::empty();
+        if modifiers_state.contains(ModifiersState::SHIFT) {
+            modifiers_state_def |= ModifiersStateDef::SHIFT;
+        }
+        if modifiers_state.contains(ModifiersState::CONTROL) {
+            modifiers_state_def |= ModifiersStateDef::CONTROL;
+        }
+        if modifiers_state.contains(ModifiersState::ALT) {
+            modifiers_state_def |= ModifiersStateDef::ALT;
+        }
+        if modifiers_state.contains(ModifiersState::SUPER) {
+            modifiers_state_def |= ModifiersStateDef::SUPER;
+        }
+        modifiers_state_def
+    }
+
+    pub fn to_modifiers_state(&self) -> ModifiersState {
+        let mut modifiers_state = ModifiersState::empty();
+        if self.contains(ModifiersStateDef::SHIFT) {
+            modifiers_state |= ModifiersState::SHIFT;
+        }
+        if self.contains(ModifiersStateDef::CONTROL) {
+            modifiers_state |= ModifiersState::CONTROL;
+        }
+        if self.contains(ModifiersStateDef::ALT) {
+            modifiers_state |= ModifiersState::ALT;
+        }
+        if self.contains(ModifiersStateDef::SUPER) {
+            modifiers_state |= ModifiersState::SUPER;
+        }
+        modifiers_state
+    }
+
+    pub fn to_modifiers_state_vec(
+        modifiers_state_def_vec: Vec<ModifiersStateDef>,
+    ) -> Vec<ModifiersState> {
+        let mut modifiers_state_vec = Vec::new();
+        for item in modifiers_state_def_vec {
+            modifiers_state_vec.push(item.to_modifiers_state());
+        }
+        modifiers_state_vec
+    }
+
+    pub fn from_modifiers_state_vec(
+        modifiers_state_vec: Vec<ModifiersState>,
+    ) -> Vec<ModifiersStateDef> {
+        let mut modifiers_state_def = Vec::new();
+        for item in modifiers_state_vec {
+            modifiers_state_def.push(ModifiersStateDef::from_modifiers_state(item));
+        }
+        modifiers_state_def
+    }
+}
 
 #[derive(Eq, PartialEq, Hash, Debug, Clone, Deserialize, Serialize, Default)]
 pub enum GlobalShortcut {
@@ -40,8 +108,9 @@ impl fmt::Display for GlobalShortcut {
 
 #[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Shortcut {
-    pub keys: Vec<KeyCode>,             // Keys required
-    pub modifiers: Vec<ModifiersState>, // Modifier keys required
+    pub keys: Vec<KeyCode>, // Keys required
+    // #[serde(with = "ModifiersStateDef")]
+    pub modifiers: Vec<ModifiersStateDef>, // Modifier keys required
     pub system_shortcut: bool, // Determines if the shortcut should work system-wide i.e. even when uplink is not in focus
 }
 
@@ -67,7 +136,7 @@ impl Shortcut {
         let mut modifier_strs: Vec<String> = self
             .modifiers
             .iter()
-            .map(|modifier| modifier_state_to_string(*modifier))
+            .map(|modifier| modifier_state_to_string(modifier.to_modifiers_state()))
             .collect();
 
         modifier_strs.extend(key_code_strs);
@@ -229,9 +298,13 @@ pub fn modifier_state_to_string(modifier_state: ModifiersState) -> String {
 
 impl From<(Vec<KeyCode>, Vec<ModifiersState>, bool)> for Shortcut {
     fn from(shortcut_tup: (Vec<KeyCode>, Vec<ModifiersState>, bool)) -> Self {
+        let mut modifier_state_def_vec = Vec::new();
+        for item in shortcut_tup.1 {
+            modifier_state_def_vec.push(ModifiersStateDef::from_modifiers_state(item));
+        }
         Shortcut {
             keys: shortcut_tup.0,
-            modifiers: shortcut_tup.1,
+            modifiers: modifier_state_def_vec,
             system_shortcut: shortcut_tup.2,
         }
     }

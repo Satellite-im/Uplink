@@ -23,7 +23,7 @@ pub fn YouTubePlayer(props: Props) -> Element {
                 allowfullscreen: true,
             },
         }
-    ))
+    )
 }
 
 fn extract_video_id_from_embed_url(embed_url: &str) -> Option<String> {

@@ -27,11 +27,11 @@ pub fn UserCard<'a>(props: Props<'a>) -> Element {
                 }
                 div {
                     class: "title",
-                    h1 { props.name.clone() }
+                    h1 { {props.name.clone()} }
                 }
                 div {
                     class: "subtitle",
-                    p { props.status.clone() }
+                    p { {props.status.clone()} }
                 }
             }
             div {

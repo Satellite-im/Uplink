@@ -10,12 +10,15 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn TooltipWrap<'a>(props: Props<'a>) -> Element {
+    let tooltip = props.tooltip.as_ref().clone();
+    let children = props.children.as_ref();
+
     rsx!(div {
         class: "tooltip-parent",
         div {
             class: "tooltip-wrapper",
-            props.tooltip.as_ref()
+            {tooltip},
         }
-        props.children.as_ref()
-    })
+        {children}
+    },)
 }

@@ -1501,6 +1501,7 @@ version = "0.2.3"
 dependencies = [
  "anyhow",
  "base64 0.20.0",
+ "bitflags 2.4.2",
  "chrono",
  "clap 4.5.1",
  "cocoa 0.24.1",
