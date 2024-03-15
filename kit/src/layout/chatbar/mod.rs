@@ -52,13 +52,13 @@ pub struct Route {
 }
 
 #[derive(Default)]
-pub struct ReplyInfo<'a> {
+pub struct ReplyInfo {
     pub user_image: Element,
     pub message: String,
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     id: String,
     placeholder: String,
     typing_users: Vec<String>,
@@ -74,13 +74,13 @@ pub struct Props<'a> {
     #[props(default = false)]
     is_disabled: bool,
     ignore_focus: bool,
-    suggestions: &'a SuggestionType,
+    suggestions: SuggestionType,
     oncursor_update: Option<EventHandler<(String, i64)>>,
     on_suggestion_click: Option<EventHandler<(String, String, i64)>>,
 }
 
-#[derive(Props)]
-pub struct ReplyProps<'a> {
+#[derive(Props, Clone)]
+pub struct ReplyProps {
     label: String,
     remote: Option<bool>,
     message: String,
@@ -89,12 +89,12 @@ pub struct ReplyProps<'a> {
     children: Element,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
-    state: &'a Signal<State>,
+    state: Signal<State>,
     chat: Uuid,
 }
 
 #[allow(non_snake_case)]
-pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
+pub fn Reply(props: ReplyProps) -> Element {
     let remote = props.remote.unwrap_or_default();
     let message = format_text(
         &props.message,
@@ -167,7 +167,7 @@ pub fn Reply<'a>(props: ReplyProps<'a>) -> Element {
 }
 
 #[allow(non_snake_case)]
-pub fn Chatbar<'a>(props: Props<'a>) -> Element {
+pub fn Chatbar(props: Props) -> Element {
     let controlled_input_id = &props.id;
     let is_typing = !props.typing_users.is_empty();
     let cursor_position = use_signal(|| None);
@@ -282,16 +282,16 @@ pub fn Chatbar<'a>(props: Props<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
-pub struct SuggestionProps<'a> {
-    suggestions: &'a SuggestionType,
+#[derive(Props, Clone)]
+pub struct SuggestionProps {
+    suggestions: SuggestionType,
     on_click: EventHandler<(String, String)>,
     on_close: EventHandler<()>,
     selected: Signal<Option<usize>>,
 }
 
 #[allow(non_snake_case)]
-fn SuggestionsMenu<'a>(props: SuggestionProps<'a>) -> Element {
+fn SuggestionsMenu(props: SuggestionProps) -> Element {
     if props.selected.read().is_none() {
         *props.selected.write_silent() = Some(0);
     }

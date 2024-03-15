@@ -1,9 +1,8 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
-use uuid::timestamp;
 
-#[derive(Eq, PartialEq, Props)]
+#[derive(Eq, PartialEq, Props, Clone)]
 pub struct Props {
     text: Option<String>,
     #[props(optional)]

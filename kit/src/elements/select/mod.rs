@@ -5,8 +5,8 @@ use dioxus_elements::GlobalAttributes;
 
 use crate::components::invisible_closer::InvisibleCloser;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
     options: Vec<String>,
@@ -42,7 +42,7 @@ fn remove_duplicates_fancy(values: Vec<(String, Element)>) -> Vec<(String, Eleme
 }
 
 #[allow(non_snake_case)]
-pub fn Select<'a>(props: Props<'a>) -> Element {
+pub fn Select<'a>(props: Props) -> Element {
     let initial_value = props.initial_value.clone();
     let mut options = remove_duplicates(props.options.clone());
     options.retain(|value| value != &initial_value);
@@ -66,8 +66,8 @@ pub fn Select<'a>(props: Props<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
-pub struct FancySelectProps<'a> {
+#[derive(Props, Clone)]
+pub struct FancySelectProps {
     #[props(optional)]
     _loading: Option<bool>,
     options: Vec<(String, Element)>,
@@ -79,7 +79,7 @@ pub struct FancySelectProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn FancySelect<'a>(props: FancySelectProps<'a>) -> Element {
+pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
     let (initial_value, initial_element) = props.initial_value.clone();
     let mut options = remove_duplicates_fancy(props.options.clone());
     if props.current_to_top.unwrap_or_default() {

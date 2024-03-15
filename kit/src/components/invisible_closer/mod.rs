@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     classes: Option<String>,
     onclose: EventHandler<()>,
     children: Option<Element>,
 }
 
 #[allow(non_snake_case)]
-pub fn InvisibleCloser<'a>(props: Props<'a>) -> Element {
+pub fn InvisibleCloser(props: Props) -> Element {
     rsx!(div {
         class: format_args!(
             "close-handler-behind {}",

@@ -5,7 +5,7 @@ use common::{icons::outline::Shape as Icon, state::State};
 
 use crate::components::context_menu::{ContextItem, ContextMenu};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct VoiceChannelUser {
     pub talking: bool,
     pub muted: bool,
@@ -14,7 +14,7 @@ pub struct VoiceChannelUser {
     pub avatar: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum ChannelType {
     Text,
     Photo,
@@ -25,14 +25,14 @@ pub enum ChannelType {
     Voice(Vec<VoiceChannelUser>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Channel {
     pub id: String,
     pub name: String,
     pub kind: ChannelType,
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     channel: Channel,
     onpress: EventHandler<Channel>,
@@ -70,29 +70,29 @@ pub fn ChannelElement(props: Props) -> Element {
                 onclick: |_| {
                     props.onpress.call(props.channel.clone());
                 },
-                match &props.channel.kind {
-                    ChannelType::Text => rsx!(IconElement {
+                {match &props.channel.kind {
+                    ChannelType::Text => rsx! {IconElement {
                         icon: Icon::ChatBubbleBottomCenterText
-                    }),
-                    ChannelType::Photo => rsx!(IconElement {
+                    }},
+                    ChannelType::Photo => IconElement {
                         icon: Icon::Photo
-                    }),
-                    ChannelType::SharedFolder => rsx!(IconElement {
+                    },
+                    ChannelType::SharedFolder => IconElement {
                         icon: Icon::Folder
-                    }),
-                    ChannelType::Robot => rsx!(IconElement {
+                    },
+                    ChannelType::Robot => IconElement {
                         icon: Icon::CommandLine
-                    }),
-                    ChannelType::Announcements => rsx!(IconElement {
+                    },
+                    ChannelType::Announcements => IconElement {
                         icon: Icon::InformationCircle
-                    }),
-                    ChannelType::Voice(_) => rsx!(IconElement {
+                    },
+                    ChannelType::Voice(_) => IconElement {
                         icon: Icon::Speaker
-                    }),
-                    ChannelType::Docs => rsx!(IconElement {
+                    },
+                    ChannelType::Docs => IconElement {
                         icon: Icon::BookOpen
-                    }),
-                },
+                    },
+                }},
                 div {
                     class: "channel-info",
                     match &props.channel.kind {

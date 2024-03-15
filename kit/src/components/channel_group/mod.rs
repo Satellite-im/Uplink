@@ -12,11 +12,11 @@ pub struct ChannelGroup {
     pub channels: Vec<Channel>,
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     group_name: String,
     channels: Vec<Channel>,
-    onpress: EventHandler<&'a Channel>,
+    onpress: EventHandler<Channel>,
 }
 
 #[allow(non_snake_case)]

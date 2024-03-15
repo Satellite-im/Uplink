@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
 // Remember: owned props must implement PartialEq!
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
     #[props(optional)]
@@ -30,7 +30,7 @@ pub fn default_state(props: Props) -> bool {
 }
 
 #[allow(non_snake_case)]
-pub fn Switch<'a>(props: Props) -> Element {
+pub fn Switch(props: Props) -> Element {
     let checked_state = default_state(props);
     let disabled = props.disabled.unwrap_or_default();
 

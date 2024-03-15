@@ -5,8 +5,8 @@ use dioxus::prelude::*;
 use crate::elements::input::Input;
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
     placeholder: String,
@@ -23,7 +23,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Multiline<'a>(props: Props<'a>) -> Element {
+pub fn Multiline(props: Props) -> Element {
     let default_text = props
         .default_text
         .clone()

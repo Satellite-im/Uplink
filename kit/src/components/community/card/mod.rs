@@ -4,15 +4,15 @@ use crate::elements::{button::Button, Appearance};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     joined: bool,
     name: String,
     onjoin: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn CommunityCard<'a>(props: Props<'a>) -> Element {
+pub fn CommunityCard(props: Props) -> Element {
     rsx!(
         div {
             class: "community-card",

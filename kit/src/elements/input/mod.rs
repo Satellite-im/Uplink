@@ -127,8 +127,8 @@ impl Size {
     }
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(default = "".to_owned())]
     id: String,
     #[props(default = false)]
@@ -301,7 +301,7 @@ pub fn validate(props: Props, val: &str) -> Option<ValidationError> {
 }
 
 #[allow(non_snake_case)]
-pub fn Input<'a>(props: Props<'a>) -> Element {
+pub fn Input(props: Props) -> Element {
     // Input element needs an id. Create a new one if an id wasn't specified
     let input_id = if props.id.is_empty() {
         Uuid::new_v4().to_string()

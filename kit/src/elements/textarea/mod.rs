@@ -128,10 +128,10 @@ pub fn Input(props: Props) -> Element {
     let value_signal = use_signal(|| value.clone());
 
     use_resource(|| {
-        to_owned![cursor_position, text_value, show_char_counter];
+        to_owned![cursor_position, show_char_counter];
         async move {
             *cursor_position.write_silent() = Some(value_signal.read().chars().count() as i64);
-            *text_value.write_silent() = val;
+            *text_value.write_silent() = text_value.read();
             if show_char_counter {
                 let _ = eval(&sync.replace("$TEXT", &text_value.read()));
             }

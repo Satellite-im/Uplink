@@ -8,8 +8,8 @@ use warp::crypto::DID;
 
 use crate::components::indicator::Indicator;
 
-#[derive(Props)]
-pub struct ItemProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct ItemProps {
     #[props(optional)]
     onpress: Option<EventHandler<MouseEvent>>,
     text: String,
@@ -34,7 +34,7 @@ pub fn emit(props: ItemProps, e: Event<MouseData>) {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
+pub fn ContextItem(props: ItemProps) -> Element {
     let should_render = props.should_render.unwrap_or(true);
 
     if !should_render {
@@ -67,7 +67,7 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
                     }
                 },
                 class: "context-item simple-context-item",
-                if *tooltip_visible.current() {
+                if *tooltip_visible.read() {
                     {props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
                            {tooltip}
@@ -100,13 +100,11 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
                     },
                     {(props.icon.is_some()).then(|| {
                         let icon = props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
-                        rsx! {
-                            icons::Icon { icon: icon }
-                        }
+                            rsx!({icons::Icon { icon: icon }})
                     })},
                     div {"{props.text}"},
                 }
-                if *tooltip_visible.current() {
+                if *tooltip_visible.read() {
                     {props.tooltip.as_ref().map(|tooltip| {
                         rsx!(
                            {tooltip}
@@ -118,7 +116,7 @@ pub fn ContextItem<'a>(props: ItemProps<'a>) -> Element {
     }
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct IdentityProps {
     sender_did: DID,
     with_status: Option<bool>,
@@ -158,8 +156,8 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
     )
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     id: String,
     items: Element,
     children: Element,
@@ -170,7 +168,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ContextMenu<'a>(props: Props<'a>) -> Element {
+pub fn ContextMenu(props: Props) -> Element {
     let id = &props.id;
     let window = use_window();
 

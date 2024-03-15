@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
 // Remember: owned props must implement PartialEq!
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
     _min: i32,
@@ -18,7 +18,7 @@ pub fn get_default(props: Props) -> i32 {
 }
 
 #[allow(non_snake_case)]
-pub fn Slider<'a>(props: Props) -> Element {
+pub fn Slider(props: Props) -> Element {
     let _slider_value = use_signal(|| get_default(props));
     // TODO: Pending dioxus update for eval returning values
     rsx! {

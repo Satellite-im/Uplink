@@ -5,8 +5,8 @@ use dioxus::prelude::*;
 
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     with_search: Option<Element>,
     #[props(optional)]
@@ -19,7 +19,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(props: Props<'a>) -> Element {
+pub fn Sidebar(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
     let hidden = props.hidden.unwrap_or(false);
 

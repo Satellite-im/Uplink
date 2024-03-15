@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 
 const MAX_LEN: usize = 17;
 
-#[derive(Props, PartialEq)]
+#[derive(Props, PartialEq, Clone)]
 pub struct Props {
     // Represents the image of the user who is typing
     typing_users: Vec<String>,
@@ -40,7 +40,7 @@ pub fn MessageTyping(props: Props) -> Element {
                 p {
                     class: "typing-message",
                     aria_label: "typing-message",
-                    typing_users,
+                    {typing_users},
                 }
                 div {
                     display: "flex",

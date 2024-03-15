@@ -6,8 +6,8 @@ use dioxus::prelude::*;
 use crate::elements::button::Button;
 use crate::elements::Appearance;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     initial_value: f32,
     min: f32,
     max: f32,
@@ -22,7 +22,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Range<'a>(props: Props<'a>) -> Element {
+pub fn Range(props: Props) -> Element {
     let internal_state = use_signal(|| props.initial_value);
     let value = use_signal(|| props.initial_value);
 

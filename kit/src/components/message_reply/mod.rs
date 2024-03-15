@@ -21,8 +21,8 @@ pub enum Order {
     Last,
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     user_image: Option<Element>,
     #[props(optional)]
@@ -43,12 +43,12 @@ pub struct Props<'a> {
     replier_did: Option<DID>,
     markdown: Option<bool>,
     transform_ascii_emojis: Option<bool>,
-    state: &'a Signal<State>,
+    state: Signal<State>,
     chat: Uuid,
 }
 
 #[allow(non_snake_case)]
-pub fn MessageReply<'a>(props: Props<'a>) -> Element {
+pub fn MessageReply(props: Props) -> Element {
     let text = format_text(
         &props.with_text.clone().unwrap_or_default(),
         props.markdown.unwrap_or_default(),

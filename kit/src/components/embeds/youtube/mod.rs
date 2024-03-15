@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-#[derive(Eq, PartialEq, Props)]
+#[derive(Eq, PartialEq, Props, Clone)]
 pub struct Props {
     video_url: String,
 }

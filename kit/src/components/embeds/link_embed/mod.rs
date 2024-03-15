@@ -48,7 +48,7 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
     })
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, PartialEq, Clone)]
 pub struct LinkEmbedProps {
     link: String,
     remote: bool,
@@ -58,7 +58,7 @@ pub struct LinkEmbedProps {
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
     let fetch_meta = use_future(|| async move { get_meta(props.link.as_str()).await });
 
-    let meta = match fetch_meta.value() {
+    let meta = match fetch_meta.resume().value() {
         Some(Ok(val)) => val.clone(),
         Some(Err(_)) => SiteMeta::default(),
         None => SiteMeta::default(),

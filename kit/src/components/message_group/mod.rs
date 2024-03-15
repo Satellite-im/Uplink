@@ -5,8 +5,8 @@ use crate::components::{
     user_image::UserImage,
 };
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     children: Element,
     user_image: Element,
     sender: String,
@@ -17,7 +17,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
+pub fn MessageGroup(props: Props) -> Element {
     let remote = props.remote.unwrap_or_default();
     let time_ago = props.timestamp.clone().unwrap_or_default();
 
@@ -51,7 +51,7 @@ pub fn MessageGroup<'a>(props: Props<'a>) -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct SkeletalProps {
     #[props(optional)]
     alt: Option<bool>,

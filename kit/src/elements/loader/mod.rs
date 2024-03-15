@@ -2,7 +2,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct Props {
     #[props(optional)]
     spinning: Option<bool>,

@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::elements::{button::Button, Appearance};
 use common::icons;
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     with_back_button: Option<bool>,
     onback: Option<EventHandler>,

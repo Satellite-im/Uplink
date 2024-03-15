@@ -32,7 +32,7 @@ pub enum ArrowPosition {
 }
 
 // Remember: owned props must implement PartialEq!
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct Props {
     loading: Option<bool>,
     text: Option<String>,

@@ -13,7 +13,7 @@ use common::icons::outline::Shape as Icon;
 pub type To = &'static str;
 
 #[derive(Clone)]
-pub struct Route<'a> {
+pub struct Route {
     pub to: To,
     pub icon: Icon,
     pub name: String,
@@ -23,7 +23,7 @@ pub struct Route<'a> {
     pub context_items: Option<Element>,
 }
 
-impl Default for Route<'_> {
+impl Default for Route {
     fn default() -> Self {
         Self {
             to: "",
@@ -37,11 +37,11 @@ impl Default for Route<'_> {
     }
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     #[props(optional)]
     onnavigate: Option<EventHandler<To>>,
-    routes: Vec<Route<'a>>,
+    routes: Vec<Route>,
     #[props(optional)]
     active: Option<To>,
     #[props(optional)]
@@ -100,7 +100,7 @@ pub fn get_active(props: Props) -> To {
 /// )
 /// ```
 #[allow(non_snake_case)]
-pub fn Nav<'a>(props: Props<'a>) -> Element {
+pub fn Nav(props: Props) -> Element {
     let active = use_signal(|| get_active(props));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);

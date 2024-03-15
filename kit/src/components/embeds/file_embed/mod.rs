@@ -19,10 +19,50 @@ use humansize::DECIMAL;
 use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
+use serde::Deserialize;
+use serde::Serialize;
 use warp::constellation::Progression;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(remote = "Progression")]
+pub enum ProgressionDef {
+    CurrentProgress {
+        /// name of the file
+        name: String,
+
+        /// size of the progression
+        current: usize,
+
+        /// total size of the file, if any is supplied
+        total: Option<usize>,
+    },
+    ProgressComplete {
+        /// name of the file
+        name: String,
+
+        /// total size of the file, if any is supplied
+        total: Option<usize>,
+    },
+    ProgressFailed {
+        /// name of the file that failed
+        name: String,
+
+        /// last known size, if any, of where it failed
+        last_size: Option<usize>,
+
+        /// error of why it failed, if any
+        error: Option<String>,
+    },
+}
+
+impl PartialEq for Progression {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 // Assuming ExternalType implements PartialEq
+    }
+}
+
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     // The filename of the file
     filename: String,
 
@@ -60,11 +100,12 @@ pub struct Props<'a> {
     // called shen the icon is clicked
     on_press: EventHandler<Option<PathBuf>>,
 
-    progress: Option<&'a Progression>,
+    #[serde(with = "ProgressionDef")]
+    progress: Option<Progression>,
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
+pub fn FileEmbedadadada(props: Props) -> Element {
     //log::trace!("rendering file embed: {}", props.filename);
     let file_extension = std::path::Path::new(&props.filename)
         .extension()
@@ -108,8 +149,8 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
             } => match total {
                 Some(size) => {
                     file_size_pending
-                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
-                    if *current > 0 && *size > 0 {
+                        .push_str(&format_args!("{}", format_size(size, DECIMAL)).to_string());
+                    if current > 0 && size > 0 {
                         current * 100 / size
                     } else {
                         0
@@ -120,7 +161,7 @@ pub fn FileEmbed<'a>(props: Props<'a>) -> Element {
             Progression::ProgressComplete { name: _, total } => {
                 if let Some(size) = total {
                     file_size_pending
-                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
+                        .push_str(&format_args!("{}", format_size(size, DECIMAL)).to_string());
                 };
                 100
             }
@@ -318,7 +359,7 @@ fn is_image(filename: String) -> bool {
 }
 
 fn show_download_or_minus_button_if_enabled<'a>(
-    props: Props<'a>,
+    props: Props,
     with_download_button: bool,
     btn_icon: common::icons::outline::Shape,
 ) -> Element {

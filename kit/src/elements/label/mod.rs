@@ -6,7 +6,7 @@ pub struct LabelWithEllipsis {
     pub padding_right_for_ellipsis: usize,
 }
 
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct Props {
     #[props(optional)]
     loading: Option<bool>,

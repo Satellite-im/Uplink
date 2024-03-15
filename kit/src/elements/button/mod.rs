@@ -4,8 +4,8 @@ use crate::elements::{loader::Loader, Appearance};
 
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     loading: Option<bool>,
     onpress: Option<EventHandler<MouseEvent>>,
     text: Option<String>,
@@ -49,7 +49,7 @@ pub fn get_appearance(props: Props) -> Appearance {
 /// },
 /// ```
 #[allow(non_snake_case)]
-pub fn Button<'a>(props: Props<'a>) -> Element {
+pub fn Button(props: Props) -> Element {
     let text = props.text.clone().unwrap_or_default();
     let text2 = text.clone();
     let aria_label = props.aria_label.clone().unwrap_or_default();

@@ -6,7 +6,7 @@ use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validatio
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
-#[derive(Props)]
+#[derive(Props, Clone)]
 pub struct Props {
     #[props(optional)]
     open: Option<bool>,

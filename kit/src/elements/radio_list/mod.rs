@@ -3,15 +3,15 @@ use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     initial_value: String,
     values: Vec<String>,
     onchange: EventHandler<String>,
 }
 
 #[allow(non_snake_case)]
-pub fn RadioList<'a>(props: Props<'a>) -> Element {
+pub fn RadioList(props: Props) -> Element {
     let internal_state = use_signal(|| props.initial_value.clone());
 
     rsx!(

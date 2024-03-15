@@ -2,8 +2,8 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone)]
+pub struct Props {
     disabled: bool,
     width: Option<String>,
     height: Option<String>,
@@ -17,7 +17,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Checkbox<'a>(props: Props<'a>) -> Element {
+pub fn Checkbox(props: Props) -> Element {
     let disabled_class = if props.disabled { "disabled" } else { "" };
     let checked_class = if props.is_checked { "checked" } else { "" };
     let aria_label = props.aria_label.clone().unwrap_or_default();

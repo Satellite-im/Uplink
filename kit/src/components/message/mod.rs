@@ -67,8 +67,8 @@ pub struct ReactionAdapter {
     pub reaction_count: usize,
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     // Message ID
     id: String,
     // indicates that the message is being edited
@@ -117,13 +117,13 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     #[props(!optional)]
-    attachments_pending_uploads: Option<&'a Vec<Progression>>,
+    attachments_pending_uploads: Option<Vec<Progression>>,
 
     pinned: bool,
 
     is_mention: bool,
 
-    state: &'a Signal<State>,
+    state: Signal<State>,
 
     chat: Uuid,
 }
@@ -176,7 +176,7 @@ fn wrap_links_with_a_tags(text: &str) -> (String, Vec<String>) {
 }
 
 #[allow(non_snake_case)]
-pub fn Message<'a>(props: Props<'a>) -> Element {
+pub fn Message(props: Props) -> Element {
     //  log::trace!("render Message");
     let loading = props.loading.unwrap_or_default();
     let is_remote = props.remote.unwrap_or_default();
@@ -357,7 +357,7 @@ pub fn Message<'a>(props: Props<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone)]
 struct EditProps {
     id: String,
     text: String,
@@ -384,7 +384,7 @@ fn EditMsg(props: EditProps) -> Element {
     })
 }
 
-#[derive(Props)]
+#[derive(Props, Clone)]
 pub struct ChatMessageProps {
     text: String,
     remote: bool,
@@ -667,7 +667,7 @@ pub enum IdentityCmd {
     SentFriendRequest(String, Vec<Identity>),
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, PartialEq, Clone)]
 pub struct IdentityMessageProps {
     id: DID,
 }

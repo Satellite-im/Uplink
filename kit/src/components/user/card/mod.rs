@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::elements::{button::Button, Appearance};
 use common::{icons::outline::Shape as Icon, language::get_local_text};
 
-#[derive(Props)]
+#[derive(Props, Clone)]
 pub struct Props {
     friends: bool,
     name: String,
