@@ -83,9 +83,9 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
                 in_files: in_files
             }
             if in_files {
-                rsx!(ChatsToSelect {
+                ChatsToSelect {
                     storage_controller: storage_controller,
-                })
+                }
             }
             FilesBreadcumbs {
                 storage_controller: storage_controller,
@@ -94,20 +94,18 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
             },
             if storage_controller.read().files_list.is_empty()
                 && storage_controller.read().directories_list.is_empty() {
-                    rsx!(
                         div {
                             padding: "48px",
                             Label {
                                 text: get_local_text("files.no-files-available"),
                             }
                         }
-                        )
                } else {
-                rsx!(FilesAndFolders {
+                FilesAndFolders {
                     storage_controller: storage_controller,
                     ch: ch,
                     send_files_mode: true,
-                })
+                }
                }
         }
     })
