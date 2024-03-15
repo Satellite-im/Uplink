@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use common::{
     state::{Action, State},
@@ -11,7 +8,7 @@ use common::{
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use uuid::Uuid;
-use warp::raygun::{self, Location};
+use warp::raygun;
 
 use crate::{
     layouts::chats::data::{self, ChatProps, MsgChInput, TypingInfo, DEFAULT_MESSAGES_TO_TAKE},
@@ -29,7 +26,6 @@ pub fn get_msg_ch(state: &Signal<State>) -> Coroutine<MsgChInput> {
             while let Some(MsgChInput {
                 msg,
                 conv_id,
-                appended_msg_id,
                 replying_to,
             }) = rx.next().await
             {
@@ -39,7 +35,6 @@ pub fn get_msg_ch(state: &Signal<State>) -> Coroutine<MsgChInput> {
                     .get_active_chat()
                     .map(|f| f.files_attached_to_send)
                     .unwrap_or_default();
-                let msg_clone = msg.clone();
                 let cmd = match replying_to {
                     Some(reply_to) => RayGunCmd::Reply {
                         conv_id,
@@ -55,56 +50,25 @@ pub fn get_msg_ch(state: &Signal<State>) -> Coroutine<MsgChInput> {
                         rsp: tx,
                     },
                 };
-                let attachments = state
-                    .read()
-                    .get_active_chat()
-                    .map(|f| f.files_attached_to_send)
-                    .unwrap_or_default();
                 state
                     .write_silent()
                     .mutate(Action::ClearChatAttachments(conv_id));
-                let attachment_files: Vec<String> = attachments
-                    .iter()
-                    .map(|p| {
-                        let pathbuf = match p {
-                            Location::Disk { path } => path.clone(),
-                            Location::Constellation { path } => PathBuf::from(path),
-                        };
-                        pathbuf
-                            .file_name()
-                            .map_or_else(String::new, |ostr| ostr.to_string_lossy().to_string())
-                    })
-                    .collect();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                     log::error!("failed to send warp command: {}", e);
-                    state.write().decrement_outgoing_messages(
-                        conv_id,
-                        msg_clone,
-                        attachment_files,
-                        appended_msg_id,
-                    );
                     continue;
                 }
 
                 let rsp = rx.await.expect("command canceled");
                 match rsp {
-                    Ok(Some(attachment)) => upload_streams.write().append((
-                        conv_id,
-                        msg,
-                        attachments,
-                        appended_msg_id,
-                        attachment,
-                    )),
+                    Ok((id, stream)) => {
+                        state.write().increment_outgoing_messages(id, msg.clone());
+                        if let Some(stream) = stream {
+                            upload_streams.write().append((conv_id, id, stream));
+                        }
+                    }
                     Err(e) => {
                         log::error!("failed to send message: {}", e);
-                        state.write().decrement_outgoing_messages(
-                            conv_id,
-                            msg_clone,
-                            attachment_files,
-                            appended_msg_id,
-                        )
                     }
-                    _ => {}
                 }
             }
         }
