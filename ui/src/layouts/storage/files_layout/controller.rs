@@ -8,7 +8,10 @@ use dioxus::signals::Signal;
 use dioxus_core::ScopeState;
 use dioxus_hooks::use_signal;
 use uuid::Uuid;
-use warp::{constellation::directory::Directory, raygun::Location};
+use warp::{
+    constellation::{directory::Directory, item::Item},
+    raygun::Location,
+};
 
 use super::functions::{self, format_item_size};
 
@@ -27,6 +30,7 @@ pub struct StorageController {
     pub files_selected_to_send: Vec<Location>,
     pub current_dir_path_as_string: String,
     pub chats_selected_to_send: Vec<Uuid>,
+    pub deleting: Vec<Item>,
 }
 
 impl StorageController {
@@ -61,6 +65,7 @@ impl StorageController {
                 .collect::<Vec<_>>()
                 .join("/"),
             chats_selected_to_send: Vec::new(),
+            deleting: Vec::new(),
         };
         &use_signal(|| controller)
     }
@@ -109,7 +114,6 @@ pub struct UploadFileController<'a> {
     pub are_files_hovering_app: Signal<bool>,
     pub files_been_uploaded: Signal<bool>,
     pub files_in_queue_to_upload: Signal<Vec<PathBuf>>,
-    pub disable_cancel_upload_button: Signal<bool>,
 }
 
 impl<'a> UploadFileController<'a> {
@@ -122,7 +126,6 @@ impl<'a> UploadFileController<'a> {
             files_in_queue_to_upload: use_signal(|| {
                 state.read().storage.files_in_queue_to_upload.clone()
             }),
-            disable_cancel_upload_button: use_signal(|| false),
         }
     }
 }

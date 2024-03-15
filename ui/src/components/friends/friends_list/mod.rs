@@ -421,15 +421,21 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                 log::error!("failed to send warp command: {}", e);
                 continue;
             }
-
             let rsp = rx.await.expect("command canceled");
             if let Err(e) = rsp {
                 log::error!("failed to send message: {}", e);
             }
         }
     });
+    let chats: Vec<_> = state
+        .read()
+        .chats_sidebar()
+        .iter()
+        .filter(|c| props.excluded_chat.map(|id| !c.id.eq(&id)).unwrap_or(true))
+        .cloned()
+        .collect();
     rsx!(Modal {
-        open: props.did.get().is_some(),
+        open: props.did.read().is_some(),
         onclose: move |_| props.did.set(None),
         show_close_button: false,
         transparent: false,
@@ -458,15 +464,21 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                     },
                 }
             }
-            state.read().chats_sidebar().iter().filter(|c|props.excluded_chat.map(|id|!c.id.eq(&id)).unwrap_or(true)).cloned().map(|chat| {
+            {chats.is_empty().then(||{
+                rsx!(div {
+                    class: "modal-share-friend-empty",
+                    get_local_text("messages.no-chats")
+                })
+            })},
+            {chats.iter().map(|chat| {
                 let id = chat.id;
-                let participants = state.read().chat_participants(&chat);
+                let participants = state.read().chat_participants(chat);
                 let other_participants =  state.read().remove_self(&participants);
                 let user: Identity = other_participants.first().cloned().unwrap_or_default();
                 let platform = user.platform().into();
                 // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
-                let participants_name = match chat.conversation_name {
-                    Some(name) => name,
+                let participants_name = match &chat.conversation_name {
+                    Some(name) => name.clone(),
                     None => State::join_usernames(&other_participants)
                 };
                 let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
@@ -488,41 +500,41 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                 let selected = chats_selected.read().contains(&id);
                 rsx!(div {
                     class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
-                    height: "80px",
-                    padding: "16px",
-                    display: "inline-flex",
-                    Checkbox {
-                        disabled: false,
-                        width: "1em".into(),
-                        height: "1em".into(),
-                        is_checked: selected,
-                        on_click: move |_| {
-                            chats_selected.with_mut(|v|{
-                                if !selected {
-                                    v.push(id);
-                                } else {
-                                    v.retain(|c|!c.eq(&id));
-                                }
-                            });
-                        }
-                    }
                     User {
                         username: participants_name,
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
                         user_image: rsx!(
-                            match chat.conversation_type {
-                                ConversationType::Direct => rsx!(UserImage {
-                                    platform: platform,
-                                    status:  user.identity_status().into(),
-                                    image: user.profile_picture(),
-                                    typing: false,
-                                }),
-                                _ => rsx!(UserImageGroup {
-                                    participants: build_participants(&participants),
-                                    typing: false,
-                                })
+                            div {
+                                class: "modal-share-friend-image-group",
+                                Checkbox {
+                                    disabled: false,
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    is_checked: selected,
+                                    on_click: move |_| {
+                                        chats_selected.with_mut(|v|{
+                                            if !selected {
+                                                v.push(id);
+                                            } else {
+                                                v.retain(|c|!c.eq(&id));
+                                            }
+                                        });
+                                    }
+                                },
+                                match chat.conversation_type {
+                                    ConversationType::Direct => rsx!(UserImage {
+                                        platform: platform,
+                                        status:  user.identity_status().into(),
+                                        image: user.profile_picture(),
+                                        typing: false,
+                                    }),
+                                    _ => rsx!(UserImageGroup {
+                                        participants: build_participants(&participants),
+                                        typing: false,
+                                    })
+                                }
                             }
                         ),
                         onpress: move |_| {
@@ -537,7 +549,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                     }
                 }
             )
-            })
+            })}
         }
     })
 }

@@ -4,7 +4,6 @@ use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
-use kit::elements::{button::Button, Appearance};
 
 use crate::utils::get_drag_event::BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX;
 use crate::utils::{
@@ -17,60 +16,10 @@ static FILES_TO_UPLOAD_SCRIPT: &str = r#"
     element.textContent = '$TEXT';
 "#;
 
-static PROGRESS_UPLOAD_PERCENTAGE_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-percentage');
-    element.textContent = '$TEXT';
-
-    var element_percentage = document.getElementById('progress-percentage');
-    element_percentage.style.width = '$WIDTH';
-"#;
-
-static PROGRESS_UPLOAD_DESCRIPTION_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-description');
-    element.textContent = '$TEXT';
-"#;
-
-static UPDATE_FILENAME_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-filename');
-    element.textContent = '$TEXT';
-"#;
-
-static UPDATE_FILE_QUEUE_SCRIPT: &str = r#"
-    var element = document.getElementById('upload-progress-files-queue');
-    element.textContent = '$TEXT_TRANSLATED ($FILES_IN_QUEUE)';
-"#;
-
 static UPDATE_FILES_TO_DROP: &str = r#"
     var element = document.getElementById('upload-progress-drop-files');
     element.textContent = '$TEXT1 $FILES_NUMBER $TEXT2';
 "#;
-
-pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
-    let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
-        .replace("$TEXT", &new_percentage)
-        .replace("$WIDTH", &new_percentage);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn change_progress_description(window: &DesktopContext, new_description: String) {
-    let new_script = PROGRESS_UPLOAD_DESCRIPTION_SCRIPT.replace("$TEXT", &new_description);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn update_filename(window: &DesktopContext, filename: String) {
-    let new_script = UPDATE_FILENAME_SCRIPT.replace("$TEXT", &filename);
-    _ = window.webview.evaluate_script(&new_script);
-}
-
-pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
-    let new_script = UPDATE_FILE_QUEUE_SCRIPT
-        .replace(
-            "$TEXT_TRANSLATED",
-            &format!(" / {}", get_local_text("files.files-in-queue")),
-        )
-        .replace("$FILES_IN_QUEUE", &format!("{}", files_in_queue));
-    _ = window.webview.evaluate_script(&new_script);
-}
 
 fn update_files_to_drop_while_upload_other_file(
     window: &DesktopContext,
@@ -98,11 +47,11 @@ fn update_files_to_drop_while_upload_other_file(
     _ = window.webview.evaluate_script(&new_script);
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
-    are_files_hovering_app: &'a Signal<bool>,
-    files_been_uploaded: &'a Signal<bool>,
-    disable_cancel_upload_button: &'a Signal<bool>,
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
+    are_files_hovering_app: Signal<bool>,
+    files_been_uploaded: Signal<bool>,
+    disable_cancel_upload_button: Signal<bool>,
     on_update: EventHandler<Vec<PathBuf>>,
     on_cancel: EventHandler<()>,
 }

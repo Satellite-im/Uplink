@@ -183,8 +183,6 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                     is_recording.set(true);
                 },
                 onkeydown: move |evt| {
-                    // println!("evt: {:?}", evt);
-
                     if evt.data.code() == Code::Escape {
                         is_recording.set(false);
                         evt.stop_propagation();
@@ -204,7 +202,9 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                         binding.extend(modifier_string_vec);
                     }
 
-                    recorded_bindings.set(binding);
+                    let binding2 = Shortcut::reorder_keybind_string(binding);
+
+                    recorded_bindings.set(binding2);
                     evt.stop_propagation();
                 },
                 onkeyup: move |_| {

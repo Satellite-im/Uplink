@@ -2,7 +2,11 @@
 use crate::utils::get_drag_event;
 use common::{
     language::{get_local_text, get_local_text_with_args},
-    state::{storage::Storage, Action, State, ToastNotification},
+    state::{
+        data_transfer::{TrackerType, TransferState, TransferTracker},
+        storage::Storage,
+        Action, State, ToastNotification,
+    },
     upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
@@ -15,7 +19,6 @@ use dioxus::{
 use dioxus_core::ScopeState;
 #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
-use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, use_resource, Coroutine, Signal, UnboundedReceiver,
     UseSharedState,
@@ -24,11 +27,12 @@ use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
 use std::{ffi::OsStr, path::PathBuf, rc::Rc, time::Duration};
 use tokio::time::sleep;
+use uuid::Uuid;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::{
-    components::files::upload_progress_bar,
-    utils::{async_task_queue::download_stream_handler, download::get_download_path},
+use crate::utils::{
+    async_task_queue::{download_stream_handler, DownloadStreamData},
+    download::get_download_path,
 };
 
 use super::files_layout::controller::{StorageController, UploadFileController};
@@ -160,7 +164,7 @@ pub fn download_file(
     let file_path_buf = if temp_path_to_download_file_to_preview.is_none() {
         match FileDialog::new()
             .set_directory(".")
-            .set_file_name(&file_stem)
+            .set_file_name(file_stem)
             .add_filter("", &[&file_extension])
             .save_file()
         {
@@ -237,11 +241,12 @@ pub enum ChanCmd {
 
 pub fn init_coroutine<'a>(
     controller: Signal<StorageController>,
-    state: &'a Signal<State>,
+    state: Signal<State>,
+    file_tracker: Signal<TransferTracker>,
 ) -> &'a Coroutine<ChanCmd> {
     let download_queue = download_stream_handler();
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![controller, download_queue, state];
+        to_owned![controller, download_queue, state, file_tracker];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -375,15 +380,20 @@ pub fn init_coroutine<'a>(
                             continue;
                         }
 
+                        // Unique id to track this download
+                        let file_id = Uuid::new_v4();
+                        let file_state = TransferState::new();
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(stream) => {
-                                download_queue.write().append((
+                                download_queue.write().append(DownloadStreamData {
                                     stream,
-                                    file_name,
+                                    file: file_name.clone(),
+                                    id: file_id,
                                     on_finish,
-                                    notification_download_status,
-                                ));
+                                    show_toast: notification_download_status,
+                                    file_state: file_state.clone(),
+                                });
                             }
                             Err(error) => {
                                 if notification_download_status {
@@ -403,6 +413,12 @@ pub fn init_coroutine<'a>(
                                 continue;
                             }
                         }
+                        file_tracker.write().start_file_transfer(
+                            file_id,
+                            file_name,
+                            file_state,
+                            TrackerType::FileDownload,
+                        );
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
@@ -433,6 +449,7 @@ pub fn init_coroutine<'a>(
                         }
                     }
                     ChanCmd::DeleteItems(item) => {
+                        controller.with_mut(|i| i.deleting.push(item.clone()));
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -448,7 +465,25 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                controller.with_mut(|i| i.storage_state = Some(storage));
+                                controller.with_mut(|i| {
+                                    i.storage_state = Some(storage);
+                                    i.deleting.retain(|i| match i {
+                                        Item::File(f) => {
+                                            if let Item::File(f2) = &item {
+                                                !f.id().eq(&f2.id())
+                                            } else {
+                                                true
+                                            }
+                                        }
+                                        Item::Directory(d) => {
+                                            if let Item::File(d2) = &item {
+                                                !d.id().eq(&d2.id())
+                                            } else {
+                                                true
+                                            }
+                                        }
+                                    });
+                                });
                             }
                             Err(e) => {
                                 log::error!("failed to delete items {}, item {:?}", e, item.name());
@@ -470,22 +505,21 @@ pub fn init_coroutine<'a>(
 /// and tries to upload a second file, then leaves and returns again,
 /// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
-    window: &DesktopContext,
-    state: &UseSharedState<State>,
+    state: Signal<State>,
     controller: &Signal<StorageController>,
     upload_file_controller: UploadFileController,
+    file_tracker: Signal<TransferTracker>,
 ) {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let disable_cancel_upload_button = upload_file_controller.disable_cancel_upload_button.clone();
     use_resource(|| {
         to_owned![
-            window,
             state,
             controller,
             files_been_uploaded,
             files_in_queue_to_upload,
-            disable_cancel_upload_button
+            file_tracker
         ];
         async move {
             let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
@@ -502,14 +536,8 @@ pub fn start_upload_file_listener(
                             continue;
                         }
                     }
-                    UploadFileAction::SizeNotAvailable(file_name) => {
-                        if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
-                            upload_progress_bar::update_files_queue_len(
-                                &window,
-                                files_in_queue_to_upload.read().len(),
-                            );
-                        }
+                    UploadFileAction::SizeNotAvailable(path, file_name) => {
+                        files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
                         state
                             .write()
                             .mutate(common::state::Action::AddToastNotification(
@@ -524,88 +552,97 @@ pub fn start_upload_file_listener(
                                 ),
                             ));
                     }
-                    UploadFileAction::Starting(filenam) => {
+                    UploadFileAction::Starting(id, file_state, file_name) => {
                         *files_been_uploaded.write_silent() = true;
-                        upload_progress_bar::update_filename(&window, filename);
-                        sleep(Duration::from_millis(500)).await;
-                    }
-                    UploadFileAction::Cancelling => {
-                        *disable_cancel_upload_button.write_silent() = true;
-                        if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
-                            upload_progress_bar::update_files_queue_len(
-                                &window,
-                                files_in_queue_to_upload.read().len(),
-                            );
-                        }
-                        upload_progress_bar::change_progress_description(
-                            &window,
-                            get_local_text("files.cancelling-upload"),
+                        file_tracker.write().start_file_transfer(
+                            id,
+                            file_name,
+                            file_state,
+                            TrackerType::FileUpload,
                         );
-                        sleep(Duration::from_millis(500)).await;
-                        if files_in_queue_to_upload.read().is_empty() {
-                            *files_been_uploaded.write_silent() = false;
-                        }
                     }
-                    UploadFileAction::Uploading((progress, msg, filename)) => {
+                    UploadFileAction::Pausing(id) => {
+                        file_tracker
+                            .write()
+                            .pause_file_upload(id, TrackerType::FileUpload);
+                    }
+                    UploadFileAction::Cancelling(path, id) => {
+                        file_tracker
+                            .write()
+                            .cancel_file_upload(id, TrackerType::FileUpload);
+                        files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                    }
+                    UploadFileAction::Uploading((progress, msg, file)) => {
                         if !*files_been_uploaded.read() && controller.read().first_render {
                             files_been_uploaded.with_mut(|i| *i = true);
                         }
-                        if *disable_cancel_upload_button.read() && !progress.contains("100") {
-                            disable_cancel_upload_button.with_mut(|i| *i = false)
-                        } else if !(*disable_cancel_upload_button.read())
-                            && progress.contains("100")
-                        {
-                            disable_cancel_upload_button.with_mut(|i| *i = true)
-                        }
-                        upload_progress_bar::update_filename(&window, filename);
-                        upload_progress_bar::update_files_queue_len(
-                            &window,
-                            files_in_queue_to_upload.read().len(),
-                        );
-                        upload_progress_bar::change_progress_percentage(&window, progress.clone());
-                        upload_progress_bar::change_progress_description(&window, msg);
-                    }
-                    UploadFileAction::Finishing(file, finish) => {
-                        *files_been_uploaded.write_silent() = true;
-                        if !files_in_queue_to_upload.read().is_empty()
-                            && (finish || files_in_queue_to_upload.read().len() > 1)
-                        {
-                            files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&file)));
-                            upload_progress_bar::update_files_queue_len(
-                                &window,
-                                files_in_queue_to_upload.read().len(),
+                        if let Some(progress) = progress {
+                            file_tracker.write().update_file_upload(
+                                file,
+                                progress,
+                                TrackerType::FileUpload,
                             );
                         }
-                        upload_progress_bar::change_progress_percentage(&window, "100%".into());
-                        upload_progress_bar::change_progress_description(
-                            &window,
-                            get_local_text("files.finishing-upload"),
+                        file_tracker.write().update_file_description(
+                            file,
+                            msg,
+                            TrackerType::FileUpload,
                         );
+                    }
+                    UploadFileAction::Finishing(path, file, finish) => {
+                        *files_been_uploaded.write_silent() = true;
+                        if finish {
+                            if !files_in_queue_to_upload.read().is_empty() {
+                                files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                            }
+                            file_tracker
+                                .write()
+                                .remove_file_upload(file, TrackerType::FileUpload);
+                        } else {
+                            file_tracker.write().update_file_description(
+                                file,
+                                get_local_text("files.finishing-upload"),
+                                TrackerType::FileUpload,
+                            );
+                        }
                     }
                     UploadFileAction::Finished(storage) => {
                         if files_in_queue_to_upload.read().is_empty() {
                             *files_been_uploaded.write_silent() = false;
                         }
-                        upload_progress_bar::change_progress_description(
-                            &window,
-                            get_local_text("files.finishing-upload"),
-                        );
                         controller.with_mut(|i| i.storage_state = Some(storage));
                     }
-                    UploadFileAction::Error => {
-                        if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
-                            upload_progress_bar::update_files_queue_len(
-                                &window,
-                                files_in_queue_to_upload.read().len(),
-                            );
+                    UploadFileAction::Remove(path, file) => {
+                        files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)));
+                        file_tracker
+                            .write()
+                            .remove_file_upload(file, TrackerType::FileUpload);
+                        *files_been_uploaded.write_silent() =
+                            file_tracker.read().file_progress_upload.is_empty();
+                    }
+                    UploadFileAction::Error(path, file) => {
+                        match path {
+                            Some(path) => {
+                                files_in_queue_to_upload.with_mut(|i| i.retain(|p| !p.eq(&path)))
+                            }
+                            None => files_in_queue_to_upload.with_mut(|i| i.clear()),
                         }
-                        upload_progress_bar::change_progress_percentage(&window, "0%".into());
-                        upload_progress_bar::change_progress_description(
-                            &window,
-                            get_local_text("files.error-to-upload"),
-                        );
+                        if let Some(file) = file {
+                            file_tracker
+                                .write()
+                                .error_file_upload(file, TrackerType::FileUpload);
+                            continue;
+                        }
+                        state
+                            .write()
+                            .mutate(common::state::Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("files.error-to-upload"),
+                                    None,
+                                    3,
+                                ),
+                            ));
                     }
                 }
             }

@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose, Engine};
 use common::{
     icons::outline::Shape, language::get_local_text, utils::lifecycle::use_component_lifecycle,
     STATIC_ARGS,
@@ -127,12 +128,12 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
                                 icon: Shape::Check,
                                 onpress: move |_| {
                                     spawn({
-                                        to_owned![eval, image_scale, cropped_image_pathbuf, clicked_button_to_crop];
+                                        to_owned![image_scale, cropped_image_pathbuf, clicked_button_to_crop];
                                         async move {
                                             let save_image_cropped_js = SAVE_CROPPED_IMAGE_SCRIPT
                                             .replace("$IMAGE_SCALE", (1.0 / *image_scale.read()).to_string().as_str());
-                                            if let Ok(r) = eval(&save_image_cropped_js) {
-                                                if let Ok(val) = r.join().await {
+                                            let eval_result = eval(&save_image_cropped_js);
+                                                if let Ok(val) = eval_result.join().await {
                                                     let thumbnail = val.as_str().unwrap_or_default();
                                                     let base64_string = thumbnail.trim_matches('\"');
                                                     let decoded_bytes = match base64::decode(base64_string) {
@@ -173,7 +174,6 @@ pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
                                                     cropped_image_pathbuf.with_mut(|f| *f = CROPPED_IMAGE_PATH.clone());
                                                     clicked_button_to_crop.set(true);
                                                 }
-                                        }
                                     }
                                     });
                                 }

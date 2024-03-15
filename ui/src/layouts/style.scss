@@ -263,6 +263,10 @@
       flex: 1;
       display: inline-flex;
       flex-direction: row;
+      .input {
+        background-color: transparent;
+        min-height: 0;
+      }
     }
 
     .row {

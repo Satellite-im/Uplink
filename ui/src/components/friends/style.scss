@@ -79,13 +79,32 @@
     .share-friend-selected{
         background: color-mix(in srgb, transparent 80%, black);
     }
+    .modal-share-friend-empty {
+        color: var(--text-color); 
+        text-align: center; 
+        padding: var(--padding); 
+        font-size: var(--text-size-more);
+    }
     .modal-share-friend {
+        padding: var(--padding-less);
+        display: inline-flex;
+        gap: var(--gap-less);
         &:hover {
 			background: color-mix(in srgb, transparent 90%, black);
 			cursor: pointer;
 		}
         *:hover{
             cursor: pointer;
+        }
+        .user {
+            height: calc(3.5 * var(--text-size));
+        }
+        .modal-share-friend-image-group {
+            display: flex; 
+            flex-direction: row; 
+            gap: var(--gap); 
+            height: fit-content; 
+            align-items: center;
         }
     }
 }

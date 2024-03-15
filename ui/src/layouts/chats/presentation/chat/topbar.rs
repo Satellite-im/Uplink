@@ -144,6 +144,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
         )}
         ContextMenu {
             id: "chat_topbar_context".into(),
+            fit_parent: true,
             key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
             items: rsx!(

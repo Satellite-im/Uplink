@@ -1,0 +1,4 @@
+[profile.dev]
+debug = 0
+strip = "debuginfo"
+

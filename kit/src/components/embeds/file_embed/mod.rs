@@ -8,20 +8,18 @@ use common::icons::Icon as IconElement;
 use common::is_file_available_to_preview;
 use common::is_video;
 use common::return_correct_icon;
+use common::state::get_upload_error_text;
+use common::state::pending_message::FileProgression;
 use common::utils::local_file_path::get_fixed_path_to_load_local_file;
 use common::STATIC_ARGS;
-use dioxus_html::input_data::keyboard_types::Modifiers;
-
 use dioxus::prelude::*;
+use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use humansize::format_size;
 use humansize::DECIMAL;
 use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
-use serde::Deserialize;
-use serde::Serialize;
-use warp::constellation::Progression;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(remote = "Progression")]
@@ -53,12 +51,6 @@ pub enum ProgressionDef {
         /// error of why it failed, if any
         error: Option<String>,
     },
-}
-
-impl PartialEq for Progression {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0 // Assuming ExternalType implements PartialEq
-    }
 }
 
 #[derive(Props, Clone, PartialEq)]
@@ -100,8 +92,7 @@ pub struct Props {
     // called shen the icon is clicked
     on_press: EventHandler<Option<PathBuf>>,
 
-    #[serde(with = "ProgressionDef")]
-    progress: Option<Progression>,
+    progress: Option<&'a FileProgression>,
 }
 
 #[allow(non_snake_case)]
@@ -142,7 +133,7 @@ pub fn FileEmbedadadada(props: Props) -> Element {
 
     let perc = if let Some(p) = props.progress {
         match p {
-            Progression::CurrentProgress {
+            FileProgression::CurrentProgress {
                 name: _,
                 current,
                 total,
@@ -158,19 +149,19 @@ pub fn FileEmbedadadada(props: Props) -> Element {
                 }
                 None => 0,
             },
-            Progression::ProgressComplete { name: _, total } => {
+            FileProgression::ProgressComplete { name: _, total } => {
                 if let Some(size) = total {
                     file_size_pending
                         .push_str(&format_args!("{}", format_size(size, DECIMAL)).to_string());
                 };
                 100
             }
-            Progression::ProgressFailed {
+            FileProgression::ProgressFailed {
                 name: _,
                 last_size: _,
-                error: _,
+                error,
             } => {
-                file_size_pending.push_str("Failed");
+                file_size_pending.push_str(&get_upload_error_text(error));
                 0
             }
         }

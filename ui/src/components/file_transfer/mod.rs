@@ -8,9 +8,9 @@ use dioxus::prelude::*;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
 
-#[derive(Props)]
-pub struct Props<'a> {
-    state: &'a UseSharedState<State>,
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
+    state: Signal<State>,
     modal: Option<bool>,
 }
 
@@ -43,7 +43,7 @@ pub fn FileTransferModal<'a>(props: Props) -> Element {
     })
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct TransferProps {
     transfers: Vec<FileProgress>,
     label: String,
@@ -55,7 +55,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
         div {
             class: "file-transfer-label-container",
             label {
-                props.label.clone(),
+                {props.label.clone()},
             },
         },
         props.transfers.iter().map(|f| {
@@ -72,8 +72,10 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
             rsx!(
                 div {
                     class: "file-transfer-file",
+                    aria_label: "file-transfer-file",
                     div {
                         class: "file-icon-container",
+                        aria_label: "file-icon-container",
                         div {
                             IconElement {
                                 icon: return_correct_icon(&f.file)
@@ -82,8 +84,10 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                     }
                     div {
                         class: "progress-container",
+                        aria_label: "progress-container",
                         div {
                             class: "progress-bar-filename-container",
+                            aria_label: "progress-bar-filename-container",
                             p {
                                 class: "filename-and-file-queue-text",
                                 aria_label: "filename-and-file-queue-text",
@@ -99,6 +103,11 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                         ProgressIndicator {
                             progress: progress
                         },
+                        f.description.as_ref().map(|desc|rsx!(div {
+                            class: "file-progress-description",
+                            aria_label: "file-progress-description",
+                            format!("{}", desc)
+                        })),
                     },
                     div {
                         class: "file-transfer-buttons",
@@ -129,7 +138,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
     })
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone< PartialEq)]
 pub struct ProgressIndicatorProps {
     progress: u8,
 }

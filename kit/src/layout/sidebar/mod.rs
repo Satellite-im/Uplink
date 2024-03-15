@@ -5,13 +5,14 @@ use dioxus::prelude::*;
 
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     with_search: Option<Element>,
     #[props(optional)]
     with_nav: Option<Element>,
     with_call_controls: Option<Element>,
+    with_file_transfer: Option<Element>,
     #[props(optional)]
     hidden: Option<bool>,
     #[props(optional)]
@@ -52,6 +53,7 @@ pub fn Sidebar(props: Props) -> Element {
                     aria_label: "sidebar-children",
                     {props.children.as_ref()}
                 },
+                {props.with_file_transfer.as_ref()},
                 {props.with_call_controls.as_ref()},
                 {props.with_nav.as_ref()},
         },

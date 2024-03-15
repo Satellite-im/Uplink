@@ -759,7 +759,7 @@ fn download_file(
 
     if let Some(file_path_to_download) = FileDialog::new()
         .set_directory(dirs::download_dir().unwrap_or_default())
-        .set_file_name(&file_stem)
+        .set_file_name(file_stem)
         .add_filter("", &[&file_extension])
         .save_file()
     {

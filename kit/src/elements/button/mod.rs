@@ -1,6 +1,6 @@
 use dioxus::{events::MouseEvent, prelude::*};
 
-use crate::elements::{loader::Loader, Appearance};
+use crate::elements::Appearance;
 
 use common::icons::outline::Shape as Icon;
 
@@ -17,6 +17,7 @@ pub struct Props {
     with_badge: Option<String>,
     small: Option<bool>,
     with_title: Option<bool>,
+    with_progress: Option<i8>,
 }
 
 /// Generates the appearance for the button.
@@ -118,18 +119,19 @@ pub fn Button(props: Props) -> Element {
                         let _ = props.onpress.as_ref().map(|f| f.call(e));
                     }
                 },
-                if let Some(loading) = props.loading {
-                    {loading.then(|| rsx!(
-                        Loader {
-                            spinning: true
+                if progress >= 0 {
+                    rsx!(
+                        div {
+                            class: "circular-progress",
+                            background: format_args!("conic-gradient(var(--circular-indicator) calc({} * 1%), var(--circular-bar) 0)", progress),
                         }
-                    ))}
-                },
-                if let Some(_icon) = props.icon {
+                    )
+                }
+                if show_icon {
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: None,
+                                class: props.loading.unwrap_or_default().then_some("spin-container-for-button"),
                                 size: 20,
                                 fill:"currentColor",
                                 icon: _icon,

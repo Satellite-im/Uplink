@@ -1,7 +1,11 @@
+use std::time::Duration;
+
+use arboard::Clipboard;
 use common::{icons, language::get_local_text, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use kit::elements::{button::Button, label::Label, Appearance};
+use tokio::time::sleep;
 
 use crate::get_app_style;
 
@@ -16,7 +20,7 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
-            height: 460.0,
+            height: 480.0,
         });
     }
 
@@ -58,6 +62,13 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
 
 #[component]
 fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
+    let copied = use_signal(|| false);
+    use_resource(|| async move {
+        if *copied.read() {
+            sleep(Duration::from_secs(3)).await;
+            *copied.write() = false;
+        }
+    });
     render! {
         div {
             class: "seed-words",
@@ -66,10 +77,9 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
                     class: "row",
                     div {
                         class: "col",
-
                         span {
                             aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                            class: "num", ((idx * 2) + 1).to_string()
+                            class: "num disable-select", ((idx * 2) + 1).to_string()
                         },
                         span {
                             aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
@@ -80,7 +90,7 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
                         class: "col",
                         span {
                             aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                            class: "num", ((idx * 2) + 2).to_string()
+                            class: "num disable-select", ((idx * 2) + 2).to_string()
                         },
                         span {
                             aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
@@ -90,6 +100,28 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
                 }
             })
         },
+        div {
+            class: "controls",
+            Button {
+                text: get_local_text("uplink.copy-seed"),
+                aria_label: "copy-seed-button".into(),
+                icon: icons::outline::Shape::BookmarkSquare,
+                onpress: move |_| {
+                    match Clipboard::new() {
+                        Ok(mut c) => {
+                            match c.set_text(words.join("\n").to_string()) {
+                                Ok(_) => *copied.write() = true,
+                                Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
+                            }
+                        },
+                        Err(e) => {
+                            log::warn!("Unable to create clipboard reference: {e}");
+                        }
+                    };
+                },
+                appearance: Appearance::Secondary
+            }
+        }
         div {
             class: "controls",
             Button {
@@ -107,5 +139,11 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
                 }
             }
         }
+        copied.read().then(||{
+            rsx!(div{
+                class: "copied-toast",
+                get_local_text("uplink.copied-seed")
+            })
+        })
     }
 }

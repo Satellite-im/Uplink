@@ -23,6 +23,16 @@ pub fn GroupSettings() -> Element {
         MembersCanChangeName(bool),
     }
 
+    let get_group_settings = || match chat_data.read().active_chat.conversation_settings() {
+        ConversationSettings::Group(settings) => settings,
+        ConversationSettings::Direct(_) => {
+            log::warn!("Group conversation has direct conversation settings.");
+            GroupSettings::default()
+        }
+    };
+
+    let group_settings_state = use_signal(|| get_group_settings);
+
     let group_settings_changed_channel =
         use_coroutine(|mut rx: UnboundedReceiver<GroupSettingsChange>| {
             to_owned![chat_data];
@@ -40,16 +50,22 @@ pub fn GroupSettings() -> Element {
                     match change {
                         GroupSettingsChange::MembersCanAddParticipants(switch_state) => {
                             settings.set_members_can_add_participants(switch_state);
+                            group_settings_state
+                                .write_silent()
+                                .set_members_can_add_participants(switch_state);
                         }
                         GroupSettingsChange::MembersCanChangeName(switch_state) => {
                             settings.set_members_can_change_name(switch_state);
+                            group_settings_state
+                                .write_silent()
+                                .set_members_can_change_name(switch_state);
                         }
                     }
 
                     let (tx, rx) = oneshot::channel();
                     let cmd = RayGunCmd::UpdateConversationSettings {
                         conv_id: chat_data.read().active_chat.id(),
-                        settings: ConversationSettings::Group(settings),
+                        settings: ConversationSettings::Group(*group_settings_state.read()),
                         rsp: tx,
                     };
 
@@ -60,13 +76,7 @@ pub fn GroupSettings() -> Element {
                 }
             }
         });
-    let get_group_settings = || match chat_data.read().active_chat.conversation_settings() {
-        ConversationSettings::Group(settings) => settings,
-        ConversationSettings::Direct(_) => {
-            log::warn!("Group conversation has direct conversation settings.");
-            GroupSettings::default()
-        }
-    };
+
     rsx!(
         div {
             id: "group-settings",
@@ -79,7 +89,7 @@ pub fn GroupSettings() -> Element {
                         "Allow anyone to add members"
                     }
                     Switch {
-                        active: get_group_settings().members_can_add_participants(),
+                        active: group_settings_state.read().members_can_add_participants(),
                         onflipped: |switch_state| {
                             group_settings_changed_channel.send(GroupSettingsChange::MembersCanAddParticipants(switch_state))
                         }
@@ -91,7 +101,7 @@ pub fn GroupSettings() -> Element {
                         "Allow anyone to rename group"
                     }
                     Switch {
-                        active: get_group_settings().members_can_change_name(),
+                        active: group_settings_state.read().members_can_change_name(),
                         onflipped: |switch_state| {
                             group_settings_changed_channel.send(GroupSettingsChange::MembersCanChangeName(switch_state))
                         }

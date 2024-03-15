@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
 use common::language::{get_local_text, get_local_text_with_args};
+use common::state::pending_message::FileProgression;
 use common::state::utils::{mention_replacement_pattern, parse_mentions};
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
@@ -14,14 +15,11 @@ use dioxus::prelude::*;
 use dioxus::signals::Signal;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{CodeBlockKind, Options, Tag};
+use pulldown_cmark::{CodeBlockKind, Options, Tag, TagEnd};
 use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
-use warp::{
-    constellation::{file::File, Progression},
-    crypto::DID,
-};
+use warp::{constellation::file::File, crypto::DID};
 
 use tracing::log;
 
@@ -117,7 +115,7 @@ pub struct Props {
 
     // Progress for attachments which are being uploaded
     #[props(!optional)]
-    attachments_pending_uploads: Option<Vec<Progression>>,
+    attachments_pending_uploads: Option<Vec<FileProgression>>,
 
     pinned: bool,
 
@@ -423,7 +421,7 @@ pub fn ChatText(props: ChatMessageProps) -> Element {
             class: text_type_class,
             p {
                 class: text_type_class,
-                aria_label: "message-text",
+                aria_label: "message-text-{cx.props.text}",
                 dangerous_inner_html: "{formatted_text}",
             },
             {links.first().and_then(|l| rsx!(
@@ -578,9 +576,9 @@ fn markdown(text: &str, emojis: bool) -> String {
     for (event, range) in parser.into_offset_iter() {
         if skipping {
             skipping = if in_link {
-                matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)))
+                matches!(event, pulldown_cmark::Event::End(TagEnd::Link))
             } else {
-                matches!(event, pulldown_cmark::Event::End(Tag::Image(_, _, _)))
+                matches!(event, pulldown_cmark::Event::End(TagEnd::Image))
             };
             continue;
         }
@@ -599,8 +597,7 @@ fn markdown(text: &str, emojis: bool) -> String {
                     std::iter::once(pulldown_cmark::Event::Code(txt)),
                 )
             }
-            pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(CodeBlockKind::Indented)) => {
-            }
+            pulldown_cmark::Event::End(TagEnd::CodeBlock) => {}
             pulldown_cmark::Event::SoftBreak => {
                 if in_paragraph {
                     html_output.push_str("</p>\n<p>");
@@ -610,15 +607,15 @@ fn markdown(text: &str, emojis: bool) -> String {
                 in_paragraph = true;
                 html_output.push_str("<p>");
             }
-            pulldown_cmark::Event::End(Tag::Paragraph) => {
+            pulldown_cmark::Event::End(TagEnd::Paragraph) => {
                 in_paragraph = false;
             }
-            pulldown_cmark::Event::Start(Tag::Image(_, _, _))
-            | pulldown_cmark::Event::Start(Tag::Link(_, _, _)) => {
+            pulldown_cmark::Event::Start(Tag::Image { .. })
+            | pulldown_cmark::Event::Start(Tag::Link { .. }) => {
                 // Ignore links and image parsing
                 // We only want Autolink but that doesn't work (or needs <> which we also dont weed)
                 skipping = true;
-                in_link = matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)));
+                in_link = matches!(event, pulldown_cmark::Event::End(TagEnd::Link));
                 html_output.push_str(&text[range]);
             }
             pulldown_cmark::Event::Text(t) => {
@@ -643,10 +640,10 @@ fn markdown(text: &str, emojis: bool) -> String {
             }
             event => {
                 match event {
-                    pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    pulldown_cmark::Event::Start(Tag::CodeBlock(_)) => {
                         in_code_block = true;
                     }
-                    pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    pulldown_cmark::Event::End(TagEnd::CodeBlock) => {
                         in_code_block = false;
                     }
                     _ => {}

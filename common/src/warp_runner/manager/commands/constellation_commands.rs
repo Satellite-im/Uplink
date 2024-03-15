@@ -4,19 +4,27 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::mpsc,
+    time::Duration,
 };
 
+use base64::{engine::general_purpose, Engine};
 use derive_more::Display;
 
 use futures::{channel::oneshot, stream, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
+use tokio::time::sleep;
+use uuid::Uuid;
 
 use crate::{
     language::get_local_text,
-    state::storage::Storage as uplink_storage,
-    upload_file_channel::{UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER},
+    state::{
+        data_transfer::{TransferState, TransferStates},
+        pending_message::FileProgression,
+        storage::Storage as uplink_storage,
+    },
+    upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
     ROOT_DIR_NAME, VIDEO_FILE_EXTENSIONS,
 };
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
@@ -366,7 +374,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     let current_directory = match warp_storage.current_directory() {
         Ok(d) => d,
         Err(_) => {
-            let _ = tx_upload_file.send(UploadFileAction::Error);
+            let _ = tx_upload_file.send(UploadFileAction::Error(None, None));
             return;
         }
     };
@@ -382,7 +390,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Some(file) => file,
             None => {
                 log::error!("Not possible to get filename");
-                let _ = tx_upload_file.send(UploadFileAction::Error);
+                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_path), None));
                 continue;
             }
         };
@@ -393,7 +401,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Ok(metadata) => metadata.len() as usize,
             Err(e) => {
                 log::error!("Not possible to get file size, error: {}", e);
-                let _ = tx_upload_file.send(UploadFileAction::Error);
+                let _ = tx_upload_file.send(UploadFileAction::Error(Some(file_path), None));
                 continue;
             }
         };
@@ -408,19 +416,21 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 Some(name) => name.to_str().unwrap_or(&local_path).to_string(),
                 None => local_path.to_string(),
             };
-            let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_name));
+            let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_path, file_name));
             continue;
         }
-        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         let original = filename.clone();
         let file = PathBuf::from(&original);
-        let _ = tx_upload_file.send(UploadFileAction::Uploading((
-            "0%".into(),
-            get_local_text("files.checking-duplicated-name"),
-            filename.clone(),
-        )));
+        // Generate uuid for tracking
+        let file_id = Uuid::new_v4();
+        let file_state = TransferState::new();
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
+        let _ = tx_upload_file.send(UploadFileAction::Starting(
+            file_id,
+            file_state.clone(),
+            filename.clone(),
+        ));
 
         match warp_storage.put(&filename, &local_path).await {
             Ok(upload_progress) => {
@@ -432,6 +442,8 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         &mut warp_storage,
                         upload_progress,
                         filename,
+                        file_id,
+                        file_state,
                         file_path.clone(),
                     )
                     .await;
@@ -453,7 +465,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         }
         let ret = match get_items_from_current_directory(&mut warp_storage) {
             Ok(r) => UploadFileAction::Finished(r),
-            Err(_) => UploadFileAction::Error,
+            Err(_) => UploadFileAction::Error(None, None),
         };
 
         let _ = tx_upload_file.send(ret);
@@ -462,94 +474,120 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
 
 async fn handle_upload_progress(
     warp_storage: &mut warp_storage,
-    mut upload_progress: ConstellationProgressStream,
+    upload_progress: ConstellationProgressStream,
     filename: String,
+    file_id: Uuid,
+    file_state: TransferState,
     file_path: PathBuf,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
     let mut previous_percentage: usize = 0;
     let mut upload_process_started = false;
+    let mut last_progress = None;
+    let mut paused = false;
 
-    while let Some(upload_progress) = upload_progress.next().await {
-        match upload_progress {
-            Progression::CurrentProgress {
-                name,
-                current,
-                total,
-            } => {
-                log::trace!("starting upload file action listener");
-                if let Ok(received_tx) = CANCEL_FILE_UPLOADLISTENER
-                    .rx
-                    .clone()
-                    .lock()
-                    .await
-                    .try_recv()
-                {
-                    if received_tx {
-                        let _ = tx_upload_file.send(UploadFileAction::Cancelling);
-                        break;
-                    }
+    let mut upload_progress = upload_progress.map(FileProgression::from);
+
+    loop {
+        tokio::select! {
+            biased;
+            true = file_state.matches(TransferStates::Cancel) => {
+                log::info!("{:?} file cancelled!", filename);
+                let _ = tx_upload_file.send(UploadFileAction::Cancelling(file_path.clone(), file_id));
+                sleep(Duration::from_secs(3)).await;
+                let _ = tx_upload_file.send(UploadFileAction::Remove(file_path, file_id));
+                return;
+            },
+            true = file_state.matches(TransferStates::Pause) => {
+                if !paused {
+                    let _ = tx_upload_file.send(UploadFileAction::Pausing(file_id));
+                    paused = true;
                 }
-                if !upload_process_started {
-                    upload_process_started = true;
-                    log::info!("Starting upload for {name}");
-                    log::info!("0% completed -> written 0 bytes")
+            },
+            upload_progress = upload_progress.next() => {
+                paused = false;
+                let Some(upload_progress) = upload_progress else {
+                    break;
                 };
+                last_progress = Some(upload_progress.clone());
+                let current_progress = upload_progress.clone();
+                match upload_progress {
+                    FileProgression::CurrentProgress {
+                        name,
+                        current,
+                        total,
+                    } => {
+                        log::trace!("starting upload file action listener");
+                        if !upload_process_started {
+                            upload_process_started = true;
+                            log::info!("Starting upload for {name}");
+                            log::info!("0% completed -> written 0 bytes")
+                        };
 
-                if let Some(total) = total {
-                    let current_percentage = (((current as f64) / (total as f64)) * 100.) as usize;
-                    if previous_percentage != current_percentage {
-                        previous_percentage = current_percentage;
-                        let readable_current = format_size(current, DECIMAL);
-                        let percentage_number = ((current as f64) / (total as f64)) * 100.;
-                        let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                            format!("{}%", percentage_number as usize),
-                            get_local_text("files.uploading-file"),
-                            filename.clone(),
-                        )));
-                        log::info!(
-                            "{}% completed -> written {readable_current}",
-                            percentage_number as usize
-                        )
+                        if let Some(total) = total {
+                            let current_percentage = (((current as f64) / (total as f64)) * 100.) as usize;
+                            if previous_percentage != current_percentage {
+                                previous_percentage = current_percentage;
+                                let readable_current = format_size(current, DECIMAL);
+                                let percentage_number = ((current as f64) / (total as f64)) * 100.;
+                                let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                    Some(current_progress), //format!("{}%", percentage_number as usize),
+                                    get_local_text("files.uploading-file"),
+                                    file_id,
+                                )));
+                                log::info!(
+                                    "{}% completed -> written {readable_current}",
+                                    percentage_number as usize
+                                )
+                            }
+                            // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
+                            // This causes pending file count to not be updated which is way we send a message here too
+                            if current_percentage == 100 {
+                                let _ = tx_upload_file.send(UploadFileAction::Finishing(
+                                    file_path.clone(),
+                                    file_id,
+                                    false,
+                                ));
+                            }
+                        }
                     }
-                    // ConstellationProgressStream only ends (atm) when all files in the queue are done uploading
-                    // This causes pending file count to not be updated which is way we send a message here too
-                    if current_percentage == 100 {
-                        let _ = tx_upload_file
-                            .send(UploadFileAction::Finishing(file_path.clone(), false));
+                    FileProgression::ProgressComplete { name, total } => {
+                        let total = total.unwrap_or_default();
+                        let readable_total = format_size(total, DECIMAL);
+                        let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                            Some(current_progress), //"100%".into(),
+                            get_local_text("files.finishing-upload"),
+                            file_id,
+                        )));
+                        log::info!("{name} has been uploaded with {}", readable_total);
+                    }
+                    FileProgression::ProgressFailed {
+                        name,
+                        last_size,
+                        error,
+                    } => {
+                        log::info!(
+                            "{name} failed to upload at {} MB due to: {}",
+                            last_size.unwrap_or_default(),
+                            error
+                        );
+                        let _ = tx_upload_file.send(UploadFileAction::Error(
+                            Some(file_path.clone()),
+                            Some(file_id),
+                        ));
+                        sleep(Duration::from_secs(3)).await;
+                        let _ = tx_upload_file.send(UploadFileAction::Remove(file_path, file_id));
+                        return;
                     }
                 }
-            }
-            Progression::ProgressComplete { name, total } => {
-                let total = total.unwrap_or_default();
-                let readable_total = format_size(total, DECIMAL);
-                let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                    "100%".into(),
-                    get_local_text("files.uploading-file"),
-                    filename.clone(),
-                )));
-                log::info!("{name} has been uploaded with {}", readable_total);
-            }
-            Progression::ProgressFailed {
-                name,
-                last_size,
-                error,
-            } => {
-                log::info!(
-                    "{name} failed to upload at {} MB due to: {}",
-                    last_size.unwrap_or_default(),
-                    error.unwrap_or_default()
-                );
-                let _ = tx_upload_file.send(UploadFileAction::Error);
-                break;
             }
         }
     }
 
     let _ = tx_upload_file.send(UploadFileAction::Uploading((
-        "100%".into(),
+        last_progress.clone(), //"100%".into(),
         get_local_text("files.checking-thumbnail"),
-        filename.clone(),
+        file_id,
     )));
 
     let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
@@ -568,9 +606,9 @@ async fn handle_upload_progress(
             Ok(_) => {
                 log::info!("Video Thumbnail uploaded");
                 let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                    "100%".into(),
+                    last_progress.clone(), //"100%".into(),
                     get_local_text("files.thumbnail-uploaded"),
-                    filename.clone(),
+                    file_id,
                 )));
             }
             Err(error) => {
@@ -586,9 +624,9 @@ async fn handle_upload_progress(
             Ok(_) => {
                 log::info!("Document Thumbnail uploaded");
                 let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                    "100%".into(),
+                    last_progress, //"100%".into(),
                     get_local_text("files.thumbnail-uploaded"),
-                    filename.clone(),
+                    file_id,
                 )));
             }
             Err(error) => {
@@ -596,7 +634,7 @@ async fn handle_upload_progress(
             }
         };
     }
-    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_path, true));
+    let _ = tx_upload_file.send(UploadFileAction::Finishing(file_path, file_id, true));
     log::info!("{:?} file uploaded!", filename);
 }
 
@@ -783,7 +821,7 @@ async fn download_file(
             Err(e) => Progression::ProgressFailed {
                 name: file_name.clone(),
                 last_size: file.metadata().map(|d| d.len() as usize).ok(),
-                error: Some(format!("{}", e)),
+                error: e,
             },
         })
         .chain(stream::once(async move {
@@ -810,7 +848,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
     };
 
     let prefix = format!("data:image/{mime};base64,");
-    let base64_image = base64::encode(thumbnail);
+    let base64_image = general_purpose::STANDARD.encode(thumbnail);
 
     prefix + &base64_image
 }

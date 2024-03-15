@@ -165,6 +165,7 @@ pub struct Props {
     devmode: Option<bool>,
     on_mouseenter: Option<EventHandler<MouseEvent>>,
     left_click_trigger: Option<bool>,
+    fit_parent: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -188,7 +189,7 @@ pub fn ContextMenu(props: Props) -> Element {
 
     rsx! {
         div {
-            class: "context-wrap",
+            class: format_args!("context-wrap {}", if cx.props.fit_parent.unwrap_or_default() {"context-wrap-fit"} else {""}),
             onmouseenter: |e| {
                 if let Some(f) = props.on_mouseenter.as_ref() { f.call(e) }
             },

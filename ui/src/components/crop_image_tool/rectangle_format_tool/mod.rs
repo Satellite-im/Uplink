@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose, Engine};
 use common::{
     icons::outline::Shape, language::get_local_text, utils::lifecycle::use_component_lifecycle,
     STATIC_ARGS,

@@ -8,7 +8,7 @@ use arboard::Clipboard as Arboard;
 use clipboard_win::{formats, get_clipboard};
 use image::DynamicImage;
 use image::ImageBuffer;
-use image::ImageOutputFormat;
+use image::ImageFormat;
 use image::RgbaImage;
 use std::error::Error;
 use std::io::BufWriter;
@@ -154,7 +154,7 @@ fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
             let image = DynamicImage::ImageRgba8(image);
             let file = std::fs::File::create(temp_path.clone())?;
             let mut buffered_writer = BufWriter::new(file);
-            if let Err(e) = image.write_to(&mut buffered_writer, ImageOutputFormat::Png) {
+            if let Err(e) = image.write_to(&mut buffered_writer, ImageFormat::Png) {
                 log::warn!("Error to write image in a temp file: {}", e);
                 return Ok(Vec::new());
             };

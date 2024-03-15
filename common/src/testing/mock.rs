@@ -3,7 +3,7 @@ use std::{
     io::{BufWriter, Write},
 };
 
-use base64::encode;
+use base64::{engine::general_purpose, Engine};
 use chrono::{Duration, Utc};
 use image::{ImageBuffer, Rgb, RgbImage};
 use lipsum::lipsum;
@@ -196,7 +196,7 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
             writer.write_all(&img.into_raw()).unwrap();
         }
 
-        let base64_url = encode(&buffer);
+        let base64_url = general_purpose::STANDARD.encode(&buffer);
         let image_url = format!("data:image/png;base64,{base64_url}");
 
         let status = match rng.gen_range(0..3) {
@@ -248,7 +248,7 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> ui_a
     let sender = &identities[rng.gen_range(0..identities.len())];
 
     // Generate a random timestamp within the past 30 days.
-    let timestamp = Utc::now() - Duration::days(rng.gen_range(0..30));
+    let timestamp = Utc::now() - Duration::try_days(rng.gen_range(0..30)).unwrap_or_default();
 
     let mut default_message = Message::default();
     default_message.set_conversation_id(conversation_id);

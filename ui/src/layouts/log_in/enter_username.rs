@@ -33,6 +33,7 @@ struct CreateAccountCmd {
 pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<String>) -> Element {
     log::trace!("rendering enter username layout");
     let window = use_window();
+    let loading = use_signal(|| false);
 
     if !matches!(&*page.current(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -72,6 +73,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 seed_words,
             }) = rx.next().await
             {
+                loading.set(true);
                 let (tx, rx) =
                     oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
@@ -103,8 +105,14 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
     });
 
     rsx!(
+        {loading.get().then(|| rsx!(
+            div {
+                class: "overlay-load-shadow",
+            },
+        ))},
         div {
             id: "unlock-layout",
+            class: format_args!("{}", if *loading.get() {"progress"} else {""}),
             aria_label: "unlock-layout",
             Label {
                 text: get_local_text("auth.enter-username")
@@ -121,7 +129,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),
                 disable_onblur: true,
-                disabled: false,
+                disabled: *loading.get(),
                 placeholder: get_local_text("auth.enter-username"),
                 options: Options {
                     with_validation: Some(username_validation),
@@ -150,8 +158,8 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 text:  get_local_text("unlock.create-account"),
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
-                icon: Icon::Check,
-                disabled: *button_disabled.get(),
+                loading: *loading.get(),
+                disabled: *button_disabled.get() || *loading.get(),
                 onpress: move |_| {
                     ch.send(CreateAccountCmd {
                         username: username.get().to_string(),

@@ -129,6 +129,13 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                 let folder_name3 = dir.name();
                 let key = dir.id();
                 let dir2 = dir.clone();
+                let deleting = storage_controller.read().deleting.iter().any(|i|{
+                    if let Item::Directory(d) = &i {
+                        d.id().eq(&dir.id())
+                    } else {
+                        false
+                    }
+                });
                 rsx!(
                     ContextMenu {
                         key: "{key}-menu",
@@ -187,7 +194,8 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                             onpress: move |_| {
                                 storage_controller.with_mut(|i| i.is_renaming_map = None);
                                 ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
-                            }
+                            },
+                            disabled: deleting,
                         }
                     }
                 )
@@ -203,6 +211,13 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                 let file3 = file.clone();
                 let key = file.id();
                 let file_id = file.id();
+                let deleting = storage_controller.read().deleting.iter().any(|i|{
+                    if let Item::File(f) = &i {
+                        f.id().eq(&file.id())
+                    } else {
+                        false
+                    }
+                });
                 rsx! {
                     ContextMenu {
                         key: "{key}-menu",
@@ -325,7 +340,8 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                                     if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
                                         ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                     }
-                                }
+                                },
+                                disabled: deleting,
                             }
                         }
                     }

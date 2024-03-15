@@ -24,6 +24,7 @@ pub fn Loader(props: Props) -> Element {
         class: if is_large(props) { "loader large" } else { "loader" },
         div {
             class: "spin",
+            aria_label: "loader",
             IconElement { icon: Icon::Loader }
         }
     })

@@ -11,7 +11,9 @@ use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_with_args};
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::profile_update_channel::PROFILE_CHANNEL_LISTENER;
+use common::state::data_transfer::{TrackerType, TransferTracker};
 use common::state::settings::GlobalShortcut;
+use common::state::ui::Layout;
 use common::state::ToastNotification;
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
@@ -49,6 +51,7 @@ use std::time::Instant;
 use std::sync::Arc;
 
 use crate::components::debug_logger::DebugLogger;
+use crate::components::file_transfer::FileTransferModal;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::community::CommunityLayout;
@@ -505,18 +508,22 @@ fn use_app_coroutines() -> Option<()> {
                     msg,
                 }) = evt
                 {
-                    state
+                    if state
                         .write_silent()
-                        .update_outgoing_messages(conversation_id, msg, progress);
-                    let read = state.read();
-                    if read
-                        .get_active_chat()
-                        .map(|c| c.id.eq(&conversation_id))
-                        .unwrap_or_default()
+                        .update_outgoing_messages(conversation_id, msg, progress)
                     {
-                        //Update the component only instead of whole state
-                        if let Some(v) = read.scope_ids.pending_message_component {
-                            schedule(ScopeId(v))
+                        state.write();
+                    } else {
+                        let read = state.read();
+                        if read
+                            .get_active_chat()
+                            .map(|c| c.id.eq(&conversation_id))
+                            .unwrap_or_default()
+                        {
+                            //Update the component only instead of whole state
+                            if let Some(v) = read.scope_ids.pending_message_component {
+                                schedule(ScopeId(v))
+                            }
                         }
                     }
                 } else {
@@ -572,13 +579,25 @@ fn use_app_coroutines() -> Option<()> {
         }
     });
 
+    let file_tracker = use_context::Signal << TransferTracker >> ();
+
     // Listen to async tasks actions that should be handled on main thread
     use_resource(|| {
         to_owned![state];
+        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = schedule_update_any();
         async move {
             let channel = ACTION_LISTENER.rx.clone();
             let mut ch = channel.lock().await;
             while let Some(action) = ch.recv().await {
+                let transfer = !matches!(
+                    action,
+                    ListenerAction::ToastAction {
+                        title: _,
+                        content: _,
+                        icon: _,
+                        timeout: _
+                    }
+                );
                 match action {
                     ListenerAction::ToastAction {
                         title,
@@ -590,7 +609,59 @@ fn use_app_coroutines() -> Option<()> {
                             ToastNotification::init(title, content, icon, timeout),
                         ));
                     }
-                    _ => (),
+                    ListenerAction::TransferProgress {
+                        id,
+                        download,
+                        progression,
+                    } => {
+                        file_tracker.write_silent().update_file_upload(
+                            id,
+                            progression,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        );
+                    }
+                    ListenerAction::FinishTransfer { id, download } => {
+                        file_tracker.write_silent().remove_file_upload(
+                            id,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        );
+                    }
+                    ListenerAction::PauseTransfer { id, download } => {
+                        file_tracker.write_silent().pause_file_upload(
+                            id,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        )
+                    }
+                    ListenerAction::CancelTransfer { id, download } => {
+                        file_tracker.write_silent().cancel_file_upload(
+                            id,
+                            if download {
+                                TrackerType::FileDownload
+                            } else {
+                                TrackerType::FileUpload
+                            },
+                        );
+                    }
+                }
+                if transfer {
+                    if let Some(v) = state.read().scope_ids.file_transfer {
+                        schedule(ScopeId(v))
+                    }
+                    if let Some(v) = state.read().scope_ids.file_transfer_icon {
+                        schedule(ScopeId(v))
+                    }
                 }
             }
         }
@@ -1187,6 +1258,9 @@ fn AppNav<'a>(
 
     let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
+    let tracker = use_context::<Signal<TransferTracker>>();
+    state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id().0);
+
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state
         .read()
@@ -1194,6 +1268,8 @@ fn AppNav<'a>(
         .iter()
         .map(|c| c.unreads())
         .sum();
+    let file_progress = tracker.read().total_progress();
+    let file_progress_ctx = file_progress >= 0 && state.read().ui.current_layout != Layout::Storage;
 
     let chat_route = UIRoute {
         to: "/chat",
@@ -1237,6 +1313,13 @@ fn AppNav<'a>(
         to: "/files",
         name: get_local_text("files.files"),
         icon: Icon::Folder,
+        progress_bar: Some(file_progress),
+        context_items: file_progress_ctx.then(|| {
+            cx.render(rsx!(FileTransferModal {
+                state: state,
+                modal: true
+            }))
+        }),
         ..UIRoute::default()
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];

@@ -18,6 +18,7 @@ pub struct Route {
     pub icon: Icon,
     pub name: String,
     pub with_badge: Option<String>,
+    pub progress_bar: Option<i8>,
     pub loading: Option<bool>,
     pub child: Option<Element>,
     pub context_items: Option<Element>,
@@ -30,6 +31,7 @@ impl Default for Route {
             icon: Icon::QuestionMarkCircle,
             name: "Default".to_owned(),
             with_badge: None,
+            progress_bar: None,
             loading: None,
             child: None,
             context_items: None,
@@ -111,7 +113,7 @@ pub fn Nav(props: Props) -> Element {
         div {
             aria_label: "button-nav",
             class: {
-                format_args!("nav {}", if bubble { "bubble" } else { "" })
+                format_args!("nav disable-select {}", if bubble { "bubble" } else { "" })
             },
             {routes_in_app.iter().map(|route| {
                 let badge = get_badge(route);
@@ -146,7 +148,8 @@ pub fn Nav(props: Props) -> Element {
                             },
                             with_badge: badge,
                             tooltip: tooltip,
-                            appearance: get_appearance(active, route.to)
+                            appearance: get_appearance(active, route.to),
+                            with_progress: route.progress_bar.unwrap_or(-1)
                         },
                         {route.child.as_ref()}
                     }

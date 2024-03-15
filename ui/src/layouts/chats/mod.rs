@@ -72,7 +72,7 @@ pub fn ChatLayout() -> Element {
     let sidebar_hidden = state.read().ui.sidebar_hidden;
     let show_welcome = state.read().chats().active.is_none();
 
-    if *first_render.get() && is_minimal_view {
+    if *first_render.read() && is_minimal_view {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }

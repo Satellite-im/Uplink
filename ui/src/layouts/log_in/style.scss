@@ -1,0 +1,21 @@
+.overlay-load-shadow {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  text-align: center;
+  pointer-events: all;
+}
+
+.copied-toast {
+  position: fixed;
+  top: var(--height-titlebar);
+  right: 0;
+  padding: var(--padding-less);
+  background: var(--secondary-dark);
+  border-radius: 0 0 var(--border-radius-more) var(--border-radius-more);
+}

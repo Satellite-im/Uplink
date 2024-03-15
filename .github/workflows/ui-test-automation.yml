@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
-          ref: 0a216237cb9c965754df444b80ea983879831396
+          ref: d15be5735c5e654bbb7b424d0ea2c414df8b5e4c
 
       - name: Set up cargo cache 🛠️
         uses: Swatinem/rust-cache@v2
@@ -170,10 +170,8 @@ jobs:
 
       - name: Get Warp Peer ID and Build app 🚀
         run: |
-          $localPeerId = Select-String -Path .\warp\peerID.txt -Pattern 'Local PeerID: ([^\s]*)' | ForEach-Object { $_.Matches.Groups[1].Value }
-          echo "localPeerId=$localPeerId" >> $env:GITHUB_ENV
-          $env:SHUTTLE_ADDR_POINT="/ip4/127.0.0.1/tcp/4444/p2p/" + $localPeerId
-          cargo build --release
+          ./utils/replace_node.ps1
+          cargo build --release -F production_mode
 
       - name: Build Installer
         run: cargo wix --package uplink --no-build --nocapture
@@ -207,7 +205,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
-          ref: 0a216237cb9c965754df444b80ea983879831396
+          ref: d15be5735c5e654bbb7b424d0ea2c414df8b5e4c
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -340,7 +338,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
-          ref: 0a216237cb9c965754df444b80ea983879831396
+          ref: d15be5735c5e654bbb7b424d0ea2c414df8b5e4c
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -449,6 +447,15 @@ jobs:
           name: appium-log-macos-chats
           path: ./appium.log
 
+      - name: Upload Uplink Logs if test fails 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: uplink-logs
+          path: |
+            ~/.uplink/.user/debug.log
+            ~/.uplinkUserB/.user/debug.log
+
       - name: Add label if any of test jobs failed
         if: failure()
         uses: buildsville/add-remove-label@v2.0.0
@@ -472,7 +479,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Satellite-im/Warp
-          ref: 0a216237cb9c965754df444b80ea983879831396
+          ref: d15be5735c5e654bbb7b424d0ea2c414df8b5e4c
           path: "./warp"
 
       - name: Download Key file 🗳️
@@ -732,6 +739,7 @@ jobs:
             test-allure-macos-ci
             test-allure-windows-ci
             test-allure-macos-chats
+            uplink-logs
 
       - name: Remove label if all test jobs succeeded
         uses: buildsville/add-remove-label@v2.0.0

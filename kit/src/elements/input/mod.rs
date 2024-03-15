@@ -9,7 +9,6 @@ use uuid::Uuid;
 pub type ValidationError = String;
 use crate::elements::label::Label;
 use crate::elements::loader::Loader;
-
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
@@ -127,7 +126,7 @@ impl Size {
     }
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(default = "".to_owned())]
     id: String,
@@ -151,6 +150,7 @@ pub struct Props {
     select_on_focus: Option<bool>,
     onchange: Option<EventHandler<(String, bool)>>,
     onreturn: Option<EventHandler<(String, bool, Code)>>,
+    onfocus: Option<EventHandler<()>>,
     reset: Option<Signal<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
@@ -373,133 +373,142 @@ pub fn Input(props: Props) -> Element {
     );
 
     rsx! (
-        div {
-            class: {
-                format_args!("input-group {}", if disabled { "disabled" } else { " "})
-            },
-            {(!label.is_empty()).then(|| rsx! (
-                Label {
-                    text: label,
-                    label_with_ellipsis: options.ellipsis_on_label.unwrap_or_default(),
-                }
-            ))}
             div {
                 class: {
-                    format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
+                    format_args!("input-group {}", if disabled { "disabled" } else { " "})
                 },
-                height: props.size.get_height(),
-                // If an icon was provided, render it before the input.
-                {(props.icon.is_some()).then(|| rsx!(
-                    span {
-                        class: "icon",
-                        IconElement {
-                            icon: get_icon(props)
-                        }
+                {(!label.is_empty()).then(|| rsx! (
+                    Label {
+                        text: label,
+                        label_with_ellipsis: options.ellipsis_on_label.unwrap_or_default(),
                     }
-                ))},
-                input {
-                    id: "{input_id}",
-                    class: format_args!("{} {}", loading_class, if props.select_on_focus.unwrap_or_default() {"select"} else {""}),
-                    aria_label: "{aria_label}",
-                    spellcheck: "{false}",
-                    disabled: "{disabled}",
-                    value: "{val.read()}",
-                    maxlength: "{max_length}",
-                    "type": "{typ}",
-                    placeholder: "{props.placeholder}",
-                    onblur: move |_| {
-                        if onblur_active {
-                            emit_return(props, val.read().to_string(), *valid.current(), Code::Enter);
-                            if options.clear_on_submit {
+                ))}
+                div {
+                    class: {
+                        format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
+                    },
+                    height: props.size.get_height(),
+                    // If an icon was provided, render it before the input.
+                    {(props.icon.is_some()).then(|| rsx!(
+                        span {
+                            class: "icon",
+                            IconElement {
+                                icon: get_icon(props)
+                            }
+                        }
+                    ))},
+                    input {
+                        id: "{input_id}",
+                        class: format_args!("{} {}", loading_class, if props.select_on_focus.unwrap_or_default() {"select"} else {""}),
+                        aria_label: "{aria_label}",
+                        spellcheck: "{false}",
+                        disabled: "{disabled}",
+                        value: "{val.read()}",
+                        maxlength: "{max_length}",
+                        "type": "{typ}",
+    <<<<<<< HEAD
+                        placeholder: "{props.placeholder}",
+    =======
+                        placeholder: "{cx.props.placeholder}",
+                        onfocus: move |_| {
+                            if let Some(e) = &cx.props.onfocus {
+                                e.call(())
+                            }
+                        },
+    >>>>>>> origin/dev
+                        onblur: move |_| {
+                            if onblur_active {
+                                emit_return(props, val.read().to_string(), *valid.current(), Code::Enter);
+                                if options.clear_on_submit {
+                                    reset_fn();
+                                } else if options.clear_validation_on_submit {
+                                    valid.set(false);
+                                }
+                            }
+                        },
+                        oninput: move |evt| {
+                            let current_val = evt.value.clone();
+
+                            *val.write_silent() = current_val.clone();
+
+                            let is_valid = if should_validate {
+                                let validation_result = validate(props, &current_val).unwrap_or_default();
+                                valid.set(validation_result.is_empty());
+                                error.set(validation_result);
+                                evt.stop_propagation();
+                                *valid.current()
+                            } else {
+                                true
+                            };
+                            emit(props, current_val, is_valid);
+                        },
+                        // after a valid submission, don't keep the input box green.
+                        onkeyup: move |evt| {
+                            if val.read().to_string().is_empty() && options.clear_validation_on_no_chars {
                                 reset_fn();
-                            } else if options.clear_validation_on_submit {
-                                valid.set(false);
+                            }
+
+                            if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
+                                if props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
+                                    let is_valid = if should_validate {
+                                        let validation_result = validate(props, "").unwrap_or_default();
+                                        valid.set(validation_result.is_empty());
+                                        error.set(validation_result);
+                                        *valid.current()
+                                    } else {
+                                        true
+                                    };
+                                    emit(props, "".to_owned(), is_valid);
+                                } else {
+                                emit_return(props, val.read().to_string(), *valid.current(), evt.code());
+                                if options.clear_on_submit {
+                                    reset_fn();
+                                } else if options.clear_validation_on_submit {
+                                    valid.set(false);
+                                }
+                            }
+                            } else if options.react_to_esc_key && evt.code() == Code::Escape {
+                                emit_return(props, "".to_owned(), min_length == 0, evt.code());
+                                if options.clear_on_submit {
+                                    reset_fn();
+                               }
                             }
                         }
                     },
-                    oninput: move |evt| {
-                        let current_val = evt.value.clone();
-
-                        *val.write_silent() = current_val.clone();
-
-                        let is_valid = if should_validate {
-                            let validation_result = validate(props, &current_val).unwrap_or_default();
-                            valid.set(validation_result.is_empty());
-                            error.set(validation_result);
-                            evt.stop_propagation();
-                            *valid.current()
-                        } else {
-                            true
-                        };
-                        emit(props, current_val, is_valid);
-                    },
-                    // after a valid submission, don't keep the input box green.
-                    onkeyup: move |evt| {
-                        if val.read().to_string().is_empty() && options.clear_validation_on_no_chars {
-                            reset_fn();
-                        }
-
-                        if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
-                            if props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
-                                let is_valid = if should_validate {
+                    {(options.with_clear_btn && !val.read().is_empty() && !disabled).then(move || rsx!(
+                        div {
+                            class: "clear-btn",
+                            onclick: move |_| {
+                                *val.write_silent() = String::new();
+                                if should_validate {
                                     let validation_result = validate(props, "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
                                     error.set(validation_result);
-                                    *valid.current()
-                                } else {
-                                    true
-                                };
-                                emit(props, "".to_owned(), is_valid);
-                            } else {
-                            emit_return(props, val.read().to_string(), *valid.current(), evt.code());
-                            if options.clear_on_submit {
-                                reset_fn();
-                            } else if options.clear_validation_on_submit {
-                                valid.set(false);
-                            }
-                        }
-                        } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(props, "".to_owned(), min_length == 0, evt.code());
-                            if options.clear_on_submit {
-                                reset_fn();
-                           }
-                        }
-                    }
-                },
-                {(options.with_clear_btn && !val.read().is_empty() && !disabled).then(move || rsx!(
-                    div {
-                        class: "clear-btn",
-                        onclick: move |_| {
-                            *val.write_silent() = String::new();
-                            if should_validate {
-                                let validation_result = validate(props, "").unwrap_or_default();
-                                valid.set(validation_result.is_empty());
-                                error.set(validation_result);
-                            }
+                                }
 
-                            if options.clear_validation_on_no_chars {
-                                reset_fn();
+                                if options.clear_validation_on_no_chars {
+                                    reset_fn();
+                                }
+                                // re-focus the input after clearing it
+                                let _ = eval(&focus_script);
+                                emit(props, String::new(), *valid.get());
+                            },
+                            IconElement {
+                                icon: options.clear_btn_icon
                             }
-                            // re-focus the input after clearing it
-                            let _ = eval(&focus_script);
-                            emit(props, String::new(), *valid.get());
-                        },
-                        IconElement {
-                            icon: options.clear_btn_icon
                         }
+                    ))},
+                    {props.loading.unwrap_or(false).then(move || rsx!(
+                        Loader { spinning: true },
+                    ))},
+                },
+                {(!error.is_empty()).then(|| rsx!(
+                    p {
+                        class: "error",
+                        aria_label: "input-error",
+                        "{error}"
                     }
-                ))},
-                {props.loading.unwrap_or(false).then(move || rsx!(
-                    Loader { spinning: true },
-                ))},
-            },
-            {(!error.is_empty()).then(|| rsx!(
-                p {
-                    class: "error",
-                    aria_label: "input-error",
-                    "{error}"
-                }
-            ))}
-        }
-    )
+                ))}
+            }
+        )
 }
