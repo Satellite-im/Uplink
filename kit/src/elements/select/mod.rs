@@ -5,7 +5,7 @@ use dioxus_elements::GlobalAttributes;
 
 use crate::components::invisible_closer::InvisibleCloser;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
@@ -66,7 +66,7 @@ pub fn Select<'a>(props: Props) -> Element {
     )
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FancySelectProps {
     #[props(optional)]
     _loading: Option<bool>,

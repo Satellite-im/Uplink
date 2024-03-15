@@ -175,7 +175,7 @@ pub fn PinnedMessages(props: Props) -> Element<'_> {
     })
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct PinnedMessageProp<'a> {
     message: warp::raygun::Message,
     chat: Uuid,

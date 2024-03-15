@@ -12,7 +12,7 @@ use crate::components::{
 
 pub mod card;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     username: String,
     user_image: Element,

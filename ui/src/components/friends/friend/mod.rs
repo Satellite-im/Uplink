@@ -18,8 +18,8 @@ use common::language::get_local_text;
 use common::state::State;
 use warp::multipass::identity::Relationship;
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     // The username of the friend request sender
     username: String,
     // A suffix to the username, typically a unique identifier
@@ -31,12 +31,12 @@ pub struct Props<'a> {
     // The user image element to display
     user_image: Element,
     // An optional event handler for the "onchat" event
-    onchat: Option<EventHandler<'a>>,
+    onchat: Option<EventHandler>,
     // An optional event handler for the "onremove" event
-    onremove: Option<EventHandler<'a>>,
-    onaccept: Option<EventHandler<'a>>,
+    onremove: Option<EventHandler>,
+    onaccept: Option<EventHandler>,
     // An optional event handler for the "onblock" event
-    onblock: Option<EventHandler<'a>>,
+    onblock: Option<EventHandler>,
     accept_button_disabled: Option<bool>,
     block_button_disabled: Option<bool>,
     remove_button_disabled: Option<bool>,
@@ -44,7 +44,7 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Friend<'a>(props: Props<'a>) -> Element {
+pub fn Friend(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
     let relationship = props.relationship;
     let status_message = props.status_message.clone();

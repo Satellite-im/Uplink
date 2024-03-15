@@ -2,7 +2,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     disabled: bool,
     width: Option<String>,

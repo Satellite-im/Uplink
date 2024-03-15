@@ -12,7 +12,7 @@ pub struct ChannelGroup {
     pub channels: Vec<Channel>,
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     group_name: String,
     channels: Vec<Channel>,
@@ -29,7 +29,7 @@ pub fn ChannelGroupElement(props: Props) -> Element {
             class: "channel-group",
             div {
                 class: "channel-group-header",
-                group_name,
+                {group_name},
                 div {
                     class: "controls",
                     IconElement {

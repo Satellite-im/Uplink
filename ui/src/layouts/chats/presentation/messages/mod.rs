@@ -192,7 +192,7 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct AllMessageGroupsProps<'a> {
     groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
@@ -212,7 +212,7 @@ pub fn loop_over_message_groups<'a>(props: AllMessageGroupsProps<'a>) -> Element
     }))
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct MessageGroupProps<'a> {
     group: &'a data::MessageGroup,
     active_chat_id: Uuid,
@@ -326,7 +326,7 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct MessagesProps<'a> {
     messages: &'a Vec<data::MessageGroupMsg>,
     active_chat_id: Uuid,
@@ -509,7 +509,7 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
     })) // end outer cx.render
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct MessageProps<'a> {
     message: &'a data::MessageGroupMsg,
     is_remote: bool,
@@ -679,7 +679,7 @@ fn render_message<'a>(props: MessageProps<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct PendingMessagesListenerProps<'a> {
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
@@ -698,7 +698,7 @@ pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps)
     })
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct PendingWrapperProps<'a> {
     msg: Vec<PendingMessage>,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
@@ -719,7 +719,7 @@ fn pending_wrapper<'a>(props: PendingWrapperProps) -> Element {
     })
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct PendingMessagesProps<'a> {
     #[props(!optional)]
     pending_outgoing_message: Option<data::MessageGroup>,

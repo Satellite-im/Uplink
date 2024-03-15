@@ -27,15 +27,15 @@ struct ImageDimensions {
     width: i64,
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     pub large_thumbnail: (Vec<u8>, String),
     pub on_cancel: EventHandler<()>,
     pub on_crop: EventHandler<PathBuf>,
 }
 
 #[allow(non_snake_case)]
-pub fn CropCircleImageModal<'a>(props: Props<'a>) -> Element {
+pub fn CropCircleImageModal(props: Props) -> Element {
     let large_thumbnail = use_signal(|| props.large_thumbnail.clone());
 
     let image_scale: &Signal<f32> = use_signal(|| 1.0);

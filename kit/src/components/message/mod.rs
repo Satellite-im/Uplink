@@ -355,7 +355,7 @@ pub fn Message(props: Props) -> Element {
     )
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 struct EditProps {
     id: String,
     text: String,
@@ -382,7 +382,7 @@ fn EditMsg(props: EditProps) -> Element {
     })
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ChatMessageProps {
     text: String,
     remote: bool,

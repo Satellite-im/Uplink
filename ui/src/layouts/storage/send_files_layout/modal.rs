@@ -5,7 +5,7 @@ use warp::raygun::Location;
 
 use crate::layouts::storage::send_files_layout::{SendFilesLayout, SendFilesStartLocation};
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct SendFilesLayoutModalProps<'a> {
     send_files_from_storage: &'a Signal<bool>,
     send_files_start_location: SendFilesStartLocation,

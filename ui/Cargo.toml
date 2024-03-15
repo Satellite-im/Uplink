@@ -15,7 +15,7 @@ dioxus-router = { workspace = true }
 dioxus-desktop = { workspace = true, features = ["transparent"] }
 dioxus-html = { workspace = true }
 raw-window-handle = { workspace = true }
-dioxus-core = { workspace = true }
+# dioxus-core = { workspace = true }
 kit = { workspace = true }
 common = { workspace = true }
 extensions = { workspace = true }

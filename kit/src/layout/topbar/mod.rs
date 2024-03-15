@@ -4,7 +4,7 @@ use tracing::log;
 
 use crate::elements::{button::Button, Appearance};
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     with_back_button: Option<bool>,

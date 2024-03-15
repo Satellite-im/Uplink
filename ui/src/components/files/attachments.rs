@@ -9,7 +9,7 @@ use kit::components::embeds::file_embed::FileEmbed;
 use uuid::Uuid;
 use warp::raygun::Location;
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct AttachmentProps<'a> {
     pub chat_id: Uuid,
     pub files_to_attach: Vec<Location>,

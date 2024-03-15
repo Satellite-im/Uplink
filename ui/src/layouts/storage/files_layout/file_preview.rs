@@ -48,19 +48,19 @@ pub fn open_file_preview_modal<'a>(
     })
 }
 
-#[derive(Props)]
-struct Props<'a> {
-    file: &'a File,
+#[derive(Props, Clone, PartialEq)]
+struct Props {
+    file: File,
     on_download: EventHandler<Option<PathBuf>>,
     on_dismiss: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-fn FilePreview<'a>(props: Props<'a>) -> Element {
+fn FilePreview(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
     let file_path_in_local_disk = use_signal(|| PathBuf::new);
 
-    let thumbnail = thumbnail_to_base64(props.file);
+    let thumbnail = thumbnail_to_base64(&props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(props.file.name());
 
     let file_loading_counter = use_signal(|| 0);

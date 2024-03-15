@@ -92,7 +92,7 @@ pub struct Props {
     // called shen the icon is clicked
     on_press: EventHandler<Option<PathBuf>>,
 
-    progress: Option<&'a FileProgression>,
+    progress: Option<FileProgression>,
 }
 
 #[allow(non_snake_case)]

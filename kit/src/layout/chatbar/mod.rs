@@ -57,7 +57,7 @@ pub struct ReplyInfo {
     pub message: String,
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     id: String,
     placeholder: String,
@@ -79,7 +79,7 @@ pub struct Props {
     on_suggestion_click: Option<EventHandler<(String, String, i64)>>,
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ReplyProps {
     label: String,
     remote: Option<bool>,

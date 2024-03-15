@@ -5,7 +5,7 @@ use kit::{
     elements::tooltip::Tooltip,
 };
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FileLocationProps<'a> {
     id: &'a String,
     update_script: &'a Signal<String>,

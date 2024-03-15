@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use crate::elements::input::Input;
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,

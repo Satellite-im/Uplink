@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     tooltip: Element,
     children: Element,

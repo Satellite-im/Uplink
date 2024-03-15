@@ -70,8 +70,8 @@ impl FromStr for Page {
     type Err = ();
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     #[props(optional)]
     onpress: Option<EventHandler<Page>>,
 }
@@ -84,7 +84,7 @@ pub fn emit(props: Props, e: Page) {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar<'a>(props: Props<'a>) -> Element {
+pub fn Sidebar(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
     let page = use_context::<Signal<Page>>();
     let _router = dioxus_router::hooks::use_navigator();

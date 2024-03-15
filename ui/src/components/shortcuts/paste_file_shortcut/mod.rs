@@ -26,7 +26,7 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
     }
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ShortCutProps<'a> {
     on_paste: EventHandler<Vec<PathBuf>>,
 }

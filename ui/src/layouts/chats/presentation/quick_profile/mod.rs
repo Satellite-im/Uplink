@@ -34,7 +34,7 @@ use crate::{
 pub const USER_VOL_MIN: f32 = 0.25;
 pub const USER_VOL_MAX: f32 = 5.0;
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,
     did_key: &'a DID,

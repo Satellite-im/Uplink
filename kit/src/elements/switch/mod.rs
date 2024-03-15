@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 // Remember: owned props must implement PartialEq!
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,

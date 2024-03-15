@@ -14,15 +14,15 @@ static CALL_COUNT: Lazy<RwLock<u32>> = Lazy::new(|| RwLock::new(0));
 
 const NAVIGATE_AND_HIGHLIGHT_KEYBINDS: &str = include_str!("./navigate_and_highlight_keybinds.js");
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     is_on_auth_pages: Option<bool>,
     on_global_shortcut: EventHandler<GlobalShortcut>,
     // TODO: overrides: Vec<(String, String)> allow for overriding the default bindings
 }
 
 #[allow(non_snake_case)]
-pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
+pub fn KeyboardShortcuts(props: Props) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }
@@ -90,7 +90,7 @@ pub fn KeyboardShortcuts<'a>(props: Props) -> Element {
     }
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 struct GlobalShortcutProps<'a> {
     keys: Vec<KeyCode>,
     modifiers: Vec<ModifiersState>,

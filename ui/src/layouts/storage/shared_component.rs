@@ -19,7 +19,7 @@ use kit::elements::folder::Folder;
 use warp::constellation::item::Item;
 use warp::raygun::Location;
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FilesBreadcumbsProps<'a> {
     storage_controller: &'a Signal<StorageController>,
     ch: &'a Coroutine<ChanCmd>,
@@ -75,7 +75,7 @@ pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
     },)
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FilesAndFoldersProps<'a> {
     storage_controller: &'a Signal<StorageController>,
     ch: &'a Coroutine<ChanCmd>,

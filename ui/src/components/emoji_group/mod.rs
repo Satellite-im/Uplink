@@ -7,14 +7,14 @@ use dioxus::prelude::*;
 use kit::elements::tooltip::{ArrowPosition, Tooltip};
 use kit::elements::{button::Button, Appearance};
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     onselect: EventHandler<String>,
     apply_to: EmojiDestination,
 }
 
 #[allow(non_snake_case)]
-pub fn EmojiGroup<'a>(props: Props<'a>) -> Element {
+pub fn EmojiGroup(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
     let emojis = state.read().ui.emojis.clone();
     let sorted_list = emojis.get_sorted_vec(Some(4));

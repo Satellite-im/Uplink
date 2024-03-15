@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     classes: Option<String>,
     onclose: EventHandler<()>,

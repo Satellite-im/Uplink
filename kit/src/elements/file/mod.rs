@@ -10,7 +10,7 @@ use dioxus_html::input_data::keyboard_types::Modifiers;
 use common::icons::Icon as IconElement;
 use common::{icons::outline::Shape as Icon, is_video};
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     text: String,
     #[props(optional)]

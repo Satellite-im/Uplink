@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 #[allow(dead_code)]
 //TODO: Remove for appearance when it is used
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     id: Uuid,
     on_hover: EventHandler<Uuid>,

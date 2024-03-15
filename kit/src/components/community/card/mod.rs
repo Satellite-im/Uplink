@@ -4,7 +4,7 @@ use crate::elements::{button::Button, Appearance};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     joined: bool,
     name: String,

@@ -5,7 +5,7 @@ use kit::elements::label::Label;
 
 pub mod sidebar;
 pub mod sub_pages;
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct SectionProps<'a> {
     section_label: String,
     section_description: String,
@@ -45,7 +45,7 @@ pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct SectionSimpleProps<'a> {
     aria_label: Option<String>,
     children: Element,
@@ -68,7 +68,7 @@ pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
     )
 }
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ExtensionProps<'a> {
     title: String,
     author: String,

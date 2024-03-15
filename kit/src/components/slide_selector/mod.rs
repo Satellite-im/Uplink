@@ -14,19 +14,25 @@ pub enum ButtonsFormat {
 pub struct Props<T: 'static> {
     values: Vec<T>,
     initial_index: usize,
-    // #[props(optional)]
-    // buttons_format: Option<ButtonsFormat>,
+    #[props(optional)]
+    buttons_format: Option<ButtonsFormat>,
     onset: EventHandler<T>,
 }
 
 impl<T> Clone for Props<T> {
     fn clone(&self) -> Self {
         Self {
-            values: self.values.clone(),
+            values: self.values,
             initial_index: self.initial_index.clone(),
-            // buttons_format: self.buttons_format.clone(),
+            buttons_format: self.buttons_format.clone(),
             onset: self.onset.clone(),
         }
+    }
+}
+
+impl<T> PartialEq for Props<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.initial_index == other.initial_index && self.buttons_format == other.buttons_format
     }
 }
 
@@ -46,7 +52,7 @@ where
 
     let buttons_format = ButtonsFormat::Arrows;
 
-    let converted_display = match props.values.get(*index.current()) {
+    let converted_display = match props.values.get(*index.read()) {
         Some(x) => x.to_string(),
         None => {
             log::error!("failed to get value in SlideSelector");
@@ -60,12 +66,12 @@ where
         Button {
             aria_label: "slide-selector-minus".into(),
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
-            disabled: *index.get() == 0,
+            disabled: *index.read() == 0,
             onpress: move |_| {
-                if *index.get() == 0 {
+                if *index.read() == 0 {
                     return;
                 }
-                let new_val = index.get() - 1;
+                let new_val = *index.read() - 1;
                 index.set(new_val);
                 if let Some(x) = props.values.get(new_val) {
                      props.onset.call(x.clone());
@@ -85,7 +91,7 @@ where
                 if *index.read() >= (props.values.len() - 1) {
                     return;
                 }
-                let new_val = index.read() + 1;
+                let new_val = *index.read() + 1;
                 index.set(new_val);
                 if let Some(x) = props.values.get(new_val) {
                     props.onset.call(x.clone());

@@ -25,13 +25,13 @@ use tracing::log;
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::GroupSettings};
 
-#[derive(Props)]
-pub struct Props<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct Props {
     oncreate: EventHandler<MouseEvent>,
 }
 
 #[allow(non_snake_case)]
-pub fn CreateGroup<'a>(props: Props<'a>) -> Element {
+pub fn CreateGroup(props: Props) -> Element {
     log::trace!("rendering create_group");
     let state = use_context::<Signal<State>>();
     let router = use_navigator();

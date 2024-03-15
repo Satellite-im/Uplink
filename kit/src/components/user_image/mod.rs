@@ -8,7 +8,7 @@ use crate::{
     elements::label::Label,
 };
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     loading: Option<bool>,

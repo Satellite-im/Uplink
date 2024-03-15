@@ -145,10 +145,10 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     {with_status.then(||{
-                        rsx!(Indicator {
+                        Indicator {
                             status: sender.identity_status().into(),
                             platform: sender.platform().into(),
-                        })
+                        }
                     })}
                 }
             }
@@ -156,7 +156,7 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
     )
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     id: String,
     items: Element,
@@ -174,17 +174,15 @@ pub fn ContextMenu(props: Props) -> Element {
     let window = use_window();
 
     let devmode = props.devmode.unwrap_or(false);
-    let with_click = props.left_click_trigger.unwrap_or_default();
+    let with_click = use_signal(|| props.left_click_trigger.unwrap_or_default());
+    let id_signal = use_signal(|| id.clone());
 
     // Handles the hiding and showing of the context menu
-    use_effect(|(id,)| {
-        to_owned![with_click];
-        async move {
-            let script = include_str!("./context.js")
-                .replace("UUID", &id)
-                .replace("ON_CLICK", &format!("{}", with_click));
-            let _ = eval(&script);
-        }
+    use_effect(async move {
+        let script = include_str!("./context.js")
+            .replace("UUID", &id_signal.read())
+            .replace("ON_CLICK", &format!("{}", with_click.read()));
+        let _ = eval(&script);
     });
 
     rsx! {

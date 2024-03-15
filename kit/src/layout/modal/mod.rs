@@ -5,7 +5,7 @@ use common::icons::outline::Shape as Icon;
 
 use dioxus::prelude::*;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     open: bool,
     with_title: Option<String>,

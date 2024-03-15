@@ -38,7 +38,7 @@ impl Size {
     }
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(default = "".to_owned())]
     id: String,

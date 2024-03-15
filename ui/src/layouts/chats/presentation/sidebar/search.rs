@@ -9,7 +9,7 @@ use warp::crypto::DID;
 
 use crate::utils::build_participants;
 
-#[derive(Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct SearchProps<'a> {
     search_typed_chars: Signal<String>,
     search_friends_is_focused: Signal<bool>,

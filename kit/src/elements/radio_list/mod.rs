@@ -3,7 +3,7 @@ use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     initial_value: String,
     values: Vec<String>,

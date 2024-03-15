@@ -51,6 +51,13 @@ pub struct Props {
     pub tooltip_direction: Option<ArrowPosition>,
 }
 
+impl PartialEq for Props {
+    // TODO(LucasMarchi): Review it later
+    fn eq(&self, other: &Self) -> bool {
+        self.routes.len() == other.routes.len() && self.active == other.active
+    }
+}
+
 /// Tells the parent the nav was interacted with.
 pub fn emit(props: Props, to: &To) {
     match &props.onnavigate {
@@ -161,7 +168,7 @@ pub fn Nav(props: Props) -> Element {
                             id: format!("route-{}-{}", name2, uuid.read()),
                             key: "{name2}-{uuid.read()}",
                             items: items.clone(),
-                            btn
+                            {btn}
                         })
                     }
                 }

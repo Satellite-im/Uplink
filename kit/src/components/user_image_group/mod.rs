@@ -8,7 +8,7 @@ use crate::{
 };
 use dioxus::{events::MouseEvent, prelude::*};
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     loading: Option<bool>,
     participants: Vec<User>,

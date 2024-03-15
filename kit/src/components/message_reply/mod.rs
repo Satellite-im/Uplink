@@ -21,7 +21,7 @@ pub enum Order {
     Last,
 }
 
-#[derive(Props, Clone)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(optional)]
     user_image: Option<Element>,

@@ -619,8 +619,8 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
     })
 }
 
-#[derive(Props)]
-pub struct CallDialogProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct CallDialogProps {
     caller: Element,
     icon: Icon,
     description: String,
@@ -635,7 +635,7 @@ pub struct CallDialogProps<'a> {
 // todo: remove this
 #[allow(unused)]
 #[allow(non_snake_case)]
-pub fn CallDialog<'a>(props: CallDialogProps<'a>) -> Element {
+pub fn CallDialog(props: CallDialogProps) -> Element {
     let with_accept_btn = match props.with_accept_btn.clone() {
         Some(w_a_b) => w_a_b,
         None => None,
