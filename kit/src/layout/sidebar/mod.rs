@@ -25,7 +25,7 @@ pub fn Sidebar(props: Props) -> Element {
     let hidden = props.hidden.unwrap_or(false);
 
     let hamburger = rsx!(Button {
-        aria_label: "hamburger-button".into(),
+        aria_label: "hamburger-button".to_string(),
         icon: Icon::SidebarArrowLeft,
         appearance: Appearance::Transparent,
         onpress: move |_| {

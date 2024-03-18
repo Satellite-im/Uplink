@@ -65,6 +65,7 @@ pub fn Button(props: Props) -> Element {
     };
 
     let tooltip_visible = use_signal(|| false);
+    let progress = props.with_progress.unwrap_or(-1);
 
     let button_class = format!(
         "btn appearance-{} btn-{} {} {}",
@@ -77,6 +78,8 @@ pub fn Button(props: Props) -> Element {
             ""
         }
     );
+
+    let show_icon = props.loading.unwrap_or_default() || props.icon.is_some();
 
     rsx!(
         div {
@@ -132,7 +135,7 @@ pub fn Button(props: Props) -> Element {
                                 class: props.loading.unwrap_or_default().then_some("spin-container-for-button".to_string()),
                                 size: 20,
                                 fill:"currentColor".to_string(),
-                                icon: _icon,
+                                icon: if props.loading.unwrap_or_default() {Icon::Loader} else {props.icon.unwrap()},
                                 disabled:  props.disabled.unwrap_or_default(),
                                 disabled_fill: "#9CA3AF".to_string()
                             },

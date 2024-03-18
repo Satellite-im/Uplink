@@ -354,7 +354,8 @@ pub fn InputRich(props: Props) -> Element {
         }
     });
 
-    use_effect(|| {
+    // TODO(MIGRATION_0.5): Before it was use_effect, verify if it keeps the same behavior
+    use_future(|| {
         to_owned![listener_data, value];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)

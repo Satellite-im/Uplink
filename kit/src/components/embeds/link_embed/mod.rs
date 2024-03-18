@@ -2,7 +2,6 @@ use crate::components::embeds::youtube::YouTubePlayer;
 use dioxus::prelude::*;
 use dioxus::prelude::{rsx, Props};
 use dioxus_core::Element;
-use dioxus_hooks::use_future;
 use scraper::{Html, Selector};
 
 use self::get_link_data::*;
@@ -56,9 +55,10 @@ pub struct LinkEmbedProps {
 
 #[allow(non_snake_case)]
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
-    let fetch_meta = use_future(|| async move { get_meta(props.link.as_str()).await });
+    // TODO(Migration_0.5): Before it was a use_future, verify if it keep same behavior
+    let fetch_meta = use_resource(|| async move { get_meta(props.link.as_str()).await });
 
-    let meta = match fetch_meta.value() {
+    let meta = match *fetch_meta.value().read() {
         Some(Ok(val)) => val.clone(),
         Some(Err(_)) => SiteMeta::default(),
         None => SiteMeta::default(),

@@ -100,12 +100,12 @@ impl PartialEq for FileProgression {
                 FileProgression::ProgressFailed {
                     name: name1,
                     last_size: last_size1,
-                    error: error1,
+                    ..
                 },
                 FileProgression::ProgressFailed {
                     name: name2,
                     last_size: last_size2,
-                    error: error2,
+                    ..
                 },
             ) => name1 == name2 && last_size1 == last_size2,
             _ => false,

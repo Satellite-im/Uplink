@@ -35,7 +35,7 @@ pub fn Slimbar(props: Props) -> Element {
             div {
                 class: "slimbar-back",
                 Button {
-                    aria_label: "back-button".into(),
+                    aria_label: "back-button".to_string(),
                     icon: icons::outline::Shape::Sidebar,
                     onpress: move |_| emit(props),
                     appearance: Appearance::Secondary
