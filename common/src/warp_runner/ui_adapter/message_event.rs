@@ -9,10 +9,7 @@ use warp::{
 
 use super::Message;
 use crate::{
-    state::{
-        self,
-        pending_message::{FileProgression, PendingMessage},
-    },
+    state::{self, pending_message::FileProgression},
     warp_runner::{
         ui_adapter::{convert_raygun_message, did_to_identity},
         Messaging,
@@ -75,7 +72,7 @@ pub enum MessageEvent {
     AttachmentProgress {
         progress: FileProgression,
         conversation_id: Uuid,
-        msg: PendingMessage,
+        msg: Uuid,
     },
 }
 

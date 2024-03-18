@@ -214,13 +214,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
         local_typing_ch.send(TypingIndicator::NotTyping);
         let active_chat_id = chat_data.read().active_chat.id();
 
-        let files_to_upload = state
-            .read()
-            .get_active_chat()
-            .as_ref()
-            .map(|d| d.files_attached_to_send.clone())
-            .unwrap_or_default();
-
         let msg = state
             .read()
             .get_active_chat()
@@ -257,13 +250,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(active_chat_id));
             }
-            let appended_msg_id = state
-                .write()
-                .increment_outgoing_messages(msg.clone(), &files_to_upload);
             msg_ch.send(MsgChInput {
                 msg,
                 conv_id: active_chat_id,
-                appended_msg_id,
                 replying_to,
             });
         }
