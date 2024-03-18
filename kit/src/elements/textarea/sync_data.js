@@ -22,3 +22,16 @@ if (counter) {
   counter.innerText = count;
 }
 
+// if ("$UUID" !== "00000000-0000-0000-0000-000000000000-chatbar") {
+  // addEventListener("click", (event) => { 
+  //   console.log(event);
+  //   if (event.target.class === "user") {
+  //     e.focus();
+  //   }
+  //   e.focus();
+  //   console.log('$UUID', "sync data file");
+  //   console.log(e);
+  //  });
+
+  // e.focus();
+// }

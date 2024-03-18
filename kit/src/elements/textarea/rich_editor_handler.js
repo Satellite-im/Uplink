@@ -3,7 +3,6 @@
  */
 
 let text = document.getElementById('$EDITOR_ID')
-
 var keys = [{
     key: "ArrowUp", run: () => {
         if (text.classList.contains("up-down-disabled")) {
@@ -63,6 +62,8 @@ var editor = new MarkdownEditor(
 editor.value('$INIT');
 
 if ($AUTOFOCUS) {
+    forceClickOnResizeArea();
+    console.log("inside AUTOFOCUS");
     addEventListener("focus", () => { editor.codemirror.focus() });
 }
 
@@ -75,3 +76,11 @@ editor.registerListener("selection", ({ _element, _codemirror, selection }) => {
     // Sync cursor to uplink
     dioxus.send(`{\"Cursor\":${selection.main.to}}`)
 });
+
+function forceClickOnResizeArea() {
+    // Create a new event.
+    const event = new Event('resize');
+    console.log("inside funciton");
+    // Dispatch the event on the window object.
+    window.dispatchEvent(event);
+  }
