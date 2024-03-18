@@ -5,7 +5,8 @@ use std::{
 
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex, Replacer};
-use titlecase::titlecase;
+// TODO: Investigate recursives `Join` from `joinery` (would be irrelevant if `titlecase` is replaced)
+// use titlecase::titlecase;
 use tracing::log;
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -32,7 +33,7 @@ pub fn get_available_themes() -> Vec<Theme> {
             if file.metadata().map(|x| x.is_file()).unwrap_or(false) {
                 let theme_path = file.path().display().to_string();
                 let pretty_theme_str = get_pretty_name(&theme_path);
-                let pretty_theme_str = titlecase(&pretty_theme_str);
+                // let pretty_theme_str = titlecase(&pretty_theme_str);
 
                 let styles = fs::read_to_string(&theme_path).unwrap_or_default();
 

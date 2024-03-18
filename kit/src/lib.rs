@@ -1,6 +1,5 @@
 // TODO: Look into complex types from clippy in regards to props attr macro.
 //      Low priority and can be ignored
-
 #![allow(clippy::type_complexity)]
 use components::indicator::{Platform, Status};
 
