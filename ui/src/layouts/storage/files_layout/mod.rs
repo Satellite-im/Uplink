@@ -61,7 +61,7 @@ pub fn FilesLayout() -> Element<'_> {
     let files_pre_selected_to_send: Signal<Vec<Location>> = use_signal(Vec::new);
     let _router = use_navigator();
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
-    let file_tracker = use_shared_state::<TransferTracker>(cx)?;
+    let file_tracker = use_context::Signal<<TransferTracker>>();
 
     functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
 

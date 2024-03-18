@@ -171,26 +171,44 @@ pub fn IconButton<'a, S: IconShape>(props: ReadOnlySignal<IconButtonProps<'a, S>
 }
 
 /// The properties for the [`Icon`] component.
-#[derive(PartialEq, Clone)]
-pub struct IconProps<'a, S: IconShape> {
+#[derive(Props, Clone)]
+pub struct IconProps<S: IconShape + 'static> {
     /// An optional class for the `<svg>` element.
-    pub class: Option<&'a str>,
+    #[props(default)]
+    pub class: Option<String>,
     /// The size of the `<svg>` element. All the heroicons are square, so this
     /// will be turned into the `height` and `width` attributes for the
     /// `<svg>`. Defaults to 20.
+    #[props(default = 20)]
     pub size: u32,
     /// The color to use for filling the icon. This is only relevant for solid
     /// icons. Defaults to "currentColor".
-    pub fill: &'a str,
+    #[props(default = "currentColor".to_string())]
+    pub fill: String,
     /// The icon shape to use.
     pub icon: S,
     /// If this is true then the fill color will be the one set in
     /// `disabled_fill` instead of `fill`.
+    #[props(default = false)]
     pub disabled: bool,
     /// The fill color to use when `disabled` is true. This is only relevant
     /// for solid icons. This defaults to "#9CA3AF", which is "coolGray 400"
     /// from tailwindcss.
-    pub disabled_fill: &'a str,
+    #[props(default = "#9CA3AF".to_string())]
+    pub disabled_fill: String,
+}
+
+impl<S> PartialEq for IconProps<S>
+where
+    S: IconShape + 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.class == other.class
+            && self.size == other.size
+            && self.fill == other.fill
+            && self.disabled == other.disabled
+            && self.disabled_fill == other.disabled_fill
+    }
 }
 
 /// Renders an `<svg>` element for a heroicon.
@@ -198,20 +216,20 @@ pub struct IconProps<'a, S: IconShape> {
 /// See the [`IconProps`] field documentation for details on the properties it
 /// accepts.
 #[allow(non_snake_case)]
-pub fn Icon<'a, S: IconShape>(props: ReadOnlySignal<IconProps<'a, S>>) -> Element {
-    let fill = if props.read().disabled {
-        props.read().disabled_fill
+pub fn Icon<S: IconShape>(props: IconProps<S>) -> Element {
+    let fill = if props.disabled {
+        props.disabled_fill.clone()
     } else {
-        props.read().fill
+        props.fill.clone()
     };
     rsx! {
         svg {
-            class: format_args!("{}", props.read().class.unwrap_or("")),
-            height: format_args!("{}", props.read().size),
-            width: format_args!("{}", props.read().size),
-            view_box: format_args!("{}", props.read().icon.view_box()),
+            class: format_args!("{}", props.class.clone().unwrap_or("".to_string())).to_string(),
+            height: format_args!("{}", props.size),
+            width: format_args!("{}", props.size),
+            view_box: format_args!("{}", props.icon.view_box()),
             fill: "{fill}",
-            {props.read().icon.path()},
+            {props.icon.path()},
         }
     }
 }

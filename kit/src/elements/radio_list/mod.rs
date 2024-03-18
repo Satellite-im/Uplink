@@ -19,8 +19,8 @@ pub fn RadioList(props: Props) -> Element {
             class: "radio-list",
             for option in &props.values {
                 Button {
-                    icon: if internal_state.get() == option { Icon::RadioSelected } else { Icon::Radio },
-                    appearance: if internal_state.get() == option { Appearance::Primary } else { Appearance::Secondary },
+                    icon: if *internal_state.read() == *option { Icon::RadioSelected } else { Icon::Radio },
+                    appearance: if *internal_state.read() == *option { Appearance::Primary } else { Appearance::Secondary },
                     text: option.clone(),
                     aria_label: format!("radio-option-{}", option),
                     onpress: move |_| {

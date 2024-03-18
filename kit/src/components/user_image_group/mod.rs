@@ -94,11 +94,11 @@ pub fn UserImageGroup(props: Props) -> Element {
                             // If we prefer a tooltip, we can use this instead of the Label
                             {props.with_username.as_ref().map(|username| rsx!(
                                 Label {
-                                    aria_label: username.into(),
+                                    aria_label: username.to_string(),
                                     text: username.to_string()
                                 }
                             ))}
-                    } else if is_using_tooltip && *tooltip_visible.current() {
+                    } else if is_using_tooltip && *tooltip_visible.read() {
                             {props.with_username.as_ref().map(|username| rsx!(
                                 Tooltip {
                                     arrow_position: ArrowPosition::Left,

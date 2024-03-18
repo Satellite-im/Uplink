@@ -21,38 +21,6 @@ use mime::IMAGE_JPEG;
 use mime::IMAGE_PNG;
 use mime::IMAGE_SVG;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(remote = "Progression")]
-pub enum ProgressionDef {
-    CurrentProgress {
-        /// name of the file
-        name: String,
-
-        /// size of the progression
-        current: usize,
-
-        /// total size of the file, if any is supplied
-        total: Option<usize>,
-    },
-    ProgressComplete {
-        /// name of the file
-        name: String,
-
-        /// total size of the file, if any is supplied
-        total: Option<usize>,
-    },
-    ProgressFailed {
-        /// name of the file that failed
-        name: String,
-
-        /// last known size, if any, of where it failed
-        last_size: Option<usize>,
-
-        /// error of why it failed, if any
-        error: Option<String>,
-    },
-}
-
 #[derive(Props, Clone, PartialEq)]
 pub struct Props {
     // The filename of the file
@@ -96,7 +64,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbedadadada(props: Props) -> Element {
+pub fn FileEmbed(props: Props) -> Element {
     //log::trace!("rendering file embed: {}", props.filename);
     let file_extension = std::path::Path::new(&props.filename)
         .extension()
@@ -161,7 +129,7 @@ pub fn FileEmbedadadada(props: Props) -> Element {
                 last_size: _,
                 error,
             } => {
-                file_size_pending.push_str(&get_upload_error_text(error));
+                file_size_pending.push_str(&get_upload_error_text(&error.clone()));
                 0
             }
         }
@@ -361,7 +329,7 @@ fn show_download_or_minus_button_if_enabled<'a>(
                 Button {
                     icon: btn_icon,
                     appearance: Appearance::Primary,
-                    aria_label: "attachment-button".into(),
+                    aria_label: "attachment-button".to_string(),
                     onpress: move |_| props.on_press.call(None),
                 }
             }

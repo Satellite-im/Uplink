@@ -155,7 +155,7 @@ pub fn Nav(props: Props) -> Element {
                             },
                             with_badge: badge,
                             tooltip: tooltip,
-                            appearance: get_appearance(active, route.to),
+                            appearance: get_appearance(active.read().clone(), route.to),
                             with_progress: route.progress_bar.unwrap_or(-1)
                         },
                         {route.child.as_ref()}

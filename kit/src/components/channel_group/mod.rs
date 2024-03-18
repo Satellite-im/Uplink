@@ -47,7 +47,7 @@ pub fn ChannelGroupElement(props: Props) -> Element {
                         ChannelElement {
                             channel: channel.clone(),
                             onpress: move |_| {
-                                props.onpress.call(channel);
+                                props.onpress.call(channel.clone());
                             }
                         }
                     )

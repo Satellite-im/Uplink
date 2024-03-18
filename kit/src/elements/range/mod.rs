@@ -26,8 +26,8 @@ pub fn Range(props: Props) -> Element {
     let internal_state = use_signal(|| props.initial_value);
     let value = use_signal(|| props.initial_value);
 
-    use_effect(|| async move {
-        internal_state.set(value.read());
+    use_effect(move || {
+        internal_state.set(value.read().clone());
     });
     let step = props.step.unwrap_or(1_f32);
     let aria_label = props.aria_label.clone().unwrap_or_default();
@@ -43,7 +43,7 @@ pub fn Range(props: Props) -> Element {
                     icon: Icon::Minus,
                     appearance: Appearance::PrimaryAlternative,
                     disabled: props.disabled.unwrap_or_default(),
-                    aria_label: "decrease_range_value_button".into(),
+                    aria_label: "decrease_range_value_button".to_string(),
                     onpress: move |_| {
                         if *internal_state.read() > props.min {
                             let value: f32 = *internal_state.read() - step;
@@ -54,12 +54,12 @@ pub fn Range(props: Props) -> Element {
                     }
                 }
             } else {
-                    {props.icon_left.is_some().then(|| rsx!(
-                        IconElement {
+                    {props.icon_left.is_some().then(||
+                        rsx!{IconElement {
                             icon: props.icon_left.unwrap_or(Icon::NoSymbol),
                             size: 16,
-                        }
-                ))}
+                        }}
+                )}
             }
             input {
                 "type": "range",
@@ -78,7 +78,7 @@ pub fn Range(props: Props) -> Element {
                 Button {
                     icon: Icon::Plus,
                     appearance: Appearance::PrimaryAlternative,
-                    aria_label: "increase_range_value_button".into(),
+                    aria_label: "increase_range_value_button".to_string(),
                     onpress: move |_| {
                         if *internal_state.read() < props.max {
                             let value: f32 = *internal_state.read() + step;

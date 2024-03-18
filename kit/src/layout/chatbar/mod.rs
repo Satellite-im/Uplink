@@ -6,8 +6,8 @@ use warp::constellation::file::File;
 
 use crate::{
     components::{
-        embeds::file_embed::FileEmbed, message::format_text, message_typing::MessageTyping,
-        user_image::UserImage,
+        embeds::file_embed::FileEmbed, indicator::Status, message::format_text,
+        message_typing::MessageTyping, user_image::UserImage,
     },
     elements::{button::Button, label::Label, textarea, Appearance},
 };
@@ -16,6 +16,7 @@ use common::{icons, language::get_local_text, warp_runner::thumbnail_to_base64};
 
 pub type To = &'static str;
 
+#[derive(Clone, PartialEq)]
 pub enum SuggestionType {
     None,
     // Emoji suggestions. First is the string that was matched. Second is the emojis matched
@@ -57,7 +58,7 @@ pub struct ReplyInfo {
     pub message: String,
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, PartialEq)]
 pub struct Props {
     id: String,
     placeholder: String,
@@ -77,6 +78,30 @@ pub struct Props {
     suggestions: SuggestionType,
     oncursor_update: Option<EventHandler<(String, i64)>>,
     on_suggestion_click: Option<EventHandler<(String, String, i64)>>,
+}
+
+impl Clone for Props {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id.clone(),
+            placeholder: self.placeholder.clone(),
+            typing_users: self.typing_users.clone(),
+            with_replying_to: self.with_replying_to.clone(),
+            with_file_upload: self.with_file_upload.clone(),
+            extensions: self.extensions.clone(),
+            controls: self.controls.clone(),
+            value: self.value.clone(),
+            loading: self.loading.clone(),
+            onchange: self.onchange.clone(),
+            on_paste_keydown: self.on_paste_keydown.clone(),
+            onreturn: self.onreturn.clone(),
+            is_disabled: self.is_disabled,
+            ignore_focus: self.ignore_focus,
+            suggestions: self.suggestions,
+            oncursor_update: self.oncursor_update.clone(),
+            on_suggestion_click: self.on_suggestion_click.clone(),
+        }
+    }
 }
 
 #[derive(Props, Clone, PartialEq)]
@@ -130,11 +155,11 @@ pub fn Reply(props: ReplyProps) -> Element {
             aria_label: "inline-reply",
             Label {
                 text: props.label.clone(),
-                aria_label: "inline-reply-header".into(),
+                aria_label: "inline-reply-header".to_string(),
             },
             Button {
                 small: true,
-                aria_label: "close-reply".into(),
+                aria_label: "close-reply".to_string(),
                 appearance: Appearance::Secondary,
                 icon: icons::outline::Shape::XMark,
                 onpress: move |_| props.onclose.call(()),
@@ -311,7 +336,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
         *props.selected.write_silent() = Some(0);
     }
     let (label, suggestions): (_, Vec<_>) = match props.suggestions {
-        SuggestionType::None => return (),
+        SuggestionType::None => return None,
         SuggestionType::Emoji(pattern, emojis) => {
             let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
@@ -357,9 +382,9 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
                         props.on_click.call((username.clone(), pattern.clone()))
                     },
                     onmouseover: move |_| {
-                        cx.props.arrow_selected.with_mut(|arrow|{
+                        props.arrow_selected.with_mut(|arrow|{
                             if !*arrow {
-                                *cx.props.selected.write() = Some(num);
+                                *props.selected.write() = Some(num);
                             }
                             *arrow = false
                         });
@@ -368,7 +393,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
                         class: "user-suggestion-profile",
                         UserImage {
                             platform: id.platform().into(),
-                            status: id.identity_status().into(),
+                            status: Status::from(id.identity_status().clone()),
                             image: id.profile_picture()
                         }
                     }
@@ -392,7 +417,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
             },
             Button {
                 small: true,
-                aria_label: "chatbar-suggestion-close-button".into(),
+                aria_label: "chatbar-suggestion-close-button".to_string(),
                 appearance: Appearance::Secondary,
                 icon: icons::outline::Shape::XMark,
                 onpress: move |_| props.on_close.call(()),

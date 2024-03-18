@@ -225,7 +225,7 @@ pub fn Message(props: Props) -> Element {
                 remote: is_remote,
                 download_pending: false,
                 with_download_button: false,
-                progress: prog,
+                progress: *prog,
                 on_press: move |_| {},
             })
         })
@@ -249,10 +249,10 @@ pub fn Message(props: Props) -> Element {
                     ..common::icons::IconProps {
                         class: None,
                         size: 14,
-                        fill:"currentColor",
+                        fill:"currentColor".to_string(),
                         icon: Icon::Pin,
                         disabled: false,
-                        disabled_fill: "#9CA3AF"
+                        disabled_fill: "#9CA3AF".to_string()
                     },
                 },
             })
@@ -421,7 +421,7 @@ pub fn ChatText(props: ChatMessageProps) -> Element {
             class: text_type_class,
             p {
                 class: text_type_class,
-                aria_label: "message-text-{cx.props.text}",
+                aria_label: "message-text-{props.text}",
                 dangerous_inner_html: "{formatted_text}",
             },
             {links.first().and_then(|l| rsx!(
@@ -734,10 +734,10 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
 
     let did = use_signal(|| props.id.clone());
 
-    use_effect(|| {
+    use_effect(move || {
         to_owned![ch];
-        async move {
-            ch.send(IdentityCmd::GetIdentity(did.read()));
+        {
+            ch.send(IdentityCmd::GetIdentity(did.read().clone()));
         }
     });
 
@@ -772,7 +772,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                 items: rsx!(
                     ContextItem {
                         icon: Icon::UserCircle,
-                        aria_label: "copy-user-id-from-user-identity-on-chat".into(),
+                        aria_label: "copy-user-id-from-user-identity-on-chat".to_string(),
                         text: get_local_text("settings-profile.copy-id"),
                         onpress: move |_| {
                             match Clipboard::new() {
@@ -797,7 +797,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                     },
                     ContextItem {
                         icon: Icon::Key,
-                        aria_label: "copy-user-did-key-from-user-identity-on-chat".into(),
+                        aria_label: "copy-user-did-key-from-user-identity-on-chat".to_string(),
                         disabled: false,
                         text: get_local_text("settings-profile.copy-did"),
                         onpress: move |_| {
@@ -820,7 +820,6 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                                 ),
                             ));
                         },
-                        tooltip: None,
                     }
                 ),
                 children: rsx!(div { // TODO: This needs to be moved to kit/src/components/embeds/identity_embed/mod.rs.
@@ -848,7 +847,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                                     p {
                                         class: "text",
                                         aria_label: "profile-status-value",
-                                        s
+                                       {s}
                                     }
                                 }
                             )

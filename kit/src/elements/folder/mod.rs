@@ -73,7 +73,7 @@ pub fn Folder(props: Props) -> Element {
                 {with_rename.then(||
                         rsx! (
                             Input {
-                                aria_label: "folder-name-input".into(),
+                                aria_label: "folder-name-input".to_string(),
                                 disabled: disabled,
                                 placeholder: String::new(),
                                 default_text: placeholder,

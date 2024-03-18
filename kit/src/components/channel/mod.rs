@@ -74,24 +74,24 @@ pub fn ChannelElement(props: Props) -> Element {
                     ChannelType::Text => rsx! {IconElement {
                         icon: Icon::ChatBubbleBottomCenterText
                     }},
-                    ChannelType::Photo => IconElement {
+                    ChannelType::Photo => rsx! {IconElement {
                         icon: Icon::Photo
-                    },
-                    ChannelType::SharedFolder => IconElement {
+                    }},
+                    ChannelType::SharedFolder => rsx! {IconElement {
                         icon: Icon::Folder
-                    },
-                    ChannelType::Robot => IconElement {
+                    }},
+                    ChannelType::Robot => rsx! {IconElement {
                         icon: Icon::CommandLine
-                    },
-                    ChannelType::Announcements => IconElement {
+                    }},
+                    ChannelType::Announcements => rsx! {IconElement {
                         icon: Icon::InformationCircle
-                    },
-                    ChannelType::Voice(_) => IconElement {
+                    }},
+                    ChannelType::Voice(_) => rsx! {IconElement {
                         icon: Icon::Speaker
-                    },
-                    ChannelType::Docs => IconElement {
+                    }},
+                    ChannelType::Docs => rsx! {IconElement {
                         icon: Icon::BookOpen
-                    },
+                    }},
                 }},
                 div {
                     class: "channel-info",

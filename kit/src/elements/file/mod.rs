@@ -86,12 +86,10 @@ pub fn File(props: Props) -> Element {
                 div {
                     class: "icon alignment",
                     if thumbnail.is_empty() {
-                      {  let file_extension = file_extension.clone().replace('.', "");
-                        rsx!(
                             label {
                                 class: "file-type",
-                                "{file_extension}"
-                            },
+                                {file_extension.clone().replace('.', "")}
+                            }
                             div {
                                 height: "80px",
                                 width: "80px",
@@ -100,7 +98,6 @@ pub fn File(props: Props) -> Element {
                                     icon: return_correct_icon(&file_name2.clone())
                                 }
                             }
-                        )}
                     } else {
                         img {
                             class: "thumbnail-container",
@@ -116,7 +113,7 @@ pub fn File(props: Props) -> Element {
                             margin_top: "12px",
                         },
                         Input {
-                                aria_label: "file-name-input".into(),
+                                aria_label: "file-name-input".to_string(),
                                 disabled: disabled,
                                 placeholder: String::new(),
                                 default_text: placeholder,

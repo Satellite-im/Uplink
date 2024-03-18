@@ -15,7 +15,7 @@ use uuid::Uuid;
 static INPUT_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r#"\{\"Input\":\"((?:.|\n)+)\"}"#).unwrap());
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Size {
     Small,
     Normal,
@@ -131,7 +131,7 @@ pub fn Input(props: Props) -> Element {
         to_owned![cursor_position, show_char_counter];
         async move {
             *cursor_position.write_silent() = Some(value_signal.read().chars().count() as i64);
-            *text_value.write_silent() = text_value.read();
+            *text_value.write_silent() = text_value.read().clone();
             if show_char_counter {
                 let _ = eval(&sync.replace("$TEXT", &text_value.read()));
             }
@@ -167,19 +167,18 @@ pub fn Input(props: Props) -> Element {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
                     oninput: {
-                        to_owned![eval, cursor_script];
+                        to_owned![cursor_script];
                         move |evt| {
-                            let current_val = evt.value.clone();
+                            let current_val = evt.value().clone();
                             *text_value.write_silent() = current_val.clone();
                             onchange.call((current_val, true));
-                            to_owned![eval, cursor_script, cursor_position];
+                            to_owned![cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_script) {
-                                        if let Ok(val) = r.join().await {
+                                    let eval_result = eval(&cursor_script);
+                                        if let Ok(val) = eval_result.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
-                                    }
                                 }
                             }
                         }
@@ -197,16 +196,15 @@ pub fn Input(props: Props) -> Element {
                         }
                     },
                     onmousedown: {
-                        to_owned![eval, cursor_script];
+                        to_owned![cursor_script];
                         move |_| {
-                            to_owned![eval, cursor_script, cursor_position];
+                            to_owned![cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update {
-                                    if let Ok(r) = eval(&cursor_script) {
-                                        if let Ok(val) = r.join().await {
+                                    let eval_result = eval(&cursor_script);
+                                        if let Ok(val) = eval_result.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
-                                    }
                                 }
                             }
                         }
@@ -259,11 +257,10 @@ pub fn Input(props: Props) -> Element {
                             to_owned![eval, cursor_script, cursor_position];
                             async move {
                                 if do_cursor_update && arrow {
-                                    if let Ok(r) = eval(&cursor_script) {
-                                        if let Ok(val) = r.join().await {
+                                    let eval_result = eval(&cursor_script);
+                                        if let Ok(val) = eval_result.join().await {
                                             *cursor_position.write() = Some(val.as_i64().unwrap_or_default());
                                         }
-                                    }
                                 }
                             }
                         }
@@ -364,35 +361,34 @@ pub fn InputRich(props: Props) -> Element {
             .replace("$AUTOFOCUS", &(!props.ignore_focus).to_string())
             .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
         async move {
-            if let Ok(eval) = eval(&rich_editor) {
-                loop {
-                    if let Ok(val) = eval.recv().await {
-                        let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
-                        // Instead of escaping all needed chars just try extract the input string
-                        let data = if let Some(capt) = input {
-                            let txt = capt.get(1).map(|t| t.as_str()).unwrap_or_default();
-                            Ok(JSTextData::Input(txt.to_string()))
-                        } else {
-                            serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default())
-                        };
-                        match data {
-                            Ok(data) => {
-                                let new =
-                                    listener_data.with(|current: &Option<Vec<JSTextData>>| {
-                                        match current {
-                                            Some(pending) => {
-                                                let mut pending = pending.clone();
-                                                pending.push(data);
-                                                pending
-                                            }
-                                            None => vec![data],
+            let eval_result = eval(&rich_editor);
+            loop {
+                if let Ok(val) = eval_result.recv().await {
+                    let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
+                    // Instead of escaping all needed chars just try extract the input string
+                    let data = if let Some(capt) = input {
+                        let txt = capt.get(1).map(|t| t.as_str()).unwrap_or_default();
+                        Ok(JSTextData::Input(txt.to_string()))
+                    } else {
+                        serde_json::from_str::<JSTextData>(val.as_str().unwrap_or_default())
+                    };
+                    match data {
+                        Ok(data) => {
+                            let new =
+                                listener_data.with(
+                                    |current: &Option<Vec<JSTextData>>| match current {
+                                        Some(pending) => {
+                                            let mut pending = pending.clone();
+                                            pending.push(data);
+                                            pending
                                         }
-                                    });
-                                *listener_data.write() = Some(new)
-                            }
-                            Err(e) => {
-                                log::error!("failed to deserialize message: {}: {}", val, e);
-                            }
+                                        None => vec![data],
+                                    },
+                                );
+                            *listener_data.write() = Some(new)
+                        }
+                        Err(e) => {
+                            log::error!("failed to deserialize message: {}: {}", val, e);
                         }
                     }
                 }

@@ -71,6 +71,48 @@ pub enum FileProgression {
     },
 }
 
+impl PartialEq for FileProgression {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                FileProgression::CurrentProgress {
+                    name: name1,
+                    current: current1,
+                    total: total1,
+                },
+                FileProgression::CurrentProgress {
+                    name: name2,
+                    current: current2,
+                    total: total2,
+                },
+            ) => name1 == name2 && current1 == current2 && total1 == total2,
+            (
+                FileProgression::ProgressComplete {
+                    name: name1,
+                    total: total1,
+                },
+                FileProgression::ProgressComplete {
+                    name: name2,
+                    total: total2,
+                },
+            ) => name1 == name2 && total1 == total2,
+            (
+                FileProgression::ProgressFailed {
+                    name: name1,
+                    last_size: last_size1,
+                    error: error1,
+                },
+                FileProgression::ProgressFailed {
+                    name: name2,
+                    last_size: last_size2,
+                    error: error2,
+                },
+            ) => name1 == name2 && last_size1 == last_size2,
+            _ => false,
+        }
+    }
+}
+
 impl From<Progression> for FileProgression {
     fn from(progress: Progression) -> Self {
         match progress {

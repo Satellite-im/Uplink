@@ -93,7 +93,7 @@ pub fn Button(props: Props) -> Element {
                      tooltip_visible.set(false);
                 }
             },
-            if *tooltip_visible.current() {
+            if *tooltip_visible.read() {
                 {props.tooltip.as_ref().map(|tooltip| {
                     rsx!(
                        {tooltip}
@@ -120,23 +120,21 @@ pub fn Button(props: Props) -> Element {
                     }
                 },
                 if progress >= 0 {
-                    rsx!(
                         div {
                             class: "circular-progress",
                             background: format_args!("conic-gradient(var(--circular-indicator) calc({} * 1%), var(--circular-bar) 0)", progress),
                         }
-                    )
                 }
                 if show_icon {
                         // for props, copy the defaults passed in by IconButton
                         common::icons::Icon {
                             ..common::icons::IconProps {
-                                class: props.loading.unwrap_or_default().then_some("spin-container-for-button"),
+                                class: props.loading.unwrap_or_default().then_some("spin-container-for-button".to_string()),
                                 size: 20,
-                                fill:"currentColor",
+                                fill:"currentColor".to_string(),
                                 icon: _icon,
                                 disabled:  props.disabled.unwrap_or_default(),
-                                disabled_fill: "#9CA3AF"
+                                disabled_fill: "#9CA3AF".to_string()
                             },
                         }
                 }

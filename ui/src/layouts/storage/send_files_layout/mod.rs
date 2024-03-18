@@ -201,7 +201,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 )}
                             ),
     =======
-                            user_image: cx.render(rsx!(
+                            user_image: rsx!(
                                 div {
                                     class: "chat-selector-to-send-image-group",
                                     Checkbox {
@@ -211,9 +211,9 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                         is_checked: is_checked,
                                         on_click: move |_| {
                                             if is_checked {
-                                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                                             } else {
-                                                cx.props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                                             }
                                         }
                                     }
@@ -231,8 +231,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                         }
                                     )}
                                 }
-                            )),
-    >>>>>>> origin/dev
+                            ),
                             with_badge: "".into(),
                             onpress: move |_| {
                                 if is_checked {

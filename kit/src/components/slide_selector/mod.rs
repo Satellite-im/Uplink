@@ -41,7 +41,7 @@ pub fn SlideSelector<T>(props: Props<T>) -> Element
 where
     T: std::fmt::Display + Clone,
 {
-    let index = use_signal(|| props.initial_index);
+    let mut index = use_signal(|| props.initial_index);
     if *index.read() != props.initial_index {
         index.set(props.initial_index);
     }
@@ -64,7 +64,7 @@ where
         class: "slide-selector",
         aria_label: "slide-selector",
         Button {
-            aria_label: "slide-selector-minus".into(),
+            aria_label: "slide-selector-minus".to_string(),
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
             disabled: *index.read() == 0,
             onpress: move |_| {
@@ -84,7 +84,7 @@ where
             "{converted_display}",
         },
         Button {
-            aria_label: "slide-selector-plus".into(),
+            aria_label: "slide-selector-plus".to_string(),
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
             disabled: *index.read() >= (props.values.len() - 1),
             onpress: move |_| {

@@ -13,7 +13,7 @@ pub fn TopbarControls() -> Element {
             div {
                 class: "controls",
                 Button {
-                    aria_label: "minimize-button".into(),
+                    aria_label: String::from("minimize-button"),
                     icon: Icon::Minus,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -21,7 +21,7 @@ pub fn TopbarControls() -> Element {
                     }
                 },
                 Button {
-                    aria_label: "square-button".into(),
+                    aria_label: String::from("square-button"),
                     icon: Icon::Square2Stack,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -36,7 +36,7 @@ pub fn TopbarControls() -> Element {
                     }
                 },
                 Button {
-                    aria_label: "close-button".into(),
+                    aria_label: String::from("close-button"),
                     icon: Icon::XMark,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {

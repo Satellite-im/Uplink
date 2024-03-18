@@ -40,7 +40,7 @@ pub fn Topbar(props: Props) -> Element {
             aria_label: "Topbar",
             {(show_back_button(props)).then(|| rsx!(
                 Button {
-                    aria_label: "back-button".into(),
+                    aria_label: "back-button".to_string(),
                     icon: icons::outline::Shape::Sidebar,
                     onpress: move |_| emit(props),
                     appearance: Appearance::Secondary

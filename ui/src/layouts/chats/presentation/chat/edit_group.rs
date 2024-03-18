@@ -283,7 +283,7 @@ fn friend_row(props: FriendRowProps) -> Element {
                     _friend.username(),
                 },
             },
-            if cx.props.friend_is_group_creator {
+            if props.friend_is_group_creator {
                 rsx!(
                     div {
                         class: "group-creator-container",
@@ -297,20 +297,20 @@ fn friend_row(props: FriendRowProps) -> Element {
                     }
                 )
             }
-            if cx.props.am_i_group_creator || cx.props.add_or_remove == "add" {
+            if props.am_i_group_creator || props.add_or_remove == "add" {
                 rsx!(Button {
-                    aria_label: if cx.props.add_or_remove == "add" {
+                    aria_label: if props.add_or_remove == "add" {
                         get_local_text("uplink.add")
                     } else {
                         get_local_text("uplink.remove")
                     },
-                    icon: if cx.props.add_or_remove == "add" {
+                    icon: if props.add_or_remove == "add" {
                         Icon::UserPlus
                     } else {
                         Icon::UserMinus
                     },
-                    text: if cx.props.minimal { String::new() }
-                        else if cx.props.add_or_remove == "add" {
+                    text: if props.minimal { String::new() }
+                        else if props.add_or_remove == "add" {
                             get_local_text("uplink.add")
                         } else {
                             get_local_text("uplink.remove")
@@ -320,7 +320,7 @@ fn friend_row(props: FriendRowProps) -> Element {
                         let mut friends = selected_friends.get().clone();
                         friends.clear();
                         selected_friends.set(vec![_friend.did_key()].into_iter().collect());
-                        if cx.props.add_or_remove == "add" {
+                        if props.add_or_remove == "add" {
                             ch.send(ChanCmd::AddParticipants);
                         } else {
                             ch.send(ChanCmd::RemoveParticipants);

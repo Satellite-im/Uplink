@@ -100,7 +100,7 @@ pub fn ContextItem(props: ItemProps) -> Element {
                     },
                     {(props.icon.is_some()).then(|| {
                         let icon = props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
-                            rsx!({icons::Icon { icon: icon }})
+                            rsx!{icons::Icon { icon: icon }}
                     })},
                     div {"{props.text}"},
                 }
@@ -145,10 +145,10 @@ pub fn IdentityHeader(props: IdentityProps) -> Element {
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     {with_status.then(||{
-                        Indicator {
+                        rsx!(Indicator {
                             status: sender.identity_status().into(),
                             platform: sender.platform().into(),
-                        }
+                        })
                     })}
                 }
             }
@@ -178,7 +178,7 @@ pub fn ContextMenu(props: Props) -> Element {
     let id_signal = use_signal(|| id.clone());
 
     // Handles the hiding and showing of the context menu
-    use_effect(async move {
+    use_effect(|| {
         let script = include_str!("./context.js")
             .replace("UUID", &id_signal.read())
             .replace("ON_CLICK", &format!("{}", with_click.read()));
@@ -187,7 +187,7 @@ pub fn ContextMenu(props: Props) -> Element {
 
     rsx! {
         div {
-            class: format_args!("context-wrap {}", if cx.props.fit_parent.unwrap_or_default() {"context-wrap-fit"} else {""}),
+            class: format_args!("context-wrap {}", if props.fit_parent.unwrap_or_default() {"context-wrap-fit"} else {""}),
             onmouseenter: |e| {
                 if let Some(f) = props.on_mouseenter.as_ref() { f.call(e) }
             },
@@ -209,7 +209,7 @@ pub fn ContextMenu(props: Props) -> Element {
                         icon: icons::outline::Shape::CommandLine,
                         text: get_local_text("uplink.open-devtools"),
                         onpress: move |_| window.webview.open_devtools(),
-                        aria_label: "open-devtools-context".into(),
+                        aria_label: "open-devtools-context".to_string(),
                     }
                 ))}
             },

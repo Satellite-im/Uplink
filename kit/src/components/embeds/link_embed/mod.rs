@@ -58,7 +58,7 @@ pub struct LinkEmbedProps {
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
     let fetch_meta = use_future(|| async move { get_meta(props.link.as_str()).await });
 
-    let meta = match fetch_meta.resume().value() {
+    let meta = match fetch_meta.value() {
         Some(Ok(val)) => val.clone(),
         Some(Err(_)) => SiteMeta::default(),
         None => SiteMeta::default(),

@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use crate::elements::input::Input;
 use common::icons::outline::Shape as Icon;
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 pub struct Props {
     #[props(optional)]
     _loading: Option<bool>,
@@ -20,6 +20,12 @@ pub struct Props {
     _onchange: Option<EventHandler<String>>,
     #[props(optional)]
     _onreturn: Option<EventHandler<String>>,
+}
+
+impl PartialEq for Props {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
 }
 
 #[allow(non_snake_case)]

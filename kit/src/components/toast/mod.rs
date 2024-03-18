@@ -57,7 +57,7 @@ pub fn Toast(props: Props) -> Element {
                 aria_label: "toast-content",
                 Label {
                     text: title,
-                    aria_label: "toast-title".into(),
+                    aria_label: "toast-title".to_string(),
                 },
                 p {
                     "{content}",
@@ -67,7 +67,7 @@ pub fn Toast(props: Props) -> Element {
                 icon: Icon::XMark,
                 appearance: Appearance::Secondary,
                 onpress: move |_| props.on_close.call(props.id),
-                aria_label: "close-toast".into(),
+                aria_label: "close-toast".to_string(),
             }
         }
     )

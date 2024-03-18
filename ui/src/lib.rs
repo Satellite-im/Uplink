@@ -1315,10 +1315,10 @@ fn AppNav<'a>(
         icon: Icon::Folder,
         progress_bar: Some(file_progress),
         context_items: file_progress_ctx.then(|| {
-            cx.render(rsx!(FileTransferModal {
+            rsx!(FileTransferModal {
                 state: state,
                 modal: true
-            }))
+            })
         }),
         ..UIRoute::default()
     };
