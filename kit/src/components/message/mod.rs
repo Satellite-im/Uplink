@@ -14,7 +14,7 @@ use derive_more::Display;
 use dioxus::prelude::*;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{CodeBlockKind, Options, Tag};
+use pulldown_cmark::{CodeBlockKind, Options, Tag, TagEnd};
 use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
@@ -614,9 +614,9 @@ fn markdown(text: &str, emojis: bool) -> String {
     for (event, range) in parser.into_offset_iter() {
         if skipping {
             skipping = if in_link {
-                matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)))
+                matches!(event, pulldown_cmark::Event::End(TagEnd::Link))
             } else {
-                matches!(event, pulldown_cmark::Event::End(Tag::Image(_, _, _)))
+                matches!(event, pulldown_cmark::Event::End(TagEnd::Image))
             };
             continue;
         }
@@ -635,8 +635,7 @@ fn markdown(text: &str, emojis: bool) -> String {
                     std::iter::once(pulldown_cmark::Event::Code(txt)),
                 )
             }
-            pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(CodeBlockKind::Indented)) => {
-            }
+            pulldown_cmark::Event::End(TagEnd::CodeBlock) => {}
             pulldown_cmark::Event::SoftBreak => {
                 if in_paragraph {
                     html_output.push_str("</p>\n<p>");
@@ -646,15 +645,15 @@ fn markdown(text: &str, emojis: bool) -> String {
                 in_paragraph = true;
                 html_output.push_str("<p>");
             }
-            pulldown_cmark::Event::End(Tag::Paragraph) => {
+            pulldown_cmark::Event::End(TagEnd::Paragraph) => {
                 in_paragraph = false;
             }
-            pulldown_cmark::Event::Start(Tag::Image(_, _, _))
-            | pulldown_cmark::Event::Start(Tag::Link(_, _, _)) => {
+            pulldown_cmark::Event::Start(Tag::Image { .. })
+            | pulldown_cmark::Event::Start(Tag::Link { .. }) => {
                 // Ignore links and image parsing
                 // We only want Autolink but that doesn't work (or needs <> which we also dont weed)
                 skipping = true;
-                in_link = matches!(event, pulldown_cmark::Event::End(Tag::Link(_, _, _)));
+                in_link = matches!(event, pulldown_cmark::Event::End(TagEnd::Link));
                 html_output.push_str(&text[range]);
             }
             pulldown_cmark::Event::Text(t) => {
@@ -679,10 +678,10 @@ fn markdown(text: &str, emojis: bool) -> String {
             }
             event => {
                 match event {
-                    pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    pulldown_cmark::Event::Start(Tag::CodeBlock(_)) => {
                         in_code_block = true;
                     }
-                    pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    pulldown_cmark::Event::End(TagEnd::CodeBlock) => {
                         in_code_block = false;
                     }
                     _ => {}

@@ -141,42 +141,36 @@ impl Chat {
     pub fn append_pending_msg(
         &mut self,
         chat_id: Uuid,
+        message_id: Uuid,
         did: DID,
         msg: Vec<String>,
-        attachments: &[Location],
-    ) -> Uuid {
-        let new = PendingMessage::new(chat_id, did, msg, attachments);
-        let uuid = new.message.inner.id();
-        self.pending_outgoing_messages.push(new);
-        uuid
+    ) -> bool {
+        if self
+            .pending_outgoing_messages
+            .iter()
+            .any(|m| m.id().eq(&message_id))
+        {
+            return false;
+        }
+        self.pending_outgoing_messages
+            .push(PendingMessage::new(chat_id, did, message_id, msg));
+        true
     }
 
-    pub fn update_pending_msg(&mut self, msg: PendingMessage, progress: FileProgression) {
+    pub fn update_pending_msg(&mut self, message_id: Uuid, progress: FileProgression) {
         let file = progress_file(&progress);
-        for m in &mut self.pending_outgoing_messages {
-            if msg.eq(m) {
-                m.attachments_progress.insert(file, progress);
-                break;
-            }
+        if let Some(m) = &mut self
+            .pending_outgoing_messages
+            .iter_mut()
+            .find(|m| m.id().eq(&message_id))
+        {
+            m.attachments_progress.insert(file, progress);
         }
     }
 
-    pub fn remove_pending_msg(
-        &mut self,
-        msg: Vec<String>,
-        attachments: Vec<String>,
-        uuid: Option<Uuid>,
-    ) {
-        let opt = self.pending_outgoing_messages.iter().position(|e| {
-            e.message.inner.lines().eq(&msg)
-                && e.attachments_progress
-                    .keys()
-                    .all(|a| attachments.contains(a))
-                && uuid.map(|id| id.eq(&e.id())).unwrap_or(true)
-        });
-        if let Some(pending) = opt {
-            self.pending_outgoing_messages.remove(pending);
-        }
+    pub fn remove_pending_msg(&mut self, message_id: Uuid) {
+        self.pending_outgoing_messages
+            .retain(|m| !m.id().eq(&message_id))
     }
 
     pub fn unreads(&self) -> u32 {

@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use base64::{engine::general_purpose, Engine};
 use derive_more::Display;
 
 use futures::{channel::oneshot, stream, StreamExt};
@@ -847,7 +848,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
     };
 
     let prefix = format!("data:image/{mime};base64,");
-    let base64_image = base64::encode(thumbnail);
+    let base64_image = general_purpose::STANDARD.encode(thumbnail);
 
     prefix + &base64_image
 }
