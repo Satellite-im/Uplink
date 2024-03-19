@@ -48,6 +48,7 @@ pub fn Select<'a>(props: Props) -> Element {
     options.retain(|value| value != &initial_value);
     options.insert(0, initial_value.clone());
     let iter = IntoIterator::into_iter(options.clone());
+    let props_clone = props.clone();
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
@@ -57,7 +58,7 @@ pub fn Select<'a>(props: Props) -> Element {
             aria_label: "Selector",
             select {
                 value: "{initial_value}",
-                onchange: move |e| emit(props, e.value().clone()),
+                onchange: move |e| emit(props_clone.clone(), e.value().clone()),
                 {iter.map(|val|
                     rsx!(option {key: "{val}", label: "{val}", value: "{val}", aria_label: "Selector Option"})
                 )}
@@ -89,6 +90,8 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
     let iter = IntoIterator::into_iter(options.clone());
     let mut visible = use_signal(|| false);
 
+    let on_select = props.onselect.clone();
+
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
     rsx!(
@@ -99,16 +102,16 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                 class: "fancy-select-wrap",
                 position: "relative",
                 width: format_args!("{}px", props.width),
-                onclick: |e| {
-                    let b = *visible.read();
-                    *visible.write() = !b;
+                onclick: move |e| {
+                    let b = visible();
+                    visible.set(!b);
                     e.stop_propagation()
                 },
                 div {
                     class: "fancy-select",
                     {initial_element}
                 },
-                {visible.read().then(||{
+                {visible.clone().read().then(||{
                     rsx!(
                         div {
                             class: "fancy-select-options",
@@ -118,7 +121,7 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                                     class: "fancy-select-option",
                                     aria_label: "selector-option",
                                     onclick: move |e| {
-                                        if let Some(f) = &props.onselect {
+                                        if let Some(f) = &on_select.clone() {
                                             f.call(val.clone())
                                         }
                                         visible.set(false);

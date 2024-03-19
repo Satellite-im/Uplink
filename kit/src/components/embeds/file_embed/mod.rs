@@ -167,6 +167,14 @@ pub fn FileEmbed(props: Props) -> Element {
     let is_file_available_to_preview = is_file_available_to_preview(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
+    let props_clone = props.clone();
+
+    let onpress_clone = props.on_press.clone();
+    let onpress_clone2 = props.on_press.clone();
+
+    let big_clone = props.big.clone();
+    let big_clone2 = props.big.clone();
+
     rsx! (
         div {
             class: {
@@ -175,7 +183,7 @@ pub fn FileEmbed(props: Props) -> Element {
                     if remote {
                         "remote"
                     } else { "" },
-                    if props.big.unwrap_or_default() {
+                    if big_clone.unwrap_or_default() {
                         "big"
                     } else { "" }
                 )
@@ -199,17 +207,17 @@ pub fn FileEmbed(props: Props) -> Element {
                                         aria_label: "message-image",
                                         onclick: move |mouse_event_data: Event<MouseData>|
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && !is_from_attachments {
-                                            props.on_press.call(Some(temp_dir.clone()));
+                                            onpress_clone.call(Some(temp_dir.clone()));
                                         },
                                         class: format_args!(
                                             "image {} expandable-image",
-                                            if props.big.unwrap_or_default() {
+                                            if big_clone2.unwrap_or_default() {
                                                 "big"
                                             } else { "" }
                                         ),
                                         src: "{thumbnail}",
                                     },
-                                    {show_download_or_minus_button_if_enabled(props, with_download_button, btn_icon)},
+                                    {show_download_or_minus_button_if_enabled(props_clone.clone(), with_download_button, btn_icon)},
                                    }
                         } else if let Some(filepath) = props.filepath.clone() {
                             {let is_image_or_video = is_image(filename.clone()) || is_video;
@@ -245,7 +253,7 @@ pub fn FileEmbed(props: Props) -> Element {
                                     height: "60px",
                                     onclick: move |mouse_event_data: Event<MouseData>| {
                                         if mouse_event_data.modifiers() != Modifiers::CONTROL && is_file_available_to_preview && !is_from_attachments {
-                                            props.on_press.call(Some(temp_dir.clone()));
+                                            onpress_clone2.call(Some(temp_dir.clone()));
                                         }
                                     },
                                     IconElement {
@@ -260,7 +268,7 @@ pub fn FileEmbed(props: Props) -> Element {
                                     if !is_from_attachments {
                                         div {
                                             class: "button-position",
-                                            {show_download_or_minus_button_if_enabled(props, with_download_button, btn_icon)},
+                                            {show_download_or_minus_button_if_enabled(props_clone.clone(), with_download_button, btn_icon)},
                                         }
                                     }
                                 }

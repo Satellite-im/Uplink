@@ -50,24 +50,24 @@ pub fn ChannelElement(props: Props) -> Element {
             items: rsx!(
                 ContextItem {
                     icon: Icon::PencilSquare,
-                    text: "Rename".into(),
+                    text: String::from("Rename"),
                     onpress: move |_| {}
                 },
                 ContextItem {
                     icon: Icon::ShieldCheck,
-                    text: "Permissions".into(),
+                    text: String::from("Permissions"),
                     onpress: move |_| {}
                 },
                 ContextItem {
                     danger: true,
                     icon: Icon::XMark,
-                    text: "Delete".into(),
+                    text: String::from("Delete"),
                     onpress: move |_| {}
                 },
             ),
             div {
                 class: "channel",
-                onclick: |_| {
+                onclick: move |_| {
                     props.onpress.call(props.channel.clone());
                 },
                 {match &props.channel.kind {

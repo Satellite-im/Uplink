@@ -23,7 +23,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn Range(props: Props) -> Element {
-    let internal_state = use_signal(|| props.initial_value);
+    let mut internal_state = use_signal(|| props.initial_value);
     let value = use_signal(|| props.initial_value);
 
     use_effect(move || {
@@ -33,6 +33,10 @@ pub fn Range(props: Props) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
     let with_buttons = props.with_buttons.unwrap_or_default();
+
+    let on_change = props.onchange.clone();
+    let on_change1 = props.onchange.clone();
+    let on_change2 = props.onchange.clone();
 
     rsx!(
         div {
@@ -49,7 +53,7 @@ pub fn Range(props: Props) -> Element {
                             let value: f32 = *internal_state.read() - step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            props.onchange.call(*internal_state.read());
+                            on_change.call(*internal_state.read());
                         }
                     }
                 }
@@ -71,7 +75,7 @@ pub fn Range(props: Props) -> Element {
                 disabled: props.disabled.unwrap_or_default(),
                 oninput: move |event| {
                     internal_state.set(event.value().parse().unwrap_or_default());
-                    props.onchange.call(event.value().parse().unwrap_or_default());
+                    on_change1.call(event.value().parse().unwrap_or_default());
                 },
             },
             if with_buttons {
@@ -84,7 +88,7 @@ pub fn Range(props: Props) -> Element {
                             let value: f32 = *internal_state.read() + step;
                             let rounded_value = (value * 10.0).round() / 10.0;
                             internal_state.set(rounded_value);
-                            props.onchange.call(*internal_state.read());
+                            on_change2.call(*internal_state.read());
                         }
                     }
                 }

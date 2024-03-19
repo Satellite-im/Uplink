@@ -51,24 +51,30 @@ pub fn ContextItem(props: ItemProps) -> Element {
 
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    let tooltip_visible = use_signal(|| false);
+    let mut tooltip_visible = use_signal(|| false);
+
+    let tooltip_clone = props.tooltip.clone();
+    let tooltip_clone2 = props.tooltip.clone();
+    let tooltip_clone3 = props.tooltip.clone();
+    let tooltip_clone4 = props.tooltip.clone();
+    let tooltip_clone5 = props.tooltip.clone();
 
     if let Some(children) = &props.children {
         rsx!(
             div {
                 onmouseenter: move |_| {
-                    if props.tooltip.is_some() {
+                    if tooltip_clone.is_some() {
                          tooltip_visible.set(true);
                     }
                 },
                 onmouseleave: move |_| {
-                    if props.tooltip.is_some() {
+                    if tooltip_clone2.is_some() {
                          tooltip_visible.set(false);
                     }
                 },
                 class: "context-item simple-context-item",
                 if *tooltip_visible.read() {
-                    {props.tooltip.as_ref().map(|tooltip| {
+                    {tooltip_clone3.as_ref().map(|tooltip| {
                         rsx!(
                            {tooltip}
                         )
@@ -81,12 +87,12 @@ pub fn ContextItem(props: ItemProps) -> Element {
         rsx!(
             div {
                 onmouseenter: move |_| {
-                    if props.tooltip.is_some() {
+                    if tooltip_clone4.is_some() {
                          tooltip_visible.set(true);
                     }
                 },
                 onmouseleave: move |_| {
-                    if props.tooltip.is_some() {
+                    if tooltip_clone5.is_some() {
                          tooltip_visible.set(false);
                     }
                 },
@@ -95,7 +101,7 @@ pub fn ContextItem(props: ItemProps) -> Element {
                     aria_label: "{aria_label}",
                     onclick: move |e| {
                         if !disabled {
-                            emit(props, e);
+                            emit(props.clone(), e);
                         }
                     },
                     {(props.icon.is_some()).then(|| {
@@ -178,7 +184,7 @@ pub fn ContextMenu(props: Props) -> Element {
     let id_signal = use_signal(|| id.clone());
 
     // Handles the hiding and showing of the context menu
-    use_effect(|| {
+    use_effect(move || {
         let script = include_str!("./context.js")
             .replace("UUID", &id_signal.read())
             .replace("ON_CLICK", &format!("{}", with_click.read()));
@@ -188,7 +194,7 @@ pub fn ContextMenu(props: Props) -> Element {
     rsx! {
         div {
             class: format_args!("context-wrap {}", if props.fit_parent.unwrap_or_default() {"context-wrap-fit"} else {""}),
-            onmouseenter: |e| {
+            onmouseenter: move |e| {
                 if let Some(f) = props.on_mouseenter.as_ref() { f.call(e) }
             },
             div {

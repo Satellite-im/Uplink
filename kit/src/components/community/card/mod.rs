@@ -13,6 +13,8 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn CommunityCard(props: Props) -> Element {
+    let onjoin_clone = props.onjoin.clone();
+
     rsx!(
         div {
             class: "community-card",
@@ -42,8 +44,8 @@ pub fn CommunityCard(props: Props) -> Element {
                     text: if props.joined { get_local_text("community.joined") } else { format!("{} {}", get_local_text("community.join"), props.name) },
                     appearance: if props.joined { Appearance::Secondary } else { Appearance::Primary },
                     icon: if props.joined { Icon::Check } else { Icon::ArrowRight },
-                    onpress: |_| {
-                        props.onjoin.call(());
+                    onpress: move |_| {
+                        onjoin_clone.call(());
                     }
                 }
             }

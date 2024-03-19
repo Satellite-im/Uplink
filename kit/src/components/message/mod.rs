@@ -368,7 +368,7 @@ fn EditMsg(props: EditProps) -> Element {
 
     rsx!(textarea::InputRich {
         id: props.id.clone(),
-        aria_label: "edit-message-input".into(),
+        aria_label: "edit-message-input".to_string(),
         ignore_focus: false,
         value: props.text.clone(),
         onchange: move |_| {},
