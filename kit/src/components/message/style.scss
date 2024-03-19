@@ -1,5 +1,6 @@
 .message {
 	background: var(--primary);
+	color: var(--text-color);
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
 	min-height: var(--height-input);
@@ -18,7 +19,7 @@
 		align-self: flex-end;
 	}
 	.text {
-		color: var(--text-color-dark);
+		color: var(--text-color);
 		display: block;
 		white-space:pre-wrap;
 
@@ -100,7 +101,7 @@
 
 .emoji-reaction-self {
 	background-color: var(--primary);
-	color: var(--text-color-dark);
+	color: var(--text-color);
 }
 
 .attachment-list {
@@ -139,7 +140,7 @@
 
 .message-user-tag {
 	background-color: var(--text-color-user-tag);
-	color: var(--text-color-dark);
+	color: var(--text-color);
 	width: fit-content;
 	height: fit-content;
 	&:not(.visual-only) {
