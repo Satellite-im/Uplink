@@ -11,7 +11,7 @@ pub enum ButtonsFormat {
 }
 
 #[derive(Props)]
-pub struct Props<T: 'static> {
+pub struct Props<T: 'static + std::clone::Clone> {
     values: Vec<T>,
     initial_index: usize,
     #[props(optional)]
@@ -19,7 +19,7 @@ pub struct Props<T: 'static> {
     onset: EventHandler<T>,
 }
 
-impl<T> Clone for Props<T> {
+impl<T: std::clone::Clone> Clone for Props<T> {
     fn clone(&self) -> Self {
         Self {
             values: self.values,
@@ -30,7 +30,7 @@ impl<T> Clone for Props<T> {
     }
 }
 
-impl<T> PartialEq for Props<T> {
+impl<T: std::clone::Clone> PartialEq for Props<T> {
     fn eq(&self, other: &Self) -> bool {
         self.initial_index == other.initial_index && self.buttons_format == other.buttons_format
     }
@@ -45,12 +45,10 @@ where
     if *index.read() != props.initial_index {
         index.set(props.initial_index);
     }
-    // let buttons_format = props
-    // .buttons_format
-    // .clone()
-    // .unwrap_or(ButtonsFormat::Arrows);
-
-    let buttons_format = ButtonsFormat::Arrows;
+    let buttons_format = props
+        .buttons_format
+        .clone()
+        .unwrap_or(ButtonsFormat::Arrows);
 
     let converted_display = match props.values.get(*index.read()) {
         Some(x) => x.to_string(),
@@ -60,43 +58,47 @@ where
         }
     };
 
-    rsx!(div {
-        class: "slide-selector",
-        aria_label: "slide-selector",
-        Button {
-            aria_label: "slide-selector-minus".to_string(),
-            icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
-            disabled: *index.read() == 0,
-            onpress: move |_| {
-                if *index.read() == 0 {
-                    return;
+    rsx!(
+            div { class: "slide-selector", aria_label: "slide-selector",
+                Button {
+                    aria_label: "slide-selector-minus".to_string(),
+                    icon: if buttons_format == ButtonsFormat::PlusAndMinus {
+        Shape::Minus
+    } else {
+        Shape::ArrowLeft
+    },
+                    disabled: *index.read() == 0,
+                    onpress: move |_| {
+                        if *index.read() == 0 {
+                            return;
+                        }
+                        let new_val = *index.read() - 1;
+                        index.set(new_val);
+                        if let Some(x) = props.values.get(new_val) {
+                            props.onset.call(x.clone());
+                        }
+                    }
                 }
-                let new_val = *index.read() - 1;
-                index.set(new_val);
-                if let Some(x) = props.values.get(new_val) {
-                     props.onset.call(x.clone());
+                span { aria_label: "slide-selector-value", class: "slide-selector__value", "{converted_display}" }
+                Button {
+                    aria_label: "slide-selector-plus".to_string(),
+                    icon: if buttons_format == ButtonsFormat::PlusAndMinus {
+        Shape::Plus
+    } else {
+        Shape::ArrowRight
+    },
+                    disabled: *index.read() >= (props.values.len() - 1),
+                    onpress: move |_| {
+                        if *index.read() >= (props.values.len() - 1) {
+                            return;
+                        }
+                        let new_val = *index.read() + 1;
+                        index.set(new_val);
+                        if let Some(x) = props.values.get(new_val) {
+                            props.onset.call(x.clone());
+                        }
+                    }
                 }
-            },
-        },
-        span {
-            aria_label: "slide-selector-value",
-            class: "slide-selector__value",
-            "{converted_display}",
-        },
-        Button {
-            aria_label: "slide-selector-plus".to_string(),
-            icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
-            disabled: *index.read() >= (props.values.len() - 1),
-            onpress: move |_| {
-                if *index.read() >= (props.values.len() - 1) {
-                    return;
-                }
-                let new_val = *index.read() + 1;
-                index.set(new_val);
-                if let Some(x) = props.values.get(new_val) {
-                    props.onset.call(x.clone());
-               }
-            },
-        },
-    })
+            }
+        )
 }
