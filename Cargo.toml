@@ -43,9 +43,9 @@ arboard = "3.3"
 humansize = "2.1.3"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.8.3"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
-warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
-warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "d15be5735c5e654bbb7b424d0ea2c414df8b5e4c" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "e95df602fa6e45231be6a27b318d21ac4b15a4a6" }
+warp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "e95df602fa6e45231be6a27b318d21ac4b15a4a6" }
+warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "e95df602fa6e45231be6a27b318d21ac4b15a4a6" }
 rfd = "0.14.0"
 mime = "0.3.17"
 serde = "1.0"
