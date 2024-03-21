@@ -110,20 +110,22 @@ pub fn get_active(props: Props) -> To {
 /// ```
 #[allow(non_snake_case)]
 pub fn Nav(props: Props) -> Element {
-    let active = use_signal(|| get_active(props));
+    let mut active = use_signal(|| get_active(props.clone()));
     let bubble = props.bubble.unwrap_or_default();
     let tooltip_direction = props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
     let routes_in_app = props.routes.clone();
     // For some reason if you dont do this the first render will not have a context menu
     let uuid = use_signal(|| Uuid::new_v4().to_string());
+    let props_signal = use_signal(|| props.clone());
+
     rsx!(
         div {
             aria_label: "button-nav",
             class: {
                 format_args!("nav disable-select {}", if bubble { "bubble" } else { "" })
             },
-            {routes_in_app.iter().map(|route| {
-                let badge = get_badge(route);
+            {routes_in_app.iter().cloned().map(|route| {
+                let badge = get_badge(&route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
                 let name2: String = name.to_lowercase();
@@ -148,7 +150,7 @@ pub fn Nav(props: Props) -> Element {
                             icon: route.icon,
                             onpress: move |_| {
                                 active.set(route.to);
-                                emit(props, &route.to)
+                                emit(props_signal.read().clone(), &route.to)
                             },
                             text: {
                                 if bubble { name } else { "".into() }

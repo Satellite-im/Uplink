@@ -97,7 +97,7 @@ impl Clone for Props {
             onreturn: self.onreturn.clone(),
             is_disabled: self.is_disabled,
             ignore_focus: self.ignore_focus,
-            suggestions: self.suggestions,
+            suggestions: self.suggestions.clone(),
             oncursor_update: self.oncursor_update.clone(),
             on_suggestion_click: self.on_suggestion_click.clone(),
         }
@@ -193,12 +193,13 @@ pub fn Reply(props: ReplyProps) -> Element {
 
 #[allow(non_snake_case)]
 pub fn Chatbar(props: Props) -> Element {
+    let props_signal = use_signal(|| props.clone());
     let controlled_input_id = &props.id;
     let is_typing = !props.typing_users.is_empty();
     let cursor_position = use_signal(|| None);
-    let selected_suggestion: Signal<Option<usize>> = use_signal(|| None);
-    let arrow_selected = use_signal(|| false);
-    let is_suggestion_modal_closed: Signal<bool> = use_signal(|| false);
+    let mut selected_suggestion: Signal<Option<usize>> = use_signal(|| None);
+    let mut arrow_selected = use_signal(|| false);
+    let mut is_suggestion_modal_closed: Signal<bool> = use_signal(|| false);
 
     rsx!(
         div {
@@ -219,9 +220,9 @@ pub fn Chatbar(props: Props) -> Element {
                         if !*is_suggestion_modal_closed.read() && (keycode == Code::Escape || keycode == Code::Tab) {
                             if keycode == Code::Tab {
                                 if let Some(i) = selected_suggestion.write_silent().take() {
-                                    if let Some(e) = props.on_suggestion_click.as_ref() {
+                                    if let Some(e) = props_signal.read().clone().on_suggestion_click.as_ref() {
                                         if let Some(p) = cursor_position.read().as_ref() {
-                                            let (pattern, replacement) = props.suggestions.get_replacement_for_index(i);
+                                            let (pattern, replacement) = props_signal.read().clone().suggestions.get_replacement_for_index(i);
                                             e.call((replacement, pattern,*p));
                                         }
                                     }
@@ -241,9 +242,9 @@ pub fn Chatbar(props: Props) -> Element {
                     },
                     onreturn: move |(v, is_valid, _)| {
                         if let Some(i) = selected_suggestion.write_silent().take() {
-                            if let Some(e) = props.on_suggestion_click.as_ref() {
+                            if let Some(e) = props_signal.read().clone().on_suggestion_click.as_ref() {
                                 if let Some(p) = cursor_position.read().as_ref() {
-                                    let (pattern, replacement) = props.suggestions.get_replacement_for_index(i);
+                                    let (pattern, replacement) = props_signal.read().clone().suggestions.get_replacement_for_index(i);
                                     e.call((replacement, pattern,*p));
                                     return;
                                 }
@@ -254,16 +255,16 @@ pub fn Chatbar(props: Props) -> Element {
                         }
                     },
                     oncursor_update: move |(v,p)| {
-                        if let Some(e) = props.oncursor_update.as_ref() {
+                        if let Some(e) = props_signal.read().clone().oncursor_update.as_ref() {
                             e.call((v,p))
                         }
                         *cursor_position.write_silent() = Some(p)
                     },
                     is_disabled: props.is_disabled,
-                    prevent_up_down_arrows: !props.suggestions.is_empty(),
+                    prevent_up_down_arrows: !props_signal.read().clone().suggestions.is_empty(),
                     onup_down_arrow:
                         move |code| {
-                            let amount = match props.suggestions {
+                            let amount = match props_signal.read().clone().suggestions {
                                 SuggestionType::None => 0,
                                 SuggestionType::Emoji(_, v) => v.len(),
                                 SuggestionType::Tag(_, v) => v.len(),
@@ -300,15 +301,15 @@ pub fn Chatbar(props: Props) -> Element {
                 class: "controls",
                 {props.controls.as_ref()}
             },
-            {(!props.suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
+            {(!props_signal.read().clone().suggestions.is_empty() && !*is_suggestion_modal_closed.read()).then(||
                 rsx!(SuggestionsMenu {
-                suggestions: props.suggestions,
+                suggestions: props_signal.read().clone().suggestions,
                 on_close: move |_| {
                     is_suggestion_modal_closed.with_mut(|i| *i = true);
                     *selected_suggestion.write() = None;
                 },
                 on_click: move |(emoji, pattern)| {
-                    if let Some(e) = props.on_suggestion_click.as_ref() {
+                    if let Some(e) = props_signal.read().on_suggestion_click.as_ref() {
                         if let Some(p) = cursor_position.read().as_ref() {
                             e.call((emoji, pattern, *p))
                         }
@@ -332,15 +333,17 @@ pub struct SuggestionProps {
 
 #[allow(non_snake_case)]
 fn SuggestionsMenu(props: SuggestionProps) -> Element {
+    let props_signal = use_signal(|| props.clone());
     if props.selected.read().is_none() {
         *props.selected.write_silent() = Some(0);
     }
-    let (label, suggestions): (_, Vec<_>) = match props.suggestions {
+    let (label, suggestions): (_, Vec<_>) = match props_signal.read().clone().suggestions {
         SuggestionType::None => return None,
         SuggestionType::Emoji(pattern, emojis) => {
-            let component = emojis.iter().enumerate().map(|(num, (emoji,alias))| {
+            let pattern_signal = use_signal(|| pattern.clone());
+            let component = emojis.iter().cloned().enumerate().map(|(num, (emoji,alias))| {
                 rsx!(div {
-                    class: format_args!("{} {}", "chatbar-suggestion", match props.selected.read().as_ref() {
+                    class: format_args!("{} {}", "chatbar-suggestion", match props_signal.read().clone().selected.read().as_ref() {
                         Some(v) => if *v == num {"chatbar-selected"} else {""},
                         None => "",
                     }),
@@ -350,12 +353,12 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
                         )
                     },
                     onclick: move |_| {
-                        props.on_click.call((emoji.clone(), pattern.clone()))
+                        props_signal.read().clone().on_click.call((emoji.clone(), pattern_signal.read().clone()))
                     },
                     onmouseover: move |_| {
-                        props.arrow_selected.with_mut(|arrow|{
+                        props_signal.read().clone().arrow_selected.with_mut(|arrow|{
                             if !*arrow {
-                                *props.selected.write() = Some(num);
+                                *props_signal.read().clone().selected.write() = Some(num);
                             }
                             *arrow = false
                         });
@@ -366,6 +369,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
             (get_local_text("messages.emoji-suggestion"), component)
         }
         SuggestionType::Tag(pattern, identities) => {
+            let pattern_signal = use_signal(|| pattern.clone());
             let component = identities.iter().enumerate().map(|(num, id)| {
                 let username = format!("{}#{}", id.username(), id.short_id());
                 rsx!(div {
@@ -379,12 +383,12 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
                         )
                     },
                     onclick: move |_| {
-                        props.on_click.call((username.clone(), pattern.clone()))
+                        props.on_click.call((username.clone(), pattern_signal.read().clone()))
                     },
                     onmouseover: move |_| {
-                        props.arrow_selected.with_mut(|arrow|{
+                        props_signal.read().clone().arrow_selected.with_mut(|arrow|{
                             if !*arrow {
-                                *props.selected.write() = Some(num);
+                                *props_signal.read().clone().selected.write() = Some(num);
                             }
                             *arrow = false
                         });
@@ -408,7 +412,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
         id: "chatbar-suggestions",
         aria_label: "chatbar-suggestions-container",
         onmouseenter: move |_| {
-            *props.arrow_selected.write() = false;
+            *props_signal.read().clone().arrow_selected.write() = false;
         },
         div {
             class: "chatbar-suggestions-header",

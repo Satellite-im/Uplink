@@ -66,6 +66,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FileEmbed(props: Props) -> Element {
     //log::trace!("rendering file embed: {}", props.filename);
+    let props_signal = use_signal(|| props.clone());
     let file_extension = std::path::Path::new(&props.filename)
         .extension()
         .and_then(OsStr::to_str)
@@ -99,7 +100,7 @@ pub fn FileEmbed(props: Props) -> Element {
 
     let mut file_size_pending = String::new();
 
-    let perc = if let Some(p) = props.progress {
+    let perc = if let Some(p) = props_signal.read().clone().progress {
         match p {
             FileProgression::CurrentProgress {
                 name: _,
@@ -167,8 +168,6 @@ pub fn FileEmbed(props: Props) -> Element {
     let is_file_available_to_preview = is_file_available_to_preview(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
-    let props_clone = props.clone();
-
     let onpress_clone = props.on_press.clone();
     let onpress_clone2 = props.on_press.clone();
 
@@ -217,7 +216,7 @@ pub fn FileEmbed(props: Props) -> Element {
                                         ),
                                         src: "{thumbnail}",
                                     },
-                                    {show_download_or_minus_button_if_enabled(props_clone.clone(), with_download_button, btn_icon)},
+                                    {show_download_or_minus_button_if_enabled(props_signal.read().clone(), with_download_button, btn_icon)},
                                    }
                         } else if let Some(filepath) = props.filepath.clone() {
                             {let is_image_or_video = is_image(filename.clone()) || is_video;
@@ -268,7 +267,7 @@ pub fn FileEmbed(props: Props) -> Element {
                                     if !is_from_attachments {
                                         div {
                                             class: "button-position",
-                                            {show_download_or_minus_button_if_enabled(props_clone.clone(), with_download_button, btn_icon)},
+                                            {show_download_or_minus_button_if_enabled(props_signal.read().clone(), with_download_button, btn_icon)},
                                         }
                                     }
                                 }

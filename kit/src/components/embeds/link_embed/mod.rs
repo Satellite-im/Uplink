@@ -16,8 +16,8 @@ pub struct SiteMeta {
     pub url: String,
 }
 
-pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
-    let content = reqwest::get(url).await?.text().await?;
+pub async fn get_meta(url: String) -> Result<SiteMeta, reqwest::Error> {
+    let content = reqwest::get(url.clone()).await?.text().await?;
     let document = Html::parse_document(&content);
     let meta_selector = match Selector::parse("meta") {
         Ok(data) => data,
@@ -26,12 +26,12 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
                 title: String::new(),
                 description: String::new(),
                 icon: String::new(),
-                url: String::from(url),
+                url: String::from(url.clone()),
             });
         }
     };
 
-    let icon = if let Ok(Some(icon)) = fetch_icon(url, document.clone()).await {
+    let icon = if let Ok(Some(icon)) = fetch_icon(&url, document.clone()).await {
         icon
     } else {
         get_image_data(document.clone(), meta_selector.clone()).unwrap_or_default()
@@ -56,9 +56,13 @@ pub struct LinkEmbedProps {
 #[allow(non_snake_case)]
 pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
     // TODO(Migration_0.5): Before it was a use_future, verify if it keep same behavior
-    let fetch_meta = use_resource(|| async move { get_meta(props.link.as_str()).await });
+    let props_link = use_signal(|| props.link.clone());
+    let fetch_meta = use_resource(move || async move { get_meta(props_link()).await });
 
-    let meta = match *fetch_meta.value().read() {
+    let fetch_meta_result = fetch_meta.read();
+    let fetch_meta_result = fetch_meta_result.as_ref().map(|val| val.as_ref());
+
+    let meta = match fetch_meta_result {
         Some(Ok(val)) => val.clone(),
         Some(Err(_)) => SiteMeta::default(),
         None => SiteMeta::default(),
@@ -75,7 +79,7 @@ pub fn EmbedLinks(props: LinkEmbedProps) -> Element {
         meta.description.clone()
     };
 
-    let youtube_video = if props.link.contains("youtube.com/watch?v=") {
+    let youtube_video = if props_link.read().contains("youtube.com/watch?v=") {
         Some(props.link.replace("watch?v=", "embed/"))
     } else {
         None

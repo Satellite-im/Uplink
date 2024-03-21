@@ -46,13 +46,15 @@ pub fn emit_press(props: Props) {
 pub fn Folder(props: Props) -> Element {
     let open = props.open.unwrap_or_default();
     let folder_name = props.text.clone().unwrap_or_default();
-    let aria_label = get_aria_label(props);
+    let aria_label = get_aria_label(props.clone());
     let placeholder = folder_name.clone();
     let with_rename = props.with_rename.unwrap_or_default();
     let icon = if open { Icon::FolderOpen } else { Icon::Folder };
     let disabled = props.disabled.unwrap_or_default();
 
     let loading = props.loading.unwrap_or_default();
+
+    let props_signal = use_signal(|| props.clone());
 
     if loading {
         rsx!(FolderSkeletal {})
@@ -65,7 +67,7 @@ pub fn Folder(props: Props) -> Element {
                 aria_label: "{aria_label}",
                 div {
                     class: "icon alignment",
-                    onclick: move |_| emit_press(props),
+                    onclick: move |_| emit_press(props_signal.read().clone()),
                     IconElement {
                         icon: icon,
                     },
@@ -94,7 +96,7 @@ pub fn Folder(props: Props) -> Element {
                                 },
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape {
-                                        emit(props, s, key_code);
+                                        emit(props_signal.read().clone(), s, key_code);
                                     }
                                 }
                             }

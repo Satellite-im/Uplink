@@ -56,11 +56,12 @@ pub fn get_file_extension(file_name: String) -> String {
 
 #[allow(non_snake_case)]
 pub fn File(props: Props) -> Element {
+    let props_signal = use_signal(|| props.clone());
     let file_extension = get_file_extension(props.text.clone());
     let file_name = props.text.clone();
     let file_name2 = file_name.clone();
 
-    let aria_label = get_aria_label(props);
+    let aria_label = get_aria_label(props_signal.read().clone());
     let placeholder = file_name.clone();
     let with_rename = props.with_rename.unwrap_or_default();
     let disabled = props.disabled.unwrap_or_default();
@@ -80,7 +81,7 @@ pub fn File(props: Props) -> Element {
                 aria_label: "{aria_label}",
                 onclick: move |mouse_event_data| {
                     if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                        emit_press(props);
+                        emit_press(props_signal.read().clone());
                     }
                 },
                 div {
@@ -135,7 +136,7 @@ pub fn File(props: Props) -> Element {
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape  {
                                         let new_name = format!("{}{}", s, file_extension);
-                                        emit(props, new_name, key_code)
+                                        emit(props_signal.read().clone(), new_name, key_code)
                                     }
                                 }
                             }

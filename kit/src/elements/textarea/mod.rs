@@ -96,7 +96,7 @@ pub fn Input(props: Props) -> Element {
         show_char_counter,
         prevent_up_down_arrows,
         onup_down_arrow,
-    } = &props;
+    } = props.clone();
 
     let id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
@@ -116,9 +116,9 @@ pub fn Input(props: Props) -> Element {
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
         .replace("$MULTI_LINE", &format!("{}", true));
-    let disabled = *loading || *is_disabled;
+    let disabled = loading || is_disabled;
 
-    let sync = include_str!("./sync_data.js").replace("$UUID", &id);
+    let sync = use_signal(|| include_str!("./sync_data.js").replace("$UUID", &id));
     let clear_counter_script =
         r#"document.getElementById('$UUID-char-counter').innerText = "0";"#.replace("$UUID", &id);
 
@@ -127,13 +127,13 @@ pub fn Input(props: Props) -> Element {
     let text_value = use_signal(|| value.clone());
     let value_signal = use_signal(|| value.clone());
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![cursor_position, show_char_counter];
         async move {
             *cursor_position.write_silent() = Some(value_signal.read().chars().count() as i64);
             *text_value.write_silent() = text_value.read().clone();
             if show_char_counter {
-                let _ = eval(&sync.replace("$TEXT", &text_value.read()));
+                let _ = eval(&sync().replace("$TEXT", &text_value.read()));
             }
         }
     });
@@ -146,6 +146,9 @@ pub fn Input(props: Props) -> Element {
         }
     }
 
+    let placeholder = use_signal(|| placeholder.clone());
+    let placeholder_clone = placeholder.clone();
+
     rsx! (
         div {
             id: "input-group-{id}",
@@ -156,13 +159,13 @@ pub fn Input(props: Props) -> Element {
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
-                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
+                    class: format_args!("{} {}", "input_textarea", if prevent_up_down_arrows {"up-down-disabled"} else {""}),
                     id: "{id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{text_value.read()}",
                     maxlength: "{max_length}",
-                    placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
+                    placeholder: format_args!("{}", if is_disabled {"".to_string()} else {placeholder_clone()}),
                     onblur: move |_| {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
@@ -233,7 +236,7 @@ pub fn Input(props: Props) -> Element {
                             let numpad_enter_toggled = !old_numpad_enter_pressed && matches!(evt.code(), Code::NumpadEnter);
                             if (enter_toggled || numpad_enter_toggled) && !(*right_shift_pressed.read() || *left_shift_pressed.read())
                             {
-                                 if *show_char_counter {
+                                 if show_char_counter {
                                         let _ = eval(&clear_counter_script);
                                     }
                                     onreturn.call((text_value.read().clone(), true, evt.code()));
@@ -266,7 +269,7 @@ pub fn Input(props: Props) -> Element {
                         }
                     }
                 }
-                if *show_char_counter {
+                if show_char_counter {
                         div {
                             class: "input-char-counter",
                             p {
@@ -295,7 +298,7 @@ pub fn Input(props: Props) -> Element {
 #[allow(non_snake_case)]
 pub fn InputRich(props: Props) -> Element {
     log::trace!("render input");
-    let listener_data = use_signal(|| None);
+    let mut listener_data = use_signal(|| None);
 
     let Props {
         id: _,
@@ -315,7 +318,7 @@ pub fn InputRich(props: Props) -> Element {
         show_char_counter,
         prevent_up_down_arrows,
         onup_down_arrow,
-    } = &props;
+    } = props.clone();
 
     let id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
@@ -328,41 +331,46 @@ pub fn InputRich(props: Props) -> Element {
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
         .replace("$MULTI_LINE", &format!("{}", true));
-    let disabled = *loading || *is_disabled;
+    let disabled = loading || is_disabled;
 
     let text_value = use_signal(|| value.clone());
-    let sync_script = include_str!("./sync_data.js").replace("$UUID", &id);
+    let sync_script = use_signal(|| include_str!("./sync_data.js").replace("$UUID", &id));
+
+    let value = use_signal(|| value.clone());
+    let placeholder = use_signal(|| placeholder.clone());
 
     // Sync changed to the editor
-    use_resource(|| {
-        to_owned![value, sync_script, text_value, placeholder, disabled];
+    use_resource(move || {
+        to_owned![sync_script, text_value, disabled];
         async move {
-            let update = !text_value.read().eq(&value);
+            let update = !text_value.read().eq(&value());
             let _ = eval(
                 &sync_script
+                    .read()
+                    .clone()
                     .replace("$UPDATE", &update.to_string())
                     .replace(
                         "$TEXT",
-                        &value
+                        &value()
                             .replace('\\', "\\\\")
                             .replace('"', "\\\"")
                             .replace('\n', "\\n"),
                     )
-                    .replace("$PLACEHOLDER", &placeholder)
+                    .replace("$PLACEHOLDER", &placeholder())
                     .replace("$DISABLED", &disabled.to_string()),
             );
         }
     });
 
     // TODO(MIGRATION_0.5): Before it was use_effect, verify if it keeps the same behavior
-    use_future(|| {
-        to_owned![listener_data, value];
+    use_future(move || {
+        to_owned![listener_data];
         let rich_editor: String = include_str!("./rich_editor_handler.js")
             .replace("$EDITOR_ID", &id2)
             .replace("$AUTOFOCUS", &(!props.ignore_focus).to_string())
-            .replace("$INIT", &value.replace('"', "\\\"").replace('\n', "\\n"));
+            .replace("$INIT", &value().replace('"', "\\\"").replace('\n', "\\n"));
         async move {
-            let eval_result = eval(&rich_editor);
+            let mut eval_result = eval(&rich_editor);
             loop {
                 if let Ok(val) = eval_result.recv().await {
                     let input = INPUT_REGEX.captures(val.as_str().unwrap_or_default());
@@ -397,7 +405,7 @@ pub fn InputRich(props: Props) -> Element {
         }
     });
 
-    if let Some(pending) = listener_data.peek().take() {
+    if let Some(pending) = listener_data.peek().clone().take() {
         pending.iter().for_each(|val| match val.to_owned() {
             JSTextData::Input(txt) => {
                 *text_value.write_silent() = txt.clone();
@@ -431,12 +439,12 @@ pub fn InputRich(props: Props) -> Element {
                 height: "{size.get_height()}",
                 textarea {
                     key: "textarea-key-{id}",
-                    class: format_args!("{} {}", "input_textarea", if *prevent_up_down_arrows {"up-down-disabled"} else {""}),
+                    class: format_args!("{} {}", "input_textarea", if prevent_up_down_arrows {"up-down-disabled"} else {""}),
                     id: "{id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     maxlength: "{max_length}",
-                    placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
+                    placeholder: format_args!("{}", if is_disabled {"".to_string()} else {placeholder()}),
                     onblur: move |_| {
                         onreturn.call((text_value.read().to_string(), false, Code::Enter));
                     },
@@ -455,7 +463,7 @@ pub fn InputRich(props: Props) -> Element {
                         }
                     }
                 }
-                if *show_char_counter {
+                if show_char_counter {
                         div {
                             class: "input-char-counter",
                             p {

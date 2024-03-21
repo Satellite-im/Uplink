@@ -42,7 +42,7 @@ pub fn ChannelGroupElement(props: Props) -> Element {
             },
             div {
                 class: "channel-group-body",
-                {channels.iter().map(|channel| {
+                {channels.iter().cloned().map(|channel| {
                     rsx!(
                         ChannelElement {
                             channel: channel.clone(),

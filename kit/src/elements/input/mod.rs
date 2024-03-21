@@ -326,6 +326,7 @@ pub fn validate(props: Props, val: &str) -> Option<ValidationError> {
 
 #[allow(non_snake_case)]
 pub fn Input(props: Props) -> Element {
+    let props_signal = use_signal(|| props.clone());
     // Input element needs an id. Create a new one if an id wasn't specified
     let input_id = if props.id.is_empty() {
         Uuid::new_v4().to_string()
@@ -367,8 +368,8 @@ pub fn Input(props: Props) -> Element {
     }
 
     let apply_validation_class = should_validate;
-    let aria_label = get_aria_label(props);
-    let label = get_label(props);
+    let aria_label = get_aria_label(props_signal.read().clone());
+    let label = get_label(props_signal.read().clone());
 
     let disabled = props.disabled.unwrap_or_default() || props.loading.unwrap_or(false);
 
@@ -411,13 +412,13 @@ pub fn Input(props: Props) -> Element {
                 class: {
                     format_args!("input {}", if *valid.read() && apply_validation_class { "input-success" } else if !error.read().is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
-                height: props.size.get_height(),
+                height: props_signal.read().clone().size.get_height(),
                 // If an icon was provided, render it before the input.
-                {(props.icon.is_some()).then(|| rsx!(
+                {(props_signal.read().clone().icon.is_some()).then(|| rsx!(
                     span {
                         class: "icon",
                         IconElement {
-                            icon: get_icon(props)
+                            icon: get_icon(props_signal.read().clone())
                         }
                     }
                 ))},
@@ -433,13 +434,13 @@ pub fn Input(props: Props) -> Element {
                     placeholder: "{props.placeholder}",
                     placeholder: "{props.placeholder}",
                     onfocus: move |_| {
-                        if let Some(e) = &props.onfocus {
+                        if let Some(e) = &props_signal.read().clone().onfocus {
                             e.call(())
                         }
                     },
                     onblur: move |_| {
                         if onblur_active {
-                            emit_return(props, val.read().to_string(), *valid.read(), Code::Enter);
+                            emit_return(props_signal.read().clone(), val.peek().to_string(), *valid.read(), Code::Enter);
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -461,7 +462,7 @@ pub fn Input(props: Props) -> Element {
                         } else {
                             true
                         };
-                        emit(props, current_val, is_valid);
+                        emit(props_signal.read().clone(), current_val, is_valid);
                     },
                     // after a valid submission, don't keep the input box green.
                     onkeyup: move |evt| {
@@ -479,9 +480,9 @@ pub fn Input(props: Props) -> Element {
                                 } else {
                                     true
                                 };
-                                emit(props, "".to_owned(), is_valid);
+                                emit(props_signal.read().clone(), "".to_owned(), is_valid);
                             } else {
-                            emit_return(props, val.read().to_string(), *valid.read(), evt.code());
+                            emit_return(props_signal.read().clone(), val.read().to_string(), *valid.read(), evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -489,7 +490,7 @@ pub fn Input(props: Props) -> Element {
                             }
                         }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(props, "".to_owned(), min_length == 0, evt.code());
+                            emit_return(props_signal.read().clone(), "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                            }
@@ -512,14 +513,14 @@ pub fn Input(props: Props) -> Element {
                             }
                             // re-focus the input after clearing it
                             let _ = eval(&focus_script);
-                            emit(props, String::new(), *valid.read());
+                            emit(props_signal.read().clone(), String::new(), *valid.read());
                         },
                         IconElement {
                             icon: options.clear_btn_icon
                         }
                     }
                 ))},
-                {props.loading.unwrap_or(false).then(move || rsx!(
+                {props_signal.read().clone().loading.unwrap_or(false).then(move || rsx!(
                     Loader { spinning: true },
                 ))},
             },
