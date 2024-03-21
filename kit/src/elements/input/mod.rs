@@ -438,7 +438,7 @@ pub fn Input(props: Props) -> Element {
                             e.call(())
                         }
                     },
-                    onblur: move |_| {
+                    onblur: &mut move |_| {
                         if onblur_active {
                             emit_return(props_signal.read().clone(), val.peek().to_string(), *valid.read(), Code::Enter);
                             if options.clear_on_submit {

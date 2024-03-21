@@ -31,7 +31,7 @@ pub fn default_state(props: Props) -> bool {
 
 #[allow(non_snake_case)]
 pub fn Switch(props: Props) -> Element {
-    let checked_state = default_state(props);
+    let checked_state = default_state(props.clone());
     let disabled = props.disabled.unwrap_or_default();
 
     rsx! {

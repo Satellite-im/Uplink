@@ -15,7 +15,7 @@ bitflags! {
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
     pub struct ModifiersStateDef: u32 {
-        const SHIFT = 0b100 << 0;
+        const SHIFT = 0b100;
         const CONTROL = 0b100 << 3;
         const ALT = 0b100 << 6;
         const SUPER = 0b100 << 9;

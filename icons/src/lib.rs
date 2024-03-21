@@ -134,7 +134,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
 /// The child elements are optional, and are there so you can add some
 /// additional text or other HTML to the button.
 #[allow(non_snake_case)]
-pub fn IconButton<'a, S: IconShape>(props: ReadOnlySignal<IconButtonProps<'a, S>>) -> Element {
+pub fn IconButton<S: IconShape>(props: ReadOnlySignal<IconButtonProps<'_, S>>) -> Element {
     rsx! {
         button {
             aria_label: "{props.read().aria_label}",
