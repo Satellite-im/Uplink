@@ -45,7 +45,7 @@ pub fn Switch(props: Props) -> Element {
                 disabled: "{disabled}",
                 "type": "checkbox",
                 checked: "{checked_state}",
-                oninput: move |e| emit(props, e.data.value() == "true")
+                oninput: move |e| emit(props.clone(), e.data.value() == "true")
             },
             span { class: "slider" }
         }

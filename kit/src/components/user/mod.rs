@@ -58,7 +58,8 @@ pub fn emit(props: Props, e: Event<MouseData>) {
 
 #[allow(non_snake_case)]
 pub fn User(props: Props) -> Element {
-    let time_ago = get_time_ago(props);
+    let props_signal = use_signal(|| props.clone());
+    let time_ago = get_time_ago(props.clone());
     let badge = get_badge(props.clone());
     let aria_label = props.aria_label.clone().unwrap_or_default();
     let active = props.active.unwrap_or_default();
@@ -71,7 +72,7 @@ pub fn User(props: Props) -> Element {
                 class: {
                     format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
                 },
-                onclick: move |e| emit(props, e),
+                onclick: move |e| emit(props_signal(), e),
                 aria_label: "{aria_label}",
                 {(!badge.is_empty()).then(|| rsx!(
                     span {

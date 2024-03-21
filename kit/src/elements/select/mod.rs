@@ -103,15 +103,18 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                 position: "relative",
                 width: format_args!("{}px", props.width),
                 onclick: move |e| {
-                    let b = visible();
-                    visible.set(!b);
+                    let b = visible.with(|f| f.clone());
+                    visible.with_mut(|f| *f = !b);
                     e.stop_propagation()
                 },
                 div {
                     class: "fancy-select",
                     {initial_element}
                 },
-                {visible.clone().read().then(||{
+                {visible.take().clone().then(move || {
+                    let mut visible2 = visible.clone();
+                    let mut visible3 = visible.clone();
+
                     rsx!(
                         div {
                             class: "fancy-select-options",
@@ -124,7 +127,7 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                                         if let Some(f) = &on_select.clone() {
                                             f.call(val.clone())
                                         }
-                                        visible.set(false);
+                                        visible2.with_mut(|f| *f = false);
                                         e.stop_propagation()
                                     },
                                     {element}
@@ -132,8 +135,8 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                             )}
                         },
                         InvisibleCloser {
-                            onclose: |_| {
-                                visible.set(false);
+                            onclose: move |_| {
+                                visible3.with_mut(|f| *f = false);
                             }
                         }
                     )

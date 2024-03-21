@@ -9,6 +9,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn ColorSwatch(props: Props) -> Element {
+    let props_signal = use_signal(|| props.clone());
     let active = props
         .active
         .then(|| "active".to_string())
@@ -17,6 +18,6 @@ pub fn ColorSwatch(props: Props) -> Element {
     rsx!(div {
         class: "color-swatch {active}",
         style: "background-color: rgb({props.color.0}, {props.color.1}, {props.color.2})",
-        onclick: |_| props.onpress.call(()),
+        onclick: move |_| props_signal().onpress.call(()),
     })
 }

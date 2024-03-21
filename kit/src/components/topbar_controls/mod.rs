@@ -7,6 +7,7 @@ use dioxus_desktop::{use_window, LogicalSize};
 pub fn TopbarControls() -> Element {
     let state = use_signal(State::load);
     let desktop = use_window();
+    let desktop_signal = use_signal(|| desktop.clone());
     let first_resize = use_signal(|| true);
     if cfg!(not(target_os = "macos")) {
         rsx!(
@@ -17,7 +18,7 @@ pub fn TopbarControls() -> Element {
                     icon: Icon::Minus,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
-                        desktop.set_minimized(true);
+                        desktop_signal().set_minimized(true);
                     }
                 },
                 Button {
@@ -25,12 +26,12 @@ pub fn TopbarControls() -> Element {
                     icon: Icon::Square2Stack,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
-                        desktop.set_maximized(!desktop.is_maximized());
+                        desktop_signal().set_maximized(!desktop.is_maximized());
                         if state.read().ui.window_maximized
                             && *first_resize.read()
                             && cfg!(target_os = "windows")
                         {
-                            desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                            desktop_signal().set_inner_size(LogicalSize::new(950.0, 600.0));
                             *first_resize.write_silent() = false;
                         }
                     }
@@ -40,7 +41,7 @@ pub fn TopbarControls() -> Element {
                     icon: Icon::XMark,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
-                        desktop.close();
+                        desktop_signal().close();
                     }
                 },
             }

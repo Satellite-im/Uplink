@@ -503,7 +503,7 @@ pub fn Input(props: Props) -> Element {
                         onclick: move |_| {
                             *val.write_silent() = String::new();
                             if should_validate {
-                                let validation_result = validate(props, "").unwrap_or_default();
+                                let validation_result = validate(props_signal(), "").unwrap_or_default();
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }

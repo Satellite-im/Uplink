@@ -176,6 +176,7 @@ fn wrap_links_with_a_tags(text: &str) -> (String, Vec<String>) {
 #[allow(non_snake_case)]
 pub fn Message(props: Props) -> Element {
     //  log::trace!("render Message");
+    let props_signal = use_signal(|| props.clone());
     let loading = props.loading.unwrap_or_default();
     let is_remote = props.remote.unwrap_or_default();
     let order = props.order.unwrap_or(Order::Last);
@@ -191,9 +192,11 @@ pub fn Message(props: Props) -> Element {
         .map(|v| !v.is_empty())
         .unwrap_or(false);
 
+    let attachments2 = props_signal.read().clone().attachments;
+
     // todo: pick an icon based on the file extension
     // there's some weirdness here to avoid more nesting. this should make the code easier to read overall
-    let attachment_list = props.attachments.as_ref().map(|vec| {
+    let attachment_list = attachments2.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
             rsx!(FileEmbed {
@@ -225,7 +228,7 @@ pub fn Message(props: Props) -> Element {
                 remote: is_remote,
                 download_pending: false,
                 with_download_button: false,
-                progress: *prog,
+                progress: prog.clone(),
                 on_press: move |_| {},
             })
         })
@@ -324,7 +327,7 @@ pub fn Message(props: Props) -> Element {
         div {
             class: "{reactions_class}",
             aria_label: "message-reaction-container",
-            {props.reactions.iter().map(|reaction| {
+            {props_signal().clone().reactions.iter().map(|reaction| {
                 let reaction_count = reaction.reaction_count;
                 let emoji = &reaction.emoji;
                 let alt = &reaction.alt;
@@ -671,7 +674,7 @@ pub struct IdentityMessageProps {
 
 #[allow(non_snake_case)]
 pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let identity = use_signal(|| None);
     let ch = use_coroutine(|mut rx: UnboundedReceiver<IdentityCmd>| {
         to_owned![identity, state];
@@ -741,7 +744,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
         }
     });
 
-    match identity.as_ref() {
+    match identity().as_ref() {
         Some(identity) => {
             let disabled = state
                 .read()

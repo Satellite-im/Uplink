@@ -56,7 +56,7 @@ pub fn Button(props: Props) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
     let badge = props.with_badge.clone().unwrap_or_default();
     let disabled = props.disabled.unwrap_or_default();
-    let appearance = get_appearance(props);
+    let appearance = get_appearance(props.clone());
     let small = props.small.unwrap_or_default();
     let title = if props.with_title.unwrap_or(true) {
         text.clone()
@@ -64,7 +64,7 @@ pub fn Button(props: Props) -> Element {
         String::new()
     };
 
-    let tooltip_visible = use_signal(|| false);
+    let mut tooltip_visible = use_signal(|| false);
     let progress = props.with_progress.unwrap_or(-1);
 
     let button_class = format!(
@@ -80,6 +80,7 @@ pub fn Button(props: Props) -> Element {
     );
 
     let show_icon = props.loading.unwrap_or_default() || props.icon.is_some();
+    let props_signal = use_signal(|| props.clone());
 
     rsx!(
         div {
@@ -87,17 +88,17 @@ pub fn Button(props: Props) -> Element {
                 format_args!("btn-wrap {}", if small { "small" } else { "" })
             },
             onmouseenter: move |_| {
-                if props.tooltip.is_some() {
+                if props_signal().tooltip.is_some() {
                      tooltip_visible.set(true);
                 }
             },
             onmouseleave: move |_| {
-                if props.tooltip.is_some() {
+                if props_signal().tooltip.is_some() {
                      tooltip_visible.set(false);
                 }
             },
             if *tooltip_visible.read() {
-                {props.tooltip.as_ref().map(|tooltip| {
+                {props_signal().tooltip.as_ref().map(|tooltip| {
                     rsx!(
                        {tooltip}
                     )
