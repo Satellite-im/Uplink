@@ -208,6 +208,12 @@ jobs:
           ref: b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff
           path: "./warp"
 
+      - name: Install Dependencies for WebdriverIO
+        continue-on-error: true
+        run: |
+          brew update
+          brew install cairo pango
+
       - name: Download Key file 🗳️
         uses: actions/download-artifact@v3
         with:
@@ -224,7 +230,7 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 18.17.1
+          node-version: 20
           cache: "npm"
 
       - name: Cache NPM dependencies 🔨
@@ -251,8 +257,12 @@ jobs:
         working-directory: ./apps
         run: |
           unzip Uplink-Mac-Universal.zip
+          cp -r ./Uplink.app ./Uplink2.app
+          perl -i -pe 's/im.satellite.uplink/im.satellite.uplinkChatUserB/g' ./Uplink2.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
+          cp -r ./Uplink2.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink2.app
 
       - name: Install Appium Server 💻
         run: |
@@ -341,6 +351,12 @@ jobs:
           ref: b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff
           path: "./warp"
 
+      - name: Install Dependencies for WebdriverIO
+        continue-on-error: true
+        run: |
+          brew update
+          brew install cairo pango
+
       - name: Download Key file 🗳️
         uses: actions/download-artifact@v3
         with:
@@ -357,7 +373,7 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 18.17.1
+          node-version: 20
           cache: "npm"
 
       - name: Cache NPM dependencies 🔨
@@ -506,7 +522,7 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 18.17.1
+          node-version: 20
           cache: "npm"
 
       - name: Cache NPM dependencies 🔨
