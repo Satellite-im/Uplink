@@ -15,7 +15,7 @@ pub enum UploadFileAction<T> {
     Cancelling(PathBuf, Uuid),
     UploadFiles(Vec<PathBuf>),
     Uploading((Option<FileProgression>, Option<String>, Uuid)),
-    Finishing(PathBuf, Uuid, bool),
+    Finishing(PathBuf, Uuid),
     Finished(T),
     Remove(PathBuf, Uuid),
     Error(Option<PathBuf>, Option<Uuid>),
