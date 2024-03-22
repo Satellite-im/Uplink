@@ -20,7 +20,7 @@ use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 
 use dioxus::prelude::*;
-use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition};
+use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition, PhysicalSize};
 
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
@@ -64,7 +64,7 @@ use crate::misc_scripts::*;
 use crate::utils::async_task_queue::{ListenerAction, ACTION_LISTENER};
 use crate::utils::keyboard::KeyboardShortcuts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
+use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use tracing::log::{self};
@@ -166,8 +166,9 @@ pub fn main_lib() {
         main_menu.init_for_nsapp();
     }
 
+    // TODO(Migration_0.5): Verify this function later
     // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
+    dioxus_desktop::launch::launch_virtual_dom(app, webview_config::webview_config())
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -201,7 +202,7 @@ fn app() -> Element {
     // 2. Guard the app with the auth
     let auth = use_signal(|| AuthPages::EntryPoint);
     let AuthPages::Success(identity) = auth.get() else {
-        return render! {
+        return rsx! {
         KeyboardShortcuts {
             is_on_auth_pages: true,
             on_global_shortcut: move |shortcut| {
@@ -221,11 +222,11 @@ fn app() -> Element {
 
     // 4. Throw up a loading screen until our assets are ready
     if use_loaded_assets().value().is_none() {
-        return render! { LoadingWash {} };
+        return rsx! { LoadingWash {} };
     }
 
     // 5. Finally, render the app
-    render! {
+    rsx! {
         Router::<UplinkRoute>{}
     }
 }
@@ -244,7 +245,7 @@ fn app_layout() -> Element {
 
     let state = use_context::<Signal<State>>();
 
-    render! {
+    rsx! {
         AppStyle {}
         div { id: "app-wrap",
             Titlebar {},
@@ -273,8 +274,8 @@ fn app_layout() -> Element {
 
 fn AppStyle() -> Element {
     let state = use_context::<Signal<State>>();
-    render! {
-        style { get_app_style(&state.read()) },
+    rsx! {
+        style { {get_app_style(&state.read())} },
     }
 }
 
@@ -579,7 +580,7 @@ fn use_app_coroutines() -> Option<()> {
         }
     });
 
-    let file_tracker = use_context::Signal << TransferTracker >> ();
+    let file_tracker = use_context::<Signal<TransferTracker>>();
 
     // Listen to async tasks actions that should be handled on main thread
     use_resource(|| {
@@ -927,7 +928,7 @@ fn get_update_icon() -> Element {
     match stage {
         DownloadProgress::Idle => rsx!(
             ContextMenu {
-                key: "update-available-menu",
+                key: "{update-available-menu}",
                 id: "update-available-menu".to_string(),
                 devmode: state.read().configuration.developer.developer_mode,
                 items: rsx!(
@@ -952,7 +953,6 @@ fn get_update_icon() -> Element {
                     aria_label: "update-available",
                     onclick: move |_| {
                         download_state.write().stage = DownloadProgress::PickFolder;
-
                     },
                     IconElement {
                         icon: common::icons::solid::Shape::ArrowDownCircle,
@@ -1018,7 +1018,7 @@ fn get_update_icon() -> Element {
 }
 
 #[component(no_case_check)]
-pub fn get_download_modal<'a>(
+pub fn get_download_modal(
     //on_submit: EventHandler<PathBuf>,
     on_dismiss: EventHandler<()>,
 ) -> Element {
@@ -1040,12 +1040,12 @@ pub fn get_download_modal<'a>(
             div {
             class: "download-modal disp-flex col",
             h1 {
-                get_local_text("updates.title")
+                {get_local_text("updates.title")}
             },
             ul {
                 class: "instruction-list",
                 li {
-                    get_local_text("updates.instruction1")
+                    {get_local_text("updates.instruction1")}
                 },
                 li {
                     Button {
@@ -1058,17 +1058,17 @@ pub fn get_download_modal<'a>(
                     }
                 },
                 li {
-                    get_local_text("updates.instruction2")
+                    {get_local_text("updates.instruction2")}
                 },
                 li {
-                    get_local_text("updates.instruction3")
+                    {get_local_text("updates.instruction3")}
                 },
                 li {
-                    get_local_text("updates.instruction4")
+                    {get_local_text("updates.instruction4")}
                 }
             },
             p {
-                get_local_text("updates.instruction5")
+                {get_local_text("updates.instruction5")}
             },
             // dl.as_ref().clone().map(|dest| rsx!(
             //     Button {
@@ -1087,33 +1087,37 @@ fn AppLogger() -> Element {
     let state = use_context::<Signal<State>>();
 
     if !state.read().initialized {
-        return rsx!(());
+        return rsx!({ () });
     }
 
-    rsx!(state
-        .read()
-        .configuration
-        .developer
-        .developer_mode
-        .then(|| rsx!(DebugLogger {})))
+    rsx!({
+        state
+            .read()
+            .configuration
+            .developer
+            .developer_mode
+            .then(|| rsx!(DebugLogger {}))
+    })
 }
 
 fn Toasts() -> Element {
     let state = use_context::<Signal<State>>();
-    rsx!(state
-        .read()
-        .ui
-        .toast_notifications
-        .iter()
-        .map(|(id, toast)| {
-            rsx!(Toast {
-                id: *id,
-                with_title: toast.title.clone(),
-                with_content: toast.content.clone(),
-                icon: toast.icon.unwrap_or(Icon::InformationCircle),
-                appearance: Appearance::Secondary,
-            },)
-        }))
+    rsx!({
+        state
+            .read()
+            .ui
+            .toast_notifications
+            .iter()
+            .map(|(id, toast)| {
+                rsx!(Toast {
+                    id: *id,
+                    with_title: toast.title.clone(),
+                    with_content: toast.content.clone(),
+                    icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                    appearance: Appearance::Secondary,
+                },)
+            })
+    })
 }
 
 fn Titlebar() -> Element {
@@ -1249,7 +1253,7 @@ fn scaled_window_position(
 }
 
 #[component]
-fn AppNav<'a>(
+fn AppNav(
     active: UplinkRoute,
     onnavigate: Option<EventHandler<()>>,
     tooltip_direction: Option<ArrowPosition>,
@@ -1324,7 +1328,7 @@ fn AppNav<'a>(
     };
     let _routes = vec![chat_route, files_route, friends_route, settings_route];
 
-    render!(kit::components::nav::Nav {
+    rsx!(kit::components::nav::Nav {
         routes: _routes,
         active: match active {
             UplinkRoute::ChatLayout {} => "/chat",

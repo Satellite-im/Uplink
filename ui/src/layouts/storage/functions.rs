@@ -16,12 +16,10 @@ use dioxus::{
     prelude::{EvalError, UseEval},
     signals::{Readable, Signal},
 };
-use dioxus_core::ScopeState;
 #[cfg(not(target_os = "macos"))]
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_hooks::{
-    to_owned, use_coroutine, use_future, use_resource, Coroutine, Signal, UnboundedReceiver,
-    UseSharedState,
+    to_owned, use_coroutine, use_future, use_resource, Coroutine, UnboundedReceiver,
 };
 use futures::{channel::oneshot, StreamExt};
 use rfd::FileDialog;
@@ -184,7 +182,7 @@ pub fn download_file(
 }
 
 pub fn add_files_in_queue_to_upload(
-    files_in_queue_to_upload: &Signal<Vec<PathBuf>>,
+    files_in_queue_to_upload: Signal<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();

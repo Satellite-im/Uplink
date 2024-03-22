@@ -53,14 +53,14 @@ impl UnlockError {
 #[component]
 pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
     log::trace!("rendering login entry point");
-    let validation_failure: &Signal<Option<UnlockError>> =
+    let validation_failure: Signal<Option<UnlockError>> =
         use_signal(|| Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
-    let error: &Signal<Option<UnlockError>> = use_signal(|| None);
+    let error: Signal<Option<UnlockError>> = use_signal(|| None);
     let shown_error = use_signal(String::new);
     let desktop = use_window();
 
-    let account_exists: &Signal<Option<bool>> = use_signal(|| None);
+    let account_exists: Signal<Option<bool>> = use_signal(|| None);
     let cmd_in_progress = use_signal(|| false);
     let first_render = use_signal(|| true);
     let state = use_signal(State::load);
@@ -177,21 +177,21 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
         .unwrap_or_default();
 
     rsx!(
-        style {get_app_style(&state.read())},
+        style {{get_app_style(&state.read())}},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
             if loading {
-                rsx!(
+                {rsx!(
                     div {
                         class: "skeletal-bars",
                         div {
                             class: "skeletal skeletal-bar",
                         },
                     }
-                )
+                )}
             } else {
-                rsx! (
+                {rsx! (
                     img {
                         class: "idle",
                         src: "{image_path}"
@@ -247,16 +247,16 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                                 cmd_in_progress.set(false);
                         }
                     },
-                    (!shown_error.get().is_empty()).then(|| rsx!(
+                   { (!shown_error.get().is_empty()).then(|| rsx!(
                         span {
                             class: "error",
                             "{shown_error}"
                         }
-                    )),
+                    ))},
                     div {
                         class: "unlock-details",
                         span {
-                            get_local_text("unlock.notice")
+                            {get_local_text("unlock.notice")}
                         }
                     },
                     Button {
@@ -319,7 +319,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                             }
                         }
                     }
-                )
+                )}
             }
         }
     )

@@ -120,7 +120,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
             div {
                 class: "instructions",
                 aria_label: "instructions",
-                get_local_text("auth.enter-username-subtext")
+                {get_local_text("auth.enter-username-subtext")}
             },
             Input {
                 id: "username-input".to_owned(),

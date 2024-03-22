@@ -61,12 +61,12 @@ pub fn SidebarInner() -> Element {
 
     rsx!(div {
         class: "community-sidebar-innner",
-        channel_groups.iter().map(|group| {
+        {channel_groups.iter().map(|group| {
             rsx!(ChannelGroupElement {
                 group_name: group.name.clone(),
                 channels: group.channels.clone(),
                 onpress: move |_| {}
             })
-        })
-    }))
+        })}
+    })
 }

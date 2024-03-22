@@ -202,7 +202,7 @@ pub fn Friends() -> Element {
                 text: get_local_text("friends.friends"),
                 aria_label: "friends-list-label".into(),
             },
-            (!friends_all.is_empty()).then(||{
+            {(!friends_all.is_empty()).then(||{
                 rsx!(Input {
                     placeholder: get_local_text("friends.search-placeholder"),
                     icon: Icon::MagnifyingGlass,
@@ -219,21 +219,21 @@ pub fn Friends() -> Element {
                     },
                     aria_label: "Search Friend".into()
                 })
-            }),
-            (friends.is_empty()).then(|| rsx! (
+            })},
+            {(friends.is_empty()).then(|| rsx! (
                 div {
                     class: "empty-friends-list",
                     img {
                         src: "{image_path}"
                     },
                 }
-            )),
-            share_did.is_some().then(||{
+            ))},
+            {share_did.read().is_some().then(||{
                 rsx!(ShareFriendsModal{
                     did: share_did.clone()
                 })
-            }),
-            friends.into_iter().map(|(letter, sorted_friends)| {
+            })},
+            {friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
                 rsx!(
                     div {
@@ -242,7 +242,7 @@ pub fn Friends() -> Element {
                             text: letter.into(),
                             aria_label: letter.into()
                         },
-                        sorted_friends.into_iter().map(|friend| {
+                        {sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
                             let chat = state.read().get_chat_with_friend(friend.did_key());
                             let chat2 = chat.clone();
@@ -283,7 +283,7 @@ pub fn Friends() -> Element {
                                             }
                                         },
                                         if let Some(f) = favorite {
-                                            rsx!(ContextItem {
+                                            {rsx!(ContextItem {
                                                 icon: if f {Icon::HeartSlash} else {Icon::Heart},
                                                 text: get_local_text(if f {"favorites.remove"} else {"favorites.favorites"}),
                                                 aria_label: if f {"favorites-remove".into()} else {"favorites-add".into()},
@@ -294,7 +294,7 @@ pub fn Friends() -> Element {
                                                         state.write().mutate(Action::ToggleFavorite(&c.id));
                                                     }
                                                 }
-                                            })
+                                            })}
                                         },
                                         hr{}
                                         ContextItem {
@@ -372,10 +372,10 @@ pub fn Friends() -> Element {
                                     }
                                 }
                             )
-                        })
+                        })}
                     }
                 )
-            })
+            })}
         }
     )
 }
@@ -467,7 +467,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
             {chats.is_empty().then(||{
                 rsx!(div {
                     class: "modal-share-friend-empty",
-                    get_local_text("messages.no-chats")
+                    {get_local_text("messages.no-chats")}
                 })
             })},
             {chats.iter().map(|chat| {

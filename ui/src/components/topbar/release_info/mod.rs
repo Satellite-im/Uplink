@@ -25,5 +25,5 @@ pub fn Release_Info() -> Element {
 
             }
         },
-    ))
+    )
 }

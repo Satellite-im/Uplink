@@ -41,20 +41,20 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
     });
 
     rsx!(
-        style {get_app_style(&state.read())},
+        style {{get_app_style(&state.read())}},
         div {
             id: "copy-seed-words-layout",
             aria_label: "copy-seed-words-layout",
             div {
                 class: "instructions-important",
-                get_local_text("copy-seed-words.instructions")
+                {get_local_text("copy-seed-words.instructions")}
             },
             Label {
                 aria_label: "copy-seed-words".into(),
                 text: get_local_text("copy-seed-words")
             },
             if let Some(words) = words.value() {
-                rsx!{ SeedWords { page: page.clone(), words: words.clone() } }
+                {rsx!(SeedWords { page: page.clone(), words: words.clone() })}
             }
         }
     )
@@ -69,36 +69,40 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
             *copied.write() = false;
         }
     });
-    render! {
+    rsx! {
         div {
             class: "seed-words",
-            words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+            {words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
                 div {
                     class: "row",
                     div {
                         class: "col",
                         span {
                             aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                            class: "num disable-select", ((idx * 2) + 1).to_string()
+                            class: "num disable-select",
+                            {((idx * 2) + 1).to_string()}
                         },
                         span {
                             aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                            class: "val", vals.first().cloned().unwrap_or_default()
+                            class: "val",
+                            {vals.first().cloned().unwrap_or_default()}
                         }
                     },
                     div {
                         class: "col",
                         span {
                             aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-                            class: "num disable-select", ((idx * 2) + 2).to_string()
+                            class: "num disable-select",
+                            {((idx * 2) + 2).to_string()}
                         },
                         span {
                             aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
-                            class: "val", vals.get(1).cloned().unwrap_or_default()
+                            class: "val",
+                            {vals.get(1).cloned().unwrap_or_default()}
                         }
                     }
                 }
-            })
+            })}
         },
         div {
             class: "controls",
@@ -139,11 +143,11 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
                 }
             }
         }
-        copied.read().then(||{
+        {copied.read().then(||{
             rsx!(div{
                 class: "copied-toast",
-                get_local_text("uplink.copied-seed")
+                {get_local_text("uplink.copied-seed")}
             })
-        })
+        })}
     }
 }

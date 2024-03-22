@@ -58,27 +58,27 @@ pub fn Friend(props: Props) -> Element {
         div {
             class: "friend",
             aria_label: "{aria_label}",
-            &props.user_image,
+            {&props.user_image},
             div {
                 class: "request-info",
                 aria_label: "Friend Info",
                 p {
                     aria_label: "friend-username",
                     "{props.username}",
-                    (!state.read().ui.is_minimal_view()).then(|| rsx!(
+                    {(!state.read().ui.is_minimal_view()).then(|| rsx!(
                         span {
                             "#{props.suffix}"
                         }
-                    )),
+                    ))},
                 },
                 if relationship.friends() {
-                   rsx!(p {
+                   {rsx!(p {
                         class: "status-message",
                         aria_label: "status-message",
-                        (!state.read().ui.is_minimal_view()).then(|| rsx!( "{status_message}" ))
-                    })
+                        {(!state.read().ui.is_minimal_view()).then(|| rsx!( "{status_message}" ))}
+                    })}
                 } else  {
-                    rsx!(Label {
+                    {rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
                         aria_label: "friendship-status".into(),
                         text: get_local_text(
@@ -89,12 +89,12 @@ pub fn Friend(props: Props) -> Element {
                             } else {
                                 "friends.requested"
                             })
-                    })
+                    })}
                 }
             },
             div {
                 class: "request-controls",
-                props.onaccept.is_some().then(|| rsx!(
+                {props.onaccept.is_some().then(|| rsx!(
                     Button {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
@@ -106,8 +106,8 @@ pub fn Friend(props: Props) -> Element {
                             None    => {},
                         }
                     }
-                )),
-                props.onchat.is_some().then(|| rsx! (
+                ))},
+                {props.onchat.is_some().then(|| rsx! (
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
                         aria_label: "Chat With Friend".into(),
@@ -118,7 +118,7 @@ pub fn Friend(props: Props) -> Element {
                             None    => {},
                         }
                     }
-                )),
+                ))},
                 Button {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
@@ -137,7 +137,7 @@ pub fn Friend(props: Props) -> Element {
                         text: if props.relationship.blocked() { get_local_text("friends.unblock") } else if props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
                     }),
                 },
-                (props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
+                {(props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
@@ -153,7 +153,7 @@ pub fn Friend(props: Props) -> Element {
                             text: get_local_text("friends.block"),
                         })
                     }
-                ))
+                ))}
             }
         }
     )

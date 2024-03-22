@@ -20,7 +20,7 @@ pub fn Layout(page: Signal<AuthPages>) -> Element {
         });
     }
     rsx!(
-        style {get_app_style(&state.read())},
+        style {{get_app_style(&state.read())}},
         div {
             id: "create-or-recover-layout",
             aria_label: "create-or-recover-layout",
@@ -31,7 +31,7 @@ pub fn Layout(page: Signal<AuthPages>) -> Element {
             div {
                 class: "instructions",
                 aria_label: "create-or-recover-instructions",
-                get_local_text("create-or-recover.instructions")
+                {get_local_text("create-or-recover.instructions")}
             },
             div {
                 class: "button-container",

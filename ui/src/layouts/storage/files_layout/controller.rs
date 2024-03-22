@@ -4,8 +4,7 @@ use common::{
     state::{storage::Storage, State},
     ROOT_DIR_NAME,
 };
-use dioxus::signals::Signal;
-use dioxus_core::ScopeState;
+use dioxus::signals::{Readable, Signal};
 use dioxus_hooks::use_signal;
 use uuid::Uuid;
 use warp::{
@@ -70,7 +69,7 @@ impl StorageController {
         &use_signal(|| controller)
     }
 
-    pub fn update_current_dir_path(&mut self, state: UseSharedState<State>) {
+    pub fn update_current_dir_path(&mut self, state: Signal<State>) {
         self.current_dir_path_as_string = state
             .read()
             .storage

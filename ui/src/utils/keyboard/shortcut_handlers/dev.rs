@@ -10,7 +10,7 @@ pub fn open_close_dev_tools() {
         window.webview.open_devtools();
     }
 }
-pub fn toggle_devmode(state: UseSharedState<State>) {
+pub fn toggle_devmode(mut state: Signal<State>) {
     let devmode = state.read().configuration.developer.developer_mode;
     state
         .write()

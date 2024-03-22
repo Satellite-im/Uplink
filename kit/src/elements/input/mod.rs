@@ -354,12 +354,12 @@ pub fn Input(props: Props) -> Element {
         }
     }
 
-    let mut reset_fn = || {
+    let mut reset_fn = move || {
         *val.write() = "".into();
         error.set("".into());
         valid.set(false);
     };
-    if let Some(hook) = &props.reset {
+    if let Some(mut hook) = &props.reset {
         let should_reset = *hook.read();
         if should_reset {
             reset_fn();
@@ -438,9 +438,9 @@ pub fn Input(props: Props) -> Element {
                             e.call(())
                         }
                     },
-                    onblur: &mut move |_| {
+                    onblur: move |_| {
                         if onblur_active {
-                            emit_return(props_signal.read().clone(), val.peek().to_string(), *valid.read(), Code::Enter);
+                            emit_return(props_signal(), val.peek().to_string(), *valid.read(), Code::Enter);
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -454,7 +454,7 @@ pub fn Input(props: Props) -> Element {
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
-                            let validation_result = validate(props, &current_val).unwrap_or_default();
+                            let validation_result = validate(props_signal(), &current_val).unwrap_or_default();
                             valid.set(validation_result.is_empty());
                             error.set(validation_result);
                             evt.stop_propagation();
@@ -462,7 +462,7 @@ pub fn Input(props: Props) -> Element {
                         } else {
                             true
                         };
-                        emit(props_signal.read().clone(), current_val, is_valid);
+                        emit(props_signal(), current_val, is_valid);
                     },
                     // after a valid submission, don't keep the input box green.
                     onkeyup: move |evt| {
@@ -473,16 +473,16 @@ pub fn Input(props: Props) -> Element {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
-                                    let validation_result = validate(props, "").unwrap_or_default();
+                                    let validation_result = validate(props_signal(), "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
                                     error.set(validation_result);
                                     *valid.read()
                                 } else {
                                     true
                                 };
-                                emit(props_signal.read().clone(), "".to_owned(), is_valid);
+                                emit(props_signal(), "".to_owned(), is_valid);
                             } else {
-                            emit_return(props_signal.read().clone(), val.read().to_string(), *valid.read(), evt.code());
+                            emit_return(props_signal(), val.read().to_string(), *valid.read(), evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
@@ -490,7 +490,7 @@ pub fn Input(props: Props) -> Element {
                             }
                         }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(props_signal.read().clone(), "".to_owned(), min_length == 0, evt.code());
+                            emit_return(props_signal(), "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                            }
@@ -513,14 +513,14 @@ pub fn Input(props: Props) -> Element {
                             }
                             // re-focus the input after clearing it
                             let _ = eval(&focus_script);
-                            emit(props_signal.read().clone(), String::new(), *valid.read());
+                            emit(props_signal(), String::new(), *valid.read());
                         },
                         IconElement {
                             icon: options.clear_btn_icon
                         }
                     }
                 ))},
-                {props_signal.read().clone().loading.unwrap_or(false).then(move || rsx!(
+                {props_signal().loading.unwrap_or(false).then(move || rsx!(
                     Loader { spinning: true },
                 ))},
             },

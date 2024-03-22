@@ -1,4 +1,3 @@
-use dioxus_core::ScopeState;
 use dioxus_desktop::use_window;
 
 /// The functionality will operate correctly only when the application is not in fullscreen mode.

@@ -6,15 +6,15 @@ use warp::raygun::Location;
 use crate::layouts::storage::send_files_layout::{SendFilesLayout, SendFilesStartLocation};
 
 #[derive(Props, Clone, PartialEq)]
-pub struct SendFilesLayoutModalProps<'a> {
-    send_files_from_storage: &'a Signal<bool>,
+pub struct SendFilesLayoutModalProps {
+    send_files_from_storage: Signal<bool>,
     send_files_start_location: SendFilesStartLocation,
     files_pre_selected_to_send: Option<Vec<Location>>,
     on_send: EventHandler<(Vec<Location>, Vec<Uuid>)>,
 }
 
 #[allow(non_snake_case)]
-pub fn SendFilesLayoutModal<'a>(props: SendFilesLayoutModalProps<'a>) -> Element {
+pub fn SendFilesLayoutModal(props: SendFilesLayoutModalProps) -> Element {
     let send_files_from_storage = props.send_files_from_storage;
     let send_files_start_location = props.send_files_start_location.clone();
     let files_pre_selected_to_send = props.files_pre_selected_to_send.clone().unwrap_or_default();

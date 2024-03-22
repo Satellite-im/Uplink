@@ -86,16 +86,16 @@ pub fn PendingFriends() -> Element {
     });
 
     if friends_list.is_empty() {
-        return render!({});
+        return rsx!({});
     }
-    rsx!(rsx!(div {
+    rsx!(div {
         class: "friends-list",
         aria_label: "Incoming Requests List",
         Label {
             text: get_local_text("friends.incoming_requests"),
             aria_label: "incoming-list-label".into(),
         },
-        friends_list.into_iter().map(|friend| {
+        {friends_list.into_iter().map(|friend| {
             let friend = Rc::new(friend);
             let _username = friend.username();
             let _status_message = friend.status_message().unwrap_or_default();
@@ -186,6 +186,6 @@ pub fn PendingFriends() -> Element {
                     }
                 }
             )
-        })
-    }))
+        })}
+    })
 }

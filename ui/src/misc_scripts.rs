@@ -8,7 +8,7 @@ pub const MARKDOWN_EDITOR: &str = include_str!("../extra/assets/scripts/editor.j
 pub fn PrismScripts() -> Element {
     let prism_path = use_prism_path();
 
-    render! {
+    rsx! {
         script { "{PRISM_SCRIPT}" },
         script { "{prism_path}" },
         script { "{MARKDOWN_EDITOR}" },

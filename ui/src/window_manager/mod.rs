@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
+use dioxus::signals::Signal;
 use dioxus_desktop::DesktopContext;
-use dioxus_hooks::UseSharedState;
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex,
@@ -26,11 +26,7 @@ pub enum WindowManagerCmd {
     ForgetFilePreview(Uuid),
 }
 
-pub async fn handle_cmd(
-    state: UseSharedState<State>,
-    cmd: WindowManagerCmd,
-    desktop: DesktopContext,
-) {
+pub async fn handle_cmd(state: Signal<State>, cmd: WindowManagerCmd, desktop: DesktopContext) {
     log::trace!("window manager command: {cmd:?}");
     match cmd {
         WindowManagerCmd::ClosePopout => {

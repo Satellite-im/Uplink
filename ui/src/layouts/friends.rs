@@ -79,9 +79,9 @@ pub fn FriendsLayout() -> Element {
             aria_label: "friends-layout",
             class: "disable-select",
             if show_slimbar {
-                rsx!(
+                {rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::FriendsLayout {} },
-                )
+                )}
             },
             ChatSidebar {
                 active_route: crate::UplinkRoute::FriendsLayout {},
@@ -89,10 +89,10 @@ pub fn FriendsLayout() -> Element {
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
-                get_topbar(route),
+                {get_topbar(route)},
                 AddFriend {},
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(props, route.get().clone()),
+                {render_route(props, route.get().clone())},
             }
         }
     )
@@ -118,14 +118,14 @@ pub fn MinimalFriendsLayout<'a>(props: MinimalProps<'a>) -> Element {
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
-                get_topbar(route),
+                {get_topbar(route)},
                 AddFriend {},
                 div {
                     class: "friends-controls",
                     aria_label: "friends-controls",
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(props, route.get().clone()),
+                {render_route(props, route.get().clone())},
                 crate::AppNav {
                     active: crate::UplinkRoute::FriendsLayout{},
                 }
@@ -159,7 +159,7 @@ fn render_route<T>(props: T, route: FriendRoute) -> Element {
     })
 }
 
-fn get_topbar<'a, T>(route: &'a Signal<FriendRoute>) -> Element {
+fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
     let state = use_context::<Signal<State>>();
     let pending_friends = state.read().friends().incoming_requests.len();
 

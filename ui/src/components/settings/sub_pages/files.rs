@@ -35,5 +35,5 @@ pub fn FilesSettings() -> Element {
                 }
             },*/
         }
-    ))
+    )
 }

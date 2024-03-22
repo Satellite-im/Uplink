@@ -37,7 +37,7 @@ pub fn FileCheckbox(
 }
 
 #[component]
-pub fn SendFilesTopbar<'a>(
+pub fn SendFilesTopbar(
     send_files_from_storage_state: Signal<bool>,
     send_files_start_location: SendFilesStartLocation,
     storage_controller: Signal<StorageController>,

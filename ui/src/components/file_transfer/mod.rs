@@ -23,23 +23,23 @@ pub fn FileTransferModal<'a>(props: Props) -> Element {
         tracker.get_tracker(TrackerType::FileDownload),
     );
     if file_progress_upload.is_empty() && file_progress_download.is_empty() {
-        return rsx!(());
+        return rsx!({ () });
     }
     let modal = props.modal.unwrap_or_default();
     rsx!(div {
         class: format_args!("file-transfer-wrap {}", if modal {"file-transfer-modal"} else {""}),
-        (!file_progress_upload.is_empty()).then(||
+       {(!file_progress_upload.is_empty()).then(||
             rsx!(FileTransferElement {
                 transfers: file_progress_upload.clone(),
                 label: get_local_text("uplink.upload-queue"),
             })
-        ),
-        (!file_progress_download.is_empty()).then(||
+        )},
+        {(!file_progress_download.is_empty()).then(||
             rsx!(FileTransferElement {
                 transfers: file_progress_download.clone(),
                 label: get_local_text("uplink.download-queue"),
             })
-        ),
+        )},
     })
 }
 
@@ -58,7 +58,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                 {props.label.clone()},
             },
         },
-        props.transfers.iter().map(|f| {
+        {props.transfers.iter().map(|f| {
             let progress = f.progress.get_progress();
             let state = f.state.clone();
             let ch = use_coroutine( |mut rx: UnboundedReceiver<bool>| {
@@ -92,22 +92,22 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                                 class: "filename-and-file-queue-text",
                                 aria_label: "filename-and-file-queue-text",
                                 margin_right: "auto",
-                                f.file.to_string(),
+                                {f.file.to_string()},
                             },
                             p {
                                 class: "transfer-progress-percentage",
                                 aria_label: "transfer-progress-percentage",
-                                format!("{}%", progress)
+                                {format!("{}%", progress)}
                             },
                         },
                         ProgressIndicator {
                             progress: progress
                         },
-                        f.description.as_ref().map(|desc|rsx!(div {
+                        {f.description.as_ref().map(|desc|rsx!(div {
                             class: "file-progress-description",
                             aria_label: "file-progress-description",
-                            format!("{}", desc)
-                        })),
+                            {format!("{}", desc)}
+                        }))},
                     },
                     div {
                         class: "file-transfer-buttons",
@@ -134,11 +134,11 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                     }
                 }
             )
-        })
+        })}
     })
 }
 
-#[derive(Props, Clone< PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ProgressIndicatorProps {
     progress: u8,
 }

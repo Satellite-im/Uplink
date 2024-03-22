@@ -42,11 +42,11 @@ pub fn SlimbarLayout(props: Props) -> Element {
             },
             top_children: rsx!(
                 // Only display favorites if we have some.
-                (!favorites.is_empty()).then(|| rsx!(
+                {(!favorites.is_empty()).then(|| rsx!(
                     div {
                         id: "favorites",
                         aria_label: "Favorites",
-                        favorites.iter().cloned().map(|chat| {
+                        {favorites.iter().cloned().map(|chat| {
                             let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key())
                                 && !state.read().chats_sidebar().contains(&chat);
                             let favorites_chat = chat.clone();
@@ -100,9 +100,9 @@ pub fn SlimbarLayout(props: Props) -> Element {
                                     }
                                 }
                             )
-                        })
+                        })}
                     }
-                )),
+                ))},
             ),
             navbar_visible: state.read().ui.sidebar_hidden,
             with_nav: rsx!(
@@ -119,7 +119,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                     },
                 },
             ),
-            state.read().configuration.developer.experimental_features.then(|| rsx!(
+            {state.read().configuration.developer.experimental_features.then(|| rsx!(
                 Button {
                     icon: Icon::Plus,
                     tooltip: rsx!(
@@ -132,7 +132,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                         router.replace(UplinkRoute::CommunityLayout {});
                     }
                 }
-            ))
+            ))}
         }
     )
 }

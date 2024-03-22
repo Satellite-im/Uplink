@@ -46,7 +46,7 @@ fn is_supported(unicode_version: UnicodeVersion) -> bool {
 }
 
 #[component(no_case_check)]
-fn build_nav() -> Element<'_> {
+fn build_nav() -> Element {
     let routes = vec![
         Route {
             to: "Smileys & Emotion",
@@ -144,7 +144,7 @@ enum Command {
 }
 
 #[component(no_case_check)]
-fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Element {
+fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Element {
     let state = use_context::<Signal<State>>();
     let mouse_over_emoji_selector = use_signal(|| false);
     let emoji_suggestions = use_signal(Vec::new);
@@ -153,6 +153,8 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
+
+    let focus_script_signal = use_signal(|| focus_script.to_string());
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<Command>| {
         to_owned![state];
@@ -209,12 +211,12 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
                 class: "search-input disable-select",
                 textarea::Input {
                     placeholder: get_local_text("uplink.search-placeholder"),
-                    key: "emoji-search-input",
+                    key: "{emoji-search-input}",
                     id: String::from("emoji-search-input"),
                     loading: false,
                     ignore_focus: false,
                     show_char_counter: false,
-                    aria_label: "emoji-search-input".into(),
+                    aria_label: "emoji-search-input".to_string(),
                     value: String::new(),
                     onreturn:  |_| {},
                     onchange: |_| {},
@@ -248,18 +250,18 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
                 id: "scrolling",
                 padding_top: if !emoji_suggestions.is_empty() {"4px"} else {""},
                 if !emoji_suggestions.is_empty() {
-                    rsx!(emoji_suggestions.iter().map(|(emoji, _)| {
+                    {rsx!({emoji_suggestions().iter().map(|(emoji, _)| {
                         rsx!(
                             div {
                                 aria_label: emoji.as_str(),
                                 class: "emoji",
-                                onclick: move |_| select_emoji_to_send(state, emoji.to_string(), ch),
-                                emoji.as_str()
+                                onclick: move |_| select_emoji_to_send(&state, emoji.to_string(), &ch),
+                                {emoji.as_str()}
                             }
                         )
-                    }))
+                    })})}
                 } else {
-                    rsx! (emojis::Group::iter().map(|group| {
+                    {rsx! ({emojis::Group::iter().map(|group| {
                         let name: String = group_to_str(group);
                         rsx!(
                             div {
@@ -271,24 +273,24 @@ fn render_selector<'a>(mouse_over_emoji_button: Signal<bool>, nav: Element) -> E
                             div {
                                 class: "emojis-container",
                                 aria_label: "emojis-container",
-                                group.emojis().filter(|emoji|is_supported(emoji.unicode_version())).map(|emoji| {
+                                {group.emojis().filter(|emoji|is_supported(emoji.unicode_version())).map(|emoji| {
                                     rsx!(
                                         div {
                                             aria_label: emoji.as_str(),
                                             class: "emoji",
-                                            onclick: move |_| select_emoji_to_send(state, emoji.to_string(), ch),
-                                            emoji.as_str()
+                                            onclick: move |_| select_emoji_to_send(&state, emoji.to_string(), &ch),
+                                            {emoji.as_str()}
                                         }
                                     )
-                                })
+                                })}
                             }
                         )
-                    }))
+                    })})}
                 }
             }
-            nav
+            {nav}
         },
-        script { focus_script },
+        script { {focus_script_signal()} },
     )
 }
 
@@ -300,7 +302,7 @@ fn render_1(_unused: bool) -> Element {
     let visible = state.read().ui.emoji_picker_visible;
     log::debug!("vis {}", visible);
 
-    use_effect(|| {
+    use_effect(move || {
         to_owned![state];
         async move {
             state.write_silent().ui.emojis.register_emoji_filter(
@@ -325,7 +327,7 @@ fn render_1(_unused: bool) -> Element {
 
     rsx! (
         // If enabled, render the selector popup.
-        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{})}),
+        {visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{})}),
         div {
             onmouseenter: |_| {
                 *mouse_over_emoji_button.write_silent() = true;
@@ -342,7 +344,7 @@ fn render_1(_unused: bool) -> Element {
                 }
             }
         }
-    ))
+    )})
 }
 
 impl Extension for EmojiSelector {
@@ -364,14 +366,14 @@ impl Extension for EmojiSelector {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&self, runtime: std::rc::Rc<Runtime>) -> Element {
-        use_hook(|| RuntimeGuard::new(runtime.clone()));
+    fn render(&self, runtime: std::rc::Rc<Runtime>) -> Element {
+        use_hook(move || RuntimeGuard::new(runtime.clone()));
         let styles = self.stylesheet();
         rsx!(
             style { "{styles}" },
-            rsx!(
+            {rsx!(
                render_1{_unused: true}
-            )
+            )}
         )
     }
 }

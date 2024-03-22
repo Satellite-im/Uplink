@@ -140,11 +140,11 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
             div {
                 class: "instructions",
                 aria_label: "instructions",
-                get_local_text("enter-seed-words.instructions")
+                {get_local_text("enter-seed-words.instructions")}
             },
             div {
                 class: "seed-words",
-                (0..6).map(|idx|{
+                {(0..6).map(|idx|{
                     let idx = idx * 2;
                     let other = idx + 1;
                     rsx!(div {
@@ -153,7 +153,8 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                             class: "col",
                             span {
                                 aria_label: "seed-word-number-{(idx + 1).to_string()}",
-                                class: "num disable-select", (idx + 1).to_string()
+                                class: "num disable-select",
+                                {(idx + 1).to_string()}
                             },
                             input::Input {
                                 aria_label: "recovery-seed-input-".to_string() + &(idx + 1).to_string(),
@@ -189,7 +190,8 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                             class: "col",
                             span {
                                 aria_label: "seed-word-number-{(other + 1).to_string()}",
-                                class: "num disable-select", (other + 1).to_string()
+                                class: "num disable-select",
+                                {(other + 1).to_string()}
                             },
                             input::Input {
                                 aria_label: "recovery-seed-input-".to_string() + &(other + 1).to_string(),
@@ -231,13 +233,13 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                             },
                         }
                     })
-                })
+                })}
             }
             {seed_error.as_ref().map(|e| rsx!(
                 span {
                     aria_label: "input-error",
                     class: "error",
-                    e.translation()
+                    {e.translation()}
                 }
             ))},
             div {

@@ -38,7 +38,7 @@ pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
         aria_label: "files-breadcrumbs",
         margin_top: format_args!("{}", if send_files_mode {"32px"} else {""}),
         margin: format_args!("{}", if send_files_mode {"var(--gap) 0"} else {"var(--gap)"}),
-        storage_controller.read().dirs_opened_ref.iter().enumerate().map(|(index, dir)| {
+        {storage_controller.read().dirs_opened_ref.iter().enumerate().map(|(index, dir)| {
             let directory = dir.clone();
             let dir_name = dir.name();
             if dir_name == ROOT_DIR_NAME && index == 0 {
@@ -71,7 +71,7 @@ pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
                     }
                 },)
             }
-        })
+        })}
     },)
 }
 
@@ -96,7 +96,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
             id: "files-list",
             class: "files-list",
             aria_label: "files-list",
-            storage_controller.read().add_new_folder.then(|| {
+            {storage_controller.read().add_new_folder.then(|| {
                 rsx!(
                 Folder {
                     with_rename: true,
@@ -122,8 +122,8 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                         storage_controller.with_mut(|i| i.add_new_folder = false);
                      }
                 })
-            }),
-            storage_controller.read().directories_list.iter().map(|dir| {
+            })},
+            {storage_controller.read().directories_list.iter().map(|dir| {
                 let folder_name = dir.name();
                 let folder_name2 = dir.name();
                 let folder_name3 = dir.name();
@@ -199,8 +199,8 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                         }
                     }
                 )
-            }),
-            storage_controller.read().files_list.iter().map(|file| {
+            })},
+            {storage_controller.read().files_list.iter().map(|file| {
                 let file_name = file.name();
                 let file_name2 = file.name();
                 let file_name3 = file.name();
@@ -224,7 +224,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                         id: file.id().to_string(),
                         items: rsx!(
                         if !send_files_mode && !state.read().chats_sidebar().is_empty() {
-                            rsx!(
+                            {rsx!(
                             ContextItem {
                                 icon: Icon::Share,
                                 aria_label: "files-share".into(),
@@ -236,7 +236,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                                 },
                             },
                             hr {},
-                        )}
+                        )}}
                             ContextItem {
                                 icon: Icon::Pencil,
                                 aria_label: "files-rename".into(),
@@ -246,7 +246,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                                 }
                             },
                             if !send_files_mode {
-                                rsx!(ContextItem {
+                                {rsx!(ContextItem {
                                     icon: Icon::ArrowDownCircle,
                                     aria_label: "files-download".into(),
                                     text: get_local_text("files.download"),
@@ -264,7 +264,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                                         let item = Item::from(file2.clone());
                                         ch.send(ChanCmd::DeleteItems(item));
                                     }
-                                },)
+                                },)}
                             }
                         ),
                         div {
@@ -346,7 +346,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                         }
                     }
                 }
-            }),
+            })},
         },
     })
 }

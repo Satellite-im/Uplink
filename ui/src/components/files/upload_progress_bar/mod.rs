@@ -2,8 +2,10 @@ use std::path::PathBuf;
 
 use common::language::{get_local_text, get_local_text_with_args};
 use dioxus::prelude::*;
-use dioxus_desktop::wry::webview::FileDropEvent;
+use dioxus_desktop::wry::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
+use kit::elements::button::Button;
+use kit::elements::Appearance;
 
 use crate::utils::get_drag_event::BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX;
 use crate::utils::{
@@ -102,7 +104,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
                         aria_label: "upload-progress-description",
-                        get_local_text("files.uploading-file"),
+                        {get_local_text("files.uploading-file")},
                     },
                     p {
                         id: "upload-progress-percentage",

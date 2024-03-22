@@ -57,16 +57,16 @@ pub fn BlockedUsers() -> Element {
     });
 
     if block_list.is_empty() {
-        return render!({});
+        return rsx!({});
     }
-    rsx!(rsx!(div {
+    rsx!(div {
         class: "friends-list",
         aria_label: "Blocked List",
         Label {
             text: get_local_text("friends.blocked"),
             aria_label: "blocked-list-label".into(),
         },
-        block_list.into_iter().map(|blocked_user| {
+        {block_list.into_iter().map(|blocked_user| {
             let did = blocked_user.did_key();
             let did_suffix = blocked_user.short_id().to_string();
             let unblock_user = blocked_user.clone();
@@ -120,6 +120,6 @@ pub fn BlockedUsers() -> Element {
                     }
                 }
             )
-        })
-    }))
+        })}
+    })
 }

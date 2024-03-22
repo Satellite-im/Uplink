@@ -27,7 +27,7 @@ const TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD: u64 = 10000;
 const TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD: u64 = 1500;
 
 #[component(no_case_check)]
-pub fn open_file_preview_modal<'a>(
+pub fn open_file_preview_modal(
     on_dismiss: EventHandler<()>,
     on_download: EventHandler<Option<PathBuf>>,
     file: File,
@@ -166,38 +166,38 @@ fn FilePreview(props: Props) -> Element {
                 && (is_video || is_audio) {
                 // It will show a video player with error, because take much time
                 // to download a video and is not possible to load it
-                rsx!(FileTypeTag {
+                {rsx!(FileTypeTag {
                     file_type: file_type,
                     source: "".to_string(),
                     code_content: code_content,
-                })
+                })}
             } else if !file_path_in_local_disk.read().exists()
                 && *file_loading_counter.read() > TIME_TO_WAIT_FOR_IMAGE_TO_DOWNLOAD
                 && file_type == FileType::Image {
                 // It will show image with thumbnail and not with high quality
                 // because image didn't download and is not possible to load it
-                rsx!(FileTypeTag {
+                {rsx!(FileTypeTag {
                     file_type: file_type,
                     source: thumbnail,
                     code_content: code_content,
-                })
+                })}
             } else if file_path_in_local_disk.read().exists() {
-                *should_dismiss_on_error.write_silent() = true;
+                {*should_dismiss_on_error.write_silent() = true;
                 // Success for both any kind of file
                 rsx!(FileTypeTag {
                     file_type: file_type,
                     source: local_disk_path_fixed,
                     code_content: code_content,
-                })
+                })}
             } else if *file_loading_counter.read() <  TIME_TO_WAIT_FOR_VIDEO_TO_DOWNLOAD {
                 if *should_dismiss_on_error.read() {
-                    props.on_dismiss.call(());
+                    {props.on_dismiss.call(());}
                 }
-                rsx!(Loader {
+                {rsx!(Loader {
                     spinning: true
-                },)
+                },)}
             } else {
-                state
+                {state
                 .write()
                 .mutate(common::state::Action::AddToastNotification(
                     ToastNotification::init(
@@ -208,7 +208,7 @@ fn FilePreview(props: Props) -> Element {
                     ),
                 ));
                 props.on_dismiss.call(());
-                rsx!(div {})
+                rsx!(div {})}
             }
         },
     )

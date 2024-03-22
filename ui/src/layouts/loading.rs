@@ -1,7 +1,6 @@
 use common::state::State;
 use dioxus::prelude::*;
-use dioxus_desktop::wry::application::dpi::LogicalPosition;
-use dioxus_desktop::LogicalSize;
+use dioxus_desktop::{LogicalPosition, LogicalSize};
 
 pub fn LoadingWash() -> Element {
     let img_path = use_hook(|| {
@@ -12,7 +11,7 @@ pub fn LoadingWash() -> Element {
             .to_string()
     });
 
-    render! {
+    rsx! {
         img {
             style: "width: 100%",
             src: "{img_path}"
@@ -20,7 +19,7 @@ pub fn LoadingWash() -> Element {
     }
 }
 
-pub fn use_loaded_assets() -> &UseFuture<Result<(), tokio::task::JoinError>> {
+pub fn use_loaded_assets() -> UseFuture<Result<(), tokio::task::JoinError>> {
     let desktop = dioxus_desktop::use_window();
     let state = use_context::<Signal<State>>();
 

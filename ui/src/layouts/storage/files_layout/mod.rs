@@ -10,6 +10,7 @@ use common::state::{ui, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
@@ -47,7 +48,7 @@ use self::controller::{StorageController, UploadFileController};
 use super::functions::{self, ChanCmd, UseEvalFn};
 
 #[allow(non_snake_case)]
-pub fn FilesLayout() -> Element<'_> {
+pub fn FilesLayout() -> Element {
     let state = use_context::<Signal<State>>();
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(&state);
@@ -61,7 +62,7 @@ pub fn FilesLayout() -> Element<'_> {
     let files_pre_selected_to_send: Signal<Vec<Location>> = use_signal(Vec::new);
     let _router = use_navigator();
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
-    let file_tracker = use_context::Signal<<TransferTracker>>();
+    let file_tracker = use_context::<Signal<TransferTracker>>();
 
     functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
 
@@ -141,7 +142,7 @@ pub fn FilesLayout() -> Element<'_> {
 
     rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
-            let file2 = file.clone();
+            {let file2 = file.clone();
             rsx!(open_file_preview_modal {
                     on_dismiss: |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
@@ -152,7 +153,7 @@ pub fn FilesLayout() -> Element<'_> {
                     },
                     file: file.clone()
                 }
-            )
+            )}
         }
         div {
             id: "files-layout",
@@ -172,7 +173,7 @@ pub fn FilesLayout() -> Element<'_> {
                                 .await
                                 .expect("Should succeed");
                             if !files_local_path.is_empty() {
-                                functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path, &eval);
+                                functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path);
                                 files_been_uploaded2.with_mut(|i| *i = true);
                             }
                         }});
@@ -190,11 +191,11 @@ pub fn FilesLayout() -> Element<'_> {
                 storage_controller.write().finish_renaming_item(false);
             },
             if show_slimbar {
-                rsx!(
+                {rsx!(
                     SlimbarLayout {
                         active: crate::UplinkRoute::FilesLayout {}
                     },
-                )
+                )}
             }
             ChatSidebar {
                 active_route: crate::UplinkRoute::FilesLayout {},
@@ -242,7 +243,7 @@ pub fn FilesLayout() -> Element<'_> {
                                             Some(path) => path,
                                             None => return
                                         };
-                                        functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
+                                        functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path);
                                         upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                     },
                                 }
@@ -252,7 +253,7 @@ pub fn FilesLayout() -> Element<'_> {
                             class: "files-info",
                             aria_label: "files-info",
                             if storage_controller.read().storage_size.0.is_empty() {
-                                rsx!(div {
+                                {rsx!(div {
                                     class: "skeletal-texts",
                                     div {
                                         class: "skeletal-text",
@@ -269,28 +270,28 @@ pub fn FilesLayout() -> Element<'_> {
                                             class: "skeletal-text-content skeletal",
                                         }
                                     },
-                                })
+                                })}
                             } else {
-                                rsx!(
+                                {rsx!(
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-max-size",
-                                        get_local_text("files.storage-max-size"),
+                                        {get_local_text("files.storage-max-size")},
                                         span {
                                             class: "count",
-                                            format!("{}", storage_controller.read().storage_size.0),
+                                            {format!("{}", storage_controller.read().storage_size.0)},
                                         }
                                     },
                                     p {
                                         class: "free-space",
                                         aria_label: "free-space-current-size",
-                                        get_local_text("files.storage-current-size"),
+                                        {get_local_text("files.storage-current-size")},
                                         span {
                                             class: "count",
-                                            format!("{}", storage_controller.read().storage_size.1),
+                                            {format!("{}", storage_controller.read().storage_size.1)},
                                         }
                                     },
-                                )
+                                )}
                             }
                         }
                     },
@@ -298,7 +299,7 @@ pub fn FilesLayout() -> Element<'_> {
                         are_files_hovering_app: upload_file_controller.are_files_hovering_app,
                         files_been_uploaded: upload_file_controller.files_been_uploaded,
                         on_update: move |files_to_upload: Vec<PathBuf>|  {
-                            functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
+                            functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload);
                         },
                     },
             SendFilesLayoutModal {
@@ -317,16 +318,16 @@ pub fn FilesLayout() -> Element<'_> {
             if storage_controller.read().files_list.is_empty()
                 && storage_controller.read().directories_list.is_empty()
                 && !storage_controller.read().add_new_folder {
-                    rsx!(
+                    {rsx!(
                         div {
                             class: "no-files-div",
                             Label {
                                 text: get_local_text("files.no-files-available"),
                             }
                         }
-                    )
+                    )}
                } else {
-                rsx!(FilesAndFolders {
+                {rsx!(FilesAndFolders {
                     storage_controller: storage_controller,
                     on_click_share_files: move |files_pre_selected: Vec<Location>| {
                         *files_pre_selected_to_send.write_silent() = files_pre_selected;
@@ -334,13 +335,13 @@ pub fn FilesLayout() -> Element<'_> {
                     },
                     ch: ch,
                     send_files_mode: false,
-                })
+                })}
                }
-                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                {(state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
                         active: crate::UplinkRoute::FilesLayout{},
                     }
-                ))
+                ))}
             }
         }
     )

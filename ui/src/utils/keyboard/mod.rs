@@ -3,7 +3,6 @@ use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::keyboard::ModifiersState;
 use dioxus_desktop::use_global_shortcut;
-use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use once_cell::sync::Lazy;
 
 use parking_lot::RwLock;
@@ -28,11 +27,11 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
     }
 
     if props.is_on_auth_pages.unwrap_or(false) {
-        let state = use_signal(|| State::load);
+        let state = use_signal(|| State::load());
         let keybinds = state.read().settings.keybinds.clone();
         return rsx! {
             for (global_shortcut, shortcut) in keybinds {
-                rsx!{
+                {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
@@ -42,7 +41,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
-                }
+                }}
             }
         };
     }
@@ -53,7 +52,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
         let keybinds = state.read().settings.keybinds.clone();
         return rsx! {
             for (global_shortcut, shortcut) in keybinds {
-                rsx!{
+                {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
@@ -63,14 +62,14 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
-                }
+                }}
             }
         };
     } else if !state.read().settings.is_recording_new_keybind {
         let keybinds = state.read().settings.keybinds.clone();
         return rsx! {
             for (global_shortcut, shortcut) in keybinds {
-                rsx!{
+                {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
                         modifiers: shortcut.modifiers,
@@ -80,7 +79,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                         },
                         global_shortcut: global_shortcut.clone(),
                     }
-                }
+                }}
             }
         };
     } else {

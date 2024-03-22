@@ -21,14 +21,18 @@ pub fn NothingHere(props: Props) -> Element {
     };
 
     rsx!(if show_warning {
-        rsx!(div {
-            class: "friends-list",
-            aria_label: "no-requests",
-            Label {
-                text: get_local_text("friends.nothing-to-see-here"),
-            }
-        })
+        {
+            rsx!(div {
+                class: "friends-list",
+                aria_label: "no-requests",
+                Label {
+                    text: get_local_text("friends.nothing-to-see-here"),
+                }
+            })
+        }
     } else {
-        rsx!({})
+        {
+            rsx!({})
+        }
     })
 }

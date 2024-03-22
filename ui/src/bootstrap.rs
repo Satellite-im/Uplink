@@ -22,9 +22,7 @@ pub fn use_warp_runner() {
     });
 }
 
-pub(crate) fn use_bootstrap<'a>(
-    identity: &multipass::identity::Identity,
-) -> Option<&'a UseSharedState<State>> {
+pub(crate) fn use_bootstrap(identity: &multipass::identity::Identity) -> Option<Signal<State>> {
     let desktop = use_window();
     use_context_provider(|| DownloadState::default);
     use_context_provider(|| components::settings::sidebar::Page::Profile);
@@ -60,7 +58,7 @@ pub(crate) fn use_bootstrap<'a>(
         state
     });
 
-    use_context::<Signal<State>>()
+    Some(use_context::<Signal<State>>())
 }
 
 pub fn set_app_panic_hook() {

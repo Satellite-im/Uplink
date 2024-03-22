@@ -8,8 +8,8 @@ use kit::components::{community::card::CommunityCard, user::card::UserCard};
 #[allow(non_snake_case)]
 pub fn CommunityLayout() -> Element {
     // TODO: Placeholder data
-    let joined = use_signal( || false);
-    let friends = use_signal( || false);
+    let joined = use_signal(|| false);
+    let friends = use_signal(|| false);
     rsx!(
         div {
             id: "communities-layout",
@@ -39,5 +39,5 @@ pub fn CommunityLayout() -> Element {
                 }
             }
         }
-    ))
+    )
 }

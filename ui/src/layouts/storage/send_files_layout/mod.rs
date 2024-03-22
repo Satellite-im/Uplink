@@ -49,7 +49,7 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
     let send_files_from_storage_state = props.send_files_from_storage_state.clone();
     let storage_controller = StorageController::new(&state);
     let first_render = use_signal(|| true);
-    let file_tracker = use_context::Signal << TransferTracker >> ();
+    let file_tracker = use_context::<Signal<TransferTracker>>();
     let ch: &Coroutine<ChanCmd> =
         functions::init_coroutine(storage_controller, state, file_tracker);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
@@ -122,127 +122,122 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
     let storage_controller = props.storage_controller.clone();
 
     rsx!(div {
-            id: "all_chats",
-            div {
-                padding_top: "16px",
-                padding_left: "16px",
-                Label {
-                    text: get_local_text("files.select-chats"),
-                }
+        id: "all_chats",
+        div {
+            padding_top: "16px",
+            padding_left: "16px",
+            Label {
+                text: get_local_text("files.select-chats"),
             }
-            state.read().chats_sidebar().iter().cloned().map(|chat| {
-                let participants = state.read().chat_participants(&chat);
-                let other_participants =  state.read().remove_self(&participants);
-                let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
-                let platform = user.platform().into();
-                // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
-                let participants_name = match chat.conversation_name {
-                    Some(name) => name,
-                    None => State::join_usernames(&other_participants)
-                };
-                let is_checked = storage_controller.read().chats_selected_to_send.iter().any(|uuid| {uuid.eq(&chat.id)});
-                let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
-                let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                    Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis(), Some((&state.read(), &chat.id, true))),
-                    _ => match &unwrapped_message.attachments()[..] {
-                        [] => get_local_text("sidebar.chat-new"),
-                        [ file ] => file.name(),
-                        _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
-                            Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name)]),
-                            None => {
-                                log::error!("error calculating subtext for sidebar chat");
-                                // Still return default message
-                                get_local_text("sidebar.chat-new")
+        }
+        {state.read().chats_sidebar().iter().cloned().map(|chat| {
+            let participants = state.read().chat_participants(&chat);
+            let other_participants =  state.read().remove_self(&participants);
+            let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
+            let platform = user.platform().into();
+            // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
+            let participants_name = match chat.conversation_name {
+                Some(name) => name,
+                None => State::join_usernames(&other_participants)
+            };
+            let is_checked = storage_controller.read().chats_selected_to_send.iter().any(|uuid| {uuid.eq(&chat.id)});
+            let unwrapped_message = match chat.messages.iter().last() {Some(m) => m.inner.clone(),None => raygun::Message::default()};
+            let subtext_val = match unwrapped_message.lines().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                Some(v) => format_text(v, state.read().ui.should_transform_markdown_text(), state.read().ui.should_transform_ascii_emojis(), Some((&state.read(), &chat.id, true))),
+                _ => match &unwrapped_message.attachments()[..] {
+                    [] => get_local_text("sidebar.chat-new"),
+                    [ file ] => file.name(),
+                    _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
+                        Some(name) => get_local_text_with_args("sidebar.subtext", vec![("user", name)]),
+                        None => {
+                            log::error!("error calculating subtext for sidebar chat");
+                            // Still return default message
+                            get_local_text("sidebar.chat-new")
+                        }
+                    }
+                }
+            };
+
+            rsx!(div {
+                    id: "chat-selector-to-send-files",
+                    height: "80px",
+                    padding: "16px",
+                    display: "inline-flex",
+                    Checkbox {
+                        disabled: false,
+                        width: "1em".into(),
+                        height: "1em".into(),
+                        is_checked: is_checked,
+                        on_click: move |_| {
+                            if is_checked {
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                            } else {
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }
-                };
-
-                rsx!(div {
-                        id: "chat-selector-to-send-files",
-    <<<<<<< HEAD
-                        height: "80px",
-                        padding: "16px",
-                        display: "inline-flex",
-                        Checkbox {
-                            disabled: false,
-                            width: "1em".into(),
-                            height: "1em".into(),
-                            is_checked: is_checked,
-                            on_click: move |_| {
-                                if is_checked {
-                                    props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                } else {
-                                    props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                    User {
+                        username: participants_name,
+                        subtext: subtext_val,
+                        timestamp: raygun::Message::default().date(),
+                        active: false,
+                        user_image: rsx!(
+                            if chat.conversation_type == ConversationType::Direct {{rsx! (
+                                UserImage {
+                                    platform: platform,
+                                    status:  user.identity_status().into(),
+                                    image: user.profile_picture(),
+                                    typing: false,
                                 }
-                            }
-                        }
-    =======
-    >>>>>>> origin/dev
-                        User {
-                            username: participants_name,
-                            subtext: subtext_val,
-                            timestamp: raygun::Message::default().date(),
-                            active: false,
-    <<<<<<< HEAD
-                            user_image: rsx!(
-                                if chat.conversation_type == ConversationType::Direct {rsx! (
+                            )}} else {{rsx! (
+                                UserImageGroup {
+                                    participants: build_participants(&participants),
+                                    typing: false,
+                                }
+                            )}}
+                        ),
+                        user_image: rsx!(
+                            div {
+                                class: "chat-selector-to-send-image-group",
+                                Checkbox {
+                                    disabled: false,
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    is_checked: is_checked,
+                                    on_click: move |_| {
+                                        if is_checked {
+                                            props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                        } else {
+                                            props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                        }
+                                    }
+                                }
+                                if chat.conversation_type == ConversationType::Direct {{rsx! (
                                     UserImage {
                                         platform: platform,
                                         status:  user.identity_status().into(),
                                         image: user.profile_picture(),
                                         typing: false,
                                     }
-                                )} else {rsx! (
+                                )}} else {{rsx! (
                                     UserImageGroup {
                                         participants: build_participants(&participants),
                                         typing: false,
                                     }
-                                )}
-                            ),
-    =======
-                            user_image: rsx!(
-                                div {
-                                    class: "chat-selector-to-send-image-group",
-                                    Checkbox {
-                                        disabled: false,
-                                        width: "1em".into(),
-                                        height: "1em".into(),
-                                        is_checked: is_checked,
-                                        on_click: move |_| {
-                                            if is_checked {
-                                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                            } else {
-                                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                            }
-                                        }
-                                    }
-                                    if chat.conversation_type == ConversationType::Direct {rsx! (
-                                        UserImage {
-                                            platform: platform,
-                                            status:  user.identity_status().into(),
-                                            image: user.profile_picture(),
-                                            typing: false,
-                                        }
-                                    )} else {rsx! (
-                                        UserImageGroup {
-                                            participants: build_participants(&participants),
-                                            typing: false,
-                                        }
-                                    )}
-                                }
-                            ),
-                            with_badge: "".into(),
-                            onpress: move |_| {
-                                if is_checked {
-                                    props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
-                                } else {
-                                    props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
-                                }
+                                )}}
+                            }
+                        ),
+                        with_badge: "".into(),
+                        onpress: move |_| {
+                            if is_checked {
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                            } else {
+                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }
-                )
-            }),
-        })
+                }
+            )
+        })},
+    })
 }

@@ -63,9 +63,9 @@ pub fn SettingsLayout() -> Element {
             id: "settings-layout",
             aria_label: "settings-layout",
             if show_slimbar {
-                rsx!(
+                {rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
-                )
+                )}
             },
             Sidebar {
                 onpress: move |p| {
@@ -78,7 +78,7 @@ pub fn SettingsLayout() -> Element {
             },
             div {
                 class: "full-width flex",
-                (state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden).then(|| rsx!(
+                {(state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden).then(|| rsx!(
                     Topbar {
                         with_back_button: true,
                         onback: move |_| {
@@ -86,17 +86,17 @@ pub fn SettingsLayout() -> Element {
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
                     },
-                )),
+                ))},
                 div {
                     id: "content",
                     class: "full-width",
                     settings,
                 },
-                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                 {(state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {
                         active: crate::UplinkRoute::SettingsLayout{},
                     }
-                 ))
+                 ))}
             },
         }
     )

@@ -74,7 +74,7 @@ pub fn DebugLogger() -> Element {
                             active_tab.set(Tab::Logs);
                         }
                     },
-                    (active_tab.get() == &Tab::Logs).then(|| rsx!{
+                    {(active_tab.read() == &Tab::Logs).then(|| rsx!{
                         div {
                             aria_label: "filter-section",
                             class: "section",
@@ -139,7 +139,7 @@ pub fn DebugLogger() -> Element {
                                 ),
                             },
                         }
-                    }),
+                    })},
                     Button {
                         aria_label: "state-button".into(),
                         text: "State".into(),
@@ -190,7 +190,7 @@ pub fn DebugLogger() -> Element {
                     class: "body",
                     div {
                         class: "body-scroll",
-                        logs_to_show.iter().filter(
+                        {logs_to_show.iter().filter(
                             |&x| x.level == *filter_level.get() || *filter_level.get() == Level::Debug
                         ).map(|log| {
                             let log_datetime = log.datetime;
@@ -223,7 +223,7 @@ pub fn DebugLogger() -> Element {
                                     }
                                 }
                             )
-                        })
+                        })}
                     }
                 }),
                 Tab::State => rsx!(div {

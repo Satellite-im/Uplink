@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use dioxus_desktop::wry::webview::FileDropEvent;
+use dioxus_desktop::wry::FileDropEvent;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 

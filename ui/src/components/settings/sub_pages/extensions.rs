@@ -8,5 +8,5 @@ pub fn ExtensionSettings() -> Element {
         id: "settings-extensions",
         aria_label: "settings-extensions",
         ExtensionsBrowser {},
-    }))
+    })
 }

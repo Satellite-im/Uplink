@@ -196,27 +196,30 @@ pub fn Message(props: Props) -> Element {
 
     // todo: pick an icon based on the file extension
     // there's some weirdness here to avoid more nesting. this should make the code easier to read overall
-    let attachment_list = attachments2.as_ref().map(|vec| {
-        vec.iter().map(|file| {
-            let key = file.id();
-            rsx!(FileEmbed {
-                key: "{key}",
-                filename: file.name(),
-                filesize: file.size(),
-                thumbnail: thumbnail_to_base64(file),
-                big: true,
-                remote: is_remote,
-                with_download_button: true,
-                download_pending: props
-                    .attachments_pending_download
-                    .as_ref()
-                    .map(|x| x.contains(file))
-                    .unwrap_or(false),
-                on_press: move |temp_dir_option| props
-                    .on_download
-                    .call((file.clone(), temp_dir_option)),
+    let attachment_list = attachments2.as_ref().cloned().map(|vec| {
+        vec.iter()
+            .cloned()
+            .map(|file| {
+                let key = file.id();
+                rsx!(FileEmbed {
+                    key: "{key}",
+                    filename: file.name(),
+                    filesize: file.size(),
+                    thumbnail: thumbnail_to_base64(&file),
+                    big: true,
+                    remote: is_remote,
+                    with_download_button: true,
+                    download_pending: props
+                        .attachments_pending_download
+                        .as_ref()
+                        .map(|x| x.contains(&file))
+                        .unwrap_or(false),
+                    on_press: move |temp_dir_option| props
+                        .on_download
+                        .call((file.clone(), temp_dir_option)),
+                })
             })
-        })
+            .collect::<Vec<_>>() // Add this line to collect the cloned values into a new vector
     });
 
     let pending_attachment_list = props.attachments_pending_uploads.as_ref().map(|vec| {
@@ -314,9 +317,9 @@ pub fn Message(props: Props) -> Element {
                 rsx!(
                     div {
                         class: "attachment-list",
-                        {attachment_list.map(|list| {
-                            rsx!( {list} )
-                        })}
+                        // {attachment_list.map(|list| {
+                        //     rsx!( {list} )
+                        // })}
                     }
                 )
             })}
@@ -327,9 +330,9 @@ pub fn Message(props: Props) -> Element {
         div {
             class: "{reactions_class}",
             aria_label: "message-reaction-container",
-            {props_signal().clone().reactions.iter().map(|reaction| {
+            {props_signal().reactions.iter().cloned().map(move |reaction| {
                 let reaction_count = reaction.reaction_count;
-                let emoji = &reaction.emoji;
+                let emoji = reaction.emoji.clone();
                 let alt = &reaction.alt;
 
                 rsx!(
@@ -744,8 +747,9 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
         }
     });
 
-    match identity().as_ref() {
+    match identity() {
         Some(identity) => {
+            let identity_signal = use_signal(|| identity.clone());
             let disabled = state
                 .read()
                 .outgoing_fr_identities()
@@ -861,7 +865,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         disabled: disabled,
                         with_title: false,
                         onpress: move |_| {
-                            ch.send(IdentityCmd::SentFriendRequest(identity.did_key().to_string(), state.read().outgoing_fr_identities()));
+                            ch.send(IdentityCmd::SentFriendRequest(identity_signal().did_key().to_string(), state.read().outgoing_fr_identities()));
                         },
                         icon: if disabled {
                             Icon::Check
@@ -871,7 +875,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         text: if disabled {
                             get_local_text("friends.already-friends")
                         } else {
-                            get_local_text_with_args("friends.add-name", vec![("name", identity.username())])
+                            get_local_text_with_args("friends.add-name", vec![("name", identity_signal().username())])
                         },
                         appearance: crate::elements::Appearance::Primary
                     }

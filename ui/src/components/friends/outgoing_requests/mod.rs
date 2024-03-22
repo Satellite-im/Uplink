@@ -53,16 +53,16 @@ pub fn OutgoingRequests() -> Element {
     });
 
     if friends_list.is_empty() {
-        return render!({});
+        return rsx!({});
     }
-    rsx!(rsx!(div {
+    rsx!(div {
         class: "friends-list",
         aria_label: "Outgoing Requests List",
         Label {
             text: get_local_text("friends.outgoing_requests"),
             aria_label: "outgoing-list-label".into(),
         },
-        friends_list.into_iter().map(|friend| {
+        {friends_list.into_iter().map(|friend| {
             let did = friend.did_key();
             let did2 = did.clone();
             let did_suffix = friend.short_id().to_string();
@@ -118,6 +118,6 @@ pub fn OutgoingRequests() -> Element {
                     }
                 }
             )
-        })
-    }))
+        })}
+    })
 }

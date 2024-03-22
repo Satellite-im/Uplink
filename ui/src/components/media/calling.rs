@@ -82,7 +82,7 @@ pub fn CallControl(props: Props) -> Element {
                 call: call.clone(),
                 in_chat: props.in_chat,
             }),
-            None => rsx!(()),
+            None => rsx!({ () }),
         },
     }
 }
@@ -313,12 +313,12 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return rsx!(());
+                    return rsx!({ () });
                 }
             }
             Some(c) => {
                 if active_call.call.conversation_id.eq(&c.id) != props.in_chat {
-                    return rsx!(());
+                    return rsx!({ () });
                 }
             }
         };
@@ -347,7 +347,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
         id: "remote-controls",
         aria_label: "remote-controls",
         class: format_args!("{}", if props.in_chat {"in-chat"} else {""}),
-        (*recording.read()).then(||{
+        {(*recording.read()).then(||{
             rsx!(
                 div {
                     class: "recording-active",
@@ -356,21 +356,21 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                         ..common::icons::IconProps {
                             class: None,
                             size: 20,
-                            fill:"currentColor",
+                            fill:"currentColor".to_string(),
                             icon: Icon::RadioSelected,
                             disabled:  false,
-                            disabled_fill: "#000000"
+                            disabled_fill: "#000000".to_string()
                         },
                     }
                 }
             )
-        }),
+        })},
         div {
             class: format_args!("call-label {}", if props.in_chat {"in-chat"} else {""}),
-            outgoing.then(|| rsx!(Label {
+            {outgoing.then(|| rsx!(Label {
                 text: get_local_text("remote-controls.outgoing-call"),
                 aria_label: "outgoing-call-label".into(),
-            }))
+            }))}
         }
         div {
             class: "call-info",
@@ -378,45 +378,45 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             div {
                 class: format_args!("calling-users {}", if props.in_chat {"in-chat"} else {""}),
                 if other_participants.is_empty() {
-                    rsx!(div {
+                    {rsx!(div {
                         class: "lonely-call",
                         aria_label: "lonely-call",
-                        get_local_text("remote-controls.empty")
-                    })
+                        {get_local_text("remote-controls.empty")}
+                    })}
                 } else if props.in_chat {
-                    let call_participants: Vec<_> = other_participants
+                    {let call_participants: Vec<_> = other_participants
                         .iter()
                         .map(|x| (call.participants_speaking.contains_key(&x.did_key()), call.participants_joined.get(&x.did_key()).cloned(), build_user_from_identity(x)))
                         .collect();
                     rsx!(CallUserImageGroup {
                         participants: call_participants,
-                    })
+                    })}
                 } else  {
-                    rsx!(UserImageGroup {
+                    {rsx!(UserImageGroup {
                         participants: build_participants(&other_participants),
-                    })
+                    })}
                 }
             }
-            (!props.in_chat).then(||rsx!(
+            {(!props.in_chat).then(||rsx!(
                 p {
                     class: "call-name",
                     aria_label: "call-name",
                     "{participants_name}"
                 }
-            )),
+            ))},
             p {
                 class: format_args!("call-time {}", if props.in_chat {"in-chat"} else {""}),
                 aria_label: "call-time",
-                format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
+                {format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id())},
             },
-            props.in_chat.then(||rsx!(div {
+            {props.in_chat.then(||rsx!(div {
                 class: "self-identity",
                 UserImage {
                     platform: self_id.platform,
                     status: self_id.status,
                     image: self_id.photo
                 }
-            }))
+            }))}
         },
         div {
             class: "controls",
@@ -449,7 +449,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                     if call.call_silenced { ch.send(CallDialogCmd::UnsilenceCall); } else { ch.send(CallDialogCmd::SilenceCall); }
                 }
             },
-            (!outgoing).then(||{
+            {(!outgoing).then(||{
                 if *recording.read() {
                     rsx!(Button {
                         aria_label: "stop-recording-button".into(),
@@ -481,7 +481,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                },
             })
          }
-      }),
+      })},
             Button {
                 icon: Icon::PhoneXMark,
                 aria_label: "call-hangup-button".into(),
@@ -567,12 +567,12 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
         match state.read().get_active_chat() {
             None => {
                 if props.in_chat {
-                    return rsx!(());
+                    return rsx!({ () });
                 }
             }
             Some(c) => {
                 if call.conversation_id.eq(&c.id) != props.in_chat {
-                    return rsx!(());
+                    return rsx!({ () });
                 }
             }
         };
@@ -651,18 +651,18 @@ pub fn CallDialog(props: CallDialogProps) -> Element {
             div {
                 class: "call-information",
                 aria_label: "call-information",
-                rsx!(
+                {rsx!(
                     common::icons::Icon {
                         ..common::icons::IconProps {
                             class: None,
                             size: 20,
-                            fill:"currentColor",
+                            fill:"currentColor".to_string(),
                             icon: props.icon,
                             disabled: false,
-                            disabled_fill: "#9CA3AF"
+                            disabled_fill: "#9CA3AF".to_string()
                         },
                     },
-                )
+                )}
                 p {
                     aria_label: "incoming-call",
                     "{props.description}",
@@ -671,13 +671,13 @@ pub fn CallDialog(props: CallDialogProps) -> Element {
             div {
                 aria_label: "calling-users",
                 class: "calling-users",
-                &props.caller,
+                {&props.caller},
             },
-            (!props.in_chat).then(||rsx!(div {
+            {(!props.in_chat).then(||rsx!(div {
                 class: "users",
                 class: "call-users",
                 "{props.usernames}",
-            }))
+            }))}
             div {
                 aria_label: "controls",
                 class: "controls",
@@ -725,7 +725,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
         user_state.map(move |s| {
             rsx!(div {
                 class: "call-status",
-                s.muted.then(||{
+                {s.muted.then(||{
                     rsx!(div {
                         class: "call-status-icon",
                         IconElement {
@@ -733,8 +733,8 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                             fill:"currentColor",
                         }
                     })
-                }),
-                s.deafened.then(||{
+                })},
+                {s.deafened.then(||{
                     rsx!(div {
                         class: "call-status-icon",
                         IconElement {
@@ -742,8 +742,8 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                             fill:"currentColor",
                         }
                     })
-                }),
-                s.recording.then(||{
+                })},
+                {s.recording.then(||{
                     rsx!(div {
                         class: "call-status-icon",
                         IconElement {
@@ -751,23 +751,26 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                             fill:"currentColor",
                         }
                     })
-                })
+                })}
             })
         })
     };
 
     rsx!(
-        visible.iter().map(|(speaking, user_state, user)| {
-            rsx!(div {
-                class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
-                UserImage {
-                    platform: user.platform,
-                    image: user.photo.clone(),
-                }
-                user_state_icons(user_state.clone())
+        {
+            visible.iter().map(|(speaking, user_state, user)| {
+                rsx!(div {
+                    class: format_args!("call-user {}", if *speaking {"speaking"} else {""}),
+                    UserImage {
+                        platform: user.platform,
+                        image: user.photo.clone(),
+                    }
+                    {user_state_icons(user_state.clone())}
+                })
             })
-        }),
-        context.map(|ctx| {
+        },
+        {
+            context.map(|ctx| {
             let txt = format!("{}+", ctx.len());
             rsx!(
                 div {
@@ -776,7 +779,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                         id: format!("{}", id),
                         left_click_trigger: true,
                         items: rsx!(
-                            ctx.iter().map(|(speaking, user_state, user)|{
+                            {ctx.iter().map(|(speaking, user_state, user)|{
                                 rsx!(div {
                                         class: "additional-participant",
                                         div {
@@ -788,11 +791,11 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                                         },
                                         p {
                                             class: "additional-participant-name",
-                                            user.username.to_string()
+                                           { user.username.to_string()}
                                         },
-                                        user_state_icons(user_state.clone())
+                                        {user_state_icons(user_state.clone())}
                                 })
-                            })
+                            })}
                         ),
                         Button {
                             aria_label: "additional-participants-button".to_string(),
@@ -802,6 +805,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                     },
                 }
             )
-        }),
+        })
+        },
     )
 }

@@ -32,5 +32,5 @@ pub fn Licenses() -> Element {
                 }
             },
         }
-    ))
+    )
 }

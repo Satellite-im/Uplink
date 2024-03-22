@@ -9,8 +9,7 @@ use common::{
     WARP_EVENT_CH,
 };
 use dioxus::signals::Signal;
-use dioxus_core::ScopeState;
-use dioxus_hooks::{use_ref, Signal};
+use dioxus_hooks::use_signal;
 use futures::{Future, StreamExt};
 use tokio::{
     sync::{
@@ -86,11 +85,11 @@ impl<T> AsyncRef<T> {
 
 /// Create a handler for an async queue
 /// Everytime a value gets added to the queue the future will be spawned when it rerenders
-pub fn async_queue<T: 'static + Send, Fut>(fut: impl Fn(T) -> Fut) -> &Signal<AsyncRef<T>>
+pub fn async_queue<T: 'static + Send, Fut>(fut: impl Fn(T) -> Fut) -> Signal<AsyncRef<T>>
 where
     Fut: Future<Output = ()> + Send + 'static,
 {
-    let queue_ref: &Signal<AsyncRef<T>> = use_signal(|| AsyncRef { inner_ref: None });
+    let queue_ref: Signal<AsyncRef<T>> = use_signal(|| AsyncRef { inner_ref: None });
     if let Some(queue) = queue_ref.write_silent().inner_ref.take() {
         for entry in queue {
             let future = fut(entry);
@@ -100,7 +99,7 @@ where
     queue_ref
 }
 
-pub fn chat_upload_stream_handler() -> &Signal<AsyncRef<(Uuid, Uuid, AttachmentEventStream)>> {
+pub fn chat_upload_stream_handler() -> Signal<AsyncRef<(Uuid, Uuid, AttachmentEventStream)>> {
     async_queue(
         |(conv_id, message_id, mut stream): (Uuid, Uuid, AttachmentEventStream)| async move {
             while let Some(kind) = stream.next().await {
