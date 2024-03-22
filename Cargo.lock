@@ -1597,7 +1597,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "base64 0.22.0",
@@ -2966,7 +2966,7 @@ dependencies = [
 
 [[package]]
 name = "extensions"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "dioxus",
  "libloading",
@@ -4393,7 +4393,7 @@ dependencies = [
 
 [[package]]
 name = "icons"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "dioxus",
  "dioxus-html",
@@ -4879,7 +4879,7 @@ dependencies = [
 
 [[package]]
 name = "kit"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "arboard",
  "base64 0.22.0",
@@ -5188,25 +5188,6 @@ dependencies = [
  "quick-protobuf-codec 0.2.0",
  "rand 0.8.5",
  "tracing",
-]
-
-[[package]]
-name = "libp2p-bitswap-next"
-version = "0.26.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35e2f355dd38765ba7c6c61c37f11359a98bd0ee227d24535586fb883772dbe3"
-dependencies = [
- "async-trait",
- "bytes",
- "fnv",
- "futures",
- "lazy_static",
- "libipld",
- "libp2p",
- "prometheus",
- "thiserror",
- "tracing",
- "unsigned-varint 0.8.0",
 ]
 
 [[package]]
@@ -7396,21 +7377,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prometheus"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "449811d15fbdf5ceb5c1144416066429cf82316e2ec8ce0c1f6f8a02e7bbcf8c"
-dependencies = [
- "cfg-if",
- "fnv",
- "lazy_static",
- "memchr",
- "parking_lot 0.12.1",
- "protobuf",
- "thiserror",
-]
-
-[[package]]
 name = "prometheus-client"
 version = "0.22.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7432,12 +7398,6 @@ dependencies = [
  "quote",
  "syn 2.0.52",
 ]
-
-[[package]]
-name = "protobuf"
-version = "2.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
 
 [[package]]
 name = "pulldown-cmark"
@@ -7823,15 +7783,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "redb"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72623e6275cd430215b741f41ebda34db93a13ebde253f908b70871c46afc5ba"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "redox_syscall"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8155,14 +8106,15 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.10.4"
+version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "112e82088a3886541ebcfdb3edb6aa86a485640bb4c3dd630be549591b87c1ec"
+checksum = "3991f82d33675470592d678f50866c2bfb0d66c3696df7a46f4f6d355d81f5ee"
 dependencies = [
  "anyhow",
  "async-broadcast 0.6.0",
  "async-stream",
  "async-trait",
+ "asynchronous-codec 0.7.0",
  "base64 0.21.7",
  "byteorder",
  "bytes",
@@ -8175,23 +8127,23 @@ dependencies = [
  "libipld",
  "libp2p",
  "libp2p-allow-block-list",
- "libp2p-bitswap-next",
  "libp2p-relay-manager",
  "parking_lot 0.12.1",
+ "quick-protobuf",
+ "quick-protobuf-codec 0.3.1",
  "rand 0.8.5",
- "redb",
  "rlimit",
  "rust-ipns",
  "rust-unixfs",
  "serde",
  "serde_json",
- "sled",
  "thiserror",
  "tokio",
  "tokio-stream",
  "tokio-util",
  "tracing",
  "tracing-futures",
+ "unsigned-varint 0.7.2",
  "void",
  "wasm-timer",
  "zeroize",
@@ -8199,9 +8151,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipns"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4039dcecfde6b2abd5068ad0e3b602ebf2a855687de238cf244c32e7b14e21cc"
+checksum = "0730dd19e9aa071b16409f1012b1a9f2c3094384a5fef9c9e016bac42d68bea2"
 dependencies = [
  "cbor4ii",
  "chrono",
@@ -8787,7 +8739,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "shuttle"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff#b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -8799,7 +8751,6 @@ dependencies = [
  "dotenv",
  "either",
  "futures",
- "futures-timer",
  "libipld",
  "rust-ipfs",
  "serde",
@@ -8873,22 +8824,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "sled"
-version = "0.34.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f96b4737c2ce5987354855aed3797279def4ebf734436c6aa4552cf8e169935"
-dependencies = [
- "crc32fast",
- "crossbeam-epoch",
- "crossbeam-utils",
- "fs2",
- "fxhash",
- "libc",
- "log",
- "parking_lot 0.11.2",
 ]
 
 [[package]]
@@ -10022,12 +9957,6 @@ name = "unsigned-varint"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb066959b24b5196ae73cb057f45598450d2c5f71460e98c49b738086eff9c06"
-dependencies = [
- "asynchronous-codec 0.7.0",
- "bytes",
- "futures-io",
- "futures-util",
-]
 
 [[package]]
 name = "untrusted"
@@ -10043,7 +9972,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "uplink"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "arboard",
@@ -10234,7 +10163,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff#b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff"
 dependencies = [
  "aes-gcm 0.10.3",
  "anyhow",
@@ -10244,22 +10173,18 @@ dependencies = [
  "bincode",
  "bs58 0.4.0",
  "cbindgen",
- "cfg-if",
  "chrono",
  "console_error_panic_hook",
- "curve25519-dalek 3.2.0",
  "derive_more",
  "did-key",
  "digest 0.10.7",
  "dyn-clone",
  "ed25519-dalek 1.0.1",
  "futures",
- "getrandom 0.2.12",
  "gloo 0.7.0",
  "hex",
  "hmac 0.12.1",
  "js-sys",
- "libc",
  "libipld",
  "mediatype",
  "multihash 0.18.1",
@@ -10278,18 +10203,16 @@ dependencies = [
  "tokio",
  "toml 0.5.11",
  "tracing",
- "tracing-futures",
  "uuid",
  "wasm-bindgen",
  "web-sys",
- "x25519-dalek 1.1.1",
  "zeroize",
 ]
 
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff#b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -10322,7 +10245,7 @@ dependencies = [
 [[package]]
 name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=d15be5735c5e654bbb7b424d0ea2c414df8b5e4c#d15be5735c5e654bbb7b424d0ea2c414df8b5e4c"
+source = "git+https://github.com/Satellite-im/Warp?rev=b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff#b574da4ab10cfd7bf38ec0e2b499232a2e8f8eff"
 dependencies = [
  "anyhow",
  "async-recursion 1.0.5",
@@ -10336,7 +10259,6 @@ dependencies = [
  "derive_more",
  "either",
  "futures",
- "futures-timer",
  "image 0.24.9",
  "libipld",
  "mediatype",
