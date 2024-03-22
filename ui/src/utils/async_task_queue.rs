@@ -116,7 +116,7 @@ pub fn chat_upload_stream_handler(
                         }
                         return;
                     }
-                    AttachmentKind::AttachedProgress(progress) => {
+                    AttachmentKind::AttachedProgress(_, progress) => {
                         let progress = progress.into();
                         if let Err(e) = WARP_EVENT_CH.tx.send(WarpEvent::Message(
                             MessageEvent::AttachmentProgress {
