@@ -14,11 +14,7 @@ use dioxus::{
     events::eval,
     signals::{Readable, Signal},
 };
-use dioxus_core::ScopeState;
-use dioxus_hooks::{
-    to_owned, use_context, use_coroutine, use_shared_state, Coroutine, UnboundedReceiver,
-    UseSharedState,
-};
+use dioxus_hooks::{to_owned, use_context, use_coroutine, Coroutine, UnboundedReceiver};
 use futures::{channel::oneshot, pin_mut, StreamExt};
 
 use uuid::Uuid;
@@ -122,14 +118,7 @@ pub fn handle_msg_scroll(
                         observer_script.replace("$TOP_MSG_ID", &top_msg_id.to_string());
                     observer_script =
                         observer_script.replace("$BOTTOM_MSG_ID", &bottom_msg_id.to_string());
-
-                    let eval = match eval_provider(&observer_script) {
-                        Ok(r) => r,
-                        Err(e) => {
-                            log::error!("use eval failed: {:?}", e);
-                            return;
-                        }
-                    };
+                    let eval_result = eval(&observer_script);
 
                     // not sure if it's safe to call eval.recv() in a select! statement. turning it into something
                     // which should definitely work for that.
@@ -137,7 +126,7 @@ pub fn handle_msg_scroll(
                     let eval_stream = async_stream::stream! {
                         let mut should_break = false;
                         while !should_break {
-                            match eval.recv().await {
+                            match eval_result.recv().await {
                                 Ok(s) => match serde_json::from_str::<JsMsg>(s.as_str().unwrap_or_default()) {
                                     Ok(msg) => {
                                         // note: if something is wrong with messages, the first thing you should do is to uncomment this log
@@ -449,7 +438,7 @@ pub fn handle_warp_commands(
     pending_downloads: &Signal<DownloadTracker>,
 ) -> Coroutine<MessagesCommand> {
     let download_streams = download_stream_handler();
-    let file_tracker = use_context::Signal << TransferTracker >> ();
+    let file_tracker = use_context::<Signal<TransferTracker>>();
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<MessagesCommand>| {
         to_owned![state, file_tracker, pending_downloads, download_streams];

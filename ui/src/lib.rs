@@ -926,41 +926,43 @@ fn get_update_icon() -> Element {
 
     let stage = download_state.read().stage;
     match stage {
-        DownloadProgress::Idle => rsx!(
-            ContextMenu {
-                key: "{update-available-menu}",
-                id: "update-available-menu".to_string(),
-                devmode: state.read().configuration.developer.developer_mode,
-                items: rsx!(
-                    ContextItem {
-                        aria_label: "update-menu-dismiss".into(),
-                        text: get_local_text("uplink.update-menu-dismiss"),
-                        onpress: move |_| {
-                            state.write().mutate(Action::DismissUpdate);
-                        }
-                    },
-                    ContextItem {
-                        aria_label: "update-menu-download".into(),
-                        text: get_local_text("uplink.update-menu-download"),
-                        onpress: move |_| {
-                            download_state.write().stage = DownloadProgress::PickFolder;
+        DownloadProgress::Idle => {
+            rsx!(
+                ContextMenu {
+                    key: "{update-available-menu}",
+                    id: "update-available-menu".to_string(),
+                    devmode: state.read().configuration.developer.developer_mode,
+                    items: rsx!(
+                        ContextItem {
+                            aria_label: "update-menu-dismiss".into(),
+                            text: get_local_text("uplink.update-menu-dismiss"),
+                            onpress: move |_| {
+                                state.write().mutate(Action::DismissUpdate);
+                            }
+                        },
+                        ContextItem {
+                            aria_label: "update-menu-download".into(),
+                            text: get_local_text("uplink.update-menu-download"),
+                            onpress: move |_| {
+                                download_state.write().stage = DownloadProgress::PickFolder;
 
+                            }
                         }
+                    ),
+                    div {
+                        id: "update-available",
+                        aria_label: "update-available",
+                        onclick: move |_| {
+                            download_state.write().stage = DownloadProgress::PickFolder;
+                        },
+                        IconElement {
+                            icon: common::icons::solid::Shape::ArrowDownCircle,
+                        },
+                        "{update_msg}",
                     }
-                ),
-                div {
-                    id: "update-available",
-                    aria_label: "update-available",
-                    onclick: move |_| {
-                        download_state.write().stage = DownloadProgress::PickFolder;
-                    },
-                    IconElement {
-                        icon: common::icons::solid::Shape::ArrowDownCircle,
-                    },
-                    "{update_msg}",
                 }
-            }
-        ),
+            )
+        }
         DownloadProgress::PickFolder => rsx!(get_download_modal {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;

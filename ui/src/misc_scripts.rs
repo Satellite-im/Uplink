@@ -15,13 +15,14 @@ pub fn PrismScripts() -> Element {
     }
 }
 
-fn use_prism_path() -> &str {
-    &use_hook(|| {
+fn use_prism_path() -> String {
+    let hook_result = &use_hook(|| {
         format!(
             r"Prism.plugins.autoloader.languages_path = '{}';",
             get_prism_path().to_string_lossy()
         )
-    })
+    });
+    hook_result.clone()
 }
 
 fn get_prism_path() -> PathBuf {

@@ -120,11 +120,11 @@ fn render_friends(props: FriendsProps) -> Element {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
             if !group_participants.is_empty() {
-                rsx!(
+                {rsx!(
                     div {
-                        key: "friend-group",
+                        key: "{friend-group}",
                         class: "friend-group",
-                        group_participants.iter().map(|_friend| {
+                        {group_participants.iter().map(|_friend| {
                             let friendid = _friend.did_key();
                             let creator = props.creator.clone();
                             rsx!(render_friend {
@@ -133,16 +133,16 @@ fn render_friends(props: FriendsProps) -> Element {
                                 is_dev: props.is_dev,
                                 context_data: props.context_data.clone(),
                             }
-                        )})
+                        )})}
                     }
-                )
+                )}
             } else {
-                rsx!(
+               { rsx!(
                     div {
                         class: "friend-group",
-                        get_local_text("uplink.nothing-here")
+                        {get_local_text("uplink.nothing-here")}
                     }
-                )
+                )}
             }
         }
     )
@@ -178,11 +178,11 @@ fn render_friend(props: FriendProps) -> Element {
                 p {
                     class: "ellipsis-overflow",
                     aria_label: "friend-username",
-                    props.friend.username(),
+                    {props.friend.username()},
                 },
             },
             if props.is_creator {
-                rsx!(
+                {rsx!(
                     div {
                         class: "group-creator-container",
                         IconElement {
@@ -190,11 +190,10 @@ fn render_friend(props: FriendProps) -> Element {
                         }
                         span {
                             class: "group-creator-text",
-                            get_local_text("messages.group-creator-label")
+                            {get_local_text("messages.group-creator-label")}
                         }
                     }
-                )
-
+                )}
             }
         }
     )

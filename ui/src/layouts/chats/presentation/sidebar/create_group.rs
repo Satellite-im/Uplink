@@ -202,21 +202,21 @@ fn render_friends(props: FriendsProps) -> Element {
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
-            props.friends.iter().map(
+            {props.friends.iter().map(
                 |(letter, sorted_friends)| {
                     let group_letter = letter.to_string();
                     rsx!(
                         div {
                             key: "friend-group-{group_letter}",
                             class: "friend-group",
-                            sorted_friends.iter().filter(|friend| {
+                            {sorted_friends.iter().filter(|friend| {
                                 let name = friend.username().to_lowercase();
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
                                     name[..(name_prefix.len())] == name_prefix.to_lowercase()
                                 }
-                            } ).map(|_friend| {
+                            } )}.map(|_friend| {
                                 rsx!(
                                 render_friend {
                                     friend: _friend.clone(),
@@ -226,7 +226,7 @@ fn render_friends(props: FriendsProps) -> Element {
                         }
                     )
                 }
-            ),
+            )},
         }
     )
 }
@@ -280,7 +280,7 @@ fn render_friend(props: FriendProps) -> Element {
                     onclick: move |_| {
                         update_fn();
                     },
-                    props.friend.username(),
+                    {props.friend.username()},
                 },
             },
             Checkbox {

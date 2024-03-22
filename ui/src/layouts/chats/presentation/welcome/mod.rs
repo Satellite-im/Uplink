@@ -23,7 +23,7 @@ pub fn Welcome() -> Element {
             aria_label: "welcome-screen",
             class: "welcome-screen",
             if state.read().ui.sidebar_hidden && state.read().ui.is_minimal_view() {
-                rsx!(
+                {rsx!(
                     Topbar {
                         with_back_button: true,
                         onback: move |_| {
@@ -31,7 +31,7 @@ pub fn Welcome() -> Element {
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
                     }
-                )
+                )}
             }
             div {
                 class: "welcome-contents",
@@ -63,8 +63,8 @@ pub fn Welcome() -> Element {
     }
 }
 
-fn use_image_path() -> &str {
-    &use_hook(|| {
+fn use_image_path() -> String {
+    let hook_result = use_hook(|| {
         get_images_dir()
             .unwrap_or_default()
             .join("mascot")
@@ -72,5 +72,6 @@ fn use_image_path() -> &str {
             .to_str()
             .map(|x| x.to_string())
             .unwrap_or_default()
-    })
+    });
+    hook_result
 }

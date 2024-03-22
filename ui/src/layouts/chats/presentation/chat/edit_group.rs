@@ -142,31 +142,31 @@ pub fn EditGroup() -> Element {
                         },
                     },
                     if *edit_group_action.get() == EditGroupAction::Remove {
-                        rsx! {
-                            add_friends,
-                        }
+                       { rsx! {
+                            {add_friends},
+                        }}
                     } else {
-                        rsx! {
-                            remove_friends,
-                        }
+                        {rsx! {
+                            {remove_friends},
+                        }}
                     },
                 },
 
             },
-            rsx!(
+            {rsx!(
                 div {
                     class: "friend-list vertically-scrollable",
                     aria_label: "friends-list",
                     if !friends.is_empty() {
-                        rsx!(
+                        {rsx!(
                             div {
                                 class: "friend-list vertically-scrollable",
                                 aria_label: "friends-list",
                                 div {
-                                    key: "friend-group",
+                                    key: "{friend-group}",
                                     class: "friend-group",
                                     aria_label: "friend-group",
-                                    friends.iter().map(
+                                    {friends.iter().map(
                                         |_friend| {
                                             let is_group_creator = creator_did2.clone() == _friend.clone().did_key();
                                             rsx!(
@@ -184,20 +184,20 @@ pub fn EditGroup() -> Element {
                                                 }
                                             )
                                         }
-                                    ),
+                                    )},
                                 }
                             }
-                        )
+                        )}
                     } else {
-                        rsx!(
+                        {rsx!(
                             div {
                                 class: "friend-group",
-                                get_local_text("uplink.nothing-here")
+                                {get_local_text("uplink.nothing-here")}
                             }
-                        )
+                        )}
                     }
                 }
-            )
+            )}
         }
     )
 }
@@ -280,11 +280,11 @@ fn friend_row(props: FriendRowProps) -> Element {
                 p {
                     class: "ellipsis-overflow",
                     aria_label: "friend-username",
-                    _friend.username(),
+                    {_friend.username()},
                 },
             },
             if props.friend_is_group_creator {
-                rsx!(
+                {rsx!(
                     div {
                         class: "group-creator-container",
                         IconElement {
@@ -292,13 +292,13 @@ fn friend_row(props: FriendRowProps) -> Element {
                         }
                         span {
                             class: "group-creator-text",
-                            get_local_text("messages.group-creator-label")
+                            {get_local_text("messages.group-creator-label")}
                         }
                     }
-                )
+                )}
             }
             if props.am_i_group_creator || props.add_or_remove == "add" {
-                rsx!(Button {
+                {rsx!(Button {
                     aria_label: if props.add_or_remove == "add" {
                         get_local_text("uplink.add")
                     } else {
@@ -326,7 +326,7 @@ fn friend_row(props: FriendRowProps) -> Element {
                             ch.send(ChanCmd::RemoveParticipants);
                         }
                     }
-                })
+                })}
             }
         }
     )

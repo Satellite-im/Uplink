@@ -45,7 +45,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessages(props: Props) -> Element<'_> {
+pub fn PinnedMessages(props: Props) -> Element {
     log::trace!("rendering pinned_messages");
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>> - ();
@@ -141,15 +141,15 @@ pub fn PinnedMessages(props: Props) -> Element<'_> {
             class: "pinned-messages",
             aria_label: "pinned-messages-container",
             if pinned_messages.is_empty() {
-                rsx!(div {
+                {rsx!(div {
                     class: "pinned-empty",
                     aria_label: "pinned-empty",
                     div {
-                        get_local_text("messages.pinned-none")
+                        {get_local_text("messages.pinned-none")}
                     }
-                })
+                })}
             } else {
-                rsx!(pinned_messages.iter().map(|message|{
+                {rsx!({pinned_messages.iter().map(|message|{
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     let conversation_id = message.conversation_id();
@@ -169,7 +169,7 @@ pub fn PinnedMessages(props: Props) -> Element<'_> {
                         }
                     },
      )
-                }))
+                })})}
             }
         }
     })
@@ -211,12 +211,12 @@ pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
     rsx!(div {
             class: "pinned-message-wrap",
             aria_label: "pinned-message-wrap",
-            props.sender.as_ref().map(|sender| {
+            {props.sender.as_ref().map(|sender| {
                 rsx!(UserImage {
                     image: sender.profile_picture(),
                     platform: sender.platform().into(),
                 })
-            }),
+            })},
             div {
                 class: "pinned-message",
                 aria_label: "pinned-message",
@@ -227,15 +227,15 @@ pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
                         class: "pinned-sender-container",
                         div {
                             class: "full-flex",
-                            props.sender.as_ref().map(|sender| {
+                            {props.sender.as_ref().map(|sender| {
                                 rsx!(
                                     p {
                                         class: "ellipsis-overflow",
                                         aria_label: "pinned-sender",
-                                        sender.username()
+                                        {sender.username()}
                                     },
                                 )
-                            }),
+                            })},
                             p {
                                 class: "pinned-sender-time",
                                 aria_label: "pinned-time",
@@ -251,7 +251,7 @@ pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
                                 onclick: move |_| {
                                     props.onclick.call(());
                                 },
-                                get_local_text("messages.pin-button-goto")
+                                {get_local_text("messages.pin-button-goto")}
                             },
                             button {
                                 class: "pinned-buttons",
@@ -259,7 +259,7 @@ pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
                                 onclick: move |e| {
                                     props.onremove.call((e, props.message.clone()));
                                 },
-                                get_local_text("messages.pin-button-unpin"),
+                                {get_local_text("messages.pin-button-unpin")},
                             }
                         }
                     }
@@ -273,17 +273,17 @@ pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
                         ascii_emoji: state.read().ui.should_transform_ascii_emojis(),
                     }
                 },
-                has_attachments.then(|| {
+                {has_attachments.then(|| {
                     rsx!(
                         div {
                             class: "attachment-list",
                             aria_label: "pinned-attachments",
-                            attachment_list.map(|list| {
-                                rsx!(list)
-                            })
+                            {attachment_list.map(|list| {
+                                rsx!({list})
+                            })}
                         }
                     )
-                })
+                })}
             }
         }
     )

@@ -115,7 +115,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
         |txt, arrow| {
             if minimal {
-                rsx!(())
+                rsx!({ () })
             } else {
                 rsx!(Tooltip {
                     arrow_position: arrow,
@@ -137,7 +137,7 @@ pub fn get_controls(props: ChatProps) -> Element {
     };
     let buttons = rsx!(
         if show_edit_members() {
-            rsx!(Button {
+            {rsx!(Button {
                 icon: Icon::Users,
                 aria_label: "edit-group-members".into(),
                 appearance: if props.show_manage_members.is_some() {
@@ -158,10 +158,10 @@ pub fn get_controls(props: ChatProps) -> Element {
                     }
                     show_more.set(false);
                 }
-            })
+            })}
         }
         if show_group_settings() {
-            rsx!(Button {
+            {rsx!(Button {
                 icon: Icon::Cog,
                 aria_label: "group-settings".into(),
                 appearance: Appearance::Secondary,
@@ -176,7 +176,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                         props.show_group_users.set(None);
                     }
                 }
-            })
+            })}
         }
         Button {
             icon: if favorite {
@@ -250,21 +250,25 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
     );
 
-    let pinned = rsx!(show_pinned.then(|| rsx!(
-        Modal {
-            open: true,
-            right: "8px",
-            transparent: true,
-            change_horizontal_position: true,
-            with_title: get_local_text("messages.pin-view"),
-            onclose: move |_| {
-                show_pinned.set(false);
-            },
-            if chat_data.read().active_chat.is_initialized {
-                rsx!(PinnedMessages{ show_pinned: show_pinned.clone()})
-            }
-        }
-    )),);
+    let pinned = rsx!({
+        show_pinned.then(|| {
+            rsx!(
+                Modal {
+                    open: true,
+                    right: "8px",
+                    transparent: true,
+                    change_horizontal_position: true,
+                    with_title: get_local_text("messages.pin-view"),
+                    onclose: move |_| {
+                        show_pinned.set(false);
+                    },
+                    if chat_data.read().active_chat.is_initialized {
+                        {rsx!(PinnedMessages{ show_pinned: show_pinned.clone()})}
+                    }
+                }
+            )
+        })
+    },);
 
     if minimal {
         return rsx!(
@@ -274,8 +278,8 @@ pub fn get_controls(props: ChatProps) -> Element {
                     icon: Icon::EllipsisVertical,
                     aria_label: "control-group".into(),
                     appearance: Appearance::Primary,
-                    tooltip: if *show_more.get() {
-                        rsx!(())
+                    tooltip: if show_more() {
+                        rsx!({()})
                     } else {
                         rsx!(Tooltip {
                             arrow_position: ArrowPosition::TopRight,
@@ -283,12 +287,12 @@ pub fn get_controls(props: ChatProps) -> Element {
                         })
                     },
                     onpress: move |_| {
-                        let current = show_more.get();
+                        let current = show_more();
                         show_more.set(!current);
                     }
                 }
             },
-            show_more.then(|| {
+            {show_more.then(|| {
                 rsx!(InvisibleCloser {
                         classes: "minimal-chat-button-group-out".into(),
                         onclose: move |_|{
@@ -297,11 +301,11 @@ pub fn get_controls(props: ChatProps) -> Element {
                     }
                     div {
                         class: "minimal-chat-button-group",
-                        buttons
+                        {buttons}
                     })
-            }),
-            pinned
+            })},
+            {pinned}
         );
     }
-    rsx!(buttons, pinned)
+    rsx!({ buttons }, { pinned })
 }

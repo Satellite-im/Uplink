@@ -334,465 +334,459 @@ pub fn ProfileSettings() -> Element {
     }
 
     rsx!(
-            {loading_indicator.read().then(|| rsx!(
+        {loading_indicator.read().then(|| rsx!(
+            div {
+                id: "overlay-load-shadow-for-profile-page",
+                class: "overlay-load-shadow-for-profile-page",
                 div {
-                    id: "overlay-load-shadow-for-profile-page",
-                    class: "overlay-load-shadow-for-profile-page",
+                    class: "overlay-loader-spinner",
+                    Loader { spinning: true },
+                }
+            },
+        ))},
+        div {
+            id: "settings-profile",
+            class: "disable-select",
+            aria_label: "settings-profile",
+            {(!show_welcome).then(|| rsx!(
+                div {
+                    class: "new-profile-welcome",
+                    aria_label: "new-profile-welcome",
                     div {
-                        class: "overlay-loader-spinner",
-                        Loader { spinning: true },
+                        class: "welcome",
+                        img {
+                            src: "{image_path}"
+                        },
+                    },
+                    div {
+                        class: "welcome-content",
+                        Button {
+                            text: get_local_text("uplink.dismiss"),
+                            aria_label: "welcome-message-dismiss".into(),
+                            icon: Icon::XMark,
+                            onpress: move |_| {
+                                state.write().ui.settings_welcome();
+                                let _ = state.write().save();
+                            }
+                        },
+                        Label {
+                            aria_label: "welcome-message".into(),
+                            text: get_local_text("settings-profile.welcome")
+                        },
+                        p {
+                            aria_label: "welcome-message-desc",
+                            {get_local_text("settings-profile.welcome-desc")}
+                        }
+                        br {},
+                        p {
+                            aria_label: "welcome-message-cta",
+                            {get_local_text("settings-profile.welcome-cta")}
+                        }
                     }
                 },
             ))},
             div {
-                id: "settings-profile",
-                class: "disable-select",
-                aria_label: "settings-profile",
-                (!show_welcome).then(|| rsx!(
-                    div {
-                        class: "new-profile-welcome",
-                        aria_label: "new-profile-welcome",
-                        div {
-                            class: "welcome",
-                            img {
-                                src: "{image_path}"
-                            },
-                        },
-                        div {
-                            class: "welcome-content",
-                            Button {
-                                text: get_local_text("uplink.dismiss"),
-                                aria_label: "welcome-message-dismiss".into(),
-                                icon: Icon::XMark,
-                                onpress: move |_| {
-                                    state.write().ui.settings_welcome();
-                                    let _ = state.write().save();
-                                }
-                            },
-                            Label {
-                                aria_label: "welcome-message".into(),
-                                text: get_local_text("settings-profile.welcome")
-                            },
-                            p {
-                                aria_label: "welcome-message-desc",
-                                get_local_text("settings-profile.welcome-desc")
-                            }
-                            br {},
-                            p {
-                                aria_label: "welcome-message-cta",
-                                get_local_text("settings-profile.welcome-cta")
+                class: "profile-header",
+                aria_label: "profile-header",
+                // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
+                // ideally this ContextItem would appear when right clicking the profile-banner div.
+                ContextMenu {
+                    id: String::from("profile-banner-context-menu"),
+                    items: rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            disabled: no_banner_picture,
+                            text: get_local_text("settings-profile.clear-banner"),
+                            aria_label: "clear-banner".into(),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::ClearBanner);
                             }
                         }
-                    },
-                )),
-                div {
-                    class: "profile-header",
-                    aria_label: "profile-header",
-                    // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
-                    // ideally this ContextItem would appear when right clicking the profile-banner div.
-                    ContextMenu {
-                        id: String::from("profile-banner-context-menu"),
-                        items: rsx!(
-                            ContextItem {
-                                icon: Icon::Trash,
-                                disabled: no_banner_picture,
-                                text: get_local_text("settings-profile.clear-banner"),
-                                aria_label: "clear-banner".into(),
-                                onpress: move |_| {
-                                    ch.send(ChanCmd::ClearBanner);
-                                }
+                    ),
+                    div {
+                        class: "profile-banner",
+                        aria_label: "profile-banner",
+                        style: "background-image: url({banner});",
+                        onclick: move |mouse_event_data| {
+                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                set_banner(open_crop_image_modal_for_banner_picture.clone());
                             }
-                        ),
-                        div {
-                            class: "profile-banner",
-                            aria_label: "profile-banner",
-                            style: "background-image: url({banner});",
-                            onclick: move |mouse_event_data| {
-                                if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                    set_banner(open_crop_image_modal_for_banner_picture.clone());
-                                }
-                            },
-                            p {class: "change-banner-text", "{change_banner_text}" },
                         },
+                        p {class: "change-banner-text", "{change_banner_text}" },
                     },
-                    ContextMenu {
-                        id: String::from("profile-picture-context-menu"),
-                        items: rsx!(
-                            ContextItem {
-                                icon: Icon::Trash,
-                                disabled: no_profile_picture,
-                                aria_label: "clear-avatar".into(),
-                                text: get_local_text("settings-profile.clear-avatar"),
-                                onpress: move |_| {
-                                    ch.send(ChanCmd::ClearProfile);
-                                }
-                            }
-                        ),
-                        div {
-                            class: "profile-picture",
-                            aria_label: "profile-picture",
-                            style: "background-image: url({image});",
-                            onclick: move |mouse_event_data: Event<MouseData>| {
-                                if mouse_event_data.modifiers() != Modifiers::CONTROL {
-                                    set_profile_picture(open_crop_image_modal.clone());
-                                }
-                            },
-                            Button {
-                                icon: Icon::Plus,
-                                aria_label: "add-picture-button".into(),
-                                onpress: move |_| {
-                                set_profile_picture(open_crop_image_modal.clone());
-                                }
-                            },
-                        },
-                    }
                 },
-                div{
-                    class: "profile-content",
-                    aria_label: "profile-content",
+                ContextMenu {
+                    id: String::from("profile-picture-context-menu"),
+                    items: rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            disabled: no_profile_picture,
+                            aria_label: "clear-avatar".into(),
+                            text: get_local_text("settings-profile.clear-avatar"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::ClearProfile);
+                            }
+                        }
+                    ),
                     div {
-                        class: "content-item",
-                        Label {
-                            text: get_local_text("uplink.username"),
-                            aria_label: "profile-username-label".into(),
+                        class: "profile-picture",
+                        aria_label: "profile-picture",
+                        style: "background-image: url({image});",
+                        onclick: move |mouse_event_data: Event<MouseData>| {
+                            if mouse_event_data.modifiers() != Modifiers::CONTROL {
+                                set_profile_picture(open_crop_image_modal.clone());
+                            }
                         },
-                        div {
-                            class: "profile-group-username",
-                            Input {
-                                placeholder:  get_local_text("uplink.username"),
-                                default_text: username.clone(),
-                                aria_label: "username-input".into(),
-                                options: Options {
-                                    with_clear_btn: true,
-                                    ..get_input_options(username_validation_options)
-                                },
-                                onreturn: move |(v, is_valid, _): (String, bool, _)| {
-                                    if !is_valid {
-                                        return;
-                                    }
-                                    if v != username {
-                                        ch.send(ChanCmd::Username(v));
-                                    }
-                                },
-                            },
-                            div {
-                                class: "profile-id-btn",
-                                ContextMenu {
-                                    id: String::from("copy-id-context-menu"),
-                                    items: rsx!(
-                                        ContextItem {
-                                            icon: Icon::UserCircle,
-                                            text: get_local_text("settings-profile.copy-id"),
-                                            aria_label: "copy-id-context".into(),
-                                            onpress: move |_| {
-                                                match Clipboard::new() {
-                                                    Ok(mut c) => {
-                                                        if let Err(e) = c.set_text(short_name_context.clone()) {
-                                                            log::warn!("Unable to set text to clipboard: {e}");
-                                                        }
-                                                    },
-                                                    Err(e) => {
-                                                        log::warn!("Unable to create clipboard reference: {e}");
-                                                    }
-                                                };
-                                                state
-                                                    .write()
-                                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("friends.copied-did"),
-                                                        None,
-                                                        2,
-                                                    )));
-                                            }
-                                        }
-                                        ContextItem {
-                                            icon: Icon::Key,
-                                            text: get_local_text("settings-profile.copy-did"),
-                                            aria_label: "copy-id-context".into(),
-                                            onpress: move |_| {
-                                                match Clipboard::new() {
-                                                    Ok(mut c) => {
-                                                        if let Err(e) = c.set_text(did_key.to_string()) {
-                                                            log::warn!("Unable to set text to clipboard: {e}");
-                                                        }
-                                                    },
-                                                    Err(e) => {
-                                                        log::warn!("Unable to create clipboard reference: {e}");
-                                                    }
-                                                };
-                                                state
-                                                    .write()
-                                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("friends.copied-did"),
-                                                        None,
-                                                        2,
-                                                    )));
-                                            }
-                                        }
-                                    ),
-                                    Button {
-                                        appearance: Appearance::SecondaryLess,
-                                        aria_label: "copy-id-button".into(),
-                                        text: did_short.to_string(),
-                                        tooltip: rsx!(
-                                            Tooltip{
-                                                text: get_local_text("settings-profile.copy-id")
-                                            }
-                                        ),
-                                        onpress: move |mouse_event: MouseEvent| {
-                                            if mouse_event.modifiers() != Modifiers::CONTROL {
-                                                match Clipboard::new() {
-                                                    Ok(mut c) => {
-                                                        if let Err(e) = c.set_text(short_name.clone()) {
-                                                            log::warn!("Unable to set text to clipboard: {e}");
-                                                        }
-                                                    },
-                                                    Err(e) => {
-                                                        log::warn!("Unable to create clipboard reference: {e}");
-                                                    }
-                                                };
-                                                state
-                                                    .write()
-                                                    .mutate(Action::AddToastNotification(ToastNotification::init(
-                                                        "".into(),
-                                                        get_local_text("friends.copied-did"),
-                                                        None,
-                                                        2,
-                                                    )));
-                                            }
-                                        }
-                                    }
-                                },
+                        Button {
+                            icon: Icon::Plus,
+                            aria_label: "add-picture-button".into(),
+                            onpress: move |_| {
+                            set_profile_picture(open_crop_image_modal.clone());
                             }
                         },
                     },
+                }
+            },
+            div{
+                class: "profile-content",
+                aria_label: "profile-content",
+                div {
+                    class: "content-item",
+                    Label {
+                        text: get_local_text("uplink.username"),
+                        aria_label: "profile-username-label".into(),
+                    },
                     div {
-                        class: "content-item",
-                        Label {
-                            text: get_local_text("uplink.status"),
-                            aria_label: "profile-status-label".into(),
-                        },
+                        class: "profile-group-username",
                         Input {
-                            placeholder: get_local_text("uplink.status"),
-                            default_text: user_status.clone(),
-                            aria_label: "status-input".into(),
+                            placeholder:  get_local_text("uplink.username"),
+                            default_text: username.clone(),
+                            aria_label: "username-input".into(),
                             options: Options {
                                 with_clear_btn: true,
-                                ..get_input_options(status_validation_options)
+                                ..get_input_options(username_validation_options)
                             },
                             onreturn: move |(v, is_valid, _): (String, bool, _)| {
                                 if !is_valid {
                                     return;
                                 }
-                                if v != user_status {
-                                    ch.send(ChanCmd::StatusMessage(v));
+                                if v != username {
+                                    ch.send(ChanCmd::Username(v));
                                 }
                             },
-                        }
-                    },
-                    SettingSection {
-                        aria_label: "online-status-section".into(),
-                        section_label: get_local_text("settings-profile.online-status"),
-                        section_description: get_local_text("settings-profile.online-status-description"),
-                        FancySelect {
-                            initial_value: get_status_option(&online_status),
-                            width: 190,
-                            options: identity_status_values.iter().map(|status| get_status_option(status)).collect(),
-                            onselect: move |value: String| {
-                                let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
-                                ch.send(ChanCmd::Status(status));
-                            }
                         },
-                    },
-                    if *phrase_exists.get() {rsx!(
-                        SettingSection {
-                            aria_label: "recovery-seed-section".into(),
-                            section_label: get_local_text("settings-profile.recovery-seed"),
-                            section_description: get_local_text("settings-profile.recovery-seed-description"),
-                            Button {
-                                text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
-                                aria_label: "reveal-recovery-seed-button".into(),
-                                appearance: Appearance::Danger,
-                                icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
-                                onpress: move |_| {
-                                    if seed_phrase.is_some() {
-                                        seed_phrase.set(None);
-                                    } else {
-                                        seed_words_ch.send(());
-                                    }
-                                }
-                            }
-                        }
-                        if let Some(phrase) = seed_phrase.as_ref() {
-                            let words = phrase.split_whitespace().collect::<Vec<&str>>();
-                            let words2 = words.clone();
-                            render!(
-                                Button {
-                                    text: get_local_text("uplink.copy-seed"),
-                                    aria_label: "copy-seed-button".into(),
-                                    icon: Icon::BookmarkSquare,
-                                    onpress: move |_| {
-                                        match Clipboard::new() {
-                                            Ok(mut c) => {
-                                                match c.set_text(words2.clone().join("\n").to_string()) {
-                                                    Ok(_) => state.write().mutate(Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("uplink.copied-seed"),
-                                                            None,
-                                                            2,
-                                                        ),
-                                                    )),
-                                                    Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
-                                                }
-                                            },
-                                            Err(e) => {
-                                                log::warn!("Unable to create clipboard reference: {e}");
-                                            }
-                                        };
-                                    },
-                                    appearance: Appearance::Secondary
-                                },
-                                SettingSectionSimple {
-                                    aria_label: "seed-words-section".into(),
-                                    div {
-                                        class: "seed-words",
-                                        words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
-                                            div {
-                                                class: "row",
-                                                div {
-                                                    class: "col",
-                                                    span {
-                                                        aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-    <<<<<<< HEAD
-                                                        class: "num", ((idx * 2) + 1).to_string()
-    =======
-                                                        class: "num disable-select", ((idx * 2) + 1).to_string()
-    >>>>>>> origin/dev
-                                                    },
-                                                    span {
-                                                        aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                                                        class: "val", vals.first().cloned().unwrap_or_default()
+                        div {
+                            class: "profile-id-btn",
+                            ContextMenu {
+                                id: String::from("copy-id-context-menu"),
+                                items: rsx!(
+                                    ContextItem {
+                                        icon: Icon::UserCircle,
+                                        text: get_local_text("settings-profile.copy-id"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(short_name_context.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
                                                     }
                                                 },
-                                                div {
-                                                    class: "col",
-                                                    span {
-                                                        aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
-    <<<<<<< HEAD
-                                                        class: "num", ((idx * 2) + 2).to_string()
-    =======
-                                                        class: "num disable-select", ((idx * 2) + 2).to_string()
-    >>>>>>> origin/dev
-                                                    },
-                                                    span {
-                                                        aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
-                                                        class: "val", vals.get(1).cloned().unwrap_or_default()
-                                                    }
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
                                                 }
-                                            }
-                                        })
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
+                                    }
+                                    ContextItem {
+                                        icon: Icon::Key,
+                                        text: get_local_text("settings-profile.copy-did"),
+                                        aria_label: "copy-id-context".into(),
+                                        onpress: move |_| {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(did_key.to_string()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
+                                    }
+                                ),
+                                Button {
+                                    appearance: Appearance::SecondaryLess,
+                                    aria_label: "copy-id-button".into(),
+                                    text: did_short.to_string(),
+                                    tooltip: rsx!(
+                                        Tooltip{
+                                            text: get_local_text("settings-profile.copy-id")
+                                        }
+                                    ),
+                                    onpress: move |mouse_event: MouseEvent| {
+                                        if mouse_event.modifiers() != Modifiers::CONTROL {
+                                            match Clipboard::new() {
+                                                Ok(mut c) => {
+                                                    if let Err(e) = c.set_text(short_name.clone()) {
+                                                        log::warn!("Unable to set text to clipboard: {e}");
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    log::warn!("Unable to create clipboard reference: {e}");
+                                                }
+                                            };
+                                            state
+                                                .write()
+                                                .mutate(Action::AddToastNotification(ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("friends.copied-did"),
+                                                    None,
+                                                    2,
+                                                )));
+                                        }
                                     }
                                 }
-                            )
-                        },
-                        SettingSectionSimple {
-                            aria_label: "store-recovery-seed-on-account-section".into(),
-                            Checkbox {
-                                aria_label: "store-recovery-seed-on-account-checkbox".into(),
-                                disabled: false,
-                                is_checked: *store_phrase.get(),
-                                height: "15px".into(),
-                                width: "15px".into(),
-                                on_click: move |_| {
-                                    show_remove_seed.set(true);
-                                },
                             },
-                            label {
-                                aria_label: "store-recovery-seed-on-account-label",
-                                get_local_text("settings-profile.store-on-account")
+                        }
+                    },
+                },
+                div {
+                    class: "content-item",
+                    Label {
+                        text: get_local_text("uplink.status"),
+                        aria_label: "profile-status-label".into(),
+                    },
+                    Input {
+                        placeholder: get_local_text("uplink.status"),
+                        default_text: user_status.clone(),
+                        aria_label: "status-input".into(),
+                        options: Options {
+                            with_clear_btn: true,
+                            ..get_input_options(status_validation_options)
+                        },
+                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                            if !is_valid {
+                                return;
+                            }
+                            if v != user_status {
+                                ch.send(ChanCmd::StatusMessage(v));
                             }
                         },
-                        show_remove_seed.then(|| rsx!(
-                            Modal {
-                                open: *show_remove_seed.clone(),
-                                onclose: move |_| show_remove_seed.set(false),
-                                transparent: false,
-                                close_on_click_inside_modal: false,
-                                div {
-                                    class: "remove-phrase-container",
-                                    div {
-                                        class: "warning-symbol",
-                                        IconElement {
-                                            icon: Icon::ExclamationTriangle
-                                        }
-                                    },
-                                    Label {
-                                        text: get_local_text("settings-profile.remove-recovery-seed"),
-                                        aria_label: "remove-phrase-label".into(),
-                                    },
-                                    p {
-                                        get_local_text("settings-profile.remove-recovery-seed-description")
-                                    },
-                                    div {
-                                        class: "button-group",
-                                        Button {
-                                            text: get_local_text("uplink.remove"),
-                                            aria_label: "remove-seed-phrase-btn".into(),
-                                            appearance: Appearance::Danger,
-                                            icon: Icon::Trash,
-                                            onpress: move |_| {
-                                                remove_seed_words_ch.send(());
+                    }
+                },
+                SettingSection {
+                    aria_label: "online-status-section".into(),
+                    section_label: get_local_text("settings-profile.online-status"),
+                    section_description: get_local_text("settings-profile.online-status-description"),
+                    FancySelect {
+                        initial_value: get_status_option(&online_status),
+                        width: 190,
+                        options: identity_status_values.iter().map(|status| get_status_option(status)).collect(),
+                        onselect: move |value: String| {
+                            let status = serde_json::from_str::<IdentityStatus>(&value).unwrap_or(IdentityStatus::Online);
+                            ch.send(ChanCmd::Status(status));
+                        }
+                    },
+                },
+                if *phrase_exists.get() {{rsx!(
+                    SettingSection {
+                        aria_label: "recovery-seed-section".into(),
+                        section_label: get_local_text("settings-profile.recovery-seed"),
+                        section_description: get_local_text("settings-profile.recovery-seed-description"),
+                        Button {
+                            text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
+                            aria_label: "reveal-recovery-seed-button".into(),
+                            appearance: Appearance::Danger,
+                            icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
+                            onpress: move |_| {
+                                if seed_phrase.is_some() {
+                                    seed_phrase.set(None);
+                                } else {
+                                    seed_words_ch.send(());
+                                }
+                            }
+                        }
+                    }
+                    if let Some(phrase) = seed_phrase.as_ref() {
+                        {let words = phrase.split_whitespace().collect::<Vec<&str>>();
+                        let words2 = words.clone();
+                        rsx!(
+                            Button {
+                                text: get_local_text("uplink.copy-seed"),
+                                aria_label: "copy-seed-button".into(),
+                                icon: Icon::BookmarkSquare,
+                                onpress: move |_| {
+                                    match Clipboard::new() {
+                                        Ok(mut c) => {
+                                            match c.set_text(words2.clone().join("\n").to_string()) {
+                                                Ok(_) => state.write().mutate(Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("uplink.copied-seed"),
+                                                        None,
+                                                        2,
+                                                    ),
+                                                )),
+                                                Err(e) => log::warn!("Unable to set text to clipboard: {e}"),
                                             }
                                         },
-                                        Button {
-                                            text: get_local_text("uplink.cancel"),
-                                            aria_label: "cancel-remove-seed-phrase-btn".into(),
-                                            icon: Icon::NoSymbol,
-                                            appearance: Appearance::Secondary,
-                                            onpress: move |_| {
-                                                show_remove_seed.set(false);
+                                        Err(e) => {
+                                            log::warn!("Unable to create clipboard reference: {e}");
+                                        }
+                                    };
+                                },
+                                appearance: Appearance::Secondary
+                            },
+                            SettingSectionSimple {
+                                aria_label: "seed-words-section".into(),
+                                div {
+                                    class: "seed-words",
+                                    {words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
+                                        div {
+                                            class: "row",
+                                            div {
+                                                class: "col",
+                                                span {
+                                                    aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
+                                                    class: "num", ((idx * 2) + 1).to_string()
+                                                    class: "num disable-select", ((idx * 2) + 1).to_string()
+                                                },
+                                                span {
+                                                    aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
+                                                    class: "val", vals.first().cloned().unwrap_or_default()
+                                                }
+                                            },
+                                            div {
+                                                class: "col",
+                                                span {
+                                                    aria_label: "seed-word-number-{((idx * 2) + 2).to_string()}",
+                                                    class: "num", ((idx * 2) + 2).to_string()
+                                                    class: "num disable-select", ((idx * 2) + 2).to_string()
+                                                },
+                                                span {
+                                                    aria_label: "seed-word-value-{((idx * 2) + 2).to_string()}",
+                                                    class: "val", vals.get(1).cloned().unwrap_or_default()
+                                                }
                                             }
+                                        }
+                                    })}
+                                }
+                            }
+                        )}
+                    },
+                    SettingSectionSimple {
+                        aria_label: "store-recovery-seed-on-account-section".into(),
+                        Checkbox {
+                            aria_label: "store-recovery-seed-on-account-checkbox".into(),
+                            disabled: false,
+                            is_checked: *store_phrase.get(),
+                            height: "15px".into(),
+                            width: "15px".into(),
+                            on_click: move |_| {
+                                show_remove_seed.set(true);
+                            },
+                        },
+                        label {
+                            aria_label: "store-recovery-seed-on-account-label",
+                            {get_local_text("settings-profile.store-on-account")}
+                        }
+                    },
+                    {show_remove_seed.then(|| rsx!(
+                        Modal {
+                            open: *show_remove_seed.clone(),
+                            onclose: move |_| show_remove_seed.set(false),
+                            transparent: false,
+                            close_on_click_inside_modal: false,
+                            div {
+                                class: "remove-phrase-container",
+                                div {
+                                    class: "warning-symbol",
+                                    IconElement {
+                                        icon: Icon::ExclamationTriangle
+                                    }
+                                },
+                                Label {
+                                    text: get_local_text("settings-profile.remove-recovery-seed"),
+                                    aria_label: "remove-phrase-label".into(),
+                                },
+                                p {
+                                    {get_local_text("settings-profile.remove-recovery-seed-description")}
+                                },
+                                div {
+                                    class: "button-group",
+                                    Button {
+                                        text: get_local_text("uplink.remove"),
+                                        aria_label: "remove-seed-phrase-btn".into(),
+                                        appearance: Appearance::Danger,
+                                        icon: Icon::Trash,
+                                        onpress: move |_| {
+                                            remove_seed_words_ch.send(());
+                                        }
+                                    },
+                                    Button {
+                                        text: get_local_text("uplink.cancel"),
+                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                        icon: Icon::NoSymbol,
+                                        appearance: Appearance::Secondary,
+                                        onpress: move |_| {
+                                            show_remove_seed.set(false);
                                         }
                                     }
                                 }
                             }
-                        )),
-                    )}
-                    if open_crop_image_modal_for_banner_picture.get().0 {
-                        rsx!(CropRectImageModal {
-                            large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
-                            on_cancel: |_| {
-                                open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
-                            },
-                            on_crop: move |image_pathbuf: PathBuf| {
-                                match transform_file_into_base64_image(image_pathbuf) {
-                                    Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
-                                    Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
-                                }
-                                open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
+                        }
+                    ))},
+                )}}
+                if open_crop_image_modal_for_banner_picture.get().0 {
+                    {rsx!(CropRectImageModal {
+                        large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
+                        on_cancel: |_| {
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
+                        },
+                        on_crop: move |image_pathbuf: PathBuf| {
+                            match transform_file_into_base64_image(image_pathbuf) {
+                                Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
                             }
-                        })
-                    }
-                    if open_crop_image_modal.get().0 {
-                        rsx!(CropCircleImageModal {
-                            large_thumbnail: open_crop_image_modal.1.clone(),
-                            on_cancel: |_| {
-                                open_crop_image_modal.set((false, (Vec::new(), String::new())));
-                            },
-                            on_crop: move |image_pathbuf: PathBuf| {
-                                match transform_file_into_base64_image(image_pathbuf) {
-                                    Ok((img_cropped, _)) => ch.send(ChanCmd::Profile(img_cropped)),
-                                    Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.0.clone()) ),
-                                }
-                                open_crop_image_modal.set((false, (Vec::new(), String::new())));
+                            open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
+                        }
+                    })}
+                }
+                if open_crop_image_modal.get().0 {
+                    {rsx!(CropCircleImageModal {
+                        large_thumbnail: open_crop_image_modal.1.clone(),
+                        on_cancel: |_| {
+                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
+                        },
+                        on_crop: move |image_pathbuf: PathBuf| {
+                            match transform_file_into_base64_image(image_pathbuf) {
+                                Ok((img_cropped, _)) => ch.send(ChanCmd::Profile(img_cropped)),
+                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.0.clone()) ),
                             }
-                        })
-                    }
+                            open_crop_image_modal.set((false, (Vec::new(), String::new())));
+                        }
+                    })}
                 }
             }
-        )
+        }
+    )
 }
 
 fn set_profile_picture(mut open_crop_image_modal: Signal<(bool, (Vec<u8>, String))>) {

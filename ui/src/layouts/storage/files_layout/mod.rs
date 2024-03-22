@@ -11,7 +11,7 @@ use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
-use dioxus_desktop::wry::webview::FileDropEvent;
+use dioxus_desktop::wry::FileDropEvent;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::label::Label;
@@ -30,7 +30,6 @@ use warp::raygun::Location;
 pub mod controller;
 pub mod file_preview;
 
-use crate::components::files::upload_progress_bar::FileHoverHandler;
 use crate::layouts::chats::ChatSidebar;
 use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::files_layout::file_preview::open_file_preview_modal;
@@ -105,40 +104,38 @@ pub fn FilesLayout() -> Element {
     );
 
     let upload_streams = chat_upload_stream_handler();
-    let send_ch = use_coroutine(
-        |mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
-            to_owned![state, upload_streams, send_files_from_storage];
-            async move {
-                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                while let Some((files_location, convs_id)) = rx.next().await {
-                    let (tx, rx) = oneshot::channel();
-                    if let Err(e) =
-                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
-                            convs_id,
-                            msg: vec!["".to_owned()],
-                            attachments: files_location,
-                            rsp: tx,
-                        }))
-                    {
-                        log::error!("Failed to send warp command: {}", e);
-                        return;
-                    }
-                    if let Ok(Ok(streams)) = rx.await {
-                        let mut to_append = upload_streams.write();
-                        for (chat, (id, stream)) in streams {
-                            state
-                                .write()
-                                .increment_outgoing_messages(id, vec!["".to_owned()]);
-                            if let Some(stream) = stream {
-                                to_append.append((chat, id, stream))
-                            }
+    let send_ch = use_coroutine(|mut rx: UnboundedReceiver<(Vec<Location>, Vec<Uuid>)>| {
+        to_owned![state, upload_streams, send_files_from_storage];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((files_location, convs_id)) = rx.next().await {
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessageForSeveralChats {
+                        convs_id,
+                        msg: vec!["".to_owned()],
+                        attachments: files_location,
+                        rsp: tx,
+                    }))
+                {
+                    log::error!("Failed to send warp command: {}", e);
+                    return;
+                }
+                if let Ok(Ok(streams)) = rx.await {
+                    let mut to_append = upload_streams.write();
+                    for (chat, (id, stream)) in streams {
+                        state
+                            .write()
+                            .increment_outgoing_messages(id, vec!["".to_owned()]);
+                        if let Some(stream) = stream {
+                            to_append.append((chat, id, stream))
                         }
                     }
-                    send_files_from_storage.set(false);
                 }
+                send_files_from_storage.set(false);
             }
-            send_files_from_storage.set(false);
-        });
+        }
+    });
 
     rsx!(
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
@@ -294,13 +291,6 @@ pub fn FilesLayout() -> Element {
                                 )}
                             }
                         }
-                    },
-                    FileHoverHandler {
-                        are_files_hovering_app: upload_file_controller.are_files_hovering_app,
-                        files_been_uploaded: upload_file_controller.files_been_uploaded,
-                        on_update: move |files_to_upload: Vec<PathBuf>|  {
-                            functions::add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload);
-                        },
                     },
             SendFilesLayoutModal {
                 send_files_from_storage: send_files_from_storage,

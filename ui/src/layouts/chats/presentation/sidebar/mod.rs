@@ -114,13 +114,13 @@ pub fn Sidebar(props: SidebarProps) -> Element {
     let ext_renders = extensions
         .values()
         .filter(|(_, ext)| ext.details().location == extensions::Location::Sidebar)
-        .map(|(_, ext)| rsx!(ext.render(cx.scope)))
+        .map(|(_, ext)| rsx!({ ext.render() }))
         .collect::<Vec<_>>();
     let search_typed_chars = use_signal(String::new);
     let transfer = if storage {
         rsx!(FileTransferModal { state: state })
     } else {
-        rsx!(())
+        rsx!({ () })
     };
 
     rsx!(
@@ -201,7 +201,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
             ),
             with_file_transfer: transfer,
             if *search_friends_is_focused.read() {
-                render! { search::search_friends {
+                {rsx! { search::search_friends {
                     search_typed_chars: search_typed_chars.clone(),
                     search_friends_is_focused: search_friends_is_focused.clone(),
                     identities: search_results.clone(),
@@ -214,16 +214,16 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         reset_searchbar.set(true);
                         on_search_dropdown_hover.with_mut(|i| *i = false);
                     }
-                }}
+                }}}
             },
             // Load extensions
             for node in ext_renders {
-                rsx!(node)
+                {rsx!({node})}
             },
             div {
                 id: "chats",
                 aria_label: "Chats",
-                (!sidebar_chats.is_empty()).then(|| rsx!(
+                {(!sidebar_chats.is_empty()).then(|| rsx!(
                     div {
                         class: "sidebar-chats-header",
                         Label {
@@ -245,7 +245,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             }
                         }
                     }
-                    show_create_group.then(|| {
+                    {show_create_group.then(|| {
                         let clss = format!(
                             "create-group-modal {}",
                             if state.read().ui.is_minimal_view() {
@@ -269,9 +269,9 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 }
                             }
                         }
-                    )}),
-                )),
-                sidebar_chats.iter().cloned().map(|chat| {
+                    )})},
+                ))},
+                {sidebar_chats.iter().cloned().map(|chat| {
                     let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
                     let participants = state.read().chat_participants(&chat);
                     let other_participants =  state.read().remove_self(&participants);
@@ -353,7 +353,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
                                     }
                                 },
-                                show_delete_conversation.read().then(||
+                                {show_delete_conversation.read().then(||
                                     rsx!(
                                         ContextItem {
                                             icon: Icon::Trash,
@@ -369,7 +369,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                             }
                                         },
                                     )
-                                )
+                                )}
                             ),
                             User {
                                 aria_label: participants_name.clone(),
@@ -378,20 +378,20 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: rsx!(
-                                    if chat.conversation_type == ConversationType::Direct {rsx! (
+                                    if chat.conversation_type == ConversationType::Direct {{rsx! (
                                         UserImage {
                                             platform: platform,
                                             status:  user.identity_status().into(),
                                             image: user.profile_picture(),
                                             typing: users_typing,
                                         }
-                                    )} else {rsx! (
+                                    )}} else {{rsx! (
                                         UserImageGroup {
                                             participants: build_participants(&participants),
                                             aria_label: "user-image-group".into(),
                                             typing: users_typing,
                                         }
-                                    )}
+                                    )}}
                                 ),
                                 with_badge: badge,
                                 onpress: move |_| {
@@ -405,8 +405,8 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             }
                         }
                     )}
-                ),
-                sidebar_chats.is_empty().then(|| rsx!(
+                )},
+                {sidebar_chats.is_empty().then(|| rsx!(
                     div {
                         class: "skeletal-steady",
                         User {
@@ -449,7 +449,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             )
                         },
                     }
-                ))
+                ))}
             }
         }
     )

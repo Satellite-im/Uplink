@@ -20,11 +20,7 @@ use common::{
     state::{ui, Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_desktop::{
-    use_window,
-    wry::{webview::FileDropEvent, FileDropEvent},
-    DesktopContext,
-};
+use dioxus_desktop::{use_window, wry::FileDropEvent, DesktopContext};
 use dioxus_html::input_data::keyboard_types::Code;
 use dioxus_html::input_data::keyboard_types::Modifiers;
 
@@ -141,17 +137,17 @@ pub fn ChatLayout() -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             if show_slimbar & !is_minimal_view {
-                rsx!(
+                {rsx!(
                     SlimbarLayout { active: crate::UplinkRoute::ChatLayout{} },
-                )
+                )}
             },
             // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
             // creating a new account on a mobile device.
             ChatSidebar {
                 active_route: crate::UplinkRoute::ChatLayout {},
             },
-            show_welcome.then(|| rsx!(Welcome {})),
-            (!show_welcome && (sidebar_hidden  || !state.read().ui.is_minimal_view())).then(|| rsx!(Compose {}))
+            {show_welcome.then(|| rsx!(Welcome {}))},
+            {(!show_welcome && (sidebar_hidden  || !state.read().ui.is_minimal_view())).then(|| rsx!(Compose {}))}
         }
     )
 }

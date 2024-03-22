@@ -34,13 +34,13 @@ pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
                     "{props.section_description}"
                 }
             },
-            props.children.is_some().then(|| rsx!(
+            {props.children.is_some().then(|| rsx!(
                 div {
                     class: "settings-control",
                     aria_label: "settings-control",
-                    &props.children
+                    {&props.children}
                 }
-            ))
+            ))}
         }
     )
 }
@@ -57,13 +57,13 @@ pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
         div {
             class: "settings-section simple disable-select",
             aria_label: "{aria_label}",
-            props.children.is_some().then(|| rsx!(
+            {props.children.is_some().then(|| rsx!(
                 div {
                     class: "settings-control",
                     aria_label: "settings-control",
-                    &props.children
+                    {&props.children}
                 }
-            ))
+            ))}
         }
     )
 }
@@ -101,7 +101,7 @@ pub fn ExtensionSetting<'a>(props: ExtensionProps<'a>) -> Element {
                 },
                 div {
                     class: "control",
-                    &props.children
+                    {&props.children}
                 }
             },
             p {

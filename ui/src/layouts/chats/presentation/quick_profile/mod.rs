@@ -35,10 +35,10 @@ pub const USER_VOL_MIN: f32 = 0.25;
 pub const USER_VOL_MAX: f32 = 5.0;
 
 #[derive(Props, Clone, PartialEq)]
-pub struct QuickProfileProps<'a> {
-    id: &'a String,
-    did_key: &'a DID,
-    update_script: &'a Signal<String>,
+pub struct QuickProfileProps {
+    id: String,
+    did_key: DID,
+    update_script: Signal<String>,
     children: Element,
 }
 
@@ -56,13 +56,16 @@ enum QuickProfileCmd {
 
 // Create a quick profile context menu
 #[allow(non_snake_case)]
-pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
+pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
     let state = use_context::<Signal<State>>();
     let settings_page = use_context::<Signal<Page>>();
     let id = props.id;
     let share_did = use_signal(|| None);
 
-    let identity = state.read().get_identity(props.did_key).unwrap_or_default();
+    let identity = state
+        .read()
+        .get_identity(&props.did_key)
+        .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
@@ -333,10 +336,10 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                     p {
                         class: "text",
                         aria_label: "profile-name-value",
-                        format!("{}", identity.username())
+                        {format!("{}", identity.username())}
                     }
                 }
-                identity.status_message().and_then(|s|{
+                {identity.status_message().and_then(|s|{
                     rsx!(
                         div {
                             id: "profile-status",
@@ -348,12 +351,12 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                             }
                         }
                     )
-                }),
+                })},
             }
             div {
                 class: "profile-context-items",
                 if is_self {
-                    rsx!(hr{},
+                    {rsx!(hr{},
                         ContextItem {
                         icon: Icon::UserCircle,
                         aria_label: "quick-profile-self-edit".into(),
@@ -362,11 +365,10 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                             settings_page.write().set(Page::Profile);
                             router.replace(UplinkRoute::SettingsLayout {});
                         }
-                    })
+                    })}
                 } else {
-                    rsx!(
                     if state.read().configuration.developer.experimental_features && in_vc {
-                        rsx!(
+                        {rsx!(
                             div {
                                 class: "range-container",
                                 Label {
@@ -387,7 +389,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                 }
                             },
                             hr{}
-                        )
+                        )}
                     }
                         /*ContextItem {
                         icon: Icon::UserCircle,
@@ -395,9 +397,9 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                         // TODO: Show a profile popup
                     },*/
                     if is_friend {
-                        rsx!(
+                        {rsx!(
                             if !chat_is_current {
-                                rsx!(
+                                {rsx!(
                                     ContextItem {
                                     icon: Icon::ChatBubbleBottomCenterText,
                                     aria_label: "quick-profile-message".into(),
@@ -405,16 +407,16 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                     onpress: move |_| {
                                         ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
                                     }
-                                })
+                                })}
                             }
                             /*ContextItem {
                                 icon: Icon::PhoneArrowUpRight,
                                 text: get_local_text("quickprofile.call"),
                                 // TODO: Impl missing
                             }*/
-                        )
+                        )}
                     } else {
-                        let outgoing = state.read().outgoing_fr_identities();
+                        {let outgoing = state.read().outgoing_fr_identities();
                         let disabled = outgoing.contains(&identity);
                         rsx!(
                             ContextItem {
@@ -426,10 +428,10 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                     ch.send(QuickProfileCmd::SendFriendRequest(identity.did_key(), outgoing.clone()));
                                 }
                             }
-                        )
+                        )}
                     }
                     if is_friend {
-                        rsx!(ContextItem {
+                        {rsx!(ContextItem {
                             danger: false,
                             icon: Icon::Link,
                             text: get_local_text("friends.share"),
@@ -437,10 +439,10 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                             onpress: move |_| {
                                 share_did.set(Some(did_cloned_2.clone()));
                             }
-                        })
-                    },
+                        })}
+                    }
                     if is_friend {
-                        rsx!(ContextItem {
+                        {rsx!(ContextItem {
                             danger: true,
                             icon: Icon::UserMinus,
                             text: get_local_text("quickprofile.friend-remove"),
@@ -449,7 +451,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                 ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
                                 ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
                             }
-                        })
+                        })}
                     }
                     ContextItem {
                         danger: true,
@@ -464,9 +466,9 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                 ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
                             }
                         }
-                    },
+                    }
                     if is_friend && !chat_is_current {
-                        rsx!(
+                        {rsx!(
                             hr{},
                             Input {
                                 placeholder: get_local_text("quickprofile.chat-placeholder"),
@@ -477,12 +479,12 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                                     let _ = eval(&script);
                                 }
                             }
-                        )
-                    })
+                        )}
+                    }
                 }
             }
         ),
-        share_did.as_ref().map(|_|{
+        {share_did.as_ref().map(|_|{
             match state.read().get_active_chat() {
                 Some(chat) => rsx!(ShareFriendsModal{
                     did: share_did.clone(),
@@ -492,7 +494,7 @@ pub fn QuickProfileContext<'a>(props: QuickProfileProps<'a>) -> Element {
                     did: share_did.clone(),
                 })
             }
-        }),
-        &props.children
+        })},
+        {&props.children}
     }})
 }

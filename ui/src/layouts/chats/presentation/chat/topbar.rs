@@ -128,27 +128,27 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
     };
 
     rsx!(
-        if direct_message {rsx! (
+        if direct_message {{rsx! (
             UserImage {
                 loading: false,
                 platform: data.active_chat.platform(),
                 status: data.active_chat.active_participant().identity_status().into(),
                 image: data.active_chat.first_image(),
             }
-        )} else {rsx! (
+        )}} else {{rsx! (
             UserImageGroup {
                 loading: false,
                 aria_label: "user-image-group".into(),
                 participants: build_participants(&all_participants),
             }
-        )}
+        )}}
         ContextMenu {
             id: "chat_topbar_context".into(),
             fit_parent: true,
             key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
             items: rsx!(
-                if direct_message {rsx!(
+                if direct_message {{rsx!(
                     ContextItem {
                         icon: Icon::XMark,
                         aria_label: "close-chat-context-option".into(),
@@ -157,8 +157,8 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                             state.write().mutate(Action::RemoveFromSidebar(conv_id));
                         }
                     }
-                )} else {rsx!(
-                    if show_rename {rsx!(
+                )}} else {{rsx!(
+                    if show_rename {{rsx!(
                         ContextItem {
                             icon: Icon::PencilSquare,
                             aria_label: "rename-group-context-option".into(),
@@ -167,8 +167,8 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                                 props.show_rename_group.set(true);
                             }
                         }
-                    )}
-                    if show_manage_members {rsx!(
+                    )}}
+                    if show_manage_members {{rsx!(
                         ContextItem {
                             icon: Icon::Users,
                             aria_label: "manage-members-context-option".into(),
@@ -177,8 +177,8 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                                 props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
                             }
                         }
-                    )}
-                    if show_group_settings() {rsx!(
+                    )}}
+                    if show_group_settings() {{rsx!(
                         ContextItem {
                             danger: true,
                             icon: Icon::Cog,
@@ -188,9 +188,9 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                                 props.show_group_settings.set(true);
                             }
                         },
-                    )}
+                    )}}
                     // TODO: `Delete` item
-                )}
+                )}}
             ),
             div {
                 class: "user-info",
@@ -203,7 +203,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         props.show_rename_group.set(false);
                     }
                 },
-                if *props.show_rename_group.get() {rsx! (
+                if *props.show_rename_group.get() {{rsx! (
                     div {
                         id: "edit-group-name",
                         class: "edit-group-name",
@@ -231,8 +231,8 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                             onpress: move |_| props.show_rename_group.set(false),
                             aria_label: "close-rename-group".into(),
                         }
-                    })
-                } else {rsx!(
+                    })}
+                } else {{rsx!(
                     p {
                         aria_label: "user-info-username",
                         class: "username",
@@ -242,16 +242,16 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         aria_label: "user-info-status",
                         class: "status",
                         if direct_message {
-                            rsx! (span {
+                            {rsx! (span {
                                 "{subtext}"
-                            })
+                            })}
                         } else {
-                            rsx! (
+                            {rsx! (
                                 span {"{members_count}"}
-                            )
+                            )}
                         }
                     }
-                )}
+                )}}
             }
         }
     )

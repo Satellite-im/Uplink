@@ -104,24 +104,26 @@ pub fn AboutPage() -> Element {
 
     let about_button = rsx!(match opt {
         None if stage == DownloadProgress::Idle => {
-            rsx!(Button {
-                key: "btn-start",
-                text: get_local_text("uplink.check-for-updates"),
-                loading: *update_button_loading.current(),
-                aria_label: "check-for-updates-button".into(),
-                appearance: Appearance::Secondary,
-                icon: Icon::ArrowPath,
-                onpress: |_| {
-                    download_available.set(None);
-                    update_button_loading.set(true);
-                    ch.send(());
-                }
-            })
+            {
+                rsx!(Button {
+                    key: "{btn-start}",
+                    text: get_local_text("uplink.check-for-updates"),
+                    loading: *update_button_loading(),
+                    aria_label: "check-for-updates-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::ArrowPath,
+                    onpress: |_| {
+                        download_available.set(None);
+                        update_button_loading.set(true);
+                        ch.send(());
+                    }
+                })
+            }
         }
         _ => match stage {
             DownloadProgress::Idle => {
                 rsx!(Button {
-                    key: "btn-idle",
+                    key: "{btn-idle}",
                     text: get_local_text("uplink.download-update"),
                     loading: *update_button_loading.current(),
                     aria_label: "check-for-updates-button".into(),
@@ -155,7 +157,7 @@ pub fn AboutPage() -> Element {
             }
             DownloadProgress::Finished => {
                 rsx!(Button {
-                    key: "btn-finished",
+                    key: "{btn-finished}",
                     text: get_local_text("uplink.update-menu-install"),
                     loading: *update_button_loading.current(),
                     aria_label: "check-for-updates-button".into(),

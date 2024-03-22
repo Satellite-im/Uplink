@@ -436,10 +436,9 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     }
                 ),
 
-            with_replying_to: (!disabled).then(|| {
-
+            with_replying_to: {(!disabled).then(|| {
                     rsx!(
-                        chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
+                        {chat_data.read().active_chat.replying_to().as_ref().map(|msg| {
                             let our_did = state.read().did_key();
                             let msg_owner = if state.read().did_key() == msg.sender() {
                                 state.read().get_identity(&state.read().did_key())
@@ -469,9 +468,9 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                                     },
                                 }
                             )
-                        })
-                    ),
-            }).unwrap_or(None),
+                        })}
+                    )
+            }).unwrap_or(None)},
             with_file_upload:
                 rsx!(
                     Button {
@@ -518,23 +517,23 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     }
                 ),
         }
-        error.0.then(|| rsx!(
+        {error.0.then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
                 get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])
             }
-        ))
+        ))}
     );
 
     rsx!(
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-                rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
+                {rsx!(shortcuts::paste_file_shortcut::PasteFilesShortcut {
                     on_paste: move |files_local_path: Vec<PathBuf>| {
                         state
                             .write()
                             .mutate(Action::AppendChatAttachments(active_chat_id, files_local_path));
-                    }})
+                    }})}
             }
                 SendFilesLayoutModal {
                     send_files_from_storage: show_storage_modal,
@@ -555,7 +554,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                 },
         div {
             class: "chatbar-container",
-            with_scroll_btn.then(|| {
+            {with_scroll_btn.then(|| {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: move |_| {
@@ -566,9 +565,9 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                         // however, this is easier and seems to work well enough.
                         scroll_ch.send(active_chat_id);
                     },
-                    get_local_text("messages.scroll-bottom"),
+                    {get_local_text("messages.scroll-bottom")},
                 })
-            })
+            })}
         },
         Attachments {
             chat_id: active_chat_id,
@@ -578,7 +577,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                 update_send();
             }
         },
-        chatbar
+        {chatbar}
     )
 }
 

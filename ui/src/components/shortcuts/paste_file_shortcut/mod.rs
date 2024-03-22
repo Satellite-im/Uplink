@@ -4,11 +4,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus::prelude::{KeyCode, Props};
-use dioxus_core::prelude::*;
-use dioxus_desktop::use_global_shortcut;
-use dioxus_desktop::wry::application::keyboard::ModifiersState;
-use dioxus_hooks::{to_owned, use_future};
+use dioxus::{
+    core_macro::Props,
+    dioxus_core::Element,
+    prelude::{EventHandler, KeyCode},
+};
+use dioxus_desktop::{tao::keyboard::ModifiersState, use_global_shortcut};
+use dioxus_hooks::{to_owned, use_resource, use_signal};
 use once_cell::sync::Lazy;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
@@ -27,7 +29,7 @@ fn debounced_callback<F: FnOnce()>(callback: F, debounce_duration: Duration) {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct ShortCutProps<'a> {
+pub struct ShortCutProps {
     on_paste: EventHandler<Vec<PathBuf>>,
 }
 
@@ -51,7 +53,7 @@ pub struct ShortCutProps<'a> {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn PasteFilesShortcut<'a>(props: ShortCutProps) -> Element {
+pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
     if cfg!(target_os = "linux") {
         return None;
     }

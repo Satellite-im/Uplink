@@ -6,15 +6,15 @@ use kit::{
 };
 
 #[derive(Props, Clone, PartialEq)]
-pub struct FileLocationProps<'a> {
-    id: &'a String,
-    update_script: &'a Signal<String>,
+pub struct FileLocationProps {
+    id: String,
+    update_script: Signal<String>,
     on_press_storage: EventHandler<()>,
     on_press_local_disk: EventHandler<()>,
 }
 
 #[allow(non_snake_case)]
-pub fn FileLocation<'a>(props: FileLocationProps<'a>) -> Element {
+pub fn FileLocation(props: FileLocationProps) -> Element {
     let state = use_context::<Signal<State>>();
     let id = props.id.clone();
     let update_script_signal = props.update_script.clone();

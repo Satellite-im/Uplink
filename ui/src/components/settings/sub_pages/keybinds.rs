@@ -54,17 +54,17 @@ pub fn Keybind(props: KeybindProps) -> Element {
             }
         },
         if idx != props.keys.len() - 1 {
-            rsx!(div {
+            {rsx!(div {
                 class: "keybind-separator",
                 aria_label: "keybind-separator",
                 IconElement {
                     icon: Icon::Plus
                 }
-            })
+            })}
         })
     });
 
-    rsx!(keys_rendered)
+    rsx!({ keys_rendered })
 }
 
 #[derive(PartialEq, Props)]
@@ -163,13 +163,13 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
             id: format_args!("{}", keybind_section_id),
             class: "keybind-section",
             aria_label: "{aria_label}",
-            (**is_recording).then(|| rsx!(div {
+            {(**is_recording).then(|| rsx!(div {
                 class: "keybind-section-mask",
                 onclick: move |_| {
                     is_recording.set(false);
                     state.write().settings.is_recording_new_keybind = false;
                 }
-            })),
+            }))},
             div {
                 aria_label: "keybind-section-label",
                 class: "keybind-section-label",
@@ -218,7 +218,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                     state.write().settings.is_recording_new_keybind = false;
                 },
                 if has_conflicts {
-                    rsx!(TooltipWrap {
+                    {rsx!(TooltipWrap {
                         tooltip: rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
@@ -228,11 +228,11 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                         Keybind {
                             keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
                         }
-                    })
+                    })}
                 } else {
-                    rsx!(Keybind {
+                    {rsx!(Keybind {
                         keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
-                    })
+                    })}
                 }
             },
             Button {
@@ -283,7 +283,7 @@ pub fn KeybindSettings() -> Element {
                 },
                 p {
                     aria_label: "settings-keybind-info-text",
-                    get_local_text("settings-keybinds.info")
+                    {get_local_text("settings-keybinds.info")}
                 }
             },
             SettingSection {

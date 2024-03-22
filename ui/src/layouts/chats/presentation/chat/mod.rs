@@ -157,7 +157,7 @@ pub fn Compose() -> Element {
             //         end_text: get_local_text("uplink.end"),
             //     },
             // ))),
-        show_manage_members
+        {show_manage_members
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
                     open: show_manage_members.is_some(),
@@ -169,8 +169,8 @@ pub fn Compose() -> Element {
                     right: "var(--gap)",
                     EditGroup {}
                 }
-            )),
-        show_group_settings.then(|| rsx!(
+            ))},
+        {show_group_settings.then(|| rsx!(
                 Modal {
                     open: *show_group_settings.get(),
                     transparent: true,
@@ -181,8 +181,8 @@ pub fn Compose() -> Element {
                     right: "var(--gap)",
                     GroupSettings {}
                 }
-            )),
-        show_group_users
+            ))},
+        {show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
                     open: show_group_users.is_some(),
@@ -197,21 +197,21 @@ pub fn Compose() -> Element {
                         quickprofile_data: quickprofile_data.clone(),
                     }
                 }
-        )),
+        ))},
         CallControl {
             in_chat: true
         },
         if init.value().is_none() {
-           rsx!(
+           {rsx!(
                 div {
                     id: "messages",
                     MessageGroupSkeletal {},
                     MessageGroupSkeletal { alt: true },
                     MessageGroupSkeletal {},
                 }
-            )
+            )}
         } else {
-            rsx!(get_messages{quickprofile_data: quickprofile_data.clone()})
+            {rsx!(get_messages{quickprofile_data: quickprofile_data.clone()})}
         },
         get_chatbar {
             show_manage_members: show_manage_members.clone(),

@@ -61,7 +61,7 @@ pub fn Explore() -> Element {
             span {
                 class: "banner",
                 aria_label: "extensions-explore-banner",
-                get_local_text("settings-extensions.banner")
+                {get_local_text("settings-extensions.banner")}
             },
             Input {
                 placeholder: "Extension name or description.".into(),
@@ -92,18 +92,22 @@ pub fn Installed() -> Element {
         .collect();
 
     rsx!(if metas.is_empty() {
-        rsx!(
-            div {
-                class: "extensions-not-installed",
-                aria_label: "extensions-not-installed",
-                Label {
-                    text: get_local_text("settings.no-extensions-installed"),
-                    aria_label: String::from("extensions-installed-label"),
+        {
+            rsx!(
+                div {
+                    class: "extensions-not-installed",
+                    aria_label: "extensions-not-installed",
+                    Label {
+                        text: get_local_text("settings.no-extensions-installed"),
+                        aria_label: String::from("extensions-installed-label"),
+                    }
                 }
-            }
-        )
+            )
+        }
     } else {
-        rsx!( metas.iter().cloned().map(|(enabled, meta)| {
+        {
+            rsx!({
+                metas.iter().cloned().map(|(enabled, meta)| {
                 rsx!(
                     ExtensionSetting {
                         title: meta.pretty_name.to_owned(),
@@ -121,7 +125,9 @@ pub fn Installed() -> Element {
                         }
                     }
                 )
-            }))
+            })
+            })
+        }
     })
 }
 
@@ -162,15 +168,15 @@ pub fn ExtensionsBrowser() -> Element {
                     active_route.set(r);
                 }
             },
-            (*active_route.get() == "installed").then(|| rsx!(
+            {(*active_route() == "installed").then(|| rsx!(
                 Installed {}
-            )),
-            (*active_route.get() == "explore").then(|| rsx!(
+            ))},
+            {(*active_route() == "explore").then(|| rsx!(
                 Explore {}
-            )),
-            (*active_route.get() == "settings").then(|| rsx!(
+            ))},
+            {(*active_route() == "settings").then(|| rsx!(
                 Settings {}
-            ))
+            ))}
         }
     )
 }

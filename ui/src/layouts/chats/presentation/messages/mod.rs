@@ -109,7 +109,7 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
                     Loader {
                         spinning: true
                     },
-                    get_local_text("messages.fetching")
+                    {get_local_text("messages.fetching")}
                 }
             })
         } else {
@@ -122,7 +122,7 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
                         IconElement {
                             icon:  Icon::LockClosed,
                         },
-                        get_local_text("messages.msg-banner")
+                        {get_local_text("messages.msg-banner")}
                     }
                 }
             )
@@ -164,8 +164,8 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
                 hidden: true,
             },
             span {
-                rsx!(
-                    msg_container_end,
+                {rsx!(
+                    {msg_container_end},
                     loop_over_message_groups {
                         groups: data::create_message_groups(chat_data.read().active_chat.my_id(), chat_data.read().active_chat.other_participants(), chat_data.read().active_chat.messages()),
                         active_chat_id: chat_data.read().active_chat.id(),
@@ -186,14 +186,14 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
                             quickprofile_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, id.clone(), own)));
                         }
                     }
-                )
+                )}
             }
         }
     )
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct AllMessageGroupsProps<'a> {
+pub struct AllMessageGroupsProps {
     groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
@@ -201,15 +201,17 @@ pub struct AllMessageGroupsProps<'a> {
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
-pub fn loop_over_message_groups<'a>(props: AllMessageGroupsProps<'a>) -> Element {
+pub fn loop_over_message_groups(props: AllMessageGroupsProps) -> Element {
     log::trace!("render message groups");
-    rsx!(props.groups.iter().map(|_group| {
-        rsx!(render_message_group {
-            group: _group,
-            active_chat_id: props.active_chat_id,
-            on_context_menu_action: move |e| props.on_context_menu_action.call(e)
-        },)
-    }))
+    rsx!({
+        props.groups.iter().map(|_group| {
+            rsx!(render_message_group {
+                group: _group,
+                active_chat_id: props.active_chat_id,
+                on_context_menu_action: move |e| props.on_context_menu_action.call(e)
+            },)
+        })
+    })
 }
 
 #[derive(Props, Clone, PartialEq)]
@@ -246,7 +248,7 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
                 div {
                     class: "blocked-container",
                     p {
-                        get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])
+                        {get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])}
                     },
                     p {
                         style: "white-space: pre",
@@ -257,7 +259,7 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
                         onclick: move |_| {
                             show_blocked.set(true);
                         },
-                        get_local_text("messages.view")
+                        {get_local_text("messages.view")}
                     }
                 }
             );
@@ -266,7 +268,7 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
             div {
                 class: "blocked-container",
                 p {
-                    get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])
+                    {get_local_text_with_args("messages.blocked", vec![("amount", messages.len())])}
                 },
                 p {
                     style: "white-space: pre",
@@ -277,7 +279,7 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
                     onclick: move |_| {
                         show_blocked.set(false);
                     },
-                    get_local_text("messages.hide")
+                    {get_local_text("messages.hide")}
                 }
             }
         )
@@ -298,9 +300,9 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
     }
 
     rsx!(
-        blocked_element,
+        { blocked_element },
         MessageGroup {
-            user_image: render!(UserImage {
+            user_image: rsx!(UserImage {
                 image: sender.profile_picture(),
                 platform: sender.platform().into(),
                 status: sender_status,
@@ -348,7 +350,8 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
         .enabled_extension(emoji_selector_extension);
 
     let ch = use_coroutine_handle::<MessagesCommand>();
-    rsx!(props.messages.iter().map(|grouped_message| {
+    rsx!({
+        props.messages.iter().map(|grouped_message| {
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -430,7 +433,7 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
                     text: get_local_text("messages.react"),
                     disabled: !has_extension,
                     tooltip:  if has_extension {
-                        rsx!(())
+                        rsx!({()})
                     } else {
                         rsx!(Tooltip {
                             arrow_position: ArrowPosition::Top,
@@ -474,7 +477,7 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
                     aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
                     should_render: !props.is_remote
-                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                        && edit_msg().map(|id| id != msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(msg_uuid));
                         state.write().ui.ignore_focus = true;
@@ -485,7 +488,7 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
                     aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !props.is_remote
-                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                        && edit_msg().map(|id| id == msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
                         state.write().ui.ignore_focus = false;
@@ -506,7 +509,8 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
                 },
             ) // end of context menu items
         }) // end context menu
-    })) // end outer cx.render
+    })
+    }) // end outer cx.render
 }
 
 #[derive(Props, Clone, PartialEq)]
@@ -576,7 +580,7 @@ fn render_message<'a>(props: MessageProps<'a>) -> Element {
     rsx!(
         div {
             class: "msg-wrapper",
-            preview_file_in_the_message.0.then(|| {
+            {preview_file_in_the_message.0.then(|| {
                 if preview_file_in_the_message.1.is_none() {
                     preview_file_in_the_message.set((false, None));
                 }
@@ -605,8 +609,8 @@ fn render_message<'a>(props: MessageProps<'a>) -> Element {
                     file: file.clone()
                 }
             )
-            }),
-            message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
+            })},
+            {message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
             MessageReply {
                     key: "reply-{message_key}",
                     with_text: other_msg.to_string(),
@@ -627,7 +631,7 @@ fn render_message<'a>(props: MessageProps<'a>) -> Element {
                         image: reply_user.profile_picture(),
                     })
                 }
-            )),
+            ))},
             Message {
                 id: message_key.clone(),
                 key: "{message_key}",
@@ -690,7 +694,7 @@ pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps)
     state.write_silent().scope_ids.pending_message_component = Some(current_scope_id().0);
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
-        None => return rsx!(()),
+        None => return rsx!({ () }),
     };
     rsx!(pending_wrapper {
         msg: chat.pending_outgoing_messages,
@@ -728,22 +732,24 @@ struct PendingMessagesProps<'a> {
 }
 
 fn render_pending_messages<'a>(props: PendingMessagesProps) -> Element {
-    rsx!(props.pending_outgoing_message.as_ref().map(|group| {
-        rsx!(render_message_group {
-            group: group,
-            active_chat_id: props.active,
-            on_context_menu_action: move |e| props.on_context_menu_action.call(e),
-            pending: true
-        },)
-    }))
+    rsx!({
+        props.pending_outgoing_message.as_ref().map(|group| {
+            rsx!(render_message_group {
+                group: group,
+                active_chat_id: props.active,
+                on_context_menu_action: move |e| props.on_context_menu_action.call(e),
+                pending: true
+            },)
+        })
+    })
 }
 
 fn download_file(
     file: &warp::constellation::file::File,
     conv_id: Uuid,
     msg_id: Uuid,
-    pending_downloads: &Signal<HashMap<Uuid, HashSet<File>>>,
-    ch: &Coroutine<MessagesCommand>,
+    mut pending_downloads: Signal<HashMap<Uuid, HashSet<File>>>,
+    ch: Coroutine<MessagesCommand>,
 ) {
     let file_name = file.name();
     let file_extension = std::path::Path::new(&file_name)

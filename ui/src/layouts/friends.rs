@@ -92,19 +92,19 @@ pub fn FriendsLayout() -> Element {
                 {get_topbar(route)},
                 AddFriend {},
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                {render_route(props, route.get().clone())},
+                {render_route(props, route())},
             }
         }
     )
 }
 
 #[derive(PartialEq, Props, Clone)]
-pub struct MinimalProps<'a> {
-    route: &'a Signal<FriendRoute>,
+pub struct MinimalProps {
+    route: Signal<FriendRoute>,
 }
 
 #[allow(non_snake_case)]
-pub fn MinimalFriendsLayout<'a>(props: MinimalProps<'a>) -> Element {
+pub fn MinimalFriendsLayout(props: MinimalProps) -> Element {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_context::<Signal<State>>();
     let route = props.route;

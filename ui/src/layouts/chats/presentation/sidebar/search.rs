@@ -45,17 +45,17 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                 *props.search_dropdown_hover.write_silent() = false;
             },
             if !friends_identities.is_empty() {
-                rsx!(
+                {rsx!(
                     div {
                         id: "users-searchdropdown-label",
                         class: "users-groups-label",
                         aria_label: "users-groups-label",
                         p {
-                            get_local_text("uplink.users")
+                            {get_local_text("uplink.users")}
                         }
-                    })
+                    })}
             }
-            friends_identities.iter().cloned().map(|identity| {
+            {friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
                 let did = identity.did_key();
                 let did2 = did.clone();
@@ -90,21 +90,21 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                         div {
                             class: "search-friends-dropdown-name",
                             aria_label: "search-friends-dropdown-name",
-                            rsx!(
-                                span { &username[0..start] },
+                            {rsx!(
+                                span { {&username[0..start]} },
                                 span {
                                     class: "highlight-search-typed-chars",
                                     aria_label: "highlight-search-typed-chars",
-                                    &username[start..end]
+                                    {&username[start..end]}
                                 },
                                 span {
                                     aria_label: "remaining-match-search",
-                                    &username[end..]
+                                    {&username[end..]}
                                 },
-                            )
+                            )}
                         }
                         if blocked_friends.contains(&did2) {
-                            rsx!(
+                            {rsx!(
                                 div {
                                     padding_right: "32px",
                                     aria_label: "search-result-blocked-user",
@@ -115,27 +115,27 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                                         icon: Icon::UserBlocked,
                                     },
                                 }
-                            )
+                            )}
                         }
                     }
                 )
-            })
+            })}
             if !chats.is_empty() && !friends_identities.is_empty() {
-                rsx!(div { class:"border", })
+                {rsx!(div { class:"border", })}
             }
             if !chats.is_empty() {
-                rsx!(
+                {rsx!(
                     div {
                         id: "groups-searchdropdown-label",
                         class: "users-groups-label",
                         aria_label: "users-groups-label",
                         p {
-                            get_local_text("uplink.groups")
+                            {get_local_text("uplink.groups")}
                         }
                     }
-                )
+                )}
             }
-            chats.iter().cloned().map(|chat| {
+            {chats.iter().cloned().map(|chat| {
                 let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let participants2 = participants.clone();
@@ -159,50 +159,50 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                                 *props.search_friends_is_focused.write_silent() = false;
                                 props.onclick.call(identity_search_result::Identifier::Uuid(id));
                         },
-                        rsx! (
+                        {rsx! (
                             div {
                                 class: "user-image-group",
                                 div {
                                     aria_label: "user-image-group-wrap",
                                     class: "user-image-group-wrap group",
-                                    rsx!(
+                                    {rsx!(
                                         UserImageGroup {
                                             loading: false,
                                             aria_label: "user-image-group".into(),
                                             participants: build_participants(&participants),
                                         }
-                                    )
+                                    )}
                                 },
                             }
                         div {
                                 class: "search-friends-dropdown-name",
                                 aria_label: "search-friends-dropdown-name",
                                 if let Some(start) = conversation_title.to_lowercase().find(&text_to_find) {
-                                    let end = start + search_typed_chars2.len();
+                                    {let end = start + search_typed_chars2.len();
                                     rsx!(
-                                        span { &conversation_title[0..start] },
+                                        span { {&conversation_title[0..start]} },
                                         span {
                                             class: "highlight-search-typed-chars",
                                             aria_label: "highlight-search-typed-chars",
-                                            &conversation_title[start..end]
+                                            {&conversation_title[start..end]}
                                         },
                                         span {
                                             aria_label: "remaining-match-search",
-                                            &conversation_title[end..]
+                                            {&conversation_title[end..]}
                                         },
-                                    )
+                                    )}
                                 } else {
-                                    rsx!(span { conversation_title})
+                                    {rsx!(span { {conversation_title} })}
                                 }
                             }
-                        )
+                        )}
                     }
                     if !participants2.is_empty() &&
                     participants2.iter().any(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
                     &&
                     identity.did_key() != state.read().did_key()
                 ) {
-                        rsx!(
+                        {rsx!(
                             div {
                                 id: "members-searchdropdown-label",
                                 aria_label: "members-searchdropdown-label",
@@ -211,12 +211,12 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                                 p {
                                     color: "var(--text-color)",
                                     font_size: "12px",
-                                    get_local_text("uplink.members")
+                                    {get_local_text("uplink.members")}
                                 }
                             }
-                        )
+                        )}
                     },
-                    participants2.iter()
+                    {participants2.iter()
                     .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
                         &&
                         identity.did_key() != state.read().did_key()
@@ -257,21 +257,21 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                                 div {
                                     class: "search-friends-dropdown-name",
                                     aria_label: "search-friends-dropdown-name",
-                                    rsx!(
-                                        span { &username[0..start] },
+                                    {rsx!(
+                                        span { {&username[0..start]} },
                                         span {
                                             class: "highlight-search-typed-chars",
                                             aria_label: "highlight-search-typed-chars",
-                                            &username[start..end]
+                                            {&username[start..end]}
                                         },
                                         span {
                                             aria_label: "remaining-match-search",
-                                            &username[end..]
+                                            {&username[end..]}
                                         },
-                                    )
+                                    )}
                                 }
                                 if blocked_friends.contains(&did2) {
-                                    rsx!(
+                                    {rsx!(
                                         div {
                                             padding_right: "32px",
                                             display: "flex",
@@ -282,13 +282,13 @@ pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
                                                 icon: Icon::UserBlocked,
                                             },
                                         }
-                                    )
+                                    )}
                                 }
                             }
                         )
-                    })
+                    })}
                 )
-            })
+            })}
         }
     )
 }
