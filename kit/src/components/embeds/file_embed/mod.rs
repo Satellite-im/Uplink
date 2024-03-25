@@ -194,7 +194,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" }
                 )
             },
-            cx.props.progress.is_some().then(|| rsx!(div {
+            (failed && cx.props.progress.is_some()).then(|| rsx!(div {
                 class: "control-btn",
                 Button {
                     icon: Icon::Trash,
@@ -207,7 +207,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                 },
-                failed.then(|| rsx!(Button {
+                Button {
                     icon: Icon::ArrowRightCircle,
                     small: true,
                     appearance: Appearance::Primary,
@@ -217,7 +217,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             e.call(())
                         }
                     },
-                }))
+                }
             })),
             div {
                 class: format_args!("{}", if has_thumbnail {""} else {"icon"}),

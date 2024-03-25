@@ -17,10 +17,7 @@ use crate::{
 
 use super::TypingIndicator;
 
-pub fn get_msg_ch(
-    cx: &Scoped<'_, ChatProps>,
-    state: &UseSharedState<State>,
-) -> Coroutine<MsgChInput> {
+pub fn get_msg_ch(cx: &ScopeState, state: &UseSharedState<State>) -> Coroutine<MsgChInput> {
     let upload_streams = chat_upload_stream_handler(cx);
     use_coroutine(cx, |mut rx: UnboundedReceiver<MsgChInput>| {
         to_owned![state, upload_streams];

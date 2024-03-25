@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::{collections::HashSet, str::FromStr};
 
 use common::language::{get_local_text, get_local_text_with_args};
-use common::state::pending_message::FileProgression;
+use common::state::pending_message::{FileLocation, FileProgression};
 use common::state::utils::{mention_replacement_pattern, parse_mentions};
 use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{thumbnail_to_base64, MultiPassCmd, WarpCmd};
@@ -18,7 +18,6 @@ use pulldown_cmark::{CodeBlockKind, Options, Tag, TagEnd};
 use regex::{Captures, Regex, Replacer};
 use uuid::Uuid;
 use warp::error::Error;
-use warp::raygun::Location;
 use warp::{constellation::file::File, crypto::DID};
 
 use tracing::log;
@@ -115,9 +114,9 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     #[props(!optional)]
-    attachments_pending_uploads: Option<&'a Vec<(FileProgression, Location)>>,
-    on_resend: Option<EventHandler<'a, (Option<String>, Location)>>,
-    on_delete: Option<EventHandler<'a, Location>>,
+    attachments_pending_uploads: Option<&'a Vec<(FileLocation, FileProgression)>>,
+    on_resend: Option<EventHandler<'a, (Option<String>, FileLocation)>>,
+    on_delete: Option<EventHandler<'a, FileLocation>>,
 
     pinned: bool,
 
@@ -228,7 +227,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .unwrap_or_default();
 
     let pending_attachment_list = cx.props.attachments_pending_uploads.as_ref().map(|vec| {
-        vec.iter().map(|(prog, location)| {
+        vec.iter().map(|(location, prog)| {
             let file = progress_file(prog);
             rsx!(FileEmbed {
                 key: "{file}",
@@ -240,13 +239,6 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 on_press: move |_| {},
                 on_resend_msg: move |_| {
                     if single {
-                        // cx.props.state.write().decrement_outgoing_messages(
-                        //     cx.props.chat,
-                        //     msg,
-                        //     progress,
-                        //     None,
-                        // )
-
                         if let Some(e) = &cx.props.on_resend {
                             e.call((cx.props.with_text.clone(), location.clone()))
                         }
