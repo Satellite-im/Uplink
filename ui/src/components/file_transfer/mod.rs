@@ -1,6 +1,4 @@
 use common::icons::outline::Shape as Icon;
-use common::icons::Icon as IconElement;
-use common::return_correct_icon;
 use common::state::data_transfer::{TrackerType, TransferProgress, TransferTracker};
 use common::state::State;
 use common::{language::get_local_text, state::data_transfer::FileProgress};
@@ -77,40 +75,22 @@ pub fn FileTransferElement(cx: Scope<TransferProps>) -> Element {
                     class: "file-transfer-file",
                     aria_label: "file-transfer-file",
                     div {
-                        class: "file-icon-container",
-                        aria_label: "file-icon-container",
-                        div {
-                            IconElement {
-                                icon: return_correct_icon(&f.file)
-                            }
-                        }
-                    }
-                    div {
                         class: "progress-container",
                         aria_label: "progress-container",
-                        div {
-                            class: "progress-bar-filename-container",
-                            aria_label: "progress-bar-filename-container",
-                            p {
-                                class: "filename-and-file-queue-text",
-                                aria_label: "filename-and-file-queue-text",
-                                margin_right: "auto",
-                                f.file.to_string(),
-                            },
-                            p {
-                                class: "transfer-progress-percentage",
-                                aria_label: "transfer-progress-percentage",
-                                format!("{}%", progress)
-                            },
+                        p {
+                            class: "filename-and-file-queue-text",
+                            aria_label: "filename-and-file-queue-text",
+                            margin_right: "auto",
+                            f.file.to_string(),
                         },
                         ProgressIndicator {
                             progress: progress
                         },
-                        f.description.as_ref().map(|desc|rsx!(div {
-                            class: "file-progress-description",
-                            aria_label: "file-progress-description",
-                            format!("{}", desc)
-                        })),
+                        p {
+                            class: "transfer-progress-percentage",
+                            aria_label: "transfer-progress-percentage",
+                            f.description.clone()
+                        },
                     },
                     div {
                         class: "file-transfer-buttons",
