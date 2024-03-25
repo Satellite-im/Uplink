@@ -62,6 +62,7 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use crate::utils::async_task_queue::{ListenerAction, ACTION_LISTENER};
+use crate::utils::keyboard::shortcut_handlers::audio::ToggleType;
 use crate::utils::keyboard::KeyboardShortcuts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService, PhysicalSize};
@@ -251,8 +252,8 @@ fn app_layout(cx: Scope) -> Element {
             KeyboardShortcuts {
                 on_global_shortcut: move |shortcut| {
                     match shortcut {
-                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle_mute(),
-                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle_deafen(),
+                        GlobalShortcut::ToggleMute => utils::keyboard::shortcut_handlers::audio::toggle(state.clone(), cx, ToggleType::Mute),
+                        GlobalShortcut::ToggleDeafen => utils::keyboard::shortcut_handlers::audio::toggle(state.clone(), cx, ToggleType::Deafen),
                         GlobalShortcut::IncreaseFontSize => utils::keyboard::shortcut_handlers::font::increase_size(state.clone()),
                         GlobalShortcut::DecreaseFontSize => utils::keyboard::shortcut_handlers::font::decrease_size(state.clone()),
                         GlobalShortcut::OpenCloseDevTools => utils::keyboard::shortcut_handlers::dev::open_close_dev_tools(cx),

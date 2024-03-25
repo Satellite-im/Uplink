@@ -14,7 +14,7 @@
   display: inline-flex;
   gap: var(--gap);
   width: 100%;
-  color: var(--text-color-dark);
+  color: var(--text-color);
   align-content: center;
   align-self: flex-end;
   position: relative;
@@ -36,7 +36,7 @@
 
       svg {
         margin-top: 0;
-        stroke: var(--text-color-dark);
+        stroke: var(--text-color);
         fill: transparent;
         height: 1.1rem;
         width: 1.1rem;
@@ -150,7 +150,7 @@
   padding: 2px;
   background-color: var(--warning-light);
   border-radius: 4px;
-  color: var(--text-color-dark);
+  color: var(--text-color);
   font-size: var(--text-size-less);
 }
 
