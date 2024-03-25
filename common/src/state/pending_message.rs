@@ -30,9 +30,9 @@ impl From<Location> for FileLocation {
     }
 }
 
-impl Into<Location> for FileLocation {
-    fn into(self) -> Location {
-        match self {
+impl From<FileLocation> for Location {
+    fn from(location: FileLocation) -> Self {
+        match location {
             FileLocation::Constellation { path } => Location::Constellation { path },
             FileLocation::Disk { path } => Location::Disk { path },
         }
