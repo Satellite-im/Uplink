@@ -13,7 +13,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn CommunityCard(props: Props) -> Element {
-    let onjoin_clone = props.onjoin.clone();
+    let onjoin_clone = props.onjoin;
 
     rsx!(
         div {

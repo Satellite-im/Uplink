@@ -27,16 +27,16 @@ pub fn Range(props: Props) -> Element {
     let value = use_signal(|| props.initial_value);
 
     use_effect(move || {
-        internal_state.set(value.read().clone());
+        internal_state.set(*value.read());
     });
     let step = props.step.unwrap_or(1_f32);
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
     let with_buttons = props.with_buttons.unwrap_or_default();
 
-    let on_change = props.onchange.clone();
-    let on_change1 = props.onchange.clone();
-    let on_change2 = props.onchange.clone();
+    let on_change = props.onchange;
+    let on_change1 = props.onchange;
+    let on_change2 = props.onchange;
 
     rsx!(
         div {

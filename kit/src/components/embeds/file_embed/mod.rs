@@ -168,11 +168,11 @@ pub fn FileEmbed(props: Props) -> Element {
     let is_file_available_to_preview = is_file_available_to_preview(&file_name_with_extension);
     let is_video = is_video(&file_name_with_extension);
 
-    let onpress_clone = props.on_press.clone();
-    let onpress_clone2 = props.on_press.clone();
+    let onpress_clone = props.on_press;
+    let onpress_clone2 = props.on_press;
 
-    let big_clone = props.big.clone();
-    let big_clone2 = props.big.clone();
+    let big_clone = props.big;
+    let big_clone2 = props.big;
 
     rsx! (
         div {

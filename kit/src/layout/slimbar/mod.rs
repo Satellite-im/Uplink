@@ -28,7 +28,7 @@ pub fn emit(props: Props) {
 
 #[allow(non_snake_case)]
 pub fn Slimbar(props: Props) -> Element {
-    let navbar_visible = props.navbar_visible.clone();
+    let navbar_visible = props.navbar_visible;
     let props2 = props.clone();
 
     rsx!(div {

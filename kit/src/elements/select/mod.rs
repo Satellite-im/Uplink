@@ -90,7 +90,7 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
     let iter = IntoIterator::into_iter(options.clone());
     let mut visible = use_signal(|| false);
 
-    let on_select = props.onselect.clone();
+    let on_select = props.onselect;
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
@@ -103,7 +103,7 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                 position: "relative",
                 width: format_args!("{}px", props.width),
                 onclick: move |e| {
-                    let b = visible.with(|f| f.clone());
+                    let b = visible.with(|f| *f);
                     visible.with_mut(|f| *f = !b);
                     e.stop_propagation()
                 },
@@ -111,9 +111,9 @@ pub fn FancySelect<'a>(props: FancySelectProps) -> Element {
                     class: "fancy-select",
                     {initial_element}
                 },
-                {visible.take().clone().then(move || {
-                    let mut visible2 = visible.clone();
-                    let mut visible3 = visible.clone();
+                {visible.take().then(move || {
+                    let mut visible2 = visible;
+                    let mut visible3 = visible;
 
                     rsx!(
                         div {

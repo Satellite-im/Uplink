@@ -147,7 +147,7 @@ pub fn Input(props: Props) -> Element {
     }
 
     let placeholder = use_signal(|| placeholder.clone());
-    let placeholder_clone = placeholder.clone();
+    let placeholder_clone = placeholder;
 
     rsx! (
         div {
@@ -298,7 +298,7 @@ pub fn Input(props: Props) -> Element {
 #[allow(non_snake_case)]
 pub fn InputRich(props: Props) -> Element {
     log::trace!("render input");
-    let mut listener_data = use_signal(|| None);
+    let listener_data = use_signal(|| None);
 
     let Props {
         id: _,

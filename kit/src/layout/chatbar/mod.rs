@@ -91,15 +91,15 @@ impl Clone for Props {
             extensions: self.extensions.clone(),
             controls: self.controls.clone(),
             value: self.value.clone(),
-            loading: self.loading.clone(),
-            onchange: self.onchange.clone(),
-            on_paste_keydown: self.on_paste_keydown.clone(),
-            onreturn: self.onreturn.clone(),
+            loading: self.loading,
+            onchange: self.onchange,
+            on_paste_keydown: self.on_paste_keydown,
+            onreturn: self.onreturn,
             is_disabled: self.is_disabled,
             ignore_focus: self.ignore_focus,
             suggestions: self.suggestions.clone(),
-            oncursor_update: self.oncursor_update.clone(),
-            on_suggestion_click: self.on_suggestion_click.clone(),
+            oncursor_update: self.oncursor_update,
+            on_suggestion_click: self.on_suggestion_click,
         }
     }
 }
@@ -315,8 +315,8 @@ pub fn Chatbar(props: Props) -> Element {
                         }
                     }
                 },
-                selected: selected_suggestion.clone(),
-                arrow_selected: arrow_selected.clone(),
+                selected: selected_suggestion,
+                arrow_selected: arrow_selected,
             }))},
         }
     )
@@ -397,7 +397,7 @@ fn SuggestionsMenu(props: SuggestionProps) -> Element {
                         class: "user-suggestion-profile",
                         UserImage {
                             platform: id.platform().into(),
-                            status: Status::from(id.identity_status().clone()),
+                            status: Status::from(id.identity_status()),
                             image: id.profile_picture()
                         }
                     }

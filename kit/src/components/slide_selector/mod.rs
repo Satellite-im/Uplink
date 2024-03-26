@@ -1,6 +1,6 @@
 use common::icons::outline::Shape;
 use dioxus::prelude::*;
-use tracing::log;
+
 
 use crate::elements::button::Button;
 
@@ -23,7 +23,7 @@ impl Clone for Props {
     fn clone(&self) -> Self {
         Self {
             // values: self.values.clone(),
-            initial_index: self.initial_index.clone(),
+            initial_index: self.initial_index,
             buttons_format: self.buttons_format.clone(),
             // onset: self.onset.clone(),
         }

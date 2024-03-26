@@ -26,7 +26,7 @@ pub async fn get_meta(url: String) -> Result<SiteMeta, reqwest::Error> {
                 title: String::new(),
                 description: String::new(),
                 icon: String::new(),
-                url: String::from(url.clone()),
+                url: url.clone(),
             });
         }
     };
@@ -43,7 +43,7 @@ pub async fn get_meta(url: String) -> Result<SiteMeta, reqwest::Error> {
         title,
         description,
         icon,
-        url: String::from(url),
+        url,
     })
 }
 

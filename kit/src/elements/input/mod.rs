@@ -382,7 +382,7 @@ pub fn Input(props: Props) -> Element {
     let focus_script_signal = use_signal(|| focus_script.clone());
 
     use_effect(move || {
-        if focus_signal.read().clone() {
+        if *focus_signal.read() {
             let _ = eval(&focus_script_signal.read());
         }
     });

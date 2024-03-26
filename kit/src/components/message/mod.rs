@@ -196,7 +196,7 @@ pub fn Message(props: Props) -> Element {
 
     // todo: pick an icon based on the file extension
     // there's some weirdness here to avoid more nesting. this should make the code easier to read overall
-    let attachment_list = attachments2.as_ref().cloned().map(|vec| {
+    let _attachment_list = attachments2.as_ref().cloned().map(|vec| {
         vec.iter()
             .cloned()
             .map(|file| {
@@ -772,7 +772,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
             let short_name = format!("{}#{}", username, short_id);
             let random_uuid = Uuid::new_v4().to_string();
 
-            return rsx!(ContextMenu {
+            rsx!(ContextMenu {
                 key: "{short_id}-{random_uuid}",
                 id: format!("{short_id}-{random_uuid}"),
                 devmode: state.read().configuration.developer.developer_mode,
@@ -843,7 +843,7 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                             p {
                                 class: "text",
                                 aria_label: "profile-name-value",
-                                {format!("{}", identity.username())}
+                                {identity.username().to_string()}
                             }
                         }
                         {identity.status_message().and_then(|s|{
@@ -880,10 +880,10 @@ pub fn IdentityMessage(props: IdentityMessageProps) -> Element {
                         appearance: crate::elements::Appearance::Primary
                     }
                 })
-            });
+            })
         }
         None => {
-            return rsx!(div {
+            rsx!(div {
                 class: "embed-identity",
                 div {
                     class: "profile-container empty-profile",

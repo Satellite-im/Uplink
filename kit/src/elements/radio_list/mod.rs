@@ -14,7 +14,7 @@ pub struct Props {
 pub fn RadioList(props: Props) -> Element {
     let mut internal_state = use_signal(|| props.initial_value.clone());
 
-    let onchange_clone = props.onchange.clone();
+    let onchange_clone = props.onchange;
     let values_clone = props.values.clone();
 
     rsx!(
