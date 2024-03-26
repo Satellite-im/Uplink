@@ -10,6 +10,16 @@ use dioxus::prelude::{EventHandler, *};
 mod coroutines;
 mod effects;
 
+use common::state::{
+    pending_message::{FileLocation, PendingMessage},
+    Action, Identity, State,
+};
+use common::{
+    icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
+    language::get_local_text_with_args,
+    state::{ui::EmojiDestination, ToastNotification},
+};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -23,14 +33,6 @@ use kit::{
         loader::Loader,
         tooltip::{ArrowPosition, Tooltip},
     },
-};
-
-use common::state::{pending_message::PendingMessage, Action, Identity, State};
-use common::{
-    icons::outline::Shape as Icon,
-    icons::Icon as IconElement,
-    language::get_local_text_with_args,
-    state::{ui::EmojiDestination, ToastNotification},
 };
 
 use common::language::get_local_text;
@@ -50,7 +52,7 @@ use crate::{
     components::emoji_group::EmojiGroup,
     layouts::{
         chats::{
-            data::{self, ChatData, ScrollBtn},
+            data::{self, ChatData, MessagesToSend, ScrollBtn},
             scripts,
         },
         storage::files_layout::file_preview::open_file_preview_modal,
@@ -583,6 +585,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     if let Some(info) = &message.in_reply_to {
         reply_user = state.read().get_identity(&info.2).unwrap_or_default();
     }
+    let to_send = use_shared_state::<MessagesToSend>(cx)?;
 
     cx.render(rsx!(
         div {
@@ -660,6 +663,26 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 pending: cx.props.pending,
                 pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
+                on_resend: move |(txt, file): (Option<String>, FileLocation)|{
+                    match txt.clone() {
+                        Some(_) => {
+                            state
+                            .write()
+                            .decrement_outgoing_messages(chat_data.read().active_chat.id(), message.inner.id());
+                        },
+                        None => {
+                            state
+                            .write()
+                            .remove_outgoing_attachment(chat_data.read().active_chat.id(), message.inner.id(), file.clone());
+                        },
+                    }
+                    to_send.with_mut(|s|s.messages_to_send.push((txt, vec![file])));
+                },
+                on_delete: move |file| {
+                    state
+                    .write()
+                    .remove_outgoing_attachment(chat_data.read().active_chat.id(), message.inner.id(), file);
+                },
                 parse_markdown: render_markdown,
                 transform_ascii_emojis: should_transform_ascii_emojis,
                 on_download: move |(file, temp_dir): (warp::constellation::file::File, Option<PathBuf>)| {
