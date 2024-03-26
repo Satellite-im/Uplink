@@ -1,4 +1,7 @@
-use common::{state::State, warp_runner::ui_adapter};
+use common::{
+    state::{pending_message::FileLocation, State},
+    warp_runner::ui_adapter,
+};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
 
@@ -13,6 +16,11 @@ use warp::raygun;
 pub struct ChatData {
     pub active_chat: ActiveChat,
     pub chat_behaviors: HashMap<Uuid, ChatBehavior>,
+}
+
+#[derive(Clone, Default)]
+pub struct MessagesToSend {
+    pub messages_to_send: Vec<(Option<String>, Vec<FileLocation>)>,
 }
 
 impl PartialEq for ChatData {

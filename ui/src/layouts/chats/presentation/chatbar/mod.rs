@@ -1,4 +1,4 @@
-mod coroutines;
+pub mod coroutines;
 
 use std::{path::PathBuf, time::Duration};
 
@@ -39,13 +39,12 @@ pub static EMOJI_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(":[^:]{2,}:?$").un
 pub static TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("@[^@ ]{2,} ?$").unwrap());
 use super::context_menus::FileLocation as FileLocationContext;
 use crate::{
-    components::{
-        files::attachments::Attachments,
-        shortcuts::{self},
-    },
-    layouts::chats::{data::ChatProps, scripts::SHOW_CONTEXT},
+    components::{files::attachments::Attachments, shortcuts},
     layouts::{
-        chats::data::{ChatData, MsgChInput, ScrollBtn, TypingIndicator},
+        chats::{
+            data::{ChatData, ChatProps, MessagesToSend, MsgChInput, ScrollBtn, TypingIndicator},
+            scripts::SHOW_CONTEXT,
+        },
         storage::send_files_layout::{modal::SendFilesLayoutModal, SendFilesStartLocation},
     },
     utils::{
@@ -62,6 +61,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let chat_data = use_shared_state::<ChatData>(cx)?;
     let scroll_btn = use_shared_state::<ScrollBtn>(cx)?;
+    let to_send = use_shared_state::<MessagesToSend>(cx)?;
     state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
@@ -144,6 +144,24 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, ChatProps>) -> Element<'a> {
     // this is used to scroll to the bottom of the chat.
     let scroll_ch = coroutines::get_scroll_ch(cx, chat_data, state);
     let msg_ch: Coroutine<MsgChInput> = coroutines::get_msg_ch(cx, state);
+    let messages_to_send = &to_send.read().messages_to_send.clone();
+    if !messages_to_send.is_empty() {
+        for (txt, files) in messages_to_send {
+            state.write().mutate(Action::SetChatAttachments(
+                active_chat_id,
+                files.iter().map(|f| f.clone().into()).collect(),
+            ));
+            msg_ch.send(MsgChInput {
+                msg: txt
+                    .as_ref()
+                    .map(|t| t.lines().map(|s| s.to_string()).collect())
+                    .unwrap_or_default(),
+                conv_id: active_chat_id,
+                replying_to: None,
+            });
+        }
+        to_send.with_mut(|s| s.messages_to_send.clear())
+    }
     let local_typing_ch = coroutines::get_typing_ch(cx);
     let local_typing_ch2 = local_typing_ch.clone();
 
