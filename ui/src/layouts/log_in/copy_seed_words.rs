@@ -17,7 +17,7 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
     let state = use_signal(State::load);
     let window = use_window();
 
-    if !matches!(&*page.current(), AuthPages::Success(_)) {
+    if !matches!(&*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
             height: 480.0,
@@ -50,10 +50,10 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
                 {get_local_text("copy-seed-words.instructions")}
             },
             Label {
-                aria_label: "copy-seed-words".into(),
+                aria_label: "copy-seed-words".to_string(),
                 text: get_local_text("copy-seed-words")
             },
-            if let Some(words) = words.value() {
+            if let Some(words) = words.value()() {
                 {rsx!(SeedWords { page: page.clone(), words: words.clone() })}
             }
         }
@@ -108,7 +108,7 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
             class: "controls",
             Button {
                 text: get_local_text("uplink.copy-seed"),
-                aria_label: "copy-seed-button".into(),
+                aria_label: "copy-seed-button".to_string(),
                 icon: icons::outline::Shape::BookmarkSquare,
                 onpress: move |_| {
                     match Clipboard::new() {
@@ -130,13 +130,13 @@ fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
             class: "controls",
             Button {
                 text: get_local_text("uplink.go-back"),
-                aria_label: "back-button".into(),
+                aria_label: "back-button".to_string(),
                 icon: icons::outline::Shape::ChevronLeft,
                 onpress: move |_| page.set(AuthPages::CreateOrRecover),
                 appearance: Appearance::Secondary
             },
             Button {
-                aria_label: "i-saved-it-button".into(),
+                aria_label: "i-saved-it-button".to_string(),
                 text: get_local_text("copy-seed-words.finished"),
                 onpress: move |_| {
                     page.set(AuthPages::EnterUserName);

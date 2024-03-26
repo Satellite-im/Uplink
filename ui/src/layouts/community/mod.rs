@@ -23,16 +23,16 @@ pub fn CommunityLayout() -> Element {
             div {
                 id: "community-content",
                 CommunityCard {
-                    joined: *joined.get(),
-                    name: "Rust".into(),
+                    joined: joined(),
+                    name: "Rust".to_string(),
                     onjoin: |_| {
                         joined.set(true);
                     }
                 },
                 UserCard {
-                    friends: *friends.get(),
-                    name: "XileHorizon".into(),
-                    status: "To infinity and then some.".into(),
+                    friends: friends(),
+                    name: "XileHorizon".to_string(),
+                    status: "To infinity and then some.".to_string(),
                     onjoin: |_| {
                         friends.set(true);
                     }

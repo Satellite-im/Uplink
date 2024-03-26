@@ -226,7 +226,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                             {rsx!(
                             ContextItem {
                                 icon: Icon::Share,
-                                aria_label: "files-share".into(),
+                                aria_label: "files-share".to_string(),
                                 text: get_local_text("files.share-files"),
                                 onpress: move |_| {
                                     if let Some(f) = &props.on_click_share_files {
@@ -238,7 +238,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                         )}}
                             ContextItem {
                                 icon: Icon::Pencil,
-                                aria_label: "files-rename".into(),
+                                aria_label: "files-rename".to_string(),
                                 text: get_local_text("files.rename"),
                                 onpress: move |_| {
                                     storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
@@ -247,7 +247,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                             if !send_files_mode {
                                 {rsx!(ContextItem {
                                     icon: Icon::ArrowDownCircle,
-                                    aria_label: "files-download".into(),
+                                    aria_label: "files-download".to_string(),
                                     text: get_local_text("files.download"),
                                     onpress: move |_| {
                                         download_file(&file_name2, &ch, None);
@@ -257,7 +257,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                                 ContextItem {
                                     icon: Icon::Trash,
                                     danger: true,
-                                    aria_label: "files-delete".into(),
+                                    aria_label: "files-delete".to_string(),
                                     text: get_local_text("uplink.delete"),
                                     onpress: move |_| {
                                         let item = Item::from(file2.clone());

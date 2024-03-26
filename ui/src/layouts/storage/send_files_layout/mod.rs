@@ -194,7 +194,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 }
                             )}}
                         ),
-                        user_image: {rsx!(
+                        user_image: rsx!(
                             div {
                                 class: "chat-selector-to-send-image-group",
                                 Checkbox {
@@ -224,7 +224,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                     }
                                 )}}
                             }
-                        )},
+                        ),
                         with_badge: "".into(),
                         onpress: move |_| {
                             if is_checked {

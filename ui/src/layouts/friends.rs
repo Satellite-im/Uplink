@@ -38,7 +38,7 @@ pub fn FriendsLayout() -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return rsx!(MinimalFriendsLayout { route: &route });
+        return rsx!(MinimalFriendsLayout { route: route });
     }
     log::trace!("rendering FriendsLayout");
 
@@ -125,7 +125,7 @@ pub fn MinimalFriendsLayout(props: MinimalProps) -> Element {
                     aria_label: "friends-controls",
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                {render_route(props, route.get().clone())},
+                {render_route(props, route.read().clone())},
                 crate::AppNav {
                     active: crate::UplinkRoute::FriendsLayout{},
                 }
@@ -136,7 +136,7 @@ pub fn MinimalFriendsLayout(props: MinimalProps) -> Element {
     rsx!(div {
         id: "friends-layout",
         aria_label: "friends-layout",
-        view
+        {view}
     })
 }
 
@@ -147,19 +147,19 @@ fn render_route<T>(props: T, route: FriendRoute) -> Element {
             PendingFriends {},
             OutgoingRequests {},
             NothingHere {
-                friends_tab: "Pending".into()
+                friends_tab: "Pending".to_string()
             }
         ),
         FriendRoute::Blocked => rsx!(
             BlockedUsers {},
             NothingHere {
-                friends_tab: "Blocked".into()
+                friends_tab: "Blocked".to_string()
             }
         ),
     })
 }
 
-fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
+fn get_topbar(route: Signal<FriendRoute>) -> Element {
     let state = use_context::<Signal<State>>();
     let pending_friends = state.read().friends().incoming_requests.len();
 
@@ -177,8 +177,8 @@ fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
                 } else {
                     get_local_text("friends.all")
                 },
-                aria_label: "all-friends-button".into(),
-                appearance: if route.clone() == FriendRoute::All {
+                aria_label: "all-friends-button".to_string(),
+                appearance: if route() == FriendRoute::All {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -189,7 +189,7 @@ fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
             },
             Button {
                 icon: Icon::Clock,
-                appearance: if route.clone() == FriendRoute::Pending {
+                appearance: if route() == FriendRoute::Pending {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -199,7 +199,7 @@ fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
                 } else {
                     get_local_text("friends.pending")
                 },
-                aria_label: "pending-friends-button".into(),
+                aria_label: "pending-friends-button".to_string(),
                 with_badge: if pending_friends > 0 {
                     pending_friends.to_string()
                 } else {
@@ -211,7 +211,7 @@ fn get_topbar<T>(route: Signal<FriendRoute>) -> Element {
             },
             Button {
                 icon: Icon::NoSymbol,
-                appearance: if route.clone() == FriendRoute::Blocked {
+                appearance: if route() == FriendRoute::Blocked {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary

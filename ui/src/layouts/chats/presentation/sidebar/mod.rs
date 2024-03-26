@@ -61,9 +61,9 @@ pub struct SidebarProps {
 pub fn Sidebar(props: SidebarProps) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_context::<Signal<State>>();
-    let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new);
-    let search_results_friends_identities = use_signal(|| Vec::<Identity>::new);
-    let search_results_chats = use_signal(|| Vec::<Chat>::new);
+    let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new());
+    let search_results_friends_identities = use_signal(|| Vec::<Identity>::new());
+    let search_results_chats = use_signal(|| Vec::<Chat>::new());
     let mut chat_with: Signal<Option<Uuid>> = use_signal(|| None);
     let reset_searchbar: Signal<_> = use_signal(|| false);
     let router = use_navigator();
@@ -135,7 +135,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: false,
-                        aria_label: "chat-search-input".into(),
+                        aria_label: "chat-search-input".to_string(),
                         icon: Icon::MagnifyingGlass,
                         reset: reset_searchbar.clone(),
                         options: Options {
@@ -149,7 +149,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 *search_friends_is_focused.write() = false;
                             }
                             if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i))  {
-                                 if let Some(entry) = search_results.get().first() {
+                                 if let Some(entry) = search_results.read().first() {
                                     if !*search_friends_is_focused.read() {
                                         select_identifier(entry.id.clone());
                                     }
@@ -230,11 +230,11 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         class: "sidebar-chats-header",
                         Label {
                             text: get_local_text("uplink.chats"),
-                            aria_label: "chats-label".into(),
+                            aria_label: "chats-label".to_string(),
                         },
                         Button {
-                            appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
-                            aria_label: "create-group-chat".into(),
+                            appearance: if show_create_group() { Appearance::Primary } else { Appearance::Secondary },
+                            aria_label: "create-group-chat".to_string(),
                             icon: Icon::ChatPlus,
                             tooltip: rsx!(
                                 Tooltip {
@@ -243,11 +243,11 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 }
                             ),
                             onpress: move |_| {
-                                show_create_group.set(!show_create_group.get());
+                                show_create_group.set(!show_create_group());
                             }
                         }
                     }
-                    {show_create_group.then(|| {
+                    {show_create_group().then(|| {
                         let clss = format!(
                             "create-group-modal {}",
                             if state.read().ui.is_minimal_view() {
@@ -259,7 +259,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         rsx!(
                         Modal {
                             class: "{clss}",
-                            open: *show_create_group.clone(),
+                            open: show_create_group(),
                             with_title: get_local_text("messages.create-group-chat"),
                             transparent: true,
                             onclose: move |_| {

@@ -83,8 +83,8 @@ pub fn search_friends(props: SearchProps) -> Element {
                             }
                         },
                         UserImage {
-                            platform: identity.platform().into(),
-                            status: identity.identity_status().into(),
+                            platform: identity.platform(),
+                            status: identity.identity_status(),
                             image: identity.profile_picture()
                         },
                         div {

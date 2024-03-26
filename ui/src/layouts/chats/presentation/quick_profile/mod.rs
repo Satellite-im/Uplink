@@ -86,8 +86,8 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
     let update_script_signal = use_signal(|| props.update_script.clone());
 
     use_resource(|| async move {
-        if !update_script_signal.read().is_empty() {
-            _ = eval(&update_script_signal.read());
+        if !update_script_signal()().is_empty() {
+            _ = eval(&update_script_signal()());
         }
     });
 
@@ -347,7 +347,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                             p {
                                 class: "text",
                                 aria_label: "profile-status-value",
-                                s
+                                {s}
                             }
                         }
                     )
@@ -359,7 +359,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                     {rsx!(hr{},
                         ContextItem {
                         icon: Icon::UserCircle,
-                        aria_label: "quick-profile-self-edit".into(),
+                        aria_label: "quick-profile-self-edit".to_string(),
                         text: get_local_text("quickprofile.self-edit"),
                         onpress: move |_| {
                             settings_page.write().set(Page::Profile);

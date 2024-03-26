@@ -25,8 +25,8 @@ pub fn Sidebar(props: Props) -> Element {
             div {
                 class: "search-input",
                 Input {
-                    placeholder: "The Uplink Community".into(),
-                    aria_label: "settings-search-input".into(),
+                    placeholder: "The Uplink Community".to_string(),
+                    aria_label: "settings-search-input".to_string(),
                     icon: Icon::MagnifyingGlass,
                     disabled: true,
                     options: Options {

@@ -13,7 +13,7 @@ use common::{
 use warp::crypto::DID;
 
 // Define a struct to represent a group of messages from the same sender.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct MessageGroup {
     pub sender: DID,
     pub remote: bool,

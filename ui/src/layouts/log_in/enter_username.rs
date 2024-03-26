@@ -156,7 +156,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
             },
             Button {
                 text:  get_local_text("unlock.create-account"),
-                aria_label: "create-account-button".into(),
+                aria_label: "create-account-button".to_string(),
                 appearance: kit::elements::Appearance::Primary,
                 loading: loading(),
                 disabled: button_disabled() || loading(),

@@ -206,7 +206,7 @@ pub fn loop_over_message_groups(props: AllMessageGroupsProps) -> Element {
     rsx!({
         props.groups.iter().map(|_group| {
             rsx!(render_message_group {
-                group: _group,
+                group: _group.clone(),
                 active_chat_id: props.active_chat_id,
                 on_context_menu_action: move |e| props.on_context_menu_action.call(e)
             },)
@@ -243,7 +243,7 @@ fn render_message_group(props: MessageGroupProps) -> Element {
     let show_blocked = use_signal(|| false);
 
     let blocked_element = if blocked {
-        if !show_blocked.read() {
+        if !show_blocked() {
             return rsx!(
                 div {
                     class: "blocked-container",
@@ -319,7 +319,7 @@ fn render_message_group(props: MessageGroupProps) -> Element {
             sender: sender_name.clone(),
             remote: group.remote,
             children: rsx!(wrap_messages_in_context_menu {
-                messages: &group.messages,
+                messages: group.messages,
                 active_chat_id: props.active_chat_id,
                 is_remote: group.remote,
                 pending: props.pending.unwrap_or_default()
@@ -357,7 +357,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
 
         // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
         let is_editing = edit_msg
-            .get()
+            .read()
             .map(|id| !props.is_remote && (id == message.inner.id()))
             .unwrap_or(false);
         let message_key = format!("{}-{:?}", &message.key, is_editing);
@@ -382,7 +382,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
             id: msg_uuid.to_string(),
             devmode: state.read().configuration.developer.developer_mode,
             children: rsx!(render_message {
-                message: grouped_message,
+                message: grouped_message.clone(),
                 is_remote: props.is_remote,
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
@@ -580,11 +580,11 @@ fn render_message(props: MessageProps) -> Element {
     rsx!(
         div {
             class: "msg-wrapper",
-            {preview_file_in_the_message.0.then(|| {
-                if preview_file_in_the_message.1.is_none() {
+            {preview_file_in_the_message().0.then(|| {
+                if preview_file_in_the_message().1.is_none() {
                     preview_file_in_the_message.set((false, None));
                 }
-                let file = preview_file_in_the_message.1.clone().unwrap();
+                let file = preview_file_in_the_message().1.clone().unwrap();
                 let file2 = file.clone();
                 rsx!(open_file_preview_modal {
                     on_dismiss: |_| {
@@ -691,7 +691,7 @@ pub struct PendingMessagesListenerProps {
 //The component that listens for upload events
 pub fn render_pending_messages_listener(props: PendingMessagesListenerProps) -> Element {
     let state = use_context::<Signal<State>>();
-    state.write_silent().scope_ids.pending_message_component = Some(current_scope_id().0);
+    state.write_silent().scope_ids.pending_message_component = Some(current_scope_id());
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
         None => return rsx!({ () }),
@@ -735,7 +735,7 @@ fn render_pending_messages(props: PendingMessagesProps) -> Element {
     rsx!({
         props.pending_outgoing_message.as_ref().map(|group| {
             rsx!(render_message_group {
-                group: group,
+                group: group.clone(),
                 active_chat_id: props.active,
                 on_context_menu_action: move |e| props.on_context_menu_action.call(e),
                 pending: true

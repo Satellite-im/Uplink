@@ -35,8 +35,8 @@ pub fn CreateGroup(props: Props) -> Element {
     log::trace!("rendering create_group");
     let state = use_context::<Signal<State>>();
     let router = use_navigator();
-    let friend_prefix = use_signal(|| String::new);
-    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let friend_prefix = use_signal(|| String::new());
+    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
     let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
     let group_name = use_signal(|| Some(String::new()));
     let friends_list = HashMap::from_iter(
@@ -64,8 +64,8 @@ pub fn CreateGroup(props: Props) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
-                let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
-                let group_name: Option<String> = group_name.current().as_ref().clone();
+                let recipients: Vec<DID> = selected_friends.read().iter().cloned().collect();
+                let group_name: Option<String> = group_name.read().as_ref().clone().cloned();
                 let group_name_string = group_name.clone().unwrap_or_default();
 
                 let (tx, rx) = oneshot::channel();
@@ -118,7 +118,7 @@ pub fn CreateGroup(props: Props) -> Element {
                 }
                 Input {
                         placeholder:  get_local_text("messages.group-name"),
-                        default_text: group_name.get().clone().unwrap_or_default(),
+                        default_text: group_name.read().clone().unwrap_or_default(),
                         aria_label: "groupname-input".into(),
                         focus_just_on_render: true,
                         options: Options {
@@ -168,7 +168,7 @@ pub fn CreateGroup(props: Props) -> Element {
                 appearance: Appearance::Primary,
                 onpress: move |e| {
                     log::info!("create dm button");
-                    if group_name.get().is_some() {
+                    if group_name.read().is_some() {
                         ch.send(());
                         props.oncreate.call(e);
                     } else {
@@ -249,9 +249,9 @@ fn render_friend(props: FriendProps) -> Element {
 
     let update_fn = || {
         let friend_did = props.friend.did_key();
-        let new_value = !*is_checked.get();
+        let new_value = !is_checked();
         is_checked.set(new_value);
-        let mut friends = props.selected_friends.get().clone();
+        let mut friends = props.selected_friends.read();
         if new_value {
             friends.insert(friend_did);
         } else {
@@ -287,7 +287,7 @@ fn render_friend(props: FriendProps) -> Element {
                 disabled: false,
                 width: "1em".into(),
                 height: "1em".into(),
-                is_checked: *is_checked.get(),
+                is_checked: is_checked(),
                 on_click: move |_| {
                     update_fn();
                 }

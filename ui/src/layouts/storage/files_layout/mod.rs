@@ -211,7 +211,7 @@ pub fn FilesLayout() -> Element {
                                     icon: Icon::FolderPlus,
                                     disabled: *upload_file_controller.files_been_uploaded.read(),
                                     appearance: Appearance::Secondary,
-                                    aria_label: "add-folder".into(),
+                                    aria_label: "add-folder".to_string(),
                                     tooltip: rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::Top,
@@ -227,7 +227,7 @@ pub fn FilesLayout() -> Element {
                                 Button {
                                     icon: Icon::Plus,
                                     appearance: Appearance::Secondary,
-                                    aria_label: "upload-file".into(),
+                                    aria_label: "upload-file".to_string(),
                                     tooltip: rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::TopRight,

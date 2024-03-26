@@ -41,7 +41,7 @@ struct Cmd {
 // styles for this layout are in layouts/style.scss
 #[component]
 pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
-    let state = use_signal(|| State::load);
+    let state = use_signal(|| State::load());
     let loading = use_signal(|| false);
     let input: Signal<Vec<_>> = use_signal(|| (0..12).map(|_| String::new()).collect());
     let seed_error = use_signal(|| None);
@@ -49,7 +49,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
 
     let window = use_window();
 
-    if !matches!(&*page.current(), AuthPages::Success(_)) {
+    if !matches!(&*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
             height: 480.0,
@@ -129,7 +129,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
     });
 
     rsx!(
-        style { {get_app_style(&state.read())} },
+        style { {get_app_style(&state())} },
         div {
             id: "enter-seed-words-layout",
             aria_label: "enter-seed-words-layout",
@@ -171,7 +171,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                                     *focus.write() = idx;
                                 },
                                 onchange: move |(x, is_valid): (String, bool)| {
-                                    if x.is_empty() || seed_error.get().is_some() {
+                                    if x.is_empty() || seed_error.read().is_some() {
                                         seed_error.set(None);
                                     }
                                     if is_valid {
@@ -208,7 +208,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                                     *focus.write() = other;
                                 },
                                 onchange: move |(x, is_valid): (String, bool)| {
-                                    if x.is_empty() || seed_error.get().is_some() {
+                                    if x.is_empty() || seed_error.read().is_some() {
                                         seed_error.set(None);
                                     }
                                     if is_valid {
@@ -255,7 +255,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                 Button {
                     aria_label: "recover-account-button".into(),
                     text: get_local_text("enter-seed-words.submit"),
-                    disabled: *loading.get(),
+                    disabled: loading(),
                     onpress: move |_| {
                         loading.set(true);
                         ch.send(Cmd {

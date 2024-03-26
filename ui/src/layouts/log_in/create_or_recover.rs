@@ -13,7 +13,7 @@ pub fn Layout(page: Signal<AuthPages>) -> Element {
     let state = use_signal(State::load);
     let window = use_window();
 
-    if !matches!(&*page.current(), AuthPages::Success(_)) {
+    if !matches!(&*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
             height: 250.0,
@@ -25,7 +25,7 @@ pub fn Layout(page: Signal<AuthPages>) -> Element {
             id: "create-or-recover-layout",
             aria_label: "create-or-recover-layout",
             Label {
-                aria_label: "create-or-recover".into(),
+                aria_label: "create-or-recover".to_string(),
                 text: get_local_text("create-or-recover")
             }
             div {
@@ -36,14 +36,14 @@ pub fn Layout(page: Signal<AuthPages>) -> Element {
             div {
                 class: "button-container",
                 Button {
-                    aria_label: "create-button".into(),
+                    aria_label: "create-button".to_string(),
                     text: get_local_text("create-or-recover.create"),
                     onpress: move |_| {
                         page.set(AuthPages::CopySeedWords);
                     }
                 },
                 Button {
-                    aria_label: "recover-button".into(),
+                    aria_label: "recover-button".to_string(),
                     text: get_local_text("create-or-recover.recover"),
                     onpress: move |_| {
                         page.set(AuthPages::EnterSeedWords);
