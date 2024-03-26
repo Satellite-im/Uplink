@@ -16,7 +16,7 @@ pub fn FileCheckbox(
     storage_controller: Signal<StorageController>,
     is_selecting_files: bool,
 ) -> Element {
-    if *is_selecting_files {
+    if is_selecting_files {
         let files_selected_to_send = storage_controller.with(|f| f.files_selected_to_send.clone());
         return rsx!( div {
             class: "checkbox-position",
@@ -52,7 +52,7 @@ pub fn SendFilesTopbar(
             Button {
                 text: get_local_text("files.go-to-files"),
                 icon: Icon::FolderPlus,
-                aria_label: "go_to_files_btn".into(),
+                aria_label: "go_to_files_btn".to_string(),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
                     if send_files_start_location.eq(&SendFilesStartLocation::Storage) {
@@ -64,7 +64,7 @@ pub fn SendFilesTopbar(
             },
             Button {
                 text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE))]),
-                aria_label: "send_files_modal_send_button".into(),
+                aria_label: "send_files_modal_send_button".to_string(),
                 disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || (in_files && f.chats_selected_to_send.is_empty())),
                 appearance: Appearance::Primary,
                 icon: Icon::ChevronRight,

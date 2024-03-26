@@ -202,7 +202,7 @@ fn app() -> Element {
 
     // 2. Guard the app with the auth
     let auth = use_signal(|| AuthPages::EntryPoint);
-    let AuthPages::Success(identity) = auth() else {
+    let AuthPages::Success(identity) = *auth.read() else {
         return rsx! {
         KeyboardShortcuts {
             is_on_auth_pages: true,
@@ -222,7 +222,7 @@ fn app() -> Element {
     bootstrap::use_bootstrap(&identity)?;
 
     // 4. Throw up a loading screen until our assets are ready
-    if use_loaded_assets().value().is_none() {
+    if use_loaded_assets().value().read().is_none() {
         return rsx! { LoadingWash {} };
     }
 
@@ -944,7 +944,7 @@ fn get_update_icon() -> Element {
                             }
                         },
                         ContextItem {
-                            aria_label: "update-menu-download".into(),
+                            aria_label: "update-menu-download".to_string(),
                             text: get_local_text("uplink.update-menu-download"),
                             onpress: move |_| {
                                 download_state.write().stage = DownloadProgress::PickFolder;

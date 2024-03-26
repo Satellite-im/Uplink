@@ -41,7 +41,7 @@ pub fn AuthGuard(page: Signal<AuthPages>) -> Element {
     // make the window smaller while the user authenticates
     let window = use_window();
 
-    if !matches!(&*page.current(), AuthPages::Success(_)) {
+    if !matches!(*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
             height: 350.0,
@@ -62,7 +62,7 @@ pub fn AuthGuard(page: Signal<AuthPages>) -> Element {
                 TopbarControls {},
             },
 
-            match *page.current() {
+            match *page.read() {
                 AuthPages::EntryPoint => rsx!(entry_point::Layout { page: page.clone(), pin: pin.clone() }),
                 AuthPages::EnterUserName => rsx!(enter_username::Layout { page: page.clone(), pin: pin.clone(), seed_words: seed_words.clone() }),
                 AuthPages::CreateOrRecover => rsx!(create_or_recover::Layout { page: page.clone() }),

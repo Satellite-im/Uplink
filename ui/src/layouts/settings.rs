@@ -28,14 +28,14 @@ use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout() -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let to = use_context::<Signal<Page>>();
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
-    let first_render = use_signal(|| true);
-    if *first_render.get() {
+    let mut first_render = use_signal(|| true);
+    if first_render() {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(false));
         }
@@ -90,7 +90,7 @@ pub fn SettingsLayout() -> Element {
                 div {
                     id: "content",
                     class: "full-width",
-                    settings,
+                    {settings},
                 },
                  {(state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     crate::AppNav {

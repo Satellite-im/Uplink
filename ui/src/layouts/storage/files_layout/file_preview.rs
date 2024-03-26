@@ -39,7 +39,7 @@ pub fn open_file_preview_modal(
         dont_pad: true,
         close_on_click_inside_modal: true,
         children: rsx!(FilePreview {
-            file: &file,
+            file: file,
             on_download: |temp_path| {
                 on_download.call(temp_path);
             },
@@ -58,7 +58,7 @@ struct Props {
 #[allow(non_snake_case)]
 fn FilePreview(props: Props) -> Element {
     let state = use_context::<Signal<State>>();
-    let file_path_in_local_disk = use_signal(|| PathBuf::new);
+    let file_path_in_local_disk = use_signal(|| PathBuf::new());
 
     let thumbnail = thumbnail_to_base64(&props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(props.file.name());
@@ -78,7 +78,7 @@ fn FilePreview(props: Props) -> Element {
     let is_code = is_lang_file(&props.file.name());
 
     if file_path_in_local_disk.read().to_string_lossy().is_empty() {
-        if !temp_dir_with_file_id.exists() && *should_download.get() {
+        if !temp_dir_with_file_id.exists() && should_download() {
             props.on_download.call(Some(temp_dir.clone()));
             should_download.set(false);
         }
@@ -123,11 +123,10 @@ fn FilePreview(props: Props) -> Element {
         }
     });
 
-    let local_disk_path_fixed =
-        get_fixed_path_to_load_local_file(file_path_in_local_disk.read().clone());
+    let local_disk_path_fixed = get_fixed_path_to_load_local_file(file_path_in_local_disk());
 
     let code_content = is_code
-        .then(|| std::fs::read_to_string(file_path_in_local_disk.read().clone()).ok())
+        .then(|| std::fs::read_to_string(file_path_in_local_disk()).ok())
         .flatten()
         .unwrap_or_default();
 
@@ -150,12 +149,12 @@ fn FilePreview(props: Props) -> Element {
 
     rsx!(
         ContextMenu {
-            id: "file-preview-context-menu".into(),
+            id: "file-preview-context-menu".to_string(),
             devmode: state.read().configuration.developer.developer_mode,
             items: rsx!(
                 ContextItem {
                     icon: Icon::ArrowDownCircle,
-                    aria_label: "files-download-preview".into(),
+                    aria_label: "files-download-preview".to_string(),
                     text: get_local_text("files.download"),
                     onpress: move |_| {
                         props.on_download.call(None);
@@ -181,7 +180,7 @@ fn FilePreview(props: Props) -> Element {
                     source: thumbnail,
                     code_content: code_content,
                 })}
-            } else if file_path_in_local_disk.read().exists() {
+            } else if file_path_in_local_disk().exists() {
                 {*should_dismiss_on_error.write_silent() = true;
                 // Success for both any kind of file
                 rsx!(FileTypeTag {

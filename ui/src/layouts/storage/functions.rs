@@ -13,7 +13,7 @@ use common::{
 };
 use dioxus::{
     events::eval,
-    prelude::{EvalError, UseEval},
+    prelude::*,
     signals::{Readable, Signal},
 };
 #[cfg(not(target_os = "macos"))]
@@ -510,7 +510,7 @@ pub fn start_upload_file_listener(
 ) {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
-    let disable_cancel_upload_button = upload_file_controller.disable_cancel_upload_button.clone();
+
     use_resource(|| {
         to_owned![
             state,

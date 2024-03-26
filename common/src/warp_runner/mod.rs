@@ -94,6 +94,7 @@ pub enum WarpCmd {
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp
+#[derive(Clone)]
 pub struct WarpRunner {
     // perhaps collecting a JoinHandle and calling abort() would be better than using Notify.
     notify: Arc<Notify>,

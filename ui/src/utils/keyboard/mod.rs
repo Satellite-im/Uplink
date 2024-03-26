@@ -1,4 +1,6 @@
-use common::state::settings::{key_code_to_str, modifier_state_to_string, GlobalShortcut};
+use common::state::settings::{
+    key_code_to_str, modifier_state_to_string, GlobalShortcut, ModifiersStateDef,
+};
 use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::keyboard::ModifiersState;
@@ -34,7 +36,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                 {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
-                        modifiers: shortcut.modifiers,
+                        modifiers: ModifiersStateDef::to_modifiers_state_vec(shortcut.modifiers),
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
                             props.on_global_shortcut.call(global_shortcut);
@@ -55,7 +57,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                 {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
-                        modifiers: shortcut.modifiers,
+                        modifiers: ModifiersStateDef::to_modifiers_state_vec(shortcut.modifiers),
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                             // If global shortcuts are paused (for example, on the keybinds settings page) don't callback
                             props.on_global_shortcut.call(global_shortcut);
@@ -72,7 +74,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
                 {rsx!{
                     RenderGlobalShortCuts {
                         keys: shortcut.keys,
-                        modifiers: shortcut.modifiers,
+                        modifiers: ModifiersStateDef::to_modifiers_state_vec(shortcut.modifiers),
                         on_global_shortcut: move |global_shortcut: GlobalShortcut| {
                                 let scroll_script = NAVIGATE_AND_HIGHLIGHT_KEYBINDS.to_string().replace("$SHORTCUT_PRESSED", format!("{:?}", global_shortcut).as_str());
                                 let _ = eval(&scroll_script);

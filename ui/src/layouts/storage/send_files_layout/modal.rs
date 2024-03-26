@@ -19,14 +19,14 @@ pub fn SendFilesLayoutModal(props: SendFilesLayoutModalProps) -> Element {
     let send_files_start_location = props.send_files_start_location.clone();
     let files_pre_selected_to_send = props.files_pre_selected_to_send.clone().unwrap_or_default();
 
-    if !*send_files_from_storage.get() {
+    if !send_files_from_storage() {
         return None;
     }
 
     rsx!( div {
             class: "send-files-to-several-chats-div",
             Modal {
-                open: *send_files_from_storage.clone(),
+                open: send_files_from_storage(),
                 transparent: false,
                 onclose: move |_| send_files_from_storage.set(false),
                 div {

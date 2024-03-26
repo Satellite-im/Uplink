@@ -66,7 +66,7 @@ pub fn FilesLayout() -> Element {
     functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> =
-        functions::init_coroutine(storage_controller, state, file_tracker);
+        functions::init_coroutine(storage_controller.clone(), state, file_tracker);
 
     use_resource(|| {
         to_owned![files_been_uploaded, files_in_queue_to_upload];
@@ -170,7 +170,7 @@ pub fn FilesLayout() -> Element {
                                 .await
                                 .expect("Should succeed");
                             if !files_local_path.is_empty() {
-                                functions::add_files_in_queue_to_upload(&files_in_queue_to_upload2.clone(), files_local_path);
+                                functions::add_files_in_queue_to_upload(files_in_queue_to_upload2.clone(), files_local_path);
                                 files_been_uploaded2.with_mut(|i| *i = true);
                             }
                         }});
@@ -301,8 +301,7 @@ pub fn FilesLayout() -> Element {
                 }
             },
             FilesBreadcumbs {
-                storage_controller: storage_controller,
-                ch: ch,
+                storage_controller: storage_controller.clone(),
                 send_files_mode: false,
             },
             if storage_controller.read().files_list.is_empty()
@@ -318,12 +317,11 @@ pub fn FilesLayout() -> Element {
                     )}
                } else {
                 {rsx!(FilesAndFolders {
-                    storage_controller: storage_controller,
+                    storage_controller: storage_controller.clone(),
                     on_click_share_files: move |files_pre_selected: Vec<Location>| {
                         *files_pre_selected_to_send.write_silent() = files_pre_selected;
                         send_files_from_storage.set(true);
                     },
-                    ch: ch,
                     send_files_mode: false,
                 })}
                }

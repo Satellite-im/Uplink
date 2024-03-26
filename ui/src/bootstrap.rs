@@ -43,7 +43,7 @@ pub(crate) fn use_bootstrap(identity: &multipass::identity::Identity) -> Option<
             state.ui.overlays.push(window);
         }
 
-        let size = scaled_window_size(desktop.webview.inner_size(), &desktop);
+        let size = scaled_window_size(desktop.inner_size(), &desktop);
         // Update the window metadata now that we've created a window
         let window_meta = WindowMeta {
             focused: desktop.is_focused(),

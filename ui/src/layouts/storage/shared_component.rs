@@ -77,7 +77,6 @@ pub fn FilesBreadcumbs(props: FilesBreadcumbsProps) -> Element {
 #[derive(Props, Clone, PartialEq)]
 pub struct FilesAndFoldersProps {
     storage_controller: Signal<StorageController>,
-    ch: Coroutine<ChanCmd>,
     on_click_share_files: Option<EventHandler<Vec<Location>>>,
     send_files_mode: bool,
 }
@@ -87,7 +86,8 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
     let state = use_context::<Signal<State>>();
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
-    let ch = props.ch;
+    let ch = use_coroutine_handle();
+
     rsx!(span {
         class: "file-parent",
         background: format_args!("{}", if send_files_mode {"var(--secondary)"} else {""}),
@@ -142,7 +142,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                         items: rsx!(
                             ContextItem {
                                 icon: Icon::Pencil,
-                                aria_label: "folder-rename".into(),
+                                aria_label: "folder-rename".to_string(),
                                 text: get_local_text("files.rename"),
                                 onpress: move |_| {
                                     storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
@@ -152,7 +152,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                             ContextItem {
                                 icon: Icon::Trash,
                                 danger: true,
-                                aria_label: "folder-delete".into(),
+                                aria_label: "folder-delete".to_string(),
                                 text: get_local_text("uplink.delete"),
                                 onpress: move |_| {
                                     let item = Item::from(dir2.clone());

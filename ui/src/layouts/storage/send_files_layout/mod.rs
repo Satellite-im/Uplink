@@ -102,7 +102,6 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
                } else {
                 FilesAndFolders {
                     storage_controller: storage_controller.clone(),
-                    ch: ch.clone(),
                     send_files_mode: true,
                 }
                }

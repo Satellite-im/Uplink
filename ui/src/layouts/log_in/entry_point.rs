@@ -78,7 +78,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
     use_resource(|| {
         to_owned![account_exists];
         async move {
-            if account_exists.current().is_some() {
+            if account_exists().is_some() {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -166,7 +166,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
         special_chars: None,
     };
 
-    let loading = account_exists.current().is_none();
+    let loading = account_exists().is_none();
 
     let image_path = get_images_dir()
         .unwrap_or_default()
@@ -202,14 +202,14 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                         is_password: true,
                         icon: Icon::Key,
                         disable_onblur: true,
-                        aria_label: "pin-input".into(),
-                        disabled: loading || *cmd_in_progress.get(),
+                        aria_label: "pin-input".to_string(),
+                        disabled: loading || cmd_in_progress(),
                         placeholder: get_local_text("unlock.enter-pin"),
                         reset: reset_input.clone(),
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
-                            with_label: if account_exists.current().unwrap_or_default()
+                            with_label: if account_exists().unwrap_or_default()
                             {Some(get_welcome_message(&state.read()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
@@ -222,7 +222,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                         onchange: move |(val, validation_passed): (String, bool)| {
                             *pin.write_silent() = val.clone();
                             // Reset the error when the person changes the pin
-                            if val.is_empty() || !shown_error.get().is_empty() {
+                            if val.is_empty() || !shown_error().is_empty() {
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
@@ -230,24 +230,24 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
-                                ch.send((val, *account_exists.get()));
+                                ch.send((val, account_exists()));
                                 validation_failure.set(None);
                             } else {
                                 validation_failure.set(Some(UnlockError::ValidationError));
                             }
                         },
                         onreturn: move |_| {
-                                if let Some(validation_error) = validation_failure.get() {
+                                if let Some(validation_error) = *validation_failure.read() {
                                     shown_error.set(validation_error.translation());
-                                } else if let Some(e) = error.get() {
+                                } else if let Some(e) = *error.read() {
                                     shown_error.set(e.translation());
-                                } else if !account_exists.current().unwrap_or_default()  {
+                                } else if !account_exists().unwrap_or_default()  {
                                     page.set(AuthPages::CreateOrRecover);
                                 }
                                 cmd_in_progress.set(false);
                         }
                     },
-                   { (!shown_error.get().is_empty()).then(|| rsx!(
+                   { (!shown_error().is_empty()).then(|| rsx!(
                         span {
                             class: "error",
                             "{shown_error}"
@@ -260,23 +260,23 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                         }
                     },
                     Button {
-                        text: match account_exists.current().unwrap_or(true) {
-                            true => if *cmd_in_progress.get() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
+                        text: match account_exists().unwrap_or(true) {
+                            true => if cmd_in_progress() {get_local_text("unlock.logging-in")} else {get_local_text("unlock.unlock-account")},
                             false => get_local_text("unlock.create-account"),
                         },
-                        aria_label: "create-account-button".into(),
+                        aria_label: "create-account-button".to_string(),
                         appearance: kit::elements::Appearance::Primary,
-                        loading:  *cmd_in_progress.get(),
-                        disabled: *cmd_in_progress.current() || validation_failure.current().is_some(),
+                        loading:  cmd_in_progress(),
+                        disabled: cmd_in_progress() || validation_failure.read().is_some(),
                         onpress: move |_| {
                             // these are only for testing.
                             // page.set(AuthPages::CreateOrRecover);
                             // return;
 
-                            if let Some(validation_error) = validation_failure.get() {
+                            if let Some(validation_error) = *validation_failure.read() {
                                 shown_error.set(validation_error.translation());
                                 reset_input.set(true);
-                            } else if let Some(e) = error.get() {
+                            } else if let Some(e) = *error.read() {
                                 shown_error.set(e.translation());
                                 reset_input.set(true);
                             } else {
@@ -287,13 +287,13 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                     },
                     ContextMenu {
                         key: "{key}-menu",
-                        id: "unlock-context-menu".into(),
+                        id: "unlock-context-menu".to_string(),
                         devmode: state.read().configuration.developer.developer_mode,
                         items: rsx!(
                             ContextItem {
                                 icon: Icon::Trash,
                                 danger: true,
-                                aria_label: "account-reset".into(),
+                                aria_label: "account-reset".to_string(),
                                 text: get_local_text("uplink.reset-account"),
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
@@ -307,7 +307,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                         div {
                             class: "help-button",
                             Button {
-                                aria_label: "help-button".into(),
+                                aria_label: "help-button".to_string(),
                                 appearance: kit::elements::Appearance::Secondary,
                                 icon: Icon::QuestionMarkCircle,
                                 tooltip: rsx!(

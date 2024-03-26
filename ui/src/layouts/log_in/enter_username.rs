@@ -35,7 +35,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
     let window = use_window();
     let loading = use_signal(|| false);
 
-    if !matches!(&*page.current(), AuthPages::Success(_)) {
+    if !matches!(&*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
             width: 500.0,
             height: 250.0,
@@ -105,14 +105,14 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
     });
 
     rsx!(
-        {loading.get().then(|| rsx!(
+        {loading().then(|| rsx!(
             div {
                 class: "overlay-load-shadow",
             },
         ))},
         div {
             id: "unlock-layout",
-            class: format_args!("{}", if *loading.get() {"progress"} else {""}),
+            class: format_args!("{}", if loading() {"progress"} else {""}),
             aria_label: "unlock-layout",
             Label {
                 text: get_local_text("auth.enter-username")
@@ -127,9 +127,9 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 focus: true,
                 is_password: false,
                 icon: Icon::Identification,
-                aria_label: "username-input".into(),
+                aria_label: "username-input".to_string(),
                 disable_onblur: true,
-                disabled: *loading.get(),
+                disabled: loading(),
                 placeholder: get_local_text("auth.enter-username"),
                 options: Options {
                     with_validation: Some(username_validation),
@@ -139,15 +139,15 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 },
                 onchange: |(val, is_valid): (String, bool)| {
                     let should_disable = !is_valid;
-                    if *button_disabled.get() != should_disable {
+                    if button_disabled() != should_disable {
                         button_disabled.set(should_disable);
                     }
                     username.set(val);
                 },
                 onreturn: move |_| {
-                    if !*button_disabled.get() {
+                    if !button_disabled() {
                         ch.send(CreateAccountCmd {
-                            username: username.get().to_string(),
+                            username: username().to_string(),
                             passphrase: pin.read().to_string(),
                             seed_words: seed_words.read().to_string()
                         });
@@ -158,11 +158,11 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                 text:  get_local_text("unlock.create-account"),
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
-                loading: *loading.get(),
-                disabled: *button_disabled.get() || *loading.get(),
+                loading: loading(),
+                disabled: button_disabled() || loading(),
                 onpress: move |_| {
                     ch.send(CreateAccountCmd {
-                        username: username.get().to_string(),
+                        username: username().to_string(),
                         passphrase: pin.read().to_string(),
                         seed_words: seed_words.read().to_string()
                     });

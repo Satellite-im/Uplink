@@ -64,7 +64,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                                     id: chat_id.to_string(),
                                     items: rsx!(
                                         ContextItem {
-                                            aria_label: "favorites-chat".into(),
+                                            aria_label: "favorites-chat".to_string(),
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
@@ -76,7 +76,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                                             }
                                         },
                                         ContextItem {
-                                            aria_label: "favorites-remove".into(),
+                                            aria_label: "favorites-remove".to_string(),
                                             icon: Icon::HeartSlash,
                                             text: get_local_text("favorites.remove"),
                                             onpress: move |_| {
@@ -125,7 +125,7 @@ pub fn SlimbarLayout(props: Props) -> Element {
                     tooltip: rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Left,
-                            text: "Create Community".into()
+                            text: "Create Community".to_string()
                         }
                     ),
                     onpress: move |_| {
