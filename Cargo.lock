@@ -1609,7 +1609,6 @@ dependencies = [
  "dioxus",
  "dioxus-desktop",
  "dirs 5.0.1",
- "either",
  "extensions",
  "fluent-templates",
  "futures",
@@ -4896,7 +4895,6 @@ dependencies = [
  "futures",
  "glob",
  "humansize",
- "linkify",
  "mime",
  "once_cell",
  "pulldown-cmark",
@@ -5833,15 +5831,6 @@ name = "linked-hash-map"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
-
-[[package]]
-name = "linkify"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1dfa36d52c581e9ec783a7ce2a5e0143da6237be5811a0b3153fedfdbe9f780"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "linux-raw-sys"
@@ -10005,7 +9994,6 @@ dependencies = [
  "dioxus-router",
  "dirs 5.0.1",
  "dotenv",
- "either",
  "env_logger",
  "extensions",
  "fdlimit",
@@ -10030,7 +10018,6 @@ dependencies = [
  "opener",
  "parking_lot 0.12.1",
  "rand 0.8.5",
- "raw-window-handle 0.6.0",
  "regex",
  "reqwest",
  "rfd 0.14.0",
