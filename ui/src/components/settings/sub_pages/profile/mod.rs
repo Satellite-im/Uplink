@@ -665,12 +665,13 @@ pub fn ProfileSettings() -> Element {
                                                 class: "col",
                                                 span {
                                                     aria_label: "seed-word-number-{((idx * 2) + 1).to_string()}",
-                                                    class: "num", ((idx * 2) + 1).to_string()
-                                                    class: "num disable-select", ((idx * 2) + 1).to_string()
+                                                    class: "num disable-select",
+                                                    {((idx * 2) + 1).to_string()},
                                                 },
                                                 span {
                                                     aria_label: "seed-word-value-{((idx * 2) + 1).to_string()}",
-                                                    class: "val", vals.first().cloned().unwrap_or_default()
+                                                    class: "val",
+                                                    {vals.first().cloned().unwrap_or_default()}
                                                 }
                                             },
                                             div {
