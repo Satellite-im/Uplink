@@ -19,7 +19,7 @@ pub fn LoadingWash() -> Element {
     }
 }
 
-pub fn use_loaded_assets() -> UseFuture<Result<(), tokio::task::JoinError>> {
+pub fn use_loaded_assets() -> Resource<Result<(), tokio::task::JoinError>> {
     let desktop = dioxus_desktop::use_window();
     let state = use_context::<Signal<State>>();
 

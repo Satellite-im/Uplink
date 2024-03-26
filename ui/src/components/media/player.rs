@@ -17,7 +17,7 @@ use kit::{
 
 use crate::UplinkRoute;
 
-#[derive(Eq, PartialEq, Props)]
+#[derive(Eq, PartialEq, Props, Clone)]
 pub struct Props {
     #[props(optional)]
     larger: Option<bool>,

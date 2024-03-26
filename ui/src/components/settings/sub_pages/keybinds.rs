@@ -36,7 +36,7 @@ const UNFOCUS_DIV_ON_SUBMIT: &str = r#"
           }
 "#;
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct KeybindProps {
     pub keys: Vec<String>, // TODO: This should be a Vec<Key>
 }
@@ -67,7 +67,7 @@ pub fn Keybind(props: KeybindProps) -> Element {
     rsx!({ keys_rendered })
 }
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct KeybindSectionProps {
     pub id: String,
     pub bindings: Vec<(GlobalShortcut, Shortcut)>,

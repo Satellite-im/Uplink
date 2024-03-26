@@ -10,7 +10,7 @@ use warp::crypto::DID;
 use crate::utils::build_participants;
 
 #[derive(Props, Clone, PartialEq)]
-pub struct SearchProps<'a> {
+pub struct SearchProps {
     search_typed_chars: Signal<String>,
     search_friends_is_focused: Signal<bool>,
     search_dropdown_hover: Signal<bool>,
@@ -20,7 +20,7 @@ pub struct SearchProps<'a> {
     onclick: EventHandler<identity_search_result::Identifier>,
 }
 
-pub fn search_friends<'a>(props: SearchProps<'a>) -> Element {
+pub fn search_friends(props: SearchProps) -> Element {
     let state = use_context::<Signal<State>>();
     if props.identities.read().is_empty() || !*props.search_friends_is_focused.read() {
         return None;

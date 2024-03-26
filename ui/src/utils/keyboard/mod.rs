@@ -90,7 +90,7 @@ pub fn KeyboardShortcuts(props: Props) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct GlobalShortcutProps<'a> {
+struct GlobalShortcutProps {
     keys: Vec<KeyCode>,
     modifiers: Vec<ModifiersState>,
     on_global_shortcut: EventHandler<GlobalShortcut>,

@@ -17,7 +17,7 @@ use kit::{
     layout::slimbar::Slimbar,
 };
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct Props {
     pub active: UplinkRoute,
 }

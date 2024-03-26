@@ -1,4 +1,5 @@
 use common::state::{Action, State};
+use dioxus::prelude::*;
 use dioxus::signals::Signal;
 
 use crate::utils::get_font_sizes::{FONT_SIZE_BIGGEST, FONT_SIZE_SMALLEST};

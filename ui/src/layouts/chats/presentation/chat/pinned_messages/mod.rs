@@ -39,7 +39,7 @@ pub enum ChannelCommand {
     },
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     show_pinned: Signal<bool>,
 }
@@ -176,7 +176,7 @@ pub fn PinnedMessages(props: Props) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct PinnedMessageProp<'a> {
+pub struct PinnedMessageProp {
     message: warp::raygun::Message,
     chat: Uuid,
     #[props(!optional)]
@@ -187,7 +187,7 @@ pub struct PinnedMessageProp<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessage<'a>(props: PinnedMessageProp<'a>) -> Element {
+pub fn PinnedMessage(props: PinnedMessageProp) -> Element {
     let state = use_context::<Signal<State>>();
     let message = &props.message;
     let attachments = message.attachments();

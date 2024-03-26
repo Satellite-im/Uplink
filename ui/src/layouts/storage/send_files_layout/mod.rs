@@ -51,7 +51,7 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
     let first_render = use_signal(|| true);
     let file_tracker = use_context::<Signal<TransferTracker>>();
     let ch: &Coroutine<ChanCmd> =
-        functions::init_coroutine(storage_controller, state, file_tracker);
+        functions::init_coroutine(storage_controller.clone(), state, file_tracker);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
     functions::get_items_from_current_directory(ch);
 
@@ -84,12 +84,11 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
             }
             if in_files {
                 ChatsToSelect {
-                    storage_controller: storage_controller,
+                    storage_controller: storage_controller.clone(),
                 }
             }
             FilesBreadcumbs {
-                storage_controller: storage_controller,
-                ch: ch,
+                storage_controller: storage_controller.clone(),
                 send_files_mode: true,
             },
             if storage_controller.read().files_list.is_empty()
@@ -102,8 +101,8 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
                         }
                } else {
                 FilesAndFolders {
-                    storage_controller: storage_controller,
-                    ch: ch,
+                    storage_controller: storage_controller.clone(),
+                    ch: ch.clone(),
                     send_files_mode: true,
                 }
                }
@@ -196,7 +195,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 }
                             )}}
                         ),
-                        user_image: rsx!(
+                        user_image: {rsx!(
                             div {
                                 class: "chat-selector-to-send-image-group",
                                 Checkbox {
@@ -226,7 +225,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                     }
                                 )}}
                             }
-                        ),
+                        )},
                         with_badge: "".into(),
                         onpress: move |_| {
                             if is_checked {

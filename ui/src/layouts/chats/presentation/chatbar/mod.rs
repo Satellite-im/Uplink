@@ -341,7 +341,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            extensions: rsx!(for node in ext_renders { rsx!(node) }),
+            extensions: rsx!(for node in ext_renders { {rsx!({node})} }),
             suggestions: suggestions,
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if !active_chat_id.is_nil() {
@@ -521,7 +521,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])
+                {get_local_text_with_args("warning-messages.maximum-of", vec![("num", MAX_CHARS_LIMIT)])}
             }
         ))}
     );

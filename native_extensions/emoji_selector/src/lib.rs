@@ -325,26 +325,35 @@ fn render_1(_unused: bool) -> Element {
         }
     });
 
-    rsx! (
+    rsx!(
         // If enabled, render the selector popup.
-        {visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: rsx!(build_nav{})}),
-        div {
-            onmouseenter: |_| {
-                *mouse_over_emoji_button.write_silent() = true;
-            },
-            onmouseleave: |_| {
-                *mouse_over_emoji_button.write_silent() = false;
-            },
-            // Render standard (required) button to toggle.
-            Button {
-                aria_label: "send-emoji-button".into(),
-                icon: Icon::FaceSmile,
-                onpress: move |_| {
-                    state.write().mutate(Action::SetEmojiPickerVisible(!visible));
-                }
-            }
+        {
+            visible.then(|| {
+                rsx!(
+                    render_selector {
+                        mouse_over_emoji_button: mouse_over_emoji_button.clone(),
+                        nav: rsx!(build_nav {})
+                    },
+                    div {
+                        onmouseenter: |_| {
+                            *mouse_over_emoji_button.write_silent() = true;
+                        },
+                        onmouseleave: |_| {
+                            *mouse_over_emoji_button.write_silent() = false;
+                        },
+                        // Render standard (required) button to toggle.
+                        Button {
+                            aria_label: "send-emoji-button".into(),
+                            icon: Icon::FaceSmile,
+                            onpress: move |_| {
+                                state.write().mutate(Action::SetEmojiPickerVisible(!visible));
+                            }
+                        },
+                    },
+                )
+            })
         }
-    )})
+    )
 }
 
 impl Extension for EmojiSelector {

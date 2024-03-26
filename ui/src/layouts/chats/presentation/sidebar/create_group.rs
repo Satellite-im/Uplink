@@ -189,7 +189,7 @@ pub fn CreateGroup(props: Props) -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct FriendsProps {
     friends: BTreeMap<char, Vec<Identity>>,
     name_prefix: Signal<String>,
@@ -231,7 +231,7 @@ fn render_friends(props: FriendsProps) -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct FriendProps {
     friend: Identity,
     selected_friends: Signal<HashSet<DID>>,

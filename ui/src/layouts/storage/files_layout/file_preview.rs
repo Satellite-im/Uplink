@@ -214,7 +214,7 @@ fn FilePreview(props: Props) -> Element {
     )
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, PartialEq, Clone)]
 struct FileTypeTagProps {
     file_type: FileType,
     source: String,
@@ -229,62 +229,72 @@ fn FileTypeTag(props: FileTypeTagProps) -> Element {
     let code_class = get_language_class(&source_path);
 
     match file_type {
-        FileType::Video => rsx!(video {
-            id: "file_preview_img",
-            aria_label: "file-preview-image",
-            max_height: IMAGE_MAX_HEIGHT,
-            max_width: IMAGE_MAX_WIDTH,
-            autoplay: true,
-            controls: true,
-            src: "{source_path}"
-        }),
-        FileType::Audio => rsx!(
-         div {
-             height: "80px",
-             padding_top: "50px",
-             audio {
-                 id: "file_preview_img",
-                 aria_label: "file-preview-image",
-                 autoplay: true,
-                 controls: true,
-                 src: "{source_path}"
+        FileType::Video => {
+            rsx!(video {
+                id: "file_preview_img",
+                aria_label: "file-preview-image",
+                max_height: IMAGE_MAX_HEIGHT,
+                max_width: IMAGE_MAX_WIDTH,
+                autoplay: true,
+                controls: true,
+                src: "{source_path}"
+            })
+        }
+        FileType::Audio => {
+            rsx!(
+             div {
+                 height: "80px",
+                 padding_top: "50px",
+                 audio {
+                     id: "file_preview_img",
+                     aria_label: "file-preview-image",
+                     autoplay: true,
+                     controls: true,
+                     src: "{source_path}"
+                 }
              }
-         }
-        ),
-        FileType::Image => rsx!(img {
-            id: "file_preview_img",
-            aria_label: "file-preview-image",
-            max_height: IMAGE_MAX_HEIGHT,
-            max_width: IMAGE_MAX_WIDTH,
-            src: "{source_path}"
-        },),
-        FileType::Doc => rsx!(iframe {
-            id: "file_preview_img",
-            aria_label: "file-preview-image",
-            max_height: "80vh",
-            max_width: "80vw",
-            height: "800px",
-            width: "800px",
-            src: "{source_path}"
-        }),
-        FileType::Code => rsx!(
-            div {
-                class: "code-preview",
-                pre {
-                    code {
-                        class: format_args!("{code_class}"),
-                        "{code_content}"
+            )
+        }
+        FileType::Image => {
+            rsx!(img {
+                id: "file_preview_img",
+                aria_label: "file-preview-image",
+                max_height: IMAGE_MAX_HEIGHT,
+                max_width: IMAGE_MAX_WIDTH,
+                src: "{source_path}"
+            },)
+        }
+        FileType::Doc => {
+            rsx!(iframe {
+                id: "file_preview_img",
+                aria_label: "file-preview-image",
+                max_height: "80vh",
+                max_width: "80vw",
+                height: "800px",
+                width: "800px",
+                src: "{source_path}"
+            })
+        }
+        FileType::Code => {
+            rsx!(
+                div {
+                    class: "code-preview",
+                    pre {
+                        code {
+                            class: format_args!("{code_class}"),
+                            "{code_content}"
+                        }
                     }
                 }
-            }
-            script {
-                r#"
+                script {
+                    r#"
                     (() => {{
                         Prism.highlightAll();
                     }})();
                     "#
-            }
-        ),
+                }
+            )
+        }
         _ => rsx!(div {}),
     }
 }

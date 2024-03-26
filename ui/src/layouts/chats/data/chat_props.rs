@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct ChatProps {
     pub show_rename_group: Signal<bool>,
     pub show_group_settings: Signal<bool>,

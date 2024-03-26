@@ -215,14 +215,14 @@ pub fn loop_over_message_groups(props: AllMessageGroupsProps) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct MessageGroupProps<'a> {
-    group: &'a data::MessageGroup,
+struct MessageGroupProps {
+    group: data::MessageGroup,
     active_chat_id: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
     pending: Option<bool>,
 }
 
-fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
+fn render_message_group(props: MessageGroupProps) -> Element {
     let state = use_context::<Signal<State>>();
 
     let MessageGroupProps {
@@ -329,13 +329,13 @@ fn render_message_group<'a>(props: MessageGroupProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct MessagesProps<'a> {
-    messages: &'a Vec<data::MessageGroupMsg>,
+struct MessagesProps {
+    messages: Vec<data::MessageGroupMsg>,
     active_chat_id: Uuid,
     is_remote: bool,
     pending: bool,
 }
-fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
+fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
     let state = use_context::<Signal<State>>();
     let edit_msg: Signal<Option<Uuid>> = use_signal(|| None);
     // see comment in ContextMenu about this variable.
@@ -514,14 +514,14 @@ fn wrap_messages_in_context_menu<'a>(props: MessagesProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct MessageProps<'a> {
-    message: &'a data::MessageGroupMsg,
+struct MessageProps {
+    message: data::MessageGroupMsg,
     is_remote: bool,
     message_key: String,
     edit_msg: Signal<Option<Uuid>>,
     pending: bool,
 }
-fn render_message<'a>(props: MessageProps<'a>) -> Element {
+fn render_message(props: MessageProps) -> Element {
     //log::trace!("render message {}", &props.message.message.key);
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
@@ -684,12 +684,12 @@ fn render_message<'a>(props: MessageProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct PendingMessagesListenerProps<'a> {
+pub struct PendingMessagesListenerProps {
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
 //The component that listens for upload events
-pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps) -> Element {
+pub fn render_pending_messages_listener(props: PendingMessagesListenerProps) -> Element {
     let state = use_context::<Signal<State>>();
     state.write_silent().scope_ids.pending_message_component = Some(current_scope_id().0);
     let chat = match state.read().get_active_chat() {
@@ -703,13 +703,13 @@ pub fn render_pending_messages_listener<'a>(props: PendingMessagesListenerProps)
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct PendingWrapperProps<'a> {
+struct PendingWrapperProps {
     msg: Vec<PendingMessage>,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
 //We need to do it this way due to reference ownership
-fn pending_wrapper<'a>(props: PendingWrapperProps) -> Element {
+fn pending_wrapper(props: PendingWrapperProps) -> Element {
     let chat_data = use_context::<Signal<ChatData>>();
     let data = chat_data.read();
     rsx!(render_pending_messages {
@@ -724,14 +724,14 @@ fn pending_wrapper<'a>(props: PendingWrapperProps) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-struct PendingMessagesProps<'a> {
+struct PendingMessagesProps {
     #[props(!optional)]
     pending_outgoing_message: Option<data::MessageGroup>,
     active: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
 }
 
-fn render_pending_messages<'a>(props: PendingMessagesProps) -> Element {
+fn render_pending_messages(props: PendingMessagesProps) -> Element {
     rsx!({
         props.pending_outgoing_message.as_ref().map(|group| {
             rsx!(render_message_group {

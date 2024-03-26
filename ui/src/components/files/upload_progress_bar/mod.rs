@@ -193,7 +193,7 @@ fn count_files_to_show(files_to_upload_len: usize) -> String {
 
 async fn drag_and_drop_function(
     window: &DesktopContext,
-    are_files_hovering_app: &Signal<bool>,
+    are_files_hovering_app: &mut Signal<bool>,
     files_ready_to_upload: &Signal<Vec<PathBuf>>,
     called_drag_and_drop_function: &Signal<bool>,
 ) {

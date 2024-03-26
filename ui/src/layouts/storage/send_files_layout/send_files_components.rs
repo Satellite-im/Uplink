@@ -25,7 +25,7 @@ pub fn FileCheckbox(
                 is_checked: files_selected_to_send.iter()
                 .any(|location| {
                     match location {
-                        Location::Constellation { path } => path == file_path,
+                        Location::Constellation { path } => path.clone() == file_path,
                         Location::Disk { .. } => false,
                     }
                 }),
@@ -65,7 +65,7 @@ pub fn SendFilesTopbar(
             Button {
                 text: get_local_text_with_args("files.send-files-text-amount", vec![("amount", format!("{}/{}", storage_controller.with(|f| f.files_selected_to_send.clone()).len(), MAX_FILES_PER_MESSAGE))]),
                 aria_label: "send_files_modal_send_button".into(),
-                disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || (*in_files && f.chats_selected_to_send.is_empty())),
+                disabled: storage_controller.with(|f| f.files_selected_to_send.is_empty() || (in_files && f.chats_selected_to_send.is_empty())),
                 appearance: Appearance::Primary,
                 icon: Icon::ChevronRight,
                 onpress: move |_| {

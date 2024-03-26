@@ -155,7 +155,7 @@ pub fn ChatLayout() -> Element {
 async fn drop_and_attach_files(
     window: &DesktopContext,
     drag_event: &Signal<Option<FileDropEvent>>,
-    state: Signal<State>,
+    mut state: Signal<State>,
 ) {
     let new_files = drag_and_drop_function(window, drag_event).await;
     let chat_uuid = state

@@ -39,6 +39,7 @@ use kit::elements::Appearance;
 use kit::layout::modal::Modal;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
+use serde::de;
 use tokio::sync::broadcast::error::RecvError;
 
 use std::collections::HashMap;
@@ -201,7 +202,7 @@ fn app() -> Element {
 
     // 2. Guard the app with the auth
     let auth = use_signal(|| AuthPages::EntryPoint);
-    let AuthPages::Success(identity) = auth.get() else {
+    let AuthPages::Success(identity) = auth() else {
         return rsx! {
         KeyboardShortcuts {
             is_on_auth_pages: true,
@@ -398,7 +399,7 @@ fn use_app_coroutines() -> Option<()> {
 
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
-    let webview = desktop.webview.clone();
+    let webview = desktop.webview;
     let first_resize = use_signal(|| true);
     use_wry_event_handler({
         to_owned![state, desktop, first_resize];
@@ -455,7 +456,7 @@ fn use_app_coroutines() -> Option<()> {
                     desktop.set_outer_position(LogicalPosition::new(pos_x, pos_y));
                     *first_resize.write_silent() = false;
                 }
-                let size = scaled_window_size(webview.inner_size(), &desktop);
+                let size = scaled_window_size(desktop.inner_size(), &desktop);
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
@@ -690,7 +691,8 @@ fn use_app_coroutines() -> Option<()> {
             loop {
                 sleep(Duration::from_secs(1)).await;
                 if state.write_silent().ui.call_info.update_active_call() {
-                    state.notify_consumers();
+                    // TODO(Migration_0.5): Verify this function later
+                    // state.notify_consumers();
                 }
             }
         }
@@ -909,7 +911,7 @@ fn get_update_icon() -> Element {
     let state = use_context::<Signal<State>>();
     let download_state = use_context::<Signal<DownloadState>>();
     let desktop = use_window();
-    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>()?;
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>();
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -927,14 +929,15 @@ fn get_update_icon() -> Element {
     let stage = download_state.read().stage;
     match stage {
         DownloadProgress::Idle => {
+            let update_available_menu = "update-available-menu".to_string();
             rsx!(
                 ContextMenu {
-                    key: "{update-available-menu}",
+                    key: "{update_available_menu}",
                     id: "update-available-menu".to_string(),
                     devmode: state.read().configuration.developer.developer_mode,
                     items: rsx!(
                         ContextItem {
-                            aria_label: "update-menu-dismiss".into(),
+                            aria_label: "update-menu-dismiss".to_string(),
                             text: get_local_text("uplink.update-menu-dismiss"),
                             onpress: move |_| {
                                 state.write().mutate(Action::DismissUpdate);
@@ -1232,7 +1235,7 @@ fn scaled_window_size(
         // On Mac window sizes are kinda funky.
         // They are scaled with the window scale factor so they dont correspond to app pixels
         let logical: LogicalSize<f64> = (inner.width as f64, inner.height as f64).into();
-        let scale = desktop.webview.window().scale_factor();
+        let scale = desktop.window.scale_factor();
         logical.to_physical(1_f64 / scale)
     } else {
         inner
@@ -1247,7 +1250,7 @@ fn scaled_window_position(
         // On Mac window the positions are kinda funky.
         // They are scaled with the window scale factor so they dont correspond to actual position
         let logical: LogicalPosition<f64> = (position.x as f64, position.y as f64).into();
-        let scale = desktop.webview.window().scale_factor();
+        let scale = desktop.window.scale_factor();
         logical.to_physical(1_f64 / scale)
     } else {
         position
@@ -1265,7 +1268,7 @@ fn AppNav(
     let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
     let tracker = use_context::<Signal<TransferTracker>>();
-    state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id().0);
+    state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id());
 
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state
@@ -1358,6 +1361,7 @@ fn AppNav(
     })
 }
 
+#[derive(Clone)]
 struct LogDropper {}
 
 impl Drop for LogDropper {

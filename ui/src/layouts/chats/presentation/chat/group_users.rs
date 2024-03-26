@@ -14,7 +14,7 @@ use kit::{
 };
 use tracing::log;
 use warp::crypto::DID;
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     #[props(!optional)]
     active_chat: Option<Chat>,
@@ -95,7 +95,7 @@ pub fn GroupUsers(props: Props) -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FriendsProps {
     group_participants: Vec<Identity>,
     name_prefix: Signal<String>,
@@ -120,9 +120,11 @@ fn render_friends(props: FriendsProps) -> Element {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
             if !group_participants.is_empty() {
-                {rsx!(
+                {
+                    let friend_group = "friend-group".to_string();
+                    rsx!(
                     div {
-                        key: "{friend-group}",
+                        key: "{friend_group}",
                         class: "friend-group",
                         {group_participants.iter().map(|_friend| {
                             let friendid = _friend.did_key();
@@ -148,7 +150,7 @@ fn render_friends(props: FriendsProps) -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct FriendProps {
     friend: Identity,
     is_creator: bool,

@@ -5,8 +5,9 @@ use kit::elements::label::Label;
 
 pub mod sidebar;
 pub mod sub_pages;
+
 #[derive(Props, Clone, PartialEq)]
-pub struct SectionProps<'a> {
+pub struct SectionProps {
     section_label: String,
     section_description: String,
     aria_label: Option<String>,
@@ -16,7 +17,7 @@ pub struct SectionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
+pub fn SettingSection(props: SectionProps) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
     let no_border = props.no_border.then_some("no-border").unwrap_or_default();
 
@@ -46,12 +47,12 @@ pub fn SettingSection<'a>(props: SectionProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct SectionSimpleProps<'a> {
+pub struct SectionSimpleProps {
     aria_label: Option<String>,
     children: Element,
 }
 #[allow(non_snake_case)]
-pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
+pub fn SettingSectionSimple(props: SectionSimpleProps) -> Element {
     let aria_label = props.aria_label.clone().unwrap_or_default();
     rsx!(
         div {
@@ -69,7 +70,7 @@ pub fn SettingSectionSimple<'a>(props: SectionSimpleProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct ExtensionProps<'a> {
+pub struct ExtensionProps {
     title: String,
     author: String,
     description: String,
@@ -77,7 +78,7 @@ pub struct ExtensionProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ExtensionSetting<'a>(props: ExtensionProps<'a>) -> Element {
+pub fn ExtensionSetting(props: ExtensionProps) -> Element {
     rsx!(
         div {
             class: "extension-setting",

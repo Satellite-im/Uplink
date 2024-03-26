@@ -20,17 +20,16 @@ use warp::constellation::item::Item;
 use warp::raygun::Location;
 
 #[derive(Props, Clone, PartialEq)]
-pub struct FilesBreadcumbsProps<'a> {
-    storage_controller: &'a Signal<StorageController>,
-    ch: &'a Coroutine<ChanCmd>,
+pub struct FilesBreadcumbsProps {
+    storage_controller: Signal<StorageController>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
+pub fn FilesBreadcumbs(props: FilesBreadcumbsProps) -> Element {
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
-    let ch = props.ch;
+    let ch = use_coroutine_handle();
 
     rsx!(div {
         id: "files-breadcrumbs",
@@ -76,15 +75,15 @@ pub fn FilesBreadcumbs<'a>(props: FilesBreadcumbsProps<'a>) -> Element {
 }
 
 #[derive(Props, Clone, PartialEq)]
-pub struct FilesAndFoldersProps<'a> {
-    storage_controller: &'a Signal<StorageController>,
-    ch: &'a Coroutine<ChanCmd>,
+pub struct FilesAndFoldersProps {
+    storage_controller: Signal<StorageController>,
+    ch: Coroutine<ChanCmd>,
     on_click_share_files: Option<EventHandler<Vec<Location>>>,
     send_files_mode: bool,
 }
 
 #[allow(non_snake_case)]
-pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
+pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
     let state = use_context::<Signal<State>>();
     let send_files_mode = props.send_files_mode;
     let storage_controller = props.storage_controller;
@@ -251,7 +250,7 @@ pub fn FilesAndFolders<'a>(props: FilesAndFoldersProps<'a>) -> Element {
                                     aria_label: "files-download".into(),
                                     text: get_local_text("files.download"),
                                     onpress: move |_| {
-                                        download_file(&file_name2, ch, None);
+                                        download_file(&file_name2, &ch, None);
                                     },
                                 },
                                 hr {},

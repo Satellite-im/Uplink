@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use kit::elements::Appearance;
 use uuid::Uuid;
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     id: Uuid,
     #[props(optional)]

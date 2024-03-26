@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use dioxus::prelude::*;
 use dioxus::signals::Signal;
 use dioxus_desktop::DesktopContext;
 use tokio::sync::{
@@ -26,7 +27,7 @@ pub enum WindowManagerCmd {
     ForgetFilePreview(Uuid),
 }
 
-pub async fn handle_cmd(state: Signal<State>, cmd: WindowManagerCmd, desktop: DesktopContext) {
+pub async fn handle_cmd(mut state: Signal<State>, cmd: WindowManagerCmd, desktop: DesktopContext) {
     log::trace!("window manager command: {cmd:?}");
     match cmd {
         WindowManagerCmd::ClosePopout => {

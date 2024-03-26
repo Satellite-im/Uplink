@@ -58,7 +58,7 @@ enum PendingCallDialogCmd {
     Reject(Uuid),
 }
 
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct Props {
     in_chat: bool,
 }
@@ -87,7 +87,7 @@ pub fn CallControl(props: Props) -> Element {
     }
 }
 
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct ActiveCallProps {
     active_call: ActiveCall,
     in_chat: bool,
@@ -503,7 +503,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
     })
 }
 
-#[derive(PartialEq, Eq, Props)]
+#[derive(PartialEq, Eq, Props, Clone)]
 pub struct PendingCallProps {
     call: Call,
     in_chat: bool,
@@ -688,7 +688,7 @@ pub fn CallDialog(props: CallDialogProps) -> Element {
     )
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct CallUserImageProps {
     participants: Vec<(bool, Option<ParticipantState>, User)>,
 }

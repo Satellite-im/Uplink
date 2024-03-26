@@ -1,8 +1,6 @@
 mod create_group;
 mod search;
 
-use std::thread::scope;
-
 use common::language::{get_local_text, get_local_text_with_args};
 use common::state::ui::Layout;
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
@@ -54,7 +52,7 @@ enum MessagesCommand {
     DeleteConversation { conv_id: Uuid },
 }
 
-#[derive(PartialEq, Props)]
+#[derive(Props, PartialEq, Clone)]
 pub struct SidebarProps {
     pub active_route: UplinkRoute,
 }
@@ -66,7 +64,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
     let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new);
     let search_results_friends_identities = use_signal(|| Vec::<Identity>::new);
     let search_results_chats = use_signal(|| Vec::<Chat>::new);
-    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
+    let mut chat_with: Signal<Option<Uuid>> = use_signal(|| None);
     let reset_searchbar: Signal<_> = use_signal(|| false);
     let router = use_navigator();
     let show_delete_conversation = use_signal(|| true);
@@ -118,9 +116,13 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         .collect::<Vec<_>>();
     let search_typed_chars = use_signal(String::new);
     let transfer = if storage {
-        rsx!(FileTransferModal { state: state })
+        {
+            rsx!(FileTransferModal { state: state })
+        }
     } else {
-        rsx!({ () })
+        {
+            rsx!({ () })
+        }
     };
 
     rsx!(
@@ -457,7 +459,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
 
 async fn conversation_coroutine(
     mut rx: UnboundedReceiver<MessagesCommand>,
-    chat_with: Signal<Option<Uuid>>,
+    mut chat_with: Signal<Option<Uuid>>,
     show_delete_conversation: Signal<bool>,
 ) {
     let warp_cmd_tx = WARP_CMD_CH.tx.clone();

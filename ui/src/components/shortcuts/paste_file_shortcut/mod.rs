@@ -5,7 +5,6 @@ use std::{
 };
 
 use dioxus::{
-    core_macro::Props,
     dioxus_core::Element,
     prelude::{EventHandler, KeyCode},
 };

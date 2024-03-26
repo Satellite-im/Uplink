@@ -417,7 +417,7 @@ pub fn AudioSettings() -> Element {
     )
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct VolumeIndicatorProps {
     volume: Signal<u8>,
 }

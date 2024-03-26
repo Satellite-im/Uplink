@@ -76,7 +76,7 @@ pub fn AboutPage() -> Element {
 
     let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>();
 
-    let opt = download_available.get().clone();
+    let opt = download_available();
     let stage = download_state.read().stage;
     let pending_key = format!("btn-pending{}", download_state.read().progress);
 
@@ -105,10 +105,11 @@ pub fn AboutPage() -> Element {
     let about_button = rsx!(match opt {
         None if stage == DownloadProgress::Idle => {
             {
+                let btn_start = "btn-start".to_string();
                 rsx!(Button {
-                    key: "{btn-start}",
+                    key: "{btn_start}",
                     text: get_local_text("uplink.check-for-updates"),
-                    loading: *update_button_loading(),
+                    loading: update_button_loading(),
                     aria_label: "check-for-updates-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowPath,
@@ -122,10 +123,11 @@ pub fn AboutPage() -> Element {
         }
         _ => match stage {
             DownloadProgress::Idle => {
+                let btn_idle = "btn-idle".to_string();
                 rsx!(Button {
-                    key: "{btn-idle}",
+                    key: "{btn_idle}",
                     text: get_local_text("uplink.download-update"),
-                    loading: *update_button_loading.current(),
+                    loading: update_button_loading(),
                     aria_label: "check-for-updates-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
@@ -156,10 +158,11 @@ pub fn AboutPage() -> Element {
                 })
             }
             DownloadProgress::Finished => {
+                let btn_finished = "btn-finished".to_string();
                 rsx!(Button {
-                    key: "{btn-finished}",
+                    key: "{btn_finished}",
                     text: get_local_text("uplink.update-menu-install"),
-                    loading: *update_button_loading.current(),
+                    loading: update_button_loading(),
                     aria_label: "check-for-updates-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
@@ -203,7 +206,7 @@ pub fn AboutPage() -> Element {
             div {
                 width: "100%",
                 onclick: |_| {
-                    if *click_count.get() < 9 {
+                    if click_count() < 9 {
                         click_count.with_mut(|x| *x += 1);
                     } else {
                         click_count.set(0);
@@ -217,7 +220,7 @@ pub fn AboutPage() -> Element {
                     section_label:  get_local_text("settings-about.version"),
                     section_description: version.into(),
                     div {
-                        about_button
+                        {about_button}
                     }
                 },
             }

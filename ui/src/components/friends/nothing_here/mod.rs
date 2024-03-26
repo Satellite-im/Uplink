@@ -2,7 +2,7 @@ use common::{language::get_local_text, state::State};
 use dioxus::prelude::*;
 use kit::elements::label::Label;
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct Props {
     // The filename of the file
     friends_tab: String,

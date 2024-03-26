@@ -10,7 +10,7 @@ use kit::layout::sidebar::Sidebar as ReusableSidebar;
 use crate::components::community::sidebar::SidebarInner;
 use crate::UplinkRoute;
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Props, Clone)]
 pub struct Props {
     pub active: UplinkRoute,
 }

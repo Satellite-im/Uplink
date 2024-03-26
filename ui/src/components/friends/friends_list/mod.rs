@@ -397,7 +397,7 @@ pub fn FriendsSkeletal() -> Element {
     )
 }
 
-#[derive(PartialEq, Props)]
+#[derive(Props, Clone, PartialEq)]
 pub struct FriendProps {
     did: Signal<Option<DID>>,
     excluded_chat: Option<Uuid>,

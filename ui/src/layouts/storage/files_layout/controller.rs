@@ -109,13 +109,13 @@ impl StorageController {
 }
 
 #[derive(PartialEq, Clone)]
-pub struct UploadFileController<'a> {
+pub struct UploadFileController {
     pub are_files_hovering_app: Signal<bool>,
     pub files_been_uploaded: Signal<bool>,
     pub files_in_queue_to_upload: Signal<Vec<PathBuf>>,
 }
 
-impl<'a> UploadFileController<'a> {
+impl UploadFileController {
     pub fn new(state: Signal<State>) -> Self {
         Self {
             are_files_hovering_app: use_signal(|| false),
