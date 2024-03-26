@@ -522,14 +522,17 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 // Update only relevant components for attachment progress events
                 if let WarpEvent::Message(MessageEvent::AttachmentProgress {
                     progress,
+                    location,
                     conversation_id,
                     msg,
                 }) = evt
                 {
-                    if state
-                        .write_silent()
-                        .update_outgoing_messages(conversation_id, msg, progress)
-                    {
+                    if state.write_silent().update_outgoing_messages(
+                        conversation_id,
+                        msg,
+                        location,
+                        progress,
+                    ) {
                         state.write();
                     } else {
                         let read = state.read();
