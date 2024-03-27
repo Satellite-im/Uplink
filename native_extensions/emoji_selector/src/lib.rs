@@ -304,7 +304,7 @@ fn render_1(_unused: bool) -> Element {
 
     use_effect(move || {
         to_owned![state];
-        async move {
+        spawn(async move {
             state.write_silent().ui.emojis.register_emoji_filter(
                 String::from("emoji_picker"),
                 |pattern, exact| {
@@ -322,7 +322,7 @@ fn render_1(_unused: bool) -> Element {
                         .collect()
                 },
             )
-        }
+        });
     });
 
     rsx!(

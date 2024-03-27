@@ -10,6 +10,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::components::indicator::{Platform, Status};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -25,7 +26,7 @@ use tracing::log;
 pub fn OutgoingRequests() -> Element {
     let state = use_context::<Signal<State>>();
     let friends_list = state.read().outgoing_fr_identities();
-    let remove_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let mut remove_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<DID>| {
         to_owned![remove_in_progress];
@@ -39,12 +40,12 @@ pub fn OutgoingRequests() -> Element {
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
-                    remove_in_progress.make_mut().remove(&did);
+                    remove_in_progress().remove(&did);
                     continue;
                 }
 
                 let rsp = rx.await.expect("command canceled");
-                remove_in_progress.make_mut().remove(&did);
+                remove_in_progress().remove(&did);
                 if let Err(e) = rsp {
                     log::error!("failed to cancel request: {}", e);
                 }
@@ -66,8 +67,8 @@ pub fn OutgoingRequests() -> Element {
             let did = friend.did_key();
             let did2 = did.clone();
             let did_suffix = friend.short_id().to_string();
-            let platform = friend.platform().into();
-            let any_button_disabled = remove_in_progress.current().contains(&did);
+            let platform = Platform::from(friend.platform());
+            let any_button_disabled = remove_in_progress().contains(&did);
             rsx!(
                 ContextMenu {
                     id: format!("{did}-friend-listing"),
@@ -99,11 +100,11 @@ pub fn OutgoingRequests() -> Element {
                             relationship.set_sent_friend_request(true);
                             relationship
                         },
-                        remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
+                        remove_button_disabled: remove_in_progress().contains(&friend.did_key()),
                         user_image: rsx! (
                             UserImage {
                                 platform: platform,
-                                status: friend.identity_status().into(),
+                                status: Status::from(friend.identity_status()),
                                 image: friend.profile_picture()
                             }
                         ),
@@ -111,7 +112,7 @@ pub fn OutgoingRequests() -> Element {
                             if STATIC_ARGS.use_mock {
                                 state.write().mutate(Action::CancelRequest(&did2));
                             } else {
-                                remove_in_progress.make_mut().insert(did2.clone());
+                                remove_in_progress().insert(did2.clone());
                                 ch.send(did2.clone());
                             }
                         }

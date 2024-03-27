@@ -192,11 +192,17 @@ pub fn get_messages(quickprofile_data: Signal<Option<(f64, f64, Identity, bool)>
     )
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 pub struct AllMessageGroupsProps {
     groups: Vec<data::MessageGroup>,
     active_chat_id: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
+}
+
+impl PartialEq for AllMessageGroupsProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.groups.len() == other.groups.len() && self.active_chat_id == other.active_chat_id
+    }
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -214,12 +220,18 @@ pub fn loop_over_message_groups(props: AllMessageGroupsProps) -> Element {
     })
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 struct MessageGroupProps {
     group: data::MessageGroup,
     active_chat_id: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
     pending: Option<bool>,
+}
+
+impl PartialEq for MessageGroupProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.active_chat_id == other.active_chat_id && self.pending == other.pending
+    }
 }
 
 fn render_message_group(props: MessageGroupProps) -> Element {
@@ -328,13 +340,23 @@ fn render_message_group(props: MessageGroupProps) -> Element {
     )
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 struct MessagesProps {
     messages: Vec<data::MessageGroupMsg>,
     active_chat_id: Uuid,
     is_remote: bool,
     pending: bool,
 }
+
+impl PartialEq for MessagesProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.messages.len() == other.messages.len()
+            && self.active_chat_id == other.active_chat_id
+            && self.is_remote == other.is_remote
+            && self.pending == other.pending
+    }
+}
+
 fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
     let state = use_context::<Signal<State>>();
     let edit_msg: Signal<Option<Uuid>> = use_signal(|| None);
@@ -513,7 +535,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
     }) // end outer cx.render
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 struct MessageProps {
     message: data::MessageGroupMsg,
     is_remote: bool,
@@ -521,6 +543,16 @@ struct MessageProps {
     edit_msg: Signal<Option<Uuid>>,
     pending: bool,
 }
+
+impl PartialEq for MessageProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_remote == other.is_remote
+            && self.message_key == other.message_key
+            && self.edit_msg == other.edit_msg
+            && self.pending == other.pending
+    }
+}
+
 fn render_message(props: MessageProps) -> Element {
     //log::trace!("render message {}", &props.message.message.key);
     let state = use_context::<Signal<State>>();
@@ -723,12 +755,18 @@ fn pending_wrapper(props: PendingWrapperProps) -> Element {
     })
 }
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 struct PendingMessagesProps {
     #[props(!optional)]
     pending_outgoing_message: Option<data::MessageGroup>,
     active: Uuid,
     on_context_menu_action: EventHandler<(Event<MouseData>, Identity)>,
+}
+
+impl PartialEq for PendingMessagesProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.active == other.active
+    }
 }
 
 fn render_pending_messages(props: PendingMessagesProps) -> Element {

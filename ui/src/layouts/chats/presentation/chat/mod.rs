@@ -63,7 +63,7 @@ pub fn Compose() -> Element {
     // We handle it here since user tags are not dioxus components
     use_effect(|| {
         to_owned![state, eval_provider, quickprofile_data];
-        async move {
+        spawn(async move {
             let eval_result = eval(USER_TAG_SCRIPT);
             loop {
                 if let Ok(s) = eval_result.recv().await {
@@ -79,11 +79,12 @@ pub fn Compose() -> Element {
                     }
                 }
             }
-        }
+        });
     });
+
     use_effect(|| {
         to_owned![quick_profile_uuid, update_script, identity_profile];
-        async move {
+        spawn(async move {
             if let Some((x, y, id, right)) = quickprofile_data.read().as_ref() {
                 let script = SHOW_CONTEXT
                     .replace("UUID", &quick_profile_uuid)
@@ -93,7 +94,7 @@ pub fn Compose() -> Element {
                 update_script.set(script);
                 identity_profile.set(id.did_key());
             }
-        }
+        });
     });
 
     // if the emoji picker is visible, autofocusing on the chatbar will close the emoji picker.

@@ -2,7 +2,7 @@
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::default_keybinds::get_keycode_and_modifier_from_a_shortcut;
-use common::state::settings::{GlobalShortcut, Shortcut};
+use common::state::settings::{GlobalShortcut, ModifiersStateDef, Shortcut};
 use common::state::Action;
 use common::utils::lifecycle::use_component_lifecycle;
 use common::{icons::Icon as IconElement, state::State};
@@ -89,16 +89,16 @@ pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, S
 }
 
 pub fn KeybindSection(props: KeybindSectionProps) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let keybind_section_id = props.id.clone();
     let is_recording = use_signal(|| false);
-    let update_keybind = use_signal(|| None);
+    let mut update_keybind = use_signal(|| None);
     let system_shortcut = Shortcut::get_system_shortcut(&state, props.shortcut.clone());
     let new_keybind_has_one_key = use_signal(|| false);
     let new_keybind_has_at_least_one_modifier = use_signal(|| false);
     let aria_label = props.aria_label.clone().unwrap_or_default();
 
-    if update_keybind.read().is_some() && !is_recording.read() {
+    if update_keybind.read().is_some() && !is_recording() {
         let (keys, modifiers) = update_keybind.read().clone().unwrap();
         state
             .write()
@@ -130,14 +130,14 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
-    let recorded_bindings = use_signal(|| Vec::new);
+    let recorded_bindings = use_signal(|| Vec::new());
 
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
     let keybind_section_id_clone = keybind_section_id.clone();
 
-    use_effect(|| async move {
-        if *is_recording {
+    use_effect(|| {
+        if is_recording() {
             let unfocus_script =
                 UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
             let _ = eval(&unfocus_script);
@@ -145,11 +145,11 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
     });
 
     let mut keybind_class = "keybind-section-keys".to_owned();
-    if **is_recording {
+    if is_recording() {
         keybind_class.push_str(" recording");
     }
 
-    if *is_recording.get() && !state.read().settings.is_recording_new_keybind {
+    if is_recording() && !state.read().settings.is_recording_new_keybind {
         state.write().settings.is_recording_new_keybind = true;
     }
 
@@ -163,7 +163,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
             id: format_args!("{}", keybind_section_id),
             class: "keybind-section",
             aria_label: "{aria_label}",
-            {(**is_recording).then(|| rsx!(div {
+            {(is_recording()).then(|| rsx!(div {
                 class: "keybind-section-mask",
                 onclick: move |_| {
                     is_recording.set(false);
@@ -208,9 +208,9 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                     evt.stop_propagation();
                 },
                 onkeyup: move |_| {
-                    if *is_recording.get() && *new_keybind_has_one_key.read() && *new_keybind_has_at_least_one_modifier.read() {
-                        let (keys, modifiers) = Shortcut::string_to_keycode_and_modifiers_state(recorded_bindings.get().clone());
-                        *update_keybind.write_silent() = Some((keys, modifiers));
+                    if is_recording() && *new_keybind_has_one_key.read() && *new_keybind_has_at_least_one_modifier.read() {
+                        let (keys, modifiers) = Shortcut::string_to_keycode_and_modifiers_state(recorded_bindings());
+                        *update_keybind.write_silent() = Some((keys, ModifiersStateDef::from_modifiers_state_vec(modifiers)));
                     }
                     *new_keybind_has_one_key.write_silent() = false;
                     *new_keybind_has_at_least_one_modifier.write_silent() = false;
@@ -226,12 +226,12 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                             }
                         ),
                         Keybind {
-                            keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
+                            keys: if is_recording() { recorded_bindings() } else { bindings },
                         }
                     })}
                 } else {
                     {rsx!(Keybind {
-                        keys: if **is_recording { recorded_bindings.get().clone() } else { bindings },
+                        keys: if is_recording() { recorded_bindings() } else { bindings },
                     })}
                 }
             },
@@ -240,7 +240,7 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
                 icon: Icon::ArrowUturnDown,
                 onpress: move |_| {
                     let (keys, modifiers) = get_keycode_and_modifier_from_a_shortcut(props.shortcut.clone());
-                    *update_keybind.write() = Some((keys, modifiers));
+                    *update_keybind.write() = Some((keys, ModifiersStateDef::from_modifiers_state_vec(modifiers)));
 
                 },
                 appearance: kit::elements::Appearance::Secondary,

@@ -201,7 +201,7 @@ pub fn AboutPage() -> Element {
             SettingSection {
                 aria_label: "about-info-section".to_string(),
                 section_label: get_local_text("settings-about.info"),
-                section_description: app_name.into(),
+                section_description: app_name.to_string(),
             },
             div {
                 width: "100%",
@@ -218,7 +218,7 @@ pub fn AboutPage() -> Element {
                 SettingSection {
                     aria_label: "about-version-section".to_string(),
                     section_label:  get_local_text("settings-about.version"),
-                    section_description: version.into(),
+                    section_description: version.to_string(),
                     div {
                         {about_button}
                     }

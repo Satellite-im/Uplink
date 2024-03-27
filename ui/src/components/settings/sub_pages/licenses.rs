@@ -17,11 +17,11 @@ pub fn Licenses() -> Element {
             aria_label: "settings-licenses",
             SettingSection {
                 aria_label: "licenses-section".to_string(),
-                section_label: "Uplink".into(),
-                section_description: "Both code and icons are under the MIT license.".into(),
+                section_label: "Uplink".to_string(),
+                section_description: "Both code and icons are under the MIT license.".to_string(),
                 Button {
                     aria_label: "licenses-button".to_string(),
-                    text: "License Description".into(),
+                    text: "License Description".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentText,
                     onpress: move |_| {

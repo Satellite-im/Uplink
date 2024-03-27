@@ -6,6 +6,7 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
+        indicator::Status,
         message::format_text,
         user::User,
         user_image::UserImage,
@@ -57,11 +58,11 @@ pub fn Friends() -> Element {
     let state = use_context::<Signal<State>>();
     let reset_filter = use_signal(|| false);
     let friend_filter = use_signal(String::new);
-    if *reset_filter.get() {
+    if reset_filter() {
         friend_filter.set(String::new());
         reset_filter.set(false);
     }
-    let filter = friend_filter.get().to_lowercase();
+    let filter = friend_filter().to_lowercase();
     let friends_all = state.read().friend_identities();
     let friends_list = HashMap::from_iter(
         friends_all
@@ -80,7 +81,7 @@ pub fn Friends() -> Element {
 
     let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
 
-    if let Some(id) = *chat_with.get(0) {
+    if let Some(id) = chat_with() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -132,12 +133,12 @@ pub fn Friends() -> Element {
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
-                            remove_in_progress.make_mut().remove(&did);
+                            remove_in_progress().remove(&did);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-                        remove_in_progress.make_mut().remove(&did);
+                        remove_in_progress().remove(&did);
                         if let Err(e) = rsp {
                             log::error!("failed to remove friend: {}", e);
                         }
@@ -149,12 +150,12 @@ pub fn Friends() -> Element {
                             rsp: tx,
                         })) {
                             log::error!("failed to send warp command: {}", e);
-                            block_in_progress.make_mut().remove(&did);
+                            block_in_progress().remove(&did);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-                        block_in_progress.make_mut().remove(&did);
+                        block_in_progress().remove(&did);
                         if let Err(e) = rsp {
                             // todo: display message to user
                             log::error!("failed to block friend: {}", e);
@@ -217,7 +218,7 @@ pub fn Friends() -> Element {
                     onchange: |(s, _)| {
                         friend_filter.set(s);
                     },
-                    aria_label: "Search Friend".into()
+                    aria_label: "Search Friend".to_string()
                 })
             })},
             {(friends.is_empty()).then(|| rsx! (
@@ -239,8 +240,8 @@ pub fn Friends() -> Element {
                     div {
                         key: "friend-group-{group_letter}",
                         Label {
-                            text: letter.into(),
-                            aria_label: letter.into()
+                            text: letter.to_string(),
+                            aria_label: letter.to_string()
                         },
                         {sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
@@ -286,7 +287,7 @@ pub fn Friends() -> Element {
                                             {rsx!(ContextItem {
                                                 icon: if f {Icon::HeartSlash} else {Icon::Heart},
                                                 text: get_local_text(if f {"favorites.remove"} else {"favorites.favorites"}),
-                                                aria_label: if f {"favorites-remove".into()} else {"favorites-add".into()},
+                                                aria_label: if f {"favorites-remove".to_string()} else {"favorites-add".to_string()},
                                                 onpress: move |_| {
                                                     // can't favorite a non-existent conversation
                                                     // todo: don't even allow favoriting from the friends page unless there's a conversation
@@ -302,13 +303,13 @@ pub fn Friends() -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             aria_label: "friends-remove".to_string(),
-                                            should_render: !remove_in_progress.current().contains(&remove_friend.did_key()),
+                                            should_render: !remove_in_progress().contains(&remove_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = remove_friend.did_key();
                                                 if STATIC_ARGS.use_mock {
                                                     state.write().mutate(Action::RemoveFriend(&did));
                                                 } else {
-                                                    remove_in_progress.make_mut().insert(did.clone());
+                                                    remove_in_progress().insert(did.clone());
                                                     ch.send(ChanCmd::RemoveFriend(did.clone()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(did));
                                                 }
@@ -319,13 +320,13 @@ pub fn Friends() -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             aria_label: "friends-block".to_string(),
-                                            should_render: !block_in_progress.current().contains(&block_friend.did_key()),
+                                            should_render: !block_in_progress().contains(&block_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = block_friend.did_key();
                                                 if STATIC_ARGS.use_mock {
                                                     state.write().mutate(Action::Block(&did));
                                                 } else {
-                                                    block_in_progress.make_mut().insert(did.clone());
+                                                    block_in_progress().insert(did.clone());
                                                     ch.send(ChanCmd::BlockFriend(did.clone()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(did));
                                                 }
@@ -338,12 +339,12 @@ pub fn Friends() -> Element {
                                         suffix: did_suffix,
                                         status_message: friend.status_message().unwrap_or_default(),
                                         relationship: relationship,
-                                        block_button_disabled: block_in_progress.current().contains(&friend.did_key()),
-                                        remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
+                                        block_button_disabled: block_in_progress().contains(&friend.did_key()),
+                                        remove_button_disabled: remove_in_progress().contains(&friend.did_key()),
                                         user_image: rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: friend.identity_status().into(),
+                                                status: Status::from(friend.identity_status()),
                                                 image: friend.profile_picture()
                                             }
                                         ),
@@ -355,7 +356,7 @@ pub fn Friends() -> Element {
                                             if STATIC_ARGS.use_mock {
                                                 state.write().mutate(Action::RemoveFriend(&remove_friend_2.did_key()));
                                             } else {
-                                                remove_in_progress.make_mut().insert(remove_friend_2.did_key());
+                                                remove_in_progress().insert(remove_friend_2.did_key());
                                                 ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
                                             }
@@ -364,7 +365,7 @@ pub fn Friends() -> Element {
                                             if STATIC_ARGS.use_mock {
                                                 state.write().mutate(Action::Block(&block_friend_2.did_key()));
                                             } else {
-                                                block_in_progress.make_mut().insert(block_friend_2.did_key());
+                                                block_in_progress().insert(block_friend_2.did_key());
                                                 ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
                                             }
@@ -405,7 +406,7 @@ pub struct FriendProps {
 
 pub fn ShareFriendsModal(props: FriendProps) -> Element {
     let state = use_context::<Signal<State>>();
-    let chats_selected = use_signal(|| Vec::new);
+    let chats_selected = use_signal(|| Vec::new());
     let ch = use_coroutine(|mut rx: UnboundedReceiver<(DID, Vec<Uuid>)>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         while let Some((id, uuid)) = rx.next().await {
@@ -497,7 +498,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                         }
                     }
                 };
-                let selected = chats_selected.read().contains(&id);
+                let selected = chats_selected().contains(&id);
                 rsx!(div {
                     class: format_args!("modal-share-friend {}", if selected {"share-friend-selected"} else {""}),
                     User {
@@ -510,8 +511,8 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                                 class: "modal-share-friend-image-group",
                                 Checkbox {
                                     disabled: false,
-                                    width: "1em".into(),
-                                    height: "1em".into(),
+                                    width: "1em".to_string(),
+                                    height: "1em".to_string(),
                                     is_checked: selected,
                                     on_click: move |_| {
                                         chats_selected.with_mut(|v|{
@@ -526,7 +527,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                                 match chat.conversation_type {
                                     ConversationType::Direct => rsx!(UserImage {
                                         platform: platform,
-                                        status:  user.identity_status().into(),
+                                        status:  Status::from(user.identity_status()),
                                         image: user.profile_picture(),
                                         typing: false,
                                     }),

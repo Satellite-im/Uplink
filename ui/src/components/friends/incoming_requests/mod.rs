@@ -11,6 +11,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::components::indicator::Status;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -32,8 +33,8 @@ enum ChanCmd {
 pub fn PendingFriends() -> Element {
     let state = use_context::<Signal<State>>();
     let friends_list = state.read().incoming_fr_identities();
-    let deny_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
-    let accept_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let deny_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
+    let accept_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![deny_in_progress, accept_in_progress];
@@ -51,12 +52,12 @@ pub fn PendingFriends() -> Element {
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
-                            accept_in_progress.make_mut().remove(&identity);
+                            accept_in_progress().remove(&identity);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-                        accept_in_progress.make_mut().remove(&identity);
+                        accept_in_progress().remove(&identity);
                         if let Err(e) = rsp {
                             log::error!("failed to accept request: {}", e);
                         }
@@ -70,12 +71,12 @@ pub fn PendingFriends() -> Element {
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
-                            deny_in_progress.make_mut().remove(&identity);
+                            deny_in_progress().remove(&identity);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
-                        deny_in_progress.make_mut().remove(&identity);
+                        deny_in_progress().remove(&identity);
                         if let Err(e) = rsp {
                             log::error!("failed to deny request: {}", e);
                         }
@@ -107,8 +108,8 @@ pub fn PendingFriends() -> Element {
             let friend3 = friend.clone();
             let friend4 = friend.clone();
 
-            let any_button_disabled = accept_in_progress.current().contains(&did)
-                ||  deny_in_progress.current().contains(&did);
+            let any_button_disabled = accept_in_progress().contains(&did)
+                ||  deny_in_progress().contains(&did);
 
             rsx!(
                 ContextMenu {
@@ -126,7 +127,7 @@ pub fn PendingFriends() -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::AcceptRequest(&friend));
                                 } else {
-                                    accept_in_progress.make_mut().insert(friend.did_key());
+                                    accept_in_progress().insert(friend.did_key());
                                     ch.send(ChanCmd::AcceptRequest(friend.did_key()));
                                 }
                             }
@@ -141,7 +142,7 @@ pub fn PendingFriends() -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::DenyRequest(&did));
                                 } else {
-                                    deny_in_progress.make_mut().insert(did.clone());
+                                    deny_in_progress().insert(did.clone());
                                     ch.send(ChanCmd::DenyRequest(did.clone()));
                                 }
                             }
@@ -160,17 +161,17 @@ pub fn PendingFriends() -> Element {
                         user_image: rsx! (
                             UserImage {
                                 platform: platform,
-                                status: friend2.identity_status().into(),
+                                status: Status::from(friend2.identity_status()),
                                 image: friend2.profile_picture()
                             }
                         ),
-                        accept_button_disabled: accept_in_progress.current().contains(&did2),
-                        remove_button_disabled: deny_in_progress.current().contains(&did2),
+                        accept_button_disabled: accept_in_progress().contains(&did2),
+                        remove_button_disabled: deny_in_progress().contains(&did2),
                         onaccept: move |_| {
                             if STATIC_ARGS.use_mock {
                                 state.write().mutate(Action::AcceptRequest(&friend4));
                             } else {
-                                accept_in_progress.make_mut().insert(friend4.did_key());
+                                accept_in_progress().insert(friend4.did_key());
                                 ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
                             }
 
@@ -179,7 +180,7 @@ pub fn PendingFriends() -> Element {
                             if STATIC_ARGS.use_mock {
                                 state.write().mutate(Action::AcceptRequest(&friend3));
                             } else {
-                                deny_in_progress.make_mut().insert(friend3.did_key());
+                                deny_in_progress().insert(friend3.did_key());
                                 ch.send(ChanCmd::DenyRequest(friend3.did_key()));
                             }
                         }

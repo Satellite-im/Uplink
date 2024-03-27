@@ -52,7 +52,7 @@ pub fn GroupUsers(props: Props) -> Element {
     let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
     let creator_id = creator_id_vector.first().cloned()?;
 
-    use_effect(|| async move {
+    use_effect(|| {
         let _ = eval(
             r#"
                 const right_clickable = document.getElementsByClassName("friend-container");

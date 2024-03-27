@@ -56,30 +56,28 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
         });
     }
 
-    use_effect(|| {
-        move |_| {
-            async move {
-                let eval_result = eval(include_str!("./enter_seed_handler.js"));
-                loop {
-                    if let Ok(val) = eval_result.recv().await {
-                        let paste = val
-                            .to_string()
-                            .replace("\\\\", "\\")
-                            .replace("\\r", "\r")
-                            .replace("\\n", "\n");
-                        let paste = &paste[1..(paste.len() - 1)]; // Trim the apostrophes from the input
-                        if !paste.is_empty() {
-                            let phrases = paste.lines().collect::<Vec<_>>();
-                            for i in 0..12 {
-                                if i < phrases.len() {
-                                    input.with_mut(|v: &mut Vec<String>| v[i] = phrases[i].into());
-                                }
+    use_effect(move || {
+        spawn(async move {
+            let eval_result = eval(include_str!("./enter_seed_handler.js"));
+            loop {
+                if let Ok(val) = eval_result.recv().await {
+                    let paste = val
+                        .to_string()
+                        .replace("\\\\", "\\")
+                        .replace("\\r", "\r")
+                        .replace("\\n", "\n");
+                    let paste = &paste[1..(paste.len() - 1)]; // Trim the apostrophes from the input
+                    if !paste.is_empty() {
+                        let phrases = paste.lines().collect::<Vec<_>>();
+                        for i in 0..12 {
+                            if i < phrases.len() {
+                                input.with_mut(|v: &mut Vec<String>| v[i] = phrases[i].into());
                             }
                         }
                     }
                 }
-            }()
-        }
+            }
+        });
     });
     // todo: show toasts to inform user of errors.
     let ch = use_coroutine(|mut rx: UnboundedReceiver<Cmd>| {
@@ -160,7 +158,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                                 value: input.read()[idx].clone(),
                                 select_on_focus: *focus.read() == idx,
                                 focus: *focus.read() == idx, // select class gets removed on focus. this forces an update
-                                placeholder: "".into(),
+                                placeholder: "".to_string(),
                                 disable_onblur: true,
                                 options: Options {
                                     clear_on_submit: false,
@@ -197,7 +195,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                                 value: input.read()[other].clone(),
                                 focus: *focus.read() == other,
                                 select_on_focus: *focus.read() == other, // select class gets removed on focus. this forces an update
-                                placeholder: "".into(),
+                                placeholder: "".to_string(),
                                 disable_onblur: true,
                                 options: Options {
                                     clear_on_submit: false,

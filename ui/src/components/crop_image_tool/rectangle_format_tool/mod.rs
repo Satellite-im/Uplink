@@ -38,7 +38,7 @@ pub struct Props {
 pub fn CropRectImageModal(props: Props) -> Element {
     let large_thumbnail = use_signal(|| props.large_thumbnail.clone());
 
-    let image_scale: &Signal<f32> = use_signal(|| 1.0);
+    let image_scale: Signal<f32> = use_signal(|| 1.0);
     let crop_image = use_signal(|| true);
     let cropped_image_pathbuf = use_signal(PathBuf::new);
     let clicked_button_to_crop = use_signal(|| false);
@@ -48,7 +48,7 @@ pub fn CropRectImageModal(props: Props) -> Element {
         width: 0,
     });
 
-    if *clicked_button_to_crop.get() {
+    if clicked_button_to_crop() {
         props.on_crop.call(cropped_image_pathbuf.read().clone());
         clicked_button_to_crop.set(false);
         crop_image.set(false);
@@ -80,7 +80,7 @@ pub fn CropRectImageModal(props: Props) -> Element {
 
     return rsx!(div {
             Modal {
-                open: *crop_image.clone(),
+                open: crop_image(),
                 onclose: move |_| {
                     // Not close if user clicks outside modal
                 },
@@ -133,8 +133,8 @@ pub fn CropRectImageModal(props: Props) -> Element {
                                         async move {
                                             let save_image_cropped_js = SAVE_CROPPED_IMAGE_SCRIPT
                                             .replace("$IMAGE_SCALE", (1.0 / *image_scale.read()).to_string().as_str());
-                                            if let Ok(r) = eval(&save_image_cropped_js) {
-                                                if let Ok(val) = r.join().await {
+                                            let eval_result = eval(&save_image_cropped_js);
+                                                if let Ok(val) = eval_result.join().await {
                                                     let thumbnail = val.as_str().unwrap_or_default();
                                                     let base64_string = thumbnail.trim_matches('\"');
                                                     let decoded_bytes = match base64::decode(base64_string) {
@@ -165,7 +165,6 @@ pub fn CropRectImageModal(props: Props) -> Element {
                                                     cropped_image_pathbuf.with_mut(|f| *f = CROPPED_IMAGE_PATH.clone());
                                                     clicked_button_to_crop.set(true);
                                                 }
-                                        }
                                     }
                                     });
                                 }

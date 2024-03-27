@@ -38,7 +38,7 @@ pub struct Props {
 pub fn CropCircleImageModal(props: Props) -> Element {
     let large_thumbnail = use_signal(|| props.large_thumbnail.clone());
 
-    let image_scale: &Signal<f32> = use_signal(|| 1.0);
+    let image_scale: Signal<f32> = use_signal(|| 1.0);
     let crop_image = use_signal(|| true);
     let cropped_image_pathbuf = use_signal(PathBuf::new);
     let clicked_button_to_crop = use_signal(|| false);
@@ -48,7 +48,7 @@ pub fn CropCircleImageModal(props: Props) -> Element {
         width: 0,
     });
 
-    if *clicked_button_to_crop.get() {
+    if clicked_button_to_crop() {
         props.on_crop.call(cropped_image_pathbuf.read().clone());
         clicked_button_to_crop.set(false);
         crop_image.set(false);
@@ -80,7 +80,7 @@ pub fn CropCircleImageModal(props: Props) -> Element {
 
     return rsx!(div {
             Modal {
-                open: *crop_image.clone(),
+                open: crop_image(),
                 onclose: move |_| {
                     // Not close if user clicks outside modal
                 },

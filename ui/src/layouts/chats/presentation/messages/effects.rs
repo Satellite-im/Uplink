@@ -17,7 +17,7 @@ pub fn init_msg_scroll(chat_data: &Signal<ChatData>, ch: Coroutine<()>) {
     let chat_key_signal = use_signal(|| chat_key);
     use_effect(move || {
         to_owned![ch];
-        async move {
+        spawn(async move {
             // replicate behavior from before refactor
             let eval_result = eval(SETUP_CONTEXT_PARENT);
             let _ = eval_result.join().await;
@@ -73,6 +73,6 @@ pub fn init_msg_scroll(chat_data: &Signal<ChatData>, ch: Coroutine<()>) {
             }
 
             ch.send(());
-        }()
+        });
     });
 }

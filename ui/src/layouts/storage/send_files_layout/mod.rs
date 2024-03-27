@@ -211,7 +211,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 )}}
                             }
                         ),
-                        with_badge: "".into(),
+                        with_badge: "".to_string(),
                         onpress: move |_| {
                             if is_checked {
                                 props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));

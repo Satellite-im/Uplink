@@ -53,7 +53,7 @@ pub fn DebugLogger() -> Element {
     let state_json = state.read().get_json();
 
     rsx!(
-        style { STYLE }
+        style { {STYLE} }
         div {
             onmounted: move |_| { _ = eval(SCRIPT) },
             id: "debug_logger",
@@ -66,21 +66,21 @@ pub fn DebugLogger() -> Element {
                     class: "logger-nav",
                     aria_label: "debug-logger-nav",
                     Button {
-                        text: "Logs".into(),
+                        text: "Logs".to_string(),
                         aria_label: "logs-button".to_string(),
                         icon: Icon::CommandLine,
-                        appearance: if *active_tab.get() == Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
+                        appearance: if active_tab() == Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
                             active_tab.set(Tab::Logs);
                         }
                     },
-                    {(active_tab.read() == &Tab::Logs).then(|| rsx!{
+                    {(active_tab() == Tab::Logs).then(|| rsx!{
                         div {
                             aria_label: "filter-section",
                             class: "section",
                             Label {
                                 aria_label: "filter-label".to_string(),
-                                text: "Filter:".into(),
+                                text: "Filter:".to_string(),
                             },
                             Button {
                                 aria_label: "debug-level-button".to_string(),
@@ -92,35 +92,35 @@ pub fn DebugLogger() -> Element {
                                 tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: "Debug".into()
+                                        text: "Debug".to_string()
                                     }
                                 ),
                             },
                             Button {
                                 aria_label: "info-level-button".to_string(),
                                 icon: Icon::InformationCircle,
-                                appearance: if *filter_level.get() == Level::Info { Appearance::Info } else { Appearance::Secondary },
+                                appearance: if filter_level() == Level::Info { Appearance::Info } else { Appearance::Secondary },
                                 onpress: |_| {
                                     filter_level.set(Level::Info);
                                 },
                                 tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: "Info".into()
+                                        text: "Info".to_string()
                                     }
                                 ),
                             },
                             Button {
                                 aria_label: "error-level-button".to_string(),
                                 icon: Icon::ExclamationTriangle,
-                                appearance: if *filter_level.get() == Level::Error { Appearance::Danger } else { Appearance::Secondary },
+                                appearance: if filter_level() == Level::Error { Appearance::Danger } else { Appearance::Secondary },
                                 onpress: |_| {
                                     filter_level.set(Level::Error);
                                 },
                                 tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: "Error".into()
+                                        text: "Error".to_string()
                                     }
                                 ),
                             },
@@ -134,7 +134,7 @@ pub fn DebugLogger() -> Element {
                                 tooltip: rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: "Trace".into()
+                                        text: "Trace".to_string()
                                     }
                                 ),
                             },
@@ -142,16 +142,16 @@ pub fn DebugLogger() -> Element {
                     })},
                     Button {
                         aria_label: "state-button".to_string(),
-                        text: "State".into(),
+                        text: "State".to_string(),
                         icon: Icon::Square3Stack3d,
-                        appearance: if *active_tab.get() == Tab::State { Appearance::Primary } else { Appearance::Secondary },
+                        appearance: if active_tab() == Tab::State { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
                             active_tab.set(Tab::State);
                         }
                     },
                     Button {
                         aria_label: "web-inspector-button".to_string(),
-                        text: "Web Inspector".into(),
+                        text: "Web Inspector".to_string(),
                         icon: Icon::ArrowTopRightOnSquare,
                         appearance: Appearance::Secondary,
                         onpress: |_| {
@@ -184,14 +184,14 @@ pub fn DebugLogger() -> Element {
                     }
                 },
             },
-            match active_tab.get() {
+            match active_tab() {
                 Tab::Logs => rsx!(div {
                     aria_label: "debug-logger-body",
                     class: "body",
                     div {
                         class: "body-scroll",
                         {logs_to_show.iter().filter(
-                            |&x| x.level == *filter_level.get() || *filter_level.get() == Level::Debug
+                            |&x| x.level == filter_level() || filter_level() == Level::Debug
                         ).map(|log| {
                             let log_datetime = log.datetime;
                             let log_level = log.level;

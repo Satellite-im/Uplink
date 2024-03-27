@@ -144,7 +144,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
             }
         )}}
         ContextMenu {
-            id: "chat_topbar_context".into(),
+            id: "chat_topbar_context".to_string(),
             fit_parent: true,
             key: "{props.channel.id}-channel",
             devmode: state.read().configuration.developer.developer_mode,
@@ -153,7 +153,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                     ContextItem {
                         icon: Icon::XMark,
                         aria_label: "close-chat-context-option".to_string(),
-                        text: "Close Chat".into(),
+                        text: "Close Chat".to_string(),
                         onpress: move |_| {
                             state.write().mutate(Action::RemoveFromSidebar(conv_id));
                         }
@@ -163,7 +163,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         ContextItem {
                             icon: Icon::PencilSquare,
                             aria_label: "rename-group-context-option".to_string(),
-                            text: "Rename".into(),
+                            text: "Rename".to_string(),
                             onpress: move |_| {
                                 props.show_rename_group.set(true);
                             }
@@ -173,7 +173,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         ContextItem {
                             icon: Icon::Users,
                             aria_label: "manage-members-context-option".to_string(),
-                            text: "Manage Members".into(),
+                            text: "Manage Members".to_string(),
                             onpress: move |_| {
                                 props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
                             }
@@ -184,7 +184,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                             danger: true,
                             icon: Icon::Cog,
                             aria_label: "group-settings-context-option".to_string(),
-                            text: "Settings".into(),
+                            text: "Settings".to_string(),
                             onpress: move |_| {
                                 props.show_group_settings.set(true);
                             }

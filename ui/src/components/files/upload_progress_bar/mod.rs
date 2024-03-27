@@ -61,7 +61,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn UploadProgressBar<'a>(props: Props) -> Element {
     let are_files_hovering_app = props.are_files_hovering_app.clone();
-    let files_ready_to_upload: Signal<Vec<PathBuf>> = use_signal(|| Vec::new);
+    let files_ready_to_upload: Signal<Vec<PathBuf>> = use_signal(|| Vec::new());
     let called_drag_and_drop_function: Signal<bool> = use_signal(|| false);
     let window = use_window();
 
@@ -77,7 +77,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
             async move {
                 drag_and_drop_function(
                     &window,
-                    &are_files_hovering_app,
+                    are_files_hovering_app,
                     &files_ready_to_upload,
                     &called_drag_and_drop_function,
                 )
@@ -193,7 +193,7 @@ fn count_files_to_show(files_to_upload_len: usize) -> String {
 
 async fn drag_and_drop_function(
     window: &DesktopContext,
-    are_files_hovering_app: &mut Signal<bool>,
+    mut are_files_hovering_app: Signal<bool>,
     files_ready_to_upload: &Signal<Vec<PathBuf>>,
     called_drag_and_drop_function: &Signal<bool>,
 ) {

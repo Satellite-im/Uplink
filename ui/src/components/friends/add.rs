@@ -47,13 +47,13 @@ pub fn AddFriend() -> Element {
         special_chars: Some((SpecialCharsAction::Allow, vec!['#'])),
     };
 
-    if *clear_input.get() {
+    if clear_input() {
         friend_input.set(String::new());
         friend_input_valid.set(false);
         clear_input.set(false);
     }
 
-    if *request_sent.get() {
+    if request_sent() {
         state
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
@@ -65,7 +65,7 @@ pub fn AddFriend() -> Element {
         request_sent.set(false);
     }
 
-    if let Some(msg) = error_toast.get().clone() {
+    if let Some(msg) = error_toast() {
         state
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
@@ -77,7 +77,7 @@ pub fn AddFriend() -> Element {
         error_toast.set(None);
     }
 
-    if let Some(id) = my_id.get().clone() {
+    if let Some(id) = my_id() {
         match Clipboard::new() {
             Ok(mut c) => {
                 if let Err(e) = c.set_text(id) {
@@ -194,13 +194,13 @@ pub fn AddFriend() -> Element {
                 class: "body",
                 ContextMenu {
                     key: "{context_key}",
-                    id: "add-friend-input-context-menu".into(),
+                    id: "add-friend-input-context-menu".to_string(),
                     devmode: state.read().configuration.developer.developer_mode,
                     children: rsx!(
                         Input {
                             placeholder: get_local_text("friends.placeholder"),
                             icon: Icon::MagnifyingGlass,
-                            value: friend_input.get().clone(),
+                            value: friend_input(),
                             options: Options {
                                 with_validation: Some(friend_validation),
                                 // Do not replace spaces with underscores
@@ -212,29 +212,29 @@ pub fn AddFriend() -> Element {
                                 ..Options::default()
                             },
                             disable_onblur: true,
-                            loading: *add_in_progress.current(),
-                            disabled: *add_in_progress.current(),
+                            loading: add_in_progress(),
+                            disabled: add_in_progress(),
                             reset: clear_input.clone(),
                             onreturn: move |_| {
-                                if !friend_input_valid.get() {
+                                if !friend_input_valid() {
                                     return;
                                 }
                                 if STATIC_ARGS.use_mock {
-                                    if let Ok(did) = DID::from_str(friend_input.get()) {
+                                    if let Ok(did) = DID::from_str(&friend_input()) {
                                         let mut ident = Identity::default();
                                         ident.set_did_key(did);
                                         state.write().mutate(Action::SendRequest(ident));
                                     }
                                 } else {
                                     add_in_progress.set(true);
-                                    ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                                    ch.send((friend_input().to_string(), state.read().outgoing_fr_identities()));
                                 }
                             },
                             onchange: |(s, is_valid)| {
                                 friend_input.set(s);
                                 friend_input_valid.set(is_valid);
                             },
-                            aria_label: "Add Someone Input".into()
+                            aria_label: "Add Someone Input".to_string()
                         }
                     ),
                     items: rsx!(
@@ -243,7 +243,7 @@ pub fn AddFriend() -> Element {
                             aria_label: "friend-add-input-copy".to_string(),
                             text: get_local_text("uplink.copy-text"),
                             onpress: move |_| {
-                                let text = friend_input.get().to_string();
+                                let text = friend_input().to_string();
                                 match Clipboard::new() {
                                     Ok(mut c) => {
                                         if let Err(e) = c.set_text(text) {
@@ -280,20 +280,20 @@ pub fn AddFriend() -> Element {
                 Button {
                     icon: add_friend_icon,
                     text: add_friend_label.to_string(),
-                    disabled: !friend_input_valid.get(),
+                    disabled: !friend_input_valid(),
                     onpress: move |_| {
                         if STATIC_ARGS.use_mock {
-                            if let Ok(did) = DID::from_str(friend_input.get()) {
+                            if let Ok(did) = DID::from_str(&friend_input()) {
                                 let mut ident = Identity::default();
                                 ident.set_did_key(did);
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
                             add_in_progress.set(true);
-                            ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                            ch.send((friend_input().to_string(), state.read().outgoing_fr_identities()));
                         }
                     },
-                    aria_label: "Add Someone Button".into()
+                    aria_label: "Add Someone Button".to_string()
                 },
                 div {
                     ContextMenu {

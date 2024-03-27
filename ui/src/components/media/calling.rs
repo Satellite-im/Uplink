@@ -121,7 +121,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             let dur_min = Duration::from_secs(60);
 
             let to_sleep = match Local::now()
-                .signed_duration_since(answer_time_signal.read())
+                .signed_duration_since(answer_time_signal())
                 .to_std()
             {
                 Ok(duration) => {
@@ -135,7 +135,8 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             };
 
             tokio::time::sleep(to_sleep).await;
-            update_fn(scope_id_signal.read());
+            // TODO(Migration_0.5): Look into this unwrap later
+            update_fn(scope_id_signal().unwrap());
         }
     });
 
@@ -334,8 +335,8 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
 
     use_effect(|| {
         to_owned![ch, state];
-        async move {
-            for id in other_participants_in_call.read() {
+        {
+            for id in other_participants_in_call() {
                 if let Some(vol) = state.read().settings.user_volumes.get(&id.did_key()) {
                     ch.send(CallDialogCmd::AdjustVolume(Box::new(id.did_key()), *vol))
                 }
@@ -580,7 +581,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
     let alive = use_signal(|| Arc::new(AtomicBool::new(false)));
     use_effect(|| {
         to_owned![alive];
-        async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) }
+        spawn(async move { PlayUntil(ContinuousSound::RingTone, alive.read().clone()) });
     });
     let mut participants = state.read().get_identities_from_call(call);
     participants = state.read().remove_self(&participants);
@@ -681,8 +682,8 @@ pub fn CallDialog(props: CallDialogProps) -> Element {
             div {
                 aria_label: "controls",
                 class: "controls",
-                with_accept_btn,
-                with_deny_btn,
+                {with_accept_btn},
+                {with_deny_btn},
             }
         }
     )
@@ -696,10 +697,10 @@ pub struct CallUserImageProps {
 #[allow(non_snake_case)]
 pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
     let amount = use_signal(|| 3);
-    let id = use_signal(|| Uuid::new_v4);
+    let id = use_signal(|| Uuid::new_v4());
     use_effect(|| {
         to_owned![amount];
-        async move {
+        spawn(async move {
             let eval_result = eval(include_str!("./resize_handler.js"));
             loop {
                 match eval_result.recv().await {
@@ -711,7 +712,7 @@ pub fn CallUserImageGroup(props: CallUserImageProps) -> Element {
                     }
                 }
             }
-        }
+        });
     });
     let visible_amount = *amount.read() as usize;
     let (visible, context) = if visible_amount >= props.participants.len() {

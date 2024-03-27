@@ -52,7 +52,7 @@ pub fn get_controls(props: ChatProps) -> Element {
 
     use_effect(|| {
         to_owned![show_more];
-        async move {
+        {
             if *show_more.read() {
                 show_more.set(false);
             }
@@ -294,7 +294,7 @@ pub fn get_controls(props: ChatProps) -> Element {
             },
             {show_more().then(|| {
                 rsx!(InvisibleCloser {
-                        classes: "minimal-chat-button-group-out".into(),
+                        classes: "minimal-chat-button-group-out".to_string(),
                         onclose: move |_|{
                             show_more.set(false);
                         },

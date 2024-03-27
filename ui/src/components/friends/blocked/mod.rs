@@ -10,6 +10,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::components::indicator::Status;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -25,7 +26,7 @@ use tracing::log;
 pub fn BlockedUsers() -> Element {
     let state = use_context::<Signal<State>>();
     let block_list = state.read().blocked_fr_identities();
-    let unblock_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let unblock_in_progress: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<DID>| {
         to_owned![unblock_in_progress];
@@ -38,12 +39,12 @@ pub fn BlockedUsers() -> Element {
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
-                    unblock_in_progress.make_mut().remove(&did);
+                    unblock_in_progress().remove(&did);
                     continue;
                 }
 
                 let rsp = rx.await.expect("command canceled");
-                unblock_in_progress.make_mut().remove(&did);
+                unblock_in_progress().remove(&did);
                 if let Err(e) = rsp {
                     match e {
                         Error::PublicKeyIsntBlocked => {}
@@ -89,7 +90,7 @@ pub fn BlockedUsers() -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::Unblock(&unblock_user.did_key()));
                                 } else {
-                                    unblock_in_progress.make_mut().insert(unblock_user.did_key());
+                                    unblock_in_progress().insert(unblock_user.did_key());
                                     ch.send(unblock_user.clone().did_key());
                                 }
                             }
@@ -101,11 +102,11 @@ pub fn BlockedUsers() -> Element {
                         suffix: did_suffix,
                         status_message: blocked_user.status_message().unwrap_or_default(),
                         relationship: relationship,
-                        remove_button_disabled: unblock_in_progress.current().contains(&blocked_user.did_key()),
+                        remove_button_disabled: unblock_in_progress().contains(&blocked_user.did_key()),
                         user_image: rsx! (
                             UserImage {
                                 platform: platform,
-                                status: blocked_user.identity_status().into(),
+                                status: Status::from(blocked_user.identity_status()),
                                 image: blocked_user.profile_picture()
                             }
                         ),
@@ -113,7 +114,7 @@ pub fn BlockedUsers() -> Element {
                             if STATIC_ARGS.use_mock {
                                 state.write().mutate(Action::Unblock(&unblock_user_clone.did_key()));
                             } else {
-                                unblock_in_progress.make_mut().insert(unblock_user_clone.did_key());
+                                unblock_in_progress().insert(unblock_user_clone.did_key());
                                 ch.send(unblock_user_clone.clone().did_key());
                             }
                         }
