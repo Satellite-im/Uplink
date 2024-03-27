@@ -62,8 +62,8 @@ pub fn ProfileSettings() -> Element {
         IdentityStatus::Offline,
     ];
     let username = identity.username();
-    let should_update = use_signal(|| None);
-    let update_failed = use_signal(|| None);
+    let should_update: Signal<Option<Identity>> = use_signal(|| None);
+    let update_failed: Signal<Option<String>> = use_signal(|| None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = identity.profile_picture();
     let banner = identity.profile_banner();
@@ -186,8 +186,8 @@ pub fn ProfileSettings() -> Element {
             }
         }
     });
-
-    if let Some(ident) = should_update.read() {
+    let should_update_clone = should_update();
+    if let Some(ident) = should_update_clone {
         log::trace!("Updating ProfileSettings");
         let mut ident = ident.clone();
         let current = state.read().get_own_identity();
@@ -207,7 +207,7 @@ pub fn ProfileSettings() -> Element {
         should_update.set(None);
     }
 
-    if let Some(msg) = update_failed.read() {
+    if let Some(msg) = update_failed() {
         state
             .write()
             .mutate(common::state::Action::AddToastNotification(
@@ -605,7 +605,7 @@ pub fn ProfileSettings() -> Element {
                         }
                     },
                 },
-                if *phrase_exists.get() {{rsx!(
+                if phrase_exists() {{rsx!(
                     SettingSection {
                         aria_label: "recovery-seed-section".to_string(),
                         section_label: get_local_text("settings-profile.recovery-seed"),
@@ -616,7 +616,7 @@ pub fn ProfileSettings() -> Element {
                             appearance: Appearance::Danger,
                             icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
                             onpress: move |_| {
-                                if seed_phrase.is_some() {
+                                if seed_phrase().is_some() {
                                     seed_phrase.set(None);
                                 } else {
                                     seed_words_ch.send(());
@@ -698,9 +698,9 @@ pub fn ProfileSettings() -> Element {
                         Checkbox {
                             aria_label: "store-recovery-seed-on-account-checkbox".to_string(),
                             disabled: false,
-                            is_checked: *store_phrase.get(),
-                            height: "15px".into(),
-                            width: "15px".into(),
+                            is_checked: store_phrase(),
+                            height: "15px".to_string(),
+                            width: "15px".to_string(),
                             on_click: move |_| {
                                 show_remove_seed.set(true);
                             },
@@ -710,9 +710,9 @@ pub fn ProfileSettings() -> Element {
                             {get_local_text("settings-profile.store-on-account")}
                         }
                     },
-                    {show_remove_seed.then(|| rsx!(
+                    {show_remove_seed().then(|| rsx!(
                         Modal {
-                            open: *show_remove_seed.clone(),
+                            open: show_remove_seed(),
                             onclose: move |_| show_remove_seed.set(false),
                             transparent: false,
                             close_on_click_inside_modal: false,
@@ -756,31 +756,31 @@ pub fn ProfileSettings() -> Element {
                         }
                     ))},
                 )}}
-                if open_crop_image_modal_for_banner_picture.get().0 {
+                if open_crop_image_modal_for_banner_picture().0 {
                     {rsx!(CropRectImageModal {
-                        large_thumbnail: open_crop_image_modal_for_banner_picture.1.clone(),
+                        large_thumbnail: open_crop_image_modal_for_banner_picture().1.clone(),
                         on_cancel: |_| {
                             open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
                             match transform_file_into_base64_image(image_pathbuf) {
                                 Ok((img_cropped, _)) => ch.send(ChanCmd::Banner(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture.1.0.clone())),
+                                Err(_) => ch.send(ChanCmd::Banner(open_crop_image_modal_for_banner_picture().1.0.clone())),
                             }
                             open_crop_image_modal_for_banner_picture.set((false, (Vec::new(), String::new())));
                         }
                     })}
                 }
-                if open_crop_image_modal.get().0 {
+                if open_crop_image_modal().0 {
                     {rsx!(CropCircleImageModal {
-                        large_thumbnail: open_crop_image_modal.1.clone(),
+                        large_thumbnail: open_crop_image_modal().1.clone(),
                         on_cancel: |_| {
                             open_crop_image_modal.set((false, (Vec::new(), String::new())));
                         },
                         on_crop: move |image_pathbuf: PathBuf| {
                             match transform_file_into_base64_image(image_pathbuf) {
                                 Ok((img_cropped, _)) => ch.send(ChanCmd::Profile(img_cropped)),
-                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal.1.0.clone()) ),
+                                Err(_) => ch.send(ChanCmd::Profile(open_crop_image_modal().1.0.clone()) ),
                             }
                             open_crop_image_modal.set((false, (Vec::new(), String::new())));
                         }

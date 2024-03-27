@@ -48,7 +48,7 @@ pub struct Props {
 pub fn PinnedMessages(props: Props) -> Element {
     log::trace!("rendering pinned_messages");
     let state = use_context::<Signal<State>>();
-    let chat_data = use_context::<Signal<ChatData>> - ();
+    let chat_data = use_context::<Signal<ChatData>>();
     let minimal = state.read().ui.metadata.minimal_view;
 
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChannelCommand>| {
@@ -131,7 +131,7 @@ pub fn PinnedMessages(props: Props) -> Element {
 
     rsx!(
         script {
-            MARKDOWN_FOR_CODE_BLOCK
+            {MARKDOWN_FOR_CODE_BLOCK}
         }
         div {
             id: "pinned-messages-container",
@@ -267,7 +267,7 @@ pub fn PinnedMessage(props: PinnedMessageProp) -> Element {
                         text: message.lines().join("\n"),
                         remote: true,
                         pending: false,
-                        state: &state,
+                        state: state,
                         chat: props.chat,
                         markdown: state.read().ui.should_transform_markdown_text(),
                         ascii_emoji: state.read().ui.should_transform_ascii_emojis(),

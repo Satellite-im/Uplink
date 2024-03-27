@@ -31,7 +31,7 @@ pub fn GroupSettings() -> Element {
         }
     };
 
-    let group_settings_state = use_signal(|| get_group_settings);
+    let group_settings_state = use_signal(|| get_group_settings());
 
     let group_settings_changed_channel =
         use_coroutine(|mut rx: UnboundedReceiver<GroupSettingsChange>| {
@@ -89,7 +89,7 @@ pub fn GroupSettings() -> Element {
                         "Allow anyone to add members"
                     }
                     Switch {
-                        active: group_settings_state.read().members_can_add_participants(),
+                        active: group_settings_state().members_can_add_participants(),
                         onflipped: |switch_state| {
                             group_settings_changed_channel.send(GroupSettingsChange::MembersCanAddParticipants(switch_state))
                         }
@@ -101,7 +101,7 @@ pub fn GroupSettings() -> Element {
                         "Allow anyone to rename group"
                     }
                     Switch {
-                        active: group_settings_state.read().members_can_change_name(),
+                        active: group_settings_state().members_can_change_name(),
                         onflipped: |switch_state| {
                             group_settings_changed_channel.send(GroupSettingsChange::MembersCanChangeName(switch_state))
                         }

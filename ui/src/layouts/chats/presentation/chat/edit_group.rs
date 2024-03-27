@@ -12,7 +12,10 @@ use common::{
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::user_image::UserImage,
+    components::{
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
     elements::{
         button::Button,
         input::{Input, Options},
@@ -68,17 +71,17 @@ pub fn EditGroup() -> Element {
         friend
             .username()
             .to_ascii_lowercase()
-            .contains(&friend_prefix.to_ascii_lowercase())
+            .contains(&friend_prefix().to_ascii_lowercase())
     });
     friends_group_list.retain(|_, friend| {
         friend
             .username()
             .to_ascii_lowercase()
-            .contains(&friend_prefix.to_ascii_lowercase())
+            .contains(&friend_prefix().to_ascii_lowercase())
     });
 
     // convert back to vec
-    let mut friends: Vec<Identity> = if *edit_group_action.get() == EditGroupAction::Add {
+    let mut friends: Vec<Identity> = if edit_group_action() == EditGroupAction::Add {
         friends_not_in_group_list.values().cloned().collect()
     } else {
         friends_group_list.values().cloned().collect()
@@ -141,7 +144,7 @@ pub fn EditGroup() -> Element {
                             friend_prefix.set(v);
                         },
                     },
-                    if *edit_group_action.get() == EditGroupAction::Remove {
+                    if edit_group_action() == EditGroupAction::Remove {
                        { rsx! {
                             {add_friends},
                         }}
@@ -171,10 +174,10 @@ pub fn EditGroup() -> Element {
                                             let is_group_creator = creator_did2.clone() == _friend.clone().did_key();
                                             rsx!(
                                                 friend_row {
-                                                    add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
-                                                        "add".into()
+                                                    add_or_remove: if edit_group_action() == EditGroupAction::Add {
+                                                        "add".to_string()
                                                     } else {
-                                                        "remove".into()
+                                                        "remove".to_string()
                                                     },
                                                     friend_is_group_creator: is_group_creator,
                                                     am_i_group_creator: am_i_group_creator,
@@ -215,7 +218,7 @@ pub struct FriendRowProps {
 /* Friend Row with add/remove button functionality */
 fn friend_row(props: FriendRowProps) -> Element {
     let _friend = props.friend.clone();
-    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new);
+    let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
     let conv_id = props.conv_id;
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![selected_friends, conv_id];
@@ -224,8 +227,7 @@ fn friend_row(props: FriendRowProps) -> Element {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     ChanCmd::AddParticipants => {
-                        let recipients: Vec<DID> =
-                            selected_friends.current().iter().cloned().collect();
+                        let recipients: Vec<DID> = selected_friends().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::AddGroupParticipants {
@@ -243,8 +245,7 @@ fn friend_row(props: FriendRowProps) -> Element {
                         }
                     }
                     ChanCmd::RemoveParticipants => {
-                        let recipients: Vec<DID> =
-                            selected_friends.current().iter().cloned().collect();
+                        let recipients: Vec<DID> = selected_friends().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveGroupParticipants {
@@ -271,8 +272,8 @@ fn friend_row(props: FriendRowProps) -> Element {
             class: "friend-container",
             aria_label: "Friend Container",
             UserImage {
-                platform: _friend.platform().into(),
-                status: _friend.identity_status().into(),
+                platform: Platform::from(_friend.platform()),
+                status: Status::from(_friend.identity_status()),
                 image: _friend.profile_picture()
             },
             div {
@@ -317,7 +318,7 @@ fn friend_row(props: FriendRowProps) -> Element {
                         }
                     ,
                     onpress: move |_| {
-                        let mut friends = selected_friends.get().clone();
+                        let mut friends = selected_friends();
                         friends.clear();
                         selected_friends.set(vec![_friend.did_key()].into_iter().collect());
                         if props.add_or_remove == "add" {

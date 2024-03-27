@@ -107,7 +107,7 @@ pub fn init_chat_data(state: Signal<State>, chat_data: Signal<ChatData>) -> Reso
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
 
-            let conv_id = match active_chat_id_signal.read() {
+            let conv_id = match active_chat_id_signal() {
                 None => return,
                 Some(x) => x,
             };

@@ -9,7 +9,10 @@ use common::{
 use dioxus::prelude::*;
 
 use kit::{
-    components::user_image::UserImage,
+    components::{
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
     elements::input::{Input, Options},
 };
 use tracing::log;
@@ -26,7 +29,7 @@ pub struct Props {
 pub fn GroupUsers(props: Props) -> Element {
     log::trace!("rendering group_users");
     let state = use_context::<Signal<State>>();
-    let friend_prefix = use_signal(|| String::new);
+    let friend_prefix = use_signal(|| String::new());
 
     let quickprofile_data = &props.quickprofile_data;
 
@@ -167,8 +170,8 @@ fn render_friend(props: FriendProps) -> Element {
                     .context_data.set(Some((e.page_coordinates().x, e.page_coordinates().y, props.friend.to_owned(), true)));
             },
             UserImage {
-                platform: props.friend.platform().into(),
-                status: props.friend.identity_status().into(),
+                platform: Platform::from(props.friend.platform()),
+                status: Status::from(props.friend.identity_status()),
                 image: props.friend.profile_picture(),
                 oncontextmenu: move |e: Event<MouseData>| {
                     props

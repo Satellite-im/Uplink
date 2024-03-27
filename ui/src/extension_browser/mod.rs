@@ -64,7 +64,7 @@ pub fn Explore() -> Element {
                 {get_local_text("settings-extensions.banner")}
             },
             Input {
-                placeholder: "Extension name or description.".into(),
+                placeholder: "Extension name or description.".to_string(),
                 // TODO: Pending implementation
                 disabled: true,
                 aria_label: "extensions-search-input".to_string(),
@@ -168,13 +168,13 @@ pub fn ExtensionsBrowser() -> Element {
                     active_route.set(r);
                 }
             },
-            {(*active_route() == "installed").then(|| rsx!(
+            {(active_route() == "installed").then(|| rsx!(
                 Installed {}
             ))},
-            {(*active_route() == "explore").then(|| rsx!(
+            {(active_route() == "explore").then(|| rsx!(
                 Explore {}
             ))},
-            {(*active_route() == "settings").then(|| rsx!(
+            {(active_route() == "settings").then(|| rsx!(
                 Settings {}
             ))}
         }

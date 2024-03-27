@@ -413,9 +413,9 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         class: "skeletal-steady",
                         User {
                             loading: true,
-                            username: "Loading".into(),
+                            username: "Loading".to_string(),
                             aria_label: "Loading".to_string(),
-                            subtext: "loading".into(),
+                            subtext: "loading".to_string(),
                             user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,
@@ -426,9 +426,9 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         },
                         User {
                             loading: true,
-                            username: "Loading".into(),
+                            username: "Loading".to_string(),
                             aria_label: "Loading".to_string(),
-                            subtext: "loading".into(),
+                            subtext: "loading".to_string(),
                             user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,
@@ -439,9 +439,9 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         },
                         User {
                             loading: true,
-                            username: "Loading".into(),
+                            username: "Loading".to_string(),
                             aria_label: "Loading".to_string(),
-                            subtext: "loading".into(),
+                            subtext: "loading".to_string(),
                             user_image: rsx!(
                                 UserImage {
                                     platform: Platform::Mobile,

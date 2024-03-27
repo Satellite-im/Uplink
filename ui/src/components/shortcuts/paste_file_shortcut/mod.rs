@@ -87,7 +87,7 @@ pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
         }
     });
 
-    use_global_shortcut(move || (key, modifiers), {
+    use_global_shortcut(move || (key, modifiers)(), {
         to_owned![command_pressed];
         move || {
             // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time

@@ -3,6 +3,7 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
+        indicator::Status,
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
@@ -98,7 +99,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
         .unwrap_or(data.active_chat.other_participants_names());
     let show_group_list = props
         .show_group_users
-        .get()
+        .read()
         .map(|group_chat_id| group_chat_id == chat_data.read().active_chat.id())
         .unwrap_or(false);
 
@@ -132,7 +133,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
             UserImage {
                 loading: false,
                 platform: data.active_chat.platform(),
-                status: data.active_chat.active_participant().identity_status().into(),
+                status: Status::from(data.active_chat.active_participant().identity_status()),
                 image: data.active_chat.first_image(),
             }
         )}} else {{rsx! (
@@ -203,7 +204,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         props.show_rename_group.set(false);
                     }
                 },
-                if *props.show_rename_group.get() {{rsx! (
+                if props.show_rename_group.read().clone() {{rsx! (
                     div {
                         id: "edit-group-name",
                         class: "edit-group-name",

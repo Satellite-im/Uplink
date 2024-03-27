@@ -140,7 +140,7 @@ pub fn get_controls(props: ChatProps) -> Element {
             {rsx!(Button {
                 icon: Icon::Users,
                 aria_label: "edit-group-members".to_string(),
-                appearance: if props.show_manage_members.is_some() {
+                appearance: if props.show_manage_members.read().clone().is_some() {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -149,7 +149,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                 tooltip: tooltip_builder("friends.manage-group-members", arrow_top),
                 onpress: move |_| {
                     let active = &chat_data.read().active_chat;
-                    if props.show_manage_members.is_some() {
+                    if props.show_manage_members.read().clone().is_some() {
                         props.show_manage_members.set(None);
                     } else if active.is_initialized {
                         props.show_manage_members.set(Some(active.id()));
@@ -168,7 +168,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                 text: text_builder("settings"),
                 tooltip: tooltip_builder("settings", arrow_top),
                 onpress: move |_| {
-                    if *props.show_group_settings.get() {
+                    if props.show_group_settings.read().clone() {
                         props.show_group_settings.set(false);
                     } else if chat_data.read().active_chat.is_initialized {
                         props.show_group_settings.set(true);
@@ -214,7 +214,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         Button {
             icon: Icon::Pin,
             aria_label: "pin-label".to_string(),
-            appearance: if *show_pinned.clone() { Appearance::Primary } else { Appearance::Secondary },
+            appearance: if show_pinned() { Appearance::Primary } else { Appearance::Secondary },
             text: text_builder("messages.pin-view"),
             tooltip: tooltip_builder("messages.pin-view", arrow_top),
             onpress: move |_| {
@@ -224,7 +224,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         }
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
+            disabled: !state.read().configuration.developer.experimental_features || call_pending() || call_in_progress,
             aria_label: "Call".to_string(),
             appearance: Appearance::Secondary,
             text: text_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}),
@@ -251,7 +251,7 @@ pub fn get_controls(props: ChatProps) -> Element {
     );
 
     let pinned = rsx!({
-        show_pinned.then(|| {
+        show_pinned().then(|| {
             rsx!(
                 Modal {
                     open: true,
@@ -292,7 +292,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                     }
                 }
             },
-            {show_more.then(|| {
+            {show_more().then(|| {
                 rsx!(InvisibleCloser {
                         classes: "minimal-chat-button-group-out".into(),
                         onclose: move |_|{

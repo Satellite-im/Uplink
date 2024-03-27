@@ -5,7 +5,8 @@ use common::{
 use dioxus::prelude::*;
 use kit::{
     components::{
-        message::format_text, user::User, user_image::UserImage, user_image_group::UserImageGroup,
+        indicator::Status, message::format_text, user::User, user_image::UserImage,
+        user_image_group::UserImageGroup,
     },
     elements::{checkbox::Checkbox, label::Label},
 };
@@ -184,8 +185,8 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 class: "chat-selector-to-send-image-group",
                                 Checkbox {
                                     disabled: false,
-                                    width: "1em".into(),
-                                    height: "1em".into(),
+                                    width: "1em".to_string(),
+                                    height: "1em".to_string(),
                                     is_checked: is_checked,
                                     on_click: move |_| {
                                         if is_checked {
@@ -198,7 +199,7 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                 if chat.conversation_type == ConversationType::Direct {{rsx! (
                                     UserImage {
                                         platform: platform,
-                                        status:  user.identity_status().into(),
+                                        status:  Status::from(user.identity_status()),
                                         image: user.profile_picture(),
                                         typing: false,
                                     }
