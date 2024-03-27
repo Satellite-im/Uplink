@@ -55,7 +55,7 @@ pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
     }
 
     let files_local_path_to_upload = use_signal(Vec::new);
-    let command_pressed = use_signal(|| false);
+    let mut command_pressed = use_signal(|| false);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
@@ -87,8 +87,7 @@ pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
         }
     });
 
-    use_global_shortcut(|| (key, modifiers), {
-        to_owned![command_pressed];
+    use_global_shortcut((key, modifiers), move || {
         move || {
             // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time
             debounced_callback(
@@ -97,7 +96,7 @@ pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
                 },
                 Duration::from_millis(250),
             );
-        }
+        };
     });
     None
 }

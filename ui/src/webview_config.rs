@@ -23,30 +23,31 @@ pub(crate) fn webview_config() -> Config {
             </html>"#
                 .to_string(),
         )
-        .with_file_drop_handler(|_w, drag_event| {
-            log::info!("Drag Event: {:?}", drag_event);
-            if cfg!(target_os = "linux") {
-                match drag_event {
-                    FileDropEvent::Hovered { .. } => {
-                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
-                        *DRAG_EVENT.write() = drag_event;
-                    }
-                    FileDropEvent::Dropped { .. } => {
-                        *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = true;
-                        *DRAG_EVENT.write() = drag_event;
-                    }
-                    _ => {
-                        if !*BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.read() {
-                            *DRAG_EVENT.write() = FileDropEvent::Cancelled;
-                        }
-                    }
-                };
-            } else {
-                *DRAG_EVENT.write() = drag_event;
-            }
-            true
-        })
         .with_disable_context_menu(false);
+    // TODO(Migration_0.5): See this later
+    // .with_file_drop_handler(|_w, drag_event| {
+    //     log::info!("Drag Event: {:?}", drag_event);
+    //     if cfg!(target_os = "linux") {
+    //         match drag_event {
+    //             FileDropEvent::Hovered { .. } => {
+    //                 *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = false;
+    //                 *DRAG_EVENT.write() = drag_event;
+    //             }
+    //             FileDropEvent::Dropped { .. } => {
+    //                 *BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.write() = true;
+    //                 *DRAG_EVENT.write() = drag_event;
+    //             }
+    //             _ => {
+    //                 if !*BLOCK_CANCEL_DRAG_EVENT_FOR_LINUX.read() {
+    //                     *DRAG_EVENT.write() = FileDropEvent::Cancelled;
+    //                 }
+    //             }
+    //         };
+    //     } else {
+    //         *DRAG_EVENT.write() = drag_event;
+    //     }
+    //     true
+    // })
 
     if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
         let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");

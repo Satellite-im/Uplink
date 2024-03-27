@@ -22,6 +22,7 @@ use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_C
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition, PhysicalSize};
 
+use dioxus_desktop::wry::WebViewExtMacOS;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
@@ -64,7 +65,7 @@ use crate::layouts::storage::files_layout::FilesLayout;
 use crate::misc_scripts::*;
 use crate::utils::async_task_queue::{ListenerAction, ACTION_LISTENER};
 use crate::utils::keyboard::KeyboardShortcuts;
-use dioxus_desktop::wry::application::event::Event as WryEvent;
+use dioxus_desktop::tao::event as WryEvent;
 use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
@@ -169,7 +170,7 @@ pub fn main_lib() {
 
     // TODO(Migration_0.5): Verify this function later
     // 5. Finally, launch the app
-    dioxus_desktop::launch::launch_virtual_dom(app, webview_config::webview_config())
+    dioxus_desktop::launch::launch(app, Vec::new(), webview_config::webview_config())
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -401,93 +402,95 @@ fn use_app_coroutines() -> Option<()> {
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview;
     let first_resize = use_signal(|| true);
-    use_wry_event_handler({
-        to_owned![state, desktop, first_resize];
-        move |event, _| match event {
-            WryEvent::WindowEvent {
-                event: WindowEvent::Focused(focused),
-                ..
-            } => {
-                //log::trace!("FOCUS CHANGED {:?}", *focused);
-                if state.read().ui.metadata.focused != *focused {
-                    state.write().ui.metadata.focused = *focused;
 
-                    if *focused {
-                        state.write().ui.notifications.clear_badge();
-                        let _ = state.write().save();
-                    }
-                }
-            }
-            WryEvent::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => state
-                .write()
-                .mutate(Action::ClearAllPopoutWindows(desktop.clone())),
-            WryEvent::WindowEvent {
-                event: WindowEvent::Moved(_),
-                ..
-            } => {
-                // Dont use the arg provided by the WindowEvent as its not right on mac
-                let position =
-                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
-                state.write_silent().ui.window_position = Some((position.x, position.y));
-                let _ = state.write().save();
-            }
-            WryEvent::WindowEvent {
-                event: WindowEvent::Resized(_),
-                ..
-            } => {
-                let current_position =
-                    scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
-                let (pos_x, pos_y) = state
-                    .read()
-                    .ui
-                    .window_position
-                    .unwrap_or(current_position.into());
-                let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
-                if *first_resize.read() {
-                    if state.read().ui.metadata.full_screen {
-                        desktop.set_fullscreen(true);
-                    } else {
-                        desktop.set_inner_size(LogicalSize::new(width, height));
-                        desktop.set_maximized(state.read().ui.metadata.maximized);
-                    }
-                    desktop.set_outer_position(LogicalPosition::new(pos_x, pos_y));
-                    *first_resize.write_silent() = false;
-                }
-                let size = scaled_window_size(desktop.inner_size(), &desktop);
-                let metadata = state.read().ui.metadata.clone();
-                let new_metadata = WindowMeta {
-                    focused: desktop.is_focused(),
-                    maximized: desktop.is_maximized(),
-                    minimized: desktop.is_minimized(),
-                    full_screen: desktop.fullscreen().is_some(),
-                    minimal_view: size.width < 600,
-                };
-                let mut changed = false;
-                if metadata != new_metadata {
-                    state.write_silent().ui.sidebar_hidden = new_metadata.minimal_view;
-                    state.write_silent().ui.metadata = new_metadata;
-                    changed = true;
-                }
-                if size.width != width || size.height != height {
-                    state.write_silent().ui.window_size = Some((size.width, size.height));
-                    let _ = state.write_silent().save();
-                    changed = true;
-                }
-                if current_position.x != pos_x || current_position.y != pos_y {
-                    state.write_silent().ui.window_position =
-                        Some((current_position.x, current_position.y));
-                    changed = true;
-                }
-                if changed {
-                    let _ = state.write().save();
-                }
-            }
-            _ => {}
-        }
-    });
+    // TODO(Migration_0.5): Verify this function later
+    // use_wry_event_handler({
+    //     to_owned![state, desktop, first_resize];
+    //     move |event, _| match event {
+    //         WindowEvent {
+    //             event: WindowEvent::Focused(focused),
+    //             ..
+    //         } => {
+    //             //log::trace!("FOCUS CHANGED {:?}", *focused);
+    //             if state.read().ui.metadata.focused != *focused {
+    //                 state.write().ui.metadata.focused = *focused;
+
+    //                 if *focused {
+    //                     state.write().ui.notifications.clear_badge();
+    //                     let _ = state.write().save();
+    //                 }
+    //             }
+    //         }
+    //         WindowEvent {
+    //             event: WindowEvent::CloseRequested,
+    //             ..
+    //         } => state
+    //             .write()
+    //             .mutate(Action::ClearAllPopoutWindows(desktop.clone())),
+    //         WindowEvent {
+    //             event: WindowEvent::Moved(_),
+    //             ..
+    //         } => {
+    //             // Dont use the arg provided by the WindowEvent as its not right on mac
+    //             let position =
+    //                 scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+    //             state.write_silent().ui.window_position = Some((position.x, position.y));
+    //             let _ = state.write().save();
+    //         }
+    //         WindowEvent {
+    //             event: WindowEvent::Resized(_),
+    //             ..
+    //         } => {
+    //             let current_position =
+    //                 scaled_window_position(desktop.outer_position().unwrap_or_default(), &desktop);
+    //             let (pos_x, pos_y) = state
+    //                 .read()
+    //                 .ui
+    //                 .window_position
+    //                 .unwrap_or(current_position.into());
+    //             let (width, height) = state.read().ui.window_size.unwrap_or((950, 600));
+    //             if *first_resize.read() {
+    //                 if state.read().ui.metadata.full_screen {
+    //                     desktop.set_fullscreen(true);
+    //                 } else {
+    //                     desktop.set_inner_size(LogicalSize::new(width, height));
+    //                     desktop.set_maximized(state.read().ui.metadata.maximized);
+    //                 }
+    //                 desktop.set_outer_position(LogicalPosition::new(pos_x, pos_y));
+    //                 *first_resize.write_silent() = false;
+    //             }
+    //             let size = scaled_window_size(desktop.inner_size(), &desktop);
+    //             let metadata = state.read().ui.metadata.clone();
+    //             let new_metadata = WindowMeta {
+    //                 focused: desktop.is_focused(),
+    //                 maximized: desktop.is_maximized(),
+    //                 minimized: desktop.is_minimized(),
+    //                 full_screen: desktop.fullscreen().is_some(),
+    //                 minimal_view: size.width < 600,
+    //             };
+    //             let mut changed = false;
+    //             if metadata != new_metadata {
+    //                 state.write_silent().ui.sidebar_hidden = new_metadata.minimal_view;
+    //                 state.write_silent().ui.metadata = new_metadata;
+    //                 changed = true;
+    //             }
+    //             if size.width != width || size.height != height {
+    //                 state.write_silent().ui.window_size = Some((size.width, size.height));
+    //                 let _ = state.write_silent().save();
+    //                 changed = true;
+    //             }
+    //             if current_position.x != pos_x || current_position.y != pos_y {
+    //                 state.write_silent().ui.window_position =
+    //                     Some((current_position.x, current_position.y));
+    //                 changed = true;
+    //             }
+    //             if changed {
+    //                 let _ = state.write().save();
+    //             }
+    //         }
+    //         _ => {}
+    //     }
+    // });
 
     // update state in response to warp events
     use_resource(|| {
@@ -713,7 +716,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // periodically refresh message timestamps and friend's status messages
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state];
         async move {
             loop {
@@ -726,7 +729,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // check for updates
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state];
         async move {
             loop {
@@ -755,7 +758,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // control child windows
-    use_resource(|| {
+    use_resource(move || {
         to_owned![desktop, state];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
@@ -768,7 +771,7 @@ fn use_app_coroutines() -> Option<()> {
 
     // init state from warp
     // also init extensions
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state];
         async move {
             if state.read().initialized {
@@ -821,7 +824,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // initialize files
-    use_resource(|| {
+    use_resource(move || {
         to_owned![items_init, state];
         async move {
             if *items_init.read() {
@@ -852,7 +855,7 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // detect when new extensions are placed in the "extensions" folder, and load them.
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state];
         async move {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
@@ -908,8 +911,8 @@ fn use_app_coroutines() -> Option<()> {
 
 fn get_update_icon() -> Element {
     log::trace!("rendering get_update_icon");
-    let state = use_context::<Signal<State>>();
-    let download_state = use_context::<Signal<DownloadState>>();
+    let mut state = use_context::<Signal<State>>();
+    let mut download_state = use_context::<Signal<DownloadState>>();
     let desktop = use_window();
     let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>();
 
@@ -1149,7 +1152,7 @@ fn use_router_notification_listener() -> Option<()> {
     // this use_future replaces the notification_action_handler.
     let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state, navigator];
         async move {
             let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
@@ -1265,7 +1268,7 @@ fn AppNav(
 ) -> Element {
     use kit::components::nav::Route as UIRoute;
 
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let navigator = use_navigator();
     let tracker = use_context::<Signal<TransferTracker>>();
     state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id().unwrap().0);

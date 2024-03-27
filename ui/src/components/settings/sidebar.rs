@@ -232,12 +232,13 @@ pub fn Sidebar(props: Props) -> Element {
                 routes: routes.clone(),
                 active: active_route.to,
                 bubble: true,
-                onnavigate: |route| {
-                    if state.read().configuration.audiovideo.interface_sounds {
-                       sounds::Play(sounds::Sounds::Interaction);
-                    }
+                onnavigate: move |route| {
+                    // TODO(Migration_0.5): Look this
+                    // if state.read().configuration.audiovideo.interface_sounds {
+                    //    sounds::Play(sounds::Sounds::Interaction);
+                    // }
 
-                    emit(props, Page::from_str(route).unwrap());
+                    // emit(props, Page::from_str(route).unwrap());
                 }
             }
         }

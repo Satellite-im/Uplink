@@ -92,7 +92,7 @@ pub fn FriendsLayout() -> Element {
                 {get_topbar(route)},
                 AddFriend {},
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                {render_route(props, route())},
+                {render_route((), route())},
             }
         }
     )

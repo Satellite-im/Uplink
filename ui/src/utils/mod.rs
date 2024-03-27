@@ -137,6 +137,7 @@ pub fn build_user_from_identity(identity: &state::Identity) -> UserInfo {
     }
 }
 
+#[derive(Clone)]
 pub struct WindowDropHandler {
     cmd: WindowManagerCmd,
 }

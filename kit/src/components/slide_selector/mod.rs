@@ -1,7 +1,6 @@
 use common::icons::outline::Shape;
 use dioxus::prelude::*;
 
-
 use crate::elements::button::Button;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -10,6 +9,7 @@ pub enum ButtonsFormat {
     Arrows,
 }
 
+// TODO(Migration_0.5): See this T problem later
 #[derive(Props)]
 pub struct Props {
     // values: Vec<T>,

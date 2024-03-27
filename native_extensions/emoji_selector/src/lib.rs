@@ -145,9 +145,9 @@ enum Command {
 
 #[component(no_case_check)]
 fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let mouse_over_emoji_selector = use_signal(|| false);
-    let emoji_suggestions = use_signal(Vec::new);
+    let mut emoji_suggestions = use_signal(Vec::new);
 
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
@@ -187,7 +187,7 @@ fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Eleme
 
     rsx! (
         InvisibleCloser {
-            onclose: |_|{
+            onclose: move |_|{
                 state.write().mutate(Action::SetEmojiDestination(
                     Some(common::state::ui::EmojiDestination::Chatbar),
                 ));
@@ -197,10 +197,10 @@ fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Eleme
             }
         }
         div {
-            onmouseenter: |_| {
+            onmouseenter: move |_| {
                 *mouse_over_emoji_selector.write_silent() = true;
             },
-            onmouseleave: |_| {
+            onmouseleave: move |_| {
                 *mouse_over_emoji_selector.write_silent() = false;
                 let _ = eval(focus_script);
             },
@@ -250,12 +250,13 @@ fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Eleme
                 id: "scrolling",
                 padding_top: if !emoji_suggestions.is_empty() {"4px"} else {""},
                 if !emoji_suggestions.is_empty() {
-                    {rsx!({emoji_suggestions().iter().map(|(emoji, _)| {
+                    {
+                        rsx!({emoji_suggestions().iter().cloned().map(|(emoji, _)| {
                         rsx!(
                             div {
                                 aria_label: emoji.as_str(),
                                 class: "emoji",
-                                onclick: move |_| select_emoji_to_send(&state, emoji.to_string(), &ch),
+                                onclick: move |_| select_emoji_to_send(state, emoji.to_string(), &ch),
                                 {emoji.as_str()}
                             }
                         )
@@ -278,7 +279,7 @@ fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Eleme
                                         div {
                                             aria_label: emoji.as_str(),
                                             class: "emoji",
-                                            onclick: move |_| select_emoji_to_send(&state, emoji.to_string(), &ch),
+                                            onclick: move |_| select_emoji_to_send(state, emoji.to_string(), &ch),
                                             {emoji.as_str()}
                                         }
                                     )
@@ -297,7 +298,7 @@ fn render_selector(mouse_over_emoji_button: Signal<bool>, nav: Element) -> Eleme
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
 #[component(no_case_check)]
 fn render_1(_unused: bool) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let mouse_over_emoji_button = use_signal(|| false);
     let visible = state.read().ui.emoji_picker_visible;
     log::debug!("vis {}", visible);
@@ -331,14 +332,14 @@ fn render_1(_unused: bool) -> Element {
             visible.then(|| {
                 rsx!(
                     render_selector {
-                        mouse_over_emoji_button: mouse_over_emoji_button.clone(),
+                        mouse_over_emoji_button: mouse_over_emoji_button,
                         nav: rsx!(build_nav {})
                     },
                     div {
-                        onmouseenter: |_| {
+                        onmouseenter: move |_| {
                             *mouse_over_emoji_button.write_silent() = true;
                         },
-                        onmouseleave: |_| {
+                        onmouseleave: move |_| {
                             *mouse_over_emoji_button.write_silent() = false;
                         },
                         // Render standard (required) button to toggle.
@@ -376,7 +377,9 @@ impl Extension for EmojiSelector {
     }
 
     fn render(&self, runtime: std::rc::Rc<Runtime>) -> Element {
-        use_hook(move || RuntimeGuard::new(runtime.clone()));
+        // TODO(Migration_0.5): Verify this item later
+        // use_hook(move || RuntimeGuard::new(runtime.clone()));
+        let _guard = RuntimeGuard::new(runtime.clone());
         let styles = self.stylesheet();
         rsx!(
             style { "{styles}" },
@@ -387,7 +390,7 @@ impl Extension for EmojiSelector {
     }
 }
 
-fn select_emoji_to_send(state: &Signal<State>, emoji: String, ch: &Coroutine<Command>) {
+fn select_emoji_to_send(mut state: Signal<State>, emoji: String, ch: &Coroutine<Command>) {
     let destination = state
         .read()
         .ui
