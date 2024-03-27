@@ -61,7 +61,7 @@ pub fn DeveloperSettings() -> Element {
             id: "settings-developer",
             aria_label: "settings-developer",
             SettingSection {
-                aria_label: "experimental-features-section".into(),
+                aria_label: "experimental-features-section".to_string(),
                 section_label: get_local_text("settings-developer.experimental-features"),
                 section_description: get_local_text("settings-developer.experimental-features-description"),
                 Switch {
@@ -72,7 +72,7 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "developer-mode-section".into(),
+                aria_label: "developer-mode-section".to_string(),
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
@@ -87,12 +87,12 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "test-notification-section".into(),
+                aria_label: "test-notification-section".to_string(),
                 section_label: get_local_text("settings-developer.test-notification"),
                 section_description: get_local_text("settings-developer.test-notification-description"),
                 Button {
                     text: get_local_text("settings-developer.test-notification"),
-                    aria_label: "test-notification-button".into(),
+                    aria_label: "test-notification-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
@@ -110,12 +110,12 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "open-cache-section".into(),
+                aria_label: "open-cache-section".to_string(),
                 section_label: get_local_text("settings-developer.open-cache"),
                 section_description: get_local_text("settings-developer.open-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.open-cache-folder"),
-                    aria_label: "open-cache-folder-button".into(),
+                    aria_label: "open-cache-folder-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
@@ -124,12 +124,12 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "compress-download-cache-section".into(),
+                aria_label: "compress-download-cache-section".to_string(),
                 section_label: get_local_text("settings-developer.compress-download-cache"),
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.compress"),
-                    aria_label: "compress-button".into(),
+                    aria_label: "compress-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
@@ -140,12 +140,12 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "print-state-section".into(),
+                aria_label: "print-state-section".to_string(),
                 section_label: get_local_text("settings-developer.print-state"),
                 section_description: get_local_text("settings-developer.print-state-description"),
                 Button {
                     text: get_local_text("settings-developer.print-state"),
-                    aria_label: "print-state-button".into(),
+                    aria_label: "print-state-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentChartBar,
                     onpress: move |_| {
@@ -154,12 +154,12 @@ pub fn DeveloperSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "clear-cache-section".into(),
+                aria_label: "clear-cache-section".to_string(),
                 section_label: get_local_text("settings-developer.clear-cache"),
                 section_description: get_local_text("settings-developer.clear-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.clear"),
-                    aria_label: "clear-button".into(),
+                    aria_label: "clear-button".to_string(),
                     appearance: Appearance::Danger,
                     icon: Icon::Trash,
                     onpress: move |_| {
@@ -168,7 +168,7 @@ pub fn DeveloperSettings() -> Element {
                 }
             }
             SettingSection {
-                aria_label: "save-logs-section".into(),
+                aria_label: "save-logs-section".to_string(),
                 section_label: get_local_text("settings-developer.save-logs-to-file"),
                 section_description: get_local_text("settings-developer.save-logs-to-file-description"),
                 Switch {

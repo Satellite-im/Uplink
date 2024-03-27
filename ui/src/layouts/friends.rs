@@ -221,7 +221,7 @@ fn get_topbar(route: Signal<FriendRoute>) -> Element {
                 } else {
                     get_local_text("friends.blocked")
                 },
-                aria_label: "blocked-friends-button".into(),
+                aria_label: "blocked-friends-button".to_string(),
                 onpress: move |_| {
                     route.set(FriendRoute::Blocked);
                 }

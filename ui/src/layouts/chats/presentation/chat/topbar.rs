@@ -73,7 +73,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
         return rsx!(
             UserImageGroup {
                 loading: true,
-                aria_label: "user-image-group".into(),
+                aria_label: "user-image-group".to_string(),
                 participants: vec![]
             },
             div {
@@ -138,7 +138,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
         )}} else {{rsx! (
             UserImageGroup {
                 loading: false,
-                aria_label: "user-image-group".into(),
+                aria_label: "user-image-group".to_string(),
                 participants: build_participants(&all_participants),
             }
         )}}
@@ -151,7 +151,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                 if direct_message {{rsx!(
                     ContextItem {
                         icon: Icon::XMark,
-                        aria_label: "close-chat-context-option".into(),
+                        aria_label: "close-chat-context-option".to_string(),
                         text: "Close Chat".into(),
                         onpress: move |_| {
                             state.write().mutate(Action::RemoveFromSidebar(conv_id));
@@ -161,7 +161,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                     if show_rename {{rsx!(
                         ContextItem {
                             icon: Icon::PencilSquare,
-                            aria_label: "rename-group-context-option".into(),
+                            aria_label: "rename-group-context-option".to_string(),
                             text: "Rename".into(),
                             onpress: move |_| {
                                 props.show_rename_group.set(true);
@@ -171,7 +171,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                     if show_manage_members {{rsx!(
                         ContextItem {
                             icon: Icon::Users,
-                            aria_label: "manage-members-context-option".into(),
+                            aria_label: "manage-members-context-option".to_string(),
                             text: "Manage Members".into(),
                             onpress: move |_| {
                                 props.show_manage_members.set(Some(chat_data.read().active_chat.id()));
@@ -182,7 +182,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         ContextItem {
                             danger: true,
                             icon: Icon::Cog,
-                            aria_label: "group-settings-context-option".into(),
+                            aria_label: "group-settings-context-option".to_string(),
                             text: "Settings".into(),
                             onpress: move |_| {
                                 props.show_group_settings.set(true);
@@ -210,7 +210,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                         Input {
                             placeholder:  get_local_text("messages.group-name"),
                             default_text: conversation_title.clone(),
-                            aria_label: "groupname-input".into(),
+                            aria_label: "groupname-input".to_string(),
                             options: Options {
                                 with_clear_btn: true,
                                 ..get_input_options()
@@ -229,7 +229,7 @@ pub fn get_topbar_children(props: ChatProps) -> Element {
                             icon: Icon::XMark,
                             appearance: Appearance::Secondary,
                             onpress: move |_| props.show_rename_group.set(false),
-                            aria_label: "close-rename-group".into(),
+                            aria_label: "close-rename-group".to_string(),
                         }
                     })}
                 } else {{rsx!(

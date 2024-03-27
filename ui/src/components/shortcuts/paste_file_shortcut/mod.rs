@@ -4,10 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus::{
-    dioxus_core::Element,
-    prelude::{EventHandler, KeyCode},
-};
+use dioxus::{dioxus_core::Element, prelude::*};
 use dioxus_desktop::{tao::keyboard::ModifiersState, use_global_shortcut};
 use dioxus_hooks::{to_owned, use_resource, use_signal};
 use once_cell::sync::Lazy;
@@ -90,7 +87,7 @@ pub fn PasteFilesShortcut(props: ShortCutProps) -> Element {
         }
     });
 
-    use_global_shortcut(|| (key, modifiers), {
+    use_global_shortcut(move || (key, modifiers), {
         to_owned![command_pressed];
         move || {
             // HACK: Shorcut is pushing 2 times, it is an other hack to avoid paste more than one time

@@ -96,7 +96,7 @@ pub fn ExtensionSetting(props: ExtensionProps) -> Element {
                         "{props.title}"
                     },
                     Label {
-                        aria_label: "extension-setting-author".into(),
+                        aria_label: "extension-setting-author".to_string(),
                         text: props.author.clone(),
                     }
                 },

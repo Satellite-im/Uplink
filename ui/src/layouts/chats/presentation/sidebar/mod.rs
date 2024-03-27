@@ -60,7 +60,7 @@ pub struct SidebarProps {
 #[allow(non_snake_case)]
 pub fn Sidebar(props: SidebarProps) -> Element {
     log::trace!("rendering chats sidebar layout");
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new());
     let search_results_friends_identities = use_signal(|| Vec::<Identity>::new());
     let search_results_chats = use_signal(|| Vec::<Chat>::new());
@@ -340,7 +340,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                             items: rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,
-                                    aria_label: "chats-clear-unreads".into(),
+                                    aria_label: "chats-clear-unreads".to_string(),
                                     text: get_local_text("uplink.clear-unreads"),
                                     should_render: has_unreads,
                                     onpress: move |_| {
@@ -349,7 +349,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                 },
                                 ContextItem {
                                     icon: Icon::EyeSlash,
-                                    aria_label: "chats-hide-chat".into(),
+                                    aria_label: "chats-hide-chat".to_string(),
                                     text: get_local_text("uplink.hide-chat"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
@@ -363,7 +363,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                             text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")}
                                             else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")}
                                             else {get_local_text("uplink.delete-conversation")},
-                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()}
+                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".to_string()}
                                             else if is_group_conv && !is_creator {"chats-leave-group".into()}
                                             else {"chats-delete-conversation".into()},
                                             onpress: move |_| {
@@ -383,14 +383,14 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                                     if chat.conversation_type == ConversationType::Direct {{rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status:  user.identity_status().into(),
+                                            status:  Status::from(user.identity_status()),
                                             image: user.profile_picture(),
                                             typing: users_typing,
                                         }
                                     )}} else {{rsx! (
                                         UserImageGroup {
                                             participants: build_participants(&participants),
-                                            aria_label: "user-image-group".into(),
+                                            aria_label: "user-image-group".to_string(),
                                             typing: users_typing,
                                         }
                                     )}}
@@ -414,7 +414,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
-                            aria_label: "Loading".into(),
+                            aria_label: "Loading".to_string(),
                             subtext: "loading".into(),
                             user_image: rsx!(
                                 UserImage {
@@ -427,7 +427,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
-                            aria_label: "Loading".into(),
+                            aria_label: "Loading".to_string(),
                             subtext: "loading".into(),
                             user_image: rsx!(
                                 UserImage {
@@ -440,7 +440,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
                         User {
                             loading: true,
                             username: "Loading".into(),
-                            aria_label: "Loading".into(),
+                            aria_label: "Loading".to_string(),
                             subtext: "loading".into(),
                             user_image: rsx!(
                                 UserImage {

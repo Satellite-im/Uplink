@@ -71,7 +71,7 @@ pub fn GroupUsers(props: Props) -> Element {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
-                    aria_label: "friend-search-input".into(),
+                    aria_label: "friend-search-input".to_string(),
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,

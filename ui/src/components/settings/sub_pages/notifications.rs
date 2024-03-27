@@ -21,7 +21,7 @@ pub fn NotificationSettings() -> Element {
                 section_label: get_local_text("settings-notifications.grant-permissions"),
                 section_description: get_local_text("settings-notifications.grant-permissions-description"),
                 Button {
-                    aria_label: "grant-permissions-button".into(),
+                    aria_label: "grant-permissions-button".to_string(),
                     text: get_local_text("settings-notifications.grant-permissions"),
                     icon: Icon::Shield,
                     onpress: move |_| {
@@ -30,7 +30,7 @@ pub fn NotificationSettings() -> Element {
                 }
             },*/
             SettingSection {
-                aria_label: "enabled-notifications-section".into(),
+                aria_label: "enabled-notifications-section".to_string(),
                 section_label: get_local_text("settings-notifications.enabled"),
                 section_description: get_local_text("settings-notifications.enabled-description"),
                 Switch {
@@ -46,7 +46,7 @@ pub fn NotificationSettings() -> Element {
             div {
                 class: format_args!("{}", if state.read().configuration.notifications.enabled { "enabled" } else { "disabled" }),
                 SettingSection {
-                    aria_label: "friends-notifications-section".into(),
+                    aria_label: "friends-notifications-section".to_string(),
                     section_label: get_local_text("friends"),
                     section_description: get_local_text("settings-notifications.friends-description"),
                     Switch {
@@ -61,7 +61,7 @@ pub fn NotificationSettings() -> Element {
                     }
                 },
                 SettingSection {
-                    aria_label: "messages-notifications-section".into(),
+                    aria_label: "messages-notifications-section".to_string(),
                     section_label: get_local_text("messages"),
                     section_description: get_local_text("settings-notifications.messages-description"),
                     Switch {
@@ -76,7 +76,7 @@ pub fn NotificationSettings() -> Element {
                     }
                 },
                 SettingSection {
-                    aria_label: "settings-notifications-section".into(),
+                    aria_label: "settings-notifications-section".to_string(),
                     section_label: get_local_text("settings"),
                     section_description: get_local_text("settings-notifications.settings-description"),
                     Switch {

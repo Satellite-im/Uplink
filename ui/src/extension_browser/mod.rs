@@ -22,20 +22,20 @@ pub fn Settings() -> Element {
         div {
             class: "extensions-settings",
             SettingSection {
-                aria_label: "open-extensions-section".into(),
+                aria_label: "open-extensions-section".to_string(),
                 section_label: get_local_text("settings-extensions.open-extensions-folder"),
                 section_description: get_local_text("settings-extensions.open-folder-description"),
                 Button {
                     icon: Icon::FolderOpen,
                     text: get_local_text("settings-extensions.open-extensions-folder"),
-                    aria_label: "open-extensions-folder-button".into(),
+                    aria_label: "open-extensions-folder-button".to_string(),
                     onpress: move |_| {
                         let _ = opener::open(&STATIC_ARGS.extensions_path);
                     }
                 },
             },
             SettingSection {
-                aria_label: "auto-enable-section".into(),
+                aria_label: "auto-enable-section".to_string(),
                 section_label: get_local_text("settings-extensions.auto-enable"),
                 section_description: get_local_text("settings-extensions.auto-enable-description"),
                 Switch {
@@ -67,7 +67,7 @@ pub fn Explore() -> Element {
                 placeholder: "Extension name or description.".into(),
                 // TODO: Pending implementation
                 disabled: true,
-                aria_label: "extensions-search-input".into(),
+                aria_label: "extensions-search-input".to_string(),
                 icon: Icon::MagnifyingGlass,
                 options: Options {
                     with_label: String::from("Search Extensions").into(),

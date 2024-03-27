@@ -107,11 +107,11 @@ pub fn CropCircleImageModal(props: Props) -> Element {
                                 class: "crop-image-topbar-left-title",
                                 Label {
                                     text: get_local_text("settings.please-select-area-you-want-to-crop"),
-                                    aria_label: "crop-image-topbar-label".into(),
+                                    aria_label: "crop-image-topbar-label".to_string(),
                                 }
                             },
                             Button {
-                                aria_label: "crop-image-cancel-button".into(),
+                                aria_label: "crop-image-cancel-button".to_string(),
                                 appearance: Appearance::DangerAlternative,
                                 icon: Shape::XMark,
                                 onpress: move |_| {
@@ -123,7 +123,7 @@ pub fn CropCircleImageModal(props: Props) -> Element {
                                 margin_right: "16px",
                             }
                             Button {
-                                aria_label: "crop-image-confirm-button".into(),
+                                aria_label: "crop-image-confirm-button".to_string(),
                                 appearance: Appearance::Success,
                                 icon: Shape::Check,
                                 onpress: move |_| {
@@ -226,7 +226,7 @@ pub fn CropCircleImageModal(props: Props) -> Element {
                     div {
                         class: "range-background",
                         Range {
-                            aria_label: "range-crop-image".into(),
+                            aria_label: "range-crop-image".to_string(),
                             initial_value: 1.0,
                             min: 1.0,
                             max: 5.0,

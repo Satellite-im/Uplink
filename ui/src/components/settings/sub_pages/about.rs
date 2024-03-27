@@ -110,7 +110,7 @@ pub fn AboutPage() -> Element {
                     key: "{btn_start}",
                     text: get_local_text("uplink.check-for-updates"),
                     loading: update_button_loading(),
-                    aria_label: "check-for-updates-button".into(),
+                    aria_label: "check-for-updates-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowPath,
                     onpress: |_| {
@@ -128,7 +128,7 @@ pub fn AboutPage() -> Element {
                     key: "{btn_idle}",
                     text: get_local_text("uplink.download-update"),
                     loading: update_button_loading(),
-                    aria_label: "check-for-updates-button".into(),
+                    aria_label: "check-for-updates-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
                     onpress: move |_| {
@@ -152,7 +152,7 @@ pub fn AboutPage() -> Element {
                     key: "{pending_key}",
                     text: format!("{}%", download_state.read().progress as u32),
                     loading: true,
-                    aria_label: "check-for-updates-button".into(),
+                    aria_label: "check-for-updates-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
                 })
@@ -163,7 +163,7 @@ pub fn AboutPage() -> Element {
                     key: "{btn_finished}",
                     text: get_local_text("uplink.update-menu-install"),
                     loading: update_button_loading(),
-                    aria_label: "check-for-updates-button".into(),
+                    aria_label: "check-for-updates-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
                     onpress: move |_| {
@@ -199,7 +199,7 @@ pub fn AboutPage() -> Element {
         div {
             id: "settings-about",
             SettingSection {
-                aria_label: "about-info-section".into(),
+                aria_label: "about-info-section".to_string(),
                 section_label: get_local_text("settings-about.info"),
                 section_description: app_name.into(),
             },
@@ -216,7 +216,7 @@ pub fn AboutPage() -> Element {
                     }
                 },
                 SettingSection {
-                    aria_label: "about-version-section".into(),
+                    aria_label: "about-version-section".to_string(),
                     section_label:  get_local_text("settings-about.version"),
                     section_description: version.into(),
                     div {
@@ -225,12 +225,12 @@ pub fn AboutPage() -> Element {
                 },
             }
             SettingSection {
-                aria_label: "open-website-section".into(),
+                aria_label: "open-website-section".to_string(),
                 section_label: get_local_text("settings-about.open-website"),
                 section_description: get_local_text("settings-about.open-website-description"),
                 Button {
                     text: get_local_text("settings-about.open-website"),
-                    aria_label: "open-website-button".into(),
+                    aria_label: "open-website-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::GlobeAlt,
                     onpress: |_| {
@@ -239,12 +239,12 @@ pub fn AboutPage() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "open-codebase-section".into(),
+                aria_label: "open-codebase-section".to_string(),
                 section_label: get_local_text("settings-about.open-codebase"),
                 section_description: get_local_text("settings-about.open-codebase-description"),
                 Button {
                     text: get_local_text("settings-about.open-codebase"),
-                    aria_label: "open-codebase-button".into(),
+                    aria_label: "open-codebase-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
@@ -253,7 +253,7 @@ pub fn AboutPage() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "made-in-section".into(),
+                aria_label: "made-in-section".to_string(),
                 section_label: get_local_text("settings-about.made-in"),
                 section_description: get_local_text("settings-about.team"),
                 div {

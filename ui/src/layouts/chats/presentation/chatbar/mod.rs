@@ -62,7 +62,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
     let scroll_btn = use_context::<Signal<ScrollBtn>>();
-    state.write_silent().scope_ids.chatbar = Some(current_scope_id().0);
+    state.write_silent().scope_ids.chatbar = Some(current_scope_id().unwrap().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
 
@@ -108,7 +108,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                 .map(|f| f.files_attached_to_send)
                 .unwrap_or_default()
                 .is_empty();
-        if !can_send.get().eq(&valid) {
+        if !can_send().eq(&valid) {
             can_send.set(valid);
         }
     };
@@ -184,7 +184,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
             if !current_chat.read().is_nil() {
-                local_typing_ch1.send(TypingIndicator::Refresh(current_chat.read()));
+                local_typing_ch1.send(TypingIndicator::Refresh(current_chat()));
             }
         }
     });
@@ -281,9 +281,9 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         .and_then(|d| d.draft.clone())
         .unwrap_or_default();
 
-    if value_chatbar.len() >= MAX_CHARS_LIMIT && !error.0 {
+    if value_chatbar.len() >= MAX_CHARS_LIMIT && !error().0 {
         error.set((true, active_chat_id));
-    } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
+    } else if value_chatbar.len() < MAX_CHARS_LIMIT && error().0 {
         error.set((false, active_chat_id));
     }
 
@@ -296,7 +296,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
             .unwrap_or_default();
         if value_chatbar.len() >= MAX_CHARS_LIMIT {
             error.set((true, active_chat_id));
-        } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
+        } else if value_chatbar.len() < MAX_CHARS_LIMIT && error().0 {
             error.set((false, active_chat_id));
         }
     };
@@ -342,7 +342,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
             extensions: rsx!(for node in ext_renders { {rsx!({node})} }),
-            suggestions: suggestions,
+            suggestions: suggestions(),
             oncursor_update: move |(mut v, p): (String, i64)| {
                 if !active_chat_id.is_nil() {
                     let sub: String = v.chars().take(p as usize).collect();
@@ -411,7 +411,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     state
                         .write()
                         .mutate(Action::SetChatDraft(active_chat_id, draft));
-                    if let SuggestionType::Tag(_, _) = suggestions.get() {
+                    if let SuggestionType::Tag(_, _) = suggestions() {
                         let amount = replacement.chars().count() - 9;
                         let name: String = replacement.chars().take(amount).collect(); // remove short did
                         if let Some(participant) = chat_participants_2.iter().find(|id|id.username().eq(&name)) {
@@ -426,8 +426,8 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     Button {
                         icon: icons::outline::Shape::ChevronDoubleRight,
                         disabled: is_loading || disabled,
-                        appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
-                        aria_label: "send-message-button".into(),
+                        appearance: if can_send() { Appearance::Primary } else { Appearance::Secondary },
+                        aria_label: "send-message-button".to_string(),
                         onpress: move |_| submit_fn2(),
                         tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Bottom,
@@ -476,7 +476,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     Button {
                         icon: icons::outline::Shape::Plus,
                         disabled: is_loading || disabled,
-                        aria_label: "upload-button".into(),
+                        aria_label: "upload-button".to_string(),
                         appearance: Appearance::Primary,
                         onpress: move |e: Event<MouseData>| {
                             let mouse_data = e;
@@ -517,7 +517,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                     }
                 ),
         }
-        {error.0.then(|| rsx!(
+        {error().0.then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",

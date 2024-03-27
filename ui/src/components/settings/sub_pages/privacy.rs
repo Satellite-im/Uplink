@@ -19,7 +19,7 @@ pub fn PrivacySettings() -> Element {
                 section_description: get_local_text("settings-privacy.backup-phrase-description"),
                 Button {
                     text: get_local_text("settings-privacy.backup-phrase"),
-                    aria_label: "backup-phrase-button".into(),
+                    aria_label: "backup-phrase-button".to_string(),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentText,
                 }

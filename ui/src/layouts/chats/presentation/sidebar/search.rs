@@ -3,6 +3,7 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::{identity_search_result, Chat, Identity, State};
 use dioxus::prelude::*;
+use kit::components::indicator::{Platform, Status};
 use kit::components::{user_image::UserImage, user_image_group::UserImageGroup};
 
 use warp::crypto::DID;
@@ -83,8 +84,8 @@ pub fn search_friends(props: SearchProps) -> Element {
                             }
                         },
                         UserImage {
-                            platform: identity.platform(),
-                            status: identity.identity_status(),
+                            platform: Platform::from(identity.platform()),
+                            status: Status::from(identity.identity_status()),
                             image: identity.profile_picture()
                         },
                         div {
@@ -168,7 +169,7 @@ pub fn search_friends(props: SearchProps) -> Element {
                                     {rsx!(
                                         UserImageGroup {
                                             loading: false,
-                                            aria_label: "user-image-group".into(),
+                                            aria_label: "user-image-group".to_string(),
                                             participants: build_participants(&participants),
                                         }
                                     )}
@@ -250,8 +251,8 @@ pub fn search_friends(props: SearchProps) -> Element {
                                     }
                                 },
                                 UserImage {
-                                    platform: identity.platform().into(),
-                                    status: identity.identity_status().into(),
+                                    platform: Platform::from(identity.platform()),
+                                    status: Status::from(identity.identity_status()),
                                     image: identity.profile_picture()
                                 },
                                 div {

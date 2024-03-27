@@ -40,7 +40,7 @@ pub fn EmojiGroup(props: Props) -> Element {
             class: "emoji-group",
             for emoji in sorted_list {
                 Button {
-                    aria_label: "frequent-emoji".into(),
+                    aria_label: "frequent-emoji".to_string(),
                     key: "{emoji.0}",
                     text: emoji.0.clone(),
                     appearance: Appearance::Secondary,
@@ -50,7 +50,7 @@ pub fn EmojiGroup(props: Props) -> Element {
                 }
             }
             Button {
-                aria_label: "open-emoji-picker".into(),
+                aria_label: "open-emoji-picker".to_string(),
                 key: "{open-picker}",
                 icon: Icon::Plus,
                 appearance: Appearance::Secondary,

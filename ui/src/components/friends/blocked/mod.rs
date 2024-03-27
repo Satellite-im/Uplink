@@ -64,7 +64,7 @@ pub fn BlockedUsers() -> Element {
         aria_label: "Blocked List",
         Label {
             text: get_local_text("friends.blocked"),
-            aria_label: "blocked-list-label".into(),
+            aria_label: "blocked-list-label".to_string(),
         },
         {block_list.into_iter().map(|blocked_user| {
             let did = blocked_user.did_key();
@@ -83,7 +83,7 @@ pub fn BlockedUsers() -> Element {
                         ContextItem {
                             danger: true,
                             icon: Icon::XMark,
-                            aria_label: "friends-unblock".into(),
+                            aria_label: "friends-unblock".to_string(),
                             text: get_local_text("friends.unblock"),
                             onpress: move |_| {
                                 if STATIC_ARGS.use_mock {

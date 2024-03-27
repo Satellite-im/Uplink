@@ -67,7 +67,7 @@ pub fn DebugLogger() -> Element {
                     aria_label: "debug-logger-nav",
                     Button {
                         text: "Logs".into(),
-                        aria_label: "logs-button".into(),
+                        aria_label: "logs-button".to_string(),
                         icon: Icon::CommandLine,
                         appearance: if *active_tab.get() == Tab::Logs { Appearance::Primary } else { Appearance::Secondary },
                         onpress: |_| {
@@ -79,11 +79,11 @@ pub fn DebugLogger() -> Element {
                             aria_label: "filter-section",
                             class: "section",
                             Label {
-                                aria_label: "filter-label".into(),
+                                aria_label: "filter-label".to_string(),
                                 text: "Filter:".into(),
                             },
                             Button {
-                                aria_label: "debug-level-button".into(),
+                                aria_label: "debug-level-button".to_string(),
                                 icon: Icon::BugAnt,
                                 appearance: Appearance::Secondary,
                                 onpress: |_| {
@@ -97,7 +97,7 @@ pub fn DebugLogger() -> Element {
                                 ),
                             },
                             Button {
-                                aria_label: "info-level-button".into(),
+                                aria_label: "info-level-button".to_string(),
                                 icon: Icon::InformationCircle,
                                 appearance: if *filter_level.get() == Level::Info { Appearance::Info } else { Appearance::Secondary },
                                 onpress: |_| {
@@ -111,7 +111,7 @@ pub fn DebugLogger() -> Element {
                                 ),
                             },
                             Button {
-                                aria_label: "error-level-button".into(),
+                                aria_label: "error-level-button".to_string(),
                                 icon: Icon::ExclamationTriangle,
                                 appearance: if *filter_level.get() == Level::Error { Appearance::Danger } else { Appearance::Secondary },
                                 onpress: |_| {
@@ -125,7 +125,7 @@ pub fn DebugLogger() -> Element {
                                 ),
                             },
                             Button {
-                                aria_label: "trace-level-button".into(),
+                                aria_label: "trace-level-button".to_string(),
                                 icon: Icon::Eye,
                                 appearance: Appearance::Secondary,
                                 onpress: |_| {
@@ -141,7 +141,7 @@ pub fn DebugLogger() -> Element {
                         }
                     })},
                     Button {
-                        aria_label: "state-button".into(),
+                        aria_label: "state-button".to_string(),
                         text: "State".into(),
                         icon: Icon::Square3Stack3d,
                         appearance: if *active_tab.get() == Tab::State { Appearance::Primary } else { Appearance::Secondary },
@@ -150,7 +150,7 @@ pub fn DebugLogger() -> Element {
                         }
                     },
                     Button {
-                        aria_label: "web-inspector-button".into(),
+                        aria_label: "web-inspector-button".to_string(),
                         text: "Web Inspector".into(),
                         icon: Icon::ArrowTopRightOnSquare,
                         appearance: Appearance::Secondary,

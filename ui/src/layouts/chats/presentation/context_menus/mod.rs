@@ -34,7 +34,7 @@ pub fn FileLocation(props: FileLocationProps) -> Element {
         items: rsx!(
             ContextItem {
                 icon: Icon::Plus,
-                aria_label: "attach-files-from-local-disk-into-chat".into(),
+                aria_label: "attach-files-from-local-disk-into-chat".to_string(),
                 text: get_local_text("files.attach-files-from-local-disk"),
                 onpress: move |_| {
                     props.on_press_local_disk.call(());
@@ -42,7 +42,7 @@ pub fn FileLocation(props: FileLocationProps) -> Element {
             },
             ContextItem {
                 icon: Icon::FolderOpen,
-                aria_label: "attach-files-from-storage-into-chat".into(),
+                aria_label: "attach-files-from-storage-into-chat".to_string(),
                 disabled: are_files_been_uploaded,
                 text: get_local_text("files.attach-files-from-storage"),
                 onpress: move |_| {

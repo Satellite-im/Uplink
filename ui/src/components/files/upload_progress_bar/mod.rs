@@ -151,7 +151,7 @@ pub fn UploadProgressBar<'a>(props: Props) -> Element {
                     div {
                         class: "cancel-button",
                         Button {
-                            aria_label: "cancel-upload".into(),
+                            aria_label: "cancel-upload".to_string(),
                             disabled: *props.disable_cancel_upload_button.read(),
                             appearance: Appearance::Primary,
                             onpress: move |_| {

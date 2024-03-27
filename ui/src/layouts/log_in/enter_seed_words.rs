@@ -58,7 +58,6 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
 
     use_effect(|| {
         move |_| {
-            to_owned![input];
             async move {
                 let eval_result = eval(include_str!("./enter_seed_handler.js"));
                 loop {
@@ -79,7 +78,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                         }
                     }
                 }
-            }
+            }()
         }
     });
     // todo: show toasts to inform user of errors.
@@ -134,7 +133,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
             id: "enter-seed-words-layout",
             aria_label: "enter-seed-words-layout",
             Label {
-                aria_label: "enter-seed-words".into(),
+                aria_label: "enter-seed-words".to_string(),
                 text: get_local_text("enter-seed-words")
             },
             div {
@@ -246,14 +245,14 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
                 class: "button-container",
                 // todo: add 12 separate input boxes per figma
                 Button {
-                    aria_label: "back-button".into(),
+                    aria_label: "back-button".to_string(),
                     text: get_local_text("uplink.go-back"),
                     icon: icons::outline::Shape::ChevronLeft,
                     onpress: move |_| page.set(AuthPages::CreateOrRecover),
                     appearance: Appearance::Secondary
                 },
                 Button {
-                    aria_label: "recover-account-button".into(),
+                    aria_label: "recover-account-button".to_string(),
                     text: get_local_text("enter-seed-words.submit"),
                     disabled: loading(),
                     onpress: move |_| {

@@ -13,7 +13,7 @@ mod effects;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Status,
+        indicator::{Platform, Status},
         message::{Message, Order, ReactionAdapter},
         message_group::MessageGroup,
         message_reply::MessageReply,
@@ -368,7 +368,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
 
         if props.pending {
             return rsx!(render_message {
-                message: grouped_message,
+                message: grouped_message.clone(),
                 is_remote: props.is_remote,
                 message_key: message_key,
                 edit_msg: edit_msg.clone(),
@@ -390,7 +390,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
             }),
             items: rsx!(
                 ContextItem {
-                    text: "Emoji Group".into(),
+                    text: "Emoji Group".to_string(),
                     EmojiGroup {
                         onselect: move |emoji: String| {
                             log::trace!("reacting with emoji: {}", emoji);
@@ -401,7 +401,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::Pin,
-                    aria_label: "messages-pin".into(),
+                    aria_label: "messages-pin".to_string(),
                     text: if message.inner.pinned() {get_local_text("messages.unpin")} else {get_local_text("messages.pin")},
                     onpress: move |_| {
                         log::trace!("pinning message: {}", message.inner.id());
@@ -419,7 +419,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
-                    aria_label: "messages-reply".into(),
+                    aria_label: "messages-reply".to_string(),
                     text: get_local_text("messages.reply"),
                     onpress: move |_| {
                         state
@@ -429,7 +429,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::FaceSmile,
-                    aria_label: "messages-react".into(),
+                    aria_label: "messages-react".to_string(),
                     text: get_local_text("messages.react"),
                     disabled: !has_extension,
                     tooltip:  if has_extension {
@@ -456,7 +456,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::ClipboardDocument,
-                    aria_label: "messages-copy".into(),
+                    aria_label: "messages-copy".to_string(),
                     text: get_local_text("uplink.copy-text"),
                     onpress: move |_| {
                         let text = message.inner.lines().join("\n");
@@ -474,7 +474,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::Pencil,
-                    aria_label: "messages-edit".into(),
+                    aria_label: "messages-edit".to_string(),
                     text: get_local_text("messages.edit"),
                     should_render: !props.is_remote
                         && edit_msg().map(|id| id != msg_uuid).unwrap_or(true),
@@ -485,7 +485,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 },
                 ContextItem {
                     icon: Icon::Pencil,
-                    aria_label: "messages-cancel-edit".into(),
+                    aria_label: "messages-cancel-edit".to_string(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !props.is_remote
                         && edit_msg().map(|id| id == msg_uuid).unwrap_or(false),
@@ -497,7 +497,7 @@ fn wrap_messages_in_context_menu(props: MessagesProps) -> Element {
                 ContextItem {
                     icon: Icon::Trash,
                     danger: true,
-                    aria_label: "messages-delete".into(),
+                    aria_label: "messages-delete".to_string(),
                     text: get_local_text("uplink.delete"),
                     should_render: sender_is_self,
                     onpress: move |_| {
@@ -626,8 +626,8 @@ fn render_message(props: MessageProps) -> Element {
                     chat: chat_data.read().active_chat.id(),
                     user_image: rsx!(UserImage {
                         loading: false,
-                        platform: reply_user.platform().into(),
-                        status: reply_user.identity_status().into(),
+                        platform: Platform::from(reply_user.platform()),
+                        status: Status::from(reply_user.identity_status()),
                         image: reply_user.profile_picture(),
                     })
                 }
@@ -652,7 +652,7 @@ fn render_message(props: MessageProps) -> Element {
                 },
                 pending: props.pending,
                 pinned: message.inner.pinned(),
-                attachments_pending_uploads: pending_uploads,
+                attachments_pending_uploads: pending_uploads.cloned(),
                 parse_markdown: render_markdown,
                 transform_ascii_emojis: should_transform_ascii_emojis,
                 on_download: move |(file, temp_dir): (warp::constellation::file::File, Option<PathBuf>)| {
@@ -691,7 +691,7 @@ pub struct PendingMessagesListenerProps {
 //The component that listens for upload events
 pub fn render_pending_messages_listener(props: PendingMessagesListenerProps) -> Element {
     let state = use_context::<Signal<State>>();
-    state.write_silent().scope_ids.pending_message_component = Some(current_scope_id());
+    state.write_silent().scope_ids.pending_message_component = Some(current_scope_id().unwrap().0);
     let chat = match state.read().get_active_chat() {
         Some(c) => c,
         None => return rsx!({ () }),

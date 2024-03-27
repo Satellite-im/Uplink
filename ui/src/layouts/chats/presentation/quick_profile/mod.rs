@@ -375,7 +375,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                                     text: get_local_text("quickprofile.volume")
                                 },
                                 Range {
-                                    aria_label: "range-quick-profile-speaker".into(),
+                                    aria_label: "range-quick-profile-speaker".to_string(),
                                     initial_value: volume,
                                     min: USER_VOL_MIN,
                                     max: USER_VOL_MAX,
@@ -402,7 +402,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                                 {rsx!(
                                     ContextItem {
                                     icon: Icon::ChatBubbleBottomCenterText,
-                                    aria_label: "quick-profile-message".into(),
+                                    aria_label: "quick-profile-message".to_string(),
                                     text: get_local_text("quickprofile.message"),
                                     onpress: move |_| {
                                         ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
@@ -421,7 +421,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                         rsx!(
                             ContextItem {
                                 icon: Icon::Plus,
-                                aria_label: "quick-profile-friend-request".into(),
+                                aria_label: "quick-profile-friend-request".to_string(),
                                 text: if disabled {get_local_text("quickprofile.pending-friend-request")} else {get_local_text("quickprofile.friend-request")},
                                 disabled: disabled,
                                 onpress: move |_| {
@@ -435,7 +435,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                             danger: false,
                             icon: Icon::Link,
                             text: get_local_text("friends.share"),
-                            aria_label: "friends-share".into(),
+                            aria_label: "friends-share".to_string(),
                             onpress: move |_| {
                                 share_did.set(Some(did_cloned_2.clone()));
                             }
@@ -446,7 +446,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                             danger: true,
                             icon: Icon::UserMinus,
                             text: get_local_text("quickprofile.friend-remove"),
-                            aria_label: "quick-profile-friend-remove".into(),
+                            aria_label: "quick-profile-friend-remove".to_string(),
                             onpress: move |_| {
                                 ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
                                 ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
@@ -456,7 +456,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
                     ContextItem {
                         danger: true,
                         icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
-                        aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
+                        aria_label: if blocked {"quick-profile-unblock".to_string()} else {"quick-profile-block".to_string()},
                         text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
                         onpress: move |_| {
                             if blocked {

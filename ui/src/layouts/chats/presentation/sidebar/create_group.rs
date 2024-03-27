@@ -12,7 +12,10 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::user_image::UserImage,
+    components::{
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
     elements::{
         button::Button,
         checkbox::Checkbox,
@@ -112,14 +115,14 @@ pub fn CreateGroup(props: Props) -> Element {
                 div {
                     align_items: "start",
                     Label {
-                        aria_label: "group-name-label".into(),
+                        aria_label: "group-name-label".to_string(),
                         text: get_local_text("messages.group-name"),
                     },
                 }
                 Input {
                         placeholder:  get_local_text("messages.group-name"),
                         default_text: group_name.read().clone().unwrap_or_default(),
-                        aria_label: "groupname-input".into(),
+                        aria_label: "groupname-input".to_string(),
                         focus_just_on_render: true,
                         options: Options {
                             with_clear_btn: true,
@@ -137,14 +140,14 @@ pub fn CreateGroup(props: Props) -> Element {
             div {
                 class: "search-input",
                 Label {
-                    aria_label: "users-label".into(),
-                    text: "Users".into(),
+                    aria_label: "users-label".to_string(),
+                    text: "Users".to_string(),
                 },
                 Input {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
-                    aria_label: "friend-search-input".into(),
+                    aria_label: "friend-search-input".to_string(),
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,
@@ -164,7 +167,7 @@ pub fn CreateGroup(props: Props) -> Element {
             },
             Button {
                 text: get_local_text("messages.create-group-chat"),
-                aria_label: "create-dm-button".into(),
+                aria_label: "create-dm-button".to_string(),
                 appearance: Appearance::Primary,
                 onpress: move |e| {
                     log::info!("create dm button");
@@ -237,7 +240,7 @@ pub struct FriendProps {
     selected_friends: Signal<HashSet<DID>>,
 }
 fn render_friend(props: FriendProps) -> Element {
-    let is_checked = use_signal(|| false);
+    let mut is_checked = use_signal(|| false);
     if !*is_checked.read()
         && props
             .selected_friends
@@ -251,13 +254,14 @@ fn render_friend(props: FriendProps) -> Element {
         let friend_did = props.friend.did_key();
         let new_value = !is_checked();
         is_checked.set(new_value);
-        let mut friends = props.selected_friends.read();
+        let mut friends = props.selected_friends.read().clone();
         if new_value {
             friends.insert(friend_did);
         } else {
             friends.remove(&friend_did);
         }
-        props.selected_friends.set(friends);
+        let friends_clone = friends.clone();
+        props.selected_friends.set(friends_clone);
     };
 
     rsx!(
@@ -265,8 +269,8 @@ fn render_friend(props: FriendProps) -> Element {
             class: "friend-container",
             aria_label: "Friend Container",
             UserImage {
-                platform: props.friend.platform().into(),
-                status: props.friend.identity_status().into(),
+                platform: Platform::from(props.friend.platform()),
+                status: Status::from(props.friend.identity_status()),
                 image: props.friend.profile_picture(),
                 on_press: move |_| {
                     update_fn();
@@ -285,8 +289,8 @@ fn render_friend(props: FriendProps) -> Element {
             },
             Checkbox {
                 disabled: false,
-                width: "1em".into(),
-                height: "1em".into(),
+                width: "1em".to_string(),
+                height: "1em".to_string(),
                 is_checked: is_checked(),
                 on_click: move |_| {
                     update_fn();

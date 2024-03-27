@@ -188,7 +188,7 @@ pub fn AddFriend() -> Element {
             class: "add-friend",
             Label {
                 text: get_local_text("friends.add"),
-                aria_label: "add-friend-label".into(),
+                aria_label: "add-friend-label".to_string(),
             },
             div {
                 class: "body",
@@ -240,7 +240,7 @@ pub fn AddFriend() -> Element {
                     items: rsx!(
                         ContextItem {
                             icon: Icon::ClipboardDocument,
-                            aria_label: "friend-add-input-copy".into(),
+                            aria_label: "friend-add-input-copy".to_string(),
                             text: get_local_text("uplink.copy-text"),
                             onpress: move |_| {
                                 let text = friend_input.get().to_string();
@@ -258,7 +258,7 @@ pub fn AddFriend() -> Element {
                         },
                         ContextItem {
                             icon: Icon::ClipboardDocument,
-                            aria_label: "friend-add-input-paste".into(),
+                            aria_label: "friend-add-input-paste".to_string(),
                             text: get_local_text("uplink.paste"),
                             onpress: move |_| {
                                 match Clipboard::new() {
@@ -302,7 +302,7 @@ pub fn AddFriend() -> Element {
                             ContextItem {
                                 icon: Icon::UserCircle,
                                 text: get_local_text("settings-profile.copy-id"),
-                                aria_label: "copy-id-context".into(),
+                                aria_label: "copy-id-context".to_string(),
                                 onpress: move |_| {
                                     match Clipboard::new() {
                                         Ok(mut c) => {
@@ -327,7 +327,7 @@ pub fn AddFriend() -> Element {
                             ContextItem {
                                 icon: Icon::Key,
                                 text: get_local_text("settings-profile.copy-did"),
-                                aria_label: "copy-id-context".into(),
+                                aria_label: "copy-id-context".to_string(),
                                 onpress: move |_| {
                                     match Clipboard::new() {
                                         Ok(mut c) => {
@@ -351,7 +351,7 @@ pub fn AddFriend() -> Element {
                             }
                         ),
                         Button {
-                            aria_label: "Copy ID".into(),
+                            aria_label: "Copy ID".to_string(),
                             icon: Icon::ClipboardDocument,
                             onpress: move |mouse_event: MouseEvent| {
                                 if mouse_event.modifiers() != Modifiers::CONTROL {

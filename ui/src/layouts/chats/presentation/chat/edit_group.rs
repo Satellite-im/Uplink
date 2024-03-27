@@ -87,7 +87,7 @@ pub fn EditGroup() -> Element {
     friends.sort_by_key(|d| d.username());
 
     let add_friends = rsx!(Button {
-        aria_label: "edit-group-add-members".into(),
+        aria_label: "edit-group-add-members".to_string(),
         icon: Icon::UserPlus,
         appearance: Appearance::Secondary,
         text: if minimal {
@@ -101,7 +101,7 @@ pub fn EditGroup() -> Element {
     });
 
     let remove_friends = rsx!(Button {
-        aria_label: "edit-group-remove-members".into(),
+        aria_label: "edit-group-remove-members".to_string(),
         icon: Icon::UserMinus,
         appearance: Appearance::Secondary,
         text: if minimal {
@@ -129,7 +129,7 @@ pub fn EditGroup() -> Element {
                         // todo: filter friends on input
                         placeholder: get_local_text("uplink.search-placeholder"),
                         disabled: false,
-                        aria_label: "friend-search-input".into(),
+                        aria_label: "friend-search-input".to_string(),
                         icon: Icon::MagnifyingGlass,
                         options: Options {
                             with_clear_btn: true,

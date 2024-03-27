@@ -84,7 +84,7 @@ pub fn GroupSettings() -> Element {
             div {
                 class: "settings",
                 SettingSectionSimple {
-                    aria_label: "allow-members-to-add-others".into(),
+                    aria_label: "allow-members-to-add-others".to_string(),
                     p {
                         "Allow anyone to add members"
                     }
@@ -96,7 +96,7 @@ pub fn GroupSettings() -> Element {
                     }
                 },
                 SettingSectionSimple {
-                    aria_label: "allow-members-to-add-edit-name".into(),
+                    aria_label: "allow-members-to-add-edit-name".to_string(),
                     p {
                         "Allow anyone to rename group"
                     }

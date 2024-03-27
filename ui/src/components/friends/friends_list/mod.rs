@@ -200,7 +200,7 @@ pub fn Friends() -> Element {
             aria_label: "Friends List",
             Label {
                 text: get_local_text("friends.friends"),
-                aria_label: "friends-list-label".into(),
+                aria_label: "friends-list-label".to_string(),
             },
             {(!friends_all.is_empty()).then(||{
                 rsx!(Input {
@@ -268,7 +268,7 @@ pub fn Friends() -> Element {
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
-                                            aria_label: "friends-chat".into(),
+                                            aria_label: "friends-chat".to_string(),
                                             onpress: move |_| {
                                                 ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
@@ -277,7 +277,7 @@ pub fn Friends() -> Element {
                                             danger: false,
                                             icon: Icon::Link,
                                             text: get_local_text("friends.share"),
-                                            aria_label: "friends-share".into(),
+                                            aria_label: "friends-share".to_string(),
                                             onpress: move |_| {
                                                 share_did.set(Some(share_friend.did_key()));
                                             }
@@ -301,7 +301,7 @@ pub fn Friends() -> Element {
                                             danger: true,
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
-                                            aria_label: "friends-remove".into(),
+                                            aria_label: "friends-remove".to_string(),
                                             should_render: !remove_in_progress.current().contains(&remove_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = remove_friend.did_key();
@@ -318,7 +318,7 @@ pub fn Friends() -> Element {
                                             danger: true,
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
-                                            aria_label: "friends-block".into(),
+                                            aria_label: "friends-block".to_string(),
                                             should_render: !block_in_progress.current().contains(&block_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = block_friend.did_key();
@@ -454,7 +454,7 @@ pub fn ShareFriendsModal(props: FriendProps) -> Element {
                     Button {
                         text: get_local_text("friends.share-to-chat"),
                         icon: Icon::Share,
-                        aria_label: "share_to_chat".into(),
+                        aria_label: "share_to_chat".to_string(),
                         appearance: Appearance::Secondary,
                         disabled: chats_selected.read().is_empty(),
                         onpress: move |_| {

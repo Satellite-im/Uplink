@@ -139,7 +139,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         if show_edit_members() {
             {rsx!(Button {
                 icon: Icon::Users,
-                aria_label: "edit-group-members".into(),
+                aria_label: "edit-group-members".to_string(),
                 appearance: if props.show_manage_members.is_some() {
                     Appearance::Primary
                 } else {
@@ -163,7 +163,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         if show_group_settings() {
             {rsx!(Button {
                 icon: Icon::Cog,
-                aria_label: "group-settings".into(),
+                aria_label: "group-settings".to_string(),
                 appearance: Appearance::Secondary,
                 text: text_builder("settings"),
                 tooltip: tooltip_builder("settings", arrow_top),
@@ -213,7 +213,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         },
         Button {
             icon: Icon::Pin,
-            aria_label: "pin-label".into(),
+            aria_label: "pin-label".to_string(),
             appearance: if *show_pinned.clone() { Appearance::Primary } else { Appearance::Secondary },
             text: text_builder("messages.pin-view"),
             tooltip: tooltip_builder("messages.pin-view", arrow_top),
@@ -225,7 +225,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
-            aria_label: "Call".into(),
+            aria_label: "Call".to_string(),
             appearance: Appearance::Secondary,
             text: text_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}),
             tooltip: tooltip_builder(if !state.read().configuration.developer.experimental_features {"uplink.coming-soon"} else {"uplink.call"}, arrow_top),
@@ -243,7 +243,7 @@ pub fn get_controls(props: ChatProps) -> Element {
         Button {
             icon: Icon::VideoCamera,
             disabled: true,
-            aria_label: "Videocall".into(),
+            aria_label: "Videocall".to_string(),
             appearance: Appearance::Secondary,
             text: text_builder("uplink.coming-soon"),
             tooltip: tooltip_builder("uplink.coming-soon", arrow_top_right),
@@ -276,7 +276,7 @@ pub fn get_controls(props: ChatProps) -> Element {
                 z_index: 100,
                 Button {
                     icon: Icon::EllipsisVertical,
-                    aria_label: "control-group".into(),
+                    aria_label: "control-group".to_string(),
                     appearance: Appearance::Primary,
                     tooltip: if show_more() {
                         rsx!({()})

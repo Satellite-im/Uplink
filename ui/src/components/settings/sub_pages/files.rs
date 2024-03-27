@@ -15,7 +15,7 @@ pub fn FilesSettings() -> Element {
             id: "settings-files",
             aria_label: "settings-files",
             SettingSection {
-                aria_label: "local-sync-section".into(),
+                aria_label: "local-sync-section".to_string(),
                 section_label: get_local_text("settings-files.local-sync"),
                 section_description: get_local_text("settings-files.local-sync-description"),
                 Switch {
@@ -27,7 +27,7 @@ pub fn FilesSettings() -> Element {
                 section_description: get_local_text("settings-files.open-sync-folder-description"),
                 Button {
                     text: get_local_text("settings-files.open-sync-folder"),
-                    aria_label: "open-sync-folder-button".into(),
+                    aria_label: "open-sync-folder-button".to_string(),
                     appearance: kit::elements::Appearance::Secondary,
                     icon: common::icons::outline::Shape::FolderOpen,
                     onpress: |_| {

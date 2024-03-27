@@ -93,7 +93,7 @@ pub fn PendingFriends() -> Element {
         aria_label: "Incoming Requests List",
         Label {
             text: get_local_text("friends.incoming_requests"),
-            aria_label: "incoming-list-label".into(),
+            aria_label: "incoming-list-label".to_string(),
         },
         {friends_list.into_iter().map(|friend| {
             let friend = Rc::new(friend);
@@ -120,7 +120,7 @@ pub fn PendingFriends() -> Element {
                             danger: true,
                             icon: Icon::Check,
                             text: get_local_text("friends.accept"),
-                            aria_label: "friends-accept".into(),
+                            aria_label: "friends-accept".to_string(),
                             should_render: !any_button_disabled,
                             onpress: move |_| {
                                 if STATIC_ARGS.use_mock {
@@ -134,7 +134,7 @@ pub fn PendingFriends() -> Element {
                         ContextItem {
                             danger: true,
                             icon: Icon::XMark,
-                            aria_label: "friends-deny".into(),
+                            aria_label: "friends-deny".to_string(),
                             text: get_local_text("friends.deny"),
                             should_render: !any_button_disabled,
                             onpress: move |_| {

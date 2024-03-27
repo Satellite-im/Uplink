@@ -7,6 +7,7 @@ use crate::{
 };
 use dioxus::{
     events::eval,
+    prelude::*,
     signals::{Readable, Signal},
 };
 use dioxus_hooks::{to_owned, use_effect, use_signal, Coroutine};
@@ -14,8 +15,8 @@ use dioxus_hooks::{to_owned, use_effect, use_signal, Coroutine};
 pub fn init_msg_scroll(chat_data: &Signal<ChatData>, ch: Coroutine<()>) {
     let chat_key = chat_data.read().active_chat.key();
     let chat_key_signal = use_signal(|| chat_key);
-    use_effect(|| {
-        to_owned![ch, chat_data];
+    use_effect(move || {
+        to_owned![ch];
         async move {
             // replicate behavior from before refactor
             let eval_result = eval(SETUP_CONTEXT_PARENT);
@@ -72,6 +73,6 @@ pub fn init_msg_scroll(chat_data: &Signal<ChatData>, ch: Coroutine<()>) {
             }
 
             ch.send(());
-        }
+        }()
     });
 }

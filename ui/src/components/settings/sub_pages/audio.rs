@@ -248,7 +248,7 @@ pub fn AudioSettings() -> Element {
             id: "settings-audio",
             aria_label: "settings-audio",
             SettingSection {
-                aria_label: "input-device-section".into(),
+                aria_label: "input-device-section".to_string(),
                 section_label: get_local_text("settings-audio.input-device"),
                 section_description: get_local_text("settings-audio.input-device-description"),
                 Select {
@@ -261,7 +261,7 @@ pub fn AudioSettings() -> Element {
             },
             // SettingSectionSimple {
             //     Range {
-            //         aria_label: "range-input-device".into(),
+            //         aria_label: "range-input-device".to_string(),
             //         initial_value: 100.0,
             //         min: VOL_MIN,
             //         max: VOL_MAX,
@@ -272,7 +272,7 @@ pub fn AudioSettings() -> Element {
             //     }
             // }
             SettingSectionSimple {
-                aria_label: "test-device-input-section".into(),
+                aria_label: "test-device-input-section".to_string(),
                 Button {
                     text: get_local_text("settings-audio.device-test"),
                     disabled: false,
@@ -285,7 +285,7 @@ pub fn AudioSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "output-device-section".into(),
+                aria_label: "output-device-section".to_string(),
                 section_label: get_local_text("settings-audio.output-device"),
                 section_description: get_local_text("settings-audio.output-device-description"),
                 Select {
@@ -298,7 +298,7 @@ pub fn AudioSettings() -> Element {
             },
             // SettingSectionSimple {
             //     Range {
-            //         aria_label: "range-output-device".into(),
+            //         aria_label: "range-output-device".to_string(),
             //         initial_value: 100.0,
             //         min: VOL_MIN,
             //         max: VOL_MAX,
@@ -309,7 +309,7 @@ pub fn AudioSettings() -> Element {
             //     }
             // }
             SettingSectionSimple {
-                aria_label: "test-device-output-section".into(),
+                aria_label: "test-device-output-section".to_string(),
                 Button {
                     text: get_local_text("settings-audio.device-test"),
                     disabled: false,
@@ -348,7 +348,7 @@ pub fn AudioSettings() -> Element {
             //}
 
             SettingSection {
-                aria_label: "echo-cancellation-section".into(),
+                aria_label: "echo-cancellation-section".to_string(),
                 section_label: get_local_text("settings-audio.echo-cancellation"),
                 section_description: get_local_text("settings-audio.echo-cancellation-description"),
                 Switch {
@@ -366,7 +366,7 @@ pub fn AudioSettings() -> Element {
             },
 
             SettingSection {
-                aria_label: "interface-sounds-section".into(),
+                aria_label: "interface-sounds-section".to_string(),
                 section_label: get_local_text("settings-audio.interface-sounds"),
                 section_description: get_local_text("settings-audio.interface-sounds-description"),
                 Switch {
@@ -380,7 +380,7 @@ pub fn AudioSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "media-sounds-section".into(),
+                aria_label: "media-sounds-section".to_string(),
                 section_label: get_local_text("settings-audio.media-sounds"),
                 section_description: get_local_text("settings-audio.media-sounds-description"),
                 Switch {
@@ -394,7 +394,7 @@ pub fn AudioSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "message-sounds-section".into(),
+                aria_label: "message-sounds-section".to_string(),
                 section_label: get_local_text("settings-audio.message-sounds"),
                 section_description: get_local_text("settings-audio.message-sounds-description"),
                 Switch {
@@ -408,7 +408,7 @@ pub fn AudioSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "call-timer-section".into(),
+                aria_label: "call-timer-section".to_string(),
                 section_label: get_local_text("settings-audio.call-timer"),
                 section_description: get_local_text("settings-audio.call-timer-description"),
                 Switch {}

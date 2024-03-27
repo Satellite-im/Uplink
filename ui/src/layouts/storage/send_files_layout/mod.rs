@@ -163,8 +163,8 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                     display: "inline-flex",
                     Checkbox {
                         disabled: false,
-                        width: "1em".into(),
-                        height: "1em".into(),
+                        width: "1em".to_string(),
+                        height: "1em".to_string(),
                         is_checked: is_checked,
                         on_click: move |_| {
                             if is_checked {
@@ -179,21 +179,6 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                         subtext: subtext_val,
                         timestamp: raygun::Message::default().date(),
                         active: false,
-                        user_image: rsx!(
-                            if chat.conversation_type == ConversationType::Direct {{rsx! (
-                                UserImage {
-                                    platform: platform,
-                                    status:  user.identity_status().into(),
-                                    image: user.profile_picture(),
-                                    typing: false,
-                                }
-                            )}} else {{rsx! (
-                                UserImageGroup {
-                                    participants: build_participants(&participants),
-                                    typing: false,
-                                }
-                            )}}
-                        ),
                         user_image: rsx!(
                             div {
                                 class: "chat-selector-to-send-image-group",

@@ -203,7 +203,7 @@ pub fn Sidebar(props: Props) -> Element {
                     class: "search-input",
                     Input {
                         placeholder: get_local_text("settings.search-placeholder"),
-                        aria_label: "settings-search-input".into(),
+                        aria_label: "settings-search-input".to_string(),
                         icon: Icon::MagnifyingGlass,
                         disabled: true,
                         options: Options {

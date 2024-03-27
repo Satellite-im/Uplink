@@ -1268,7 +1268,7 @@ fn AppNav(
     let state = use_context::<Signal<State>>();
     let navigator = use_navigator();
     let tracker = use_context::<Signal<TransferTracker>>();
-    state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id());
+    state.write_silent().scope_ids.file_transfer_icon = Some(current_scope_id().unwrap().0);
 
     let pending_friends = state.read().friends().incoming_requests.len();
     let unreads: u32 = state
@@ -1291,7 +1291,7 @@ fn AppNav(
         },
         context_items: (unreads > 0).then(|| {
             rsx!(ContextItem {
-                aria_label: "clear-unreads".into(),
+                aria_label: "clear-unreads".to_string(),
                 text: get_local_text("uplink.clear-unreads"),
                 onpress: move |_| {
                     state.write().mutate(Action::ClearAllUnreads);

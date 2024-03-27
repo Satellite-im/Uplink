@@ -112,7 +112,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                     div {
                         class: "file-transfer-buttons",
                         Button {
-                            aria_label: "pause-upload".into(),
+                            aria_label: "pause-upload".to_string(),
                             disabled: matches!(f.progress, TransferProgress::Progress(100)),
                             appearance: Appearance::Primary,
                             small: true,
@@ -122,7 +122,7 @@ pub fn FileTransferElement(props: TransferProps) -> Element {
                             },
                         },
                         Button {
-                            aria_label: "cancel-upload".into(),
+                            aria_label: "cancel-upload".to_string(),
                             disabled: matches!(f.progress, TransferProgress::Cancelling(_) | TransferProgress::Progress(100)),
                             appearance: Appearance::Primary,
                             icon: Icon::XMark,

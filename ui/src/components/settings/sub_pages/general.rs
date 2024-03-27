@@ -66,7 +66,7 @@ pub fn GeneralSettings() -> Element {
                 }
             },*/
             SettingSection {
-                aria_label: "app-language-section".into(),
+                aria_label: "app-language-section".to_string(),
                 section_label: get_local_text("settings-general.app-language"),
                 section_description: get_local_text("settings-general.change-language"),
                 Select {
@@ -79,7 +79,7 @@ pub fn GeneralSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "font-section".into(),
+                aria_label: "font-section".to_string(),
                 section_label: get_local_text("settings-general.font"),
                 section_description: get_local_text("settings-general.font-description"),
                 Select {
@@ -99,7 +99,7 @@ pub fn GeneralSettings() -> Element {
                 },
                 Button {
                     icon: Icon::FolderOpen,
-                    aria_label: "open-fonts-folder-button".into(),
+                    aria_label: "open-fonts-folder-button".to_string(),
                     onpress: move |_| {
                         let _ = opener::open(&STATIC_ARGS.fonts_path);
                     },
@@ -110,7 +110,7 @@ pub fn GeneralSettings() -> Element {
                 },
             },
             SettingSection {
-                aria_label: "font-scaling-section".into(),
+                aria_label: "font-scaling-section".to_string(),
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
@@ -123,7 +123,7 @@ pub fn GeneralSettings() -> Element {
                 }
             },
             SettingSection {
-                aria_label: "theme-section".into(),
+                aria_label: "theme-section".to_string(),
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 no_border: true,
@@ -133,7 +133,7 @@ pub fn GeneralSettings() -> Element {
                     } else {
                         Icon::Moon
                     },
-                    aria_label: "dark-light-toggle".into(),
+                    aria_label: "dark-light-toggle".to_string(),
                     onpress: move |_| {
                         let current_theme = state.read().ui.theme.clone().unwrap_or_default();
 
@@ -162,7 +162,7 @@ pub fn GeneralSettings() -> Element {
                 },
                 Button {
                     icon: Icon::FolderOpen,
-                    aria_label: "open-themes-folder-button".into(),
+                    aria_label: "open-themes-folder-button".to_string(),
                     onpress: move |_| {
                         let _ = opener::open(&STATIC_ARGS.themes_path);
                     },
@@ -173,7 +173,7 @@ pub fn GeneralSettings() -> Element {
                 },
             },
             SettingSectionSimple {
-                aria_label: "color-section".into(),
+                aria_label: "color-section".to_string(),
                 div {
                     class: "color-swatches",
                     Button {

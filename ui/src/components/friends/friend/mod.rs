@@ -80,7 +80,7 @@ pub fn Friend(props: Props) -> Element {
                 } else  {
                     {rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
-                        aria_label: "friendship-status".into(),
+                        aria_label: "friendship-status".to_string(),
                         text: get_local_text(
                             if relationship.blocked() {
                                 "friends.blocked-desc"
@@ -98,7 +98,7 @@ pub fn Friend(props: Props) -> Element {
                     Button {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
-                        aria_label: "Accept Friend".into(),
+                        aria_label: "Accept Friend".to_string(),
                         loading:  props.accept_button_disabled.unwrap_or(false),
                         disabled:any_button_disabled,
                         onpress: move |_| match &props.onaccept {
@@ -110,7 +110,7 @@ pub fn Friend(props: Props) -> Element {
                 {props.onchat.is_some().then(|| rsx! (
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
-                        aria_label: "Chat With Friend".into(),
+                        aria_label: "Chat With Friend".to_string(),
                         disabled: any_button_disabled,
                         text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
                         onpress: move |_| match &props.onchat {
@@ -131,7 +131,7 @@ pub fn Friend(props: Props) -> Element {
                             None => {},
                         }
                     },
-                    aria_label: "Remove or Deny Friend".into(),
+                    aria_label: "Remove or Deny Friend".to_string(),
                     tooltip: rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
                         text: if props.relationship.blocked() { get_local_text("friends.unblock") } else if props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
@@ -147,7 +147,7 @@ pub fn Friend(props: Props) -> Element {
                             Some(f) => f.call(()),
                             None    => {},
                         },
-                        aria_label: "Block Friend".into(),
+                        aria_label: "Block Friend".to_string(),
                         tooltip: rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("friends.block"),

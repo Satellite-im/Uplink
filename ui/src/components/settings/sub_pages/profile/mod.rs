@@ -362,7 +362,7 @@ pub fn ProfileSettings() -> Element {
                         class: "welcome-content",
                         Button {
                             text: get_local_text("uplink.dismiss"),
-                            aria_label: "welcome-message-dismiss".into(),
+                            aria_label: "welcome-message-dismiss".to_string(),
                             icon: Icon::XMark,
                             onpress: move |_| {
                                 state.write().ui.settings_welcome();
@@ -370,7 +370,7 @@ pub fn ProfileSettings() -> Element {
                             }
                         },
                         Label {
-                            aria_label: "welcome-message".into(),
+                            aria_label: "welcome-message".to_string(),
                             text: get_local_text("settings-profile.welcome")
                         },
                         p {
@@ -397,7 +397,7 @@ pub fn ProfileSettings() -> Element {
                             icon: Icon::Trash,
                             disabled: no_banner_picture,
                             text: get_local_text("settings-profile.clear-banner"),
-                            aria_label: "clear-banner".into(),
+                            aria_label: "clear-banner".to_string(),
                             onpress: move |_| {
                                 ch.send(ChanCmd::ClearBanner);
                             }
@@ -421,7 +421,7 @@ pub fn ProfileSettings() -> Element {
                         ContextItem {
                             icon: Icon::Trash,
                             disabled: no_profile_picture,
-                            aria_label: "clear-avatar".into(),
+                            aria_label: "clear-avatar".to_string(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
                                 ch.send(ChanCmd::ClearProfile);
@@ -439,7 +439,7 @@ pub fn ProfileSettings() -> Element {
                         },
                         Button {
                             icon: Icon::Plus,
-                            aria_label: "add-picture-button".into(),
+                            aria_label: "add-picture-button".to_string(),
                             onpress: move |_| {
                             set_profile_picture(open_crop_image_modal.clone());
                             }
@@ -454,14 +454,14 @@ pub fn ProfileSettings() -> Element {
                     class: "content-item",
                     Label {
                         text: get_local_text("uplink.username"),
-                        aria_label: "profile-username-label".into(),
+                        aria_label: "profile-username-label".to_string(),
                     },
                     div {
                         class: "profile-group-username",
                         Input {
                             placeholder:  get_local_text("uplink.username"),
                             default_text: username.clone(),
-                            aria_label: "username-input".into(),
+                            aria_label: "username-input".to_string(),
                             options: Options {
                                 with_clear_btn: true,
                                 ..get_input_options(username_validation_options)
@@ -483,7 +483,7 @@ pub fn ProfileSettings() -> Element {
                                     ContextItem {
                                         icon: Icon::UserCircle,
                                         text: get_local_text("settings-profile.copy-id"),
-                                        aria_label: "copy-id-context".into(),
+                                        aria_label: "copy-id-context".to_string(),
                                         onpress: move |_| {
                                             match Clipboard::new() {
                                                 Ok(mut c) => {
@@ -508,7 +508,7 @@ pub fn ProfileSettings() -> Element {
                                     ContextItem {
                                         icon: Icon::Key,
                                         text: get_local_text("settings-profile.copy-did"),
-                                        aria_label: "copy-id-context".into(),
+                                        aria_label: "copy-id-context".to_string(),
                                         onpress: move |_| {
                                             match Clipboard::new() {
                                                 Ok(mut c) => {
@@ -533,7 +533,7 @@ pub fn ProfileSettings() -> Element {
                                 ),
                                 Button {
                                     appearance: Appearance::SecondaryLess,
-                                    aria_label: "copy-id-button".into(),
+                                    aria_label: "copy-id-button".to_string(),
                                     text: did_short.to_string(),
                                     tooltip: rsx!(
                                         Tooltip{
@@ -571,12 +571,12 @@ pub fn ProfileSettings() -> Element {
                     class: "content-item",
                     Label {
                         text: get_local_text("uplink.status"),
-                        aria_label: "profile-status-label".into(),
+                        aria_label: "profile-status-label".to_string(),
                     },
                     Input {
                         placeholder: get_local_text("uplink.status"),
                         default_text: user_status.clone(),
-                        aria_label: "status-input".into(),
+                        aria_label: "status-input".to_string(),
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options(status_validation_options)
@@ -592,7 +592,7 @@ pub fn ProfileSettings() -> Element {
                     }
                 },
                 SettingSection {
-                    aria_label: "online-status-section".into(),
+                    aria_label: "online-status-section".to_string(),
                     section_label: get_local_text("settings-profile.online-status"),
                     section_description: get_local_text("settings-profile.online-status-description"),
                     FancySelect {
@@ -607,12 +607,12 @@ pub fn ProfileSettings() -> Element {
                 },
                 if *phrase_exists.get() {{rsx!(
                     SettingSection {
-                        aria_label: "recovery-seed-section".into(),
+                        aria_label: "recovery-seed-section".to_string(),
                         section_label: get_local_text("settings-profile.recovery-seed"),
                         section_description: get_local_text("settings-profile.recovery-seed-description"),
                         Button {
                             text: if seed_phrase.as_ref().is_none() { get_local_text("settings-profile.reveal-recovery-seed") } else { get_local_text("settings-profile.hide-recovery-seed") },
-                            aria_label: "reveal-recovery-seed-button".into(),
+                            aria_label: "reveal-recovery-seed-button".to_string(),
                             appearance: Appearance::Danger,
                             icon: if seed_phrase.as_ref().is_none() { Icon::Eye } else { Icon::EyeSlash },
                             onpress: move |_| {
@@ -630,7 +630,7 @@ pub fn ProfileSettings() -> Element {
                         rsx!(
                             Button {
                                 text: get_local_text("uplink.copy-seed"),
-                                aria_label: "copy-seed-button".into(),
+                                aria_label: "copy-seed-button".to_string(),
                                 icon: Icon::BookmarkSquare,
                                 onpress: move |_| {
                                     match Clipboard::new() {
@@ -655,7 +655,7 @@ pub fn ProfileSettings() -> Element {
                                 appearance: Appearance::Secondary
                             },
                             SettingSectionSimple {
-                                aria_label: "seed-words-section".into(),
+                                aria_label: "seed-words-section".to_string(),
                                 div {
                                     class: "seed-words",
                                     {words.chunks_exact(2).enumerate().map(|(idx, vals)| rsx! {
@@ -694,9 +694,9 @@ pub fn ProfileSettings() -> Element {
                         )}
                     },
                     SettingSectionSimple {
-                        aria_label: "store-recovery-seed-on-account-section".into(),
+                        aria_label: "store-recovery-seed-on-account-section".to_string(),
                         Checkbox {
-                            aria_label: "store-recovery-seed-on-account-checkbox".into(),
+                            aria_label: "store-recovery-seed-on-account-checkbox".to_string(),
                             disabled: false,
                             is_checked: *store_phrase.get(),
                             height: "15px".into(),
@@ -726,7 +726,7 @@ pub fn ProfileSettings() -> Element {
                                 },
                                 Label {
                                     text: get_local_text("settings-profile.remove-recovery-seed"),
-                                    aria_label: "remove-phrase-label".into(),
+                                    aria_label: "remove-phrase-label".to_string(),
                                 },
                                 p {
                                     {get_local_text("settings-profile.remove-recovery-seed-description")}
@@ -735,7 +735,7 @@ pub fn ProfileSettings() -> Element {
                                     class: "button-group",
                                     Button {
                                         text: get_local_text("uplink.remove"),
-                                        aria_label: "remove-seed-phrase-btn".into(),
+                                        aria_label: "remove-seed-phrase-btn".to_string(),
                                         appearance: Appearance::Danger,
                                         icon: Icon::Trash,
                                         onpress: move |_| {
@@ -744,7 +744,7 @@ pub fn ProfileSettings() -> Element {
                                     },
                                     Button {
                                         text: get_local_text("uplink.cancel"),
-                                        aria_label: "cancel-remove-seed-phrase-btn".into(),
+                                        aria_label: "cancel-remove-seed-phrase-btn".to_string(),
                                         icon: Icon::NoSymbol,
                                         appearance: Appearance::Secondary,
                                         onpress: move |_| {

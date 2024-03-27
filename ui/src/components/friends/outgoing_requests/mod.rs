@@ -60,7 +60,7 @@ pub fn OutgoingRequests() -> Element {
         aria_label: "Outgoing Requests List",
         Label {
             text: get_local_text("friends.outgoing_requests"),
-            aria_label: "outgoing-list-label".into(),
+            aria_label: "outgoing-list-label".to_string(),
         },
         {friends_list.into_iter().map(|friend| {
             let did = friend.did_key();
@@ -77,7 +77,7 @@ pub fn OutgoingRequests() -> Element {
                         ContextItem {
                             danger: true,
                             icon: Icon::XMark,
-                            aria_label: "friends-cancel".into(),
+                            aria_label: "friends-cancel".to_string(),
                             text: get_local_text("friends.cancel"),
                             should_render: !any_button_disabled,
                             onpress: move |_| {

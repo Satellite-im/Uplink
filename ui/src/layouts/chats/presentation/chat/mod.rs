@@ -42,7 +42,7 @@ pub fn Compose() -> Element {
     let state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
 
-    let init = coroutines::init_chat_data(&state, &chat_data);
+    let init = coroutines::init_chat_data(state, chat_data);
     coroutines::handle_warp_events(&state, &chat_data);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
@@ -104,16 +104,16 @@ pub fn Compose() -> Element {
     let user_did: DID = state.read().did_key();
     let is_owner = creator.map(|id| id == user_did).unwrap_or_default();
 
-    if init.value().is_some() {
+    if init.value()().is_some() {
         if let Some(chat) = state.read().get_active_chat() {
             let metadata = data::Metadata::new(&state.read(), &chat);
             if chat_data.read().active_chat.metadata_changed(&metadata) {
                 // If the metadata has changed, we should cancel out all actions to modify it.
-                if *show_rename_group.get() {
+                if show_rename_group() {
                     show_rename_group.set(false);
                 }
                 // Now we can continue
-                if !*show_group_settings.get() && show_manage_members.get().is_none() {
+                if !show_group_settings() && show_manage_members().is_none() {
                     chat_data.write().active_chat.set_metadata(metadata);
                 }
             }
@@ -157,10 +157,10 @@ pub fn Compose() -> Element {
             //         end_text: get_local_text("uplink.end"),
             //     },
             // ))),
-        {show_manage_members
+        {show_manage_members()
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
-                    open: show_manage_members.is_some(),
+                    open: show_manage_members().is_some(),
                     transparent: true,
                     with_title: get_local_text("friends.manage-group-members"),
                     onclose: move |_| {
@@ -170,9 +170,9 @@ pub fn Compose() -> Element {
                     EditGroup {}
                 }
             ))},
-        {show_group_settings.then(|| rsx!(
+        {show_group_settings().then(|| rsx!(
                 Modal {
-                    open: *show_group_settings.get(),
+                    open: show_group_settings(),
                     transparent: true,
                     with_title: get_local_text("settings"),
                     onclose: move |_| {
@@ -182,10 +182,10 @@ pub fn Compose() -> Element {
                     GroupSettings {}
                 }
             ))},
-        {show_group_users
+        {show_group_users()
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 Modal {
-                    open: show_group_users.is_some(),
+                    open: show_group_users().is_some(),
                     right: "calc(100% - (var(--width-sidebar) * 2 ) - var(--padding-more))",
                     transparent: true,
                     with_title: get_local_text("friends.view-group"),
@@ -201,7 +201,7 @@ pub fn Compose() -> Element {
         CallControl {
             in_chat: true
         },
-        if init.value().is_none() {
+        if init.value()().is_none() {
            {rsx!(
                 div {
                     id: "messages",
@@ -224,7 +224,7 @@ pub fn Compose() -> Element {
         super::quick_profile::QuickProfileContext{
             id: quick_profile_uuid,
             update_script: update_script,
-            did_key: identity_profile,
+            did_key: identity_profile(),
         }
     }
     )

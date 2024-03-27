@@ -343,7 +343,7 @@ fn render_1(_unused: bool) -> Element {
                         },
                         // Render standard (required) button to toggle.
                         Button {
-                            aria_label: "send-emoji-button".into(),
+                            aria_label: "send-emoji-button".to_string(),
                             icon: Icon::FaceSmile,
                             onpress: move |_| {
                                 state.write().mutate(Action::SetEmojiPickerVisible(!visible));

@@ -369,7 +369,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             class: format_args!("call-label {}", if props.in_chat {"in-chat"} else {""}),
             {outgoing.then(|| rsx!(Label {
                 text: get_local_text("remote-controls.outgoing-call"),
-                aria_label: "outgoing-call-label".into(),
+                aria_label: "outgoing-call-label".to_string(),
             }))}
         }
         div {
@@ -423,7 +423,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             aria_label: "call-controls",
             Button {
                 icon: Icon::Microphone,
-                aria_label: "call-mic-button".into(),
+                aria_label: "call-mic-button".to_string(),
                 appearance: if call.self_muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: rsx!(
                     Tooltip {
@@ -437,7 +437,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             },
             Button {
                 icon: if call.call_silenced { Icon::HeadphonesSlash } else { Icon::Headphones },
-                aria_label: "call-speaker-button".into(),
+                aria_label: "call-speaker-button".to_string(),
                 appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: rsx!(
                     Tooltip {
@@ -452,7 +452,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
             {(!outgoing).then(||{
                 if *recording.read() {
                     rsx!(Button {
-                        aria_label: "stop-recording-button".into(),
+                        aria_label: "stop-recording-button".to_string(),
                         icon: Icon::StopCircle,
                         appearance: Appearance::Danger,
                         tooltip: rsx!(
@@ -467,7 +467,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
                   })
                 } else {
                     rsx!(Button {
-            aria_label: "start-recording-button".into(),
+            aria_label: "start-recording-button".to_string(),
             icon: Icon::RadioSelected,
             appearance: Appearance::Secondary,
             tooltip: rsx!(
@@ -484,7 +484,7 @@ fn ActiveCallControl(props: ActiveCallProps) -> Element {
       })},
             Button {
                 icon: Icon::PhoneXMark,
-                aria_label: "call-hangup-button".into(),
+                aria_label: "call-hangup-button".to_string(),
                 appearance: Appearance::Danger,
                 onpress: move |_| {
                     ch.send(CallDialogCmd::Hangup(call.id));
@@ -601,7 +601,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
         icon: Icon::PhoneArrowDownLeft,
         description: get_local_text("remote-controls.incoming-call"),
         with_accept_btn: rsx!(Button {
-            aria_label: "accept-call-button".into(),
+            aria_label: "accept-call-button".to_string(),
             icon: Icon::Phone,
             appearance: Appearance::Success,
             onpress: move |_| {
@@ -609,7 +609,7 @@ fn PendingCallDialog(props: PendingCallProps) -> Element {
             }
         }),
         with_deny_btn: rsx!(Button {
-            aria_label: "deny-call-button".into(),
+            aria_label: "deny-call-button".to_string(),
             icon: Icon::PhoneXMark,
             appearance: Appearance::Danger,
             onpress: move |_| {
