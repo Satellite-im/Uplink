@@ -15,7 +15,7 @@ pub struct SendFilesLayoutModalProps {
 
 #[allow(non_snake_case)]
 pub fn SendFilesLayoutModal(props: SendFilesLayoutModalProps) -> Element {
-    let send_files_from_storage = props.send_files_from_storage;
+    let mut send_files_from_storage = props.send_files_from_storage;
     let send_files_start_location = props.send_files_start_location.clone();
     let files_pre_selected_to_send = props.files_pre_selected_to_send.clone().unwrap_or_default();
 

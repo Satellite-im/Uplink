@@ -48,15 +48,15 @@ pub fn SendFilesLayout(props: SendFilesProps) -> Element {
     let state = use_context::<Signal<State>>();
     let send_files_start_location = props.send_files_start_location.clone();
     let send_files_from_storage_state = props.send_files_from_storage_state.clone();
-    let storage_controller = StorageController::new(&state);
+    let storage_controller = StorageController::new(state);
     let first_render = use_signal(|| true);
     let file_tracker = use_context::<Signal<TransferTracker>>();
-    let ch: &Coroutine<ChanCmd> =
+    let ch: Coroutine<ChanCmd> =
         functions::init_coroutine(storage_controller.clone(), state, file_tracker);
     let in_files = send_files_start_location.eq(&SendFilesStartLocation::Storage);
     functions::get_items_from_current_directory(ch);
 
-    functions::run_verifications_and_update_storage(&state, storage_controller, vec![]);
+    functions::run_verifications_and_update_storage(state, storage_controller, vec![]);
 
     if *first_render.read() {
         *first_render.write_silent() = false;
@@ -118,7 +118,7 @@ struct ChatsToSelectProps {
 #[allow(non_snake_case)]
 fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
     let state = use_context::<Signal<State>>();
-    let storage_controller = props.storage_controller.clone();
+    let mut storage_controller = props.storage_controller.clone();
 
     rsx!(div {
         id: "all_chats",
@@ -169,9 +169,9 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                         is_checked: is_checked,
                         on_click: move |_| {
                             if is_checked {
-                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }
@@ -190,9 +190,9 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                                     is_checked: is_checked,
                                     on_click: move |_| {
                                         if is_checked {
-                                            props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                            storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                                         } else {
-                                            props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                            storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                                         }
                                     }
                                 }
@@ -214,9 +214,9 @@ fn ChatsToSelect(props: ChatsToSelectProps) -> Element {
                         with_badge: "".to_string(),
                         onpress: move |_| {
                             if is_checked {
-                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
+                                storage_controller.with_mut(|f| f.chats_selected_to_send.retain(|uuid| chat.id != *uuid));
                             } else {
-                                props.storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
+                                storage_controller.with_mut(|f| f.chats_selected_to_send.push(chat.id));
                             }
                         }
                     }

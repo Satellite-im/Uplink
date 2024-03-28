@@ -24,7 +24,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn SlimbarLayout(props: Props) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let router = use_navigator();
 
     let favorites = if state.read().initialized {

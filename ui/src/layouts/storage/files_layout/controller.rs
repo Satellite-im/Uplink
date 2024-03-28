@@ -33,7 +33,7 @@ pub struct StorageController {
 }
 
 impl StorageController {
-    pub fn new<'a>(state: &'a Signal<State>) -> &'a Signal<Self> {
+    pub fn new(state: Signal<State>) -> Signal<Self> {
         let controller = Self {
             storage_state: None,
             directories_list: state.read().storage.directories.clone(),
@@ -66,7 +66,7 @@ impl StorageController {
             chats_selected_to_send: Vec::new(),
             deleting: Vec::new(),
         };
-        &use_signal(|| controller)
+        use_signal(|| controller)
     }
 
     pub fn update_current_dir_path(&mut self, state: Signal<State>) {

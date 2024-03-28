@@ -28,6 +28,7 @@ pub fn search_friends(props: SearchProps) -> Element {
     }
 
     let mut friends_identities = props.friends_identities.read().clone();
+    let mut search_friends_is_focused = props.search_friends_is_focused.clone();
     let chats = props.chats.read().clone();
 
     friends_identities.sort_by_key(|identity| identity.username());
@@ -36,13 +37,13 @@ pub fn search_friends(props: SearchProps) -> Element {
         div {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
-            onblur: |_| {
-                *props.search_friends_is_focused.write() = false;
+            onblur: move |_| {
+                *search_friends_is_focused.write() = false;
             },
-            onmouseenter: |_| {
+            onmouseenter: move |_| {
                 *props.search_dropdown_hover.write_silent() = true;
             },
-            onmouseleave: |_| {
+            onmouseleave: move |_| {
                 *props.search_dropdown_hover.write_silent() = false;
             },
             if !friends_identities.is_empty() {

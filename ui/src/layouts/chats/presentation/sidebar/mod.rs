@@ -61,18 +61,18 @@ pub struct SidebarProps {
 pub fn Sidebar(props: SidebarProps) -> Element {
     log::trace!("rendering chats sidebar layout");
     let mut state = use_context::<Signal<State>>();
-    let search_results = use_signal(|| Vec::<identity_search_result::Entry>::new());
-    let search_results_friends_identities = use_signal(|| Vec::<Identity>::new());
-    let search_results_chats = use_signal(|| Vec::<Chat>::new());
+    let mut search_results = use_signal(|| Vec::<identity_search_result::Entry>::new());
+    let mut search_results_friends_identities = use_signal(|| Vec::<Identity>::new());
+    let mut search_results_chats = use_signal(|| Vec::<Chat>::new());
     let mut chat_with: Signal<Option<Uuid>> = use_signal(|| None);
-    let reset_searchbar: Signal<_> = use_signal(|| false);
+    let mut reset_searchbar: Signal<_> = use_signal(|| false);
     let router = use_navigator();
     let show_delete_conversation = use_signal(|| true);
-    let on_search_dropdown_hover = use_signal(|| false);
-    let search_friends_is_focused = use_signal(|| false);
+    let mut on_search_dropdown_hover = use_signal(|| false);
+    let mut search_friends_is_focused = use_signal(|| false);
     let storage = state.read().ui.current_layout == Layout::Storage;
 
-    if let Some(chat) = *chat_with.read() {
+    if let Some(chat) = chat_with() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
         router.replace(UplinkRoute::ChatLayout {});
@@ -82,7 +82,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
-    let select_identifier = move |id: identity_search_result::Identifier| match id {
+    let mut select_identifier = move |id: identity_search_result::Identifier| match id {
         identity_search_result::Identifier::Did(did) => {
             if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
                 chat_with.set(Some(c.id));
@@ -106,7 +106,7 @@ pub fn Sidebar(props: SidebarProps) -> Element {
         vec![]
     };
 
-    let show_create_group = use_signal(|| false);
+    let mut show_create_group = use_signal(|| false);
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions

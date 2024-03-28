@@ -57,7 +57,7 @@ enum QuickProfileCmd {
 // Create a quick profile context menu
 #[allow(non_snake_case)]
 pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let settings_page = use_context::<Signal<Page>>();
     let id = props.id;
     let share_did = use_signal(|| None);
@@ -85,7 +85,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
 
     let update_script_signal = use_signal(|| props.update_script.clone());
 
-    use_resource(|| async move {
+    use_resource(move || async move {
         if !update_script_signal()().is_empty() {
             _ = eval(&update_script_signal()());
         }
@@ -110,7 +110,7 @@ pub fn QuickProfileContext(props: QuickProfileProps) -> Element {
     let router = use_navigator();
 
     let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
-    if let Some(id) = *chat_with.read() {
+    if let Some(id) = chat_with() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {

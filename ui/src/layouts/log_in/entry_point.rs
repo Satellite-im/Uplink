@@ -33,6 +33,7 @@ use common::{
 
 use crate::{bootstrap::create_uplink_dirs, get_app_style, AuthPages};
 
+#[derive(Clone)]
 enum UnlockError {
     ValidationError,
     InvalidPin,
@@ -53,18 +54,18 @@ impl UnlockError {
 #[component]
 pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
     log::trace!("rendering login entry point");
-    let validation_failure: Signal<Option<UnlockError>> =
+    let mut validation_failure: Signal<Option<UnlockError>> =
         use_signal(|| Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
-    let error: Signal<Option<UnlockError>> = use_signal(|| None);
-    let shown_error = use_signal(String::new);
+    let mut error: Signal<Option<UnlockError>> = use_signal(|| None);
+    let mut shown_error = use_signal(String::new);
     let desktop = use_window();
 
-    let account_exists: Signal<Option<bool>> = use_signal(|| None);
-    let cmd_in_progress = use_signal(|| false);
-    let first_render = use_signal(|| true);
-    let state = use_signal(State::load);
-    let reset_input = use_signal(|| false);
+    let mut account_exists: Signal<Option<bool>> = use_signal(|| None);
+    let mut cmd_in_progress = use_signal(|| false);
+    let mut first_render = use_signal(|| true);
+    let mut state = use_signal(State::load);
+    let mut reset_input = use_signal(|| false);
 
     // On windows, is necessary use state on topbar controls, without using use_shared_state
     // So state is loaded there to use window_maximized and offer better UX
@@ -75,7 +76,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
     }
 
     // this will be needed later
-    use_resource(|| {
+    use_resource(move || {
         to_owned![account_exists];
         async move {
             if account_exists().is_some() {
@@ -237,9 +238,9 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                             }
                         },
                         onreturn: move |_| {
-                                if let Some(validation_error) = *validation_failure.read() {
+                                if let Some(validation_error) = validation_failure() {
                                     shown_error.set(validation_error.translation());
-                                } else if let Some(e) = *error.read() {
+                                } else if let Some(e) = error() {
                                     shown_error.set(e.translation());
                                 } else if !account_exists().unwrap_or_default()  {
                                     page.set(AuthPages::CreateOrRecover);
@@ -272,11 +273,12 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                             // these are only for testing.
                             // page.set(AuthPages::CreateOrRecover);
                             // return;
-
-                            if let Some(validation_error) = *validation_failure.read() {
+                            let error_test: Option<UnlockError> = error.read().clone();
+                            let validation_failure_test = validation_failure.read().clone();
+                            if let Some(validation_error) = validation_failure_test {
                                 shown_error.set(validation_error.translation());
                                 reset_input.set(true);
-                            } else if let Some(e) = *error.read() {
+                            } else if let Some(e) = error_test {
                                 shown_error.set(e.translation());
                                 reset_input.set(true);
                             } else {
@@ -295,7 +297,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>) -> Element {
                                 danger: true,
                                 aria_label: "account-reset".to_string(),
                                 text: get_local_text("uplink.reset-account"),
-                                onpress: |_| {
+                                onpress: move |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
                                     page.set(AuthPages::EntryPoint);
                                     error.set(None);

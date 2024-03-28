@@ -203,7 +203,8 @@ fn app() -> Element {
 
     // 2. Guard the app with the auth
     let auth = use_signal(|| AuthPages::EntryPoint);
-    let AuthPages::Success(identity) = *auth.read() else {
+    let auth_result = auth.read().clone();
+    let AuthPages::Success(identity) = auth_result else {
         return rsx! {
         KeyboardShortcuts {
             is_on_auth_pages: true,
@@ -371,7 +372,9 @@ fn use_auto_updater() -> Option<()> {
 
 fn use_app_coroutines() -> Option<()> {
     let desktop = use_window();
-    let state = use_context::<Signal<State>>();
+    let desktop_signal = use_signal(|| desktop.clone());
+
+    let mut state = use_context::<Signal<State>>();
 
     // don't fetch stuff from warp when using mock data
     let items_init = use_signal(|| STATIC_ARGS.use_mock);
@@ -400,7 +403,7 @@ fn use_app_coroutines() -> Option<()> {
 
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
-    let webview = desktop.webview;
+    // let webview = use_signal(|| desktop.clone().webview);
     let first_resize = use_signal(|| true);
 
     // TODO(Migration_0.5): Verify this function later
@@ -493,8 +496,7 @@ fn use_app_coroutines() -> Option<()> {
     // });
 
     // update state in response to warp events
-    use_resource(|| {
-        to_owned![state];
+    use_resource(move || {
         let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = schedule_update_any();
         async move {
             // don't process warp events until friends and chats have been loaded
@@ -539,47 +541,41 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // focus handler for notifications
-    use_resource(|| {
-        to_owned![desktop];
-        async move {
-            let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
-            let mut ch = channel.lock().await;
-            while (ch.recv().await).is_some() {
-                desktop.set_focus();
-            }
+    use_resource(move || async move {
+        let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
+        let mut ch = channel.lock().await;
+        while (ch.recv().await).is_some() {
+            desktop_signal().set_focus();
         }
     });
 
     // Listen to profile updates
-    use_resource(|| {
-        to_owned![state];
-        async move {
-            while !state.read().initialized {
-                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-            }
-            let channel = PROFILE_CHANNEL_LISTENER.rx.clone();
-            let mut ch = channel.lock().await;
-            while let Some(action) = ch.recv().await {
-                let mut id = state.read().get_own_identity();
-                let did = action.did;
-                if did.eq(&id.did_key()) {
+    use_resource(move || async move {
+        while !state.read().initialized {
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        let channel = PROFILE_CHANNEL_LISTENER.rx.clone();
+        let mut ch = channel.lock().await;
+        while let Some(action) = ch.recv().await {
+            let mut id = state.read().get_own_identity();
+            let did = action.did;
+            if did.eq(&id.did_key()) {
+                if let Some(picture) = action.picture.as_ref() {
+                    id.set_profile_picture(picture);
+                }
+                if let Some(banner) = action.banner.as_ref() {
+                    id.set_profile_banner(banner);
+                }
+                state.write().set_own_identity(id);
+            } else {
+                state.write().update_identity_with(did, |id| {
                     if let Some(picture) = action.picture.as_ref() {
                         id.set_profile_picture(picture);
                     }
                     if let Some(banner) = action.banner.as_ref() {
                         id.set_profile_banner(banner);
                     }
-                    state.write().set_own_identity(id);
-                } else {
-                    state.write().update_identity_with(did, |id| {
-                        if let Some(picture) = action.picture.as_ref() {
-                            id.set_profile_picture(picture);
-                        }
-                        if let Some(banner) = action.banner.as_ref() {
-                            id.set_profile_banner(banner);
-                        }
-                    });
-                }
+                });
             }
         }
     });
@@ -587,8 +583,7 @@ fn use_app_coroutines() -> Option<()> {
     let file_tracker = use_context::<Signal<TransferTracker>>();
 
     // Listen to async tasks actions that should be handled on main thread
-    use_resource(|| {
-        to_owned![state];
+    use_resource(move || {
         let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = schedule_update_any();
         async move {
             let channel = ACTION_LISTENER.rx.clone();
@@ -673,23 +668,19 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // clear toasts
-    use_resource(|| {
-        to_owned![state];
-        async move {
-            loop {
-                sleep(Duration::from_secs(1)).await;
-                if !state.read().has_toasts() {
-                    continue;
-                }
-                log::trace!("decrement toasts");
-                state.write().decrement_toasts();
+    use_resource(move || async move {
+        loop {
+            sleep(Duration::from_secs(1)).await;
+            if !state.read().has_toasts() {
+                continue;
             }
+            log::trace!("decrement toasts");
+            state.write().decrement_toasts();
         }
     });
 
     //Update active call
-    use_resource(|| {
-        to_owned![state];
+    use_resource(move || {
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
@@ -702,22 +693,18 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // clear typing indicator
-    use_resource(|| {
-        to_owned![state];
-        async move {
-            loop {
-                sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                if state.write_silent().clear_typing_indicator(Instant::now()) {
-                    log::trace!("clear typing indicator");
-                    state.write();
-                }
+    use_resource(move || async move {
+        loop {
+            sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
+            if state.write_silent().clear_typing_indicator(Instant::now()) {
+                log::trace!("clear typing indicator");
+                state.write();
             }
         }
     });
 
     // periodically refresh message timestamps and friend's status messages
     use_resource(move || {
-        to_owned![state];
         async move {
             loop {
                 // simply triggering an update will refresh the message timestamps
@@ -729,43 +716,37 @@ fn use_app_coroutines() -> Option<()> {
     });
 
     // check for updates
-    use_resource(move || {
-        to_owned![state];
-        async move {
-            loop {
-                let latest_release = match utils::auto_updater::check_for_release().await {
-                    Ok(opt) => match opt {
-                        Some(r) => r,
-                        None => {
-                            sleep(Duration::from_secs(3600 * 24)).await;
-                            continue;
-                        }
-                    },
-                    Err(e) => {
-                        log::error!("failed to check for release: {e}");
+    use_resource(move || async move {
+        loop {
+            let latest_release = match utils::auto_updater::check_for_release().await {
+                Ok(opt) => match opt {
+                    Some(r) => r,
+                    None => {
                         sleep(Duration::from_secs(3600 * 24)).await;
                         continue;
                     }
-                };
-                if state.read().settings.update_dismissed == Some(latest_release.tag_name.clone()) {
+                },
+                Err(e) => {
+                    log::error!("failed to check for release: {e}");
                     sleep(Duration::from_secs(3600 * 24)).await;
                     continue;
                 }
-                state.write().update_available(latest_release.tag_name);
+            };
+            if state.read().settings.update_dismissed == Some(latest_release.tag_name.clone()) {
                 sleep(Duration::from_secs(3600 * 24)).await;
+                continue;
             }
+            state.write().update_available(latest_release.tag_name);
+            sleep(Duration::from_secs(3600 * 24)).await;
         }
     });
 
     // control child windows
-    use_resource(move || {
-        to_owned![desktop, state];
-        async move {
-            let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
-            let mut ch = window_cmd_rx.lock().await;
-            while let Some(cmd) = ch.recv().await {
-                window_manager::handle_cmd(state.clone(), cmd, desktop.clone()).await;
-            }
+    use_resource(move || async move {
+        let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
+        let mut ch = window_cmd_rx.lock().await;
+        while let Some(cmd) = ch.recv().await {
+            window_manager::handle_cmd(state.clone(), cmd, desktop_signal()).await;
         }
     });
 

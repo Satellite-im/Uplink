@@ -36,12 +36,12 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn CreateGroup(props: Props) -> Element {
     log::trace!("rendering create_group");
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let router = use_navigator();
-    let friend_prefix = use_signal(|| String::new());
+    let mut friend_prefix = use_signal(|| String::new());
     let selected_friends: Signal<HashSet<DID>> = use_signal(|| HashSet::new());
-    let chat_with: Signal<Option<Uuid>> = use_signal(|| None);
-    let group_name = use_signal(|| Some(String::new()));
+    let mut chat_with: Signal<Option<Uuid>> = use_signal(|| None);
+    let mut group_name = use_signal(|| Some(String::new()));
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -50,7 +50,7 @@ pub fn CreateGroup(props: Props) -> Element {
             .map(|id| (id.did_key(), id.clone())),
     );
 
-    if let Some(id) = *chat_with.read() {
+    if let Some(id) = chat_with() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -241,27 +241,24 @@ pub struct FriendProps {
 }
 fn render_friend(props: FriendProps) -> Element {
     let mut is_checked = use_signal(|| false);
-    if !*is_checked.read()
-        && props
-            .selected_friends
-            .read()
-            .contains(&props.friend.did_key())
-    {
+    let mut selected_friends = props.selected_friends.clone();
+    let friend = use_signal(|| props.friend.clone());
+    if !*is_checked.read() && selected_friends.read().contains(&props.friend.did_key()) {
         is_checked.set(true);
     }
 
-    let update_fn = || {
-        let friend_did = props.friend.did_key();
+    let mut update_fn = move || {
+        let friend_did = friend().did_key();
         let new_value = !is_checked();
         is_checked.set(new_value);
-        let mut friends = props.selected_friends.read().clone();
+        let mut friends = selected_friends.read().clone();
         if new_value {
             friends.insert(friend_did);
         } else {
             friends.remove(&friend_did);
         }
         let friends_clone = friends.clone();
-        props.selected_friends.set(friends_clone);
+        selected_friends.set(friends_clone);
     };
 
     rsx!(

@@ -44,7 +44,7 @@ pub fn FriendsLayout() -> Element {
 
     // this is a hack to deal with a change in how Dioxus routing works. The `route` hook used to be shared
     // between elements.
-    use_resource(|| {
+    use_resource(move || {
         to_owned![route];
         async move {
             let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
@@ -159,8 +159,8 @@ fn render_route<T>(props: T, route: FriendRoute) -> Element {
     })
 }
 
-fn get_topbar(route: Signal<FriendRoute>) -> Element {
-    let state = use_context::<Signal<State>>();
+fn get_topbar(mut route: Signal<FriendRoute>) -> Element {
+    let mut state = use_context::<Signal<State>>();
     let pending_friends = state.read().friends().incoming_requests.len();
 
     rsx!(Topbar {

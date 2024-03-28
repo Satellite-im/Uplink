@@ -38,10 +38,10 @@ pub struct Props {
 pub fn CropCircleImageModal(props: Props) -> Element {
     let large_thumbnail = use_signal(|| props.large_thumbnail.clone());
 
-    let image_scale: Signal<f32> = use_signal(|| 1.0);
-    let crop_image = use_signal(|| true);
+    let mut image_scale: Signal<f32> = use_signal(|| 1.0);
+    let mut crop_image = use_signal(|| true);
     let cropped_image_pathbuf = use_signal(PathBuf::new);
-    let clicked_button_to_crop = use_signal(|| false);
+    let mut clicked_button_to_crop = use_signal(|| false);
 
     let image_dimensions = use_signal(|| ImageDimensions {
         height: 0,
@@ -54,7 +54,7 @@ pub fn CropCircleImageModal(props: Props) -> Element {
         crop_image.set(false);
     }
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![image_dimensions];
         async move {
             while image_dimensions.read().width == 0 && image_dimensions.read().height == 0 {

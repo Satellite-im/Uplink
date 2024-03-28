@@ -49,8 +49,8 @@ static ALLOW_FOLDER_NAVIGATION: &str = r#"
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub fn run_verifications_and_update_storage(
-    state: &Signal<State>,
-    controller: &Signal<StorageController>,
+    mut state: Signal<State>,
+    mut controller: Signal<StorageController>,
     files_in_queue_to_upload: Vec<PathBuf>,
 ) {
     let files_in_queue_to_upload_list = files_in_queue_to_upload;
@@ -72,8 +72,8 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn get_items_from_current_directory(ch: &Coroutine<ChanCmd>) {
-    use_resource(|| {
+pub fn get_items_from_current_directory(ch: Coroutine<ChanCmd>) {
+    use_resource(move || {
         to_owned![ch];
         async move {
             sleep(Duration::from_secs(1)).await;
@@ -84,7 +84,7 @@ pub fn get_items_from_current_directory(ch: &Coroutine<ChanCmd>) {
 
 #[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(are_files_hovering_app: &Signal<bool>) {
-    use_resource(|| {
+    use_resource(move || {
         async move {
             // ondragover function from div does not work on windows
             loop {
@@ -146,7 +146,7 @@ pub fn format_item_size(item_size: usize) -> String {
 
 pub fn download_file(
     file_name: &str,
-    ch: &Coroutine<ChanCmd>,
+    ch: Coroutine<ChanCmd>,
     temp_path_to_download_file_to_preview: Option<PathBuf>,
 ) {
     let file_extension = std::path::Path::new(&file_name)
@@ -193,17 +193,14 @@ pub fn add_files_in_queue_to_upload(
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }
 
-pub fn use_allow_block_folder_nav(files_in_queue_to_upload: &Signal<Vec<PathBuf>>) {
+pub fn use_allow_block_folder_nav(files_in_queue_to_upload: Signal<Vec<PathBuf>>) {
     // Block directories navigation if there is a file been uploaded
     // use_future here to verify before render elements on first render
-    use_resource(|| {
-        to_owned![files_in_queue_to_upload];
-        async move {
-            allow_folder_navigation(files_in_queue_to_upload.read().is_empty());
-        }
+    use_resource(move || async move {
+        allow_folder_navigation(files_in_queue_to_upload().is_empty());
     });
     // This is to run on all re-renders
-    allow_folder_navigation(files_in_queue_to_upload.read().is_empty());
+    allow_folder_navigation(files_in_queue_to_upload().is_empty());
 }
 
 pub fn allow_folder_navigation(allow_navigation: bool) {
@@ -241,7 +238,7 @@ pub fn init_coroutine<'a>(
     controller: Signal<StorageController>,
     state: Signal<State>,
     file_tracker: Signal<TransferTracker>,
-) -> &'a Coroutine<ChanCmd> {
+) -> Coroutine<ChanCmd> {
     let download_queue = download_stream_handler();
     let ch = use_coroutine(|mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![controller, download_queue, state, file_tracker];
@@ -493,7 +490,7 @@ pub fn init_coroutine<'a>(
             }
         }
     });
-    &ch
+    ch
 }
 
 /// Upload files has many states to manage
@@ -504,14 +501,14 @@ pub fn init_coroutine<'a>(
 /// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
     state: Signal<State>,
-    controller: &Signal<StorageController>,
+    controller: Signal<StorageController>,
     upload_file_controller: UploadFileController,
     file_tracker: Signal<TransferTracker>,
 ) {
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![
             state,
             controller,

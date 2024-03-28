@@ -59,9 +59,9 @@ use crate::{
 
 pub fn get_chatbar<'a>(props: ChatProps) -> Element {
     log::trace!("get_chatbar");
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let chat_data = use_context::<Signal<ChatData>>();
-    let scroll_btn = use_context::<Signal<ScrollBtn>>();
+    let mut scroll_btn = use_context::<Signal<ScrollBtn>>();
     state.write_silent().scope_ids.chatbar = Some(current_scope_id().unwrap().0);
 
     let active_chat_id = chat_data.read().active_chat.id();
@@ -73,14 +73,15 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         .map(|c| c.id == active_chat_id)
         .unwrap_or_default();
 
-    let is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
-    let can_send = use_signal(|| state.read().active_chat_has_draft());
-    let update_script = use_signal(String::new);
-    let upload_button_menu_uuid = &*use_hook(|| Uuid::new_v4().to_string());
-    let show_storage_modal = use_signal(|| false);
+    let mut is_loading = !state_matches_active_chat || !chat_data.read().active_chat.is_initialized;
+    let mut can_send = use_signal(|| state.read().active_chat_has_draft());
+    let mut update_script = use_signal(String::new);
+    // TODO(Migration_0.5): Look after migration
+    let upload_button_menu_uuid = use_signal(|| Uuid::new_v4().to_string());
+    let mut show_storage_modal = use_signal(|| false);
 
-    let suggestions = use_signal(|| SuggestionType::None);
-    let mentions = use_signal(Vec::new);
+    let mut suggestions = use_signal(|| SuggestionType::None);
+    let mut mentions = use_signal(Vec::new);
 
     let with_scroll_btn = scroll_btn.read().get(active_chat_id) && !is_loading;
 
@@ -100,7 +101,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
-    let update_send = move || {
+    let mut update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
                 .read()
@@ -151,7 +152,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
     let local_typing_ch1 = local_typing_ch.clone();
     let enable_paste_shortcut = use_signal(|| true);
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![enable_paste_shortcut];
         async move {
             loop {
@@ -180,7 +181,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
 
     let current_chat = use_signal(|| active_chat_id);
 
-    use_resource(|| async move {
+    use_resource(move || async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
             if !current_chat.read().is_nil() {
@@ -189,7 +190,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         }
     });
 
-    let msg_valid = |msg: &[String]| {
+    let msg_valid = move |msg: &[String]| {
         (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
             || !state
                 .read()
@@ -212,7 +213,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
     let chat_participants_2 = chat_participants.clone();
     let chat_participants_3 = chat_participants.clone();
 
-    let submit_fn = move || {
+    let mut submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
         let active_chat_id = chat_data.read().active_chat.id();
 
@@ -260,7 +261,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         }
     };
 
-    let submit_fn2 = submit_fn.clone();
+    let mut submit_fn2 = submit_fn.clone();
 
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -273,7 +274,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
 
     let disabled = !state.read().can_use_active_chat();
     // todo: don't define a hook so far down
-    let error = use_signal(|| (false, active_chat_id));
+    let mut error = use_signal(|| (false, active_chat_id));
     let value_chatbar = state
         .read()
         .get_active_chat()
@@ -287,7 +288,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
         error.set((false, active_chat_id));
     }
 
-    let validate_max = move || {
+    let mut validate_max = move || {
         let value_chatbar = state
             .read()
             .get_active_chat()
@@ -481,7 +482,7 @@ pub fn get_chatbar<'a>(props: ChatProps) -> Element {
                         onpress: move |e: Event<MouseData>| {
                             let mouse_data = e;
                             let script = SHOW_CONTEXT
-                                .replace("UUID", upload_button_menu_uuid)
+                                .replace("UUID", &upload_button_menu_uuid())
                                 .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string())
                                 .replace("$SELF", "false");

@@ -33,7 +33,7 @@ struct CreateAccountCmd {
 pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<String>) -> Element {
     log::trace!("rendering enter username layout");
     let window = use_window();
-    let loading = use_signal(|| false);
+    let mut loading = use_signal(|| false);
 
     if !matches!(&*page.read(), AuthPages::Success(_)) {
         window.set_inner_size(LogicalSize {
@@ -42,9 +42,9 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
         });
     }
 
-    let username = use_signal(String::new);
+    let mut username = use_signal(String::new);
     //let error = use_signal( String::new);
-    let button_disabled = use_signal(|| true);
+    let mut button_disabled = use_signal(|| true);
 
     let username_validation = Validation {
         // The input should have a maximum length of 32
@@ -137,7 +137,7 @@ pub fn Layout(page: Signal<AuthPages>, pin: Signal<String>, seed_words: Signal<S
                     clear_on_submit: false,
                     ..Default::default()
                 },
-                onchange: |(val, is_valid): (String, bool)| {
+                onchange: move |(val, is_valid): (String, bool)| {
                     let should_disable = !is_valid;
                     if button_disabled() != should_disable {
                         button_disabled.set(should_disable);

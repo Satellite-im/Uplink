@@ -42,10 +42,10 @@ struct Cmd {
 #[component]
 pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
     let state = use_signal(|| State::load());
-    let loading = use_signal(|| false);
-    let input: Signal<Vec<_>> = use_signal(|| (0..12).map(|_| String::new()).collect());
-    let seed_error = use_signal(|| None);
-    let focus = use_signal(|| 0);
+    let mut loading = use_signal(|| false);
+    let mut input: Signal<Vec<_>> = use_signal(|| (0..12).map(|_| String::new()).collect());
+    let mut seed_error = use_signal(|| None);
+    let mut focus = use_signal(|| 0);
 
     let window = use_window();
 
@@ -58,7 +58,7 @@ pub fn Layout(pin: Signal<String>, page: Signal<AuthPages>) -> Element {
 
     use_effect(move || {
         spawn(async move {
-            let eval_result = eval(include_str!("./enter_seed_handler.js"));
+            let mut eval_result = eval(include_str!("./enter_seed_handler.js"));
             loop {
                 if let Ok(val) = eval_result.recv().await {
                     let paste = val

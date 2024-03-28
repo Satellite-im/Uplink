@@ -18,7 +18,7 @@ pub const APP_STYLE: &str = include_str!("../../compiled_styles.css");
 // EntryPoint -> CreateOrRecover -> CopySeedWords -> EnterUserName -> login
 // serve as a sort of router while the user logs in]
 #[allow(clippy::large_enum_variant)]
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum AuthPages {
     EntryPoint,
     CreateOrRecover,

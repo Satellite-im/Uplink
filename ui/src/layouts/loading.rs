@@ -23,7 +23,7 @@ pub fn use_loaded_assets() -> Resource<Result<(), tokio::task::JoinError>> {
     let desktop = dioxus_desktop::use_window();
     let state = use_context::<Signal<State>>();
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![desktop, state];
         async move {
             let res = tokio::task::spawn_blocking(|| {

@@ -24,7 +24,7 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
         });
     }
 
-    let words = use_resource(|| {
+    let words = use_resource(move || {
         to_owned![seed_words];
         async move {
             let mnemonic = warp::crypto::keypair::generate_mnemonic_phrase(
@@ -62,8 +62,8 @@ pub fn Layout(page: Signal<AuthPages>, seed_words: Signal<String>) -> Element {
 
 #[component]
 fn SeedWords(page: Signal<AuthPages>, words: Vec<String>) -> Element {
-    let copied = use_signal(|| false);
-    use_resource(|| async move {
+    let mut copied = use_signal(|| false);
+    use_resource(move || async move {
         if *copied.read() {
             sleep(Duration::from_secs(3)).await;
             *copied.write() = false;

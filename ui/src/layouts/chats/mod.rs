@@ -59,8 +59,8 @@ pub const OVERLAY_SCRIPT: &str = r#"
 
 #[allow(non_snake_case)]
 pub fn ChatLayout() -> Element {
-    let state = use_context::<Signal<State>>();
-    let first_render = use_signal(|| true);
+    let mut state = use_context::<Signal<State>>();
+    let mut first_render = use_signal(|| true);
 
     state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
@@ -77,7 +77,7 @@ pub fn ChatLayout() -> Element {
     let show_slimbar = state.read().show_slimbar();
 
     // #[cfg(target_os = "windows")]
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state, window, drag_event];
         async move {
             // ondragover function from div does not work on windows

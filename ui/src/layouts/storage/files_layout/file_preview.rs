@@ -40,7 +40,7 @@ pub fn open_file_preview_modal(
         close_on_click_inside_modal: true,
         children: rsx!(FilePreview {
             file: file,
-            on_download: |temp_path| {
+            on_download: move |temp_path| {
                 on_download.call(temp_path);
             },
             on_dismiss: move |_| on_dismiss.call(()),
@@ -57,8 +57,8 @@ struct Props {
 
 #[allow(non_snake_case)]
 fn FilePreview(props: Props) -> Element {
-    let state = use_context::<Signal<State>>();
-    let file_path_in_local_disk = use_signal(|| PathBuf::new());
+    let mut state = use_context::<Signal<State>>();
+    let mut file_path_in_local_disk = use_signal(|| PathBuf::new());
 
     let thumbnail = thumbnail_to_base64(&props.file);
     let temp_dir = STATIC_ARGS.temp_files.join(props.file.name());
@@ -71,7 +71,7 @@ fn FilePreview(props: Props) -> Element {
         props.file.id(),
         temp_dir.extension().unwrap_or_default().to_string_lossy()
     ));
-    let should_download = use_signal(|| true);
+    let mut should_download = use_signal(|| true);
 
     let is_video = is_video(&props.file.name());
     let is_audio = is_audio(&props.file.name());
@@ -87,7 +87,7 @@ fn FilePreview(props: Props) -> Element {
         }
     }
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![
             temp_dir,
             file_path_in_local_disk,

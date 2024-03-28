@@ -19,7 +19,7 @@ pub fn handle_warp_events(state: &Signal<State>, chat_data: &Signal<ChatData>) {
         let active_chat_id = state.read().get_active_chat().map(|x| x.id);
         active_chat_id
     });
-    use_resource(|| {
+    use_resource(move || {
         to_owned![chat_data];
         async move {
             let mut ch = WARP_EVENT_CH.tx.subscribe();
@@ -100,7 +100,7 @@ pub fn init_chat_data(state: Signal<State>, chat_data: Signal<ChatData>) -> Reso
         let active_chat_id = state.read().get_active_chat().map(|x| x.id);
         active_chat_id
     });
-    use_resource(|| {
+    use_resource(move || {
         to_owned![state, chat_data];
         async move {
             while !state.read().initialized {

@@ -1,3 +1,5 @@
+use std::borrow::{Borrow, BorrowMut};
+
 use crate::layouts::storage::functions::{self, download_file, ChanCmd};
 use crate::layouts::storage::send_files_layout::send_files_components::{
     toggle_selected_file, FileCheckbox,
@@ -83,9 +85,10 @@ pub struct FilesAndFoldersProps {
 
 #[allow(non_snake_case)]
 pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
-    let state = use_context::<Signal<State>>();
-    let send_files_mode = props.send_files_mode;
-    let storage_controller = props.storage_controller;
+    let mut state = use_context::<Signal<State>>();
+    let send_files_mode = props.send_files_mode.clone();
+    let mut storage_controller = props.storage_controller.clone();
+    let storage_controller_immutable = props.storage_controller.clone();
     let ch = use_coroutine_handle();
 
     rsx!(span {
@@ -99,7 +102,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                 rsx!(
                 Folder {
                     with_rename: true,
-                    onrename: |(val, key_code)| {
+                    onrename: move |(val, key_code)| {
                         let new_name: String = val;
                         if storage_controller.read().directories_list.iter().any(|dir| dir.name() == new_name) {
                             state
@@ -122,7 +125,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                      }
                 })
             })},
-            {storage_controller.read().directories_list.iter().map(|dir| {
+            {storage_controller_immutable.read().directories_list.iter().map(|dir| {
                 let folder_name = dir.name();
                 let folder_name2 = dir.name();
                 let folder_name3 = dir.name();
@@ -199,7 +202,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                     }
                 )
             })},
-            {storage_controller.read().files_list.iter().map(|file| {
+            {storage_controller_immutable.read().files_list.iter().cloned().map(|file| {
                 let file_name = file.name();
                 let file_name2 = file.name();
                 let file_name3 = file.name();
@@ -250,7 +253,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                                     aria_label: "files-download".to_string(),
                                     text: get_local_text("files.download"),
                                     onpress: move |_| {
-                                        download_file(&file_name2, &ch, None);
+                                        download_file(&file_name2, ch, None);
                                     },
                                 },
                                 hr {},
@@ -275,7 +278,7 @@ pub fn FilesAndFolders(props: FilesAndFoldersProps) -> Element {
                             },
                             File {
                                 key: "{key}-file",
-                                thumbnail: thumbnail_to_base64(file),
+                                thumbnail: thumbnail_to_base64(&file),
                                 text: file.name(),
                                 aria_label: file.name(),
                                 with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),

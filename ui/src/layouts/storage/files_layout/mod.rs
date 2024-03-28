@@ -44,31 +44,31 @@ use dioxus_html::input_data::keyboard_types::Modifiers;
 
 use self::controller::{StorageController, UploadFileController};
 
-use super::functions::{self, ChanCmd, UseEvalFn};
+use super::functions::{self, ChanCmd};
 
 #[allow(non_snake_case)]
 pub fn FilesLayout() -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     state.write_silent().ui.current_layout = ui::Layout::Storage;
-    let storage_controller = StorageController::new(&state);
-    let upload_file_controller = UploadFileController::new(state.clone());
+    let mut storage_controller = StorageController::new(state);
+    let mut upload_file_controller = UploadFileController::new(state.clone());
     let window = use_window();
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_in_queue_to_upload2 = files_in_queue_to_upload.clone();
     let files_been_uploaded2 = files_been_uploaded.clone();
-    let send_files_from_storage = use_signal(|| false);
+    let mut send_files_from_storage = use_signal(|| false);
     let files_pre_selected_to_send: Signal<Vec<Location>> = use_signal(Vec::new);
     let _router = use_navigator();
     let show_slimbar = state.read().show_slimbar() & !state.read().ui.is_minimal_view();
     let file_tracker = use_context::<Signal<TransferTracker>>();
 
-    functions::use_allow_block_folder_nav(&files_in_queue_to_upload);
+    functions::use_allow_block_folder_nav(files_in_queue_to_upload);
 
-    let ch: &Coroutine<ChanCmd> =
+    let ch: Coroutine<ChanCmd> =
         functions::init_coroutine(storage_controller.clone(), state, file_tracker);
 
-    use_resource(|| {
+    use_resource(move || {
         to_owned![files_been_uploaded, files_in_queue_to_upload];
         async move {
             // Remove load progress bar if anythings goes wrong
@@ -82,7 +82,7 @@ pub fn FilesLayout() -> Element {
     });
 
     functions::run_verifications_and_update_storage(
-        &state,
+        state,
         storage_controller,
         upload_file_controller
             .files_in_queue_to_upload
@@ -141,7 +141,7 @@ pub fn FilesLayout() -> Element {
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             {let file2 = file.clone();
             rsx!(open_file_preview_modal {
-                    on_dismiss: |_| {
+                    on_dismiss: move |_| {
                         storage_controller.with_mut(|i| i.show_file_modal = None);
                     },
                     on_download: move |temp_path| {
@@ -162,7 +162,7 @@ pub fn FilesLayout() -> Element {
                         && (keyboard_data.modifiers() == Modifiers::CONTROL || keyboard_data.modifiers() == Modifiers::META)
                     {
                         spawn({
-                            to_owned![files_been_uploaded2, files_in_queue_to_upload2, eval];
+                            to_owned![files_been_uploaded2, files_in_queue_to_upload2];
                             async move {
                                 let files_local_path = tokio::task::spawn_blocking(|| {
                                     get_files_path_from_clipboard().unwrap_or_default()
@@ -184,7 +184,7 @@ pub fn FilesLayout() -> Element {
                     }
                 }
             },
-            onclick: |_| {
+            onclick: move |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
             if show_slimbar {

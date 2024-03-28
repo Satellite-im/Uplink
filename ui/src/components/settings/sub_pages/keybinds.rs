@@ -91,7 +91,7 @@ pub fn check_for_conflicts(shortcut: Shortcut, shortcuts: Vec<(GlobalShortcut, S
 pub fn KeybindSection(props: KeybindSectionProps) -> Element {
     let mut state = use_context::<Signal<State>>();
     let keybind_section_id = props.id.clone();
-    let is_recording = use_signal(|| false);
+    let mut is_recording = use_signal(|| false);
     let mut update_keybind = use_signal(|| None);
     let system_shortcut = Shortcut::get_system_shortcut(&state, props.shortcut.clone());
     let new_keybind_has_one_key = use_signal(|| false);
@@ -130,13 +130,13 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
         .map(|(_, sc)| sc.clone())
         .unwrap_or_default();
 
-    let recorded_bindings = use_signal(|| Vec::new());
+    let mut recorded_bindings = use_signal(|| Vec::new());
 
     let script = AVOID_INPUT_ON_DIV.replace("$UUID", keybind_section_id.as_str());
     let _ = eval(&script);
     let keybind_section_id_clone = keybind_section_id.clone();
 
-    use_effect(|| {
+    use_effect(move || {
         if is_recording() {
             let unfocus_script =
                 UNFOCUS_DIV_ON_SUBMIT.replace("$UUID", keybind_section_id_clone.as_str());
@@ -257,10 +257,10 @@ pub fn KeybindSection(props: KeybindSectionProps) -> Element {
 
 #[allow(non_snake_case)]
 pub fn KeybindSettings() -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let bindings = state.read().settings.keybinds.clone();
-    let state2 = state.clone();
-    let state3 = state.clone();
+    let mut state2 = state.clone();
+    let mut state3 = state.clone();
 
     use_component_lifecycle(
         move || {

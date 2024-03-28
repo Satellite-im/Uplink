@@ -17,11 +17,11 @@ use crate::utils::get_font_sizes::FONT_SIZE_OPTIONS;
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings() -> Element {
-    let state = use_context::<Signal<State>>();
+    let mut state = use_context::<Signal<State>>();
     let initial_lang_value = state.read().settings.language.clone();
 
-    let themes_fut = use_resource(|| async move { get_available_themes() });
-    let font_fut = use_resource(|| async move { get_available_fonts() });
+    let themes_fut = use_resource(move || async move { get_available_themes() });
+    let font_fut = use_resource(move || async move { get_available_fonts() });
 
     log::trace!("General settings page rendered.");
 
