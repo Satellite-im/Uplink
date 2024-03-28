@@ -22,7 +22,7 @@ use common::{get_extras_dir, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_C
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::{LogicalPosition, PhysicalPosition, PhysicalSize};
 
-use dioxus_desktop::wry::WebViewExtMacOS;
+// use dioxus_desktop::wry::WebViewExtMacOS;
 use dioxus_desktop::{
     tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
