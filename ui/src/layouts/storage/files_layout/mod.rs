@@ -94,7 +94,7 @@ pub fn FilesLayout() -> Element {
 
     #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(
-        upload_file_controller.are_files_hovering_app,
+        &upload_file_controller.are_files_hovering_app,
     );
     functions::start_upload_file_listener(
         state,
