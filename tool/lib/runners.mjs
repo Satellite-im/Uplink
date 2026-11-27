@@ -14,8 +14,15 @@
  * main, and when it ends it is held to the commit that was published: a build of anything else is refused.
  *
  * `--on glyph` on a release script builds where it was built before, for as long as that repository keeps the old
- * workflows. Windows does so by itself while Satellite-im/Uplink lacks the signing account's secrets (signedThere):
+ * workflows. Windows does so by itself while Satellite-im/Uplink lacks the signing account's secrets (signingLacks):
  * an installer built there would be unsigned, and an unsigned one is never released in a signed one's place.
+ *
+ * NOT YET, THOUGH ([RUNS_IN]). The day the workflows were first published there and asked to run (2026-11-27), every
+ * job ended before it began: "The job was not started because your account is locked due to a billing issue". The
+ * Satellite-im organization's GitHub account is locked for billing, which only its owner can settle, and until it is
+ * no runner there starts anything. So a release builds where it always did, unless `--on uplink` says to try there.
+ * Once the account is settled: `gh workflow run linux.yml --repo Satellite-im/Uplink --ref main -f version=<v> -f
+ * build=<n>` (and windows.yml) as a trial, and when one has passed, [RUNS_IN] becomes 'uplink'.
  */
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -23,6 +30,8 @@ import { refLacksRelease } from './built_ref.mjs';
 
 export const UPLINK = 'Satellite-im/Uplink';
 export const GLYPH = 'InfamousVague/glyph';
+/** Where a release builds when it is not told: 'glyph' until Satellite-im/Uplink's runners can start a job (above). */
+export const RUNS_IN = 'glyph';
 
 /** The repository and the workflow file for [name] ('windows' or 'linux'), built [on] 'uplink' or 'glyph'. */
 export const runnerFor = (on, name) => (on === 'uplink' ? { repo: UPLINK, workflow: `${name}.yml` } : { repo: GLYPH, workflow: `messaging-${name}.yml` });

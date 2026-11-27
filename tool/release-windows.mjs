@@ -24,7 +24,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { requireNotes } from './lib/notes.mjs';
-import { GLYPH, UPLINK, finished, runnerFor, signingLacks, started } from './lib/runners.mjs';
+import { GLYPH, RUNS_IN, UPLINK, finished, runnerFor, signingLacks, started } from './lib/runners.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // The site's address since 2026-11-15 (tool/deploy-site.mjs); /opt/ghost-sms-* keep their names on the box.
@@ -77,13 +77,16 @@ async function liveRelease() {
  * An unsigned installer is never released in a signed one's place: Windows would warn everyone who downloads it.
  */
 function whereBuilt() {
+  // Not before that repository's runners can start a job at all (tool/lib/runners.mjs says what holds them).
+  if (RUNS_IN !== 'uplink') return RUNS_IN;
   const lacks = signingLacks();
   if (lacks && lacks.length === 0) return 'uplink';
   say(lacks ? `  ${UPLINK} has no ${lacks.join(', ')}: built in ${GLYPH}, which has the signing secrets, so the installer is signed.` : `  ${UPLINK}'s secrets could not be listed: built in ${GLYPH}.`);
   return 'glyph';
 }
 
-// Where it is built (tool/lib/runners.mjs): the app's own repository, once it has the signing account's secrets; until then where it was built before, which has them.
+// Where it is built: where tool/lib/runners.mjs says a release builds for now, and in the app's own repository only
+// once that has the signing account's secrets. --on uplink or --on glyph says outright.
 const on = flag('on') ?? whereBuilt();
 if (on !== 'uplink' && on !== 'glyph') fail(`--on ${on}: uplink (Satellite-im/Uplink) or glyph (where it was built before).`);
 

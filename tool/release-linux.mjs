@@ -24,7 +24,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { requireNotes } from './lib/notes.mjs';
-import { finished, runnerFor, started } from './lib/runners.mjs';
+import { RUNS_IN, finished, runnerFor, started } from './lib/runners.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // The site's address since 2026-11-15 (tool/deploy-site.mjs); /opt/ghost-sms-* keep their names on the box.
@@ -73,9 +73,9 @@ async function liveRelease() {
   if (now && now.version === versionName && !has('again')) fail(`Uplink for Linux ${versionName} is already on the site (--again to send it again).`);
 }
 
-const whereBuilt = () => 'uplink';
+const whereBuilt = () => RUNS_IN;
 
-// Where it is built (tool/lib/runners.mjs): the app's own repository, unless --on glyph says where it was built before.
+// Where it is built: where tool/lib/runners.mjs says a release builds for now, unless --on uplink or --on glyph says.
 const on = flag('on') ?? whereBuilt();
 if (on !== 'uplink' && on !== 'glyph') fail(`--on ${on}: uplink (Satellite-im/Uplink) or glyph (where it was built before).`);
 

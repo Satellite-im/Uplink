@@ -1857,23 +1857,33 @@ Since 2026-11-27 the same snapshot also goes to github.com/Satellite-im/Uplink's
 name (Matt, asked whether every release should update it: "Yes, every release"), last of the three. That
 repository's `main` is its default branch; the Rust app it held before is on `dev` and in the 1.0.x tags.
 
-**The runners are that repository's** (Matt, asked "Move the Windows, Linux and relay builds onto
-Satellite-im/Uplink?": "Yes, move them"). The build workflows are the app's own files now,
-`.github/workflows/windows.yml`, `linux.yml`, `relay.yml`, `p2p-core.yml` and `windows-video-check.yml` in this
-folder, which is that repository's root, so they are published with the source and build what was published beside
-them. `tool/release-linux.mjs` and `tool/release-windows.mjs` bring that repository's `main` up to the release
-(`tool/publish-source.mjs`), ask for the build there, and refuse one that was of any other commit
-(`tool/lib/runners.mjs`); merging a release into the developing repository's `main` first is needed only for a build
-that still runs there. Windows is the one that still does, and says so each time: its installer is signed with the
-Azure Artifact Signing secrets, which the developing repository has and Satellite-im/Uplink has not been given yet
-(`AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`,
-`AZURE_SIGNING_PROFILE`: Matt's to add; a secret's value cannot be read back out of GitHub). The day they are there,
-the script builds Windows there too with nothing else changed. `--on glyph` builds either where it was built before,
-from the copies the developing repository keeps at its own root (`messaging-windows.yml`, `messaging-linux.yml`): to
-be deleted once a release of each has gone out from the new place. The relay's workflow runs in both repositories
-the source is published to; its release in Satellite-im/Uplink is never marked the latest, which is the app's, and
-its container there (`ghcr.io/satellite-im/ghost-relay`) starts private until someone makes the package public by
-hand, so the docs still name `ghcr.io/infamousvague/ghost-relay`.
+**The runners are to be that repository's** (Matt, asked "Move the Windows, Linux and relay builds onto
+Satellite-im/Uplink?": "Yes, move them"), and everything for it is in place but the two things that are Matt's.
+The build workflows are the app's own files now, `.github/workflows/windows.yml`, `linux.yml`, `relay.yml`,
+`p2p-core.yml` and `windows-video-check.yml` in this folder, which is that repository's root, so they are published
+with the source and build what was published beside them. `tool/release-linux.mjs` and `tool/release-windows.mjs`
+can build there (`--on uplink`; `tool/lib/runners.mjs`): they bring that repository's `main` up to the release
+(`tool/publish-source.mjs`), ask for the build, and refuse one that was of any other commit.
+
+What holds it, as of 2026-11-27:
+1. **Satellite-im's GitHub account is locked for billing.** The first time the workflows were asked to run there,
+   every job ended before it began: "The job was not started because your account is locked due to a billing
+   issue". Nothing runs there until the organization's owner settles it. So `RUNS_IN` in `tool/lib/runners.mjs` is
+   still `'glyph'`: a release builds Windows and Linux where it always did (the developing repository's
+   `messaging-windows.yml` and `messaging-linux.yml`, at its `main`, into which the release is merged first). Once
+   the account is settled, a trial of each (`gh workflow run linux.yml --repo Satellite-im/Uplink --ref main -f
+   version=<v> -f build=<n>`), and when they pass `RUNS_IN` becomes `'uplink'`; the two old workflows are deleted
+   after a release of each has gone out from the new place.
+2. **The signing secrets are not there.** Windows' installer is signed with `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`,
+   `AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT` and `AZURE_SIGNING_PROFILE`, which the
+   developing repository has and Satellite-im/Uplink has not been given (a secret's value cannot be read back out of
+   GitHub, so they are Matt's to add). Whatever `RUNS_IN` says, the Windows script builds there only when they are
+   present, and says which it chose: an unsigned installer never takes a signed one's place.
+
+The relay's workflow runs in both repositories the source is published to; its release in Satellite-im/Uplink is
+never marked the latest, which is the app's, and its container there (`ghcr.io/satellite-im/ghost-relay`) starts
+private until someone makes the package public by hand, so the docs still name `ghcr.io/infamousvague/ghost-relay`.
+While the account is locked it fails there like the rest, on each release that changes the relay.
 
 And each release is a release on GitHub there too (`node tool/release-github.mjs`, run by the same four scripts
 after the source; Matt, asked whether every release should publish one: "Yes, every release"). It is tagged `v` and
