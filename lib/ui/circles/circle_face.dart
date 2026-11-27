@@ -6,6 +6,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -15,6 +16,7 @@ import '../../art/app_icon.dart';
 import '../../art/lucide.g.dart';
 import '../../art/lucide_more.dart';
 import '../../circles/circle.dart';
+import '../../files/files_store.dart';
 import '../../kit/settings_kit.dart';
 import '../../sms.dart' show Sms;
 import '../../voice/voice.dart';
@@ -91,18 +93,54 @@ LucideIcon spaceKindIcon(SpaceKind kind) => switch (kind) {
       SpaceKind.open => Lucide.compass,
     };
 
+/// Circles' pictures at full size on this device (Circle.pictureFile; Matt, 2026-11-27: "upload at full resolution"):
+/// the part of the picture chosen, cut at the picture's own resolution, kept on the relay under the circle's seed as
+/// its banner's is. A face drawn with more pixels than its stand-in is sharp at ([fullFrom]) asks for it here: it is
+/// brought down once, and the faces showing are told when it has come.
+class CircleFulls extends ChangeNotifier {
+  static final CircleFulls instance = CircleFulls();
+
+  /// A face this many pixels across or fewer is drawn from the stand-in, which is that sharp or sharper.
+  static const fullFrom = 160;
+
+  final Set<String> _asked = {};
+
+  /// [c]'s full picture where it is on this device; null where the circle has none or it is still on its way (asked
+  /// for, once). Never in a browser, which keeps no files: the stand-in, which came with the circle, is its picture.
+  String? of(Circle c) {
+    final j = c.pictureFile;
+    final f = j == null || Sms.browser ? null : SpaceFile.fromJson(j, by: c.manifest.by ?? '');
+    if (f == null) return null;
+    final have = FilesStore.instance.cached(f);
+    if (have != null) return have;
+    if (_asked.add(f.id)) {
+      FilesStore.instance.fetch(c.bannerChannel, f).then((_) => notifyListeners(), onError: (_) {
+        // Asked again the next time a large face of it is drawn.
+        _asked.remove(f.id);
+      });
+    }
+    return null;
+  }
+}
+
 /// A circle's face: its picture, or its icon on a wash of its colour; filled with the colour when [selected]. Round,
 /// as its name says, and drawn in [hue] through the app's hue tokens, so each look settles it into its own page.
 class CircleFace extends StatelessWidget {
-  const CircleFace({super.key, required this.hue, required this.icon, this.picture, this.size = 44, this.selected = false, this.semanticLabel, this.ringed = true});
+  const CircleFace({super.key, required this.hue, required this.icon, this.picture, this.circle, this.size = 44, this.selected = false, this.semanticLabel, this.ringed = true});
 
   /// Drawn for [circle].
   factory CircleFace.of(Circle circle, {Key? key, double size = 44, bool selected = false, bool ringed = true}) =>
-      CircleFace(key: key, hue: circle.hue, icon: circle.icon, picture: circle.picture, size: size, selected: selected, semanticLabel: circle.name, ringed: ringed);
+      CircleFace(key: key, hue: circle.hue, icon: circle.icon, picture: circle.picture, circle: circle, size: size, selected: selected, semanticLabel: circle.name, ringed: ringed);
 
   final String hue;
   final String icon;
+
+  /// Its picture's stand-in (base64), as the circle's manifest carries it; null for a face that wears its icon.
   final String? picture;
+
+  /// The circle it is the face of, where it is one's: a face drawn large is drawn from its full picture
+  /// ([CircleFulls]) once that is on this device.
+  final Circle? circle;
   final double size;
   final bool selected;
   final String? semanticLabel;
@@ -129,7 +167,16 @@ class CircleFace extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) {
+    // Drawn large, and the circle has its picture at full size: drawn again when that has come.
+    final pixels = size * (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1);
+    final c = circle;
+    if (c == null || picture == null || pixels <= CircleFulls.fullFrom || c.pictureFile == null) return _face(context, null, pixels);
+    return ListenableBuilder(listenable: CircleFulls.instance, builder: (context, _) => _face(context, CircleFulls.instance.of(c), pixels));
+  }
+
+  /// The face, its picture drawn from the file at [full] where there is one, else from its stand-in.
+  Widget _face(BuildContext context, String? full, double pixels) => Semantics(
         label: semanticLabel,
         image: true,
         child: GlacierScope(
@@ -139,6 +186,14 @@ class CircleFace extends StatelessWidget {
             final bevel = isBevelChrome(t);
             final bytes = picture == null ? null : _bytes(picture!);
             final colour = settingsHue(t);
+            // The picture: the full one where it is here, decoded at the size it is drawn, with the stand-in under any
+            // trouble reading it; else the stand-in.
+            Widget pictured(Uint8List standIn, {FilterQuality quality = FilterQuality.low, required Widget Function() none}) {
+              final small = Image.memory(standIn, width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true, filterQuality: quality, errorBuilder: (_, _, _) => none());
+              if (full == null) return small;
+              return Image.file(File(full), width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true, filterQuality: FilterQuality.medium, cacheWidth: pixels.ceil(), errorBuilder: (_, _, _) => small);
+            }
+
             // A picture fills the round itself: clipped to it, a little zoomed so no edge of a square picture shows, with
             // nothing of the circle's colour behind it to show round its rim (Matt, 2026-11-19: "the icons inside the
             // sidebar rail for the circles bleed around the edges since they're square and not zoomed to fit"). Chosen,
@@ -152,7 +207,7 @@ class CircleFace extends StatelessWidget {
                   child: ClipOval(
                     child: Transform.scale(
                       scale: 1.08,
-                      child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true, filterQuality: FilterQuality.medium, errorBuilder: (_, _, _) => ColoredBox(color: settingsHueWash(t), child: Center(child: _icon(t, colour, bevel)))),
+                      child: pictured(bytes, quality: FilterQuality.medium, none: () => ColoredBox(color: settingsHueWash(t), child: Center(child: _icon(t, colour, bevel)))),
                     ),
                   ),
                 ),
@@ -169,9 +224,7 @@ class CircleFace extends StatelessWidget {
                 color: bevel ? null : (selected ? colour : settingsHueWash(t)),
                 border: bevel || (selected && ringed) ? Border.all(color: bevel ? DialupColors.of(t).dark : colour, width: bevel ? 1 : 2) : null,
               ),
-              child: bytes != null
-                  ? Image.memory(bytes, width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true, errorBuilder: (_, _, _) => _icon(t, colour, bevel))
-                  : _icon(t, colour, bevel),
+              child: bytes != null ? pictured(bytes, none: () => _icon(t, colour, bevel)) : _icon(t, colour, bevel),
             );
           }),
         ),

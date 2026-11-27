@@ -320,7 +320,9 @@ class CircleManifest {
   /// A Lucide icon's name (lib/art), shown on the circle's face where it has no picture.
   final String icon;
 
-  /// A small picture (WebP or PNG, base64, at most [circlePictureMax]) in the icon's place; null for none.
+  /// A small picture (base64, at most [circlePictureMax]: a JPEG, a PNG where it can be seen through, a WebP or PNG
+  /// from a build before 0.12.52) in the icon's place; null for none. The part of the picture chosen, at full size, is
+  /// [pictureFile].
   final String? picture;
   final List<CircleSpace> spaces;
 
@@ -469,7 +471,8 @@ class CircleManifest {
     return all;
   }
 
-  /// Its banner (`bn`, base64 PNG, at most [circleBannerMax]); null for none, where the sidebar's top wears its colour.
+  /// Its banner (`bn`, base64, at most [circleBannerMax]: a JPEG, a PNG from a build before 0.12.52); null for none,
+  /// where the sidebar's top wears its colour.
   String? get banner => extra['bn'] is String && (extra['bn'] as String).length <= circleBannerMax ? extra['bn'] as String : null;
 
   /// Its invite word (`iw`, Matt, 2026-11-19: "add the custom invite code word as a default feature"): gogho.st/c/<word>,
@@ -478,10 +481,27 @@ class CircleManifest {
   String? get inviteWord => extra['iw'] is String && (extra['iw'] as String).length <= 32 ? extra['iw'] as String : null;
 
   /// Its banner at full size (`bf`; Matt, 2026-11-19: "when uploading a banner from camera roll it's not uploading
-  /// the full resolution image"): the picture as it was chosen, sealed on the relay under the circle's own seed as a
-  /// chat's file is (Circle.bannerChannel), named here with its key. [banner] is its small stand-in, shown until it
-  /// is here. The entry is as a Files space's carries a file (SpaceFile.toJson), so lib/files reads it; null for none.
+  /// the full resolution image"): the part of the picture chosen, cut at the picture's own resolution (the whole
+  /// picture, from a build before 0.12.52), sealed on the relay under the circle's own seed as a chat's file is
+  /// (Circle.bannerChannel), named here with its key. [banner] is its small stand-in, shown until it is here. The
+  /// entry is as a Files space's carries a file (SpaceFile.toJson), so lib/files reads it; null for none.
   Map<String, Object?>? get bannerFile => extra['bf'] is Map ? (extra['bf'] as Map).cast<String, Object?>() : null;
+
+  /// Its picture at full size (`pf`; Matt, 2026-11-27: "uploading the pictures for banners and the circle profile
+  /// picture should use a cropping / zooming tool and upload at full resolution"): the part chosen, cut at the
+  /// picture's own resolution and kept on the relay as the banner's is. [picture] is its stand-in, drawn wherever
+  /// the face is no larger than the stand-in is sharp at, and until this is here.
+  ///
+  /// The entry says which stand-in it is the whole of (`of`, [pictureMark]). A build from before 0.12.52 changes
+  /// the picture without knowing of this entry and passes it on as it was: belonging to another picture, it is null.
+  Map<String, Object?>? get pictureFile {
+    final f = extra['pf'], p = picture;
+    if (f is! Map || p == null || f['of'] != pictureMark(p)) return null;
+    return f.cast<String, Object?>();
+  }
+
+  /// What a full picture says of the stand-in it belongs to ([pictureFile]): a few bytes of its hash.
+  static String pictureMark(String picture) => NetCrypto.hex(NetCrypto.sha256(utf8.encode(picture)).sublist(0, 6));
 
   /// Who was put out of the circle by its owner or an admin (`rm`, ids; Matt, 2026-11-19: "add the ability to remove
   /// members from a circle as an admin"). Every member's app leaves them out: not listed, not heard in its spaces or
@@ -799,6 +819,7 @@ class Circle {
   String get hue => manifest.hue;
   String get icon => manifest.icon;
   String? get picture => manifest.picture;
+  Map<String, Object?>? get pictureFile => manifest.pictureFile;
   String? get banner => manifest.banner;
   String? get inviteWord => manifest.inviteWord;
 
@@ -812,8 +833,8 @@ class Circle {
   String get token => NetCrypto.hex(NetCrypto.derive(_seed, 'circle token'));
   Uint8List get key => NetCrypto.derive(_seed, 'circle key');
 
-  /// Where the circle's own files are kept on the relay (its full banner): a space of no kind anyone opens, its seed the
-  /// circle's, so whoever is in the circle can fetch what is there.
+  /// Where the circle's own files are kept on the relay (its banner and its picture at full size, its soundboard's
+  /// sounds): a space of no kind anyone opens, its seed the circle's, so whoever is in the circle can fetch what is there.
   VoiceChannel get bannerChannel => VoiceChannel(seed: seed, name: name, kind: SpaceKind.files, owner: owner, circle: seed);
 
   /// [space] as a space of this circle: owned by the circle's owner, marked as the circle's.

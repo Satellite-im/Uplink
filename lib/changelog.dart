@@ -25,6 +25,12 @@ class ReleaseNotes {
 
 /// Every release's entry, the newest first.
 const List<ReleaseNotes> changelog = [
+  ReleaseNotes('0.12.52', '2026-11-27', [
+    'Position a circle\'s picture and banner: choose one in Circle settings and a window opens to drag it and make it larger, round for the picture and wide for the banner, as your own profile picture has.',
+    'Circle pictures are sharp: the picture and the banner everyone sees at once are several times larger than they were, and the part you chose also goes up at the picture\'s own size, so it stays sharp on a large screen. Choose a circle\'s picture or banner again to get the sharper one.',
+    'Your picture stays where it is: setting a banner from a computer used to move the file you chose out of its folder into the app\'s own. It is left alone now.',
+    'A picture that can\'t be used says why: a file that isn\'t a picture this device reads, a full-size copy that didn\'t reach the relay, or a circle you can\'t change, where it used to say only that it couldn\'t be used.',
+  ]),
   ReleaseNotes('0.12.51', '2026-11-27', [
     'Uplink: Ghost Messaging has a new name. The app says Uplink everywhere now: on your home screen, in its own pages, and in what your phone or computer asks you. Your account, your chats, your friends and your settings are just as they were, and the people you talk to reach you as before.',
     'A new app icon: the Uplink logo, on your home screen, in the Dock, on the taskbar and inside the app.',

@@ -515,3 +515,11 @@ if (!process.argv.includes('--no-source')) {
   const published = spawnSync('node', [join(ROOT, 'tool/publish-source.mjs')], { stdio: 'inherit' });
   if (published.status !== 0) say('x The source was not published; run node tool/publish-source.mjs');
 }
+// The release on GitHub (tool/release-github.mjs; Matt, 2026-11-27, asked whether every release should publish one:
+// "Yes, every release"): this version's installers at github.com/Satellite-im/Uplink/releases as far as they are out,
+// a draft until every platform is. After the source, whose commit the release's tag stands on. Said, not fatal.
+if (!process.argv.includes('--no-github')) {
+  say('> The release on GitHub (github.com/Satellite-im/Uplink/releases)');
+  const onGithub = spawnSync('node', [join(ROOT, 'tool/release-github.mjs')], { stdio: 'inherit' });
+  if (onGithub.status !== 0) say('x The release on GitHub was not made or filled; run node tool/release-github.mjs');
+}

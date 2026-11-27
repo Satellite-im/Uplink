@@ -448,7 +448,7 @@ String sealedWords(String hubUrl) {
 }
 
 /// The version this build is, where Android has not said (the screens drawn in tests).
-const appVersion = '0.12.51';
+const appVersion = '0.12.52';
 
 // --- Language ---------------------------------------------------------------------------------------------------------
 

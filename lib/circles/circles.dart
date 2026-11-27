@@ -373,14 +373,25 @@ class Circles extends ChangeNotifier {
     return c;
   }
 
-  /// Changes [c]'s name, colour, icon or picture.
-  Future<bool> edit(Circle c, {String? name, String? hue, String? icon, String? picture, bool clearPicture = false, String? banner, Map<String, Object?>? bannerFile, bool clearBanner = false}) {
+  /// Changes [c]'s name, colour, icon, picture or banner. A picture or a banner is its stand-in ([picture],
+  /// [banner]), with the file that is the whole of it where it went up ([pictureFile], [bannerFile]: SpaceFile.toJson).
+  /// A new one, or none, takes the old one's file out with it.
+  Future<bool> edit(Circle c, {String? name, String? hue, String? icon, String? picture, Map<String, Object?>? pictureFile, bool clearPicture = false, String? banner, Map<String, Object?>? bannerFile, bool clearBanner = false}) {
     if (hue != null && !circleHues.contains(hue)) return Future.value(false);
     if (picture != null && picture.length > circlePictureMax) return Future.value(false);
     if (banner != null && banner.length > circleBannerMax) return Future.value(false);
     final n = capName(name);
+    final newBanner = banner != null || clearBanner, newPicture = picture != null || clearPicture;
     return _publish(c, (m) {
-      final extra = banner != null || clearBanner ? ({...m.extra}..remove('bn')..remove('bf')..addAll({if (banner != null) 'bn': banner, if (banner != null && bannerFile != null) 'bf': bannerFile})) : null;
+      final extra = !newBanner && !newPicture
+          ? null
+          : ({...m.extra}
+            ..removeWhere((k, _) => (newBanner && (k == 'bn' || k == 'bf')) || (newPicture && k == 'pf'))
+            ..addAll({
+              'bn': ?banner,
+              if (banner != null && bannerFile != null) 'bf': bannerFile,
+              if (picture != null && pictureFile != null && !clearPicture) 'pf': {...pictureFile, 'of': CircleManifest.pictureMark(picture)},
+            }));
       return m.next(name: n == null || n.isEmpty ? null : n, hue: hue, icon: icon, picture: picture, clearPicture: clearPicture, extra: extra);
     });
   }

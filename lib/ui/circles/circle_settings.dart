@@ -403,13 +403,13 @@ class _SectionBody extends StatelessWidget {
             label: c.picture == null ? 'Choose a picture' : 'Change the picture',
             hint: const Tr('Shown in the icon\'s place'),
             onPress: () async {
-              final p = await pickCirclePicture(context);
-              if (p != null) circles.edit(c, picture: p);
+              await chooseCirclePicture(context, c);
             },
           ),
           if (c.picture != null) SettingRow(icon: AppIcon(Lucide.trash2, size: 18), label: 'Use the icon instead', onPress: () => circles.edit(c, clearPicture: true)),
-          // Behind the top of its sidebar, as a Discord server's banner (Matt, 2026-11-19).
-          SettingRow(
+          // Behind the top of its sidebar, as a Discord server's banner (Matt, 2026-11-19). Not chosen in a browser
+          // either, which reads no file for it; one set elsewhere can still be taken away there.
+          if (!Sms.browser) SettingRow(
             key: const ValueKey('circle-banner'),
             icon: AppIcon(Lucide.imagePlus, size: 18),
             label: c.banner == null ? 'Choose a banner' : 'Change the banner',

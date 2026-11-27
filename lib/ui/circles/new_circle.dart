@@ -264,7 +264,7 @@ class _SpacePill extends StatelessWidget {
 }
 
 /// A circle's picture, chosen or taken away: a row for each.
-List<Widget> _pictureRows(BuildContext context, {required String? picture, required ValueChanged<String> onPicked, required VoidCallback onCleared}) => [
+List<Widget> _pictureRows(BuildContext context, {required String? picture, required ValueChanged<CirclePick> onPicked, required VoidCallback onCleared}) => [
       SettingRow(
         key: const ValueKey('circle-picture'),
         icon: AppIcon(Lucide.imagePlus, size: 18),
@@ -305,6 +305,8 @@ class _NewCircleScreenState extends State<NewCircleScreen> {
   String _hue = 'indigo';
   String _icon = 'users';
   String? _picture;
+  // The picture chosen, with the part of it cut at full size, which goes up once the circle is there to keep it.
+  CirclePick? _picked;
   // The two spaces a circle starts with (Circles.make's own): one to text in, one to talk in.
   final _spaces = [_Draft('General', SpaceKind.text), _Draft('Lounge', SpaceKind.voice)];
   // The ids of the friends ticked to bring.
@@ -345,6 +347,10 @@ class _NewCircleScreenState extends State<NewCircleScreen> {
       toast(context, 'Couldn\'t make the circle: the relay server isn\'t connected yet.', tone: GlacierToastTone.danger);
       return;
     }
+    // Its picture at full size, now there is a circle to keep it under: sent up behind the rest, and the stand-in the
+    // circle was made with is its picture until then (and where it doesn't go up).
+    final picked = _picked;
+    if (picked != null && picked.cut != null && widget.make == null) unawaited(sendCirclePicture(context, c, picked, quiet: true));
     final friends = [for (final f in _buddies.friends) if (_with.contains(f.id)) f];
     final missed = friends.isEmpty ? const <Buddy>[] : await (widget.share ?? Circles.instance.share)(c, friends);
     if (!mounted) return;
@@ -413,7 +419,7 @@ class _NewCircleScreenState extends State<NewCircleScreen> {
                 gap,
                 // Not in a browser, which can't choose a picture yet (Sms.browser).
                 if (!Sms.browser) ...[
-                  _hued('purple', PaneSection(title: 'Picture', description: const Tr('Optional: a picture of your own on the circle\'s face.'), children: _pictureRows(context, picture: _picture, onPicked: (p) => setState(() => _picture = p), onCleared: () => setState(() => _picture = null)))),
+                  _hued('purple', PaneSection(title: 'Picture', description: const Tr('Optional: a picture of your own on the circle\'s face.'), children: _pictureRows(context, picture: _picture, onPicked: (p) => setState(() { _picked = p; _picture = p.small; }), onCleared: () => setState(() { _picked = null; _picture = null; })))),
                   gap,
                 ],
                 PaneSection(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 
 import 'pictures.dart';
@@ -135,3 +136,154 @@ Future<String?> bannerPictureOf(Uint8List bytes, {ui.Rect? crop, int most = Prof
     image?.dispose();
   }
 }
+
+// --- a circle's picture and banner (lib/ui/circles/circle_picture.dart) ----------------------------------------------
+//
+// Matt, 2026-11-27: "uploading the pictures for banners and the circle profile picture should use a cropping /
+// zooming tool and upload at full resolution, right now they're super low resolution". Both were made a PNG small
+// enough for the circle's manifest, and a PNG of anything with detail in it is large: a photo's banner came out 150
+// pixels across and its picture 72. Each is now two things: a stand-in for the manifest, a JPEG (several times the
+// pixels in the same room), and the part chosen cut at the picture's own resolution, which goes up as a file.
+
+/// How large [bytes] is as a picture, in its own pixels; null where this device can't read it as one.
+Future<ui.Size?> pictureSizeOf(Uint8List bytes) async {
+  try {
+    final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+    final desc = await ui.ImageDescriptor.encoded(buffer);
+    final size = ui.Size(desc.width.toDouble(), desc.height.toDouble());
+    desc.dispose();
+    buffer.dispose();
+    return size.isEmpty ? null : size;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// The part of a picture [w] by [h] that is kept: [crop] of it (shares of its width and height; all of it where
+/// null), then the widest band [shape] wide to one high inside that, about its middle.
+ui.Rect _kept(double w, double h, ui.Rect? crop, double shape) {
+  final all = ui.Rect.fromLTWH(0, 0, w, h);
+  final part = crop == null ? all : ui.Rect.fromLTWH(crop.left * w, crop.top * h, crop.width * w, crop.height * h).intersect(all);
+  if (part.width < 1 || part.height < 1) return ui.Rect.zero;
+  final bw = part.width / part.height > shape ? part.height * shape : part.width, bh = bw / shape;
+  return ui.Rect.fromLTWH(part.left + (part.width - bw) / 2, part.top + (part.height - bh) / 2, bw, bh);
+}
+
+/// [bytes] decoded so that the part kept ([crop], [shape]) is about [across] pixels wide, and no larger than it is:
+/// by the platform, which reads a phone's twelve million pixels at the size asked for.
+Future<ui.Image> _decodedFor(Uint8List bytes, ui.Rect? crop, double shape, double across) async {
+  final probe = await ui.ImmutableBuffer.fromUint8List(bytes);
+  final desc = await ui.ImageDescriptor.encoded(probe);
+  try {
+    final kept = _kept(desc.width.toDouble(), desc.height.toDouble(), crop, shape);
+    final scale = kept.width > across ? across / kept.width : 1.0;
+    final codec = await desc.instantiateCodec(targetWidth: (desc.width * scale).round().clamp(1, desc.width), targetHeight: (desc.height * scale).round().clamp(1, desc.height));
+    final image = (await codec.getNextFrame()).image;
+    codec.dispose();
+    return image;
+  } finally {
+    desc.dispose();
+    probe.dispose();
+  }
+}
+
+/// Whether any of [rgba]'s pixels can be seen through: a logo on no ground, which a JPEG would put on black.
+bool _seeThrough(ByteData rgba) {
+  for (var i = 3; i < rgba.lengthInBytes; i += 4) {
+    if (rgba.getUint8(i) < 250) return true;
+  }
+  return false;
+}
+
+/// [bytes] (any picture this device reads) as a stand-in for a circle's manifest: the part chosen, [shape] wide to one
+/// high, as base64 of at most [most] characters, at the largest of [widths] (pixels across, largest first) that fits.
+/// A JPEG, at the best of [qualities] that fits; a PNG where the part kept can be seen through, so a logo keeps its
+/// ground. Never made larger than the part kept is. Null where it can't be read or nothing fits.
+Future<String?> pictureStandIn(Uint8List bytes, {ui.Rect? crop, required double shape, required List<int> widths, List<int> qualities = const [84, 74, 64, 54], required int most}) async {
+  ui.Image? image;
+  try {
+    image = await _decodedFor(bytes, crop, shape, widths.first * 2.0);
+    final from = _kept(image.width.toDouble(), image.height.toDouble(), crop, shape);
+    if (from.isEmpty) return null;
+    // The sizes to try: the part's own where it is smaller than the largest of [widths] (a small logo is sent as it
+    // is, never blown up), then each of [widths] it is at least as large as.
+    final own = from.width.round().clamp(1, widths.first);
+    final sizes = [if (own < widths.first) own, for (final w in widths) if (w < own || (w == own && own == widths.first)) w];
+    for (final width in sizes) {
+      final height = (width / shape).round().clamp(1, width);
+      final recorder = ui.PictureRecorder();
+      ui.Canvas(recorder).drawImageRect(image, from, ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()), ui.Paint()..filterQuality = ui.FilterQuality.high);
+      final made = await recorder.endRecording().toImage(width, height);
+      try {
+        final rgba = await made.toByteData(format: ui.ImageByteFormat.rawRgba);
+        if (rgba == null) continue;
+        if (_seeThrough(rgba)) {
+          final png = await made.toByteData(format: ui.ImageByteFormat.png);
+          if (png == null) continue;
+          final b64 = base64.encode(png.buffer.asUint8List(png.offsetInBytes, png.lengthInBytes));
+          if (b64.length <= most) return b64;
+          continue;
+        }
+        final pixels = img.Image.fromBytes(width: width, height: height, bytes: rgba.buffer, numChannels: 4, order: img.ChannelOrder.rgba);
+        for (final q in qualities) {
+          final b64 = base64.encode(img.encodeJpg(pixels, quality: q, chroma: img.JpegChroma.yuv420));
+          if (b64.length <= most) return b64;
+        }
+      } finally {
+        made.dispose();
+      }
+    }
+    return null;
+  } catch (_) {
+    return null;
+  } finally {
+    image?.dispose();
+  }
+}
+
+/// The part of a picture chosen, cut out of it at the picture's own resolution: what goes up as a circle's banner or
+/// picture in full. [kind] is its file's ending: `jpg`, or `png` where it can be seen through.
+class CutPicture {
+  const CutPicture({required this.bytes, required this.kind, required this.width, required this.height});
+  final Uint8List bytes;
+  final String kind;
+  final int width, height;
+}
+
+/// [bytes] cut to the part chosen ([crop], then the widest band [shape] wide to one high in it): every pixel the
+/// picture has there, and nothing made up, so never larger than it is. A picture larger than [mostAcross] pixels
+/// across the part is brought down to that (a phone's 12 million pixels as a banner 4000 across is more than any
+/// screen shows). A JPEG of quality [quality]; a PNG where it can be seen through. Null where it can't be read.
+Future<CutPicture?> cutPictureOf(Uint8List bytes, {ui.Rect? crop, required double shape, required int mostAcross, int quality = 90}) async {
+  ui.Image? image;
+  try {
+    image = await _decodedFor(bytes, crop, shape, mostAcross.toDouble());
+    final from = _kept(image.width.toDouble(), image.height.toDouble(), crop, shape);
+    if (from.isEmpty) return null;
+    final width = from.width.round().clamp(1, mostAcross), height = (width / shape).round().clamp(1, width);
+    final recorder = ui.PictureRecorder();
+    ui.Canvas(recorder).drawImageRect(image, from, ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()), ui.Paint()..filterQuality = ui.FilterQuality.high);
+    final made = await recorder.endRecording().toImage(width, height);
+    try {
+      final rgba = await made.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (rgba == null) return null;
+      if (_seeThrough(rgba)) {
+        final png = await made.toByteData(format: ui.ImageByteFormat.png);
+        if (png == null) return null;
+        return CutPicture(bytes: png.buffer.asUint8List(png.offsetInBytes, png.lengthInBytes), kind: 'png', width: width, height: height);
+      }
+      // Off the page's own thread: a banner 3840 across is five million pixels to squeeze.
+      final jpg = await compute(_jpegOf, (rgba: rgba.buffer.asUint8List(rgba.offsetInBytes, rgba.lengthInBytes), width: width, height: height, quality: quality));
+      return CutPicture(bytes: jpg, kind: 'jpg', width: width, height: height);
+    } finally {
+      made.dispose();
+    }
+  } catch (_) {
+    return null;
+  } finally {
+    image?.dispose();
+  }
+}
+
+Uint8List _jpegOf(({Uint8List rgba, int width, int height, int quality}) of) =>
+    img.encodeJpg(img.Image.fromBytes(width: of.width, height: of.height, bytes: of.rgba.buffer, bytesOffset: of.rgba.offsetInBytes, numChannels: 4, order: img.ChannelOrder.rgba), quality: of.quality);
