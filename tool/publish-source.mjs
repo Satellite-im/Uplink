@@ -14,6 +14,13 @@
  *
  * Also sends sidecar/gmessages to github.com/InfamousVague/ghost-gmessages-sidecar where it changed, since a release
  * that carries the sidecar must have its source published (the AGPL).
+ *
+ * And the same snapshot goes to github.com/Satellite-im/Uplink's main, the app's home under its new name (Matt,
+ * 2026-11-27: "we're going to push it to the Satellite-im/uplink repo"; asked whether every release should update its
+ * main from then on, "Yes, every release"). That repository was another app's before (Rust, on its dev branch and in
+ * its 1.0.x tags), so only its main is fetched, and only its newest commit; and the snapshot goes without
+ * .github/, whose one workflow (relay.yml) would start publishing the relay's builds under that organization's
+ * name, which nobody has asked for. It is published last: a failure there leaves the other two done.
  */
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -50,12 +57,14 @@ function mirror(from, files, to) {
 /**
  * Makes the public [repo] hold exactly [files] of [from], as one commit named [message] pushed to its main. The
  * checkout is kept in build/public between runs. With nothing changed nothing is committed; a dry run only lists.
+ * [mainAlone] fetches the repository's main and nothing else of it, and only that branch's newest commit: for a
+ * repository with years of another history on other branches.
  */
-function publish(repo, from, files, message) {
+function publish(repo, from, files, message, { mainAlone = false } = {}) {
   const at = join(ROOT, 'build/public', repo.split('/')[1]);
   if (!existsSync(join(at, '.git'))) {
     mkdirSync(dirname(at), { recursive: true });
-    run('gh', ['repo', 'clone', repo, at, '--', '--quiet']);
+    run('gh', ['repo', 'clone', repo, at, '--', '--quiet', ...(mainAlone ? ['--depth', '1', '--single-branch', '--branch', 'main'] : [])]);
   }
   // A repository with nothing in it yet has nothing to bring down.
   if (spawnSync('git', ['-C', at, 'rev-parse', '--verify', '--quiet', 'HEAD']).status === 0) run('git', ['-C', at, 'pull', '--quiet', '--ff-only']);
@@ -96,3 +105,6 @@ publish('InfamousVague/ghost-messaging', snapshot, tracked, `Uplink ${version}`)
 const sidecar = join(snapshot, 'sidecar/gmessages');
 const sidecarFiles = listed(join(ROOT, 'sidecar/gmessages')).filter((f) => f !== 'SOURCE_URL');
 publish('InfamousVague/ghost-gmessages-sidecar', sidecar, sidecarFiles, `As in Uplink ${version}`);
+
+// The app's home under its new name, last (see the top of this file): everything but .github/.
+publish('Satellite-im/Uplink', snapshot, tracked.filter((f) => !f.startsWith('.github/')), `Uplink ${version}`, { mainAlone: true });

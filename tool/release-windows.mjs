@@ -160,7 +160,7 @@ say(`ok live: ${HOST_URL}/${FEED} — Uplink for Windows ${info.version} (${info
 // The source, published as this release has it (tool/publish-source.mjs; Matt, 2026-11-15: "update the notes on claude
 // so that each release runs this automatically"). The release is live either way: a failure here is said, not fatal.
 if (!process.argv.includes('--no-source')) {
-  say('> Publishing the source (github.com/InfamousVague/ghost-messaging)');
+  say('> Publishing the source (github.com/InfamousVague/ghost-messaging and github.com/Satellite-im/Uplink)');
   const published = spawnSync('node', [join(ROOT, 'tool/publish-source.mjs')], { stdio: 'inherit' });
   if (published.status !== 0) say('x The source was not published; run node tool/publish-source.mjs');
 }

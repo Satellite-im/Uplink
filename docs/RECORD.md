@@ -1827,6 +1827,10 @@ Each release publishes the source by itself: tool/release.mjs, release-mac.mjs a
 `node tool/publish-source.mjs` (github.com/InfamousVague/ghost-messaging, one commit a release, messaging/ as
 committed at HEAD; and the sidecar's own repository where it changed). `--no-source` skips it; a failure there is said
 and leaves the release live. A release that carries the Google Messages sidecar must have its source public.
+Since 2026-11-27 the same snapshot also goes to github.com/Satellite-im/Uplink's `main`, the app's home under its new
+name (Matt, asked whether every release should update it: "Yes, every release"), last of the three and without
+`.github/`, whose relay workflow would publish builds under that organization's name. That repository's `main` is
+its default branch; the Rust app it held before is on `dev` and in the 1.0.x tags.
 
 Matt, 2026-11-13: "add auto update and serve it over ghost-sms.com I'll point the domain to the same server ghost kbd
 uses". Both scripts are Ghost Keyboard's, for this app, and use Ghost.md's box account (`tauri/.env`) through
