@@ -1,0 +1,17 @@
+Uplink's Matrix helper (this folder) is part of Uplink and is under the same licence, the GNU Affero
+General Public License v3 (../../LICENSE).
+
+It is built on these, each under its own licence, which travels with any copy of the helper:
+
+  maunium.net/go/mautrix (mautrix-go, with its goolm Olm/Megolm implementation)
+      Mozilla Public License 2.0 - https://github.com/mautrix/go/blob/main/LICENSE
+      Copyright Tulir Asokan and contributors. Its source, as used, is that of the version go.mod names; no change
+      has been made to it.
+  go.mau.fi/util                  Mozilla Public License 2.0
+  modernc.org/sqlite (computers)  BSD 3-Clause
+  github.com/mattn/go-sqlite3 (phone, through go.mau.fi/util/dbutil/litestream)  MIT; SQLite itself is public domain
+  github.com/rs/zerolog           MIT
+  golang.org/x/*                  BSD 3-Clause
+
+The MPL-2.0 is compatible with the AGPL-3.0 (MPL-2.0 section 3.3): the files of mautrix-go stay under the MPL-2.0, and
+the helper as a whole may be given under the AGPL-3.0.

@@ -1,0 +1,171 @@
+<p>A plugin's <code>rules</code> say what it does: <b>tags</b> it gives texts by their words, <b>sections</b> (tabs and kinds) that take tagged texts, <b>actions</b> (buttons and menu lines) and <b>incoming</b> rules for texts as they come. Any of them can say when it applies with a condition. The examples here are from <a href="/docs/examples/bills.ghostplugin">Bills</a> and <a href="/docs/examples/parcels.ghostplugin">Parcels</a>.</p>
+<pre><code>"rules": {
+  "tags": [],        // up to 32 tag rules
+  "sections": [],    // up to 4 tabs and kinds
+  "actions": [],     // up to 12 buttons and menu lines
+  "incoming": []     // up to 8 rules for texts as they come
+}</code></pre>
+<p>(JSON has no comments: they're only to say what each is.) Each part may be left out, but a plugin needs at least one tag rule or one section (<code>empty_pack</code>).</p>
+
+<h2 id="when">Conditions</h2>
+<p>A condition, a rule's <code>when</code> or a section's <code>takes</code>, is an object whose keys are all optional. Every one given must hold.</p>
+<table>
+  <tr><th>Key</th><th>Holds when</th></tr>
+  <tr><td><code>from</code></td><td>The sender is one of these, 1 to 50 of them, each 3 to 64 characters. A number is compared by its digits alone, so <code>+1 (555) 010-0100</code> and <code>15550100100</code> are the same; a name a company texts from is compared in any case. An entry with no digit or letter in it, such as <code>(-)</code>, matches nobody.</td></tr>
+  <tr><td><code>tagged</code></td><td>The text has every one of these tags, 1 to 8 of the plugin's own.</td></tr>
+  <tr><td><code>untagged</code></td><td>It has none of these, 1 to 8.</td></tr>
+  <tr><td><code>setting</code></td><td>A switch's key alone: that switch is on (its <code>default</code> until the person changes it). Or <code>{"key": "level", "is": "loose"}</code>: that choice is <code>loose</code> (its <code>default</code> until changed); for a switch, <code>"is"</code> is <code>"on"</code> or <code>"off"</code>.</td></tr>
+  <tr><td><code>section</code></td><td>Actions only: the conversation is in this section of the plugin's own, or <code>"main"</code> for Messages. Never true in a message's menu, which isn't in a section. Anywhere else it's <code>section_condition</code>.</td></tr>
+</table>
+<ul>
+  <li>A plugin with an incoming rule can't use <code>from</code> anywhere (<code>from_with_incoming</code>): nobody can judge a rule that marks read or silences texts from numbers they don't know. Nor can a plugin with a <code>link</code> button (<code>bad_link_when</code>): a tag given by sender, a tab that takes by sender or that tab's row would offer the link for those numbers alone, and pressing it would tell the page which numbers wrote.</li>
+  <li>In a tag rule, <code>tagged</code> and <code>untagged</code> see only the tags given by the rules before it, so naming a tag no earlier rule gives is <code>unknown_tag</code>. Everywhere else, a tag no rule gives is <code>unknown_tag</code>, and a section the plugin doesn't have is <code>unknown_section</code>.</li>
+  <li>There's no condition on groups: a plugin never sees one.</li>
+</ul>
+
+<h2 id="tags">Tags</h2>
+<p>A tag rule gives a text a tag when its words match. Several rules may give the same tag: they're different ways to get it.</p>
+<pre><code>{
+  "tag": "bill",
+  "any": ["your bill is ready", "amount due {amount}"],
+  "atLeast": 1,
+  "none": ["unsubscribe"],
+  "wordsFrom": "extra",
+  "when": {"untagged": ["paid"]},
+  "detail": {"from": "token"}
+}</code></pre>
+<table>
+  <tr><th>Field</th><th>What it is</th></tr>
+  <tr><td><code>tag</code></td><td>The tag it gives. Required.</td></tr>
+  <tr><td><code>any</code></td><td>0 to 30 <a href="/docs/plugin-phrases/">phrases</a>, at least <code>atLeast</code> of which must match.</td></tr>
+  <tr><td><code>atLeast</code></td><td>1 to 5, and 1 if left out. At most the number of <code>any</code> phrases, unless it has <code>wordsFrom</code> too.</td></tr>
+  <tr><td><code>all</code></td><td>1 to 8 phrases that must all match.</td></tr>
+  <tr><td><code>none</code></td><td>1 to 20 phrases none of which may match.</td></tr>
+  <tr><td><code>wordsFrom</code></td><td>A <code>words</code> setting's key: the words the person typed there join <code>any</code>, each a plain phrase (<a href="/docs/plugin-phrases/#yours">their own words</a>).</td></tr>
+  <tr><td><code>when</code></td><td>A condition.</td></tr>
+  <tr><td><code>detail</code></td><td>What the tag keeps: words of your own (1 to 200 characters); <code>{"from": "token"}</code>, what a phrase's first token found; or <code>{"from": "match"}</code>, the whole of what a phrase matched. Nothing if left out.</td></tr>
+</table>
+<p>A rule needs something to start it: <code>any</code>, <code>all</code>, <code>wordsFrom</code>, or a <code>when</code> with <code>from</code> or <code>tagged</code> (<code>tag_rule_no_trigger</code>).</p>
+<h3>How a text's tags are worked out</h3>
+<p>For each text the plugin sees, its tag rules run in the order they're written, each one like this:</p>
+<ol>
+  <li>If its <code>when</code> doesn't hold, with the tags given so far, the rule is passed over.</li>
+  <li>Its phrases are its <code>any</code>, then the person's words from <code>wordsFrom</code>. If it has either, it counts how many of them match the text; fewer than <code>atLeast</code>, and it's passed over. A rule whose only phrases are the person's words does nothing until they type some.</li>
+  <li>If it has <code>all</code> and one of them doesn't match, or <code>none</code> and one of them does, it's passed over.</li>
+  <li>Its detail: your own words, if that's what it says; for <code>{"from": "token"}</code>, going through its phrases in order, what the first token found in the first phrase that has a token and matches; for <code>{"from": "match"}</code>, the whole match of the first phrase that matches. Trimmed, cut to 200 characters, and nothing where it's empty.</li>
+  <li>The text gets the tag if it hasn't got it yet. If it has it already with no detail, and this rule found one, the detail is kept.</li>
+</ol>
+<p>Whenever one of the plugin's settings changes, every conversation's tags are worked out again.</p>
+<h3>An example of atLeast</h3>
+<pre><code>{"tag": "school", "any": ["school", "pupils", "uniform", "half term"], "atLeast": 2}</code></pre>
+<p>"Half term starts Monday: uniform list attached." gets the tag, since two phrases match; "School's out!" doesn't, with one.</p>
+<h3>An example of wordsFrom</h3>
+<p>Bills has a <code>words</code> setting, <b>More words for bills</b>, and its first rule says <code>"wordsFrom": "extra"</code>. Someone who types <code>council tax, water rates</code> there gets "Your council tax is due next week." in their Bills tab, though none of Bills' own phrases match it.</p>
+
+<h2 id="sections">Tabs and kinds</h2>
+<p>A section takes the conversations whose last text from them meets its <code>takes</code>. A <b>tab</b> is a tab of its own in the list, beside Messages and Codes; a <b>kind</b> is a line in the list's filter, which people show or hide in Messages as they do the built-in kinds.</p>
+<table>
+  <tr><th>Field</th><th>What it is</th></tr>
+  <tr><td><code>key</code></td><td>1 to 12 lower-case letters, unique in the plugin.</td></tr>
+  <tr><td><code>label</code></td><td>1 to 24 characters: its tab's words, or its line in the filter. Not a built-in's (<code>name_reserved</code>).</td></tr>
+  <tr><td><code>icon</code></td><td>An <a href="/docs/plugin-format/#names">icon name</a>.</td></tr>
+  <tr><td><code>kind</code></td><td><code>"tab"</code> or <code>"filter"</code>.</td></tr>
+  <tr><td><code>leavesMain</code></td><td>Tabs only, <code>true</code> if left out: its conversations leave Messages for the tab. <code>false</code> keeps them in Messages too. On a kind it's <code>leaves_main_on_filter</code>.</td></tr>
+  <tr><td><code>takes</code></td><td>A condition with <code>tagged</code> or <code>from</code> (<code>takes_nothing</code> otherwise), and no <code>section</code>. Required.</td></tr>
+  <tr><td><code>row</code></td><td>How its conversations' rows look (<a href="#rows">below</a>).</td></tr>
+</table>
+<p>Every section needs the <code>sort</code> permission. A plugin's kinds start shown, and the person hides one in the filter as they would any kind.</p>
+<h3>Built-in plugins sort first</h3>
+<p>Built-in plugins' tabs and kinds are asked first, then plugins from other developers in the order they were added, each one's sections in the order written: the first that takes a conversation has it. So a plugin never takes what Codes or the spam filter takes, nor what a kind of Kinds of text takes. Kinds of text is on from the start, and its <b>Payment reminders</b> and <b>Deliveries &amp; tracking</b> take most bill and parcel texts before any other plugin is asked. Your plugin still tags them, but its tab gets them only where the person switches that kind off, in <ui>Marketplace › Kinds of text</ui>.</p>
+<p>Try it says when this happens ("In this app, Kinds of text › Payment reminders takes this text first"), and every plugin's page with tabs or kinds says it to the people who add it: <b>Built-in plugins sort first: a text Codes, Spam filter or a kind of Kinds of text takes stays theirs.</b></p>
+
+<h2 id="rows">Rows</h2>
+<p>A section's <code>row</code> draws its conversations' rows in the list:</p>
+<pre><code>"row": {"value": "{tag:bill}", "caption": "A bill", "end": "copyamount"}</code></pre>
+<table>
+  <tr><th>Field</th><th>What it is</th></tr>
+  <tr><td><code>value</code></td><td>Up to 24 characters, large where the last words would be, with the words small under it. A <a href="#templates">template</a>.</td></tr>
+  <tr><td><code>caption</code></td><td>Up to 60 characters, a quiet line under the words: why it's in this tab. A template.</td></tr>
+  <tr><td><code>face</code></td><td><code>{"name": "Parcels", "color": "#4F46E5"}</code>: in place of the sender's face, the first letter of <code>name</code> (1 to 24 characters, plain words) on that colour (<code>#RRGGBB</code>: <code>bad_color</code> otherwise).</td></tr>
+  <tr><td><code>end</code></td><td>An action's id: its button at the row's end.</td></tr>
+  <tr><td><code>word</code></td><td>An action's id: a word to press after the caption.</td></tr>
+  <tr><td><code>tap</code></td><td>A <code>copy</code> action's id: what tapping the row does, in place of opening the conversation (a long press opens its menu, whose first line is <b>Open conversation</b>).</td></tr>
+</table>
+<ul>
+  <li>The row always keeps the conversation's own name. A plugin can't choose what a conversation is called, since anyone who texts could then choose the name their conversation shows.</li>
+  <li>A face's name is plain words with no placeholder, and never a company's logo. The <a href="/docs/plugin-guidelines/#out">guidelines on other companies' names</a> apply to it.</li>
+  <li>A row's <code>tap</code> can only copy (<code>verb_not_here</code>): tapping what looks like a conversation never opens a page or writes anything.</li>
+  <li>An action a row names must list <code>row</code> in its <code>slots</code> (<code>unknown_action</code>), and can't be a <code>write</code> (<code>verb_not_here</code>).</li>
+  <li>A text with a sign-in code in it never gets a plugin's row.</li>
+</ul>
+
+<h2 id="actions">Buttons and menu lines</h2>
+<pre><code>{
+  "id": "copyamount",
+  "label": "Copy the amount",
+  "icon": "copy",
+  "slots": ["row", "list.conversation.menu", "conversation.message.menu"],
+  "when": {"tagged": ["bill"]},
+  "do": "copy",
+  "text": "{tag:bill}",
+  "say": "Amount copied"
+}</code></pre>
+<p>An action has an <code>id</code>, a <code>label</code> (1 to 32 characters), an <code>icon</code>, 1 to 4 different <code>slots</code>, an optional <code>when</code>, what it does (<code>do</code>), and that verb's fields.</p>
+<table>
+  <tr><th>Slot</th><th>Where it shows</th></tr>
+  <tr><td><code>row</code></td><td>On its sections' rows, where a row's <code>end</code>, <code>word</code> or <code>tap</code> names it.</td></tr>
+  <tr><td><code>list.conversation.menu</code></td><td>A line in a conversation's menu in the list (a long press). At most 3 actions (<code>slot_full</code>).</td></tr>
+  <tr><td><code>conversation.header</code></td><td>A button in a texts conversation's header. At most 1 (<code>header_full</code>).</td></tr>
+  <tr><td><code>conversation.message.menu</code></td><td>A line in a message's menu in a texts conversation. At most 3.</td></tr>
+</table>
+<table>
+  <tr><th><code>do</code></th><th>Its fields</th><th>Needs</th><th>Slots</th><th>What it does</th></tr>
+  <tr><td><code>say</code></td><td><code>text</code> (1 to 80)</td><td>nothing</td><td>every one</td><td>Shows those words for a moment.</td></tr>
+  <tr><td><code>copy</code></td><td><code>text</code> (a template, 1 to 200), <code>say</code> (1 to 80, <code>Copied</code> if left out)</td><td><code>copy</code></td><td>every one</td><td>Copies the text to the clipboard, and says so.</td></tr>
+  <tr><td><code>write</code></td><td><code>text</code> (1 to 300)</td><td><code>write</code></td><td><code>conversation.header</code>, <code>conversation.message.menu</code></td><td>Writes the text in the conversation's box, for the person to send or not.</td></tr>
+  <tr><td><code>markread</code></td><td>none</td><td><code>markread</code></td><td>every one</td><td>Marks that conversation read.</td></tr>
+  <tr><td><code>move</code></td><td><code>to</code>: <code>"main"</code>, or one of its own tabs' keys</td><td><code>move</code></td><td><code>row</code>, <code>list.conversation.menu</code>, <code>conversation.header</code></td><td>Moves that conversation to the tab, or back to Messages.</td></tr>
+  <tr><td><code>link</code></td><td><code>url</code>: the plugin's one <code>links</code> address</td><td><code>links</code></td><td>every one</td><td>Opens that page in the browser.</td></tr>
+</table>
+<ul>
+  <li>Only a copy's <code>text</code> holds placeholders. A label, a <code>say</code>'s text, a copy's <code>say</code> and a <code>write</code>'s text have no <code>{</code> or <code>}</code> at all (<code>bad_template</code>): a stranger's words never reach the app's menus, and the words a button writes are the words the reviewer read.</li>
+  <li>A <code>move</code> goes only to Messages or one of the plugin's own tabs, never to a kind (<code>verb_not_here</code>).</li>
+  <li>A <code>link</code> opens only the plugin's one address (<code>link_not_declared</code>), and a plugin with one can't use <code>from</code> anywhere, so which texts offer the button can't tell a server which numbers wrote.</li>
+  <li>An action is offered only where its <code>when</code> holds and the plugin sees the text, and a copy only where its placeholders can be filled. Its <code>section</code> condition reads the section the conversation is in.</li>
+  <li>The list's menu, a texts conversation's header and its messages' menu are where they show. Telegram, Signal and spaces' chats never show a plugin's buttons.</li>
+  <li>A plugin's buttons are kept from running away: words it says are shown at most once every second and a half, and it can copy at most ten times a minute.</li>
+</ul>
+
+<h2 id="incoming">As texts arrive</h2>
+<pre><code>{"in": "receipts", "do": ["markread"], "setting": "autoread"}</code></pre>
+<p>An incoming rule marks a text read, or takes its notification away, as it comes: <code>in</code> is one of the plugin's own sections, <code>do</code> is <code>markread</code>, <code>mute</code> or both, <code>setting</code> is the switch that turns it on, and <code>when</code> is an optional condition. It acts when the conversation is in that section, the switch is on and the condition holds.</p>
+<ul>
+  <li>The switch must start off (<code>"default": false</code>: <code>incoming_needs_toggle</code>), so nothing is marked read or silenced until the person switches it on.</li>
+  <li>It runs on the phone, while the app is open, after Android has shown the notification, which it then takes away: the sound has played by then. Nothing runs while the app is closed.</li>
+  <li>It never runs on a computer, nor on a paired iPhone. Its switch's hint says so there.</li>
+  <li><code>mute</code> is for one text at a time: it takes away that text's notification and never mutes the conversation, so the next text there notifies as usual unless it too is in that section with the switch on. <code>markread</code> marks the conversation read, which takes its notification away too.</li>
+  <li>Marking a conversation read marks every text in it read, and its one notification lists every text not read yet, so it acts only where each of those is one it would mark read or silence itself as it came. A bank's alert still unread under a receipt keeps Bills from marking the receipt read; two receipts don't.</li>
+  <li>It never acts on a text with a sign-in code in it, whatever Codes' own switch says.</li>
+  <li>Removing the plugin switches those switches off again, so adding it back starts with them off.</li>
+  <li>A new version that gives a switch a job it didn't have (another section, silencing as well as marking read, or a switch that was an ordinary setting before) starts that switch off as it's added or updated. A switch is only ever on for what the person switched it on for.</li>
+  <li><code>markread</code> needs the <code>markread</code> permission, and <code>mute</code> the <code>mute</code> one.</li>
+</ul>
+
+<h2 id="templates">Templates</h2>
+<p>A template is text with <code>{tag:&lt;name&gt;}</code> in it, <code>&lt;name&gt;</code> one of the plugin's own tags: <code>{tag:bill}</code> becomes the detail the <code>bill</code> tag kept, <code>$45.20</code>. <code>{{</code> and <code>}}</code> are a plain <code>{</code> and <code>}</code>; any other <code>{…}</code> is <code>bad_template</code>.</p>
+<ul>
+  <li>Only a row's <code>value</code> and <code>caption</code> and a copy's <code>text</code> are templates; a placeholder anywhere else is <code>bad_template</code>.</li>
+  <li>Where the tag is missing, or kept no detail, the field is left out: that part of the row is empty, and the copy button isn't offered.</li>
+  <li>A row's value and caption are cut to their length with "…"; copied text is cut without one.</li>
+</ul>
+
+<h2 id="sees">What a plugin sees</h2>
+<p>A plugin from another developer is shown, and acts on, only:</p>
+<ul>
+  <li>texts from one person who isn't in the phone's contacts: never a group, whose last words may be anyone's;</li>
+  <li>words known to be theirs: never your own, and not a conversation you started that has had nothing back yet;</li>
+  <li>texts not sent with Uplink's own encryption;</li>
+  <li>texts (SMS and picture messages): never chats on other networks, circles and spaces, or friends by username.</li>
+</ul>
+<p>While Uplink can't read your contacts (<ui>Settings › Android › Contacts</ui> is Off), no number has a name and a contact can't be told from a stranger, so a plugin from another developer sees nothing at all.</p>
+<p>Where those don't hold, it gives no tags and offers no buttons. And whatever it sees, it does nothing to a text with a sign-in code in it: it can tag one, but its tabs don't take it, its rows don't draw it, a conversation moved into its tab by hand goes back to where it belongs, and its incoming rules leave it alone. That's wider than what the Codes tab takes: a word like code, password, verification or 验证码 anywhere in the text with a run of four to ten letters and digits holding a digit, so "G-482913 is your Google verification code." counts, and so does "Use code SAVE20". Nor does it to a conversation with such a text still unread under newer words, a code then "Never share this code" a moment later, until it's read, on a computer paired with the phone as on the phone; nor, until the phone has said, to one it's asking about. The same goes for a conversation moved into its tab whose sender is in your contacts now. Try it, and <code>filters.classify</code> once the plugin is on, count as texts from a stranger, so they reach it: <a href="/docs/plugin-testing/#seen">testing what it sees</a>.</p>

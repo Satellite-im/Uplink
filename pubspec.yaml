@@ -1,0 +1,127 @@
+name: ghost_messaging
+description: "Uplink: an SMS and MMS app for Android, drawn with Glacier (Ghost.md's UI kit)."
+publish_to: 'none'
+version: 0.12.51+179
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # The Glacier UI kit in Flutter, vendored from Ghost.md by way of Ghost Keyboard (packages/glacier/VENDORED.md).
+  glacier:
+    path: packages/glacier
+  pointycastle: ^4.0.0
+  # gzip for the account's backup in a browser, where dart:io's isn't (lib/account/gzip.dart). Already in every build,
+  # by way of `image`.
+  archive: ^4.7.1
+  # SHA-256 of a whole file, five times pointycastle's speed (lib/files/files_store.dart).
+  crypto: ^3.0.6
+  image: ^4.13.1
+  qr: ^4.0.1
+  # Voice and video channels and group calls (lib/voice; Matt, 2026-11-14: "jump in audio chats like discord has
+  # always open voice channels"): WebRTC, the sound and picture going between the phones directly.
+  flutter_webrtc: 1.6.3
+  # TDLib's C functions for the Telegram inbox (lib/inbox/td_json.dart): Dart's own FFI helpers, already in the lock.
+  ffi: ^2.1.0
+  # The browser's own WebSocket, for the hub's route in a web page (lib/net/hub_link_web.dart): already in the lock.
+  web: ^1.1.0
+  # The video player on the phone (lib/ui/video_screen.dart; Matt, 2026-11-15: "id like a video player built with
+  # glacier UI right now it looks like a very old android core system player"): ExoPlayer under the app's own controls.
+  video_player: ^2.14.1
+  media_kit: ^1.2.6
+  media_kit_video: ^2.0.1
+  media_kit_libs_macos_video: ^1.1.4
+  media_kit_libs_windows_video: ^1.0.11
+  media_kit_libs_android_video: ^1.3.8
+  media_kit_libs_linux: ^1.2.1
+  # The relay itself (relay/, Dart's own library and nothing else): the hub a relay hosted from the app runs
+  # (lib/relay_host; docs/OPEN_NETWORK.md, section 5), and what the Mac's link is tested through (test/desk_link_test.dart).
+  # Reached only through lib/relay_host/relay_host.dart's half for a phone or a computer: a browser's build never names it.
+  ghost_relay:
+    path: relay
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # Starts the real Mac app and drives it against a phone on an emulator (integration_test/desk_live_test.dart).
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  video_player_platform_interface: ^6.9.0
+
+flutter:
+  uses-material-design: false
+  assets:
+    # Ghost.md's stylesheets, read by the token engine over Glacier's own (lib/main.dart).
+    - assets/css/ink.css
+    - assets/css/app.css
+    # Overlays that play in place of a drawn effect, where one has been added (docs/effects.md).
+    - assets/effects/
+    # The sticker packs, made from the effects' ghost by tool/sticker_packs.py (lib/stickers.dart).
+    - assets/stickers/ghost/
+    - assets/stickers/love/
+    - assets/stickers/party/
+    - assets/stickers/sweet/
+    - assets/stickers/mischief/
+    # The walkthrough's voice, ElevenLabs' at build time (tool/onboarding_voice.py, lib/onboarding/narration.dart).
+    - assets/onboarding/
+    # The app's own mark, cut from its icon (tool/app_icon.py).
+    - assets/art/
+    # The app's words in each language but English, which is in the code (lib/l10n/words.dart, tool/l10n.dart).
+    - assets/l10n/
+    # The interface sounds, made by tool/ui_sounds.py (lib/sounds.dart).
+    - assets/sounds/
+    # The Soundboard plugin's own sounds (tool/soundboard_sounds.py; lib/voice/soundboard.dart).
+    - assets/soundboard/
+    # Profile cosmetics (GMFB-34; lib/me/cosmetics.dart): Lovart's art, from ~/Desktop/ghost-profile-cosmetics-prompts.md,
+    # one file per piece by its id. A piece without its file is drawn as a stand-in (lib/ui/cosmetics_ui.dart).
+    - assets/cosmetics/decorations/
+    - assets/cosmetics/borders/
+    - assets/cosmetics/banners/
+    - assets/cosmetics/names/
+    - assets/cosmetics/effects/
+    # Every emoji with its names, keywords and skin tones, for the app's own picker (lib/emoji_data.dart; emojibase,
+    # MIT, assets/emoji/LICENSE-emojibase).
+    - assets/emoji/emoji.tsv
+  fonts:
+    - family: Inter Variable
+      fonts:
+        - asset: assets/fonts/InterVariable-latin.ttf
+    - family: JetBrains Mono Variable
+      fonts:
+        - asset: assets/fonts/JetBrainsMonoVariable-latin.ttf
+    # The look Dial-Up's face (lib/looks.dart): Arial's metrics, under the OFL (assets/fonts/OFL-Arimo.txt).
+    - family: Arimo
+      fonts:
+        - asset: assets/fonts/ArimoVariable.ttf
+    # The look Runestone's face (lib/looks.dart): an old adventure game's own square letters, as RuneStar/fonts traced
+    # them and gave them to the public domain (assets/fonts/CC0-Runestone.txt), made into one family, a regular and a
+    # bold, by tool/runestone_font.py. Western Europe's letters only, 18 KB each.
+    - family: Runestone
+      fonts:
+        - asset: assets/fonts/Runestone-Regular.ttf
+        - asset: assets/fonts/Runestone-Bold.ttf
+          weight: 700
+    # The Readable font, for anyone who finds letters hard to tell apart (Settings › Appearance; GMFB-41): Atkinson
+    # Hyperlegible Next, drawn by the Braille Institute so that no two letters look alike, under the OFL
+    # (assets/fonts/OFL-Atkinson.txt). Latin, variable in weight, with its italic: 170 KB.
+    - family: Atkinson Hyperlegible Next Variable
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegibleNextVariable-latin.ttf
+        - asset: assets/fonts/AtkinsonHyperlegibleNextVariable-latin-Italic.ttf
+          style: italic
+    # The emoji sets the person chooses between (lib/emoji_sets.dart, assets/emoji/LICENSES.md).
+    - family: Ghost Emoji Noto
+      fonts:
+        - asset: assets/emoji/NotoColor.ttf
+    - family: Ghost Emoji Twemoji
+      fonts:
+        - asset: assets/emoji/Twemoji.ttf
+    - family: Ghost Emoji OpenMoji
+      fonts:
+        - asset: assets/emoji/OpenMoji.ttf
+    - family: Ghost Emoji Outline
+      fonts:
+        - asset: assets/emoji/NotoOutline.ttf

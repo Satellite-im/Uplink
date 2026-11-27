@@ -1,0 +1,519 @@
+/*
+ * INK. Glyph's palette is paper and ink and the greys between them, with no hue
+ * anywhere, and dark mode is the same page printed in reverse.
+ *
+ * How it is built, because the order of three things below is load-bearing:
+ *
+ * 1. A neutral scale, `--app-gray-1` (paper) to `--app-gray-12` (ink), defined
+ *    once for paper and once reversed for dark. Chroma zero throughout: the
+ *    kit's greys lean blue (hue 260), which reads as "cool UI" rather than ink.
+ *
+ * 2. Everything a component reads - Glacier's semantic tokens AND its grey and
+ *    accent ramps - mapped onto that scale. Accent is ink. Danger, success,
+ *    warning and info are ink too: a state is said with a word or a shape, not
+ *    a colour. ONE EXCEPTION, at Matt's call: a Delete may be red, from the
+ *    kit's red ramp, which this file leaves alone for that reason (it was
+ *    first the notes list's swipe to delete, since removed). The mapping is declared at `:root:root:root` so it outranks
+ *    every theme and accent block in tokens.css, including the
+ *    `:root:not([data-theme='light'])[data-accent=…]` ones.
+ *
+ * 3. `.app-inverse`, which declares the SAME mapping on the reversed scale.
+ *    Custom properties resolve `var()` where they are declared, so an element
+ *    that only redefined `--app-gray-12` would still inherit a `--glacier-text`
+ *    already resolved to the page's ink; re-declaring the mapping on the
+ *    element is what makes everything inside it - kit components included -
+ *    print in reverse. A pressed row, a selected segment, the recorder on a
+ *    light phone: add the class and the element is the other theme.
+ *
+ * Named tokens for the app's own CSS, in place of raw greys:
+ *
+ *   --app-paper     the page            --app-ink      text, solid controls
+ *   --app-paper-2   a tinted surface    --app-ink-2    secondary text
+ *   --app-paper-3   pressed, sunken     --app-ink-3    tertiary text, markers
+ *   --app-rule      hairlines           --app-ink-4    disabled, faint marks
+ *   --app-wash      a translucent ink tint for highlights over any surface
+ *   --app-mark      the highlighter's blue wash, the one colour among the marks
+ *   --app-ink-level the ink as a grey in sRGB, 0 to 1, written beside each scale
+ *   --app-ink-flat  a filter that prints an element flat in the ink, whatever is in it (a redaction's bar)
+ */
+
+/* ---- 1. the scale ------------------------------------------------------- */
+
+:root {
+  --app-gray-1: oklch(0.995 0 0);
+  --app-gray-2: oklch(0.975 0 0);
+  --app-gray-3: oklch(0.955 0 0);
+  --app-gray-4: oklch(0.925 0 0);
+  --app-gray-5: oklch(0.895 0 0);
+  --app-gray-6: oklch(0.86 0 0);
+  --app-gray-7: oklch(0.8 0 0);
+  --app-gray-8: oklch(0.7 0 0);
+  --app-gray-9: oklch(0.56 0 0);
+  --app-gray-10: oklch(0.47 0 0);
+  --app-gray-11: oklch(0.36 0 0);
+  --app-gray-12: oklch(0.16 0 0);
+  --app-ink-level: 0.052;
+  --app-raised: var(--app-gray-1);
+  --app-scrim: oklch(0.16 0 0 / 0.42);
+  /* A workspace's hue on this paper: dark enough to read as ink on white (see "the workspace hues" below). */
+  --app-hue-lift: 0.55;
+  --app-hue-chroma: 0.14;
+}
+
+[data-theme='dark'] {
+  --app-gray-1: oklch(0.11 0 0);
+  --app-gray-2: oklch(0.14 0 0);
+  --app-gray-3: oklch(0.17 0 0);
+  --app-gray-4: oklch(0.205 0 0);
+  --app-gray-5: oklch(0.24 0 0);
+  --app-gray-6: oklch(0.28 0 0);
+  --app-gray-7: oklch(0.34 0 0);
+  --app-gray-8: oklch(0.44 0 0);
+  --app-gray-9: oklch(0.6 0 0);
+  --app-gray-10: oklch(0.69 0 0);
+  --app-gray-11: oklch(0.8 0 0);
+  --app-gray-12: oklch(0.965 0 0);
+  --app-ink-level: 0.954;
+  --app-raised: var(--app-gray-3);
+  --app-scrim: oklch(0 0 0 / 0.62);
+  --app-hue-lift: 0.78;
+  --app-hue-chroma: 0.13;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --app-gray-1: oklch(0.11 0 0);
+    --app-gray-2: oklch(0.14 0 0);
+    --app-gray-3: oklch(0.17 0 0);
+    --app-gray-4: oklch(0.205 0 0);
+    --app-gray-5: oklch(0.24 0 0);
+    --app-gray-6: oklch(0.28 0 0);
+    --app-gray-7: oklch(0.34 0 0);
+    --app-gray-8: oklch(0.44 0 0);
+    --app-gray-9: oklch(0.6 0 0);
+    --app-gray-10: oklch(0.69 0 0);
+    --app-gray-11: oklch(0.8 0 0);
+    --app-gray-12: oklch(0.965 0 0);
+    --app-ink-level: 0.954;
+    --app-raised: var(--app-gray-3);
+    --app-scrim: oklch(0 0 0 / 0.62);
+    --app-hue-lift: 0.78;
+    --app-hue-chroma: 0.13;
+  }
+}
+
+/* The reversed scale for .app-inverse: dark values on a paper page... */
+.app-inverse {
+  --app-gray-1: oklch(0.13 0 0);
+  --app-gray-2: oklch(0.165 0 0);
+  --app-gray-3: oklch(0.2 0 0);
+  --app-gray-4: oklch(0.235 0 0);
+  --app-gray-5: oklch(0.27 0 0);
+  --app-gray-6: oklch(0.31 0 0);
+  --app-gray-7: oklch(0.37 0 0);
+  --app-gray-8: oklch(0.46 0 0);
+  --app-gray-9: oklch(0.62 0 0);
+  --app-gray-10: oklch(0.7 0 0);
+  --app-gray-11: oklch(0.81 0 0);
+  --app-gray-12: oklch(0.975 0 0);
+  --app-ink-level: 0.967;
+  --app-raised: var(--app-gray-3);
+  --app-hue-lift: 0.78;
+  --app-hue-chroma: 0.13;
+  color-scheme: dark;
+}
+
+/* ...and paper values on a dark one. */
+[data-theme='dark'] .app-inverse {
+  --app-gray-1: oklch(0.975 0 0);
+  --app-gray-2: oklch(0.95 0 0);
+  --app-gray-3: oklch(0.925 0 0);
+  --app-gray-4: oklch(0.895 0 0);
+  --app-gray-5: oklch(0.86 0 0);
+  --app-gray-6: oklch(0.82 0 0);
+  --app-gray-7: oklch(0.76 0 0);
+  --app-gray-8: oklch(0.66 0 0);
+  --app-gray-9: oklch(0.52 0 0);
+  --app-gray-10: oklch(0.44 0 0);
+  --app-gray-11: oklch(0.34 0 0);
+  --app-gray-12: oklch(0.14 0 0);
+  --app-ink-level: 0.035;
+  --app-raised: var(--app-gray-1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-inverse {
+    --app-gray-1: oklch(0.975 0 0);
+    --app-gray-2: oklch(0.95 0 0);
+    --app-gray-3: oklch(0.925 0 0);
+    --app-gray-4: oklch(0.895 0 0);
+    --app-gray-5: oklch(0.86 0 0);
+    --app-gray-6: oklch(0.82 0 0);
+    --app-gray-7: oklch(0.76 0 0);
+    --app-gray-8: oklch(0.66 0 0);
+    --app-gray-9: oklch(0.52 0 0);
+    --app-gray-10: oklch(0.44 0 0);
+    --app-gray-11: oklch(0.34 0 0);
+    --app-gray-12: oklch(0.14 0 0);
+    --app-ink-level: 0.035;
+    --app-raised: var(--app-gray-1);
+    --app-hue-lift: 0.55;
+    --app-hue-chroma: 0.14;
+    color-scheme: light;
+  }
+}
+
+/*
+ * A named theme (core/preferences.ts THEME_PRESETS: dawn, boreal, ember, sakura, meadow, tide, dusk): the page's greys become the kit's tinted
+ * ones, step for step (Matt: "port Attack.FM's set"). The kit already tints `--glacier-gray-*` under
+ * `data-theme-preset` (vendor/@glacier/tokens tokens.css), but Glyph draws from its own scale above, which is pure grey
+ * on purpose and read nothing of the kit's - so stamping a preset alone changed nothing on the page. Both are the
+ * same twelve steps, ground to words, so each step is simply the kit's. Taken from the kit rather than copied, so a
+ * theme retuned there is retuned here.
+ *
+ * `:root:root` outranks the dark scale above, including the one under `prefers-color-scheme`, which a named dark
+ * theme also answers to.
+ */
+:root:root[data-theme-preset] {
+  --app-gray-1: var(--glacier-gray-1);
+  --app-gray-2: var(--glacier-gray-2);
+  --app-gray-3: var(--glacier-gray-3);
+  --app-gray-4: var(--glacier-gray-4);
+  --app-gray-5: var(--glacier-gray-5);
+  --app-gray-6: var(--glacier-gray-6);
+  --app-gray-7: var(--glacier-gray-7);
+  --app-gray-8: var(--glacier-gray-8);
+  --app-gray-9: var(--glacier-gray-9);
+  --app-gray-10: var(--glacier-gray-10);
+  --app-gray-11: var(--glacier-gray-11);
+  --app-gray-12: var(--glacier-gray-12);
+}
+
+/*
+ * The kit's ink as a grey, for `--app-ink-flat` below: a named theme's ink is tinted, and the flat bar is the nearest
+ * grey to it (the light themes' `--glacier-gray-12` is oklch 0.303, the dark ones' 0.935; stylesheets.test.ts checks).
+ */
+:root:root[data-theme-preset='dawn'],
+:root:root[data-theme-preset='sakura'],
+:root:root[data-theme-preset='meadow'] {
+  --app-ink-level: 0.182;
+}
+:root:root[data-theme-preset='boreal'],
+:root:root[data-theme-preset='ember'],
+:root:root[data-theme-preset='tide'],
+:root:root[data-theme-preset='dusk'] {
+  --app-ink-level: 0.915;
+}
+
+/*
+ * The kit's greys follow the page's own - everywhere except the root under a named theme.
+ *
+ * These were in the big mapping below, which makes the kit's components draw in Glyph's pure greys. Under a named
+ * theme the direction has to turn round: the kit's tinted greys are the source, and the rule above takes the page's
+ * from them. With both in force the two pointed at each other - `--app-gray-1` at `--glacier-gray-1` and back - and a
+ * custom property that refers to itself through another is invalid, so every colour built on the scale came out empty
+ * and the page lost its ground (measured: `--app-paper`, `--app-ink` and `--glacier-bg` all empty under Ember). So on
+ * the root, this mapping stands aside while a theme is named. An inverse surface keeps it: it never reads the kit's
+ * greys back, so there is nothing there to loop.
+ */
+:root:root:root:not([data-theme-preset]),
+.app-inverse {
+  --glacier-gray-1: var(--app-gray-1);
+  --glacier-gray-2: var(--app-gray-2);
+  --glacier-gray-3: var(--app-gray-3);
+  --glacier-gray-4: var(--app-gray-4);
+  --glacier-gray-5: var(--app-gray-5);
+  --glacier-gray-6: var(--app-gray-6);
+  --glacier-gray-7: var(--app-gray-7);
+  --glacier-gray-8: var(--app-gray-8);
+  --glacier-gray-9: var(--app-gray-9);
+  --glacier-gray-10: var(--app-gray-10);
+  --glacier-gray-11: var(--app-gray-11);
+  --glacier-gray-12: var(--app-gray-12);
+}
+
+/* ---- 2 and 3. the mapping, on the page and on every inverse -------------- */
+
+:root:root:root,
+.app-inverse {
+  --app-paper: var(--app-gray-1);
+  --app-paper-2: var(--app-gray-3);
+  --app-paper-3: var(--app-gray-5);
+  --app-rule: var(--app-gray-4);
+  --app-ink: var(--app-gray-12);
+  --app-ink-2: var(--app-gray-11);
+  --app-ink-3: var(--app-gray-9);
+  --app-ink-4: var(--app-gray-7);
+  --app-wash: color-mix(in oklch, var(--app-gray-12) 9%, transparent);
+  /*
+   * The highlighter's ink (Matt: "make the highlight use a blue highlight instead of dim gray"). The one coloured
+   * mark in a monochrome app, so it is a wash rather than a fill: the words keep the page's own ink and stay as
+   * readable as the line around them. Mixed against the paper it sits on, so it is a pale wash on white and a deep
+   * one on black rather than the same flat blue twice.
+   */
+  --app-mark: color-mix(in oklch, oklch(0.62 0.17 250) 34%, transparent);
+  /*
+   * The ink as a filter, for a span that has to print flat in it whatever is in it: a redaction's bar
+   * (plugins/marks/index.tsx) over an emoji, which keeps its own colours under `color` and the fill colour alike.
+   * `brightness(0)` takes every pixel to black and `invert()` lifts black to a grey, so on this scale, grey
+   * throughout, the bar is the ink to the sRGB rounding; under a named theme it is the nearest grey to a tinted ink.
+   * The level is the ink's own, written beside each scale above, and stylesheets.test.ts works it out from the
+   * scale's `--app-gray-12` so a retuned ink cannot leave the bar behind.
+   */
+  --app-ink-flat: brightness(0) invert(var(--app-ink-level));
+
+  --glacier-bg: var(--app-paper);
+  --glacier-surface: var(--app-paper-2);
+  --glacier-surface-raised: var(--app-raised);
+  --glacier-surface-sunken: var(--app-gray-2);
+  --glacier-overlay: var(--app-scrim);
+  --glacier-hover: var(--app-paper-2);
+  --glacier-active: var(--app-paper-3);
+  --glacier-selection: color-mix(in oklch, var(--app-gray-12) 16%, transparent);
+  --glacier-border-subtle: var(--app-rule);
+  --glacier-border: var(--app-gray-6);
+  --glacier-border-strong: var(--app-gray-8);
+  --glacier-text: var(--app-ink);
+  --glacier-text-muted: var(--app-ink-2);
+  --glacier-text-subtle: var(--app-ink-3);
+  --glacier-text-disabled: var(--app-ink-4);
+
+  --glacier-segment-track: var(--app-paper-2);
+  --glacier-segment-thumb: var(--app-accent);
+  --glacier-slider-thumb: var(--app-paper);
+
+  --glacier-danger-solid: var(--app-ink);
+  --glacier-danger-solid-hover: var(--app-ink-2);
+  --glacier-danger-soft: var(--app-paper-2);
+  --glacier-danger-soft-hover: var(--app-paper-3);
+  --glacier-danger-border: var(--app-ink-3);
+  --glacier-danger-text: var(--app-ink);
+  --glacier-danger-contrast: var(--app-paper);
+  --glacier-success-solid: var(--app-ink);
+  --glacier-success-solid-hover: var(--app-ink-2);
+  --glacier-success-soft: var(--app-paper-2);
+  --glacier-success-soft-hover: var(--app-paper-3);
+  --glacier-success-border: var(--app-ink-3);
+  --glacier-success-text: var(--app-ink);
+  --glacier-success-contrast: var(--app-paper);
+  --glacier-warning-solid: var(--app-ink);
+  --glacier-warning-solid-hover: var(--app-ink-2);
+  --glacier-warning-soft: var(--app-paper-2);
+  --glacier-warning-soft-hover: var(--app-paper-3);
+  --glacier-warning-border: var(--app-ink-3);
+  --glacier-warning-text: var(--app-ink);
+  --glacier-warning-contrast: var(--app-paper);
+  --glacier-info-solid: var(--app-ink);
+  --glacier-info-solid-hover: var(--app-ink-2);
+  --glacier-info-soft: var(--app-paper-2);
+  --glacier-info-soft-hover: var(--app-paper-3);
+  --glacier-info-border: var(--app-ink-3);
+  --glacier-info-text: var(--app-ink);
+  --glacier-info-contrast: var(--app-paper);
+
+  --glacier-glass-thin: color-mix(in oklch, var(--app-paper) 55%, transparent);
+  --glacier-glass-regular: color-mix(in oklch, var(--app-paper) 75%, transparent);
+  --glacier-glass-thick: color-mix(in oklch, var(--app-paper) 90%, transparent);
+  --glacier-glass-border: var(--app-rule);
+  --glacier-glass-highlight: transparent;
+  --glacier-gradient-wash-accent: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+  --glacier-gradient-wash-neutral: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+  --glacier-gradient-wash-danger: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+  --glacier-gradient-wash-success: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+  --glacier-gradient-wash-warning: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+  --glacier-gradient-wash-info: linear-gradient(var(--app-paper-2), var(--app-paper-2));
+}
+
+/*
+ * An inverse element is a surface of its own: it paints its paper and sets its
+ * ink. The class is doubled because component CSS modules load after this
+ * file, and a component's own `background: none` or `color: inherit` would
+ * otherwise win at equal specificity and leave ink words on an ink band.
+ */
+.app-inverse.app-inverse {
+  background-color: var(--app-paper);
+  color: var(--glacier-text);
+}
+
+/* ---- the few kit parts a token cannot reach ---------------------------- */
+
+/*
+ * The segmented control's selected thumb is ink, so its label has to be
+ * paper - and the kit colours the label with --glacier-text, which is ink.
+ * Matched by the control's structure (a radiogroup of labels holding a thumb
+ * span and a label span), not by its hashed class names, which change with
+ * every kit build.
+ */
+[role='radiogroup'] > label[data-selected] > span:last-child {
+  color: var(--app-paper);
+}
+
+[role='radiogroup'] > label > span[aria-hidden='true'] {
+  box-shadow: none;
+}
+
+/*
+ * The switch's thumb is a literal #fdfdfd in the kit. On the paper theme that
+ * is paper on an ink track; on the dark theme the checked track is near-white
+ * ink, and a near-white thumb on it disappears. It takes the page's paper.
+ * The kit puts role="switch" on the input; the thumb is inside the track
+ * span that follows it.
+ */
+[role='switch'] + span > span {
+  background: var(--app-paper);
+}
+
+/* ---- the app's own ink pieces -------------------------------------------- */
+
+/*
+ * The one loud button: ink, full pill, paper type. One per screen at most -
+ * Continue, Add, Done - and everything else stays a quiet `.app-word`.
+ */
+.app-pill {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--glacier-space-2);
+  min-block-size: var(--glacier-space-12);
+  padding: 0 var(--glacier-space-6);
+  border: none;
+  border-radius: var(--glacier-radius-full);
+  background: var(--app-ink);
+  color: var(--app-paper);
+  font: inherit;
+  font-size: var(--glacier-font-size-md);
+  font-weight: var(--glacier-font-weight-semibold);
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--glacier-duration-fast) var(--glacier-ease-out);
+}
+
+.app-pill:active {
+  transform: scale(0.98);
+}
+
+.app-pill:disabled {
+  background: var(--app-paper-3);
+  color: var(--app-ink-3);
+  cursor: default;
+  transform: none;
+}
+
+.app-pill:focus-visible {
+  outline: 2px solid var(--app-ink);
+  outline-offset: 3px;
+}
+
+/*
+ * ---- the workspace hues --------------------------------------------------
+ *
+ * Matt: "add the ability to choose from a swatch of colours for the workspace pill colour". The app is grey
+ * everywhere by design, so a workspace's colour is the one place colour carries meaning, and it is treated as ink
+ * rather than as a fill: the same six hues at the lightness this paper needs (`--app-hue-lift`, set with the scale
+ * above, and flipped again on an inverse surface), so a hue reads on white, on black, and on an inverted card.
+ *
+ * Anything wearing `data-hue` gets `--app-space` and can use it for its border, its words, or its ground; the hue's
+ * name is what a workspace stores (core/workspaces.ts), so these can be retuned without touching a person's notes.
+ * `ink` is the app's own colour, which is what a workspace with no hue wears.
+ */
+[data-hue] {
+  --app-space: var(--app-ink);
+}
+
+[data-hue='ember'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 32);
+}
+
+[data-hue='amber'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 75);
+}
+
+[data-hue='moss'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 150);
+}
+
+[data-hue='sea'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 230);
+}
+
+[data-hue='violet'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 295);
+}
+
+[data-hue='rose'] {
+  --app-space: oklch(var(--app-hue-lift) var(--app-hue-chroma) 355);
+}
+
+/*
+ * Gold: the bookmark's colour, and the only colour Glyph gives a thing of its own (Matt: "Make the bookmark icon on
+ * the note yellow / gold instead of white so it stands out"). Worked out on the element that wears `app-gold`, as the
+ * hues are, so it reads on white, on black and on an inverted card alike; the element then uses `--app-gold` for its
+ * ink or a line, and its words stay the page's.
+ *
+ * A step lighter and fuller than the hues: gold is a light colour, and at their lightness it came out mustard on
+ * white and brown on black, set side by side with the hues' amber (75) and lighter and fuller steps from 70 to 95.
+ */
+.app-gold {
+  --app-gold: oklch(calc(var(--app-hue-lift) + 0.08) calc(var(--app-hue-chroma) + 0.02) 82);
+}
+
+/*
+ * ---- the accent, and the one way out of grey -----------------------------
+ *
+ * Glyph is ink on paper, so every accent token is mapped onto the grey scale and the app has no colour of its own.
+ * That is the default and it is what `ink` means in Settings > Appearance. Matt then asked for a picker ("add ...
+ * the accent color picker"), so this mapping stands aside the moment an accent is chosen: with `data-accent` on the
+ * root the kit's own ramp for that colour (tokens.css) is left showing, in the few places an accent is used - a
+ * focus ring, a chosen segment, a swatch - while paper, ink and every grey stay exactly as they were.
+ */
+:root:root:root:not([data-accent]),
+:root:not([data-accent]) .app-inverse {
+  --glacier-accent-1: var(--app-gray-1);
+  --glacier-accent-2: var(--app-gray-2);
+  --glacier-accent-3: var(--app-gray-3);
+  --glacier-accent-4: var(--app-gray-4);
+  --glacier-accent-5: var(--app-gray-5);
+  --glacier-accent-6: var(--app-gray-6);
+  --glacier-accent-7: var(--app-gray-7);
+  --glacier-accent-8: var(--app-gray-8);
+  --glacier-accent-9: var(--app-gray-12);
+  --glacier-accent-10: var(--app-gray-11);
+  --glacier-accent-11: var(--app-gray-12);
+  --glacier-accent-12: var(--app-gray-12);
+  --glacier-accent-solid: var(--app-accent);
+  --glacier-accent-solid-hover: var(--app-accent);
+  --glacier-accent-soft: var(--app-paper-2);
+  --glacier-accent-soft-hover: var(--app-paper-3);
+  --glacier-accent-border: var(--app-ink-3);
+  --glacier-accent-text: var(--app-ink);
+  --glacier-accent-contrast: var(--app-on-accent);
+  /* The ring round whatever has the keyboard: ink with no accent, and the accent's own when there is one, since a
+     focus ring is exactly the kind of mark an accent is for. */
+  --glacier-focus-ring: var(--app-ink);
+}
+
+/*
+ * ---- how round a corner is ------------------------------------------------
+ *
+ * One multiplier over the kit's whole radius scale (`--glacier-radius-scale`), stamped as `data-rounding`
+ * (core/preferences.ts). `round` is the kit's own 1 and stamps nothing. A pill is untouched at every setting:
+ * `--glacier-radius-full` is a flat 9999px, so Speak stays a pill even when every card is square.
+ *
+ * Most of the modules' pills write 999px instead, which the setting leaves alone too. It is the same pill, but not the
+ * same pixels: moved onto the token, a pill's corner is drawn a shade differently in a pixel or two (measured on the
+ * cheat sheet's search field, the same in every run), so they keep their number.
+ */
+[data-rounding='square'] {
+  --glacier-radius-scale: 0;
+}
+
+[data-rounding='soft'] {
+  --glacier-radius-scale: 0.55;
+}
+
+[data-rounding='rounder'] {
+  --glacier-radius-scale: 1.5;
+}

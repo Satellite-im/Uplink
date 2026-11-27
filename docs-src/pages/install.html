@@ -1,0 +1,80 @@
+<p>Uplink comes straight from <a href="https://gogho.st/">gogho.st</a>, not an app store, and keeps itself up to date once it's installed.</p>
+
+<h2 id="android">On an Android phone</h2>
+<steps>
+<step title="Download it">
+<p>On your phone, open <a href="/ghost-messaging.apk">gogho.st/ghost-messaging.apk</a> (or tap <b>Download for Android</b> on gogho.st).</p>
+</step>
+<step title="Let your browser install it">
+<p>Open the downloaded file from your notifications or <ui>Files › Downloads</ui>. The first time, Android says your browser can't install apps: tap <b>Settings</b>, switch on <b>Allow from this source</b>, go back, and tap <b>Install</b>.</p>
+<m-screen title="Install unknown apps" back caption="Android's own setting, per app.">
+  <m-section><m-row icon="globe" hue="blue" label="Chrome" hint="Allow from this source" switch="on" tap/></m-section>
+</m-screen>
+</step>
+<step title="Say yes to Play Protect">
+<p>If Play Protect asks about an app it doesn't know, tap <b>More details</b>, then <b>Install anyway</b>. It asks because the app isn't from the Play Store, not because something is wrong.</p>
+</step>
+<step title="Open it">
+<p>The welcome opens. Carry on with <a href="/docs/first-run/">The first time you open it</a>.</p>
+</step>
+</steps>
+<note kind="info" title="Android 13 and later: restricted settings">
+<p>Apps installed from outside the Play Store can't be your texting app, or read notifications, until you allow it. When Uplink asks, tap <b>Open Android's page for Uplink</b>, then <b>⋮ › Allow restricted settings</b>, and try again.</p>
+</note>
+
+<h2 id="mac">On a Mac</h2>
+<steps>
+<step title="Download the disk image">
+<p>Get <a href="/ghost-messaging-mac.dmg">ghost-messaging-mac.dmg</a> from gogho.st. It runs on Apple silicon and Intel Macs, macOS 12 or later.</p>
+</step>
+<step title="Drag it to Applications">
+<p>Open the disk image and drag <b>Uplink</b> onto <b>Applications</b>.</p>
+</step>
+<step title="Open it">
+<p>Open it from Applications. It's signed and checked by Apple, so it opens without a warning. It updates itself from then on.</p>
+</step>
+</steps>
+
+<h2 id="windows">On Windows</h2>
+<steps>
+<step title="Download the installer">
+<p>Get <a href="/ghost-messaging-setup.exe">ghost-messaging-setup.exe</a> from gogho.st. For Windows 10 and 11.</p>
+</step>
+<step title="Run it">
+<p>Run the installer and follow it. Then open <b>Uplink</b> from the Start menu. It updates itself from then on.</p>
+</step>
+</steps>
+
+<h2 id="linux">On Linux</h2>
+<steps>
+<step title="Download it">
+<p>On Ubuntu, Debian, Linux Mint, Pop!_OS and their family, get <a href="/ghost-messaging-linux.deb">ghost-messaging-linux.deb</a>. On any other Linux, get <a href="/ghost-messaging-linux-x64.tar.gz">ghost-messaging-linux-x64.tar.gz</a>. For 64-bit PCs (x86-64).</p>
+</step>
+<step title="Install it">
+<p>Open the .deb to install it with your software centre, or run <code>sudo apt install ./ghost-messaging-linux.deb</code>. With the .tar.gz, unpack it anywhere and run <code>ghost-messaging</code> in its folder; it needs GTK 3 and libmpv, which most desktops have.</p>
+</step>
+<step title="Open it">
+<p>Open <b>Uplink</b> from your apps. It looks for updates itself from then on (see <a href="#linux-updates">Updates on Linux</a>).</p>
+</step>
+</steps>
+
+<h2 id="iphone">On an iPhone <soon/></h2>
+<p>The iPhone app isn't out yet. When it is, it'll have friends, circles, calls and files, but not your texts: Apple doesn't let apps send or read texts outside the EU.</p>
+
+<h2 id="updates">Updates</h2>
+<p>The app checks for updates itself and tells you when one is ready. After each update, <b>What's new</b> lists what changed; find it again in <ui>Settings › About</ui>.</p>
+<m-screen title="Updates" back caption="Settings › Updates on the phone.">
+  <m-section>
+    <m-row icon="refresh-cw" hue="green" label="Automatic updates" hint="Download new versions by themselves" switch="on"/>
+    <m-row icon="search" hue="blue" label="Check for updates" chev/>
+  </m-section>
+</m-screen>
+<p>On Android, the first update asks you to allow Uplink to install updates; say yes, the same as for your browser above.</p>
+
+<h3 id="linux-updates">Updates on Linux</h3>
+<p>Uplink for Linux looks for a new version as it opens and every few hours, and downloads it by itself. What happens next depends on how you installed it:</p>
+<ul>
+  <li><b>The .tar.gz</b>: the new version is unpacked beside the old one. Click <ui>Settings › Updates › Restart to update</ui> and it swaps in the new one and opens it. If you don't, it does the same the next time you open the app. This needs the folder you unpacked it into to be yours, such as one in your home folder.</li>
+  <li><b>The .deb</b>: installing a package needs your password, so the app can't do it alone. It downloads and checks the new .deb, then <ui>Settings › Updates</ui> shows the one command that installs it, with <b>Copy the install command</b>. Paste it into a terminal, then open Uplink again.</li>
+</ul>
+<p>Versions up to 0.12.12 didn't update themselves on Linux. Install the new one once by hand, and it updates itself from then on.</p>

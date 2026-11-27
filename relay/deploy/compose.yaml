@@ -1,0 +1,54 @@
+# Uplink relay behind Caddy, with TLS from Let's Encrypt (docs/SELF_HOSTING.md).
+#
+#   cp relay.env.example relay.env        # and edit it: nothing in it is required
+#   cp Caddyfile.example Caddyfile        # and put your domain in it
+#   docker compose up -d                  # from messaging/relay/deploy
+#   docker compose --profile calls up -d  # the same, with coturn for calls (turnserver.conf from its example first)
+#
+# Your domain's DNS must point at this machine, and ports 80 and 443 must reach it, before Caddy can get a certificate.
+
+services:
+  relay:
+    # The image each release publishes (.github/workflows/relay.yml), for x64 and arm64. Built from this folder instead:
+    # `docker build -t ghost-relay ..`, and `image: ghost-relay` here.
+    image: ghcr.io/infamousvague/ghost-relay:latest
+    restart: unless-stopped
+    env_file:
+      - path: relay.env
+        required: false
+    volumes:
+      - relay-data:/data
+    # Reached only by Caddy, on the compose network: nothing is published from it directly.
+    expose:
+      - "8787"
+    mem_limit: 512m
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - relay
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  # Optional: a TURN server, for calls between devices that can't reach each other directly. Started only with
+  # --profile calls. It needs the host's network (it relays on a wide range of UDP ports), so it is not on the
+  # compose network; set GHOST_TURN_SECRET and GHOST_TURN_URLS in relay.env to match turnserver.conf.
+  coturn:
+    image: coturn/coturn:4
+    profiles: ["calls"]
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+
+volumes:
+  relay-data:
+  caddy-data:
+  caddy-config:

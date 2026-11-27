@@ -1,0 +1,137 @@
+<p>Spotify plays music to a circle's call. One person's own Spotify app plays, everyone in the call hears it in stereo, and everyone who may speak can add songs to one queue.</p>
+<p><b>Turn it on:</b> for a whole circle, in <ui>Circle settings › Plugins</ui>. It does nothing outside a circle's spaces.</p>
+
+<h2 id="turn-on">Turn it on for a circle</h2>
+<p>Whoever may change the circle turns it on once, for everyone in it. Nobody else adds or sets up anything.</p>
+<m-screen title="Plugins" back caption="Circle settings › Plugins.">
+  <m-section title="For everyone in the circle">
+    <m-row icon="megaphone" hue="amber" label="Soundboard" switch="on"/>
+    <m-row icon="audio-lines" hue="green" label="Spotify" switch="off" tap/>
+  </m-section>
+</m-screen>
+
+<h2 id="start">Play music to the call</h2>
+<p>Someone on a Mac or a PC with the Spotify app plays it; here they are called the DJ. Their own Spotify account plays, and Uplink never asks for its password.</p>
+<steps>
+<step title="Open Spotify on your computer">
+<p>Open the Spotify app and sign in. Choosing which song plays needs Spotify Premium. Put on headphones.</p>
+</step>
+<step title="Join the call, and open Spotify in it">
+<p>Press the note in the space's header, or <b>Spotify</b> in the call's menu.</p>
+<m-screen title="Lounge">
+  <m-menu title="Call"><m-item icon="audio-lines" hint="A plugin" tap>Spotify</m-item><m-item icon="user-plus">Invite</m-item></m-menu>
+</m-screen>
+</step>
+<step title="Press Start">
+<p>What your Spotify was already playing is what the call hears first. Otherwise it waits for a song.</p>
+<m-screen title="Spotify" back>
+  <m-section><m-row icon="play" label="Start" hint="Play your Spotify to the call" chev tap/></m-section>
+</m-screen>
+</step>
+</steps>
+<p>One person plays at a time: whoever started first, until they press <b>Stop</b> or leave the call. Then someone else can start. Stopping pauses a song that came from the queue, and leaves one you chose in Spotify yourself playing for you.</p>
+<p>On a stage, or anywhere your role can't speak, you can't play music or choose songs. If a moderator mutes the DJ for everyone, their music stops too.</p>
+
+<h3 id="mac">On a Mac</h3>
+<p>macOS 14.4 or later. The first time, macOS asks you two things, and the music needs both:</p>
+<ul>
+  <li><b>May Uplink control Spotify?</b> This is what presses Spotify's play, pause and skip. If you said no, turn it on in <ui>System Settings › Privacy &amp; Security › Automation</ui>.</li>
+  <li><b>May it record system audio?</b> This is what takes Spotify's sound. Uplink takes the sound of the Spotify app only. If you said no, the music is silent for everyone: turn it on in <ui>System Settings › Privacy &amp; Security › Screen &amp; System Audio Recording</ui>.</li>
+</ul>
+
+<h3 id="pc">On a Windows PC</h3>
+<p>Windows 10 version 2004 or later, with Spotify from spotify.com or from the Microsoft Store. Windows asks you nothing.</p>
+<p>Windows plays a song by opening it in Spotify, so Spotify may come to the front, and sometimes it shows the song without starting it. Uplink then asks Spotify to play. If that doesn't do it, you are told <b>Spotify opened but didn't start the song. Press play on it there.</b> Press play in Spotify and the queue goes on.</p>
+
+<h2 id="queue">Add songs</h2>
+<p>In Spotify, on any device, press <ui>Share › Copy Song Link</ui>. Paste it under <b>Add a song</b>.</p>
+<m-screen title="Spotify" back caption="The queue, as someone listening sees it.">
+  <m-row-raw><span class="m-avatar" data-hue="purple">♪</span><span class="m-txt"><b>Cut To The Feeling</b><small>Carly Rae Jepsen · From Maya's Spotify</small></span></m-row-raw>
+  <m-row-raw><m-btn kind="primary">Pause</m-btn><m-btn kind="secondary">Skip</m-btn></m-row-raw>
+  <m-section title="Add a song">
+    <m-field label="A song's link" value="https://open.spotify.com/track/…"/>
+    <m-row icon="plus" label="Add it to the queue" tap/>
+  </m-section>
+  <m-section title="Up next · 2">
+    <m-row label="Never Gonna Give You Up" hint="Added by you"/>
+    <m-row label="Dancing Queen" hint="Added by Jo"/>
+  </m-section>
+</m-screen>
+<ul>
+  <li>Anyone whose role may speak in the space can add songs, move them up and down, pause, play and skip.</li>
+  <li>You can take away a song you added. The DJ can take away any.</li>
+  <li>The queue holds 100 songs, at most 20 from each person.</li>
+  <li>Albums, playlists and podcasts can't be added: paste a song's link.</li>
+  <li>The queue is kept on the DJ's computer, and goes when they stop.</li>
+  <li>If the DJ picks another song in Spotify itself, that plays, and the queue goes on after it. When the queue runs out, Spotify is paused.</li>
+</ul>
+<p>While music plays, <b>Spotify</b> is listed among the people in the call, and a line over the call has the song, pause, skip and <b>Queue</b>.</p>
+<m-screen>
+  <m-banner><b>Cut To The Feeling</b> Carly Rae Jepsen</m-banner>
+</m-screen>
+
+<h2 id="hear">How loud it is for you</h2>
+<p>Under <b>On this device</b> the music has a loudness of its own, only for you. At 0% it isn't sent to you at all. Deafened, you hear none of it; muting your microphone changes nothing. The DJ hears it from Spotify itself, so they have no slider there.</p>
+<m-screen title="Spotify" back>
+  <m-section title="On this device">
+    <m-row icon="volume-2" label="Loudness" value="60%"/>
+  </m-section>
+</m-screen>
+<note kind="warn" title="The DJ should wear headphones"><p>On speakers, their microphone hears the music and sends it a second time.</p></note>
+
+<h2 id="lossless">Lossless</h2>
+<p>Everyone hears the music in high quality: stereo, at the highest rate a call's sound has. It can also come without loss, as it was taken from the DJ's Spotify, 48 kHz and 16 bits with nothing left out. You hear high quality first; lossless takes over once it has played cleanly for a second, and high quality is back at once if it stops. Where they cross, you hear a moment of the song again, as lossless is about half a second behind.</p>
+<m-screen title="Spotify" back caption="What you hear, and the switch.">
+  <m-section title="On this device">
+    <m-row icon="audio-lines" label="You hear" hint="The music as it was captured, 48 kHz, 16 bits, with nothing left out." value="Lossless"/>
+    <m-row icon="music" label="Lossless music" switch="on"/>
+  </m-section>
+</m-screen>
+<p>It plays where all of this is so. Where it isn't, <b>You hear</b> says why, in a line.</p>
+<ul>
+  <li><b>You wear headphones.</b> On speakers, your microphone would send the music back to the call: a call takes its own sound out of your microphone, and lossless is played beside it. Where your device can't tell, <b>I'm wearing headphones</b> is there for you to say so, for what you hear it on now.</li>
+  <li><b>Your headset isn't in a call.</b> A Bluetooth headset whose microphone is in use plays everything at a call's quality. Choose another microphone, or wired headphones.</li>
+  <li><b>You and the DJ are connected directly.</b> It is never sent through the relay. To find a direct way, the music's connection tries every path first where you can have lossless, so the DJ's device and yours learn each other's internet address, as in a call that isn't relayed.</li>
+  <li><b>The connection keeps up.</b> It takes about 1 Mbit/s, and at most 1.5. If it stutters you have high quality for a while, and it is tried again by itself.</li>
+  <li><b>The DJ can send it.</b> Up to six people at once have it from one DJ, fewer if their upload can't take it. The DJ sees how many, and what it takes.</li>
+</ul>
+<p>The switch <b>Lossless music</b> is yours, kept on this device. On a Mac, macOS plays it a little quieter in a call than it plays the call itself.</p>
+<note kind="tip" title="If you are the DJ"><p>Nobody can hear more than your Spotify plays. Set <ui>Audio quality</ui> to <b>Lossless</b> in Spotify's own settings, which needs Premium, and turn off anything there that changes the sound. If your Bluetooth headset's microphone is in use, your computer plays everything at a call's quality, Spotify too, and that is all there is to send: you are told, and another microphone or wired headphones put it right.</p></note>
+
+<h2 id="recorded">What is and isn't recorded</h2>
+<ul>
+  <li>The music is never in a <a href="/docs/record-call/">recording</a> of the call, its <a href="/docs/live-captions/">captions</a> or <a href="/docs/scribe/">Scribe</a>. Without headphones, though, the DJ's microphone can pick it up, and then it is heard under their voice.</li>
+  <li>Nothing of the music is stored anywhere. It goes live from the DJ's computer to each person in the call, encrypted as the call is, and it is Spotify's sound and no other app's.</li>
+  <li>What is said of the queue (songs, who added them) goes in the call, sealed as the call is. The relay can't read it.</li>
+  <li>The device that adds a song asks Spotify what it is called, and each device in the call loads the covers from Spotify.</li>
+</ul>
+
+<h2 id="devices">What each device can do</h2>
+<table>
+  <tr><th>On</th><th>Play music to the call</th><th>Listen and queue songs</th><th>Hear it lossless</th></tr>
+  <tr><td>Mac</td><td>Yes, macOS 14.4 or later</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Windows</td><td>Yes, Windows 10 version 2004 or later</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Linux</td><td>No</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Android</td><td>No</td><td>Yes</td><td>With a wired or USB headset the call plays to</td></tr>
+  <tr><td>iPhone</td><td>No</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Browser</td><td>No</td><td>Yes, without covers</td><td>No</td></tr>
+</table>
+<p>Someone on a version from before this, or a guest who joined from a space's link in a browser, is in the call as ever and hears no music.</p>
+
+<h2 id="terms">Spotify's terms</h2>
+<note kind="warn" title="For a small private call"><p>Spotify's terms are for personal use and don't allow rebroadcasting. This is for a few friends in a private call, and the account of whoever plays carries that risk.</p></note>
+
+<h2 id="trouble">If something is wrong</h2>
+<table>
+  <tr><th>What you see</th><th>What to do</th></tr>
+  <tr><td>There is no Spotify in the call</td><td>The circle hasn't turned it on, or the space isn't a circle's.</td></tr>
+  <tr><td>Someone on a Mac or a PC with Spotify can start it</td><td>This device can't play to a call. It can listen and add songs once someone starts.</td></tr>
+  <tr><td>Spotify isn't open</td><td>Open the Spotify app on the same computer, sign in, and press <b>Start</b>. Spotify's web player doesn't work for this.</td></tr>
+  <tr><td>macOS isn't letting Uplink press Spotify's buttons</td><td>Turn Spotify on for Uplink in <ui>System Settings › Privacy &amp; Security › Automation</ui>.</td></tr>
+  <tr><td>No sound is coming from Spotify</td><td>On a Mac, see <a href="#mac">the second permission</a>. On a PC, check Spotify in the Windows volume mixer. On either, check that Spotify plays on this computer and not on a speaker or phone.</td></tr>
+  <tr><td>Spotify opened but didn't start the song</td><td>On a PC: press play on it in Spotify.</td></tr>
+  <tr><td>That song couldn't be played</td><td>Spotify didn't play it: it may not be there in the DJ's country, or their account can't choose songs. The next one plays; after three in a row the music waits.</td></tr>
+  <tr><td>You hear nothing, and others do</td><td>Check <b>Loudness</b> under <b>On this device</b>, and that you aren't deafened. A connection that drops is made again by itself.</td></tr>
+  <tr><td>You hear says High quality, and you want lossless</td><td>The line under it says why. See <a href="#lossless">Lossless</a>.</td></tr>
+  <tr><td>Everyone hears the music twice</td><td>The DJ's microphone is hearing their speakers: headphones.</td></tr>
+</table>

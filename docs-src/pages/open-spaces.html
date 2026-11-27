@@ -1,0 +1,140 @@
+<p>An open space is a call you walk around in. Everyone in it stands somewhere on one floor, seen from above, and you hear people louder or quieter by how near they stand. It is for a room full of people who want several conversations at once: walk over to the one you want.</p>
+
+<h2 id="make">Make one</h2>
+<p>Make a space as you make any other (<ui>New space</ui>, or <ui>Add a space</ui> in a circle) and choose <b>Open space</b> as its kind. Open it and press <b>Join voice</b>: the floor comes up straight away, saying <b>Connecting…</b> until the call is in, and you are on it near the middle.</p>
+<m-screen caption="Add a space, in a circle you are making.">
+  <m-menu title="Add a space">
+    <m-item icon="headphones">Chat &amp; voice</m-item>
+    <m-item icon="message-square">Text</m-item>
+    <m-item icon="folder">Files</m-item>
+    <m-item icon="compass" hint="A room you walk around in: hear who is near you" tap>Open space</m-item>
+  </m-menu>
+</m-screen>
+<m-floor hint="Press the floor, then walk with W A S D or the arrow keys" say newgroup caption="Just in, on a computer: you near the middle, two others further off. The words at the top fade once you walk.">
+  <m-standing you name="Alex Rivera" hue="teal" x="52" y="54" ring="none"/>
+  <m-standing name="Maya Chen" hue="rose" x="24" y="34" heard="0.45"/>
+  <m-standing name="Jo Okafor" hue="blue" x="80" y="70" heard="0.3"/>
+</m-floor>
+
+<h2 id="walk">Walk around</h2>
+<table>
+  <tr><th>On</th><th>How</th></tr>
+  <tr><td>A computer</td><td>Press the floor once, then walk with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys (two at once walk on a slant). Or press where you want to go.</td></tr>
+  <tr><td>A phone</td><td>Press where you want to go, or drag your finger and follow it.</td></tr>
+</table>
+<p>You stay in the middle of the view and the floor moves under you. The floor is a room with see-through walls in your accent colour. When the view reaches a wall it stops there, so you never look past the room, and you walk on towards the edge of the screen until you reach the wall itself.</p>
+<p>While the chat's box at the foot of the floor has the keyboard, your keys type words, not steps: press the floor to walk again.</p>
+<m-floor walls="far left" newgroup say caption="At the top left corner of the room: the view has stopped at the walls, and you have walked on up to them.">
+  <m-standing you name="Alex Rivera" hue="teal" x="18" y="32" ring="none"/>
+  <m-standing name="Maya Chen" hue="rose" x="58" y="62" heard="0.6"/>
+</m-floor>
+
+<h2 id="hear">Who you hear</h2>
+<p>How much you hear of each person goes by how far apart you stand:</p>
+<ul>
+  <li><b>Close by, whole.</b> Within about three steps of you (three times the size of someone's picture) a person is as loud as in any call.</li>
+  <li><b>Further off, quieter.</b> Past that they fade, quickly at first, as voices do across a room.</li>
+  <li><b>Past the ring, not at all.</b> A faint ring round you marks how far you hear: about thirteen pictures from you to it. Nobody beyond it is heard. On a big screen you see it as a circle round you; on a phone it mostly lies just past the edges of the view.</li>
+</ul>
+<p>Someone you hear less is drawn fainter, so you can still find them and walk over. Walk back and they come back: nobody is cut off or leaves the call, it is only how loud they are played to you. The green ripple round someone's picture is them talking, as in any call; how faint they are is how much of it reaches you.</p>
+<m-floor caption="Everyone here is talking. The dashed marks are this page's, not the app's: how much of each person you hear. Not to scale: in the app people are smaller against the ring.">
+  <m-standing you name="Alex Rivera" hue="teal" x="40" y="62" ring="38"/>
+  <m-standing name="Maya Chen" hue="rose" x="57" y="62" talking="0.8" mark="Whole"/>
+  <m-standing name="Jo Okafor" hue="blue" x="62" y="30" talking="0.7" heard="0.25" mark="Faint"/>
+  <m-standing name="Sam Reyes" hue="green" x="10" y="14" talking="0.7" heard="0" mark="Not heard"/>
+</m-floor>
+<ul>
+  <li><b>Your own volume for each person still counts.</b> Press and hold someone (on a computer, the other mouse button) for their volume, as in any call. Distance works on top of it.</li>
+  <li><b>Someone on an older version</b> of the app, or a guest who joined from a browser, says nothing of where they stand: they stand in the middle of the floor and are heard from there.</li>
+</ul>
+
+<h2 id="groups">Groups</h2>
+<p>A group is a named circle on the floor: one for the people playing a game, one for a film, one for a quiet chat. Inside a group you hear everyone in it whole, wherever in it they stand. Someone outside your group comes through its edge at under a third of what distance alone would give, so from outside a group is a murmur until you step in.</p>
+<m-floor caption="You and Maya in Game: you hear each other whole, and its circle is stronger because you are in it. Movie night is across the room, heard only through its edge.">
+  <m-group name="Game" hue="amber" x="28" y="60" r="19" count="2" mine/>
+  <m-group name="Movie night" hue="rose" x="74" y="52" r="19" count="2"/>
+  <m-standing you name="Alex Rivera" hue="teal" x="19" y="66" ring="none"/>
+  <m-standing name="Maya Chen" hue="purple" x="34" y="50" talking="0.6" mark="Whole"/>
+  <m-standing name="Jo Okafor" hue="blue" x="67" y="40" talking="0.6" heard="0.03" mark="A murmur"/>
+  <m-standing name="Sam Reyes" hue="green" x="82" y="64" heard="0.02"/>
+</m-floor>
+<steps>
+<step title="Make a group"><p>Stand where you want it and press <b>New group</b>. Choose <b>Game</b>, <b>Casual chat</b> or <b>Movie night</b>, or <b>Name it yourself</b>. The group's circle is drawn round where you stand, in a colour of its own.</p>
+<m-screen>
+  <m-menu title="New group here">
+    <m-item icon="gamepad-2" hint="A circle for whoever is playing" tap>Game</m-item>
+    <m-item icon="message-circle">Casual chat</m-item>
+    <m-item icon="film">Movie night</m-item>
+    <m-item icon="pencil">Name it yourself</m-item>
+  </m-menu>
+</m-screen></step>
+<step title="Step in and out"><p>Walk into the circle to join it, and out to leave. Its name shows how many are in it. The circle grows as more people step in, so there is room for everyone, and shrinks as they go. If two circles overlap, you are in the one whose middle is nearer.</p></step>
+<step title="Change it"><p>Press a group's name for what you can do with it. Anyone in the space can, and a change is the same for everyone.</p>
+<m-screen>
+  <m-menu title="Game">
+    <m-item icon="compass">Walk there</m-item>
+    <m-item icon="pencil">Rename</m-item>
+    <m-item icon="move" hint="Round where you stand now">Move it here</m-item>
+    <m-item icon="trash-2" hint="For everyone in the space" danger>Remove</m-item>
+  </m-menu>
+</m-screen></step>
+</steps>
+<p>Groups stay with the space: they are there the next time anyone who has seen them comes back, even to an empty room. A space holds up to 24 groups, and a group's name is up to 32 letters.</p>
+
+<h2 id="chat">Chat on the floor</h2>
+<p>What people write in the space's chat comes up over the floor as bubbles, for about ten seconds each, fading out at the end. Someone standing in a group has their words stacked over that group's circle; anyone else's stack at the side of the view, above the box. Each stack shows the newest four. Like voices, bubbles are fainter the further you are from whoever wrote them, or from the edge of their group; your own are always whole. A sticker, a voice message or a file shows as a few words saying so.</p>
+<p>Write from the <b>Say something</b> box at the foot of the floor and press <kbd>Enter</kbd>. Only what is written while you are on the floor comes up there. On a phone the whole chat is the call's other tab (the speech bubble above the floor); on a computer it is on the space's page again once you leave the call.</p>
+<m-floor say="tap" newgroup caption="Bubbles over Game, where you stand, and at the side from Jo, who is in no group and further off, so fainter.">
+  <m-group name="Game" hue="amber" x="58" y="64" r="17" count="2" mine>
+    <m-floor-bubble name="Maya Chen">one more round?</m-floor-bubble>
+    <m-floor-bubble you>go on then</m-floor-bubble>
+  </m-group>
+  <m-standing you name="Alex Rivera" hue="teal" x="51" y="68" ring="none"/>
+  <m-standing name="Maya Chen" hue="purple" x="66" y="58"/>
+  <m-standing name="Jo Okafor" hue="blue" x="12" y="20" heard="0.25"/>
+  <m-floor-bubbles side>
+    <m-floor-bubble name="Jo Okafor" seen="0.4">anyone up for the film later?</m-floor-bubble>
+  </m-floor-bubbles>
+</m-floor>
+
+<h2 id="layout">On a phone and on a computer</h2>
+<p>On a phone the floor fills the space's page under its two tabs (the call, and the chat), with the call's controls over its foot.</p>
+<m-screen title="Lounge" back actions="users" caption="On a phone: the floor, the chat's box and New group above the call's controls.">
+  <div class="m-tabs"><span class="on"><svg class="i" aria-label="People"><use href="/docs/icons.svg#users"/></svg></span><span><svg class="i" aria-label="Chat"><use href="/docs/icons.svg#message-circle"/></svg></span></div>
+  <m-floor inset h="25rem" say newgroup dock>
+    <m-group name="Casual chat" hue="green" x="62" y="30" r="22" count="1"/>
+    <m-standing you name="Alex Rivera" hue="teal" x="40" y="56" ring="none"/>
+    <m-standing name="Maya Chen" hue="rose" x="64" y="30" heard="0.5"/>
+  </m-floor>
+</m-screen>
+<p>On a computer, or a phone opened out wide, joining leaves the circle's list beside it as it was: the floor is the space's own page, with the call's controls over its foot.</p>
+<m-screen wide full rail circles="Friends:teal|Games:purple" open="Friends" caption="On a computer: the circle's spaces on the left, the open space's floor beside them.">
+  <div class="m-split">
+    <div class="m-split-list">
+      <div class="m-section-title">Spaces</div>
+      <m-space kind="text" name="General"/>
+      <m-space kind="voice" name="Voice"/>
+      <m-space kind="open" name="Lounge"/>
+      <m-space kind="files" name="Files"/>
+    </div>
+    <div class="m-split-pane">
+      <div class="m-pane-head"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg></span><span><b>Lounge</b><small>Open space</small></span></div>
+      <m-floor inset walls="far" say newgroup dock>
+        <m-group name="Game" hue="amber" x="68" y="54" r="17" count="2"/>
+        <m-standing you name="Alex Rivera" hue="teal" x="32" y="46" ring="none"/>
+        <m-standing name="Maya Chen" hue="rose" x="61" y="48" heard="0.3"/>
+        <m-standing name="Jo Okafor" hue="blue" x="76" y="60" heard="0.25"/>
+      </m-floor>
+    </div>
+  </div>
+</m-screen>
+
+<h2 id="others">On older versions and in a browser</h2>
+<ul>
+  <li><b>An older version</b> of the app shows an open space on its own as an ordinary call, where everyone is heard whole, and an open space in a circle as a chat. Its people stand in the middle of everyone else's floor.</li>
+  <li><b>The app in a browser</b> has no calls yet, so an open space there shows its chat, and you can't make one there. A guest who joins the call from a space's link in a browser stands in the middle of the floor.</li>
+</ul>
+
+<h2 id="next">What comes next</h2>
+<p>Today everyone is drawn as their profile picture, with the ripple round it while they talk. A character of your own to walk around as, dressed in your cosmetics, is planned.</p>
+<p>How it works under the hood, for developers: <a href="/docs/developer/flows/#open-space">An open space's floor</a>.</p>

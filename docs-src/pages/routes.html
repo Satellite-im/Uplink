@@ -1,0 +1,161 @@
+<p>Between Uplink apps (friends, groups, encrypted texts), messages can travel more than one way. <ui>Settings › Routes</ui> shows the ways your phone reaches others, tried from the top: one that fails or gets no answer gives way to the next.</p>
+
+<m-screen title="Routes" back caption="Settings › Routes on the phone.">
+  <m-section title="Routes" foot="The ways this phone reaches another, tried from the top.">
+    <m-row icon="globe" hue="blue" label="Relay server" hint="Through a server on the internet. The server sees who talks to whom, never what is said." switch="on"/>
+    <m-row icon="message-square" hue="green" label="SMS" hint="As data texts over the phone network. Each counts as a text on your plan." switch="on"/>
+  </m-section>
+  <m-section title="People you can reach" foot="Press one to send a test and see which route carries it.">
+    <m-row-raw><span class="m-avatar" data-hue="rose">MC</span><span class="m-txt"><b>Maya Chen</b><small>Last by the relay server</small></span></m-row-raw>
+  </m-section>
+</m-screen>
+
+<h2 id="relay">The relay server</h2>
+<p>Uplink's relay server (at gogho.st) passes sealed packets between apps: friends, circles, spaces and calls' setup. It can't read them; it sees only which installs are talking, as any server would. It's also where your username, your sealed account backup and a circle's sealed files are kept.</p>
+
+<h2 id="own-relay">Your own relay server</h2>
+<p>Anyone can run the relay on a server of their own and use it in place of ours. Under <ui>Settings › Routes › Relay server</ui>, type its address (<code>relay.example.com</code> is enough) and press <b>Check it and use it</b>. Nothing changes unless an Uplink relay answers there; when one does, the app tells you what moving means and switches only when you say so. The section always shows which relay is in use, and <b>Go back to Uplink's relay</b> switches back in one press. Running the server itself is on <a href="/docs/self-hosting/">Run your own relay</a>.</p>
+
+<m-screen title="Routes" back caption="Settings › Routes on a relay of your own.">
+  <m-section title="Relay server" foot="Relays can pass messages to each other. Add a friend on another relay as @name@their.relay. Everything else is still kept on each relay apart.">
+    <m-row icon="globe" hue="blue" label="Your own relay: relay.example.com" hint="In use · connected"/>
+    <m-row icon="network" hue="green" label="Passes messages to other relays" hint="A friend on another relay, added as @name@their.relay, is reached through this one."/>
+    <m-row icon="undo-2" hue="blue" label="Go back to Uplink's relay" hint="gogho.st, where everyone else is." chev tap/>
+    <m-field label="Another relay server's address" placeholder="relay.example.com"/>
+    <m-row icon="check" hue="green" label="Check it and use it" hint="Nothing changes unless an Uplink relay answers there." chev/>
+  </m-section>
+</m-screen>
+
+<h2 id="across">Friends on another relay</h2>
+<p>Relays can pass sealed messages to each other, so a friend doesn't have to use the same relay as you. Each of you goes on using your own, and the two relays hand each other what you write. Neither can read it.</p>
+<p>To add someone on another relay, open <b>Contacts</b>, tap <b>Add a friend</b>, and type their username with their relay after it: <code>@maya@relay.example</code>. Nobody is asked while you type: their relay is asked when you tap <b>Add</b>, through yours where it talks to theirs. They are kept, and shown, under that name, and their card says which relay they are on.</p>
+
+<m-screen title="Add a friend" back caption="Adding someone on another relay.">
+  <m-field label="Their username" value="@maya@relay.example"/>
+  <m-row-raw><span class="m-avatar" data-hue="rose">M</span><span class="m-txt"><b>maya@relay.example</b><small>On relay.example: Add asks that relay</small></span><m-btn kind="primary" icon="user-plus" tap>Add</m-btn></m-row-raw>
+</m-screen>
+
+<p>Whether a relay talks to others is up to whoever runs it, and it is off until they switch it on. <ui>Settings › Routes</ui> says which yours is: <b>Passes messages to other relays</b>, or <b>Doesn't pass messages to other relays</b>. It takes both relays: where yours doesn't, the app asks their relay itself (as nobody: not as you), tells you the request can't be passed on yet, and sends it again by itself for two weeks. Where yours says theirs won't take messages from it, that is the answer.</p>
+
+<note kind="warn" title="What crosses relays, and what doesn't yet">
+<ul>
+<li><b>Crosses:</b> friend requests and everything friends write each other, where both relays talk. Messages for someone who is away wait at their own relay.</li>
+<li><b>Doesn't yet:</b> calls, circles and spaces (each is a room on one relay), and who's online. The app says so instead of ringing a friend on another relay, keeps their ring as a missed call, and leaves them out of circles and spaces.</li>
+<li><b>Kept on each relay apart:</b> usernames (<code>@maya</code> on yours and <code>@maya@relay.example</code> can be two people), your account and its backup, invite words and Files spaces.</li>
+<li><b>Add-me links</b> made on a relay of your own name it, so whoever opens one is asked for on that relay, from whichever relay they use. A link that names none is someone on gogho.st.</li>
+<li><b>Invite links</b> to a circle or a space made on a relay of your own name it too. Opened by someone on another relay, the app says which relay the circle is on and which to use first, instead of joining it where nobody is.</li>
+<li><b>Your username</b> follows you: moved to another relay, the app claims it there too where it is free, and your profile asks for one where someone else has it. Back on the relay you left, you have the one you had.</li>
+<li><b>Still works with anyone:</b> texts (SMS), including encrypted ones. The Marketplace always comes from gogho.st.</li>
+<li><b>Off on a relay of your own unless you set them up:</b> calls through a TURN server, verifying numbers by text, linking Discord, X or Telegram. Closed iPhones can't be woken by your relay.</li>
+<li><b>Someone on an older version</b> of the app can't be reached from another relay: the app tells you they need a newer one. Where it is their relay that doesn't pass messages on, it says that instead.</li>
+</ul>
+<p>So a relay of your own suits a group that moves together, for its circles, spaces and calls, and its people can still be friends with people elsewhere.</p>
+</note>
+
+<p>How to run one (Docker, or systemd behind Caddy or nginx, with coturn for calls) is on its own page: <a href="/docs/self-hosting/">Run your own relay</a>. The sample files are in the repository, in <code>relay/deploy/</code>.</p>
+
+<h2 id="direct">Direct</h2>
+<p>A second way between Uplink apps, tried after the relay server: straight from one device to another. The relay stays first, because it is fast and keeps a message for someone who is away. The direct route is the way through when the relay can't carry something, for instance when it can't be reached, and the way your app checks what the relay says (below).</p>
+<p><b>It starts off.</b> Switch it on under <ui>Settings › Routes</ui> on an Android phone or a computer (the Mac, Windows or Linux); it isn't in the iPhone app or the browser yet. Until you switch it on, none of it runs on your device. Before you do, Settings says what it means.</p>
+<p>Your device links only with your own other devices and with your friends' devices. They are told where it is in sealed messages; nobody else is, and nothing is put in any public directory. What crosses a direct link is sealed exactly as it is through the relay.</p>
+
+<m-screen title="Routes" back caption="Settings › Routes, before Direct is switched on.">
+  <m-section title="Routes" foot="The ways this phone reaches another, tried from the top.">
+    <m-row icon="globe" hue="blue" label="Relay server" hint="Through a server on the internet. The server sees who talks to whom, never what is said." switch="on"/>
+    <m-row icon="link-2" hue="teal" label="Direct" hint="Off. Straight between your devices and your friends', for when the relay server can't carry something. Their devices learn this device's network address, and nobody else is told it." switch="off"/>
+    <m-row icon="message-square" hue="green" label="SMS" hint="As data texts over the phone network. Each counts as a text on your plan." switch="on"/>
+  </m-section>
+  <m-section title="Direct" foot="A link helper sees which devices link and how much they send, never who they are or what is said.">
+    <m-row icon="eye-off" hue="slate" label="Only through link helpers" hint="Friends' devices then see the link helper's address and not this device's. It is slower." switch="off"/>
+  </m-section>
+</m-screen>
+
+<m-screen title="Routes" back caption="Settings › Routes, with Direct switched on.">
+  <m-section title="Direct" foot="A link helper sees which devices link and how much they send, never who they are or what is said.">
+    <m-row icon="users" hue="blue" label="Knows 3 friends' devices" hint="And 1 other device of your own."/>
+    <m-row icon="link" hue="teal" label="Linked to 1 device now" hint="1 straight."/>
+    <m-row icon="eye-off" hue="slate" label="Only through link helpers" hint="Friends' devices then see the link helper's address and not this device's. It is slower." switch="off"/>
+  </m-section>
+</m-screen>
+
+<ul>
+<li><b>Who counts as a friend:</b> only someone you and they both said yes to, as a friend by username or by number. People you share a group with, and people who have only asked, are never linked with or told anything.</li>
+<li><b>What a friend's device learns:</b> your device's network address, as with any direct connection, and on a phone only while you're using the app. Switch on <b>Only through link helpers</b> and friends are told at once, and from then see the helper's address instead; links are slower then. You can switch it on before you switch Direct on, so that no friend's device ever sees your address. It is off unless you switch it on, because where the relay names no link helper, nothing would link at all.</li>
+<li><b>Link helpers</b> are servers that help two devices find each other across networks, and pass their sealed packets along where no straight path can be made. The relay you use names them. Where it names none (a relay of your own that hasn't been given one), Settings says so: devices behind most home routers can't link then, and direct links work only between devices that can reach each other as they are, such as two on the same network.</li>
+<li><b>On a phone</b> the direct network runs only for something of your own: a message you send, or the relay being unreachable while you use the app. It stops two minutes after, whatever a friend's device does, so it doesn't wear the battery down; with the app put away nothing of it keeps the phone awake. On a computer it stays up while the route is on.</li>
+<li><b>Invisible:</b> while you've chosen to be shown as Invisible, your device makes no direct links with friends' devices, since a link would show it is there. Your own devices still link with each other.</li>
+<li><b>Off:</b> switch <b>Direct</b> off under Routes and every link is closed at once, nothing is linked, and nobody is told where your device is. What it knew of your friends' devices stays, for when you switch it on again.</li>
+<li><b>If it can't start</b> on your device, <ui>Settings › Routes</ui> says why under <b>Direct</b>, and every other route works as before.</li>
+</ul>
+
+<h2 id="local">Local network</h2>
+<p>A third way between Uplink apps: straight between devices on the same Wi-Fi or wired network, with no server and no internet at all. It comes after the relay server and Direct, as the way through when neither can carry something, and by itself it keeps you talking where there is a network and no internet: a cabin, a plane's Wi-Fi with nothing behind it, an office whose line is down.</p>
+<p><b>It starts off.</b> Switch it on under <ui>Settings › Routes</ui> on an Android phone or a computer (the Mac, Windows or Linux); it isn't in the iPhone app or the browser. The first time, a Mac asks whether Uplink may find devices on your local network, and Windows asks whether it may be reached on private networks: say yes, or the route stays down and Settings says so.</p>
+
+<m-screen title="Routes" back caption="Settings › Routes, with the local network switched on.">
+  <m-section title="Routes" foot="The ways this phone reaches another, tried from the top.">
+    <m-row icon="globe" hue="blue" label="Relay server" hint="Through a server on the internet. The server sees who talks to whom, never what is said." switch="on"/>
+    <m-row icon="wifi" hue="teal" label="Local network" hint="Ready. Straight between your devices and your friends' while they are on the same Wi-Fi or wired network as this one, with no server and no internet." switch="on"/>
+    <m-row icon="message-square" hue="green" label="SMS" hint="As data texts over the phone network. Each counts as a text on your plan." switch="on"/>
+  </m-section>
+  <m-section title="Local network" foot="Anyone else on the network sees that a copy of the app is at this address, never who you are.">
+    <m-row icon="wifi" hue="teal" label="Found 2 devices on this network" hint="Your own devices and your friends', while they have Uplink open on the same network with this route switched on."/>
+    <m-row icon="link-2" hue="teal" label="Linked to 2 devices now" hint="Maya Chen at 192.168.1.20. Your other devices at 192.168.1.14."/>
+  </m-section>
+</m-screen>
+
+<ul>
+<li><b>How devices find each other:</b> every few seconds your device says it is here to the whole network, in a way only your own devices and your friends' can recognise: a mark for each of them, made from the key the two of you already seal messages with, good for ten minutes and for the one address it is said from, and mixed with noise that looks the same. It names nobody. Anyone else on the network can tell that some copy of Uplink is at that address, and roughly how many people it could have at most (under 8, under 16, under 32 and so on): not who you are, not who your friends are, not how many you have. Someone who says your device's words again from their own address is recognised by nobody.</li>
+<li><b>Who it links with:</b> your own other devices and your friends' devices, as Direct does. Never people you only share a group with, and never someone who has only asked to be a friend. Both devices need the route switched on and the app open.</li>
+<li><b>What a link is:</b> each device proves to the other that it holds your shared key before anything is sent, and everything after is sealed for that link, on top of the sealing every message already has. Someone else on the Wi-Fi sees sealed bytes between two addresses.</li>
+<li><b>What a friend's device learns:</b> your device's address on that network (something like 192.168.1.20), which anything on the same network could see anyway.</li>
+<li><b>Only the network you are on:</b> the route speaks and listens only at the private addresses a home, office or café network gives out, and only on a network this device itself has such an address on. It never says anything to the open internet, and a friend's device can't send yours connecting anywhere else.</li>
+<li><b>On a phone</b> it runs only while the app is in use, and closes everything when the app is put away. On a computer it stays up while the route is on.</li>
+<li><b>Invisible:</b> while you're shown as Invisible, only your own devices can tell the device is yours. It lets go of every link to a friend's device and starts over under a new name, so your friends' devices lose the one they knew. It still says it is here, for your own devices to find: a copy of the app is still seen at that address by the network, as before.</li>
+<li><b>Groups:</b> with no internet, what you write in a group reaches the members who are on this network with you. The others are owed it, and have it as soon as any route reaches them, for a week.</li>
+<li><b>What it holds itself to:</b> however much anyone on the network says to it, it reads and looks at only so much a second, makes only a few connections at a time, and closes a link that says more than a link may. A stranger who floods the network can slow the finding of a device that has just arrived; they can't make yours link with anyone, read anything, or stop the app.</li>
+<li><b>Some networks keep devices apart</b> (many guest and hotel networks do): there the devices never hear each other, nothing is found, and the other routes carry everything as before. The same on a phone joined to a Wi-Fi that has no internet while its mobile data is on: Android sends everything by mobile data then, the relay carries, and this route finds nothing until mobile data is off.</li>
+</ul>
+
+<h2 id="checked">How the relay is checked</h2>
+<p>The relay is fast and keeps messages for people who are away, so it comes first. Your app also checks what it says, so a relay that drops something, keeps it back, or gives someone's username to another key doesn't go unnoticed.</p>
+<ul>
+<li><b>Usernames.</b> Each friend you added by username is looked up again once a day, and your own each time you connect. If the relay that once gave a friend's username to them now gives it to another account, their profile says so; usually it's because they changed or gave up their username and someone else took it. Either way you're still talking to the friend you added: the relay can't swap them for someone else. If a friend tells their app they go by a new username, and the relay agrees, that's the one looked up from then on. Their app is told too, through the relay and over a direct link where one is open. Each relay is its own directory, so on a relay of your own nobody's username is held against what ours said. If you use Uplink on several devices, they take turns: your friends are still looked up once a day between them, and each of your devices shows what was found. These lookups and the checks on friend requests use at most a quarter of what the relay answers your account in an hour, leaving the rest for adding friends and accepting requests. If the relay ever says that's used up, <b>Accept</b> tells you by when it frees up.</li>
+<li><b>Your own username.</b> If the relay gives it to another account, you're told once, calmly, with the usual reasons: you gave it up or changed it on another of your devices, made a new key for this phone (the old key still holds it), or use another relay.</li>
+<li><b>Add-me links</b> carry your account's name (made from your key) after a <code>#</code>, which no browser sends to any server. Whoever opens your link adds that key and no other, whatever the relay says.</li>
+<li><b>Messages.</b> With <b>Direct</b> switched on, your device and a friend's compare, over a direct link, which messages went between them and when, never what they said. Anything your device never got is sent again straight. Only once it has come is anything held against the relay, and then as the friend's device's word. A device that was away while another of yours took a message, or a message lost when the relay restarted, isn't counted against it.</li>
+</ul>
+
+<m-screen title="Routes" back caption="Settings › Routes, Checking the relay, in a build with Direct.">
+  <m-section title="Checking the relay" foot="What is compared is which messages went and came, and when: never their words.">
+    <m-row icon="shield-check" hue="green" label="Last checked 5 min ago, with 3 devices" hint="Of Uplink's relay (gogho.st), over direct links with your friends' devices."/>
+    <m-row icon="check" hue="green" label="212 messages matched this week" hint="1 came straight after the relay didn't bring it."/>
+    <m-row icon="circle-alert" hue="red" label="Maya's device says the relay passed on a message to you, and it never came by the relay" hint="21 Nov"/>
+    <m-row icon="refresh-cw" hue="blue" label="Check now" hint="Dials the friends the relay says are here, and compares." chev/>
+    <m-row icon="at-sign" hue="blue" label="Asks the relay about 4 friends' usernames each day" hint="Last asked 2 h ago."/>
+  </m-section>
+</m-screen>
+
+<p>Without Direct, the relay is checked by the username lookups alone, and <ui>Settings › Routes</ui> says so. <b>Check now</b> dials the friends the relay says are online, once a minute at most; with no direct link in use, a few are checked by themselves while the app is open.</p>
+
+<h2 id="texts">SMS as a route</h2>
+<p>When the relay can't be reached, a message to a friend can go as a data text over the phone network instead: still sealed, needing no internet, and reaching a phone whose app is closed. Each one counts as a text on your plan, so only small messages go this way.</p>
+
+<h2 id="which">Which route each conversation is on</h2>
+<p><ui>Settings › Routes</ui> lists each conversation with someone the routes reach, the one used last first, with the route that last carried something to them, the one that last brought something from them, and when. A group of friends goes person by person, because each of its people is reached by a route of their own: one may be on the relay server while another, sitting beside you, is on the local network.</p>
+
+<m-screen title="Routes" back caption="Settings › Routes, Which route each conversation is on.">
+  <m-section title="Which route each conversation is on" foot="Circles and spaces always go by the relay server they were made on, and texts by the phone's carrier. Kept on this device only, out of any backup, for a week, and deleted when you sign out.">
+    <m-row icon="wifi" hue="teal" label="Maya Chen" hint="Last sent by Local network, 2 min ago; last came by Local network, 1 min ago."/>
+    <m-row icon="users" hue="violet" label="Weekend" hint="Maya by Local network, Sam by Relay server; nothing lately to or from 1 other."/>
+    <m-row icon="globe" hue="blue" label="Sam Okafor" hint="Last sent by Relay server, 3 h ago; last came by Relay server, 2 days ago."/>
+  </m-section>
+</m-screen>
+
+<p>The list is kept on your device from one time you open the app to the next, for a week, in a file that no backup takes, and it is deleted when you sign out. It holds which route and when, never anything that was said. A circle or a space is a room on its relay, so it always goes by the relay server; texts go by the phone's carrier.</p>
+
+<h2 id="test">Test a route</h2>
+<p>Under <b>People you can reach</b>, press someone and choose <b>Send a test</b>, <b>By the relay server only</b>, <b>By a direct link only</b>, <b>By the local network only</b> (each where that route is on), or <b>By SMS only (one text on your plan)</b>. <b>Lately</b> shows how recent messages went.</p>
+
+<h2 id="invite">Invite someone by text</h2>
+<p><b>Invite someone by text</b> opens a new chat with an invitation written. Choose who, change the words if you like, and send it as any text. Once they have the app and you text each other, it offers to turn encryption on between you.</p>

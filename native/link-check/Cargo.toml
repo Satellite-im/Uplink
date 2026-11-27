@@ -1,0 +1,21 @@
+# Proves a link helper links two devices: see src/main.rs. A crate of its own, in no workspace and in no build of the
+# app; its Cargo.lock is kept, so it is always the same iroh that is asked.
+[package]
+name = "link-check"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.91"
+publish = false
+
+[workspace]
+
+[dependencies]
+# The versions the direct network's core is built on (docs/OPEN_NETWORK.md section 2), exactly. unstable-net-report is
+# how an endpoint says what the helper told it of its own address.
+iroh = { version = "=1.5.0", default-features = false, features = ["tls-ring", "unstable-net-report"] }
+iroh-relay = { version = "=1.5.0", default-features = false, features = ["tls-ring"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "net", "io-util"] }
+
+# What it measures is the network, so what is under it is built as it would be in the app.
+[profile.dev.package."*"]
+opt-level = 2

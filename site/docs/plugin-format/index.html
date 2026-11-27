@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The plugin file · Uplink docs</title>
+<meta name="description" content="Every field of a ghost-plugin/1 file, with its limits.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Build a plugin</div>
+    <h1>The plugin file</h1>
+    <p class="lede">Every field of a ghost-plugin/1 file, with its limits.</p>
+    <p>A plugin is one file of JSON, named <code>&lt;id&gt;.ghostplugin</code>, in the <b>ghost-plugin/1</b> format: one object holding the fields below. It's at most 256 KB (262,144 bytes) and nested at most 8 deep. Numbers in it are whole numbers, and <code>null</code> appears only where a field says it may. A key the format doesn't have is a problem at any depth (<code>unknown_field</code>), so a reviewer sees everything a plugin holds. Developer mode loads any file name, and the file laid out however you like.</p>
+
+<h2 id="fields">The fields</h2>
+<table>
+  <tr><th>Field</th><th>What it is</th><th>Rules</th></tr>
+  <tr><td><code>format</code></td><td>The format</td><td>Required. Exactly <code>"ghost-plugin/1"</code>.</td></tr>
+  <tr><td><code>id</code></td><td>Your plugin's id</td><td>Required. 3 to 24 lower-case letters and digits, starting with a letter; not one the app keeps (<a href="#ids">below</a>).</td></tr>
+  <tr><td><code>version</code></td><td>This version, like <code>1.0.0</code></td><td>Required. Three whole numbers with dots between, each 0 to 99999 with no leading zero. Compared number by number: 1.10.0 is newer than 1.9.0.</td></tr>
+  <tr><td><code>name</code></td><td>What it's called</td><td>Required. 1 to 32 characters, one line. Not a built-in plugin's name nor Uplink's.</td></tr>
+  <tr><td><code>tagline</code></td><td>Its short line, under its name</td><td>Required. 1 to 60, one line.</td></tr>
+  <tr><td><code>description</code></td><td>What it does, on its page</td><td>Required. 1 to 1,500; line breaks allowed.</td></tr>
+  <tr><td><code>icon</code></td><td>Its picture</td><td>A square PNG in base64 (<a href="#icon">below</a>). Not needed in Developer mode; needed to submit it.</td></tr>
+  <tr><td><code>symbol</code></td><td>The plain icon drawn where a row needs one, and on its tile when it has no picture</td><td>An icon name (<a href="#names">below</a>). <code>puzzle</code> if left out.</td></tr>
+  <tr><td><code>hue</code></td><td>Its colour</td><td>Required. One of the sixteen hues below.</td></tr>
+  <tr><td><code>shelf</code></td><td>Its category in the Marketplace</td><td>Required. <code>organise</code>, <code>safety</code>, <code>messages</code> or <code>tools</code>.</td></tr>
+  <tr><td><code>labels</code></td><td>Its tags in the Marketplace: on its card, on its page and in search</td><td>Required. 1 to 4 different ones from the sixteen below.</td></tr>
+  <tr><td><code>permissions</code></td><td>What it may do beyond reading texts</td><td>Required, and may be <code>[]</code>. Each one a rule uses must be listed (<code>needs_permission</code>), and each one listed must be used (<code>permission_unused</code>). <a href="/docs/plugin-permissions/">What a plugin may do</a>.</td></tr>
+  <tr><td><code>links</code></td><td>The one web page its buttons may open</td><td>0 or 1 https address (<a href="#addresses">below</a>), <code>[]</code> if left out.</td></tr>
+  <tr><td><code>shots</code></td><td>The SHA-256s of its screenshots, in order</td><td>0 to 4. The submission form fills this in from the screenshots you add; leave it out.</td></tr>
+  <tr><td><code>developer</code></td><td>Your username</td><td>Needed to submit it; the form puts yours in. 3 to 20 lower-case letters, digits, dots and underscores, starting with a letter or digit, with no <code>..</code> and none of uplink, ghost, gogho, official, verified or support in it.</td></tr>
+  <tr><td><code>support</code></td><td>Where people get help with it</td><td>Needed to submit it. An https address or an email address (<a href="#addresses">below</a>), at most 200 characters. Shown on its page for anyone to see.</td></tr>
+  <tr><td><code>whatsNew</code></td><td>What this version changed</td><td>0 to 500 characters; line breaks allowed.</td></tr>
+  <tr><td><code>minApp</code></td><td>The oldest Uplink it works in</td><td>A version, as <code>version</code>. An older app refuses it (<code>needs_newer_app</code>).</td></tr>
+  <tr><td><code>settings</code></td><td>Its own settings</td><td>0 to 24 (<a href="#settings">below</a>); <code>[]</code> if left out.</td></tr>
+  <tr><td><code>rules</code></td><td>What it does</td><td>Required. <code>{"tags", "sections", "actions", "incoming"}</code>, each optional, with at least one tag rule or one section (<code>empty_pack</code>). <a href="/docs/plugin-rules/">Tags, tabs and buttons</a>.</td></tr>
+</table>
+
+<h3>Hues</h3>
+<p><code>amber</code> <code>blue</code> <code>coral</code> <code>cyan</code> <code>green</code> <code>indigo</code> <code>lime</code> <code>magenta</code> <code>mint</code> <code>orange</code> <code>purple</code> <code>red</code> <code>rose</code> <code>slate</code> <code>yellow</code> <code>graphite</code></p>
+<h3>Categories (<code>shelf</code>)</h3>
+<p><code>organise</code> (Organise), <code>safety</code> (Safety), <code>messages</code> (Messages), <code>tools</code> (Tools).</p>
+<h3>Tags (<code>labels</code>)</h3>
+<table>
+  <tr><th>In the file</th><th>Shown as</th><th>In the file</th><th>Shown as</th></tr>
+  <tr><td><code>bills</code></td><td>Bills</td><td><code>money</code></td><td>Money</td></tr>
+  <tr><td><code>codes</code></td><td>Codes</td><td><code>quiet</code></td><td>Quiet</td></tr>
+  <tr><td><code>deliveries</code></td><td>Deliveries</td><td><code>replies</code></td><td>Replies</td></tr>
+  <tr><td><code>events</code></td><td>Events</td><td><code>safety</code></td><td>Safety</td></tr>
+  <tr><td><code>filters</code></td><td>Filters</td><td><code>school</code></td><td>School</td></tr>
+  <tr><td><code>health</code></td><td>Health</td><td><code>shopping</code></td><td>Shopping</td></tr>
+  <tr><td><code>language</code></td><td>Language</td><td><code>sorting</code></td><td>Sorting</td></tr>
+  <tr><td><code>travel</code></td><td>Travel</td><td><code>work</code></td><td>Work</td></tr>
+</table>
+<h3 id="addresses">Web and email addresses</h3>
+<p>A web address (in <code>links</code>, a <code>link</code> button's <code>url</code>, or <code>support</code>) is <code>https</code>, at most 200 characters, with no user name or password, no port, no <code>#</code> part, no spaces and no <code>{</code> or <code>}</code>. A query is allowed, but it's fixed: nothing from a text is ever put into an address. Its host is two or more parts of lower-case letters, digits and inner hyphens (<code>example.com</code>), none starting <code>xn--</code>; never an IP address, never a name ending <code>.local</code>, <code>.lan</code>, <code>.home</code>, <code>.internal</code>, <code>.localhost</code> or <code>.arpa</code>, and never gogho.st or ghost-sms.com, whose addresses the app opens itself (<code>bad_url</code> otherwise). An email address, for <code>support</code> only, is the usual <code>name@example.com</code>, its domain held to the same rules (<code>bad_email</code>).</p>
+<h3 id="names">Icon names</h3>
+<p>For <code>symbol</code>, and a section's, an action's or a setting's <code>icon</code>: any of the app's own icon names below. <code>ghost</code>, <code>store</code> and <code>shield-check</code> are kept for the app itself (its mark, the Marketplace and "Can't reach the internet"), and any other name is <code>bad_icon_name</code>.</p>
+<p class="icon-names"><code>activity</code> <code>alarm-clock</code> <code>alert-circle</code> <code>alert-triangle</code> <code>align-left</code> <code>anchor</code> <code>archive</code> <code>archive-restore</code> <code>arrow-down</code> <code>arrow-down-to-line</code> <code>arrow-left</code> <code>arrow-right</code> <code>arrow-up</code> <code>arrow-up-right-from-square</code> <code>arrow-up-to-line</code> <code>asterisk</code> <code>at-sign</code> <code>audio-lines</code> <code>ban</code> <code>baseline</code> <code>bell</code> <code>bold</code> <code>book</code> <code>book-open</code> <code>book-open-text</code> <code>bookmark</code> <code>bookmark-check</code> <code>bot</code> <code>box-select</code> <code>braces</code> <code>brain</code> <code>brush-cleaning</code> <code>calculator</code> <code>calendar-days</code> <code>calendar-plus</code> <code>calendar-search</code> <code>calendar-x</code> <code>chart-gantt</code> <code>chart-no-axes-combined</code> <code>check</code> <code>check-check</code> <code>check-circle-2</code> <code>check-square</code> <code>chevron-down</code> <code>chevron-left</code> <code>chevron-right</code> <code>chevron-up</code> <code>chevrons-down</code> <code>chevrons-down-up</code> <code>chevrons-up</code> <code>chevrons-up-down</code> <code>circle</code> <code>circle-alert</code> <code>circle-check</code> <code>circle-dashed</code> <code>circle-dot</code> <code>circle-help</code> <code>circle-minus</code> <code>circle-question-mark</code> <code>circle-stop</code> <code>circle-user</code> <code>circle-x</code> <code>clipboard-paste</code> <code>clock</code> <code>code</code> <code>code-square</code> <code>compass</code> <code>contact-2</code> <code>contact-round</code> <code>copy</code> <code>copy-plus</code> <code>crown</code> <code>curly-braces</code> <code>database</code> <code>door-open</code> <code>download</code> <code>ear</code> <code>edit</code> <code>edit-3</code> <code>ellipsis</code> <code>ellipsis-vertical</code> <code>equal</code> <code>eraser</code> <code>external-link</code> <code>eye</code> <code>eye-off</code> <code>feather</code> <code>file</code> <code>file-code</code> <code>file-plus</code> <code>file-text</code> <code>film</code> <code>flag</code> <code>flame</code> <code>flask-conical</code> <code>folder</code> <code>folder-input</code> <code>folder-open</code> <code>folder-plus</code> <code>gauge</code> <code>git-branch</code> <code>globe</code> <code>graduation-cap</code> <code>grid-2-x-2-plus</code> <code>grid-2x2-plus</code> <code>grip-vertical</code> <code>group</code> <code>hard-drive</code> <code>hard-drive-download</code> <code>hard-drive-upload</code> <code>hash</code> <code>heading</code> <code>heading-1</code> <code>heading-2</code> <code>heading-3</code> <code>help-circle</code> <code>highlighter</code> <code>history</code> <code>hourglass</code> <code>image</code> <code>image-plus</code> <code>info</code> <code>italic</code> <code>kanban-square</code> <code>key-round</code> <code>laptop</code> <code>layout-grid</code> <code>layout-list</code> <code>lightbulb</code> <code>link</code> <code>link-2</code> <code>list</code> <code>list-checks</code> <code>list-filter</code> <code>list-ordered</code> <code>list-plus</code> <code>list-todo</code> <code>list-tree</code> <code>loader-2</code> <code>loader-circle</code> <code>locate-fixed</code> <code>lock</code> <code>log-out</code> <code>magnet</code> <code>mail</code> <code>map-pin</code> <code>map-pinned</code> <code>maximize</code> <code>megaphone</code> <code>menu</code> <code>message-circle-question</code> <code>message-circle-question-mark</code> <code>message-square</code> <code>message-square-dashed</code> <code>message-square-plus</code> <code>message-square-quote</code> <code>mic</code> <code>minus</code> <code>minus-circle</code> <code>more-horizontal</code> <code>more-vertical</code> <code>network</code> <code>palette</code> <code>panel-left</code> <code>pause</code> <code>pen-box</code> <code>pen-line</code> <code>pen-square</code> <code>pencil</code> <code>pencil-line</code> <code>phone</code> <code>pin</code> <code>pin-off</code> <code>play</code> <code>plus</code> <code>puzzle</code> <code>refresh-cw</code> <code>repeat</code> <code>replace</code> <code>rotate-ccw</code> <code>rotate-ccw-clock</code> <code>rotate-cw</code> <code>scan-text</code> <code>scissors</code> <code>scroll-text</code> <code>search</code> <code>send</code> <code>settings</code> <code>shapes</code> <code>share-2</code> <code>sidebar</code> <code>sigma</code> <code>sliders-horizontal</code> <code>smartphone</code> <code>snowflake</code> <code>sparkles</code> <code>spell-check</code> <code>spline</code> <code>square</code> <code>square-arrow-out-up-right</code> <code>square-check-big</code> <code>square-code</code> <code>square-dashed</code> <code>square-dashed-text</code> <code>square-kanban</code> <code>square-pen</code> <code>square-radical</code> <code>stars</code> <code>sticker</code> <code>stop-circle</code> <code>strikethrough</code> <code>subscript</code> <code>sun</code> <code>sun-moon</code> <code>sunrise</code> <code>superscript</code> <code>swatch-book</code> <code>table</code> <code>tag</code> <code>terminal</code> <code>text</code> <code>text-align-start</code> <code>text-cursor-input</code> <code>text-quote</code> <code>text-search</code> <code>text-select</code> <code>text-selection</code> <code>ticket</code> <code>trash</code> <code>trash-2</code> <code>triangle-alert</code> <code>type</code> <code>underline</code> <code>undo-2</code> <code>unlink</code> <code>usb</code> <code>user-2</code> <code>user-check</code> <code>user-circle</code> <code>user-group</code> <code>user-minus</code> <code>user-plus</code> <code>user-round</code> <code>user-x</code> <code>users</code> <code>video</code> <code>volume-2</code> <code>wand-2</code> <code>wand-sparkles</code> <code>waves</code> <code>waves-horizontal</code> <code>wifi</code> <code>wifi-off</code> <code>workflow</code> <code>x</code> <code>x-circle</code> <code>zoom-in</code> <code>zoom-out</code></p>
+
+<h2 id="ids">Ids, sections, tags and keys</h2>
+<table>
+  <tr><th>What</th><th>In the file</th><th>In the app</th></tr>
+  <tr><td>The plugin</td><td><code>id</code>: 3 to 24 lower-case letters and digits, starting with a letter</td><td><code>x</code> and its id: Bills is <code>xbills</code>. You'll see it in <code>plugins.list</code> and <code>filters.classify</code>, and its switch is <code>plugin_xbills</code>. No built-in plugin's id starts with <code>x</code>, so yours can never be mixed up with one.</td></tr>
+  <tr><td>A section</td><td><code>key</code>: 1 to 12 lower-case letters, no digits</td><td><code>x</code>, its id, <code>0</code>, its key: <code>xbills0bills</code>. Never <code>other</code>.</td></tr>
+  <tr><td>A tag</td><td><code>tag</code>: 1 to 16 lower-case letters and digits, starting with a letter</td><td><code>xbills.bill</code>. A plugin's rules read only its own tags: it can't see, give or fake Spam's or Codes'.</td></tr>
+  <tr><td>A setting</td><td><code>key</code>: 1 to 24 lower-case letters and digits, starting with a letter</td><td>Kept as <code>plugin_xbills_extra</code>.</td></tr>
+  <tr><td>An action</td><td><code>id</code>: 1 to 24 lower-case letters and digits, starting with a letter</td><td>Unique within the plugin.</td></tr>
+  <tr><td>A choice</td><td><code>value</code>: 1 to 16 lower-case letters and digits</td><td>Unique within its setting.</td></tr>
+</table>
+<p>A pattern broken is <code>bad_key</code> (<code>bad_id</code> for the plugin's id). These ids are the app's own, and no plugin may have them (<code>id_reserved</code>): <code>codes</code> <code>kinds</code> <code>spam</code> <code>embeds</code> <code>actions</code> <code>replies</code> <code>quiet</code> <code>strangers</code> <code>cleaner</code> <code>translate</code> <code>recordcall</code> <code>scribe</code> <code>captions</code> <code>watch</code> <code>debt</code> <code>political</code> <code>sales</code> <code>scams</code> <code>reminders</code> <code>food</code> <code>deliveries</code> <code>appointments</code> <code>notices</code> <code>other</code> <code>ghost</code> <code>ghostmessaging</code> <code>official</code> <code>admin</code> <code>system</code> <code>market</code> <code>marketplace</code> <code>store</code> <code>plugin</code> <code>plugins</code> <code>settings</code> <code>messages</code>, and any id with <code>uplink</code>, <code>ghost</code> or <code>gogho</code> in it.</p>
+<p>The examples' ids, <code>bills</code> and <code>parcels</code>, load in Developer mode like any other, but can't be submitted (<code>id_example</code>: "That's the example's id: give your plugin an id of its own."), so nobody takes the id every reader of these pages starts with.</p>
+
+<h2 id="icon">The icon</h2>
+<ul>
+  <li>Not needed in Developer mode: without one, the plugin's tile draws its <code>symbol</code> on its hue. Submitting needs one, and the submission form makes it for you from any picture you choose or paste (256 pixels a side, smaller if it must be), so you only need what follows to put one in the file yourself.</li>
+  <li>A PNG, square, 64 to 512 pixels a side, holding only the chunks <code>IHDR</code>, <code>PLTE</code>, <code>tRNS</code>, <code>sRGB</code>, <code>gAMA</code>, <code>pHYs</code>, <code>IDAT</code> and <code>IEND</code>, with nothing after <code>IEND</code>: so no animation, no text, no EXIF and no colour profile (<code>bad_icon</code> otherwise).</li>
+  <li>In base64, the standard alphabet with <code>=</code> padding and no spaces or line breaks: at most 48,000 characters, and at most 36,000 bytes once decoded.</li>
+  <li>It's drawn over the plugin's hue, filling its tile. Transparent parts show the hue, so a white glyph on transparency looks like a built-in plugin's tile.</li>
+</ul>
+<p>To make the base64 on a Mac:</p>
+<pre><code>base64 -i icon.png | tr -d '\n'</code></pre>
+<p>In PowerShell on Windows:</p>
+<pre><code>[Convert]::ToBase64String([IO.File]::ReadAllBytes('icon.png'))</code></pre>
+
+<h2 id="text">Words in a plugin</h2>
+<p>Every string in a plugin, its phrases included, keeps these rules (<code>bad_text</code>, or <code>phrase_bad_text</code> for a phrase):</p>
+<ul>
+  <li>No space at its start or end.</li>
+  <li>One line. Only the <code>description</code>, <code>whatsNew</code> and settings' <code>hint</code>s may have line breaks, and only the plain one (<code>\n</code>).</li>
+  <li>Nothing invisible: no control characters, zero-width spaces or joiners, direction marks or overrides, soft hyphens, private-use characters (one draws a company's logo on some systems), tag characters, or blank-looking letters that make a name look empty.</li>
+  <li>Lengths are counted as JavaScript and Dart count them, in UTF-16 code units: most letters are one, and an emoji is often two.</li>
+</ul>
+<p>A name, and a section's label, can't be a built-in plugin's or one of their tabs' and kinds', nor have <code>uplink</code>, <code>ghost</code> or <code>gogho</code> in it (<code>name_reserved</code>). They're compared with look-alikes folded first, so "Сodes" with a Cyrillic С, or "Ｃｏｄｅｓ" in wide letters, is still Codes.</p>
+
+<h2 id="settings">Settings</h2>
+<p>Each setting is an object with a <code>type</code>, shown on the plugin's page in the order written; a <code>heading</code> starts a new card.</p>
+<table>
+  <tr><th><code>type</code></th><th>Fields</th><th>Shown as</th></tr>
+  <tr><td><code>toggle</code></td><td><code>key</code>, <code>label</code> (1 to 60), <code>hint</code> (1 to 200), <code>icon</code>, and <code>default</code> (<code>true</code> or <code>false</code>, required)</td><td>A switch</td></tr>
+  <tr><td><code>choice</code></td><td><code>key</code>, <code>label</code>, <code>hint</code>, <code>icon</code>, <code>options</code> (2 to 8 of <code>{"value", "label" (1 to 40), "hint" (1 to 120)}</code>), and <code>default</code> (one of the values: <code>choice_default</code> otherwise)</td><td>A choice of one</td></tr>
+  <tr><td><code>words</code></td><td><code>key</code>, <code>label</code>, <code>hint</code>, <code>icon</code>, <code>placeholder</code> (1 to 60)</td><td>A field for the person's own words, a line each or with commas between: <a href="/docs/plugin-phrases/#yours">what a rule does with them</a></td></tr>
+  <tr><td><code>note</code></td><td><code>label</code>, <code>hint</code>, <code>icon</code></td><td>A line of words</td></tr>
+  <tr><td><code>heading</code></td><td><code>label</code>, <code>hint</code></td><td>A heading over the next card</td></tr>
+</table>
+<ul>
+  <li><code>hint</code>, <code>icon</code> and <code>placeholder</code> may be left out; everything else in the table is required.</li>
+  <li>Keys are unique across a plugin's settings (<code>duplicate</code>). A rule that names a setting must name one there, of the right kind (<code>unknown_setting</code>).</li>
+  <li>A toggle an incoming rule names must start off (<code>"default": false</code>), and is switched off again when the plugin is removed. On a computer or an iPhone its hint says it does nothing there.</li>
+  <li>The person's choices are kept when they remove the plugin, and are there again if they add it back.</li>
+</ul>
+
+<h2 id="canonical">The form it's sent in</h2>
+<p>When you submit a plugin, the app sends it in one fixed form: every object's keys sorted, no spaces or line breaks, every string written the one way. The Marketplace takes only that form, so a plugin's SHA-256 names exactly one file, and a change of one character is a new file that needs a new review. You never have to make it yourself: the submission form does, from whatever you loaded. Developer mode takes the file just as you wrote it.</p>
+
+<h2 id="example">The whole Bills file</h2>
+<p>The example on this site, <a href="/docs/examples/bills.ghostplugin">bills.ghostplugin</a>, as it is. <a href="/docs/examples/parcels.ghostplugin">Parcels</a> is the other one.</p>
+<pre><code>{
+  "format": "ghost-plugin/1",
+  "id": "bills",
+  "version": "1.0.0",
+  "name": "Bills",
+  "tagline": "Bills and payment reminders in a tab of their own",
+  "description": "Texts from companies about a bill (a statement that's ready, an amount due) go to a Bills tab, with the amount large on the row and a press to copy it. Receipts for payments you've made are a kind in the list's filter, which can mark them read as they come. Nobody in your contacts is ever sorted.",
+  "icon": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAaklEQVR42u3awQ0AIAgAMfZfGoeQEMHeAMb0AT6MkCRJkq7K5gAAAPA2wLTzAQAAAAAAAAD1F6x68AAAAMAQBAAAAABbAAAAAIYgAAAAAGzbAgAAADAEAQAAAADAFgC/xAAA+AtAkiRJwzpcxpX3TIHg+gAAAABJRU5ErkJggg==",
+  "symbol": "calculator",
+  "hue": "amber",
+  "shelf": "organise",
+  "labels": [
+    "bills",
+    "money",
+    "sorting"
+  ],
+  "permissions": [
+    "sort",
+    "copy",
+    "markread"
+  ],
+  "developer": "yourname",
+  "support": "https://example.com/plugins/bills",
+  "settings": [
+    {
+      "type": "toggle",
+      "key": "autoread",
+      "label": "Mark receipts as read",
+      "hint": "As they come: texts that say a payment went through.",
+      "default": false,
+      "icon": "check-check"
+    },
+    {
+      "type": "words",
+      "key": "extra",
+      "label": "More words for bills",
+      "hint": "A text with any of these goes to Bills too.",
+      "placeholder": "council tax, water rates"
+    }
+  ],
+  "rules": {
+    "tags": [
+      {
+        "tag": "bill",
+        "any": [
+          "your bill is ready",
+          "your statement is ready",
+          "amount due {amount}",
+          "amount due: {amount}",
+          "payment of {amount} is due",
+          "minimum payment due"
+        ],
+        "wordsFrom": "extra",
+        "detail": {
+          "from": "token"
+        }
+      },
+      {
+        "tag": "paid",
+        "any": [
+          "payment received",
+          "thank you for your payment",
+          "payment of {amount} received",
+          "we've received your payment"
+        ],
+        "detail": {
+          "from": "token"
+        }
+      }
+    ],
+    "sections": [
+      {
+        "key": "bills",
+        "label": "Bills",
+        "icon": "calculator",
+        "kind": "tab",
+        "takes": {
+          "tagged": [
+            "bill"
+          ],
+          "untagged": [
+            "paid"
+          ]
+        },
+        "row": {
+          "value": "{tag:bill}",
+          "caption": "A bill",
+          "end": "copyamount"
+        }
+      },
+      {
+        "key": "receipts",
+        "label": "Receipts",
+        "icon": "check-check",
+        "kind": "filter",
+        "takes": {
+          "tagged": [
+            "paid"
+          ]
+        }
+      }
+    ],
+    "actions": [
+      {
+        "id": "copyamount",
+        "label": "Copy the amount",
+        "icon": "copy",
+        "slots": [
+          "row",
+          "list.conversation.menu",
+          "conversation.message.menu"
+        ],
+        "when": {
+          "tagged": [
+            "bill"
+          ]
+        },
+        "do": "copy",
+        "text": "{tag:bill}",
+        "say": "Amount copied"
+      }
+    ],
+    "incoming": [
+      {
+        "in": "receipts",
+        "do": [
+          "markread"
+        ],
+        "setting": "autoread"
+      }
+    ]
+  }
+}</code></pre>
+
+    <nav class="prevnext"><a class="prev" href="/docs/plugin-quick-start/"><small>Previous</small>Your first plugin</a><a class="next" href="/docs/plugin-rules/"><small>Next</small>Tags, tabs and buttons</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#fields">The fields</a><a href="#ids">Ids, sections, tags and keys</a><a href="#icon">The icon</a><a href="#text">Words in a plugin</a><a href="#settings">Settings</a><a href="#canonical">The form it's sent in</a><a href="#example">The whole Bills file</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

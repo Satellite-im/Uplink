@@ -1,0 +1,269 @@
+/*
+  Uplink's look, shared by every page of gogho.st (Matt, 2026-11-27: "Redo the whole website with branding geared
+  towards uplink, remove the ghost images and give me space type images prompts to generate").
+
+  From the Uplink sticker (art/uplink-logo.webp): black and white, a black speech-bubble sticker leaning forward like
+  italic type, a thin white line inset from its edge, heavy slanted letters, and one long tapered needle going up
+  through the top edge: the uplink beam. So: a near-black starfield, white type, forward-slanted display headings,
+  small radii, outlined "sticker" cards, and the needle as the accent.
+
+  Everything is prefixed u- so a page's own styles never collide. Dark by default; a page that offers a light theme
+  sets data-theme="light" on <html> and gets black on paper.
+
+  The space pictures (art/space/*.webp) do not exist until Matt makes them: every slot (.u-slot) draws a CSS starfield
+  first and the picture lies over it, removed by its own onerror, so a missing picture leaves stars, not a hole.
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&display=swap");
+
+:root {
+  color-scheme: dark;
+  /* colour */
+  --u-bg: #040406;          /* deep space, the page */
+  --u-bg-2: #0a0a0e;        /* a raised band */
+  --u-paper: #0d0d12;       /* a sticker's face */
+  --u-ink: #ffffff;         /* type, lines, the needle */
+  --u-ink-2: rgba(255, 255, 255, .74);
+  --u-ink-3: rgba(255, 255, 255, .5);
+  --u-rule: rgba(255, 255, 255, .14);   /* hairlines, outer edges */
+  --u-line: rgba(255, 255, 255, .82);   /* the sticker's inset line */
+  --u-solid-bg: #ffffff;    /* the main button */
+  --u-solid-fg: #040406;
+  --u-glow: rgba(255, 255, 255, .07);
+  --u-star: #ffffff;
+  /* shape */
+  --u-r-sm: 4px;
+  --u-r: 8px;
+  --u-r-lg: 14px;
+  --u-inset: 6px;           /* how far the sticker line sits inside the edge */
+  --u-slant: -10deg;        /* the lean of buttons and tags (skewX) */
+  --u-needle-tilt: 10deg;   /* the needle leans right as it goes up */
+  /* type */
+  --u-display: "Saira", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --u-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --u-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --u-h1: clamp(2.6rem, 7.2vw, 5.4rem);
+  --u-h2: clamp(2rem, 5.2vw, 3.6rem);
+  --u-h3: 1.2rem;
+  --u-lede: clamp(1.05rem, 2.1vw, 1.2rem);
+  /* layout */
+  --u-max: 74rem;
+  --u-gutter: 16px;
+  --u-shadow: 0 24px 60px -24px rgba(0, 0, 0, .8);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --u-bg: #f5f5f2;
+  --u-bg-2: #ebebe6;
+  --u-paper: #ffffff;
+  --u-ink: #050507;
+  --u-ink-2: rgba(5, 5, 7, .74);
+  --u-ink-3: rgba(5, 5, 7, .52);
+  --u-rule: rgba(5, 5, 7, .14);
+  --u-line: rgba(5, 5, 7, .85);
+  --u-solid-bg: #050507;
+  --u-solid-fg: #ffffff;
+  --u-glow: rgba(0, 0, 0, .04);
+  --u-shadow: 0 20px 50px -26px rgba(0, 0, 0, .35);
+}
+
+/* --- base --- */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--u-bg); color: var(--u-ink);
+  font: 17px/1.6 var(--u-body); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+@supports (overflow: clip) { body { overflow-x: clip; } }
+img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+code { font-family: var(--u-mono); font-size: .9em; background: var(--u-rule); padding: .08em .35em; border-radius: var(--u-r-sm); }
+::selection { background: var(--u-ink); color: var(--u-bg); }
+:focus-visible { outline: 2px solid var(--u-ink); outline-offset: 3px; }
+
+.u-wrap { width: 100%; max-width: var(--u-max); margin: 0 auto; padding: 0 var(--u-gutter); }
+.u-center { text-align: center; }
+.u-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* An inline line icon: <svg class="u-i"><use href="#i-…"/></svg>, or an inline <svg class="u-i" viewBox="0 0 24 24">. */
+.u-i { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* --- type --- */
+/* The display face, slanted and heavy, as the logo's letters. */
+.u-display, .u-h1, .u-h2 {
+  font-family: var(--u-display); font-style: italic; font-weight: 900; text-transform: uppercase;
+  letter-spacing: -.01em; line-height: .94; margin: 0;
+}
+.u-h1 { font-size: var(--u-h1); margin: 0 0 1.2rem; }
+.u-h2 { font-size: var(--u-h2); margin: 0 0 1rem; }
+.u-h3 { font-family: var(--u-display); font-style: italic; font-weight: 800; font-size: var(--u-h3); letter-spacing: .005em; line-height: 1.15; margin: 0 0 .35rem; }
+/* Outlined words in a heading: the second half of a line, drawn as the sticker's line. */
+.u-h1 em, .u-h2 em, .u-display em { font-style: italic; color: transparent; -webkit-text-stroke: 1.5px var(--u-ink); paint-order: stroke fill; }
+@supports not (-webkit-text-stroke: 1px #fff) { .u-h1 em, .u-h2 em, .u-display em { color: var(--u-ink-2); } }
+.u-lede { font-size: var(--u-lede); color: var(--u-ink-2); max-width: 36rem; margin: 0 0 2rem; }
+.u-sub { font-size: 1.08rem; color: var(--u-ink-2); max-width: 40rem; margin: 0; }
+.u-center .u-sub, .u-center .u-lede { margin-left: auto; margin-right: auto; }
+.u-muted { color: var(--u-ink-3); }
+
+/* A kicker above a heading, led by a small needle. */
+.u-kicker {
+  display: inline-flex; align-items: center; gap: .6rem; margin-bottom: .9rem;
+  font-family: var(--u-display); font-weight: 700; font-style: italic; font-size: .82rem; letter-spacing: .18em; text-transform: uppercase; color: var(--u-ink-2);
+}
+.u-kicker::before { content: ""; width: 3px; height: 1.25rem; background: var(--u-ink); clip-path: polygon(50% 0, 100% 100%, 0 100%); transform: rotate(var(--u-needle-tilt)); }
+
+/* A tag that leans forward, like a small sticker: <span class="u-tag"><b>0.12.49</b>Text</span>. */
+.u-tag {
+  display: inline-flex; align-items: center; gap: .55rem; padding: .32rem .8rem .32rem .35rem;
+  border: 1px solid var(--u-rule); border-radius: var(--u-r-sm); background: var(--u-paper);
+  font-size: .84rem; font-weight: 600; color: var(--u-ink-2); transform: skewX(var(--u-slant));
+}
+.u-tag > * { transform: skewX(calc(var(--u-slant) * -1)); }
+.u-tag b { position: relative; isolation: isolate; color: var(--u-bg); padding: .08rem .55rem; font-family: var(--u-display); font-style: italic; font-weight: 800; letter-spacing: .02em; }
+/* Its badge leans with it: the box is drawn slanted behind the words, which keep their own italic (Matt, 2026-11-27:
+   "this tag should be slanted to fit the style of the container"). */
+.u-tag b::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--u-ink); border-radius: 2px; transform: skewX(var(--u-slant)); }
+
+/* --- buttons: they lean as the sticker does; their words stand upright --- */
+.u-btn {
+  display: inline-flex; align-items: center; gap: .7rem; text-decoration: none; cursor: pointer;
+  padding: .8rem 1.3rem .8rem 1.05rem; border-radius: var(--u-r-sm); border: 1.5px solid var(--u-ink);
+  font: 700 1rem/1.15 var(--u-body); transform: skewX(var(--u-slant));
+  transition: transform .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.u-btn > * { transform: skewX(calc(var(--u-slant) * -1)); }
+.u-btn small { display: block; font-weight: 500; font-size: .76rem; opacity: .7; margin-top: .1rem; }
+.u-btn:hover { transform: skewX(var(--u-slant)) translateY(-2px); box-shadow: 4px 4px 0 var(--u-rule); }
+.u-btn:active { transform: skewX(var(--u-slant)) scale(.97); }
+.u-btn--solid { background: var(--u-solid-bg); color: var(--u-solid-fg); border-color: var(--u-solid-bg); }
+.u-btn--line { background: transparent; color: var(--u-ink); border-color: var(--u-rule); }
+.u-btn--line:hover { border-color: var(--u-ink); }
+.u-btn--sm { padding: .5rem .95rem; font-size: .92rem; }
+.u-btns { display: flex; flex-wrap: wrap; gap: .75rem; padding-left: .3rem; }
+
+/* --- sticker card: a dark face, a hairline edge, and the white line inset from it --- */
+.u-sticker {
+  position: relative; background: var(--u-paper); border: 1px solid var(--u-rule); border-radius: var(--u-r);
+  padding: 1.5rem 1.45rem; box-shadow: var(--u-shadow);
+}
+.u-sticker::after {
+  content: ""; position: absolute; inset: var(--u-inset); border: 1.25px solid var(--u-line); border-radius: calc(var(--u-r) - 3px);
+  pointer-events: none; opacity: .55; transition: opacity .2s ease;
+}
+.u-sticker:hover::after { opacity: 1; }
+.u-sticker > * { position: relative; }
+.u-sticker p { margin: 0; color: var(--u-ink-2); font-size: .96rem; }
+/* The square that holds a card's icon. */
+.u-badge {
+  width: 2.7rem; height: 2.7rem; display: grid; place-items: center; margin-bottom: 1rem;
+  border: 1.5px solid var(--u-ink); border-radius: var(--u-r-sm); transform: skewX(var(--u-slant)); color: var(--u-ink);
+}
+.u-badge > * { transform: skewX(calc(var(--u-slant) * -1)); }
+.u-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
+
+/* A chip: a small leaning label with an icon. */
+.u-chip {
+  display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .85rem; border: 1px solid var(--u-rule);
+  border-radius: var(--u-r-sm); background: var(--u-paper); font-weight: 600; font-size: .9rem; transform: skewX(var(--u-slant));
+}
+.u-chip > * { transform: skewX(calc(var(--u-slant) * -1)); }
+.u-chip .u-i { width: 1rem; height: 1rem; }
+.u-chip--dashed { background: transparent; border-style: dashed; color: var(--u-ink-3); }
+.u-chips { display: flex; flex-wrap: wrap; gap: .55rem; padding-left: .3rem; }
+
+/* --- the needle: a long tapered line going up, the uplink beam --- */
+/* Place it in a positioned parent: <i class="u-needle" style="left:60%;height:120%"></i>. */
+.u-needle {
+  position: absolute; bottom: 0; left: 50%; width: 3px; height: 100%; pointer-events: none;
+  background: linear-gradient(to top, transparent 0%, var(--u-ink) 55%, var(--u-ink) 100%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%); transform: rotate(var(--u-needle-tilt)); transform-origin: 50% 100%;
+}
+.u-needle--glow { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .7)); }
+/* A thin rule with the needle rising out of it, between sections. */
+.u-rule { position: relative; height: 1px; background: linear-gradient(90deg, transparent, var(--u-rule) 20%, var(--u-rule) 80%, transparent); margin: 0 auto; max-width: var(--u-max); }
+
+/* --- space: the CSS starfield (always there) and the picture slots over it --- */
+.u-stars {
+  background-color: var(--u-bg);
+  background-image:
+    radial-gradient(1.4px 1.4px at 23px 41px, #fff 45%, transparent 55%),
+    radial-gradient(1px 1px at 140px 120px, rgba(255,255,255,0.8) 45%, transparent 55%),
+    radial-gradient(1.2px 1.2px at 230px 60px, rgba(255,255,255,0.65) 45%, transparent 55%),
+    radial-gradient(1px 1px at 80px 250px, rgba(255,255,255,0.55) 45%, transparent 55%),
+    radial-gradient(1.6px 1.6px at 301px 203px, #fff 45%, transparent 55%),
+    radial-gradient(1px 1px at 190px 290px, rgba(255,255,255,0.45) 45%, transparent 55%),
+    radial-gradient(1px 1px at 47px 95px, rgba(255,255,255,0.5) 45%, transparent 55%),
+    radial-gradient(1.2px 1.2px at 353px 17px, rgba(255,255,255,0.7) 45%, transparent 55%),
+    radial-gradient(1px 1px at 171px 357px, rgba(255,255,255,0.4) 45%, transparent 55%),
+    radial-gradient(1.4px 1.4px at 413px 233px, rgba(255,255,255,0.85) 45%, transparent 55%),
+    radial-gradient(1px 1px at 260px 150px, rgba(255,255,255,0.35) 45%, transparent 55%),
+    radial-gradient(1.2px 1.2px at 13px 433px, rgba(255,255,255,0.6) 45%, transparent 55%),
+    radial-gradient(1.8px 1.8px at 521px 77px, #fff 45%, transparent 55%),
+    radial-gradient(1px 1px at 389px 489px, rgba(255,255,255,0.5) 45%, transparent 55%),
+    radial-gradient(1.3px 1.3px at 240px 300px, rgba(255,255,255,0.7) 45%, transparent 55%),
+    radial-gradient(1px 1px at 590px 350px, rgba(255,255,255,0.4) 45%, transparent 55%),
+    radial-gradient(60% 50% at 75% 15%, rgba(255,255,255,.07), transparent 70%),
+    radial-gradient(50% 45% at 10% 90%, rgba(255,255,255,.04), transparent 70%);
+  background-size: 337px 311px, 337px 311px, 337px 311px, 337px 311px, 337px 311px, 337px 311px, 467px 389px, 467px 389px, 467px 389px, 467px 389px, 467px 389px, 613px 547px, 613px 547px, 613px 547px, 613px 547px, 613px 547px, 100% 100%, 100% 100%;
+}
+:root[data-theme="light"] .u-stars:not(.u-night) { background-image: none; }
+
+/*
+  A space picture's slot. Markup:
+    <div class="u-slot u-stars"><img class="u-slot-img" src="/art/space/x.webp" alt="" loading="lazy" onerror="this.remove()"></div>
+  The slot keeps its size and stars when the picture is missing. .u-slot--fade fades its foot into the page;
+  .u-slot--bg lies behind a section's content (the section needs position: relative).
+*/
+.u-slot { position: relative; overflow: hidden; border-radius: var(--u-r); isolation: isolate; }
+.u-slot-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+.u-slot::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(4,4,6,0) 40%, rgba(4,4,6,.55)); pointer-events: none; }
+.u-slot--bg { position: absolute; inset: 0; border-radius: 0; z-index: 0; pointer-events: none; }
+.u-slot--fade { -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
+.u-over { position: relative; z-index: 1; }  /* content laid over a .u-slot--bg */
+:root[data-theme="light"] .u-slot--bg:not(.u-night) { display: none; }
+/* A section that is always night, whatever the page's theme (the hero, the last band). */
+.u-night {
+  color-scheme: dark;
+  --u-bg: #040406; --u-bg-2: #0a0a0e; --u-paper: #0d0d12; --u-ink: #ffffff; --u-ink-2: rgba(255,255,255,.74); --u-ink-3: rgba(255,255,255,.5);
+  --u-rule: rgba(255,255,255,.16); --u-line: rgba(255,255,255,.82); --u-solid-bg: #ffffff; --u-solid-fg: #040406;
+  color: var(--u-ink);
+}
+.u-night:not(.u-slot):not(.u-stars) { background-color: var(--u-bg); }
+
+/* --- top bar --- */
+.u-bar {
+  position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--u-rule);
+  background: color-mix(in srgb, var(--u-bg) 80%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.u-bar .u-wrap { display: flex; align-items: center; gap: 1rem; height: 4rem; }
+.u-brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; flex: none; }
+.u-brand img { height: 2.6rem; width: auto; filter: drop-shadow(0 0 1px var(--u-line)); }
+.u-brand span { font-family: var(--u-display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 1.15rem; letter-spacing: .01em; }
+.u-nav { display: flex; gap: 1.6rem; margin-left: auto; font-weight: 600; font-size: .94rem; color: var(--u-ink-2); }
+.u-nav a { text-decoration: none; position: relative; }
+.u-nav a:hover { color: var(--u-ink); }
+.u-nav a:hover::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.3rem; height: 2px; background: var(--u-ink); transform: skewX(var(--u-slant)); }
+.u-icon-btn {
+  width: 2.4rem; height: 2.4rem; display: grid; place-items: center; padding: 0; cursor: pointer; flex: none;
+  border: 1px solid var(--u-rule); border-radius: var(--u-r-sm); background: transparent; color: var(--u-ink-2);
+}
+.u-icon-btn:hover { color: var(--u-ink); border-color: var(--u-ink); }
+.u-icon-btn .u-i { width: 1.1rem; height: 1.1rem; }
+@media (max-width: 820px) { .u-nav { display: none; } .u-bar .u-push { margin-left: auto; } }
+
+/* --- sections --- */
+.u-section { position: relative; padding: 6rem 0; }
+@media (max-width: 700px) { .u-section { padding: 4.25rem 0; } }
+
+/* --- footer --- */
+.u-footer { border-top: 1px solid var(--u-rule); color: var(--u-ink-3); font-size: .86rem; padding: 2rem 0 3rem; }
+.u-footer .u-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; justify-content: space-between; }
+.u-footer img { height: 2rem; width: auto; filter: drop-shadow(0 0 1px var(--u-line)); }
+.u-footer a { color: var(--u-ink-2); }
+.u-footer a:hover { color: var(--u-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .u-btn, .u-sticker::after { transition: none; }
+}

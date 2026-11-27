@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Uplink in a browser: the page `node tool/build-web.mjs` (flutter build web -t lib/web/main.dart) copies
+    into the build beside the app itself and what loads it. A relay serves the folder under /app/; the build for
+    app.gogho.st (--app) is served there from /, by tool/deploy-site.mjs's block.
+
+    Where the app is served from. `flutter build web` writes its base-href option here; served from a folder, it is
+    that folder, starting and ending with a slash.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+
+  <!--
+    What this page may do, said to the browser (the server says the same in a header, with frame-ancestors 'none',
+    which a page can't say of itself; the worker, argon2id.js, is held to the header alone): run its own scripts and
+    nobody else's (and compile Flutter's engine, which is WebAssembly); speak to its own address and to the hub, which
+    is that same address where a relay serves the app, and gogho.st's for app.gogho.st (tool/build-web.mjs --app names
+    it here); take pictures, fonts and sounds only from there or from bytes it made itself; be the address of no form
+    and frame nothing. Nothing is fetched from anyone else. Styles written into the page are allowed because Flutter's
+    engine writes its own that way.
+
+    What it does not do: keep out a script that does get into the page, or a browser extension allowed to read and
+    change pages at this address. Either can do whatever the app can, which includes asking the browser to open
+    everything the app keeps here (lib/web/store.dart), and it can take the page to another address with what it
+    read. And this page, with every script it runs, comes from the server each time it is opened: a server broken into
+    could hand out a page that takes the password as it is typed. The app on a phone or a computer is installed once,
+    and changes only with an update.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; frame-src 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+
+  <meta name="description" content="Uplink in your browser: write to your friends and your circles, sealed end to end.">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Added to an iPhone's home screen. -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Uplink">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- The app's icon (tool/app_icon.py writes these from art/app-icon.png). -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <title>Uplink</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- The icon's own black until the app has drawn its first frame, not a white flash. -->
+  <style>
+    html, body { height: 100%; margin: 0; background: #000000; }
+  </style>
+</head>
+<body>
+  <!-- Written by `flutter build web` from web/flutter_bootstrap.js: it loads Flutter's engine, then the app. -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

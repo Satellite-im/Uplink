@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Uplink
+GenericName=Messaging
+Comment=Your texts, friends, circles and spaces, sealed end to end
+Exec=ghost-messaging %u
+Icon=ghost-messaging
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+StartupWMClass=st.gogho.GhostMessaging
+MimeType=x-scheme-handler/ghostmsg;

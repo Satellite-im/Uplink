@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build a plugin · Uplink docs</title>
+<meta name="description" content="What a plugin of your own can do, what it is made of, and how it reaches the Marketplace.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Build a plugin</div>
+    <h1>Build a plugin</h1>
+    <p class="lede">What a plugin of your own can do, what it is made of, and how it reaches the Marketplace.</p>
+    <p>A plugin of your own sorts texts the way you'd like them sorted: bills in a tab of their own with the amount on the row, a parcel's tracking number a press away, receipts marked read as they come. It's one file you write by hand that says what to look for in a text and what to do with it. You try it on your own device in Developer mode, then send it to the Marketplace, where it's reviewed before anyone else can add it.</p>
+
+<h2 id="can">What a plugin can do</h2>
+<ul>
+  <li><b>Tag texts by their words</b>: "your bill is ready", "amount due $45.20", a tracking number. A tag can keep what it found, like the amount.</li>
+  <li><b>Give texts a tab of their own</b> beside Messages and Codes, or a <b>kind</b> in the list's filter that people show or hide.</li>
+  <li><b>Draw its texts' rows</b>: a value large on the row (the amount, a tracking number), a short caption, a face with a letter and a colour, and a button at the row's end.</li>
+  <li><b>Add buttons</b>: lines in a conversation's menu in the list, a button in a conversation's header, lines in a message's menu. A button can say something, copy words to the clipboard, write a reply for you to send, mark the conversation read, move it to one of the plugin's tabs or back to Messages, or open the plugin's own web page.</li>
+  <li><b>Act as texts come</b>: mark texts in its own tabs and kinds as read, or take their notification away, but only behind a switch in its settings that starts off.</li>
+  <li><b>Have settings of its own</b>: switches, choices, and words the person types (more words for bills, say), shown on its page in the Marketplace.</li>
+</ul>
+
+<h2 id="cant">What it can't do</h2>
+<ul>
+  <li>It can't reach the internet, and it isn't code: nothing in it runs. It's a description the app follows. A button you press can open its one web page in your browser, and that's all.</li>
+  <li>It never sees your contacts' texts, group texts, texts sent with Uplink's encryption, your own messages, chats on other networks (Telegram, Signal and the rest), or circles and spaces.</li>
+  <li>It never acts on a text with a sign-in code in it. It can tag one, but never sort it into a tab, mark it read or silence it.</li>
+  <li>It can't change the words of a message, or who a conversation is from: a row always keeps the conversation's own name.</li>
+  <li>It's for you alone, on one device. Plugins from other developers can't be turned on for a whole circle yet.</li>
+</ul>
+
+<h2 id="file">One file: ghost-plugin/1</h2>
+<p>A plugin is one file, <code>&lt;id&gt;.ghostplugin</code>, of JSON in the <b>ghost-plugin/1</b> format: its name and description, its icon, what it may do, its settings, and its rules. It finds words in a text with <a href="/docs/plugin-phrases/">phrases</a> like <code>amount due {amount}</code>, never with code or regular expressions, so no plugin can hang the app, and one that's slow is paused. Every field is on <a href="/docs/plugin-format/">The plugin file</a>.</p>
+<pre><code>{
+  "format": "ghost-plugin/1",
+  "id": "mybills",
+  "version": "1.0.0",
+  "name": "My bills",
+  "tagline": "Bills in a tab of their own",
+  "description": "Texts that say a bill is ready go to a Bills tab, with the amount on the row.",
+  "symbol": "calculator",
+  "hue": "amber",
+  "shelf": "organise",
+  "labels": ["bills"],
+  "permissions": ["sort"],
+  "rules": {
+    "tags": [{"tag": "bill", "any": ["your bill is ready", "amount due {amount}"], "detail": {"from": "token"}}],
+    "sections": [{"key": "bills", "label": "Bills", "icon": "calculator", "kind": "tab", "takes": {"tagged": ["bill"]}, "row": {"value": "{tag:bill}"}}]
+  }
+}</code></pre>
+<p>That's a whole plugin, as small as one can be: Developer mode loads it as it is. To submit it, it also needs an icon, your username and a help address (<a href="/docs/plugin-format/#example">the whole Bills file</a> has them).</p>
+
+<h2 id="where">Where it runs</h2>
+<ul>
+  <li><b>An Android phone</b>: everything, as your texts come.</li>
+  <li><b>A computer paired with an Android phone</b>: it sorts the phone's texts there too, once it's added on the computer (plugins are added on each device on its own). Marking read and silencing as texts come happen on the phone only.</li>
+  <li><b>A Mac or Windows PC on its own</b> has no texts, so a plugin does nothing there.</li>
+  <li><b>iPhone</b>: plugins from other developers aren't on iPhone at all, because of the App Store's rules for apps that add other developers' features. Developer mode can still load your own there, to try it with <b>Try it</b>.</li>
+</ul>
+
+<h2 id="path">From an idea to the Marketplace</h2>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Write it</h3>
+<p>Start from one of the examples below and change it, or write one from nothing with <a href="/docs/plugin-format/">The plugin file</a> beside you. Any text editor will do.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Try it in Developer mode</h3>
+<p>Load it in <span class="ui-path">Settings › Developer › Plugins in development</span> from a file, a link or the clipboard, then try it on a text without waiting for one to come. Change it, press <b>Reload</b>, try it again. <a href="/docs/plugin-quick-start/">Your first plugin</a> walks through it.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Submit it</h3>
+<p><span class="ui-path">Marketplace › Submit a plugin</span>: the plugin, its icon, description and tags, a screenshot or two, and a note for the reviewer. <a href="/docs/plugin-submit/">Submit it to the Marketplace</a>.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Review</h3>
+<p>A person at Uplink reads the whole file, tries it, and approves it, asks for changes or turns it down. <span class="ui-path">Marketplace › My submissions</span> shows where it stands, and the app tells you when that changes.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Listed</h3>
+<p>Approved, it's in Discover for everyone with the <b>Reviewed</b> mark, under your username. People see what it can do before they add it, and can report it from its page.</p>
+</div></li>
+</ol>
+
+<h2 id="examples">The examples</h2>
+<p>Two complete plugins to start from, each one file:</p>
+<table>
+  <tr><th>Example</th><th>What it shows</th></tr>
+  <tr><td><a href="/docs/examples/bills.ghostplugin">Bills</a></td><td>An amount found in a text and shown large on its row, a tab and a kind, a setting of the person's own words, and marking receipts read behind a switch.</td></tr>
+  <tr><td><a href="/docs/examples/parcels.ghostplugin">Parcels</a></td><td>Words between words, tracking codes, a choice setting, a reply to send, a link, moving a conversation back to Messages, and silencing behind a switch.</td></tr>
+</table>
+<p>They're on this site at <code>https://gogho.st/docs/examples/bills.ghostplugin</code> and <code>https://gogho.st/docs/examples/parcels.ghostplugin</code>, which Developer mode can load as they are, and in the app's repository in <a href="https://github.com/InfamousVague/ghost-messaging/tree/main/examples/plugins">examples/plugins on GitHub</a>, with a note on each. Their ids, <code>bills</code> and <code>parcels</code>, can't be submitted: give yours an id of its own.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/discord/"><small>Previous</small>Discord servers</a><a class="next" href="/docs/plugin-quick-start/"><small>Next</small>Your first plugin</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#can">What a plugin can do</a><a href="#cant">What it can't do</a><a href="#file">One file: ghost-plugin/1</a><a href="#where">Where it runs</a><a href="#path">From an idea to the Marketplace</a><a href="#examples">The examples</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

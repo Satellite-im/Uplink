@@ -1,0 +1,347 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- The SMS role grants the SMS ones by itself once the person picks Uplink as the default. -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.WRITE_SMS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.RECEIVE_WAP_PUSH" />
+    <!-- Asked for at first launch: names and faces, notifications, and this phone's own number (to tell a group
+         MMS's other people from the person). -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The fingerprint or face in place of the app's own PIN, by the phone's prompt (AppLock.kt, GMFB-46). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- A friend's call shown full screen on a locked phone, as a phone's call is (IncomingCall.kt, GMFB-28). -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- The app's own updates, from gogho.st (Updater.kt): the one place it opens a connection to. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- So a failed look for an update can say the phone is offline, where it otherwise blames the site. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Paired computers (DeskService.kt, docs/desktop.md): the camera reads the computer's QR code, asked for when
+         scanning; the foreground service keeps the phone reachable by a paired computer, and starts again after a
+         restart. None is used until a computer is paired. -->
+    <!-- Voice messages (Voice.kt): asked for the first time one is recorded, and open only while one is. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Voice and video channels (lib/voice): the speaker or a headset chosen, and a Bluetooth one heard. -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    <!-- A voice or video call in a space going on with the phone locked (CallService.kt). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- Sharing the screen in a call (GMFB-27): Android 14 asks for a media projection service while it is captured. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- The local network route (LanEar.kt): hearing what other devices say to the whole Wi-Fi network while the route is open. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Ringing for a friend's call while the app is closed (Reach.kt, GMFB-28): Android's own question whether the app
+         may run while the phone sleeps. Asked only where the person switched that on. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <uses-feature android:name="android.hardware.telephony" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:label="Uplink"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:supportsPictureInPicture="true"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Required of a default SMS app: other apps' "text this number" (sms:, smsto:, mms:, mmsto:). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+            <!-- A computer's pairing link (ghostmsg://pair/…), which is what its QR code holds: the phone's own camera
+                 opens it here (Desk.kt, docs/desktop.md). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ghostmsg" android:host="pair" />
+            </intent-filter>
+            <!-- A circle's invite opened from its page's Open in Uplink (site/join: ghostmsg://join/#c.…), as the
+                 https link above is, for a browser that keeps the https one to itself. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ghostmsg" android:host="join" />
+                <!-- Someone's add-me link, from the page's Open in Uplink (site/add; GMFB-34). -->
+                <data android:scheme="ghostmsg" android:host="add" />
+                <!-- A relay's link, from the QR code of a relay hosted from someone's app (ghostmsg://relay?a=…;
+                     lib/relay_host): the app asks whether to use it. -->
+                <data android:scheme="ghostmsg" android:host="relay" />
+            </intent-filter>
+            <!-- A circle's invite link (https://gogho.st/join/#c.…): the circle's invite in the app. Verified as an App
+                 Link (Matt, 2026-11-17: invites texted to contacts should open the app straight away once it is set
+                 up): gogho.st/.well-known/assetlinks.json names this package and the release key's SHA-256, so Android
+                 opens the app for it without asking. A debug build, signed with another key, is not verified and is
+                 offered only under "Open by default". -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="gogho.st" android:pathPrefix="/join" />
+                <!-- A circle's invite word (https://gogho.st/c/bookclub; lib/circles/invite_word.dart). -->
+                <data android:scheme="https" android:host="gogho.st" android:pathPrefix="/c/" />
+                <!-- Someone's add-me link (https://gogho.st/add/maya; lib/friends/add_link.dart, GMFB-34). -->
+                <data android:scheme="https" android:host="gogho.st" android:pathPrefix="/add/" />
+            </intent-filter>
+            <!-- Shared text from other apps. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Files shared from other apps, one or many, of any kind: added to a Files space the person picks
+                 (lib/ui/files_space/share_in.dart). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <!-- Decline on a friend's call's notification (IncomingCall.kt, GMFB-28). -->
+        <receiver android:name=".IncomingCall$DeclineReceiver" android:exported="false" />
+
+        <!-- Required of a default SMS app: incoming SMS, delivered to the default app alone. -->
+        <receiver
+            android:name=".SmsDeliverReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
+        </receiver>
+
+        <!-- The SMS route's data texts (NetSms.kt): an SMS addressed to this port comes here and nowhere else,
+             whether or not this is the phone's texting app. -->
+        <receiver
+            android:name=".NetSmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.DATA_SMS_RECEIVED" />
+                <data android:scheme="sms" android:host="*" android:port="16962" />
+            </intent-filter>
+        </receiver>
+
+        <!-- The same data texts, looked at for one thing: the wake that says a friend's message is waiting at the
+             relay server while the app is closed (Friends.kt). -->
+        <receiver
+            android:name=".FriendWakeReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="998">
+                <action android:name="android.intent.action.DATA_SMS_RECEIVED" />
+                <data android:scheme="sms" android:host="*" android:port="16962" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Required of a default SMS app: incoming MMS notifications (WAP push). -->
+        <receiver
+            android:name=".MmsPushReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Results the system sends back: an SMS sent or delivered, an MMS sent or downloaded, a reply from a
+             notification, a notification marked read. Never exported: only our own PendingIntents reach them. -->
+        <receiver android:name=".SmsStatusReceiver" android:exported="false" />
+        <receiver android:name=".MmsResultReceiver" android:exported="false" />
+        <receiver android:name=".NotificationActionReceiver" android:exported="false" />
+        <!-- A reminder about a conversation coming due (Reminders.kt). -->
+        <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <receiver android:name=".InstallReceiver" android:exported="false" />
+        <!-- The home screen widgets (GhostWidgets.kt): how many are unread, the newest conversations, and who was
+             written with last. Exported as every widget's receiver must be, for the launcher to ask it to draw. -->
+        <receiver android:name=".UnreadWidget" android:exported="true" android:label="@string/widget_unread_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_unread" />
+        </receiver>
+        <receiver android:name=".ChatsWidget" android:exported="true" android:label="@string/widget_chats_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_chats" />
+        </receiver>
+        <receiver android:name=".PeopleWidget" android:exported="true" android:label="@string/widget_people_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_people" />
+        </receiver>
+        <service android:name=".ChatsWidgetService" android:exported="false" android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!-- Required of a default SMS app: "respond via message" from the incoming-call screen. -->
+        <service
+            android:name=".HeadlessSmsSendService"
+            android:exported="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </service>
+
+        <!-- Plays a video that came or went in a message, the whole screen (Video.kt). It goes on through a turn
+             or a fold of the phone. -->
+        <activity
+            android:name=".VideoActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+
+        <!-- A conversation's bubble on the side of the screen (BubbleActivity.kt, Bubbles.kt; GMFB-8): Android shows it
+             embedded in the bubble, resized to it, a document of its own for each conversation's bubble. Opened only by
+             the bubble's intent from a notification, so not exported. -->
+        <activity
+            android:name=".BubbleActivity"
+            android:exported="false"
+            android:allowEmbedded="true"
+            android:resizeableActivity="true"
+            android:documentLaunchMode="always"
+            android:theme="@style/NormalTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
+        <!-- Scanning the QR code a computer shows to pair with (ScanActivity.kt). -->
+        <activity
+            android:name=".ScanActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+
+        <!-- Keeps the phone reachable by the computers it is paired with, while there is one. "Remote messaging" is
+             Android's kind of foreground service for carrying texts to another of the person's own devices. -->
+        <!-- A call in a space, going on with the phone locked (CallService.kt). -->
+        <service
+            android:name=".CallService"
+            android:exported="false"
+            android:foregroundServiceType="microphone|mediaPlayback|camera|mediaProjection" />
+
+        <service
+            android:name=".DeskService"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging" />
+
+        <!-- Every fifteen minutes or so, a look at whether a friend by username wrote while Uplink was closed (HubPeek.kt). -->
+        <service
+            android:name=".HubPeekJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Signal and Telegram kept connected while Uplink is out of sight (NetworksService.kt). -->
+        <service
+            android:name=".NetworksService"
+            android:exported="false"
+            android:foregroundServiceType="remoteMessaging" />
+
+        <!-- Beside Google Messages (GmBridge.kt): its notifications read, with the person's notification access, so its
+             RCS chats are in Uplink and answered through it. Every other app's notifications are ignored. -->
+        <service
+            android:name=".GmListener"
+            android:label="Uplink: Google Messages bridge"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <receiver android:name=".DeskBootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Where an MMS is written for the phone process to send, and where it writes one it downloaded. -->
+        <provider
+            android:name=".MmsFileProvider"
+            android:authorities="${applicationId}.mmsfiles"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
+        <!-- Sign-in codes, for Ghost Keyboard alone to ask for (Codes.kt): anyone may knock, and only the keyboard,
+             known by its certificate, is answered. -->
+        <provider
+            android:name=".CodesProvider"
+            android:authorities="${applicationId}.codes"
+            android:exported="true" />
+
+        <!-- Your bubbles' colour, for Ghost Keyboard alone, to keep the two in step (AccentSync.kt). -->
+        <provider
+            android:name=".AccentProvider"
+            android:authorities="${applicationId}.accent"
+            android:exported="true" />
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <!-- Ghost Keyboard, so Settings can say whether it is on this phone. -->
+        <package android:name="com.infamousvague.devkeyboard" />
+        <!-- Its colour, kept in step with your bubbles' (AccentSync.kt). -->
+        <provider android:authorities="com.infamousvague.devkeyboard.accent" />
+        <!-- The texting apps people come from (Arriving.kt): whether one is on the phone, its name, and its settings
+             page, to say what to turn off there before switching. -->
+        <package android:name="com.google.android.apps.messaging" />
+        <package android:name="com.samsung.android.messaging" />
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>

@@ -1,0 +1,25 @@
+# DeepFilterNet for voicefx (native/voicefx): DeepFilterNet 3 with its model built in, as the C functions voicefx.c
+# calls (df_create, df_get_frame_length, df_process_frame, df_free). libDF's own C API needs the model as a file and
+# panics on one it cannot read; this one carries the model and turns any panic into a frame passed through.
+[package]
+name = "voicefx_deepfilter"
+version = "0.1.0"
+edition = "2021"
+# Dependencies picked to build with the Rust that builds the apps (the Mac's and the Windows runner's).
+rust-version = "1.85"
+resolver = "3"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+deep_filter = { git = "https://github.com/Rikorose/DeepFilterNet", tag = "v0.5.6", default-features = false, features = ["tract", "default-model"] }
+ndarray = "0.15"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+debug = false
+panic = "unwind"

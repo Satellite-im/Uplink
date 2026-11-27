@@ -1,0 +1,43 @@
+# nginx in front of an Uplink relay (docs/SELF_HOSTING.md). Replace relay.example.com with your domain and
+# get a certificate for it first (for example `certbot --nginx -d relay.example.com`). The relay listens on
+# 127.0.0.1:8787 (deploy/ghost-relay.service). Put this in /etc/nginx/conf.d/ghost-relay.conf.
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name relay.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name relay.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/relay.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/relay.example.com/privkey.pem;
+
+    # Files spaces upload in pieces of up to 8 MiB; the relay refuses bodies over 10 MiB itself.
+    client_max_body_size 10m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8787;
+        proxy_http_version 1.1;
+        # The hub (/hub) and pairings (/relay/...) are WebSockets.
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        # A WebSocket stays open for as long as an app is connected; the apps ping every 25 seconds.
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+        # Pass uploads and downloads on as they come.
+        proxy_request_buffering off;
+        proxy_buffering off;
+    }
+}

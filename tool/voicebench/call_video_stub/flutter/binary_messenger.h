@@ -1,0 +1,1 @@
+namespace flutter { class BinaryMessenger; }

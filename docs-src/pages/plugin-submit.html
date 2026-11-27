@@ -1,0 +1,137 @@
+<p>When your plugin works, send it to the Marketplace from <ui>Marketplace › Submit a plugin</ui>. A person at Uplink reviews it, and once it's approved anyone can add it, under your username. You can send new versions, take it off the Marketplace and list it again from <ui>Marketplace › My submissions</ui>.</p>
+
+<h2 id="before">What you need first</h2>
+<ul>
+  <li><b>A username</b>, claimed in <ui>Settings › Me</ui> a week ago or more: your plugin is listed under it ("A username can submit plugins a week after it's claimed.").</li>
+  <li><b>Your Uplink identity on the device you send from.</b> A computer that follows its phone doesn't have one of its own: on it, use <ui>Settings › Me › Become the same you as your phone</ui>, or send from the phone.</li>
+  <li><b>The app on Uplink's own server.</b> Plugins are reviewed there; if <ui>Settings › Routes</ui> has the app on another, <b>Send for review</b> says so and waits until you switch back.</li>
+  <li><b>Not an iPhone</b>: plugins from other developers aren't on iPhone, so neither is Submit a plugin.</li>
+</ul>
+<p>Developer mode isn't needed to submit, though you'll want it to try your plugin first. The Marketplace may also ask for a verified number (<ui>Settings › Me › Number</ui>).</p>
+
+<h2 id="phone">From your computer to your phone</h2>
+<p>You'll likely write the file on a computer and send it from your phone. Any of these gets it there:</p>
+<ul>
+  <li><code>adb push yours.ghostplugin /sdcard/Download/</code>, then in the form tap <b>Choose the plugin file</b> and pick it from Downloads.</li>
+  <li>Load it in Developer mode from a link through <code>adb reverse</code> (<a href="/docs/plugin-testing/#load">how</a>), then tap <b>Use one in development</b> in the form.</li>
+  <li>Load it with <code>plugins.devInstall</code> from your computer (<a href="/docs/plugin-testing/#api">how</a>), then <b>Use one in development</b>.</li>
+  <li>Or send it from the computer itself: there, <ui>Settings › Me › Become the same you as your phone</ui>, then <b>Paste the plugin</b>, or on a Mac <b>Choose the plugin file</b>.</li>
+</ul>
+
+<h2 id="form">The form</h2>
+<p><ui>Marketplace › Submit a plugin</ui>, from top to bottom. Load your plugin first: everything below it is filled in from the file, and you can change any of it there.</p>
+<div class="pair">
+<m-screen title="Submit a plugin" back caption="The plugin, and how it's listed.">
+  <m-section title="The plugin">
+    <m-row icon="folder-open" hue="amber" label="Choose the plugin file"/>
+    <m-row icon="clipboard-paste" hue="blue" label="Paste the plugin"/>
+    <m-row icon="flask-conical" hue="purple" label="Use one in development" tap/>
+    <m-row icon="calculator" hue="amber" label="mybills · 1.0.0" hint="1 tag rule, 1 tab"/>
+  </m-section>
+  <div class="m-section-title">How it's listed</div>
+  <m-upload label="Icon" hint="Choose a picture, or paste one on a computer. A square of it is made for you." icon="image-plus"/>
+  <m-field label="Name" value="My bills"/>
+  <m-field label="Short line" value="Bills in a tab of their own"/>
+  <m-area label="Description" value="Texts that say a bill is ready go to a Bills tab, with the amount on the row."/>
+  <m-section>
+    <m-row icon="layout-grid" hue="slate" label="Category" value="Organise" chev/>
+    <m-row icon="palette" hue="amber" label="Colour" value="Amber" chev/>
+  </m-section>
+  <m-chips items="Bills|Money|Sorting|Shopping|Work" on="Bills|Money" tap="Sorting"/>
+</m-screen>
+<m-screen title="Submit a plugin" back caption="This version, screenshots, and sending it.">
+  <div class="m-section-title">This version</div>
+  <m-field label="Version" value="1.0.0"/>
+  <m-area label="What's new" placeholder="What this version changed"/>
+  <m-field label="Help link or email" value="https://example.com/mybills"/>
+  <div class="m-section-title">Screenshots</div>
+  <m-upload label="Add a screenshot" hint="Everyone sees these once it's listed. Use made-up texts, never real conversations or anyone's number."/>
+  <m-section>
+    <m-row icon="image" hue="blue" label="Add a picture of the samples"/>
+    <m-row label="List it once it's approved" switch="on"/>
+  </m-section>
+  <m-area label="Notes" placeholder="For the reviewer"/>
+  <m-section>
+    <m-row label="I made this plugin, and it follows the Marketplace guidelines" switch="on" tap/>
+    <m-row icon="book-open" hue="slate" label="Read the Marketplace guidelines" chev/>
+  </m-section>
+  <m-p>As @maya. Your username, help link and screenshots are shown to everyone once it's listed.</m-p>
+  <m-btn kind="primary" icon="send">Send for review</m-btn>
+</m-screen>
+</div>
+<table>
+  <tr><th>Field</th><th>What it takes</th></tr>
+  <tr><td><b>The plugin</b></td><td><b>Choose the plugin file</b> (Android and a Mac), <b>Paste the plugin</b>, or <b>Use one in development</b> (when one is loaded). A line then says what it found in the file, or its problems. <b>Try it</b> is there once it's loaded.</td></tr>
+  <tr><td><b>Icon</b></td><td><b>Choose a picture</b> (not on Windows, which has no picture panel for it) or, on a computer, <b>Paste a picture</b>. Any picture: a square PNG is made from its middle, 256 pixels a side.</td></tr>
+  <tr><td><b>Name</b></td><td>1 to 32 characters, not a built-in plugin's.</td></tr>
+  <tr><td><b>Short line</b></td><td>1 to 60.</td></tr>
+  <tr><td><b>Description</b></td><td>1 to 1,500, as many lines as you like.</td></tr>
+  <tr><td><b>Category</b></td><td>Organise, Safety, Messages or Tools.</td></tr>
+  <tr><td><b>Colour</b></td><td>One of the sixteen hues.</td></tr>
+  <tr><td><b>Tags</b></td><td>1 to 4 of the sixteen: what people search and browse by.</td></tr>
+  <tr><td><b>Version</b></td><td>Three numbers, higher than the version listed now, where it's listed.</td></tr>
+  <tr><td><b>What's new</b></td><td>Up to 500 characters. Needed for a new version of a plugin that's listed.</td></tr>
+  <tr><td><b>Help link or email</b></td><td>An https address or an email address. Shown on your plugin's page for anyone to see.</td></tr>
+  <tr><td><b>Screenshots</b></td><td>Up to four: <b>Add a screenshot</b> (not on Windows), <b>Paste a picture</b> (on a computer), or <b>Add a picture of the samples</b>, which draws the list's rows for the sample texts your plugin sorts. Each is made into a new PNG, at most 2,400 pixels a side and 1 MB.</td></tr>
+  <tr><td><b>List it once it's approved</b></td><td>On: listed as soon as it's approved. Off: approved, it waits for you to list it in My submissions.</td></tr>
+  <tr><td><b>Notes</b></td><td>Up to 1,000 characters, for the reviewer alone.</td></tr>
+  <tr><td><b>I made this plugin, and it follows the Marketplace guidelines</b></td><td>Must be on. <b>Read the Marketplace guidelines</b> opens <a href="/docs/plugin-guidelines/">them</a>.</td></tr>
+</table>
+<ul>
+  <li><b>Screenshots are shown to everyone.</b> Use made-up texts and numbers, never real conversations or anyone's number. <b>Add a picture of the samples</b> is made-up already.</li>
+  <li><b>It's checked as you go.</b> As soon as your plugin is loaded, and whenever you change its version, the form asks the Marketplace whether it would take it: an id another developer has, a username another developer sends under, a username too new, a version not newer than the one listed, the very same file sent before. Any of these shows under The plugin, before you've filled in the rest. Where the Marketplace couldn't be asked (it was busy, or out of reach), nothing is held back: it's asked again when you send it. Whatever it said, <b>Ask the Marketplace again</b> asks once more.</li>
+  <li><b>The form is kept as you go</b>, for each plugin: leave it to claim a username or to reload your plugin, and it's all there when you come back. Loading a corrected copy with the same id keeps whatever you changed in the form; a copy with another id asks first whether to start again with it.</li>
+  <li><b>Send for review</b> is ready once there are no problems and the switch is on. It says <b>Sent for review</b>, and opens My submissions with the new one marked.</li>
+</ul>
+
+<h2 id="listing">Listing it</h2>
+<ul>
+  <li><b>List it once it's approved</b>, on by default, lists it as soon as it's approved. Off, it's approved and waits; list it from <ui>Marketplace › My submissions</ui> when you're ready.</li>
+  <li><b>Take it off the Marketplace</b>, on its heading in My submissions: "People who added it keep it. Nobody new can add it until you list it again."</li>
+  <li><b>List it again</b> puts it back, where you were the one who took it off. Where review took it off, only review can list it again.</li>
+</ul>
+
+<h2 id="review">What review looks at</h2>
+<p>The reviewer reads the whole plugin in the same app you have, with these in front of them:</p>
+<ul>
+  <li><b>What it can do</b>: the same lines people will see before they add it, made from the file, and for a new version, what's new in them.</li>
+  <li><b>Look closely</b>: every rule that acts on texts, gathered so none hides among the phrases: every number it names, every incoming rule and the switch it needs, every reply it writes and every copy it makes, its link, every phrase with no anchor, and what changed among these since the last version.</li>
+  <li><b>Checks</b>: that the file is the very one the Marketplace holds, sent the way the app sends it, and every problem and warning.</li>
+  <li><b>Try it</b>, on the samples and on texts of the reviewer's own.</li>
+  <li><b>The file</b>, all of it, and what changed since your last version or since changes were asked for.</li>
+  <li>Your listing: the screenshots (with no real person's texts or number), what's new, your help link and your notes; and your username's history.</li>
+</ul>
+<p>Then it's <b>Approve and list</b>, <b>Ask for changes</b> or <b>Reject</b>, the last two always with a note saying why.</p>
+
+<h2 id="status">Where it stands</h2>
+<p><ui>Marketplace › My submissions</ui> lists your plugins, each with whether it's listed, and every version you've sent under it:</p>
+<table>
+  <tr><th>Status</th><th>What it means</th></tr>
+  <tr><td><m-status kind="submitted">Waiting for review</m-status></td><td>Sent; nobody has started on it yet.</td></tr>
+  <tr><td><m-status kind="in_review">In review</m-status></td><td>A reviewer has started on it.</td></tr>
+  <tr><td><m-status kind="changes_requested">Changes asked for</m-status></td><td>The reviewer's note says what to change.</td></tr>
+  <tr><td><m-status kind="approved">Approved</m-status></td><td>Approved, with "· listed" or "· not listed" for the version that's current. "Withdrawn by review" and why, where review took an approved version back.</td></tr>
+  <tr><td><m-status kind="rejected">Not accepted</m-status></td><td>Turned down, with a note saying why.</td></tr>
+  <tr><td><m-status kind="withdrawn">Withdrawn</m-status></td><td>You withdrew it.</td></tr>
+  <tr><td><m-status kind="superseded">Replaced by a newer version</m-status></td><td>You sent another version before this one was decided.</td></tr>
+</table>
+<p>You don't have to keep looking: when one changes the app tells you, once: "My bills 1.0.0: changes asked for. See Marketplace › My submissions.", "My bills 1.0.0 was approved and is listed." (or "… was approved. List it from My submissions when you're ready."), "My bills 1.0.0 wasn't accepted.", or "My bills was taken off the Marketplace."</p>
+
+<h2 id="changes">Changes asked for, and new versions</h2>
+<ul>
+  <li>A submission's page has its notes, the reviewer's and yours, each with the date; what it can do; its screenshots; and <b>Copy the package</b>, the file as sent.</li>
+  <li><b>Submit a new version</b> opens the form with that file and your listing's words, its screenshots kept, and its version one higher where it was approved (the same where changes were asked for). Load your corrected file, and the form keeps what you'd written in it.</li>
+  <li>Sent again after changes, the reviewer sees what changed since they asked, and your note.</li>
+  <li>Once a new version of a listed plugin is approved, everyone who has it is offered it as an update, and its screenshots carry over unless you removed them.</li>
+</ul>
+
+<h2 id="withdraw">Withdrawing one</h2>
+<ul>
+  <li>While a submission is waiting, in review or has changes asked for, <b>Withdraw</b> on its page takes it back.</li>
+  <li>Once a version is approved, take the plugin off the Marketplace instead (<a href="#listing">above</a>): people who have it keep it.</li>
+  <li>Review can withdraw a version it approved, if it turns out to break the <a href="/docs/plugin-guidelines/">guidelines</a>. It then switches off on every device that has it, and My submissions says <b>Withdrawn by review</b> with the reason.</li>
+</ul>
+
+<h2 id="signed">What "Reviewed" means</h2>
+<p>Approving a plugin is a signature, made on the reviewer's own device, over exactly that file: its id, its version and its SHA-256. Every Uplink app carries the reviewer's key and checks that signature when the plugin is added and every time the app starts, so no server, ours included, can pass off a changed file, or one nobody reviewed, as reviewed. A change of one character is a new file that needs a new review.</p>
+<p><b>Reviewed</b> on a card, and <b>Reviewed by Uplink</b> on a plugin's page, say that a person read that file and its listing, and found it does what it says within the guidelines. It says nothing about who you are.</p>

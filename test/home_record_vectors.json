@@ -1,0 +1,584 @@
+{
+  "about": "Home records as the app and the relay must both read them (docs/OPEN_NETWORK.md, section 1). Written by test/home_record_test.dart (UPDATE_HOME_VECTORS=1); read by it and by relay/test/home_record_test.dart.",
+  "now": 1795348800000,
+  "bytes": [
+    {
+      "a": "d284f0626fd0836ce4b1731793fa6905",
+      "n": 1,
+      "t": 1795345200000,
+      "h": [
+        "wss://gogho.st/hub"
+      ],
+      "hex": "67686f73742d686f6d652076310ad284f0626fd0836ce4b1731793fa690500000001000001a202e9b38001127773733a2f2f676f67686f2e73742f687562"
+    },
+    {
+      "a": "d284f0626fd0836ce4b1731793fa6905",
+      "n": 2,
+      "t": 1795345201000,
+      "h": [
+        "wss://relay.example.com/hub",
+        "ghost-relay://abababababababababababababababab?n=cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd&via=wss%3A%2F%2Fgogho.st%2Fhub"
+      ],
+      "hex": "67686f73742d686f6d652076310ad284f0626fd0836ce4b1731793fa690500000002000001a202e9b768021b7773733a2f2f72656c61792e6578616d706c652e636f6d2f6875629067686f73742d72656c61793a2f2f61626162616261626162616261626162616261626162616261626162616261623f6e3d63646364636463646364636463646364636463646364636463646364636463646364636463646364636463646364636463646364636463646364636463646364267669613d777373253341253246253246676f67686f2e7374253246687562"
+    },
+    {
+      "a": "ffffffffffffffffffffffffffffffff",
+      "n": 4294967295,
+      "t": 9007199254740991,
+      "h": [
+        "a",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "c"
+      ],
+      "hex": "67686f73742d686f6d652076310affffffffffffffffffffffffffffffffffffffff001fffffffffffff030161c862626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262626262620163"
+    }
+  ],
+  "good": [
+    {
+      "name": "signed by the app, one hub",
+      "rec": {
+        "v": 1,
+        "a": "d284f0626fd0836ce4b1731793fa6905",
+        "k": "AlFcPW6545a5BNP+yn9U/c0MwemXvzddylFa0KbDtANf",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "UPc/7Gr0cozXwbgkOnzUIUzmv8YQSBTUQMpFoq5v5MsiovTwENdFI8u6ZCP0ZQqoNQJUASZvUk+pllPTK8bkLg=="
+      }
+    },
+    {
+      "name": "signed by the app, the next count, a hub and a hosted relay",
+      "rec": {
+        "v": 1,
+        "a": "d284f0626fd0836ce4b1731793fa6905",
+        "k": "AlFcPW6545a5BNP+yn9U/c0MwemXvzddylFa0KbDtANf",
+        "h": [
+          "wss://relay.example.com/hub",
+          "ghost-relay://abababababababababababababababab?n=cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd&via=wss%3A%2F%2Fgogho.st%2Fhub"
+        ],
+        "n": 2,
+        "t": 1795345201000,
+        "s": "T4xJEYKTalOs4pFTjkLWILNX/4yAUh66cmr9pg4tWE3/sP+L5zV64BVGjUodfT6qtQ0Fr0KmwAB79Q44xo0Tgg=="
+      }
+    },
+    {
+      "name": "signed by the relay's arithmetic",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://relay.example.com:8443/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW4zRX6pc4d4x3G5RdTVUUfSlmcuoZv4gmDuJ3OUjHDQog=="
+      }
+    },
+    {
+      "name": "three addresses, one of exactly 200 characters, the highest count there is",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://relay.example.com/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/hub",
+          "wss://b.example/hub",
+          "ws://10.0.0.5:8787/hub"
+        ],
+        "n": 4294967295,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6h1IEsuAsF7pblhZ5TdZpGHOvriiNIh2LBpq6blr9h2A=="
+      }
+    },
+    {
+      "name": "made four minutes ahead of the clock",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795349040000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW7ZGksplIBxuNF+pbhGKPGaXcCYxWCI1v202WwC7v33tA=="
+      }
+    }
+  ],
+  "bad": [
+    {
+      "name": "another version",
+      "why": "shape",
+      "rec": {
+        "v": 2,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "no key",
+      "why": "shape",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "a signature cut short",
+      "why": "shape",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJ"
+      }
+    },
+    {
+      "name": "a name that is not hex",
+      "why": "shape",
+      "rec": {
+        "v": 1,
+        "a": "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "not a map",
+      "why": "shape",
+      "rec": "a record"
+    },
+    {
+      "name": "Sam's name over a key that is not his, which did sign it",
+      "why": "name",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AlFcPW6545a5BNP+yn9U/c0MwemXvzddylFa0KbDtANf",
+        "h": [
+          "wss://evil.example/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6gnyRrdR6nAR2C8Qgn5yR4RnaNgaIzn5cJd4uoqbZ1ZQ=="
+      }
+    },
+    {
+      "name": "no address",
+      "why": "addresses",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5DPP0qFFDVD+/djWq+3cGDS+vGnfzxwT762viqJuBzBA=="
+      }
+    },
+    {
+      "name": "four addresses",
+      "why": "addresses",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://1.example/hub",
+          "wss://2.example/hub",
+          "wss://3.example/hub",
+          "wss://4.example/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5z3lY26GO+0YaD6azSyBg0ZSTovH3UaN6j2fjmlSxzRA=="
+      }
+    },
+    {
+      "name": "an address of 201 characters",
+      "why": "addresses",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://relay.example.com/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW4XKzpg6/auz6ebSNeJMotlPPDaoAGk6EZnQUqYPzClkA=="
+      }
+    },
+    {
+      "name": "an address with a space in it",
+      "why": "addresses",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub now"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW4Eb5y8B0Q8WHMd/D1ZwPT5T4fkLu30Rwx4PQVLEPUoDA=="
+      }
+    },
+    {
+      "name": "an address that is not a string",
+      "why": "addresses",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          7
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "a count of nothing",
+      "why": "count",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 0,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5GUn4ejLw5yLdcWbsaSst2Rb7YnitcBNEierxELvZkzw=="
+      }
+    },
+    {
+      "name": "a count past four bytes",
+      "why": "count",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 4294967296,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "a count that is not a number",
+      "why": "count",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": "1",
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "a time before there was one",
+      "why": "time",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": -1,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "made six minutes ahead of the clock",
+      "why": "future",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795349160000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW75ZzPl65mfMCxfj4iV8iNKU8z8mft5pehowzZu33Yr5A=="
+      }
+    },
+    {
+      "name": "made thirty days before the clock: ended",
+      "why": "old",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1792756800000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5NcT3HGF78+FiGh4Xb6S5D6QKefYA58tl/3fBJh+JS8A=="
+      }
+    },
+    {
+      "name": "an address changed after it was signed",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://evil.example/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "an address added after it was signed",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub",
+          "wss://evil.example/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "the count raised after it was signed",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 2,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "the time changed after it was signed",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200001,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW6KdUX+TRahCQ/kPGfB+1xF5HXMxtEiF2npRTnKfbtJLA=="
+      }
+    },
+    {
+      "name": "signed by another key",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://gogho.st/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW7V2/oxwii1udA87+j6gzTaImo3cyyC61K20nful+3jgw=="
+      }
+    },
+    {
+      "name": "the app's record with its address changed",
+      "why": "signature",
+      "rec": {
+        "v": 1,
+        "a": "d284f0626fd0836ce4b1731793fa6905",
+        "k": "AlFcPW6545a5BNP+yn9U/c0MwemXvzddylFa0KbDtANf",
+        "h": [
+          "wss://evil.example/hub"
+        ],
+        "n": 1,
+        "t": 1795345200000,
+        "s": "UPc/7Gr0cozXwbgkOnzUIUzmv8YQSBTUQMpFoq5v5MsiovTwENdFI8u6ZCP0ZQqoNQJUASZvUk+pllPTK8bkLg=="
+      }
+    }
+  ],
+  "order": [
+    {
+      "name": "the higher count, whatever else",
+      "older": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://a.example/hub"
+        ],
+        "n": 4,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5Hl76xjHO/rUHP2qurQ9ODW52nwYoKus9WDpQX79zAiA=="
+      },
+      "newer": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://a.example/hub"
+        ],
+        "n": 5,
+        "t": 1795345140000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5nBDBi1u2oQiTWJKGWITEv+YL1Z+JOG1DjMOrxbUwV9w=="
+      }
+    },
+    {
+      "name": "one count: the later made",
+      "older": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://a.example/hub"
+        ],
+        "n": 5,
+        "t": 1795345140000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW5nBDBi1u2oQiTWJKGWITEv+YL1Z+JOG1DjMOrxbUwV9w=="
+      },
+      "newer": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://b.example/hub"
+        ],
+        "n": 5,
+        "t": 1795345200000,
+        "s": "HhhTL9R1TALzBB2cdc6zO4P/2BrHzk/ogsyxyYvFiW7cl/0uds3T8RHpyovoqgOqT1g5syUqsJkYKl4LeZZycg=="
+      }
+    },
+    {
+      "name": "one count, made at once: the greater signature",
+      "older": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://c.example/hub"
+        ],
+        "n": 6,
+        "t": 1795345200000,
+        "s": "WRq3ceu8/W2cuQlNEGUordGmnUTCwfYn8InsWLnGGt+GkUleNCJ/8b//eHwcYF6puG99CgPhSKTPfsYXlIPOrg=="
+      },
+      "newer": {
+        "v": 1,
+        "a": "bc609618bfe80ad8dfcc8e15df6c07c0",
+        "k": "AgIX5hfwtkQ5KCePlpmeaaI6TywVK99tbN9m5bgCgtTt",
+        "h": [
+          "wss://d.example/hub"
+        ],
+        "n": 6,
+        "t": 1795345200000,
+        "s": "cxA+wws8z1fargjpNTSu8USjWUDPa7uhKgz3y9XWWmTUiRKIv3XgqMs2cJcxN0lSI8z5BOXVVdyBg4dqorgjpw=="
+      }
+    }
+  ],
+  "hubs": [
+    [
+      "wss://gogho.st/hub",
+      "wss://gogho.st/hub"
+    ],
+    [
+      "WSS://Relay.Example.COM:443/hub/",
+      "wss://relay.example.com/hub"
+    ],
+    [
+      "wss://relay.example.com:8443/hub",
+      "wss://relay.example.com:8443/hub"
+    ],
+    [
+      "ws://10.0.0.5:8787/hub",
+      "ws://10.0.0.5:8787/hub"
+    ],
+    [
+      "ws://relay.example.com:80/hub//",
+      "ws://relay.example.com/hub"
+    ],
+    [
+      "wss://relay.example.com/a/b/hub",
+      "wss://relay.example.com/a/b/hub"
+    ],
+    [
+      "wss://[2001:DB8::1]/hub",
+      "wss://[2001:db8::1]/hub"
+    ],
+    [
+      "https://relay.example.com/hub",
+      null
+    ],
+    [
+      "relay.example.com",
+      null
+    ],
+    [
+      "wss://user@relay.example.com/hub",
+      null
+    ],
+    [
+      "wss://relay.example.com/hub?x=1",
+      null
+    ],
+    [
+      "wss://relay.example.com/hub#x",
+      null
+    ],
+    [
+      "wss:///hub",
+      null
+    ],
+    [
+      "ghost-relay://abababababababababababababababab?via=x",
+      null
+    ]
+  ]
+}

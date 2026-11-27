@@ -1,0 +1,39 @@
+# Uplink relay as a systemd service (docs/SELF_HOSTING.md).
+#
+#   cd messaging/relay && dart compile exe bin/relay.dart -o ghost-relay   # on the server, or with
+#                                                                          #   --target-os linux --target-arch x64
+#   sudo useradd --system --no-create-home --shell /usr/sbin/nologin ghost-relay
+#   sudo install -d -o root -g root -m 755 /opt/ghost-relay
+#   sudo install -o root -g root -m 755 ghost-relay /opt/ghost-relay/ghost-relay
+#   sudo install -d -o ghost-relay -g ghost-relay -m 700 /var/lib/ghost-relay
+#   sudo install -o root -g ghost-relay -m 640 relay.env /etc/ghost-relay.env       # optional
+#   sudo cp deploy/ghost-relay.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now ghost-relay
+#   journalctl -u ghost-relay -f
+#
+# It listens on 127.0.0.1:8787 only: put Caddy or nginx in front of it for TLS (Caddyfile.example, nginx.conf.example).
+
+[Unit]
+Description=Uplink relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ghost-relay
+Group=ghost-relay
+# Every variable is optional (relay.env.example); the leading "-" lets the file be missing.
+EnvironmentFile=-/etc/ghost-relay.env
+ExecStart=/opt/ghost-relay/ghost-relay --host 127.0.0.1 --port 8787 --data /var/lib/ghost-relay
+Restart=always
+RestartSec=2
+# Held messages for people who are away are kept in memory (at most 96 MB), so leave it room.
+MemoryMax=512M
+LimitNOFILE=65536
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/ghost-relay
+
+[Install]
+WantedBy=multi-user.target

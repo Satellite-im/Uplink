@@ -1,0 +1,62 @@
+<p>Spaces are the rooms of a circle. Each has a chat, and what else it does depends on its kind.</p>
+
+<h2 id="kinds">The five kinds</h2>
+<m-screen title="New space" back>
+  <m-section>
+    <m-space kind="voice" name="Chat and voice" line="Talk any time, with a chat beside it"/>
+    <m-space kind="text" name="Texting" line="A chat, no voice"/>
+    <m-space kind="files" name="Files" line="Share files, with a chat beside them"/>
+    <m-space kind="sms" name="SMS space" line="People without the app are in it by text"/>
+    <m-space kind="open" name="Open space" line="A room you walk around in: hear who is near you"/>
+  </m-section>
+</m-screen>
+<table>
+  <tr><th>Kind</th><th>For</th><th>More</th></tr>
+  <tr><td>Chat and voice</td><td>A chat, and a call anyone can hop in and out of, like a voice channel.</td><td><a href="/docs/calls/">Calls</a></td></tr>
+  <tr><td>Texting</td><td>A chat on its own.</td><td></td></tr>
+  <tr><td>Files</td><td>Folders of files, sealed end to end, with a chat beside them.</td><td><a href="/docs/files/">Files spaces</a></td></tr>
+  <tr><td>SMS space</td><td>A chat that people without the app are in by text, from one member's phone.</td><td><a href="/docs/sms-spaces/">SMS spaces</a></td></tr>
+  <tr><td>Open space</td><td>A call you walk around in, hearing who is near you, with groups on the floor.</td><td><a href="/docs/open-spaces/">Open spaces</a></td></tr>
+</table>
+<p>To add one: <b>New space</b> in the circle's menu, under its name (if your role may manage spaces). To rename, move, change or delete spaces: <ui>Circle settings › Spaces › Arrange spaces</ui>. Spaces with the same heading are listed together.</p>
+
+<h2 id="chat">The chat</h2>
+<p>Every space's chat takes words, pictures, files, GIFs, stickers and voice messages. Long-press a message for reactions, reply, reply in thread, copy and delete.</p>
+<m-screen title="General" back actions="shield-check">
+  <m-bubble from="them" name="Sam" time="7:02">Chapter 9 tonight? 📚</m-bubble>
+  <m-bubble from="me" time="7:04">Yes! @Maya bring the snacks</m-bubble>
+</m-screen>
+
+<h2 id="threads">Threads</h2>
+<p>To talk about one message without filling the chat, long-press it and choose <b>Reply in thread</b>. The thread opens on its own page, with the message at the top, the replies under it, and a box to reply in.</p>
+<m-screen title="General" back>
+  <m-bubble from="them" name="Sam" time="7:02">Chapter 9 tonight? 📚</m-bubble>
+  <m-row-raw><m-btn kind="secondary" icon="message-square">2 replies · Maya, 5m</m-btn></m-row-raw>
+</m-screen>
+<p>Replies stay out of the chat. A line under the message says how many there are and who wrote last; tap it to open the thread. Anyone on a version from before threads sees the replies in the chat as ordinary replies to that message.</p>
+
+<h2 id="mentions">Mentions</h2>
+<p>Type <b>@</b> at the start of a word and pick someone from the list. They get a notification, the message stands out for them, and unread marks show <b>@</b> when something unread mentions you. Turn mention notifications off in <ui>Settings › Notifications</ui>.</p>
+
+<h2 id="polls">Polls</h2>
+<steps>
+<step title="Ask one">
+<p>In a space's chat, tap <b>+</b>, then <b>Poll</b>. Write a question and two to ten answers, and choose whether people may pick one or several.</p>
+<m-screen title="General" back>
+  <m-menu><m-item icon="image">Picture</m-item><m-item icon="file-text">File</m-item><m-item icon="chart-column" tap>Poll</m-item></m-menu>
+</m-screen>
+</step>
+<step title="Vote">
+<p>The poll is a card with each answer's share. Tap an answer to vote; tap it again to take your vote back. Late arrivals see the votes so far.</p>
+<m-screen>
+  <m-section title="Where next month?">
+    <m-row label="The Overstory" value="5" tap/>
+    <m-row label="Piranesi" value="3"/>
+    <m-row label="Pachinko" value="1"/>
+  </m-section>
+</m-screen>
+</step>
+</steps>
+
+<h2 id="own">Spaces of your own</h2>
+<p>A space doesn't have to be in a circle: <ui>New › New space</ui> makes one you can share with friends. Every <a href="/docs/friends/">group of friends</a> comes with its own space too. Spaces of your own show in Messages with their newest message, and swipe left to archive like a conversation.</p>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open spaces · Uplink docs</title>
+<meta name="description" content="A call you walk around in: hear who is near you, and gather in groups.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Circles, spaces and calls</div>
+    <h1>Open spaces</h1>
+    <p class="lede">A call you walk around in: hear who is near you, and gather in groups.</p>
+    <p>An open space is a call you walk around in. Everyone in it stands somewhere on one floor, seen from above, and you hear people louder or quieter by how near they stand. It is for a room full of people who want several conversations at once: walk over to the one you want.</p>
+
+<h2 id="make">Make one</h2>
+<p>Make a space as you make any other (<span class="ui-path">New space</span>, or <span class="ui-path">Add a space</span> in a circle) and choose <b>Open space</b> as its kind. Open it and press <b>Join voice</b>: the floor comes up straight away, saying <b>Connecting…</b> until the call is in, and you are on it near the middle.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Add a space</div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Chat &amp; voice</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Text</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files</span></div>
+    <div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open space</span><small>A room you walk around in: hear who is near you</small></div>
+  </div>
+</div></div><figcaption>Add a space, in a circle you are making.</figcaption></figure>
+<figure class="mock m-floor-mock"><div class="m-floor" role="group" aria-label="An open space's floor, seen from above">
+  <div class="m-standing you" style="left:52%;top:54%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+  <div class="m-standing" style="left:24%;top:34%;--seen:0.67"><span class="m-face" data-hue="rose">MC</span><span class="m-tag">Maya Chen</span></div>
+  <div class="m-standing" style="left:80%;top:70%;--seen:0.58"><span class="m-face" data-hue="blue">JO</span><span class="m-tag">Jo Okafor</span></div>
+<span class="m-fpill m-fhint">Press the floor, then walk with W A S D or the arrow keys</span><span class="m-fsay">Say something</span><span class="m-fpill m-fnew"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#target"/></svg>New group</span></div><figcaption>Just in, on a computer: you near the middle, two others further off. The words at the top fade once you walk.</figcaption></figure>
+
+<h2 id="walk">Walk around</h2>
+<table>
+  <tr><th>On</th><th>How</th></tr>
+  <tr><td>A computer</td><td>Press the floor once, then walk with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys (two at once walk on a slant). Or press where you want to go.</td></tr>
+  <tr><td>A phone</td><td>Press where you want to go, or drag your finger and follow it.</td></tr>
+</table>
+<p>You stay in the middle of the view and the floor moves under you. The floor is a room with see-through walls in your accent colour. When the view reaches a wall it stops there, so you never look past the room, and you walk on towards the edge of the screen until you reach the wall itself.</p>
+<p>While the chat's box at the foot of the floor has the keyboard, your keys type words, not steps: press the floor to walk again.</p>
+<figure class="mock m-floor-mock"><div class="m-floor w-far w-left" role="group" aria-label="An open space's floor, seen from above"><span class="m-wall far"></span><span class="m-wall left"></span>
+  <div class="m-standing you" style="left:18%;top:32%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+  <div class="m-standing" style="left:58%;top:62%;--seen:0.76"><span class="m-face" data-hue="rose">MC</span><span class="m-tag">Maya Chen</span></div>
+<span class="m-fsay">Say something</span><span class="m-fpill m-fnew"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#target"/></svg>New group</span></div><figcaption>At the top left corner of the room: the view has stopped at the walls, and you have walked on up to them.</figcaption></figure>
+
+<h2 id="hear">Who you hear</h2>
+<p>How much you hear of each person goes by how far apart you stand:</p>
+<ul>
+  <li><b>Close by, whole.</b> Within about three steps of you (three times the size of someone's picture) a person is as loud as in any call.</li>
+  <li><b>Further off, quieter.</b> Past that they fade, quickly at first, as voices do across a room.</li>
+  <li><b>Past the ring, not at all.</b> A faint ring round you marks how far you hear: about thirteen pictures from you to it. Nobody beyond it is heard. On a big screen you see it as a circle round you; on a phone it mostly lies just past the edges of the view.</li>
+</ul>
+<p>Someone you hear less is drawn fainter, so you can still find them and walk over. Walk back and they come back: nobody is cut off or leaves the call, it is only how loud they are played to you. The green ripple round someone's picture is them talking, as in any call; how faint they are is how much of it reaches you.</p>
+<figure class="mock m-floor-mock"><div class="m-floor" role="group" aria-label="An open space's floor, seen from above">
+  <span class="m-hearing" style="left:40%;top:62%;width:76%" aria-hidden="true"></span><div class="m-standing you" style="left:40%;top:62%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+  <div class="m-standing" style="left:57%;top:62%;--seen:1.00"><span class="m-face talking" style="--lv:0.8" data-hue="rose">MC</span><span class="m-tag">Maya Chen</span><span class="m-heardmark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg>Whole</span></div>
+  <div class="m-standing" style="left:62%;top:30%;--seen:0.55"><span class="m-face talking" style="--lv:0.7" data-hue="blue">JO</span><span class="m-tag">Jo Okafor</span><span class="m-heardmark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg>Faint</span></div>
+  <div class="m-standing" style="left:10%;top:14%;--seen:0.40"><span class="m-face talking" style="--lv:0.7" data-hue="green">SR</span><span class="m-tag">Sam Reyes</span><span class="m-heardmark none"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-x"/></svg>Not heard</span></div>
+</div><figcaption>Everyone here is talking. The dashed marks are this page's, not the app's: how much of each person you hear. Not to scale: in the app people are smaller against the ring.</figcaption></figure>
+<ul>
+  <li><b>Your own volume for each person still counts.</b> Press and hold someone (on a computer, the other mouse button) for their volume, as in any call. Distance works on top of it.</li>
+  <li><b>Someone on an older version</b> of the app, or a guest who joined from a browser, says nothing of where they stand: they stand in the middle of the floor and are heard from there.</li>
+</ul>
+
+<h2 id="groups">Groups</h2>
+<p>A group is a named circle on the floor: one for the people playing a game, one for a film, one for a quiet chat. Inside a group you hear everyone in it whole, wherever in it they stand. Someone outside your group comes through its edge at under a third of what distance alone would give, so from outside a group is a murmur until you step in.</p>
+<figure class="mock m-floor-mock"><div class="m-floor" role="group" aria-label="An open space's floor, seen from above">
+  <div class="m-group mine" data-hue="amber" style="left:28%;top:60%;width:38%"><span class="m-gname"><b>Game</b><span>2</span></span></div>
+  <div class="m-group" data-hue="rose" style="left:74%;top:52%;width:38%"><span class="m-gname"><b>Movie night</b><span>2</span></span></div>
+  <div class="m-standing you" style="left:19%;top:66%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+  <div class="m-standing" style="left:34%;top:50%;--seen:1.00"><span class="m-face talking" style="--lv:0.6" data-hue="purple">MC</span><span class="m-tag">Maya Chen</span><span class="m-heardmark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg>Whole</span></div>
+  <div class="m-standing" style="left:67%;top:40%;--seen:0.42"><span class="m-face talking" style="--lv:0.6" data-hue="blue">JO</span><span class="m-tag">Jo Okafor</span><span class="m-heardmark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg>A murmur</span></div>
+  <div class="m-standing" style="left:82%;top:64%;--seen:0.41"><span class="m-face" data-hue="green">SR</span><span class="m-tag">Sam Reyes</span></div>
+</div><figcaption>You and Maya in Game: you hear each other whole, and its circle is stronger because you are in it. Movie night is across the room, heard only through its edge.</figcaption></figure>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Make a group</h3><p>Stand where you want it and press <b>New group</b>. Choose <b>Game</b>, <b>Casual chat</b> or <b>Movie night</b>, or <b>Name it yourself</b>. The group's circle is drawn round where you stand, in a colour of its own.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">New group here</div>
+    <div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gamepad-2"/></svg><span>Game</span><small>A circle for whoever is playing</small></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Casual chat</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Movie night</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#pencil"/></svg><span>Name it yourself</span></div>
+  </div>
+</div></div></figure></div></li>
+<li class="step"><div class="step-body"><h3>Step in and out</h3><p>Walk into the circle to join it, and out to leave. Its name shows how many are in it. The circle grows as more people step in, so there is room for everyone, and shrinks as they go. If two circles overlap, you are in the one whose middle is nearer.</p></div></li>
+<li class="step"><div class="step-body"><h3>Change it</h3><p>Press a group's name for what you can do with it. Anyone in the space can, and a change is the same for everyone.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Game</div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Walk there</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#pencil"/></svg><span>Rename</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#move"/></svg><span>Move it here</span><small>Round where you stand now</small></div>
+    <div class="m-item danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#trash-2"/></svg><span>Remove</span><small>For everyone in the space</small></div>
+  </div>
+</div></div></figure></div></li>
+</ol>
+<p>Groups stay with the space: they are there the next time anyone who has seen them comes back, even to an empty room. A space holds up to 24 groups, and a group's name is up to 32 letters.</p>
+
+<h2 id="chat">Chat on the floor</h2>
+<p>What people write in the space's chat comes up over the floor as bubbles, for about ten seconds each, fading out at the end. Someone standing in a group has their words stacked over that group's circle; anyone else's stack at the side of the view, above the box. Each stack shows the newest four. Like voices, bubbles are fainter the further you are from whoever wrote them, or from the edge of their group; your own are always whole. A sticker, a voice message or a file shows as a few words saying so.</p>
+<p>Write from the <b>Say something</b> box at the foot of the floor and press <kbd>Enter</kbd>. Only what is written while you are on the floor comes up there. On a phone the whole chat is the call's other tab (the speech bubble above the floor); on a computer it is on the space's page again once you leave the call.</p>
+<figure class="mock m-floor-mock"><div class="m-floor" role="group" aria-label="An open space's floor, seen from above">
+  <div class="m-group mine" data-hue="amber" style="left:58%;top:64%;width:34%"><span class="m-gname"><b>Game</b><span>2</span></span><div class="m-fstack over">
+    <div class="m-fbubble" style="opacity:1"><b>Maya Chen</b> one more round?</div>
+    <div class="m-fbubble" style="opacity:1"><b>You</b> go on then</div>
+  </div></div>
+  <div class="m-standing you" style="left:51%;top:68%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+  <div class="m-standing" style="left:66%;top:58%;--seen:1.00"><span class="m-face" data-hue="purple">MC</span><span class="m-tag">Maya Chen</span></div>
+  <div class="m-standing" style="left:12%;top:20%;--seen:0.55"><span class="m-face" data-hue="blue">JO</span><span class="m-tag">Jo Okafor</span></div>
+  <div class="m-fstack side">
+    <div class="m-fbubble" style="opacity:0.4"><b>Jo Okafor</b> anyone up for the film later?</div>
+  </div>
+<span class="m-fsay tap">Say something</span><span class="m-fpill m-fnew"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#target"/></svg>New group</span></div><figcaption>Bubbles over Game, where you stand, and at the side from Jo, who is in no group and further off, so fainter.</figcaption></figure>
+
+<h2 id="layout">On a phone and on a computer</h2>
+<p>On a phone the floor fills the space's page under its two tabs (the call, and the chat), with the call's controls over its foot.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Lounge</span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg></span></div><div class="m-body">
+  <div class="m-tabs"><span class="on"><svg class="i" aria-label="People"><use href="/docs/icons.svg#users"/></svg></span><span><svg class="i" aria-label="Chat"><use href="/docs/icons.svg#message-circle"/></svg></span></div>
+  <div class="m-floor has-dock" style="height:25rem" role="group" aria-label="An open space's floor, seen from above">
+    <div class="m-group" data-hue="green" style="left:62%;top:30%;width:44%"><span class="m-gname"><b>Casual chat</b><span>1</span></span></div>
+    <div class="m-standing you" style="left:40%;top:56%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+    <div class="m-standing" style="left:64%;top:30%;--seen:0.70"><span class="m-face" data-hue="rose">MC</span><span class="m-tag">Maya Chen</span></div>
+  <span class="m-fsay">Say something</span><span class="m-fpill m-fnew"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#target"/></svg>New group</span><div class="m-calldock" role="img" aria-label="The call's controls: Mute, Deafen, camera, Share screen, Leave"><span class="m-cpill"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#mic"/></svg><svg class="i m-cchev" aria-hidden="true"><use href="/docs/icons.svg#chevron-up"/></svg></span><span class="m-cpill"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><svg class="i m-cchev" aria-hidden="true"><use href="/docs/icons.svg#chevron-up"/></svg></span><span class="m-cbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#video-off"/></svg></span><span class="m-cbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#screen-share"/></svg></span><span class="m-cbtn leave"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#phone-off"/></svg></span></div></div>
+</div></div><figcaption>On a phone: the floor, the chat's box and New group above the call's controls.</figcaption></figure>
+<p>On a computer, or a phone opened out wide, joining leaves the circle's list beside it as it was: the floor is the space's own page, with the call's controls over its foot.</p>
+<figure class="mock wide full"><div class="m-screen has-rail"><div class="m-rail" role="img" aria-label="The rail: Messages, your circles, New, Contacts, Archive, Marketplace, Settings"><span class="m-ring" title="Messages"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg></span><span class="m-rail-rule"></span><span class="m-rail-circle open" title="Friends"><span class="m-avatar" data-hue="teal">F</span></span><span class="m-rail-circle" title="Games"><span class="m-avatar" data-hue="purple">G</span></span><span class="m-ring" title="New or join a circle"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-plus"/></svg></span><span class="m-rail-gap"></span><span class="m-rail-rule"></span><span class="m-ring" title="New"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#plus"/></svg></span><span class="m-ring" title="Contacts"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#contact-round"/></svg></span><span class="m-ring" title="Archive"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#archive"/></svg></span><span class="m-ring" title="Marketplace"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg></span><span class="m-ring" title="Settings"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg></span></div><div class="m-main"><div class="m-body">
+  <div class="m-split">
+    <div class="m-split-list">
+      <div class="m-section-title">Spaces</div>
+      <div class="m-spacerow"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg></span><span class="m-txt"><b>General</b></span></div>
+      <div class="m-spacerow"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg></span><span class="m-txt"><b>Voice</b></span></div>
+      <div class="m-spacerow"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg></span><span class="m-txt"><b>Lounge</b></span></div>
+      <div class="m-spacerow"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg></span><span class="m-txt"><b>Files</b></span></div>
+    </div>
+    <div class="m-split-pane">
+      <div class="m-pane-head"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg></span><span><b>Lounge</b><small>Open space</small></span></div>
+      <div class="m-floor w-far has-dock" role="group" aria-label="An open space's floor, seen from above"><span class="m-wall far"></span>
+        <div class="m-group" data-hue="amber" style="left:68%;top:54%;width:34%"><span class="m-gname"><b>Game</b><span>2</span></span></div>
+        <div class="m-standing you" style="left:32%;top:46%;--seen:1.00"><span class="m-face" data-hue="teal">AR</span><span class="m-tag">You</span></div>
+        <div class="m-standing" style="left:61%;top:48%;--seen:0.58"><span class="m-face" data-hue="rose">MC</span><span class="m-tag">Maya Chen</span></div>
+        <div class="m-standing" style="left:76%;top:60%;--seen:0.55"><span class="m-face" data-hue="blue">JO</span><span class="m-tag">Jo Okafor</span></div>
+      <span class="m-fsay">Say something</span><span class="m-fpill m-fnew"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#target"/></svg>New group</span><div class="m-calldock" role="img" aria-label="The call's controls: Mute, Deafen, camera, Share screen, Leave"><span class="m-cpill"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#mic"/></svg><svg class="i m-cchev" aria-hidden="true"><use href="/docs/icons.svg#chevron-up"/></svg></span><span class="m-cpill"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><svg class="i m-cchev" aria-hidden="true"><use href="/docs/icons.svg#chevron-up"/></svg></span><span class="m-cbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#video-off"/></svg></span><span class="m-cbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#screen-share"/></svg></span><span class="m-cbtn leave"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#phone-off"/></svg></span></div></div>
+    </div>
+  </div>
+</div></div></div><figcaption>On a computer: the circle's spaces on the left, the open space's floor beside them.</figcaption></figure>
+
+<h2 id="others">On older versions and in a browser</h2>
+<ul>
+  <li><b>An older version</b> of the app shows an open space on its own as an ordinary call, where everyone is heard whole, and an open space in a circle as a chat. Its people stand in the middle of everyone else's floor.</li>
+  <li><b>The app in a browser</b> has no calls yet, so an open space there shows its chat, and you can't make one there. A guest who joins the call from a space's link in a browser stands in the middle of the floor.</li>
+</ul>
+
+<h2 id="next">What comes next</h2>
+<p>Today everyone is drawn as their profile picture, with the ripple round it while they talk. A character of your own to walk around as, dressed in your cosmetics, is planned.</p>
+<p>How it works under the hood, for developers: <a href="/docs/developer/flows/#open-space">An open space's floor</a>.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/roles/"><small>Previous</small>Roles and permissions</a><a class="next" href="/docs/sms-spaces/"><small>Next</small>SMS spaces</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#make">Make one</a><a href="#walk">Walk around</a><a href="#hear">Who you hear</a><a href="#groups">Groups</a><a href="#chat">Chat on the floor</a><a href="#layout">On a phone and on a computer</a><a href="#others">On older versions and in a browser</a><a href="#next">What comes next</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<p>Thank you for trying Uplink early. Five steps, about three minutes. Answer the questions and the steps fit your device. Your answers and ticks stay in this browser.</p>
+
+<div class="alpha-invite" data-invite="yes" hidden>
+<note kind="alpha" title="You've been invited">
+<p>This page carries your invite to <b id="circle-name">the Alpha testers circle</b>. Step 5 opens it.</p>
+</note>
+</div>
+
+<h2 id="questions">First, a few questions</h2>
+<div class="qs">
+  <div class="q"><p>What will you test on?</p>
+    <div class="choices" data-q="device">
+      <button type="button" data-v="android">Android phone</button><button type="button" data-v="mac">Mac</button><button type="button" data-v="windows">Windows</button><button type="button" data-v="iphone">iPhone</button>
+    </div>
+    <p class="hint" data-when="device=iphone" hidden>The iPhone app isn't out yet. Pick a computer for now and you'll still get the whole circle: chat, voice, video and files.</p>
+  </div>
+  <div class="q" data-when="device=android" hidden><p>Will Uplink be your texting app?</p>
+    <div class="choices" data-q="sms">
+      <button type="button" data-v="beside">Not yet, keep my current app <small>Recommended</small></button><button type="button" data-v="default">Yes, send and get my texts in Uplink</button>
+    </div>
+    <p class="hint">It's an alpha: running it beside your current app is the safe way to start. You can make it your texting app any time in Settings.</p>
+  </div>
+  <div class="q" data-when="device=android sms=default" hidden><p>Do you use Google Messages' chat features (RCS)?</p>
+    <div class="choices" data-q="rcs"><button type="button" data-v="yes">Yes, or not sure</button><button type="button" data-v="no">No</button></div>
+  </div>
+  <div class="q"><p>Is Uplink installed already?</p>
+    <div class="choices" data-q="have"><button type="button" data-v="no">No, it's new to me</button><button type="button" data-v="yes">Yes</button></div>
+  </div>
+</div>
+
+<h2 id="steps">Then, five steps</h2>
+<ol class="steps alpha-steps">
+<li class="step" data-step="1"><div class="step-body">
+  <h3>Download the app</h3>
+  <p data-when="device=android" hidden>The Android app comes straight from us, not the Play Store.</p>
+  <p data-when="device=mac" hidden>A disk image for Macs on Apple silicon or Intel, macOS 12 or later.</p>
+  <p data-when="device=windows" hidden>An installer for Windows 10 and 11.</p>
+  <p data-when="device=" hidden>Pick your device above for the right download.</p>
+  <p class="dl">
+    <a class="m-btn primary" data-when="device=android" hidden href="/ghost-messaging.apk">Download for Android <small data-version="apk"></small></a>
+    <a class="m-btn primary" data-when="device=mac device=iphone" hidden href="/ghost-messaging-mac.dmg">Download for Mac <small data-version="mac"></small></a>
+    <a class="m-btn primary" data-when="device=windows" hidden href="/ghost-messaging-setup.exe">Download for Windows <small data-version="windows"></small></a>
+  </p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="2"><div class="step-body">
+  <h3>Install it</h3>
+  <div data-when="device=android" hidden>
+    <ul>
+      <li>Open the downloaded file from your notifications or <ui>Files › Downloads</ui>.</li>
+      <li>If Android says your browser can't install apps, tap <b>Settings</b>, switch on <b>Allow from this source</b>, then go back and tap <b>Install</b>.</li>
+      <li>If Play Protect asks about an unknown app, tap <b>More details › Install anyway</b>.</li>
+    </ul>
+    <m-screen caption="Android's own question, the first time.">
+      <m-section title="Install unknown apps"><m-row icon="globe" label="Your browser" hint="Allow from this source" switch="on" tap/></m-section>
+    </m-screen>
+  </div>
+  <div data-when="device=mac device=iphone" hidden>
+    <ul><li>Open the downloaded disk image, then drag <b>Uplink</b> into <b>Applications</b>.</li><li>Open it from Applications. It updates itself from then on.</li></ul>
+  </div>
+  <div data-when="device=windows" hidden>
+    <ul><li>Run <code>ghost-messaging-setup.exe</code> and follow the installer.</li><li>Open <b>Uplink</b> from the Start menu. It updates itself from then on.</li></ul>
+  </div>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="3"><div class="step-body">
+  <h3>Pick a username and password</h3>
+  <p data-when="device=mac device=windows device=iphone device=" hidden>The first screen asks for two things: a username, which is how the other testers find you, and a password, which makes your Uplink account so you can sign in on another device. Tap <b>Continue</b>.</p>
+  <div data-when="device=mac device=windows device=iphone device=" hidden><m-screen caption="The whole first screen.">
+    <m-p>Pick a username and a password.</m-p>
+    <m-field label="Username" value="alex"/>
+    <m-field label="Password" value="••••••••••••"/>
+    <m-btn kind="primary" tap>Continue</m-btn>
+    <m-p>Already have an account?</m-p>
+    <m-btn kind="secondary">Sign in</m-btn>
+  </m-screen></div>
+  <div data-when="device=android" hidden>
+    <p>First, one page about your texts (below). Then a username, which is how the other testers find you, and a password, which makes your Uplink account so you can sign in on another device. Tap <b>Continue</b>.</p>
+  </div>
+  <div data-when="device=android sms=beside" hidden>
+    <p>On the texts page, tap <b>Use beside Google Messages</b>. Your texts stay where they are, and you don't need to make Uplink your texting app.</p>
+    <m-screen caption="The welcome's texts page.">
+      <m-btn kind="secondary">Set as default SMS app</m-btn>
+      <m-btn kind="primary" tap>Use beside Google Messages</m-btn>
+    </m-screen>
+  </div>
+  <div data-when="device=android sms=default" hidden>
+    <p>On the texts page, tap <b>Set as default SMS app</b> and say yes when Android asks.</p>
+    <p>If Android refuses, tap <b>Open Android's page for Uplink</b>, then <b>⋮ › Allow restricted settings</b>, and try again.</p>
+    <div data-when="device=android sms=default rcs=yes" hidden><note kind="warn" title="Turn off RCS chats first"><p>While they're on in Google Messages, people who use RCS keep sending you chats that never arrive as texts. The welcome shows a <b>Coming from Google Messages? Do this first</b> card that opens the right setting.</p></note></div>
+  </div>
+  <p>Next come your 12 recovery words. Write them down if you can: with them you can get your account back without your password. Then tap them in order to check, or tap <b>Skip this check</b> and you're in. You can see them again any time in <ui>Settings › Me › Account</ui>.</p>
+  <p>Already have an Uplink account? Tap <b>Sign in</b> under <b>Already have an account?</b> on that same screen instead. You don't need to pair a phone to join the circle; skip it if Uplink offers it. More in <a href="/docs/first-run/">The first time you open it</a>.</p>
+  <note kind="alpha" title="Signing up got simpler"><p>If you joined before, you went through six pages and made your account later in Settings. New testers now pick a username and password on the first screen and are done. Nothing changes for you.</p></note>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="4"><div class="step-body">
+  <h3>Add your name and picture</h3>
+  <p>Go to <ui>Settings › Me › Profile</ui> and add a name and picture, so the other testers know who's talking.</p>
+  <m-screen title="Profile" back>
+    <m-section><m-row icon="image" label="Picture" chev tap/><m-row icon="user-round" label="Name" value="Alex" chev/><m-row icon="at-sign" label="Username" value="@alex" chev/></m-section>
+  </m-screen>
+  <p>Verifying your number and linking other accounts can wait. See <a href="/docs/profile/">Your profile and number</a>.</p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="5"><div class="step-body">
+  <h3>Join the Alpha testers circle</h3>
+  <div data-invite="yes" hidden>
+    <p data-when="device=android" hidden>Tap <b>Open the invite</b> on this phone. Uplink opens on the circle's invite: tap <b>Join</b>.</p>
+    <p data-when="device=mac device=windows device=iphone device=" hidden>Tap <b>Copy the invite</b>, then in Uplink tap <ui>New › Join a circle by link</ui>, paste it, and tap <b>Join</b>.</p>
+    <p class="dl"><a class="m-btn primary" id="open-invite" data-when="device=android" hidden href="#">Open the invite</a> <button type="button" class="m-btn secondary" id="copy-invite"><span>Copy the invite</span></button></p>
+  </div>
+  <div data-invite="no">
+    <p>Use the invite link you were sent: it starts with <code>gogho.st/join/</code>.</p>
+    <ul><li>Tap it on your phone and Uplink opens on the invite: tap <b>Join</b>.</li><li>Or copy it, then in Uplink tap <ui>New › Join a circle by link</ui>, paste it, and tap <b>Join</b>.</li></ul>
+  </div>
+  <m-screen title="New">
+    <m-menu><m-item icon="message-square">New message</m-item><m-item icon="users">New circle</m-item><m-item icon="link" tap>Join a circle by link</m-item></m-menu>
+  </m-screen>
+  <p>Once you're in, say hi, and post anything odd you notice, with a screenshot if you can. That's the whole job.</p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+</ol>
+<div id="all-done" hidden><note kind="tip" title="You're in. Thank you!"><p>Updates arrive in the app by themselves. Each one says what's new, so look out for things to try.</p></note></div>
+
+<h2 id="reporting">Telling us what you find</h2>
+<ul>
+  <li>Post it in the Alpha testers circle: what you did, what you expected, and what happened, with a screenshot if you can.</li>
+  <li>For a problem with texts or pictures, include the report from <ui>Settings › Developer › Copy report</ui>: it says what the app tried, never what your messages said.</li>
+  <li>Things marked <soon/> in these docs aren't out yet.</li>
+</ul>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const KEY = 'ghost-alpha-guide';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
+  const answers = Object.assign({ device: '', sms: '', rcs: '', have: '' }, saved.answers);
+  const done = new Set(saved.done || []);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ answers, done: [...done] })); } catch (_) {} };
+  if (!answers.device) {
+    const ua = navigator.userAgent;
+    answers.device = /Android/i.test(ua) ? 'android' : /iPhone|iPad/i.test(ua) ? 'iphone' : /Mac/i.test(ua) ? 'mac' : /Windows/i.test(ua) ? 'windows' : '';
+  }
+  // The circle's invite, carried after the # (#c.<seed>.<name>.<owner>, as the circle's link has it after /join/).
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const m = /^c\.([0-9a-f]{64})(?:\.([A-Za-z0-9_-]*))?(?:\.(0[23][0-9a-f]{64}))?$/.exec(hash);
+  const invite = m ? 'https://gogho.st/join/#' + hash : null;
+  if (m && m[2]) {
+    try {
+      const b64 = m[2].replace(/-/g, '+').replace(/_/g, '/');
+      const name = new TextDecoder().decode(Uint8Array.from(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)), (ch) => ch.charCodeAt(0)));
+      if (name.trim()) $('#circle-name').textContent = name.trim();
+    } catch (_) {}
+  }
+  for (const el of $$('[data-invite]')) el.hidden = (el.dataset.invite === 'yes') !== !!invite;
+  if (invite) {
+    $('#open-invite').href = invite;
+    $('#copy-invite').onclick = async () => {
+      const label = $('#copy-invite span');
+      try { await navigator.clipboard.writeText(invite); label.textContent = 'Copied'; } catch (_) { prompt('Copy the invite:', invite); }
+      setTimeout(() => (label.textContent = 'Copy the invite'), 1800);
+    };
+  }
+  const matches = (rule) => {
+    const want = {};
+    for (const part of rule.split(/\s+/)) { const [k, v] = part.split('='); (want[k] ||= []).push(v); }
+    return Object.entries(want).every(([k, vs]) => vs.includes(answers[k] || ''));
+  };
+  const steps = $$('.alpha-steps .step');
+  const render = () => {
+    for (const group of $$('[data-q]')) for (const b of $$('button', group)) b.setAttribute('aria-pressed', String(answers[group.dataset.q] === b.dataset.v));
+    for (const el of $$('[data-when]')) el.hidden = !matches(el.dataset.when);
+    for (const step of steps) {
+      const n = Number(step.dataset.step);
+      const isDone = done.has(n) || (answers.have === 'yes' && n <= 2);
+      step.classList.toggle('done', isDone);
+      $('.mark button', step).textContent = isDone ? 'Undo' : 'Mark done';
+    }
+    $('#all-done').hidden = steps.filter((s) => s.classList.contains('done')).length < 5;
+  };
+  for (const group of $$('[data-q]')) group.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    answers[group.dataset.q] = b.dataset.v;
+    save();
+    render();
+  });
+  for (const step of steps) {
+    const n = Number(step.dataset.step);
+    $('.mark button', step).onclick = () => {
+      if (answers.have === 'yes' && n <= 2) return;
+      done.has(n) ? done.delete(n) : done.add(n);
+      save();
+      render();
+    };
+  }
+  for (const [id, feed] of [['apk', '/apk.json'], ['mac', '/mac.json'], ['windows', '/windows.json']]) {
+    fetch(feed, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((info) => {
+      if (info && info.version) for (const el of $$(`[data-version="${id}"]`)) el.textContent = info.version;
+    }).catch(() => {});
+  }
+  render();
+})();
+</script>

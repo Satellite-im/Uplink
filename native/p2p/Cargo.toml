@@ -1,0 +1,59 @@
+# The direct network's core (docs/OPEN_NETWORK.md, section 2): a node on iroh that offers one thing, framed streams to
+# another node by its id on a numbered channel, behind the small C interface in src/ffi.rs (include/ghost_p2p.h).
+# lib/net/p2p/node_ffi.dart is its only caller; README.md says what every function and byte means.
+[package]
+name = "ghost_p2p"
+version = "0.1.0"
+edition = "2024"
+# iroh 1.5 asks for 1.91; built and tested here with 1.94.1.
+rust-version = "1.91"
+license = "AGPL-3.0-only"
+publish = false
+
+[lib]
+# cdylib: Android, the Mac, Windows, Linux (opened by Dart). staticlib: the iPhone. rlib: the tests.
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+# Every version here is the one the tests ran against; Cargo.lock holds the rest of the tree.
+[dependencies]
+# No default features: no metrics, no port mapping on the router (UPnP, NAT-PMP, PCP), none of Apple's faster but
+# private datagram calls. tls-ring is the one thing an endpoint cannot be made without.
+iroh = { version = "=1.5.0", default-features = false, features = ["tls-ring"] }
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "sync", "time", "macros"] }
+tokio-util = { version = "=0.7.20", default-features = false }
+n0-future = "=0.3.2"
+# Already in the tree by way of iroh, at these versions: this machine's network interfaces and their addresses (what a
+# node tells its friends, and the port it asks for on each network); and writing a node key over before its memory is
+# let go.
+netdev = { version = "=0.47.0", default-features = false }
+zeroize = { version = "=1.9.2", default-features = false }
+
+[target.'cfg(target_os = "android")'.dependencies]
+# The two JNI calls src/ffi.rs makes to hand iroh's DNS the app's context; iroh's resolver brings this in already.
+jni-sys = "=0.4.1"
+
+[dev-dependencies]
+# test-utils: a link helper inside the test process (iroh::test_utils::run_relay_server), and the switch that lets a
+# test trust its self-signed certificate. metrics: iroh's own count of what crossed a node's sockets, for the tests
+# that measure what an idle node costs. None of the three is in a build of the library.
+iroh = { version = "=1.5.0", default-features = false, features = ["tls-ring", "test-utils", "metrics"] }
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "sync", "time", "macros", "net"] }
+
+[profile.release]
+# Small before fast: the frames are a messenger's packets, and the cryptography is ring's own assembly either way.
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+# Stripped: by the linker on Android, Linux and Windows. Not on a Mac, where tool/build-p2p.sh turns this off and has
+# the linker leave the symbols out instead: a library that Xcode 27's strip has been at is one macOS 27 will not load
+# ("mis-aligned LINKEDIT string pool").
+strip = true
+debug = false
+# Unwinding, never abort: every entry in src/ffi.rs catches a panic, so a bug here cannot take the app down; and on
+# Android iroh's DNS reader relies on catching one where the app's context was not handed over.
+panic = "unwind"
+
+# What is compiled only to run during the build (build scripts, proc macros) is never stripped: for the same reason,
+# a stripped proc macro is a library rustc cannot load on a Mac ("can't find crate"), and the build stops there.
+[profile.release.build-override]
+strip = false

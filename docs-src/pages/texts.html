@@ -1,0 +1,95 @@
+<p>Your texts (SMS and picture messages) work as in any texting app, with more: reactions, edits, effects, stickers and voice messages.</p>
+
+<h2 id="list">The conversations list</h2>
+<ul>
+  <li><b>Unread conversations are at the top</b>, the newest first, then everything you've read. Pinned ones stay above both. A muted conversation keeps its place by date.</li>
+  <li><b>Reading a conversation doesn't move it.</b> One you open from the top stays where it is while you're in the app, so nothing shifts under your finger; a new message still takes its conversation to the top. The list is put back in order when you leave the app or its window, switch tabs, search, or pull it down.</li>
+  <li><b>Each row's last line is the newest message</b> in that conversation, whichever way it came (SMS, a picture message, or RCS beside Google Messages). A row can show something else on purpose: <b>Draft:</b> what you've typed and not sent, or a short summary in italics after a » when several messages are unread.</li>
+  <li><b>Swipe</b> a conversation left to archive it; keep swiping to delete. Swipe right to pin it to the top.</li>
+  <li><b>Long-press</b> one for pin, mute, block, delete and more, or to choose several.</li>
+  <li><b>Search</b> at the top finds names, numbers and words, snoozed conversations too.</li>
+  <li><b>Snooze</b>: long-press a conversation and choose <b>Snooze…</b>. See <a href="#snooze">Snooze a conversation</a>.</li>
+  <li><b>Mark all read</b> (the round button by the title) covers spaces, Telegram and Signal too.</li>
+</ul>
+<m-screen title="Messages" actions="check-check,plus">
+  <m-convo name="Maya Chen" preview="See you at 7!" time="4:12" unread="2" tap/>
+  <m-convo name="Dad" preview="📷 Picture" time="Yesterday"/>
+</m-screen>
+
+<h2 id="send">Sending</h2>
+<p>Type and send as usual. Beside the box: pictures (up to five in one message), stickers, GIFs and emoji, and the microphone for a voice message (press and hold where Send would be).</p>
+<m-screen title="Maya Chen" back actions="settings">
+  <m-bubble from="them" time="4:10">Dinner at Luca's?</m-bubble>
+  <m-bubble from="me" time="4:12">Yes! 7?</m-bubble>
+  <m-row-raw><span class="m-iconbtn"><svg class="i"><use href="/docs/icons.svg#plus"/></svg></span><m-field placeholder="Text message"/><span class="m-iconbtn"><svg class="i"><use href="/docs/icons.svg#mic"/></svg></span></m-row-raw>
+</m-screen>
+
+<h2 id="formatting">Formatting</h2>
+<p>Write these round words in any message and Uplink draws them formatted, in chats with friends, in spaces and in Telegram, Signal and the other networks' chats:</p>
+<table>
+  <tr><th>Write</th><th>To get</th></tr>
+  <tr><td><code>**bold**</code></td><td><b>bold</b></td></tr>
+  <tr><td><code>*italic*</code> or <code>_italic_</code></td><td><i>italic</i></td></tr>
+  <tr><td><code>~~strike~~</code></td><td><s>strike</s></td></tr>
+  <tr><td><code>`code`</code></td><td><code>code</code></td></tr>
+  <tr><td><code>```</code> on lines before and after</td><td>a block of code</td></tr>
+  <tr><td><code>&gt; </code> at the start of a line</td><td>a quote</td></tr>
+  <tr><td><code>||spoiler||</code></td><td>hidden until tapped</td></tr>
+  <tr><td><code>[words](https://…)</code></td><td>a link under those words</td></tr>
+</table>
+<p>Links and @mentions still work inside formatting, and nothing inside code is formatted. Each kind stays on one line (except code blocks). To write a marker itself, put a backslash before it: <code>\*</code>.</p>
+<p>The markers go as you typed them, so a text, Telegram or an older Uplink shows the asterisks. While you type to a friend or in a space they are dimmed in the box, and in a chat with a friend, choosing words offers <b>Bold</b>, <b>Italic</b> and <b>Code</b>. Notifications show the words without the markers, and a spoiler as ▒.</p>
+
+<h2 id="ticks">Ticks</h2>
+<table>
+  <tr><th>Mark</th><th>Means</th></tr>
+  <tr><td>A clock</td><td>Sending.</td></tr>
+  <tr><td>One tick</td><td>Sent.</td></tr>
+  <tr><td>Two ticks</td><td>Delivered to their phone. In colour: read (picture and group messages, from phones that say so).</td></tr>
+  <tr><td>A lock</td><td>Encrypted: see <a href="/docs/encryption/">Encrypted texts</a>.</td></tr>
+</table>
+<p>Delivery reports and read receipts are in <ui>Settings › Receipts</ui>.</p>
+
+<h2 id="hold">Press and hold a message</h2>
+<m-screen>
+  <m-row-raw><span style="font-size:1.5rem">❤️ 👍 👎 😂 ‼️ ❓</span></m-row-raw>
+  <m-menu><m-item icon="pencil">Edit</m-item><m-item icon="copy">Copy text</m-item><m-item icon="sparkles">Effects</m-item><m-item icon="trash-2" danger>Delete message</m-item></m-menu>
+</m-screen>
+<ul>
+  <li><b>React</b> with an emoji; it shows under the message.</li>
+  <li><b>Edit</b>: a text can't change once it's on their phone, so you choose <b>Change on this phone only</b> or <b>Send correction</b>.</li>
+  <li><b>Effects</b>: send it with a screen effect (confetti, hearts and 18 more), seen by anyone using Uplink.</li>
+</ul>
+
+<h2 id="snooze">Snooze a conversation</h2>
+<p>Long-press a conversation in Messages and choose <b>Snooze…</b>, then for how long: an hour, three hours, this evening, tomorrow morning, or next Monday.</p>
+<m-screen>
+  <m-menu title="Snooze Maya Chen">
+    <m-item icon="clock">For an hour</m-item>
+    <m-item icon="clock">For 3 hours</m-item>
+    <m-item icon="clock" tap>Until tomorrow (9 AM)</m-item>
+    <m-item icon="clock">Until next week (Monday, 9 AM)</m-item>
+  </m-menu>
+</m-screen>
+<p>It leaves Messages until then. Its messages still arrive, and search still finds it. When the time comes it's back at the top with a notification, and it stays at the top until you open it. Long-press it and choose <b>Unsnooze</b> to bring it back early. Snoozes are kept on the device you set them on, and the app needs to be running for one to end on time; if it was closed, the conversation comes back when the app next opens.</p>
+
+<h2 id="export">Export a conversation</h2>
+<p>In a conversation's settings, <b>Export conversation</b> saves every message as a Markdown file (<code>.md</code>), which any notes app or text editor opens. It has the conversation's name, a heading for each day, and each message with who sent it, when, and any pictures or files named under it. The pictures and files themselves aren't in it. On a phone you choose where to save it; on a Mac a save panel opens; on Windows and Linux it goes to Downloads.</p>
+<p>A space's chat exports the same way: <b>Export chat</b> in the space's settings, or long-press the space in Messages. Its threads come too.</p>
+
+<h2 id="settings">A conversation's settings</h2>
+<p>Tap the cog, or the conversation's name at the top:</p>
+<m-screen title="Maya Chen" back>
+  <m-section>
+    <m-row icon="pin" hue="amber" label="Pin to top" switch="off"/>
+    <m-row icon="volume-x" hue="slate" label="Mute notifications" switch="off"/>
+    <m-row icon="image" hue="purple" label="Chat background" chev/>
+    <m-row icon="palette" hue="rose" label="Your bubbles here" chev/>
+    <m-row icon="lock" hue="green" label="Encryption" chev/>
+    <m-row icon="download" hue="blue" label="Export conversation" chev/>
+  </m-section>
+</m-screen>
+<p>A group text also has <b>Group name</b>, <b>Add people</b> and <b>Leave group</b>. A chat background syncs to the others if they use Uplink too.</p>
+
+<h2 id="look">Looks, stickers and effects</h2>
+<p><ui>Settings › Appearance</ui> has the looks (Uplink, Sharp, Dial-Up and Runestone) and the textures each is drawn with, light and dark, your bubble colour and text size. <ui>Settings › Emoji</ui>, <ui>Settings › Effects</ui> and <ui>Settings › Sounds</ui> have the rest.</p>

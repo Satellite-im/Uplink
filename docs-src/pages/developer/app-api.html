@@ -1,0 +1,67 @@
+<p>Uplink has an API: every part of the app, from your conversations to its screens, as methods you can call from a script or another program. It's off until you turn it on, and only someone with your token or connection string can use it.</p>
+
+<h2 id="on">Turn it on</h2>
+<steps>
+<step title="Developer mode">
+<p>On your phone, tap <ui>Settings › About › Version</ui> twelve times. Taps more than two seconds apart start the count again, and from the eighth tap a note counts down. Then <ui>Settings › Developer</ui> and <ui>Settings › API</ui> appear.</p>
+</step>
+<step title="Choose how to reach it">
+<m-screen title="API" back>
+  <m-section title="On this phone">
+    <m-row label="Serve the API" hint="Over HTTP, with a token" switch="on" tap/>
+    <m-row label="Allow from Wi-Fi" hint="Served on the phone's address on your network too" switch="off"/>
+    <m-row icon="copy" hue="slate" label="Copy the token" chev/>
+  </m-section>
+  <m-section title="From anywhere">
+    <m-row label="Through the relay" switch="off"/>
+    <m-row icon="copy" hue="slate" label="Copy the connection string" chev/>
+  </m-section>
+</m-screen>
+<ul>
+  <li><b>Serve the API</b>: over HTTP on the phone. From a computer by USB: <code>adb forward tcp:8765 tcp:8765</code>, then call <code>http://localhost:8765</code>. <b>Allow from Wi-Fi</b> serves it on your network too.</li>
+  <li><b>Through the relay</b>: from anywhere. The connection string (<code>ghostapi1:…</code>) holds the key every call is sealed with; the relay passes calls along without being able to read them. Keep it as you would a password.</li>
+</ul>
+</step>
+</steps>
+
+<h2 id="call">Call a method</h2>
+<p>Over HTTP, <code>POST /api/&lt;method&gt;</code> with the parameters as a JSON body and your token:</p>
+<pre><code>curl -s http://localhost:8765/api/conversations.list \
+  -H 'Authorization: Bearer &lt;token&gt;' \
+  -d '{"limit": 5}'</code></pre>
+<p>Or with the command-line client in the app's repository (<code>tool/ghost-api.mjs</code>):</p>
+<pre><code>node tool/ghost-api.mjs --token &lt;token&gt; app.info
+node tool/ghost-api.mjs --remote ghostapi1:&lt;secret&gt; networks.chats '{"network": "telegram"}'</code></pre>
+<p>With no method it lists them all; <code>--doc &lt;method&gt;</code> shows one's documentation.</p>
+
+<h2 id="shape">Requests and answers</h2>
+<table>
+  <tr><th>Request</th><th>What it does</th></tr>
+  <tr><td><code>GET /api</code></td><td>Everything the API says of itself: every method, as JSON (<code>api.describe</code>).</td></tr>
+  <tr><td><code>GET /api/&lt;method&gt;</code></td><td>One method's documentation.</td></tr>
+  <tr><td><code>POST /api/&lt;method&gt;</code></td><td>Calls it. The body is its parameters as a JSON object, or empty.</td></tr>
+  <tr><td><code>POST /api</code></td><td>The same as one object: <code>{"method": "…", "params": {…}, "id": …}</code>. The <code>id</code> comes back with the answer.</td></tr>
+</table>
+<p>Every request but <code>GET /</code> needs <code>Authorization: Bearer &lt;token&gt;</code>. Answers are JSON:</p>
+<pre><code>{"ok": true, "result": …}
+{"ok": false, "error": {"code": "bad_params", "message": "\"thread\" is needed: …"}}</code></pre>
+<table>
+  <tr><th>Code</th><th>Status</th><th>Meaning</th></tr>
+  <tr><td><code>unauthorized</code></td><td>401</td><td>The token is missing or wrong.</td></tr>
+  <tr><td><code>not_found</code></td><td>404</td><td>No such method, or what it named isn't there.</td></tr>
+  <tr><td><code>bad_params</code></td><td>400</td><td>A parameter is missing or of the wrong type, or the body isn't a JSON object. Also 405 for anything but GET and POST.</td></tr>
+  <tr><td><code>failed</code></td><td>500</td><td>The method ran and what it asked failed. The message says why.</td></tr>
+</table>
+<p>Parameter types are <code>string</code>, <code>int</code>, <code>bool</code>, <code>list</code> and <code>object</code>, and each call is checked against them before it runs.</p>
+
+<h2 id="remote">Through the relay</h2>
+<p>The connection string is <code>ghostapi1:</code> and 64 hex digits: a secret of 32 bytes. Both ends make three things from it with HKDF-SHA256 (salt <code>ghost-api v1</code>): the pairing channel they meet on (info <code>relay channel</code>, its first 16 bytes), that channel's token (<code>relay token</code>), and an AES-256-GCM key (<code>seal key</code>). The app holds the channel as its <code>phone</code> end; a client joins as the other (<a href="/docs/developer/hub/#pairing">Pairing channels</a>).</p>
+<p>A request is one binary frame: a 12-byte nonce, then <code>{"method", "params", "id"}</code> sealed with the key (additional data <code>ghost-api-v1</code>, GCM's tag at the end). The answer comes back the same way. The relay passes the frames and can't open them. The app must be running to answer. <code>tool/ghost-api.mjs</code> is a client of about 150 lines to read or copy from.</p>
+
+<h2 id="methods">The methods</h2>
+<p><ui>Settings › API › Methods</ui> lists the same, with a place to try each. Those marked <span class="badge danger">changes things</span> send, delete or change something, and ask before running there. The methods for <a href="/docs/plugin-testing/#api">plugins in development</a> need developer mode and aren't in App Store builds.</p>
+<api-methods/>
+<p><b>Recent calls</b> on the API page shows the last calls made, from where and how long they took. <b>Make a new token</b> or <b>Make a new connection string</b> shuts out whoever had the old one.</p>
+
+<h2 id="source">The source</h2>
+<p>Uplink is open source (AGPL-3.0): <a href="https://github.com/InfamousVague/ghost-messaging">github.com/InfamousVague/ghost-messaging</a>.</p>

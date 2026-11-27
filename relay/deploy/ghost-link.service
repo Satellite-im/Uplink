@@ -1,0 +1,55 @@
+# A link helper for Uplink's direct links as a systemd service (docs/SELF_HOSTING.md, "A link helper for
+# direct links"): iroh's relay server, with the settings in deploy/link-helper.toml.example.
+#
+#   tool/build-link.sh host                # on the server (Rust 1.91 or later); or `tool/build-link.sh` elsewhere, with zig
+#   sudo useradd --system --no-create-home --shell /usr/sbin/nologin ghost-link
+#   sudo install -d -o root -g root -m 755 /opt/ghost-link
+#   sudo install -o root -g root -m 755 build/link/host/iroh-relay /opt/ghost-link/iroh-relay
+#   sudo install -d -o ghost-link -g ghost-link -m 750 /var/lib/ghost-link
+#   sudo install -d -o root -g ghost-link -m 750 /etc/ghost-link /etc/ghost-link/certs
+#   sudo install -o root -g ghost-link -m 640 link-helper.toml /etc/ghost-link/config.toml     # the sample, edited
+#   sudo install -o root -g ghost-link -m 640 <certificate> <key> /etc/ghost-link/certs/       # named as the settings name them
+#   sudo cp relay/deploy/ghost-link.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now ghost-link
+#   curl https://relay.example.com:7843/healthz                                                # {"status":"ok","version":"1.5.0",…}
+#
+# tool/deploy-link.mjs writes this file to our own server: what changes here changes there.
+
+[Unit]
+Description=Uplink link helper: iroh's relay server, for direct links between devices
+After=network.target
+# Started without its settings the program runs on its own defaults (plain HTTP, port 80): no file, no start.
+AssertPathExists=/etc/ghost-link/config.toml
+
+[Service]
+User=ghost-link
+Group=ghost-link
+WorkingDirectory=/var/lib/ghost-link
+# What it writes: when it starts, when it reads the certificate again, and a connection that goes wrong, by its
+# address. The one part of the server that names devices is kept quiet: left at "info" it writes a line, with the
+# address and the start of the device's id, for every device that leaves. No colour codes in the journal.
+Environment=RUST_LOG=info,iroh_relay::server::client=error NO_COLOR=1
+ExecStart=/opt/ghost-link/iroh-relay --config-path /etc/ghost-link/config.toml
+# SIGINT is the one signal it closes its links in order on.
+KillSignal=SIGINT
+TimeoutStopSec=10
+Restart=always
+RestartSec=2
+# The server has no limit of its own on how many devices sign in. These are what a flood of them runs into: past
+# the memory it is stopped and started again, and the machine's other services are left alone.
+MemoryMax=300M
+CPUQuota=100%
+LimitNOFILE=65536
+# A port anyone can reach is knocked on all day, and every knock that is not TLS is three lines in the journal.
+LogRateLimitIntervalSec=60
+LogRateLimitBurst=120
+# How much it has carried shows in `systemctl status ghost-link`.
+IPAccounting=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/ghost-link
+
+[Install]
+WantedBy=multi-user.target

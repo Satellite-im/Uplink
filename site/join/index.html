@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Join a space · Uplink</title>
+<meta name="description" content="Join an Uplink space from your browser: voice and video, sealed between the people in it.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#040406">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/uplink.css">
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (_) {}</script>
+<style>
+  /* In Uplink's look (/uplink.css): the page's own names for its colours, from the shared ones. */
+  :root { --bg: var(--u-bg); --card: var(--u-paper); --tile: #17171d; --ink: var(--u-ink); --ink2: var(--u-ink-2); --rule: var(--u-rule); --red: #ff5f52; --green: var(--u-ink); }
+  :root[data-theme="light"] { --tile: #e7e7e2; --red: #d2382c; }
+  body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+  .backdrop { position: fixed; }
+  .backdrop::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,4,6,.5), rgba(4,4,6,.82) 70%); }
+  main { position: relative; z-index: 1; flex: 1; width: 100%; max-width: 64rem; margin: 0 auto; padding: 0 var(--u-gutter) max(1.5rem, env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+  h1 { font-family: var(--u-display); font-style: italic; font-weight: 900; font-size: clamp(2rem, 6.5vw, 3rem); letter-spacing: -.01em; line-height: 1; margin: 2.4rem 0 .6rem; overflow-wrap: anywhere; }
+  h2 { font-family: var(--u-display); font-style: italic; font-weight: 800; letter-spacing: .01em; }
+  .sub { color: var(--ink2); margin: 0 0 1.5rem; }
+  .sub b { color: var(--ink); }
+  /* A sticker: the face, a hairline edge, and a line inset from it. */
+  .card, .chat, dialog { background: var(--card); border: 1px solid var(--rule); border-radius: var(--u-r); box-shadow: var(--u-shadow); }
+  .card, .chat { position: relative; }
+  .card::after, .chat::after { content: ""; position: absolute; inset: var(--u-inset); border: 1.25px solid var(--u-line); border-radius: calc(var(--u-r) - 3px); opacity: .4; pointer-events: none; }
+  .card { padding: 1.2rem 1.25rem; }
+  .lobby { display: grid; gap: 1rem; grid-template-columns: 1fr; max-width: 34rem; }
+  .preview { aspect-ratio: 4 / 3; background: var(--tile); border: 1px solid var(--rule); border-radius: var(--u-r); overflow: hidden; position: relative; display: grid; place-items: center; }
+  .preview video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .preview .face { width: 4.5rem; height: 4.5rem; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--u-line); display: grid; place-items: center; font: italic 900 1.7rem/1 var(--u-display); }
+  label { display: block; font-weight: 700; margin-bottom: 0.45rem; }
+  input[type=text] { width: 100%; font: inherit; padding: 0.75rem 1rem; border-radius: var(--u-r-sm); border: 1.5px solid var(--rule); background: var(--bg); color: var(--ink); }
+  input[type=text]:focus { outline: none; border-color: var(--ink); }
+  .row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+  button { font: inherit; cursor: pointer; border: 0; }
+  /* The main and quiet buttons lean as the sticker does; only their shape leans, so the words a script sets stand upright. */
+  .primary, .quiet { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; background: none; text-decoration: none; transition: transform .15s ease; }
+  .primary::before, .quiet::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: var(--u-r-sm); transform: skewX(var(--u-slant)); transition: border-color .15s ease, box-shadow .15s ease; }
+  .primary, .quiet { margin-inline: .3rem; }
+  .primary { color: var(--u-solid-fg); font-weight: 700; padding: 0.85rem 1.7rem; font-size: 1.05rem; }
+  .primary::before { background: var(--u-solid-bg); }
+  .quiet { color: var(--ink); padding: 0.6rem 1.15rem; font-weight: 650; }
+  .quiet::before { border: 1.5px solid var(--rule); }
+  .primary:hover, .quiet:hover { transform: translateY(-2px); }
+  .primary:hover::before { box-shadow: 4px 4px 0 var(--rule); }
+  .quiet:hover::before { border-color: var(--ink); }
+  .primary:disabled { opacity: 0.5; cursor: default; transform: none; }
+  .link { background: none; color: var(--ink2); text-decoration: underline; padding: 0; font-size: 0.95rem; }
+  .round { width: 3.4rem; height: 3.4rem; border-radius: var(--u-r); display: grid; place-items: center; background: var(--card); border: 1.5px solid var(--rule); color: var(--ink); }
+  .round:hover { border-color: var(--ink); }
+  .round.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .round.leave { background: var(--red); color: #fff; border-color: var(--red); }
+  .round svg { width: 1.35rem; height: 1.35rem; }
+  .note { color: var(--ink2); font-size: 0.9rem; margin: 0.6rem 0 0; }
+  .note a { color: var(--ink); }
+  .error { color: var(--red); font-size: 0.95rem; margin: 0.5rem 0 0; }
+  .grid { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); align-content: start; margin-top: 1rem; }
+  .grid:empty { display: none; }
+  .bar .dock { display: flex; gap: 0.6rem; padding: 0.5rem; border-radius: var(--u-r-lg); background: var(--bg); border: 1px solid var(--rule); box-shadow: var(--u-shadow); }
+  .tile { aspect-ratio: 4 / 3; background: var(--tile); border: 1px solid var(--rule); border-radius: var(--u-r); overflow: hidden; position: relative; display: grid; place-items: center; }
+  .tile video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+  .tile.me video { transform: scaleX(-1); }
+  .tile .face { width: 4rem; height: 4rem; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--u-line); display: grid; place-items: center; font: italic 900 1.5rem/1 var(--u-display); }
+  .tile .who { position: absolute; left: 0.6rem; bottom: 0.5rem; right: 0.6rem; font-weight: 600; font-size: 0.95rem; display: flex; gap: 0.35rem; align-items: center; text-shadow: 0 0 6px rgba(0,0,0,0.25); }
+  .tile.has-video .who { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.7); }
+  .tile .who small { font-weight: 400; opacity: 0.75; }
+  .tile .who svg { width: 0.95rem; height: 0.95rem; color: var(--red); flex: none; }
+  .people { list-style: none; margin: 1rem 0 0; padding: 0.4rem 0; max-width: 34rem; }
+  .people li { display: flex; align-items: center; gap: 0.9rem; padding: 0.55rem 1rem 0.55rem 1.2rem; font-weight: 600; }
+  .people small { font-weight: 400; color: var(--ink2); }
+  .people .m { margin-left: auto; color: var(--red); display: flex; }
+  .people .m svg { width: 1rem; height: 1rem; }
+  /* A face, and wobbly rings going out from it while they talk (Matt, 2026-11-15: "make the profile picture habe
+     wobbly ripples going out when talking"). */
+  .face2 { position: relative; width: 2.6rem; height: 2.6rem; flex: none; }
+  .face2 b { position: absolute; inset: 0; border-radius: 50%; background: var(--tile); display: grid; place-items: center; z-index: 1; border: 1px solid var(--rule); font-family: var(--u-display); font-style: italic; font-weight: 900; }
+  .face2 i { position: absolute; inset: 0; border: 2px solid var(--green); border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%; opacity: 0; }
+  .talking .face2 b { border: 2.5px solid var(--green); }
+  .talking .face2 i { animation: ripple 1.8s ease-out infinite; }
+  .talking .face2 i:nth-of-type(2) { animation-delay: 0.6s; }
+  .talking .face2 i:nth-of-type(3) { animation-delay: 1.2s; }
+  @keyframes ripple {
+    0% { transform: scale(1) rotate(0deg); opacity: 0.75; border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%; }
+    50% { border-radius: 54% 46% 48% 52% / 46% 54% 48% 52%; }
+    100% { transform: scale(1.85) rotate(60deg); opacity: 0; border-radius: 48% 52% 54% 46% / 54% 48% 46% 52%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .talking .face2 i { animation: none; opacity: 0.5; } .primary, .quiet { transition: none; } }
+  .bar { position: sticky; bottom: 0; display: flex; justify-content: center; gap: 0.9rem; padding: 1rem 0 0.25rem; background: linear-gradient(transparent, color-mix(in srgb, var(--bg) 88%, transparent) 40%); }
+  .center { text-align: center; margin: auto; max-width: 30rem; padding: 2rem 0; }
+  .center h1 { margin-top: 0; }
+  .center .u-kicker { margin-bottom: .2rem; }
+  .lobby-kicker { margin: 2.4rem 0 0; }
+  .lobby-kicker + h1 { margin-top: .5rem; }
+  .steps { text-align: left; margin: 0.5rem 0 0; padding: 1.2rem 1.4rem; list-style: none; counter-reset: step; display: grid; gap: 0.7rem; }
+  .steps li { counter-increment: step; display: flex; gap: .8rem; align-items: baseline; position: relative; }
+  .steps li::before { content: counter(step); flex: none; display: inline-grid; place-items: center; width: 1.65rem; height: 1.65rem; border: 1.5px solid var(--ink); border-radius: var(--u-r-sm); transform: skewX(var(--u-slant)); font: italic 800 .88rem/1 var(--u-display); }
+  .steps li > span.t { flex: 1; }
+  /* The hangout's chat (lib/voice/hangout.dart), beside the people on a wide screen, under them on a narrow one. */
+  .room { display: grid; gap: 1.25rem; grid-template-columns: 1fr; align-items: start; }
+  @media (min-width: 52rem) { .room { grid-template-columns: minmax(16rem, 22rem) 1fr; } }
+  .chat { padding: 1rem 1.1rem; display: flex; flex-direction: column; min-height: 18rem; max-height: 60vh; margin-top: 1rem; }
+  .chat > * { position: relative; z-index: 1; }
+  .chat h2 { font-size: 1.05rem; margin: 0 0 0.4rem; text-transform: uppercase; }
+  .chat ol { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+  .chat li { padding: 0.25rem 0; overflow-wrap: anywhere; }
+  .chat li .h { display: flex; gap: 0.5rem; align-items: baseline; margin-top: 0.5rem; }
+  .chat li .h b { font-size: 0.92rem; }
+  .chat li .h time { color: var(--ink2); font-size: 0.78rem; }
+  .chat li .del { margin-left: auto; background: none; color: var(--ink2); font-size: 0.8rem; padding: 0; }
+  .chat form { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+  .chat form button { padding: 0.6rem 1.2rem; font-size: 0.95rem; }
+  .chat .empty { color: var(--ink2); font-size: 0.92rem; margin: auto 0; text-align: center; }
+  .tag { font: italic 800 0.72rem/1.4 var(--u-display); letter-spacing: .03em; text-transform: uppercase; padding: 0.05rem 0.45rem; border-radius: 2px; border: 1px solid var(--rule); color: var(--ink2); }
+  .tag.strong { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .round:disabled { opacity: 0.4; cursor: default; }
+  [hidden] { display: none !important; }
+  dialog { padding: 1.5rem; color: var(--ink); max-width: min(26rem, calc(100% - 2rem)); }
+  dialog h2 { text-transform: uppercase; font-size: 1.5rem; }
+  dialog::backdrop { background: rgba(0,0,0,0.6); }
+  .u-bar .u-btn { margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="u-slot u-slot--bg u-stars backdrop" aria-hidden="true"><img class="u-slot-img" src="/art/space/join.webp" alt="" loading="lazy" onerror="this.remove()"></div>
+<header class="u-bar">
+  <div class="u-wrap">
+    <a class="u-brand" href="/"><img src="/art/uplink-logo.webp" width="1200" height="918" alt="Uplink"></a>
+    <a class="u-btn u-btn--solid u-btn--sm" href="/"><span>Get Uplink</span></a>
+  </div>
+</header>
+<main>
+
+  <!-- Not a hangout link. -->
+  <section id="bad" class="center" hidden>
+    <span class="u-kicker">Space link</span>
+    <h1>This link isn't a space</h1>
+    <p class="sub">Ask whoever sent it for the whole link: it ends with a long string of letters and numbers after a #.</p>
+  </section>
+
+  <!-- A circle's link: circles open in the app (lib/circles/circle.dart). Get the app copies the invite, which the app
+       finds the first time it is set up and opens the circle with (lib/circles/pending_link.dart); with the app here,
+       Open in Uplink hands it over (ghostmsg://join/#c.…). Matt, 2026-11-19: "make a route to allow people to
+       click a link on their phone or desktop to join a circle, have it prompt them to download the app if it's not
+       downloaded already and then have it redirect to the circle after they sign up for their account". -->
+  <section id="circle" class="center" hidden>
+    <span class="u-kicker">Circle invite</span>
+    <h1 id="circle-title">Circle</h1>
+    <p class="sub">You're invited to <b id="circle-name">a circle</b> on Uplink: a few people and their spaces, for chat and voice, texting and files.</p>
+    <ol class="steps card">
+      <li><span class="t"><b>Get Uplink</b> <span id="circle-for">for this device</span>.</span></li>
+      <li><span class="t"><b>Set it up</b>: pick a username, a minute or two.</span></li>
+      <li><span class="t"><b>You're in.</b> The app opens <span id="circle-name2">the circle</span> for you.</span></li>
+    </ol>
+    <div class="row" style="justify-content:center;margin-top:1.25rem">
+      <a class="primary" id="circle-get" href="/">Get Uplink</a>
+      <a class="quiet" id="circle-open" href="#">Open in Uplink</a>
+    </div>
+    <p class="note" id="circle-note" aria-live="polite"></p>
+    <p class="note">Set it up already? Open this link on that device, or paste it into the app (New › Join a circle by link). <button class="link" id="circle-copy">Copy link</button></p>
+  </section>
+
+  <!-- Before joining: who is here, your name, your microphone and camera. -->
+  <section id="lobby" hidden>
+    <span class="u-kicker lobby-kicker">Space invite</span>
+    <h1 id="title">Space</h1>
+    <p class="sub" id="here">Connecting…</p>
+    <div class="lobby">
+      <div class="preview" id="preview"><div class="face" id="preview-face">?</div></div>
+      <div class="row">
+        <button class="round on" id="lobby-mic" aria-label="Microphone on"></button>
+        <button class="round" id="lobby-cam" aria-label="Camera off"></button>
+        <span class="note" id="devices"></span>
+      </div>
+      <div class="card">
+        <label for="name">Your name</label>
+        <input type="text" id="name" maxlength="40" autocomplete="nickname" placeholder="Guest">
+        <p class="note" id="who-note">You join as a guest. Nobody needs your number or an account.</p>
+        <p class="note"><button class="link" id="signup-open">Sign up with a username</button></p>
+      </div>
+      <div class="row">
+        <button class="primary" id="join">Join</button>
+      </div>
+      <p class="error" id="lobby-error" hidden></p>
+      <p class="note">What's said here goes between the people in the space, sealed with a key from this link. Our server only helps you find each other.</p>
+      <!-- Someone texted this link from the app (Matt, 2026-11-17: "a link that eventually follows through after they
+           setup their account"): the app is the other way in, with the invite kept for them. -->
+      <p class="note">Rather use the app? <a href="/">Get Uplink</a> and set it up: once you verify your phone number in it, your invite will be waiting.</p>
+    </div>
+  </section>
+
+  <!-- In the hangout. -->
+  <section id="call" hidden style="display:flex;flex-direction:column;flex:1">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <h1 id="call-title" style="margin-top:1.25rem">Space</h1>
+        <p class="sub" id="call-here" style="margin:0"></p>
+      </div>
+      <button class="quiet" id="copy">Copy link</button>
+    </div>
+    <div class="grid" id="tiles"></div>
+    <div class="room">
+      <ul class="people" id="people"></ul>
+      <section class="chat" aria-label="Chat">
+        <h2>Chat</h2>
+        <ol id="messages"></ol>
+        <p class="empty" id="no-messages">No messages yet</p>
+        <form id="say"><input type="text" id="said" maxlength="4000" placeholder="Message" autocomplete="off" aria-label="Message"><button class="primary">Send</button></form>
+        <p class="note" id="no-chat" hidden>Your role can’t send messages here.</p>
+      </section>
+    </div>
+    <div style="flex:1"></div>
+    <p class="error" id="call-error" hidden></p>
+    <div class="bar"><div class="dock">
+      <button class="round" id="mic" aria-label="Mute"></button>
+      <button class="round" id="cam" aria-label="Turn video on"></button>
+      <button class="round leave" id="leave" aria-label="Leave"></button>
+    </div></div>
+  </section>
+
+  <!-- Left. -->
+  <section id="left" class="center" hidden>
+    <h1 id="left-title">You left the space</h1>
+    <p class="sub" id="left-why">It stays open: come back any time with the same link.</p>
+    <button class="primary" id="rejoin">Join again</button>
+  </section>
+</main>
+
+<dialog id="signup">
+  <h2 style="margin-top:0">Sign up</h2>
+  <p class="note" style="margin-top:0">A username people can find you by on Uplink. It's tied to this browser: there's no password, and nothing else about you is kept.</p>
+  <label for="username" style="margin-top:1rem">Username</label>
+  <input type="text" id="username" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="maya">
+  <p class="error" id="signup-error" hidden></p>
+  <div class="row" style="margin-top:1rem;justify-content:flex-end">
+    <button class="quiet" id="signup-cancel">Not now</button>
+    <button class="primary" id="signup-claim">Claim it</button>
+  </div>
+</dialog>
+
+<script type="module">
+import { readLink, readCircleLink, identity, connectHub, Hangout, Chat } from './voice.js';
+
+const $ = (id) => document.getElementById(id);
+const icons = {
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></svg>',
+  micOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M16.95 16.95A7 7 0 0 1 5 12v-2"/><path d="M18.89 13.23A7 7 0 0 0 19 12v-2"/><path d="m2 2 20 20"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/></svg>',
+  cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+  camOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.66 6H14a2 2 0 0 1 2 2v2.5l5.248-3.062A.5.5 0 0 1 22 7.87v8.196"/><path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="m2 2 20 20"/></svg>',
+  leave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.1 13.9a14 14 0 0 0 3.732 2.668 1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2 18 18 0 0 1-12.728-5.272"/><path d="M22 2 2 22"/><path d="M4.76 13.582A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 .244.473"/></svg>',
+};
+const show = (id) => { for (const s of ['bad', 'circle', 'lobby', 'call', 'left']) $(s).hidden = s !== id; };
+const store = { get: (k) => { try { return localStorage.getItem(k) ?? ''; } catch (_) { return ''; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} } };
+const initial = (n) => (n.replace('@', '').trim()[0] ?? '?').toUpperCase();
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+// A circle's link: said what it is, and the way to the app (Matt, 2026-11-17: circles, "simpler and easier to digest").
+const circle = readCircleLink(location.hash);
+if (circle) {
+  document.title = circle.name + ' · Uplink';
+  $('circle-title').textContent = 'Join ' + circle.name;
+  $('circle-name').textContent = circle.name;
+  $('circle-name2').textContent = circle.name;
+  // Which device this is: its download, from the release's own feed (tool/release*.mjs), as the home page has them.
+  const ua = navigator.userAgent;
+  const iphone = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const kind = /Android/.test(ua) ? 'apk' : iphone ? null : /Mac OS X|Macintosh/.test(ua) ? 'mac' : /Windows/.test(ua) ? 'windows' : null;
+  const where = { apk: 'for Android', mac: 'for Mac', windows: 'for Windows' };
+  const files = { apk: '/ghost-messaging.apk', mac: '/ghost-messaging-mac.dmg', windows: '/ghost-messaging-setup.exe' };
+  if (kind) {
+    $('circle-for').textContent = where[kind];
+    $('circle-get').textContent = 'Get Uplink ' + where[kind];
+    $('circle-get').href = files[kind];
+    fetch('/' + (kind === 'apk' ? 'apk' : kind) + '.json', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      // The Mac's is the disk image where the release made one; mac.json's url stays the zip installed copies update from.
+      .then((info) => {
+        const file = info && info.dmg && /^[A-Za-z0-9._-]+$/.test(info.dmg.url) ? info.dmg : info;
+        if (file && /^[A-Za-z0-9._-]+$/.test(file.url)) $('circle-get').href = '/' + file.url;
+      })
+      .catch(() => {});
+  } else {
+    // An iPhone, or anything else: the home page, which says what there is for it.
+    $('circle-for').textContent = 'from gogho.st';
+  }
+  // The app's own scheme, which the Android, Mac and Windows apps take (lib/desktop/links.dart, MainActivity.kt).
+  const own = 'ghostmsg://join/' + location.hash;
+  if (iphone) $('circle-open').hidden = true;
+  $('circle-open').href = own;
+  const say = (words) => { $('circle-note').textContent = words; };
+  // A circle on a relay other than Uplink's (the link says which, lib/invites/link_relay.dart): the app has to
+  // use that relay to join it, and says so itself where it doesn't.
+  if (circle.relay) say(circle.name + ' is on the relay ' + circle.relay + '. In Uplink, use that relay first (Settings › Routes › Relay server), then open this link.');
+  // Get the app: the invite copied as it goes, for the app to find once it is set up.
+  $('circle-get').addEventListener('click', () => {
+    const done = () => say('Your invite is copied. Install Uplink and open it: once it\'s set up, it takes you to ' + circle.name + '.');
+    try {
+      navigator.clipboard.writeText(location.href).then(done, () => say('Once Uplink is set up, come back and press Open in Uplink.'));
+    } catch (_) {
+      say('Once Uplink is set up, come back and press Open in Uplink.');
+    }
+  });
+  // Open: where nothing took it (the app isn't here), said so.
+  $('circle-open').addEventListener('click', () => {
+    let left = false;
+    const away = () => { left = true; };
+    window.addEventListener('blur', away, { once: true });
+    document.addEventListener('visibilitychange', away, { once: true });
+    setTimeout(() => {
+      if (!left && !document.hidden) say('Nothing opened? Uplink isn\'t on this device yet: get it above, and your invite comes with it.');
+    }, 1800);
+  });
+  $('circle-copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(location.href); $('circle-copy').textContent = 'Copied'; setTimeout(() => ($('circle-copy').textContent = 'Copy link'), 1800); } catch (_) {}
+  };
+  show('circle');
+  throw new Error('a circle link');
+}
+const link = readLink(location.hash);
+if (!link) { show('bad'); throw new Error('not a hangout link'); }
+// A texting or Files space has no voice: its chat alone, with no microphone or camera asked for.
+// An open space is a call too: here, with no floor, everyone is heard whole (lib/voice/open_space.dart).
+const chatOnly = link.kind !== 'voice' && link.kind !== 'open';
+document.title = link.name + ' · Uplink';
+for (const id of ['title', 'call-title']) $(id).textContent = link.name;
+if (chatOnly) {
+  for (const id of ['lobby-mic', 'lobby-cam', 'devices', 'preview', 'tiles', 'people', 'mic', 'cam']) $(id).hidden = true;
+  $('join').textContent = 'Open the chat';
+  if (link.kind === 'files') $('no-messages').textContent = 'No messages yet. The files themselves are in the app.';
+}
+show('lobby');
+
+// The hub is this site's own, unless the space is on another relay, which its link names (lib/invites/link_relay.dart:
+// its hub is asked, since a space is a room on the relay it was made on), or a test names one (?hub=ws://…).
+const hubUrl = new URLSearchParams(location.search).get('hub') ?? (link.relay ? `wss://${link.relay}/hub` : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/hub`);
+let username = store.get('ghost-voice-username');
+$('name').value = store.get('ghost-voice-name') || (username ? '@' + username : '');
+const me = await identity(true);
+let hub, hangout, chat;
+let wantMic = true, wantCam = false, preview = null;
+
+function rename() {
+  $('preview-face').textContent = initial($('name').value || 'Guest');
+  $('who-note').textContent = username ? `Signed up as @${username}.` : 'You join as a guest. Nobody needs your number or an account.';
+  $('signup-open').hidden = !!username;
+}
+rename();
+$('name').addEventListener('input', rename);
+
+function paintToggles() {
+  $('lobby-mic').innerHTML = wantMic ? icons.mic : icons.micOff;
+  $('lobby-mic').classList.toggle('on', !wantMic);
+  $('lobby-mic').setAttribute('aria-label', wantMic ? 'Microphone on' : 'Microphone off');
+  $('lobby-cam').innerHTML = wantCam ? icons.cam : icons.camOff;
+  $('lobby-cam').classList.toggle('on', wantCam);
+  $('lobby-cam').setAttribute('aria-label', wantCam ? 'Camera on' : 'Camera off');
+  $('devices').textContent = (wantMic ? 'Microphone on' : 'Muted') + ' · ' + (wantCam ? 'camera on' : 'camera off');
+}
+paintToggles();
+$('lobby-mic').onclick = () => { wantMic = !wantMic; paintToggles(); };
+$('lobby-cam').onclick = async () => {
+  wantCam = !wantCam;
+  paintToggles();
+  if (wantCam) {
+    try {
+      preview = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'user' } });
+      const v = document.createElement('video');
+      Object.assign(v, { autoplay: true, muted: true, playsInline: true, srcObject: preview });
+      $('preview').replaceChildren(v);
+    } catch (e) {
+      wantCam = false;
+      paintToggles();
+      error('lobby-error', 'The camera couldn’t be opened: ' + e.message);
+    }
+  } else {
+    for (const t of preview?.getTracks() ?? []) t.stop();
+    preview = null;
+    $('preview').replaceChildren(Object.assign(document.createElement('div'), { className: 'face', id: 'preview-face', textContent: initial($('name').value || 'Guest') }));
+  }
+};
+
+function error(id, words) { $(id).textContent = words; $(id).hidden = !words; }
+
+async function connect() {
+  try {
+    hub = await connectHub(hubUrl, me);
+    // A texting or Files space has no call room: it is never looked at.
+    if (!chatOnly) {
+      hangout = new Hangout(hub, link.seed, paint);
+      await hangout.prepare();
+    }
+    // The hangout's chat and roles, in a room of their own beside the call's.
+    chat = new Chat(hub, link.seed, link.owner, paint);
+    await chat.prepare();
+    if (hangout) hangout.refuse = (id) => chat.roster.banned(id);
+  } catch (e) {
+    $('here').textContent = 'The relay server can’t be reached right now.';
+    error('lobby-error', e.message);
+  }
+}
+await connect();
+// For tool/voicebench/join_test.mjs: the hangout as it stands.
+window.ghostHangout = () => hangout;
+window.ghostChat = () => chat;
+
+function paint() {
+  if (chatOnly) return paintChatOnly();
+  if (!hangout) return;
+  const n = hangout.here.length;
+  $('here').textContent = n === 0 ? 'Nobody is here yet. Be the first.' : plural(n, 'person is', 'people are') + ' here.';
+  if (!hangout.joined) return;
+  // Put out by a moderator, or banned: leave, and say why.
+  if (chat?.putOut) {
+    hangout.leave();
+    chat.close();
+    $('left-title').textContent = chat.putOut;
+    $('left-why').textContent = chat.putOut.includes('banned') ? 'You can’t come back to this space.' : 'You can come back with the same link.';
+    $('rejoin').hidden = chat.putOut.includes('banned');
+    show('left');
+    return;
+  }
+  // What this browser's role allows: speaking, video (lib/voice/roles.dart).
+  const mayTalk = !chat || chat.heard(chat.me), mayShow = !chat || chat.can('video');
+  if (!mayTalk && !hangout.muted) hangout.setMuted(true);
+  if (!mayShow && hangout.video) hangout.setVideo(false);
+  $('mic').disabled = !mayTalk;
+  $('cam').disabled = !mayShow;
+  const people = hangout.members.size + 1;
+  $('call-here').textContent = people === 1 ? 'Just you so far' : plural(people, 'person', 'people') + ' here';
+  $('mic').innerHTML = hangout.muted ? icons.micOff : icons.mic;
+  $('mic').classList.toggle('on', hangout.muted);
+  $('mic').setAttribute('aria-label', hangout.muted ? 'Unmute' : 'Mute');
+  $('cam').innerHTML = hangout.video ? icons.cam : icons.camOff;
+  $('cam').classList.toggle('on', hangout.video);
+  $('cam').setAttribute('aria-label', hangout.video ? 'Turn video off' : 'Turn video on');
+  $('leave').innerHTML = icons.leave;
+  const everyone = [{ id: 'me', name: (hangout.name || 'Guest') + ' (you)', muted: hangout.muted, stream: hangout.cam, me: true }];
+  for (const [id, m] of hangout.members) everyone.push({ id, name: m.name || 'Someone', guest: m.guest, muted: m.muted, stream: m.video ? m.stream : null, audio: m.stream });
+  // Everyone as a list; a picture only for whoever has video on (Matt, 2026-11-15: "make the voice chats a list of
+  // participants don't show the squares unless someone turns on video"). Sound plays from the list's rows.
+  const list = $('people');
+  const keptRows = new Map([...list.children].map((el) => [el.dataset.id, el]));
+  list.replaceChildren(...everyone.map((p) => {
+    let li = keptRows.get(p.id);
+    if (!li) {
+      li = document.createElement('li');
+      li.dataset.id = p.id;
+      li.innerHTML = '<span class="face2"><i></i><i></i><i></i><b></b></span><span class="n"></span><small class="g"></small><span class="m"></span>';
+      if (!p.me) { const a = document.createElement('audio'); a.autoplay = true; li.append(a); }
+    }
+    li.querySelector('b').textContent = initial(p.name);
+    li.querySelector('.n').textContent = p.name;
+    const id = p.me ? chat?.me : p.id;
+    const role = chat && id ? chat.roster.roleOf(id) : null, owner = chat && id ? chat.roster.isOwner(id) : false;
+    const shown = owner ? 'Owner' : role && role.id !== (chat.roster.j.n ?? 'member') ? role.n : '';
+    li.querySelector('.g').innerHTML = (p.guest ? 'guest' : '') + (shown ? `${p.guest ? ' ' : ''}<span class="tag${owner || role?.id === 'admin' ? ' strong' : ''}"></span>` : '');
+    if (shown) li.querySelector('.tag').textContent = shown;
+    // Muted for everyone, or a role that may not speak: not played here either.
+    const silenced = !p.me && chat && !chat.heard(p.id);
+    li.querySelector('.m').innerHTML = p.muted || silenced ? icons.micOff : '';
+    li.classList.toggle('talking', !p.muted && !silenced && (levels.get(p.id) ?? 0) > 0.04);
+    const a = li.querySelector('audio');
+    if (a && p.audio && a.srcObject !== p.audio) a.srcObject = p.audio;
+    if (a) a.muted = !!silenced;
+    return li;
+  }));
+  const tiles = everyone.filter((p) => p.stream);
+  const box = $('tiles');
+  const kept = new Map([...box.children].map((el) => [el.dataset.id, el]));
+  const order = [];
+  for (const t of tiles) {
+    let el = kept.get(t.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'tile' + (t.me ? ' me' : '');
+      el.dataset.id = t.id;
+      el.innerHTML = '<div class="face"></div><div class="who"><span class="n"></span><small class="g"></small><span class="m"></span></div>';
+    }
+    el.querySelector('.face').textContent = initial(t.name);
+    el.querySelector('.n').textContent = t.name;
+    el.querySelector('.g').textContent = t.guest ? 'guest' : '';
+    el.querySelector('.m').innerHTML = t.muted ? icons.micOff : '';
+    let v = el.querySelector('video');
+    if (t.stream) {
+      if (!v) { v = document.createElement('video'); Object.assign(v, { autoplay: true, playsInline: true, muted: true }); el.prepend(v); }
+      if (v.srcObject !== t.stream) v.srcObject = t.stream;
+    } else if (v) v.remove();
+    el.classList.toggle('has-video', !!t.stream);
+    order.push(el);
+  }
+  box.replaceChildren(...order);
+  paintChat();
+  if (hangout.lost) error('call-error', 'The connection to the relay server was lost. Leave and join again.');
+}
+
+// A texting or Files space: who is in its chat, and the chat; no call.
+function paintChatOnly() {
+  $('here').textContent = link.kind === 'files' ? 'A Files space: its chat is here, its files in the app.' : 'A texting space: a chat, no voice.';
+  if (!chat?.opened) return;
+  if (chat.putOut) {
+    chat.close();
+    $('left-title').textContent = chat.putOut;
+    $('left-why').textContent = chat.putOut.includes('banned') ? 'You can’t come back to this space.' : 'You can come back with the same link.';
+    $('rejoin').hidden = chat.putOut.includes('banned');
+    show('left');
+    return;
+  }
+  const n = chat.present?.size ?? 0;
+  $('call-here').textContent = n === 0 ? 'Just you so far' : plural(n + 1, 'person', 'people') + ' here';
+  paintChat();
+}
+
+// The chat: newest at the foot, a name over each run of one person's messages, Delete where this browser may.
+const clock = (at) => new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+let painted = '';
+function paintChat() {
+  if (!chat) return;
+  const may = chat.can('chat');
+  $('say').hidden = !may;
+  $('no-chat').hidden = may;
+  const key = chat.messages.map((m) => m.id).join() + '|' + chat.roster.version;
+  if (key === painted) return;
+  painted = key;
+  const list = $('messages');
+  const atFoot = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+  list.replaceChildren(...chat.messages.map((m, i) => {
+    const li = document.createElement('li');
+    if (i === 0 || chat.messages[i - 1].f !== m.f) {
+      const h = document.createElement('div');
+      h.className = 'h';
+      const b = document.createElement('b');
+      b.textContent = m.f === chat.me ? 'You' : (m.n || 'Someone');
+      const t = document.createElement('time');
+      t.textContent = clock(m.at);
+      h.append(b, t);
+      li.append(h);
+    }
+    const x = document.createElement('div');
+    x.textContent = m.x;
+    li.append(x);
+    if (chat.canDelete(m)) {
+      const d = Object.assign(document.createElement('button'), { className: 'del', textContent: 'Delete', type: 'button' });
+      d.onclick = () => chat.remove(m);
+      (li.querySelector('.h') ?? li).append(d);
+    }
+    return li;
+  }));
+  $('no-messages').hidden = chat.messages.length > 0;
+  if (atFoot) list.scrollTop = list.scrollHeight;
+}
+$('say').onsubmit = (e) => {
+  e.preventDefault();
+  if (chat?.send($('said').value)) $('said').value = '';
+};
+
+// How loud each one is, a few times a second (WebRTC's audioLevel), for the rippling faces.
+const levels = new Map();
+setInterval(async () => {
+  if (!hangout?.joined) return;
+  for (const [id, pc] of hangout.peers) {
+    for (const s of (await pc.getStats()).values()) {
+      if (s.type === 'inbound-rtp' && s.kind === 'audio' && typeof s.audioLevel === 'number') levels.set(id, s.audioLevel);
+      if (s.type === 'media-source' && s.kind === 'audio' && typeof s.audioLevel === 'number') levels.set('me', s.audioLevel);
+    }
+  }
+  paint();
+}, 200);
+
+$('join').onclick = async () => {
+  const name = $('name').value.trim() || (username ? '@' + username : 'Guest');
+  store.set('ghost-voice-name', $('name').value.trim());
+  $('join').disabled = true;
+  error('lobby-error', '');
+  try {
+    if (!hub?.up) await connect();
+    for (const t of preview?.getTracks() ?? []) t.stop();
+    preview = null;
+    if (chat?.putOut) throw new Error(chat.putOut);
+    chat?.open({ name, guest: !username, username });
+    if (!chatOnly) await hangout.join({ name, guest: !username, username, audio: wantMic, video: wantCam && (!chat || chat.can('video')) });
+    show('call');
+    paint();
+  } catch (e) {
+    error('lobby-error', e.name === 'NotAllowedError' ? 'Allow the microphone to join: your browser asks for it.' : e.message);
+  } finally {
+    $('join').disabled = false;
+  }
+};
+$('mic').onclick = () => hangout.setMuted(!hangout.muted);
+$('cam').onclick = () => hangout.setVideo(!hangout.video).catch((e) => error('call-error', 'The camera couldn’t be opened: ' + e.message));
+$('leave').onclick = () => { if (!chatOnly) hangout.leave(); chat?.close(); show('left'); };
+$('rejoin').onclick = () => { show('lobby'); paint(); };
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(location.href); $('copy').textContent = 'Copied'; setTimeout(() => ($('copy').textContent = 'Copy link'), 1800); } catch (_) {}
+};
+addEventListener('beforeunload', () => { if (hangout?.joined) hangout.leave(); chat?.close(); });
+
+// Sign up: a username on the relay's directory, for this browser's key.
+$('signup-open').onclick = () => { error('signup-error', ''); $('signup').showModal(); };
+$('signup-cancel').onclick = () => $('signup').close();
+$('signup-claim').onclick = async () => {
+  const want = $('username').value.trim().toLowerCase().replace(/^@+/, '');
+  if (!/^[a-z0-9][a-z0-9._]{2,19}$/.test(want) || want.includes('..')) return error('signup-error', 'A username is 3 to 20 letters, numbers, dots or underscores.');
+  try {
+    const got = await hub.dir({ dir: 'claim', name: want }, 'claim');
+    if (!got.ok) return error('signup-error', got.err === 'taken' ? `@${want} is taken.` : 'That username can’t be used.');
+    username = want;
+    store.set('ghost-voice-username', want);
+    if (!$('name').value.trim()) $('name').value = '@' + want;
+    rename();
+    $('signup').close();
+  } catch (e) {
+    error('signup-error', e.message);
+  }
+};
+</script>
+</body>
+</html>

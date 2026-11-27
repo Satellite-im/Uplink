@@ -1,0 +1,43 @@
+<p>A Files space is a circle's shared folder: upload files, put them in folders, and open them on any device. Every file is sealed end to end before it leaves your device, so the server keeps only locked pieces it can't open.</p>
+
+<h2 id="add">Add files</h2>
+<p>Open the Files space and tap <b>Upload</b>. On a computer, you can also drag files onto it. Big files go up in pieces and carry on after the app is closed and opened again.</p>
+<p>An upload that stopped part way and can't carry on (a file sent from a space's chat, or one from before the app was reinstalled) shows at the top of the space as <b>Unfinished upload</b>, with how much of it got there. It holds its room in the space until it is removed, or for a day after its last piece. Whoever started it and the space's owner can remove it to free that room, then add the file again.</p>
+<m-screen title="Shared" back actions="search,plus">
+  <m-tabs items="List|Grid" active="List"/>
+  <m-section>
+    <m-row icon="folder" hue="amber" label="Trip" hint="8 files" chev/>
+    <m-row icon="file-text" hue="blue" label="menu.pdf" hint="1.2 MB · Maya"/>
+    <m-row icon="film" hue="purple" label="Highlights.mp4" hint="840 MB · Jo"/>
+  </m-section>
+  <m-btn kind="primary" icon="hard-drive-upload" tap>Upload</m-btn>
+</m-screen>
+
+<h2 id="organise">Folders, moving and renaming</h2>
+<p>Press and hold a file or folder for its menu:</p>
+<m-screen>
+  <m-menu title="Highlights.mp4">
+    <m-item icon="folder-input">Move to folder</m-item>
+    <m-item icon="pencil">Rename</m-item>
+    <m-item icon="share-2">Share</m-item>
+    <m-item icon="film">Watch together in the call</m-item>
+    <m-item icon="trash-2" danger>Delete</m-item>
+  </m-menu>
+</m-screen>
+<p>Make a folder with <b>New folder</b>; folders can sit inside folders. Who may add, rename and delete files is up to the circle's <a href="/docs/roles/">roles</a>: people with <b>Share files</b> can add, and moderators can rename or delete anyone's.</p>
+
+<h2 id="video">Videos</h2>
+<p>MP4 and MKV videos play in the app and start straight away, streaming as they play. Where a file has more than one soundtrack or subtitles, the player lets you choose. In a call with <a href="/docs/watch-together/">Watch together</a> on, a video can play for everyone at once.</p>
+
+<h2 id="share-in">Sharing in from other apps</h2>
+<p>Share a file from another app to Uplink and pick a Files space to put it in. There needs to be a Files space first.</p>
+
+<h2 id="my-files">My files</h2>
+<p><b>My files</b> is a drive of your own, in no circle or space. It is the row under the search in your list of conversations, once you are signed in to an Uplink account. It works as a Files space does (upload, folders, videos), and nobody else is in it: it has no chat, no invites and no roles.</p>
+<p>Every device signed in to your account shows the same files. The drive's keys are made from your account's recovery words on each device, so nothing has to be passed between your devices, and the server keeps only locked pieces it can't open. A computer linked to a phone is not given the words, so My files opens there once you sign in to your account on it.</p>
+<p>To put one of your files in a chat, press and hold it and choose <b>Send to a chat</b>, then pick a space. The file is sent into that space's chat as any file is. Chats with friends can't carry files yet. In a browser, save the file and add it to the chat from there.</p>
+<p id="sync-a-folder">On a computer (Mac, Windows or Linux), <b>Sync a folder</b> at the top of My files keeps a folder of yours in step with it. Files that are new or changed in the folder go up, and files new or changed in My files come down, while the app is open. Nothing is removed by syncing: a file you remove on one side stays on the other, so it comes back; remove it in both places to be rid of it. Where a file was changed on both sides, both are kept, the other one beside yours as "name (from My files)". Hidden files, links, and files too big for My files are left out, and the line under the folder's path says so. The folder is this computer's choice alone; <b>Stop syncing</b> ends it and removes nothing.</p>
+<p>My files holds as much as one Files space does, shown at the foot of the page. The server lets go of a drive that no device of yours has opened the app on for ninety days.</p>
+
+<h2 id="limits">Sizes and space</h2>
+<p>A file can be very large (tens of gigabytes), and each space shows how much room it has left. Recordings from <a href="/docs/record-call/">Record call</a> can be saved into a Files space by themselves.</p>

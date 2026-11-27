@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/widget_bg"
+    android:gravity="center" android:orientation="vertical" android:padding="10dp">
+    <LinearLayout android:id="@+id/widget_people_one" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:gravity="center" android:orientation="horizontal" />
+    <LinearLayout android:id="@+id/widget_people_two" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:gravity="center" android:orientation="horizontal" />
+    <TextView android:id="@+id/widget_empty" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center" android:text="No one written to yet" android:textColor="@color/widget_ink2"
+        android:textSize="13sp" />
+</LinearLayout>

@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.infamousvague.ghostmessaging",
+      "sha256_cert_fingerprints": ["32:3E:0F:73:ED:D9:1B:03:EC:93:89:92:C0:0B:E7:F5:BF:D5:2D:36:E2:A9:E4:6A:6F:34:F0:4E:57:E2:6E:47"]
+    }
+  }
+]

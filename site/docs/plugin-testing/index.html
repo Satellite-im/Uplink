@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Try it in Developer mode · Uplink docs</title>
+<meta name="description" content="Load your plugin from a file, a link or the clipboard, try it on a text, reload it, and read what went wrong.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Build a plugin</div>
+    <h1>Try it in Developer mode</h1>
+    <p class="lede">Load your plugin from a file, a link or the clipboard, try it on a text, reload it, and read what went wrong.</p>
+    <p>Developer mode loads a plugin you're making straight onto your own device, unreviewed, so you can try it, change it and load it again before anyone else sees it. Everything here is in <span class="ui-path">Settings › Developer › Plugins in development</span>, and on each plugin's own page there.</p>
+
+<h2 id="developer">Developer mode</h2>
+<p>Turn it on with twelve taps on <span class="ui-path">Settings › About › Version</span> (<a href="/docs/plugin-quick-start/#on">how</a>). Plugins in development load only in Developer mode, and run only while it's on: switch it off and they stop, switch it back on and they're there again. While one is on, the list of conversations says so in a quiet line: <b>A plugin in development is on · Settings › Developer</b>. They show in the Marketplace too, under <span class="ui-path">Marketplace › In development</span> and as <b>In development · not reviewed</b> on their pages, so one never looks like a reviewed plugin.</p>
+<p>Tap a plugin's row in <span class="ui-path">Settings › Developer</span> for its page there: where this copy came from and when, its <b>Problems</b>, what it ran into <b>Lately</b>, <b>Try it</b>, its own settings once it's on, and <b>Reload</b>, <b>Open in the Marketplace</b>, <b>Submit it to the Marketplace</b> and <b>Remove</b>. Its page in the Marketplace leads back here, so changing it, reloading, trying it and reading what went wrong all happen in one place.</p>
+
+<h2 id="load">Three ways to load one</h2>
+<table>
+  <tr><th>Way</th><th>Android phone</th><th>Mac</th><th>Windows PC</th><th>iPhone</th></tr>
+  <tr><td><b>Load a plugin from a file</b></td><td>Yes, and a <code>.ghostplugin</code> file shared into the app loads too</td><td>Yes</td><td>No</td><td>No</td></tr>
+  <tr><td><b>Paste a plugin</b>: its words, copied from anywhere</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+  <tr><td><b>Load a plugin from a link</b></td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+</table>
+<ul>
+  <li>A link is <code>https</code> to anywhere, or plain <code>http</code> only to the device itself: <code>http://127.0.0.1</code> on Android, which reaches your computer through <code>adb reverse</code>, and <code>127.0.0.1</code>, <code>localhost</code> or <code>[::1]</code> on a computer. Anything else says "Use http://127.0.0.1 with adb reverse, or https."</li>
+  <li>A link may redirect three times, each to an address the same rule allows. It has 10 seconds to answer and 20 in all, and the file is at most 256 KB.</li>
+  <li>Each load says how it went: "Bills loaded", "Bills loaded. Switch it on to agree to what it can do now.", or what was wrong.</li>
+  <li>Loading a copy with the same id as one loaded already takes its place, switched on or off as that was.</li>
+  <li>An id a plugin from the Marketplace has on this device is refused: "Bills is installed from the Marketplace. Remove it there first, or give your copy another id."</li>
+</ul>
+<pre><code>python3 -m http.server 8080      # on your computer, in your plugin's folder
+adb reverse tcp:8080 tcp:8080    # then load http://127.0.0.1:8080/yours.ghostplugin on the phone</code></pre>
+
+<h2 id="try-it">Try it, and the samples</h2>
+<p>A plugin's page in <span class="ui-path">Settings › Developer</span> has <b>Try it</b>, which runs it on words you type as if they'd come from a number not in your contacts. Nothing is sent, no text has to come, and it works on every platform, an iPhone's too.</p>
+<ul>
+  <li>Type the text, and who it's from if it matters (<code>72975</code> if you leave it). <b>Every switch on</b> tries it with all of its switches on.</li>
+  <li><b>Try it</b> says the tags it gave and what each kept, the tab or kind it goes to, its row's value and caption, the buttons it offers in each place, what it would do as the text came (mark read, silence), and how long it took.</li>
+  <li>Where a built-in plugin that's on would take the text first, it says which: "In this app, Kinds of text › Payment reminders takes this text first". That's <a href="/docs/plugin-rules/#sections">built-in plugins sorting first</a>; switch that kind off to let yours have it.</li>
+  <li><b>Try the samples</b> runs it on sixteen texts, and lists what it made of each one.</li>
+</ul>
+<table>
+  <tr><th>Sample</th><th>Bills makes it</th><th>Parcels makes it</th></tr>
+  <tr><td>Your bill is ready. Amount due: $45.20 by 3 Dec. Pay at example.com/pay</td><td>bill: $45.20, Bills</td><td></td></tr>
+  <tr><td>EnergyCo: your statement is ready to view online.</td><td>bill, Bills</td><td></td></tr>
+  <tr><td>Thank you for your payment of £30.00. It may take 2 days to show.</td><td>paid, Receipts</td><td></td></tr>
+  <tr><td>Payment of €12,50 received. Ref 88213.</td><td>paid: €12,50, Receipts</td><td></td></tr>
+  <tr><td>Reminder: minimum payment due on your card.</td><td>bill, Bills</td><td></td></tr>
+  <tr><td>Your council tax is due next week.</td><td></td><td></td></tr>
+  <tr><td>Your parcel has shipped! Tracking number: 1Z999AA10123456784</td><td></td><td>parcel, track: 1Z999AA10123456784, Parcels</td></tr>
+  <tr><td>Your order is out for delivery today.</td><td></td><td>parcel, Parcels</td></tr>
+  <tr><td>We tried to deliver your parcel. Missed delivery, rebook at example.com</td><td></td><td>parcel, Parcels</td></tr>
+  <tr><td>Good news, your order has been dispatched.</td><td></td><td></td></tr>
+  <tr><td>Your new blue parcel has shipped. Tracking no. JD014600006295117</td><td></td><td>parcel, track: JD014600006295117, Parcels</td></tr>
+  <tr><td>Your code is 482913. Don’t share it with anyone.</td><td></td><td></td></tr>
+  <tr><td>Are we still on for dinner on Friday?</td><td></td><td></td></tr>
+  <tr><td>Your appointment is on March 5th at 3pm. Reply C to cancel.</td><td></td><td></td></tr>
+  <tr><td>Congratulations! You have won a $500 gift card. Claim now: http://prize.example/win</td><td></td><td></td></tr>
+  <tr><td>Vote YES on Measure 12 this Tuesday. Paid for by Friends of the Park.</td><td></td><td></td></tr>
+</table>
+<p>Each sample is from <code>72975</code>, with the plugin alone and its settings as they start. A blank is nothing: no tags, no tab.</p>
+<p>Try it and Try the samples use the plugin's settings as they start, not what you've chosen on its page, and <b>Every switch on</b> turns its switches on, never a choice or words. So the council tax and dispatched samples come out blank here: Bills sorts the first only with <b>council tax</b> in <b>More words for bills</b>, and Parcels sorts the second only with <b>What counts as a parcel</b> on <b>Anything about shipping</b>. Try those on real texts once you've chosen them.</p>
+
+<h2 id="reload">Reload</h2>
+<p><b>Reload</b>, on a plugin's page, loads it again from where it came from: a link is fetched again, and a file loaded on a Mac is read again from where it is. A pasted plugin, or a file picked on Android, has no Reload: paste it or pick it again, and the new copy takes the old one's place.</p>
+<ul>
+  <li>A copy with problems doesn't take the place of one that works: the last good copy keeps running, and the new copy's problems are listed.</li>
+  <li>A copy whose id has changed is refused: "The copy's id is now billz: load it as a new plugin."</li>
+  <li>A copy that can do more than you agreed to, a new permission, a new link or a new tab, is switched off until you agree again: switching it on shows the sheet again, with what it can do now.</li>
+</ul>
+
+<h2 id="problems">Problems and errors</h2>
+<p>A plugin's page lists <b>Problems</b>, its newest copy's, each with its code, where it is in the file (<code>rules.tags[0].any[2]</code>, or nothing for the whole file) and what's wrong in words, and <b>Lately</b>: what it ran into while running, newest first, such as a button the app refused. A load that isn't JSON, or has no id the app can use, adds no row at all: a sheet lists its problems, with <b>Copy the problems</b>.</p>
+<p>Errors stop a plugin loading and being submitted, and its row counts them as problems. Warnings don't, and its row counts them apart (<b>1 warning</b>), but a reviewer sees them too:</p>
+<table>
+  <tr><th>Warning</th><th>What it means</th></tr>
+  <tr><td><code>broad_phrase</code></td><td>A phrase with no token that's one short word (four letters or fewer), or one like "your", "the" or "thanks": it matches far more texts than you mean.</td></tr>
+  <tr><td><code>description_link</code></td><td>The description has a web address in it.</td></tr>
+  <tr><td><code>unused_tag</code></td><td>A tag nothing uses: no condition, template or section reads it.</td></tr>
+  <tr><td><code>opens_links</code></td><td>It opens its link when a button is pressed: check that's your own page.</td></tr>
+</table>
+<table>
+  <tr><th>Error</th><th>What it means</th></tr>
+  <tr><td><code>too_large</code></td><td>The file is over 262,144 bytes.</td></tr>
+  <tr><td><code>too_deep</code></td><td>It's nested more than 8 deep.</td></tr>
+  <tr><td><code>bad_utf8</code>, <code>bad_json</code></td><td>It isn't UTF-8, or isn't JSON.</td></tr>
+  <tr><td><code>not_object</code></td><td>The file, a rule, a setting or a condition isn't an object.</td></tr>
+  <tr><td><code>format_unknown</code></td><td><code>format</code> is missing, or isn't <code>ghost-plugin/1</code>.</td></tr>
+  <tr><td><code>needs_newer_app</code></td><td><code>minApp</code> is newer than this app.</td></tr>
+  <tr><td><code>unknown_field</code></td><td>A key the format doesn't have, anywhere (a row's <code>title</code>, a section's <code>hidden</code> and a condition's <code>group</code> among them).</td></tr>
+  <tr><td><code>missing</code></td><td>A required field isn't there. To submit, that includes <code>icon</code>, <code>developer</code> and <code>support</code>.</td></tr>
+  <tr><td><code>wrong_type</code></td><td>A field is the wrong kind of JSON: a string where a list should be, say.</td></tr>
+  <tr><td><code>fraction</code></td><td>A number with a fraction or an exponent.</td></tr>
+  <tr><td><code>bad_text</code></td><td>Words that break <a href="/docs/plugin-format/#text">the rules for words</a>: a space at an end, a line break where there can't be one, an invisible character.</td></tr>
+  <tr><td><code>too_long</code>, <code>too_short</code></td><td>Words longer or shorter than they may be.</td></tr>
+  <tr><td><code>too_many</code>, <code>too_few</code></td><td>More or fewer of something than allowed: labels, links, settings, rules.</td></tr>
+  <tr><td><code>duplicate</code></td><td>The same thing twice where each must be different: keys, ids, labels, permissions, links, screenshots, a choice's values.</td></tr>
+  <tr><td><code>bad_id</code>, <code>id_reserved</code></td><td>The plugin's id breaks its pattern, or is <a href="/docs/plugin-format/#ids">one the app keeps</a>.</td></tr>
+  <tr><td><code>id_example</code></td><td>A submission with an example's id: "That's the example's id: give your plugin an id of its own."</td></tr>
+  <tr><td><code>bad_version</code></td><td><code>version</code> or <code>minApp</code> isn't three numbers with dots between.</td></tr>
+  <tr><td><code>bad_hue</code>, <code>bad_shelf</code>, <code>bad_label</code>, <code>bad_permission</code></td><td>Not one of <a href="/docs/plugin-format/#fields">the words the format takes</a>.</td></tr>
+  <tr><td><code>bad_icon_name</code></td><td>Not one of <a href="/docs/plugin-format/#names">the app's icon names</a>, or one kept for the app.</td></tr>
+  <tr><td><code>bad_icon</code></td><td>The icon isn't a square PNG of 64 to 512 pixels with only the chunks allowed, or is too large.</td></tr>
+  <tr><td><code>bad_url</code>, <code>bad_email</code></td><td><a href="/docs/plugin-format/#addresses">An address the format doesn't take</a>.</td></tr>
+  <tr><td><code>bad_shot</code></td><td>A <code>shots</code> entry isn't 64 lower-case hex characters.</td></tr>
+  <tr><td><code>bad_developer</code></td><td><code>developer</code> isn't a username, or has uplink, ghost, gogho, official, verified or support in it.</td></tr>
+  <tr><td><code>name_reserved</code></td><td>The name, or a section's label, is a built-in plugin's or one of their tabs' or kinds', even in look-alike letters, or has uplink, ghost or gogho in it.</td></tr>
+  <tr><td><code>bad_color</code></td><td>A face's colour isn't <code>#RRGGBB</code>.</td></tr>
+  <tr><td><code>bad_key</code></td><td>A setting's key, a section's key, a tag's name, an action's id or a choice's value breaks its pattern.</td></tr>
+  <tr><td><code>bad_slot</code>, <code>bad_verb</code></td><td>Not a place a button can go, or not something a button can do.</td></tr>
+  <tr><td><code>verb_fields</code></td><td>A button's fields are missing, or are ones its <code>do</code> doesn't take.</td></tr>
+  <tr><td><code>verb_not_here</code></td><td>A button in a place that can't take it: a <code>write</code> in the list's menu or on a row, a <code>move</code> in a message's menu or to a kind, a row's <code>tap</code> that isn't a copy.</td></tr>
+  <tr><td><code>unknown_setting</code>, <code>unknown_tag</code>, <code>unknown_section</code>, <code>unknown_action</code></td><td>A name for something the plugin doesn't have, or has of another kind. In a tag rule, a tag no earlier rule gives.</td></tr>
+  <tr><td><code>section_condition</code></td><td><code>section</code> in a condition that isn't a button's.</td></tr>
+  <tr><td><code>from_with_incoming</code></td><td><code>from</code> anywhere in a plugin with an incoming rule.</td></tr>
+  <tr><td><code>bad_link_when</code></td><td><code>from</code> anywhere in a plugin with a <code>link</code> button: in a tag rule's, a section's or a button's condition.</td></tr>
+  <tr><td><code>needs_permission</code>, <code>permission_unused</code></td><td>A rule uses a permission the plugin doesn't list, or it lists one nothing uses.</td></tr>
+  <tr><td><code>link_not_declared</code></td><td>A <code>link</code> button's address isn't the plugin's one link.</td></tr>
+  <tr><td><code>incoming_needs_toggle</code></td><td>An incoming rule's setting isn't a switch that starts off.</td></tr>
+  <tr><td><code>takes_nothing</code></td><td>A section's <code>takes</code> has neither <code>tagged</code> nor <code>from</code>.</td></tr>
+  <tr><td><code>tag_rule_no_trigger</code></td><td>A tag rule with nothing to start it.</td></tr>
+  <tr><td><code>leaves_main_on_filter</code></td><td><code>leavesMain</code> on a kind.</td></tr>
+  <tr><td><code>choice_default</code></td><td>A choice's <code>default</code> isn't one of its values.</td></tr>
+  <tr><td><code>header_full</code>, <code>slot_full</code></td><td>More than one button in the header, or three lines in a menu.</td></tr>
+  <tr><td><code>bad_template</code></td><td>A placeholder where none may be, a brace where none may be, or a <code>{…}</code> that isn't <code>{tag:name}</code>.</td></tr>
+  <tr><td><code>too_many_phrases</code>, <code>too_many_anchorless</code></td><td>Over 200 phrases, or over 8 without an anchor, in the plugin; or over 1,600 phrases in all of this device's plugins.</td></tr>
+  <tr><td><code>phrase_bad_text</code>, <code>phrase_bad_token</code>, <code>phrase_tokens_touch</code>, <code>phrase_token_touches_word</code>, <code>phrase_words_edge</code>, <code>phrase_url_followed</code>, <code>phrase_too_many_tokens</code>, <code>phrase_too_short</code></td><td>A phrase breaks <a href="/docs/plugin-phrases/#rules">one of its rules</a>.</td></tr>
+  <tr><td><code>empty_pack</code></td><td>No tag rule and no section.</td></tr>
+  <tr><td><code>too_many_issues</code></td><td>A hundred problems or more: the first 99 are listed, and this one says how many more. Fix those and check it again.</td></tr>
+  <tr><td><code>not_canonical</code></td><td>Only from the Marketplace: the file wasn't sent the way the app sends it.</td></tr>
+</table>
+<p>Loading can be refused for reasons outside the file too: <code>too_many_packs</code> (sixteen plugins on the device already), <code>id_installed</code> (the Marketplace's copy of that id is here), <code>id_changed</code> (a reload with another id), <code>bad_link</code> and <code>fetch_failed</code> (a link that isn't allowed, or didn't answer), and <code>dev_mode_off</code>.</p>
+
+<h2 id="api">From your computer, through the API</h2>
+<p>With the phone plugged in by USB and <span class="ui-path">Settings › API › Serve the API</span> on (<a href="/docs/developer/app-api/">Developer API</a>), a script can load, try and remove plugins in development:</p>
+<pre><code>adb forward tcp:8765 tcp:8765
+
+# Load it: the file's JSON as "pack" (or its words as a string, "text")
+printf '{"pack": %s}' "$(cat bills.ghostplugin)" | curl -s http://localhost:8765/api/plugins.devInstall \
+  -H 'Authorization: Bearer &lt;token&gt;' --data-binary @-
+
+# Only check it, loading nothing
+printf '{"dryRun": true, "pack": %s}' "$(cat bills.ghostplugin)" | curl -s http://localhost:8765/api/plugins.devInstall \
+  -H 'Authorization: Bearer &lt;token&gt;' --data-binary @-
+
+# What the phone's plugins that are on make of a text
+curl -s http://localhost:8765/api/filters.classify -H 'Authorization: Bearer &lt;token&gt;' \
+  -d '{"text": "Your bill is ready. Amount due: $45.20 by 3 Dec."}'
+
+# Remove it
+curl -s http://localhost:8765/api/plugins.devRemove -H 'Authorization: Bearer &lt;token&gt;' -d '{"id": "bills"}'</code></pre>
+<ul>
+  <li><code>plugins.devInstall</code> answers <code>{"ok": true, "id": "bills", "plugin": "xbills", "on": false, "issues": []}</code> inside the API's own <code>result</code>. A plugin with problems isn't an error: it answers <code>"ok": false</code> with every one in <code>issues</code>.</li>
+  <li>It loads switched off. <code>"on": true</code> switches it on only where you've agreed on the phone to everything it can do already; otherwise it answers <code>"on": false</code> and <code>"needs": "consent on the phone"</code>. The phone says whenever a plugin was loaded from the API, so nobody with your token can load one unseen.</li>
+  <li><code>filters.classify</code> asks only the plugins that are on. A plugin first loaded from the API is off until you've agreed on the phone to what it can do: switch it on once in <span class="ui-path">Settings › Developer › Plugins in development</span>. After that a load with <code>"on": true</code> switches it on too. Until then <code>filters.classify</code> shows only the built-in plugins' tags.</li>
+  <li>Once it's on, <code>filters.classify</code> gives the tags under their names in the app (<code>xbills.bill</code>: <code>$45.20</code>) and the section it would go to: <code>xbills0bills</code>, or another plugin's where a built-in plugin takes it first (with Kinds of text on, the example bill goes to its <code>reminders</code>).</li>
+  <li><code>plugins.list</code> says each plugin's <code>source</code> (<code>builtIn</code>, <code>reviewed</code> or <code>dev</code>) and <code>version</code>.</li>
+  <li>With Developer mode off they answer "Turn on developer mode first: tap Settings › About › Version twelve times."</li>
+</ul>
+
+<h2 id="seen">Which texts a plugin sees</h2>
+<p>A plugin sees only texts from one person not in your contacts, in words known to be theirs, not sent with Uplink's encryption, and never chats on other networks, circles or spaces (<a href="/docs/plugin-rules/#sees">all of it</a>). When you test on real texts:</p>
+<ul>
+  <li>A text from someone in your contacts does nothing, nor does a group, or your own message.</li>
+  <li>A conversation you started that's had no answer yet isn't seen until something comes back.</li>
+  <li>A text with a sign-in code in it is tagged, and nothing more.</li>
+  <li><b>Try it</b> (on or off) and <code>filters.classify</code> (once it's on) always count as a stranger's text, so they're the quickest way to test.</li>
+</ul>
+
+<h2 id="next">Testing the next version of a listed plugin</h2>
+<p>Your copy in development and the Marketplace's copy of the same plugin can't both be on one device. To try your next version:</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Remove the Marketplace's copy</h3>
+<p>On its page in the Marketplace, tap <b>Remove</b>. Your choices for it are kept.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Load yours</h3>
+<p>Load your new version in <span class="ui-path">Settings › Developer › Plugins in development</span>, and try it as above.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Then put things back</h3>
+<p>When you're done, remove your copy there, and add the Marketplace's again from its page. Once your new version is approved, it's an update like anyone else's.</p>
+</div></li>
+</ol>
+
+    <nav class="prevnext"><a class="prev" href="/docs/plugin-permissions/"><small>Previous</small>What a plugin may do</a><a class="next" href="/docs/plugin-submit/"><small>Next</small>Submit it to the Marketplace</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#developer">Developer mode</a><a href="#load">Three ways to load one</a><a href="#try-it">Try it, and the samples</a><a href="#reload">Reload</a><a href="#problems">Problems and errors</a><a href="#api">From your computer, through the API</a><a href="#seen">Which texts a plugin sees</a><a href="#next">Testing the next version of a listed plugin</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

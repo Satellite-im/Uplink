@@ -1,0 +1,1518 @@
+/*
+ * The shell, and the app's own vocabulary. Component look comes from Glacier and colour from ink.css; this file
+ * arranges the phone's shell and names the values the modules share, so none of them writes its own copy:
+ *
+ * - the root's custom properties: the notch and home-indicator insets, the tab bar's heights, the gutter at each edge,
+ *   the type scale and its tracking, the one round control (`--app-ring`), the weight of a drawn line (`--app-line`),
+ *   the header's glass and the app's own movements (`--app-pop`, `--app-turn`, `--app-settle`);
+ * - the app's own pieces, which modules wear or compose: `.app-word`, the quiet button; `.app-unseen`, words for a
+ *   screen reader alone; `.app-eyebrow`, the small spaced capitals over a group (`.app-pill` and `.app-inverse` are
+ *   ink.css's, being made of ink);
+ * - the page itself, the Mac's title bar, the tab bar, the drag strip, the status bar's scrim, the scrollbar under a
+ *   header, the header's glass pane, the icon wash and the split window's columns.
+ *
+ * The page's edges under a header - the wisp and the desktop's blur strip - are art/wisp.css. In the cascade this
+ * comes after the kit's tokens and styles and before ink.css (src/main.tsx), and every CSS module after all of them.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* The app's accent (lib/accent.dart): what is pressed and chosen wears it - Send, a toggle's chosen tab, a
+     switch that is on, the page shown in the navigation pill. The page's ink and paper, unless the bubble colour
+     chosen everywhere is laid over them. */
+  --app-accent: var(--app-ink);
+  --app-on-accent: var(--app-paper);
+  /* The colours that mean something whatever the look (lib/kit/semantic_colors.dart): each was a hex in the Dart
+     where it was drawn, and keeps that hex here, so Uplink's own look is drawn as before; a look may name its own. */
+  --app-danger: #dd3a30;
+  --app-unread: #4f5bd5;
+  --app-chosen: #4f5bd5;
+  --app-info: #4f5bd5;
+  --app-online: #2fb35a;
+  --app-warn: #c27c00;
+  --app-pinned: #d38b00;
+  --app-text-selection: color-mix(in srgb, var(--app-chosen) 30%, transparent);
+  --app-sheet-scrim: #00000066;
+  --app-menu-scrim: #00000073;
+  /* Your bubbles while they are the look's own ('theme', lib/backgrounds.dart): white, Uplink's default, until a look
+     (at the end of this file) names its own. */
+  --app-bubble-mine: #FFFFFF;
+  --app-on-bubble-mine: #16181D;
+  /* The notch and home-indicator insets, named once so every surface that
+     hugs an edge reads the same number. Real values only arrive because the
+     viewport meta says viewport-fit=cover. */
+  --app-inset-top: env(safe-area-inset-top, 0px);
+  /*
+   * The app's own tab bar (.app-tabBar, notes/NoteTabs.tsx), 0 until a route
+   * turns it on (`data-tabs`). Matt: "I want the tab nav to be the same height
+   * and dimensions across every route so make it part of the main app layout".
+   * It used to be a row each screen's header carried, which made it as tall as
+   * that screen felt like being.
+   */
+  --app-tabs: 0px;
+  /*
+   * How tall one tab in that bar draws (notes/NoteTabs.module.css `.tab`): the workspace pill's own height - a line
+   * of `--glacier-font-size-sm`, 0.52em above and below it, and its 1px ring - plus the air the name gives it.
+   *
+   * Here rather than in the stylesheet that uses it, because the BAR has to be this tall too, and the bar's height is
+   * this file's. It was `2.25rem`, a number that stood for the tab row and did not follow it: the kit's type scale
+   * grows with the window, so a tab drew 34.2px on a phone and 36.4px on a widescreen, and on a widescreen it hung
+   * 2.8px past the bar's own hairline (Matt: "tabs are rendering below the header line on widescreen displays"). One
+   * expression, read by the tab and by the bar around it, cannot do that.
+   */
+  --app-tab-h: calc(var(--glacier-font-size-sm) * 2.04 + 2px + var(--glacier-space-1) * 2.6);
+  /*
+   * The app's one round control: every ring a thumb aims at is this across - the bar's sidebar button and arrows
+   * (notes/NoteTabs.module.css `.sidebar`, `.step`), the note's tools (editor/NoteScreen.module.css `.cog`) and the
+   * home page's dock (home/HomeScreen.module.css `.round`, `.speak`). A kit step multiplied, a notch under the step
+   * itself (Matt: "Make the bookmark, more button, speak and book a little bit smaller"), so Appearance > Spacing
+   * moves every ring together.
+   */
+  --app-ring: calc(var(--glacier-space-10) * 0.88);
+  /* The rail's rings and circles' faces: the pill's on a phone (Matt, 2026-11-20: "leave them the same size on mobile,
+     though"), a little smaller on a computer (below). */
+  --app-rail-ring: var(--app-ring);
+  /*
+   * The header's rings, a size under the app's (Matt, 2026-10-03, of the bar's people and bell buttons: "decrease the
+   * padding around the buttons in the header it's too much"): the bar's sidebar button, its arrows and its tools
+   * (notes/NoteTabs.module.css `.sidebar`, `.step`) and the note's tools portalled in beside them
+   * (editor/NoteScreen.module.css `.cog`). The glyphs keep their size; only the ground around them shrinks, from
+   * 35-44px to 30-37px. The home page's dock keeps `--app-ring`: it is a row of its own, under the thumb.
+   */
+  /*
+   * Smaller again, with less air over the row, so the header is condensed by default (Matt, 2026-10-17: "make the
+   * header of the app more condensed by default"): 30-37px became 28-34px.
+   */
+  --app-bar-ring: calc(var(--glacier-space-10) * 0.68);
+  /*
+   * And how tall the row above it draws: the round controls it holds, which are all `--app-bar-ring`.
+   *
+   * Derived for the same reason as the tab's: `3.5rem` stood for this row from when it held a 40px button, and the
+   * scale it is built on moves. Appearance > Spacing scales the space tokens, so these rings draw 27.4px at the
+   * tightest setting and 56.9px at the roomiest - 0.9px past the 56px the bar had set aside - and everything under
+   * them was pushed into the hairline. Both halves of the bar are their contents now, so neither can outgrow it.
+   */
+  --app-tab-top: var(--app-bar-ring);
+  /*
+   * And the air under the bar's last row. Nothing on a phone, where the bar is glass with no edge to sit against; on
+   * a desktop it is the same as the air over the first row, set below with the hairline it clears.
+   */
+  --app-tab-bottom: 0px;
+  /*
+   * What every screen's header clears at the top: the notch or the Mac's title
+   * bar, and the tab bar under it. Headers pad by this and the wisp measures
+   * them, so the bar arriving moves every screen down without one of them
+   * knowing it exists.
+   */
+  --app-safe-top: calc(var(--app-inset-top) + var(--app-tabs));
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  /*
+   * The page's gutter at each edge, notch included: what every screen and the bar pad by, and what anything reaching
+   * past the bar's padding has to give back (notes/NoteTabs.module.css `.tabs`). Named once so none of them can drift.
+   *
+   * Worked out here, at the root, from the root's `--app-gutter`. A surface that sets its own `--app-gutter` (a note
+   * drawn small, a book's preface, the reader's column, a mark's example) pads by `--app-gutter` itself, never by these.
+   */
+  --app-gutter-start: calc(var(--app-safe-left) + var(--app-gutter));
+  /*
+   * The top bar's own left inset, which is NOT the page's gutter (Matt: "Sidebar toggle sits too far in from the
+   * left the padding on the left is too much", and of the row below it, "There is not enough padding on the left of
+   * the tabs bar causing the groups to be placed too far up against the edge"). Two complaints about one edge from
+   * either side of it: the buttons were a gutter in at 22px and the first tab was 4px in, so nothing in the bar
+   * lined up with anything else in it. One value now, used by the bar's padding and by the row that bleeds past it
+   * (notes/NoteTabs.module.css `.tabs`), so a button's ground and the tab under it start at the same place.
+   *
+   * Kept under the wisp's reach: the smoke at the row's start is drawn over the first 20px of the row's own box
+   * (art/wispSides.ts), so an inset larger than that would bend empty padding and read as a plain dark gradient.
+   */
+  --app-bar-start: calc(var(--app-safe-left) + var(--glacier-space-3));
+  --app-gutter-end: calc(var(--app-safe-right) + var(--app-gutter));
+  /*
+   * The top bar's own end inset and the air over its first row: the page's gutter and a small step everywhere but the
+   * Mac, which sets both below so the three outer edges of the bar's buttons match.
+   */
+  --app-bar-end: var(--app-gutter-end);
+  --app-bar-top: var(--glacier-space-1);
+
+  /*
+   * THE TYPE SCALE. Glyph is typography first: the words are the interface,
+   * and chrome - cards, borders, icon rows - is kept to what a thumb needs.
+   * Every size is a kit step multiplied, never a new number, so a density or
+   * font change in the token layer still flows through; `--app-text-scale` is
+   * the reader's own dial, stamped by preferences.ts as `data-text-size`.
+   *
+   * This reverses DESIGN section 3.3, which held headings one step BELOW the
+   * kit map so a note would not read as a poster. Section 14 records why: the
+   * poster is now the point.
+   *
+   * The default is a tenth under the kit's own steps (Matt: "Default text size a bit too large"). Body is set a step
+   * above the kit's reading size, and 0.9 of that lands it halfway back towards it - measured, 21.8px to 19.6 at
+   * 1280 wide and 19.5px to 17.6 on a phone - with every heading and title coming down by the same tenth, so the
+   * note keeps its shape. Only the default rung moves: Larger and Largest below are what a person chose for their
+   * eyes, and they keep exactly the size they chose.
+   */
+  --app-text-scale: 0.9;
+  /* The screen title: one word, set big enough to be the whole header. */
+  --app-display: calc(var(--glacier-font-size-5xl) * 1.3);
+  /* A note's title in the list. */
+  --app-title: calc(var(--glacier-font-size-2xl) * var(--app-text-scale));
+  /* Words a person taps: Write, Speak, Done. */
+  --app-action: var(--glacier-font-size-xl);
+  /* The editor. Body is a full step above the kit's reading size. */
+  --app-body: calc(var(--glacier-font-size-lg) * var(--app-text-scale));
+  --app-h1: calc(var(--glacier-font-size-4xl) * var(--app-text-scale));
+  --app-h2: calc(var(--glacier-font-size-3xl) * var(--app-text-scale));
+  --app-h3: calc(var(--glacier-font-size-2xl) * var(--app-text-scale));
+  --app-h4: calc(var(--glacier-font-size-xl) * var(--app-text-scale));
+  --app-h5: calc(var(--glacier-font-size-lg) * var(--app-text-scale));
+  --app-h6: calc(var(--glacier-font-size-md) * var(--app-text-scale));
+  /* Large type needs less air between letters than the kit's reading sizes. */
+  --app-tracking-display: -0.045em;
+  --app-tracking-title: -0.025em;
+  /* And small capitals need more: the spaced label over a group (`.app-eyebrow`), and a step closer for one set a size
+     up or packed tighter. */
+  --app-tracking-caps: 0.08em;
+  --app-tracking-caps-close: 0.06em;
+  /* The page edge. Wide, because big type crowded against a bezel looks cheap. */
+  --app-gutter: var(--glacier-space-5);
+
+  /*
+   * The weight of a line the app draws on purpose - a ring round a round button, the outline on the thing chosen, a
+   * card's edge that says something - where the kit's hairline (1px) only separates.
+   */
+  --app-line: 1.5px;
+
+  /*
+   * The app's own movements, each a duration and a curve kept together because they are one gesture wherever it is
+   * used: a card or a chip popping in (the confirm card, Things to say, the recorder's chip once the words have
+   * moved); a round button's glyph turning when it is pressed (the home dock, the note's tools); and a line settling
+   * into place (the update and Academy cards, the recorder's landing). Fixed, as they always were: unlike the kit's
+   * durations they do not follow Settings › Appearance › Motion.
+   */
+  --app-pop: 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
+  --app-turn: 420ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  --app-settle: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-text-size='larger'] {
+  --app-text-scale: 1.15;
+}
+
+[data-text-size='largest'] {
+  --app-text-scale: 1.3;
+}
+
+/*
+ * Inter's optical sizes. At display sizes the text cut's open spacing and
+ * heavy details look loose; `opsz` swaps in the display drawing as the size
+ * grows, which is most of what makes a 60px word look set rather than scaled.
+ */
+html {
+  font-optical-sizing: auto;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+/*
+ * The quiet button every screen uses: a word, no box. The tap target stays
+ * finger-sized through padding, and the pressed state is a colour change a
+ * thumb can see without anything moving.
+ */
+.app-word {
+  appearance: none;
+  border: none;
+  background: none;
+  margin: 0;
+  padding: var(--glacier-space-2) 0;
+  min-block-size: var(--glacier-space-12);
+  font: inherit;
+  font-weight: var(--glacier-font-weight-medium);
+  color: var(--glacier-text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-word:active {
+  color: var(--glacier-text);
+}
+
+.app-word:disabled {
+  color: var(--glacier-text-subtle);
+  cursor: default;
+}
+
+.app-word:focus-visible {
+  outline: 2px solid var(--glacier-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--glacier-radius-sm);
+}
+
+/*
+ * Words for a screen reader alone: kept in the page, one pixel square and clipped to nothing, so they are read and
+ * never seen - a screen's name where it shows none, a word inside a round button, the input under a choice card.
+ * Modules take it with `composes: app-unseen from global` and add their own margin where they want one.
+ */
+.app-unseen {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * The small spaced capitals over a group or a card - "Things to say", a sheet's "Reading it", a command's heading -
+ * in the third ink, quieter than anything they head. Modules compose it (`composes: app-eyebrow from global`) and add
+ * their own margin or layout.
+ */
+.app-eyebrow {
+  margin: 0;
+  font-size: var(--glacier-font-size-xs);
+  font-weight: var(--glacier-font-weight-bold);
+  letter-spacing: var(--app-tracking-caps);
+  text-transform: uppercase;
+  color: var(--app-ink-3);
+}
+
+html,
+body {
+  margin: 0;
+  font-family: var(--glacier-font-sans);
+  color: var(--glacier-text);
+  background: var(--glacier-bg);
+  /* A phone shell never rubber-bands as a page; the scrolling surfaces are
+     inside the app and own their own overscroll. */
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* The shell owns the viewport and scrolls its own content. dvh, not vh: on a
+   phone vh is the LARGEST viewport (browser chrome hidden), so a 100vh root
+   sits behind the on-screen keyboard and the home indicator. */
+#root {
+  height: 100dvh;
+}
+
+/*
+ * The status bar's ground. The page is drawn edge to edge, so a list or a note
+ * scrolled up ran under the phone's clock and icons and they sat on words
+ * (Matt: "top content when scrolling intercepts the native top menu controls
+ * … We need a gradient to fix that at the top"). Solid paper across the bar
+ * and no further: a view scrolling under it has already gone to smoke by then
+ * (`--wisp-top-fade` reaches the bar's height in art/wispEdge.ts), so the old
+ * gradient tail below the bar is gone, and what the eye sees at the top of a
+ * page is the wisp dissolving rather than a black fade (Matt: "replace the
+ * areas where it's just a black fade and blur to use the wisp fade effect").
+ * Nothing can be touched through it, and it is zero high where there is no
+ * status bar, as on a desktop.
+ */
+/*
+ * The Mac app's title bar (core/platform.ts `data-titlebar`): the window draws under a transparent bar with no chrome
+ * of its own. The three native traffic lights sit in the tab bar's own control row now, inline with the sidebar button
+ * and the arrows, rather than in a strip of their own above it (Matt: "traffic light controls ... inline with the rest
+ * of the icons on the top bar removing the wasted space in the header"). So there is no title strip for the page to
+ * clear - the inset is nothing - and the tab bar keeps a gutter the width of the three lights at its start, which the
+ * native buttons are centred into (src-tauri/src/platform.rs `place_traffic_lights`). The whole row drags the window,
+ * as a title bar does (`.app-dragBar` behind the controls), and a double click zooms it.
+ */
+:root[data-titlebar='overlay'] {
+  --app-inset-top: 0px;
+  /* The room the three traffic lights take at the row's start; the first control begins after it (`.app-tabBar`). */
+  --app-traffic-lights: 72px;
+}
+
+/*
+ * The app's tab bar, on the routes that have one (App.tsx sets `data-tabs`):
+ * the open notes and the way to the rest of them, in one row of one height,
+ * the same on the list as on a note. It sits under the notch and over the
+ * screen's own header pane, which paints the glass behind it - the pane
+ * reaches the top of the phone because its padding starts below the bar.
+ *
+ * Its two heights are named once (`--app-tabs-one`, `--app-tabs-two`) and chosen by `data-tabs`, which the shell sets
+ * from the bar's style and whether a note is open (shell/topBar.ts `barRows`; docs/DESIGN.md §178). `--app-bar-extra`
+ * is a line's extra air in a style whose rows are capsules (the Islands), nothing in the rest.
+ */
+:root {
+  --app-bar-extra: 0px;
+  /*
+   * The air under the bar's last row, from its foot to the bar's edge: nothing in a style whose tabs stand on the
+   * bar's edge, and the Islands' below. A screen whose header pane is only the bar's glass hangs its blur strip
+   * (art/wisp.css `.app-headerBlur`) from the row's foot by this (editor/NoteScreen.module.css,
+   * home/HomeScreen.module.css), rather than from the bar's edge under the air.
+   */
+  --app-bar-air: 0px;
+  /* A little taller than the row it holds, so the controls sit in the bar rather than against its top edge (Matt:
+     "add just a bit more padding around the tab bar ... the active tabs are a bit close to the top"): the bar's own
+     top padding, the row, and a breath under it. A clipped control is worse than a few pixels of chrome. */
+  --app-tabs-one: calc(var(--app-bar-top) + var(--app-tab-top) + var(--glacier-space-1) + var(--app-tab-bottom) + var(--app-bar-extra));
+  /*
+   * With notes open the bar carries a second line of tabs under the controls, so it is that much taller. Built from the
+   * one-line height, the gap the bar sets between its two rows (notes/NoteTabs.module.css `.bar`) and the tab's own
+   * height, rather than a number standing for the last two: a tab that grows now really does take the bar with it,
+   * which the `2.25rem` here only claimed to do.
+   */
+  --app-tabs-two: calc(
+    var(--app-bar-top) + var(--app-tab-top) + var(--glacier-space-1) + var(--app-tab-h) + var(--glacier-space-1) +
+      var(--app-tab-bottom) + var(--app-bar-extra) * 2
+  );
+}
+
+:root[data-tabs='on'] {
+  --app-tabs: var(--app-tabs-one);
+}
+
+:root[data-tabs='rows'] {
+  --app-tabs: var(--app-tabs-two);
+}
+
+/*
+ * The Islands (notes/NoteTabs.module.css `.capsule`): each line is a capsule, a ring with its padding and border, so
+ * each line is that much taller; and on a window in two panes the three capsules share one line, so the bar is one
+ * line tall there whatever is open. The bar and the screen's header pane paint no glass under them - the capsules
+ * carry their own, and the page scrolls under them.
+ */
+/*
+ * The header toolbar's line, Grouped command (lib/shell/header/grouped_command_row.dart), its rings the home
+ * page's dock's as the dock is while the page scrolls (Matt, 2026-10-29: "make the header icons and searchbar just a
+ * touch smaller to match the size of the buttons in the dock when smaller"): `--app-ring` at the dock's scrolled
+ * scale (lib/shell/page_dock.dart `dockScrolledScale`, 0.8), 28-35px, where they were 34-42px (2026-10-28: "a size
+ * larger", then "very slightly" more). The bar's heights are built from the ring, so the bar follows. Stamped by the
+ * shell (`data-header`) wherever there is a bar.
+ */
+:root[data-header='large'] {
+  --app-bar-ring: calc(var(--app-ring) * 0.8);
+}
+
+/*
+ * The header's line on a window narrower than the opened Fold: a small step larger than the dock's smaller size (Matt,
+ * 2026-10-29: "Make the header icons and search bar slightly larger on mobile"), about 31px on a phone where it was
+ * 28.6.
+ */
+:root[data-header='phone'] {
+  --app-bar-ring: calc(var(--app-ring) * 0.8 + 2.5px);
+}
+
+:root[data-topbar='islands'] {
+  --app-bar-extra: 8px;
+}
+
+:root[data-topbar='islands'][data-split][data-tabs='rows'] {
+  --app-tabs: var(--app-tabs-one);
+}
+
+/*
+ * On a window in two panes the capsules' one line is centred in the bar, over its bottom padding: the air under
+ * them is that padding and half the breath the line is centred in (`--app-tabs-one`). The blur strip under a
+ * screen's empty header pane hung from the bar's edge, so a crisp band the air tall showed between the capsules and
+ * the blur - measured 12.5px at 1200px, capsules ending at 59.9 and the bar at 72.4 (Matt: "on desktop there is a
+ * small gap below the header before the blur shows"). On a narrow window the tab line sits at the bar's foot.
+ */
+:root[data-topbar='islands'][data-split] {
+  --app-bar-air: calc(var(--app-tab-bottom) + var(--glacier-space-1) / 2);
+}
+
+:root[data-topbar='islands'] .app-headerPane,
+:root[data-topbar='islands'][data-split] .app-headerPane {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-topbar='islands'][data-split] .app-tabBar {
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-block-end-color: transparent;
+}
+
+.app-tabBar {
+  position: fixed;
+  inset-block-start: var(--app-inset-top);
+  inset-inline: 0;
+  z-index: 5;
+  block-size: var(--app-tabs);
+  display: flex;
+  align-items: center;
+  padding-block-start: var(--app-bar-top);
+  padding-block-end: var(--app-tab-bottom);
+  /*
+   * The bar keeps the page's own gutter, both ends.
+   *
+   * Two readings of the same edge, and Matt has now asked for each in turn: first that the sidebar button line up
+   * with the notes ("doesn't align with the left side of the screen's padding"), which I took as its glyph, so the
+   * box hung a few pixels further out; then that the button sits too close to the edge "compared to the padding on
+   * other content", which is that overhang seen from the other side. A button cannot have both its ground and the
+   * glyph inside it on one line, so the ground wins: it is the edge a person sees, especially with a mouse, where
+   * the ground is drawn under the pointer. The glyph sits its own half-inset in, as a button's glyph does everywhere.
+   */
+  /* The bar keeps the page's gutter at both ends. The Mac's traffic lights get their room on the control row alone
+     (notes/NoteTabs.module.css `.top`), not here, so the tab row still spans the full width (Matt: "the tabs ... are
+     spaced over for the traffic lights though the lights should be on a different row than the tabs"). */
+  padding-inline: var(--app-bar-start) var(--app-bar-end);
+  /* Nothing of its own to paint: the header pane under it is the glass, and its own children take the taps. */
+  pointer-events: none;
+}
+
+/*
+ * The Mac's bar: its buttons as far from the window's top as from its sides (Matt, 2026-10-03, of the bell 10px under
+ * the top and 26px in from the right: "even out the margin around the outside of the buttons so it matches we need a
+ * bit more space on the top"). It sat tighter at the top before (Matt: "the top padding on the header on desktop can
+ * be less"), at a small step under a row centred in a little more; now the start, the end and the top are all one
+ * step, `--glacier-space-3`: the end comes in from the page's gutter to match the start (`--app-bar-start`), and the
+ * top padding is that step less the half of the breath under the row that centring puts above it. The traffic lights
+ * follow the row's centre (src-tauri/src/platform.rs `place_traffic_lights`).
+ */
+:root[data-titlebar='overlay'] {
+  --app-bar-top: calc(var(--glacier-space-3) - var(--glacier-space-1) / 2);
+  --app-bar-end: calc(var(--app-safe-right) + var(--glacier-space-3));
+}
+
+/*
+ * On a window wide enough for the notes to sit beside a note, the bar takes a ground of its own right across the
+ * window (Matt: "the tabbar should go across 100% of the screen even on widescreen").
+ *
+ * It always did span the full width - measured at 1200px: left 0, width 1200 - but it is transparent, and the glass
+ * behind it belongs to whichever screen is under it. Split in two, that is two panes with a divider between them, so
+ * the row read as though it stopped at the divider and belonged to the left column. One ground across the top makes
+ * it one bar again. A phone keeps the glass, where there is only ever one pane under it and the wisp needs to show
+ * through.
+ */
+/* Asked of the root rather than of the width: App.tsx stamps `data-split` when the panes are up, so this rule and the
+   rule that puts them there cannot part company at some window size. */
+:root[data-split] .app-tabBar {
+  /*
+   * That ground is glass, not paper (Matt: "the top header is missing the glass effect, it's showing at the very top
+   * but the tabs and such are fully opaque"): the same mix and blur as the screen's own header pane, so the cards
+   * scrolled under the bar show through it as they do under the title strip above it, which is the pane alone.
+   */
+  background: color-mix(in srgb, var(--app-header-tint) var(--app-header-shade), color-mix(in srgb, var(--glacier-bg) var(--app-glass-mix), transparent));
+  -webkit-backdrop-filter: var(--app-glass-blur);
+  backdrop-filter: var(--app-glass-blur);
+  border-block-end: var(--glacier-hairline) solid var(--glacier-border-subtle);
+  /*
+   * From the window's top edge, not from under the status bar (Matt, of the Fold: "the very top bar where the time
+   * and battery show up still has the missing semiopaque black background like the rest of the headers have"). The
+   * bar began at `--app-inset-top`, and the pane's tint below starts where the bar ends, so the strip behind the
+   * clock had the pane's blur and nobody's tint: the scrolled cards showed through it lighter than through the bar,
+   * a soft grey gradient over a black bar. The bar now reaches the top and pads down by the inset, so the strip is
+   * the bar - one glass from the screen's edge to the bar's line. Its bottom edge, `--app-safe-top` and the pane's
+   * gradient are as they were, so nothing under it moves. The Mac's title strip is the same 44px, and its drag bar
+   * (z 41) still sits over this (z 5).
+   */
+  inset-block-start: 0;
+  padding-block-start: calc(var(--app-inset-top) + var(--app-bar-top));
+  block-size: calc(var(--app-inset-top) + var(--app-tabs));
+}
+
+/*
+ * The line needs air above it, as much as the top of the bar has (Matt: "on desktop the tabs sit too close to the
+ * bottom line on the header"). Measured before: 12.7px from the bar's top to its controls, 3.1px from the tabs down
+ * to the line - the bar's height allowed a gap and a breath under the rows but no inset to match the one at the top.
+ * Set with the line and on the same condition, so the inset is there exactly where there is a line to clear. The
+ * height above grows by the same amount, so the rows keep their places and the room is added under them.
+ */
+:root[data-split] {
+  --app-tab-bottom: var(--glacier-space-2);
+}
+
+/*
+ * With tabs showing, they are the bar's bottom edge instead (Matt: "clean up the tabs to look like real tabs instead
+ * of pills"). A real tab stands on a line and the one being read opens into the page below it, so the air above the
+ * line goes and the tabs' own baseline (notes/NoteTabs.module.css `.tabs`) takes over from the bar's hairline - two
+ * lines one pixel apart would read as a double rule. The air stays where there are no tabs, over the bar's line.
+ *
+ * Only where the tabs stand on a line: Classic, the Ledger (whose tabs are the bar's top edge, but whose tool row
+ * draws its own line) and the Masthead (whose index line is the rule). A capsule stands on nothing, so the Islands
+ * keep the bar's own hairline and the air over it.
+ */
+:root[data-split][data-tabs='rows']:not([data-topbar='islands']) {
+  --app-tab-bottom: 0px;
+}
+
+:root[data-split][data-tabs='rows']:not([data-topbar='islands']) .app-tabBar {
+  border-block-end-color: transparent;
+}
+
+/*
+ * The row inside the bar is a layout container, not a target: it fills the bar's width so the tabs can scroll inside
+ * it, and taking taps it swallowed every click in the top strip of the window - over the sidebar column and over the
+ * note (Matt: "the topbar and sidebar intercept still"). The things a finger aims at say so for themselves
+ * (notes/NoteTabs.module.css): the sidebar button, the arrows and each tab.
+ */
+.app-tabBar > * {
+  pointer-events: none;
+  min-inline-size: 0;
+}
+
+.app-dragBar {
+  display: none;
+}
+
+/*
+ * A thing carried by the app's one drag (core/holdDrag.ts): the copy in the air under the pointer, and the gap the
+ * thing leaves where it would land - the look a ```board's card has always had (editor/boards/theme.ts
+ * `.cm-boardGhost`, `[data-lifted]`), so a query's cards and rows and a notebook's pages are carried alike.
+ */
+.app-dragGhost {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  margin: 0;
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 28%);
+  opacity: 0.96;
+}
+
+[data-drag-gap] {
+  background: color-mix(in oklch, currentColor 4%, transparent);
+  border-style: dashed !important;
+  outline: 1px dashed color-mix(in oklch, currentColor 30%, transparent);
+  outline-offset: -1px;
+  overflow: hidden;
+}
+
+[data-drag-gap] > * {
+  visibility: hidden;
+}
+
+/* While something is carried: no text is picked up on the way, and the pointer says what is happening. */
+:root[data-dragging],
+:root[data-dragging] * {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grabbing !important;
+}
+
+:root[data-titlebar='overlay'] .app-dragBar {
+  display: block;
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  /* The control row is the title bar now, so the drag strip is as tall as it. Behind the bar's controls (z 5) rather
+     than over them, so the empty parts of the row drag the window while the sidebar button, arrows and tabs still
+     take their taps (the bar itself is pointer-events:none, so a press on its empty ground falls through to here). */
+  z-index: 4;
+  block-size: var(--app-tabs);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.app-statusScrim {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 40;
+  block-size: var(--app-inset-top);
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--glacier-bg) 0, var(--glacier-bg) 78%, color-mix(in srgb, var(--glacier-bg) 0%, transparent) 100%);
+}
+
+/*
+ * A screen with a header pane covers the status bar itself, in glass, since its header pads by `--app-safe-top` and
+ * reaches the top of the phone. The scrim used to paint over that in solid paper, so the strip behind the clock was
+ * flat while the menu bar a few pixels below it was frosted (Matt: "top bar native bar doesnt have same blur as top
+ * bar menu bar"). Where there is a header, the header is the whole cover; where there is none - the list - the scrim
+ * stays as it was. A browser without `:has` keeps the old solid strip, which is the safe way round.
+ */
+body:has(.app-headerPane) .app-statusScrim {
+  display: none;
+}
+
+/*
+ * A view that scrolls under a header pane (art/wispEdge.ts marks it, and knows the header's height as `--wisp-under`):
+ * its scrollbar starts where the header ends (Matt: "On the home page the scrollbar goes behind the header"). The view
+ * runs the whole height so its words can pass under the glass, and so did its scrollbar, under the blur, from the
+ * window's top edge. Only where there is a pointer: styling a scrollbar gives up the platform's own, and on a phone
+ * the thin one that shows only while scrolling is the right one. A slim rounded thumb in the page's ink, on no track.
+ *
+ * The one place a `var()` of a root property keeps its fallback, and a radius stays a number: a scrollbar is drawn by
+ * the engine, in pseudo-elements no computed style can be read from and no screenshot in a test shows, so nothing
+ * here is changed without a real look at it.
+ */
+@media (hover: hover) and (pointer: fine) {
+  [data-under-header]::-webkit-scrollbar {
+    inline-size: 12px;
+    width: 12px;
+    background: transparent;
+  }
+
+  [data-under-header]::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block-start: max(var(--wisp-under, 0px), var(--app-safe-top, 0px));
+    margin-top: max(var(--wisp-under, 0px), var(--app-safe-top, 0px));
+  }
+
+  [data-under-header]::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    background-color: color-mix(in oklch, var(--app-ink, currentColor) 22%, transparent);
+  }
+
+  [data-under-header]::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, var(--app-ink, currentColor) 40%, transparent);
+  }
+}
+
+/*
+ * A header pane over a wisp-edged scroller (art/wispEdge.ts): dark glass in
+ * the dark and light glass on paper, the page's own colour at two thirds
+ * over a blur of whatever runs under it (Matt: "it's not like a dark glass,
+ * it's solid black"). Tinted with the page's own paper rather than a lighter
+ * grey, so at the top of the page, with nothing under it, it is the page and
+ * nothing shows; once the page runs under it the blur reads as glass. The
+ * wisp sits a little way below its edge.
+ *
+ * The recipe is named once, `--app-glass-mix` and `--app-glass-blur`, for the four things that are this glass: the
+ * pane, the tab bar across a split window, the smoke bench's header (diag/WispBench.module.css), and Settings' search
+ * field over its column in the split view (settings/settings.css). The mix is only the percentage, so each surface
+ * still mixes its own `--glacier-bg` where it is drawn.
+ */
+:root {
+  --app-glass-mix: 66%;
+  --app-glass-blur: blur(18px) saturate(1.1);
+  /* And a card that floats over the page - the notes and aside card (notes/FloatingCard.module.css), the Claude
+     drawer on a wide window (plugins/claude/claude.module.css) - blurs what is under it more, and casts a shadow. */
+  --app-float-blur: blur(20px);
+  --app-float-shadow: 0 16px 40px rgb(0 0 0 / 34%);
+}
+
+/*
+ * The header's glass is that glass made darker (Matt, 2026-11-01, of the Mac's header in the dark: "the header is a
+ * mix of glass and not glass elements, make the header 50% darker glass and make sure all components in the header
+ * support glass"): `--app-header-shade` of black laid over the glass, so the pane, the tab bar across a split window
+ * and the Islands' capsules let half the light through that the glass did, in the dark - the tint at half its
+ * lightness and what runs under it at half its brightness, the blur as it was. Mixed rather than laid on, it is one
+ * colour: `color-mix(in srgb, var(--app-header-tint) var(--app-header-shade), <the glass>)` is the glass under that share of
+ * black, both being drawn premultiplied.
+ *
+ * On paper it is white that is laid over the glass, not black (Matt, 2026-11-02: "In light mode also the header is
+ * gray when it should be frosted white glass"): 8% of black read as a grey bar. `--app-header-tint` is white there at
+ * 40%, so the header is frosted white glass, brighter than the glass alone and what runs under it softened to a haze,
+ * and black at half in the dark as before.
+ *
+ * Every control on the header is the one glass of its own (`--app-control-glass`): the page's ink at that share over
+ * the header's glass, with the hairline the pills have always worn, a step more (`--app-control-glass-lit`) under a
+ * mouse or a finger. Nothing in it is opaque, so the bar's blur is under every pill, circle and field; none of them
+ * blurs again for itself. An "on" control (ink, its glyph in paper) is a state, not a surface, and stays solid.
+ */
+:root {
+  --app-header-tint: oklch(1 0 0);
+  --app-header-shade: 40%;
+  --app-control-glass: 6%;
+  --app-control-glass-lit: 11%;
+}
+
+[data-theme='dark'] {
+  --app-header-tint: oklch(0 0 0);
+  --app-header-shade: 50%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --app-header-tint: oklch(0 0 0);
+    --app-header-shade: 50%;
+  }
+}
+
+.app-headerPane {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 3;
+  background: color-mix(in srgb, var(--app-header-tint) var(--app-header-shade), color-mix(in srgb, var(--glacier-bg) var(--app-glass-mix), transparent));
+  -webkit-backdrop-filter: var(--app-glass-blur);
+  backdrop-filter: var(--app-glass-blur);
+}
+
+/*
+ * Under the split layout's bar, which is glass of its own across the whole window (`.app-tabBar` above), the pane's
+ * tint starts where the bar ends: two tints laid on each other would make the note's side of the divider darker than
+ * the sidebar's. The blur is still the pane's over its whole height - blur laid on blur looks the same as blur.
+ */
+:root[data-split] .app-headerPane {
+  background: linear-gradient(
+    to bottom,
+    transparent var(--app-safe-top),
+    color-mix(in srgb, var(--app-header-tint) var(--app-header-shade), color-mix(in srgb, var(--glacier-bg) var(--app-glass-mix), transparent)) var(--app-safe-top)
+  );
+}
+
+/*
+ * Icons are outlines, with a wash inside the few that are one closed shape.
+ *
+ * Every icon used to carry the wash (Matt: "use the filled style we use on AttackFM", then "the icon fill should be
+ * slightly opaque, not solid"), but an icon is several shapes, and a fill set on the icon fills all of them: the
+ * mic's capsule and the arc around it, the cog's body and the hole in its middle, a shield and the tick inside it,
+ * a page and its lines. The inside doubled up and the detail went (Matt: "clean up icons in glacier UI so that
+ * icons like the microphone's fill doesn't double up on the inside stuff").
+ *
+ * Then every icon but these few was hollow, and Matt asked for the wash back on all of them ("a bunch of the icons
+ * across the app is missing the semiopaque fill that the icons should all have"). It is back, on each icon's body
+ * alone - one shape of the icon, with the detail left as strokes over it - which iconWash.css does, shape by shape,
+ * made from the icons in use (art/iconWash.ts says how a body is chosen). The rules below are what was here first.
+ *
+ * So the wash on the whole icon is kept only where there is nothing inside to lose. Of the icons Glyph draws, these are the ones
+ * whose whole shape is a single closed silhouette; every other icon is its outline, which is what lucide draws by
+ * default. `.lucide` is the kit's icon internals showing through (@glacier/icons proxies lucide).
+ *
+ * Both rules are `:where()`, so they lose to any rule an icon's own stylesheet writes - but NOT to a `fill`
+ * attribute on the svg. A presentation attribute is not an author declaration at all: it sits below every author
+ * rule in the cascade, so it loses to a zero-specificity `:where()` exactly as it loses to anything else. Only an
+ * inline style declaration or `!important` beats one.
+ *
+ * So `<Bookmark fill={marked ? 'currentColor' : 'none'} />` could never have coloured that bookmark, and it did
+ * not: measured in both states, set and unset computed to this same 33% wash, and pressing the button changed
+ * nothing on screen for a day. An icon whose fill carries state has to say so in a style declaration or a class,
+ * never in the attribute (editor/NoteScreen.tsx).
+ */
+:where(svg.lucide) {
+  fill: none;
+}
+
+:where(svg.lucide-bookmark, svg.lucide-play, svg.lucide-puzzle, svg.lucide-square),
+:where(svg.lucide-pause, svg.lucide-layout-grid, svg.lucide-ellipsis-vertical),
+/*
+ * The board draws its own icons rather than importing them (editor/boards/icons.ts), so none of the rules above could ever
+ * reach them and the hourglass over an empty "in progress" column stood out as the one hollow shape among filled
+ * ones. Its `fill="none"` is an attribute, which loses to this rule, as the note above explains.
+ */
+:where(svg.app-drawnIcon[data-icon='doing']) {
+  fill: color-mix(in srgb, currentColor 33%, transparent);
+}
+
+/*
+ * The desktop sidebar (App.tsx, core/useWideScreen.ts `useSidebar`): the notes
+ * list in a phone-width column on the left, the open note in the rest. Each
+ * pane is its screen as it is on a phone, sized to its column; the list's dock
+ * and the note's header stay inside their own pane.
+ */
+.app-split {
+  display: grid;
+  grid-template-columns: clamp(300px, 30vw, 380px) minmax(0, 1fr);
+  block-size: 100dvh;
+}
+
+.app-sidebar,
+.app-notePane {
+  position: relative;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.app-sidebar {
+  border-inline-end: 1px solid var(--glacier-border-subtle);
+}
+
+/* Hidden by the top bar's sidebar icon (App.tsx `dockShown`): the note takes the whole window. */
+.app-split[data-sidebar='hidden'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/*
+ * The right-hand aside (aside/Aside.tsx; Matt: "a right side aside menu that can pop out book indexes and list other
+ * notes from the workspace"): with the sidebar docked, a third column, shown and hidden by the tab row's mirrored
+ * sidebar icon (App.tsx `asideShown`), the same way the sidebar is a first column. Both hidden, the note takes the
+ * window; either alone, the note takes the rest. With the sidebar a floating card (the default), the aside is the
+ * same card at the right (notes/FloatingCard.module.css, `AsideCard`), on a desktop and a phone alike.
+ */
+.app-split[data-aside='shown'] {
+  grid-template-columns: clamp(300px, 30vw, 380px) minmax(0, 1fr) clamp(240px, 22vw, 320px);
+}
+
+.app-split[data-sidebar='hidden'][data-aside='shown'] {
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 320px);
+}
+
+.app-aside {
+  position: relative;
+  min-inline-size: 0;
+  overflow: hidden;
+  border-inline-start: 1px solid var(--glacier-border-subtle);
+}
+
+/*
+ * The colours of the app's running work (docs/ACTIVITY.md; Matt, 2026-10-29: "better show users what background
+ * processes are happening with vivid colors and iconography"): the ring in the header, the tray under it and the
+ * result chips (lib/activity/). Drawn from the Market's plugin tiles (lib/market/market_items.dart `marketHues`):
+ * sync the blue, AI writing the violet, pictures rose into amber, audio the teal, meetings the orange, downloads the
+ * green, and red for what needs the person. On paper each is the tile's deep end, darkened where it was under 3:1
+ * against white; in the dark, the tile's bright end. Waiting is the ink's quietest grey. The app is monochrome at
+ * rest, so none of these shows unless something runs.
+ */
+:root {
+  --activity-sync: #0a6fe0;
+  --activity-ai: #8a3dbf;
+  --activity-images: #d6336c;
+  --activity-images-2: #b86f00;
+  --activity-audio: #14806f;
+  --activity-meetings: #c9560b;
+  --activity-downloads: #23873f;
+  --activity-needs-you: #d1342b;
+  --activity-waiting: var(--app-ink-3);
+}
+
+[data-theme='dark'] {
+  --activity-sync: #4ea1ff;
+  --activity-ai: #c77dff;
+  --activity-images: #ff7aa8;
+  --activity-images-2: #ffb84d;
+  --activity-audio: #5fe0cf;
+  --activity-meetings: #ff9a4d;
+  --activity-downloads: #4cd571;
+  --activity-needs-you: #ff6b61;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --activity-sync: #4ea1ff;
+    --activity-ai: #c77dff;
+    --activity-images: #ff7aa8;
+    --activity-images-2: #ffb84d;
+    --activity-audio: #5fe0cf;
+    --activity-meetings: #ff9a4d;
+    --activity-downloads: #4cd571;
+    --activity-needs-you: #ff6b61;
+  }
+}
+
+/* Calm (Settings › Appearance): every one of them ink, the motion kept; what waits stays the quiet grey. */
+:root:root[data-calm] {
+  --activity-sync: var(--app-ink);
+  --activity-ai: var(--app-ink);
+  --activity-images: var(--app-ink);
+  --activity-images-2: var(--app-ink);
+  --activity-audio: var(--app-ink);
+  --activity-meetings: var(--app-ink);
+  --activity-downloads: var(--app-ink);
+  --activity-needs-you: var(--app-ink);
+}
+
+/* ---- the looks (lib/looks.dart) ---------------------------------------------------------------------------------
+ *
+ * Settings › Appearance › Look (Matt, 2026-11-16: "spend some time making a few themes for ghost"). Each is stamped
+ * on the page as `data-theme-preset` by ghostAttrs, with its fixed `data-theme` where it has only one brightness;
+ * Uplink, the app's own, stamps none and none of this applies to it. Mist and Lamplight are Uplink's packs since
+ * 2026-11-27 (chosen under it, in Settings › Appearance › Textures) and are written here as any look is: a pack that
+ * is part of the app is a preset of its own.
+ *
+ * How each is written, and why:
+ * - its twelve greys at `:root[data-theme-preset='x']` (with `[data-theme='dark']` for a dark half): all twelve, always,
+ *   since ink.css's `:root:root[data-theme-preset]` copies `--glacier-gray-*` onto the page's `--app-gray-*`, and a
+ *   step left out falls back to the kit's own blue-tinted grey. Nothing here maps the kit's greys back onto the
+ *   page's: with both in force the two point at each other and every colour comes out empty (ink.css explains);
+ * - everything else at `:root:root:root:root[data-theme-preset='x']`, specificity 5: above ink.css's mapping (3) and
+ *   its accent ramp (4), which a block written as the kit writes its presets (2) would silently lose to, and below
+ *   lib/accent.dart's rule for a bubble colour chosen (6), so a colour picked in Appearance still wins;
+ * - `--app-bubble-mine` and `--app-on-bubble-mine` are your bubbles while they are the look's own ('theme', the
+ *   default once a look is chosen), `--app-bubble-theirs` and `--app-bubble-rim` someone else's where a look draws
+ *   them otherwise (lib/backgrounds.dart).
+ * The contrast of each pair was measured as it was chosen, and test/themes_test.dart checks the page's ink and your
+ * bubble's words stay readable (4.5:1 or more) in every look.
+ */
+
+/* Mist: morning fog on pale water. A faintly aqua white page, deep-teal ink, deep-teal bubbles of your own. Light. */
+:root[data-theme-preset='mist'] {
+  --glacier-gray-1: #F8FEFD;
+  --glacier-gray-2: #F1FAF9;
+  --glacier-gray-3: #E7F5F3;
+  --glacier-gray-4: #DCEFEC;
+  --glacier-gray-5: #D1E7E3;
+  --glacier-gray-6: #C2DCD8;
+  --glacier-gray-7: #ACCAC5;
+  --glacier-gray-8: #8CACA8;
+  --glacier-gray-9: #51746F;
+  --glacier-gray-10: #3E605B;
+  --glacier-gray-11: #294642;
+  --glacier-gray-12: #0F2624;
+}
+:root:root:root:root[data-theme-preset='mist'] {
+  --glacier-glass-thin: oklch(0.985 0.012 186 / 0.48);
+  --glacier-glass-regular: oklch(0.985 0.012 186 / 0.68);
+  --glacier-glass-thick: oklch(0.985 0.012 186 / 0.86);
+  --glacier-glass-border: oklch(0.4 0.03 186 / 0.12);
+  --glacier-glass-highlight: oklch(1 0 0 / 0.82);
+  --glacier-surface-raised: #FFFFFF;
+  --glacier-overlay: oklch(0.25 0.03 186 / 0.40);
+  --glacier-segment-track: oklch(0.93 0.02 186 / 0.72);
+  --glacier-slider-thumb: #FFFFFF;
+  --app-ink-level: 0.13;
+  --app-raised: var(--app-gray-1);
+  --app-scrim: oklch(0.25 0.03 186 / 0.40);
+  --app-mark: color-mix(in oklch, oklch(0.70 0.12 186) 34%, transparent);
+  --app-accent: #0C7F7A;
+  --app-on-accent: #FFFFFF;
+  --app-bubble-mine: #0C7F7A;
+  --app-on-bubble-mine: #FFFFFF;
+  --glacier-selection: color-mix(in oklch, #0C7F7A 22%, transparent);
+  --glacier-focus-ring: #0C7F7A;
+  --glacier-radius-scale: 1.5;
+  /* What means unread, chosen or informative is the look's teal, not Uplink's indigo (the text selection follows
+     --app-chosen). */
+  --app-unread: #0C7F7A;
+  --app-chosen: #0C7F7A;
+  --app-info: #0C7F7A;
+}
+
+/* Lamplight: a warm, low-blue evening dark. Amber-tinted paper, parchment ink, amber bubbles. Dark. */
+:root[data-theme-preset='lamplight'] {
+  --glacier-gray-1: #100B07;
+  --glacier-gray-2: #16100B;
+  --glacier-gray-3: #1E1611;
+  --glacier-gray-4: #291F18;
+  --glacier-gray-5: #33271F;
+  --glacier-gray-6: #403228;
+  --glacier-gray-7: #514135;
+  --glacier-gray-8: #6D5949;
+  --glacier-gray-9: #A58C73;
+  --glacier-gray-10: #B0967C;
+  --glacier-gray-11: #CCB395;
+  --glacier-gray-12: #E9D6BB;
+}
+:root:root:root:root[data-theme-preset='lamplight'] {
+  --glacier-glass-thin: oklch(0.18 0.015 58 / 0.44);
+  --glacier-glass-regular: oklch(0.18 0.015 58 / 0.64);
+  --glacier-glass-thick: oklch(0.18 0.015 58 / 0.88);
+  --glacier-glass-border: oklch(0.88 0.04 78 / 0.10);
+  --glacier-glass-highlight: oklch(0.95 0.03 78 / 0.10);
+  --glacier-surface-raised: #1E1611;
+  --glacier-overlay: oklch(0 0 0 / 0.62);
+  --glacier-segment-track: oklch(0.25 0.02 58 / 0.72);
+  --glacier-slider-thumb: #E9D6BB;
+  --app-ink-level: 0.85;
+  --app-raised: var(--app-gray-3);
+  --app-scrim: oklch(0 0 0 / 0.62);
+  --app-mark: color-mix(in oklch, oklch(0.62 0.13 75) 34%, transparent);
+  --app-accent: #E5A152;
+  --app-on-accent: #221106;
+  --app-bubble-mine: #E5A152;
+  --app-on-bubble-mine: #221106;
+  --glacier-selection: color-mix(in oklch, #E5A152 26%, transparent);
+  --glacier-focus-ring: #E5A152;
+  --app-unread: #E5A152;
+  --app-chosen: #E5A152;
+  --app-info: #D9A86A;
+}
+
+/* Sharp: high contrast in either brightness, every grey above AA, rules you can see; its dark half is true black. */
+:root[data-theme-preset='sharp'] {
+  --glacier-gray-1: #FFFFFF;
+  --glacier-gray-2: #F5F5F5;
+  --glacier-gray-3: #E8E8E8;
+  --glacier-gray-4: #DEDEDE;
+  --glacier-gray-5: #D1D1D1;
+  --glacier-gray-6: #808080;
+  --glacier-gray-7: #696969;
+  --glacier-gray-8: #555555;
+  --glacier-gray-9: #484848;
+  --glacier-gray-10: #353535;
+  --glacier-gray-11: #242424;
+  --glacier-gray-12: #000000;
+}
+:root[data-theme-preset='sharp'][data-theme='dark'] {
+  --glacier-gray-1: #000000;
+  --glacier-gray-2: #0B0B0B;
+  --glacier-gray-3: #161616;
+  --glacier-gray-4: #1F1F1F;
+  --glacier-gray-5: #2E2E2E;
+  --glacier-gray-6: #868686;
+  --glacier-gray-7: #989898;
+  --glacier-gray-8: #AEAEAE;
+  --glacier-gray-9: #BEBEBE;
+  --glacier-gray-10: #D1D1D1;
+  --glacier-gray-11: #E4E4E4;
+  --glacier-gray-12: #FFFFFF;
+}
+:root:root:root:root[data-theme-preset='sharp'] {
+  --glacier-surface-raised: #FFFFFF;
+  --glacier-overlay: oklch(0 0 0 / 0.55);
+  --glacier-glass-thin: oklch(1 0 0 / 0.80);
+  --glacier-glass-regular: oklch(1 0 0 / 0.90);
+  --glacier-glass-thick: oklch(1 0 0 / 0.96);
+  --glacier-glass-border: oklch(0 0 0 / 0.45);
+  --glacier-segment-track: #E8E8E8;
+  --glacier-slider-thumb: #FFFFFF;
+  --app-ink-level: 0;
+  --app-raised: var(--app-gray-1);
+  --app-scrim: oklch(0 0 0 / 0.55);
+  --app-rule: var(--app-gray-6);
+  --glacier-border: var(--app-gray-8);
+  --glacier-border-subtle: var(--app-gray-6);
+  --glacier-border-strong: var(--app-gray-12);
+  --glacier-hairline: 2px;
+  --app-line: 2px;
+  --app-mark: color-mix(in oklch, oklch(0.62 0.17 250) 45%, transparent);
+  --app-accent: #005C5B;
+  --app-on-accent: #FFFFFF;
+  --app-bubble-mine: #005C5B;
+  --app-on-bubble-mine: #FFFFFF;
+  --app-bubble-theirs: var(--app-gray-3);
+  --app-bubble-rim: var(--app-gray-8);
+  --glacier-focus-ring: var(--app-accent);
+  --glacier-selection: color-mix(in oklch, var(--app-accent) 30%, transparent);
+  --glacier-radius-scale: 0.55;
+  /* The accent, a var() so the dark half's aqua follows without repeating it: teal 7.8:1 on white. */
+  --app-unread: var(--app-accent);
+  --app-chosen: var(--app-accent);
+  --app-info: var(--app-accent);
+}
+/* The same specificity as the light half and later, so it wins the tie. The rule, border, line and radius need no
+   repeating: they are var()s onto the scale and follow it. */
+:root:root:root[data-theme-preset='sharp'][data-theme='dark'] {
+  --glacier-surface-raised: #161616;
+  --glacier-overlay: oklch(0 0 0 / 0.75);
+  --glacier-glass-thin: oklch(0 0 0 / 0.85);
+  --glacier-glass-regular: oklch(0 0 0 / 0.92);
+  --glacier-glass-thick: oklch(0 0 0 / 0.97);
+  --glacier-glass-border: oklch(1 0 0 / 0.45);
+  --glacier-segment-track: #161616;
+  --glacier-slider-thumb: #FFFFFF;
+  --app-ink-level: 1;
+  --app-raised: var(--app-gray-3);
+  --app-scrim: oklch(0 0 0 / 0.75);
+  --app-accent: #51FCFB;
+  --app-on-accent: #002524;
+  --app-bubble-mine: #51FCFB;
+  --app-on-bubble-mine: #002524;
+  --app-bubble-theirs: var(--app-gray-5);
+}
+
+/* Dial-Up: a late-90s online service's chat room. Silver bevelled windows with navy title bars, a white page where
+   each line is a name and what they said, a teal desktop in the wide window's gutters. Light only: its dark half
+   (After Hours, a black high-contrast scheme of the same era) was taken out on 2026-11-27, at Matt's word ("remove
+   the dark dial uptheme"). Drawn by lib/ui/dialup/ (Bevel, Sunken, RetroButton, TitleBar), which read the tokens
+   below; the layout asks `--app-chrome-style` (`bevel` here and in Runestone, the chrome's dark look), so it goes by
+   these rules rather than by the look's name.
+   Grey on silver fails (#808080 on #C0C0C0 is 2.2:1), so readable secondary words are #404040 (5.7:1) and #808080 is
+   kept for bevels and what is disabled; pure red on white is 4:1, so your own name and failures are #B00000. */
+:root[data-theme-preset='dialup'] {
+  --glacier-gray-1: #FFFFFF;
+  --glacier-gray-2: #F4F4F4;
+  --glacier-gray-3: #DFDFDF;
+  --glacier-gray-4: #C0C0C0;
+  --glacier-gray-5: #C0C0C0;
+  --glacier-gray-6: #A0A0A0;
+  --glacier-gray-7: #808080;
+  --glacier-gray-8: #606060;
+  --glacier-gray-9: #404040;
+  --glacier-gray-10: #303030;
+  --glacier-gray-11: #202020;
+  --glacier-gray-12: #000000;
+}
+:root:root:root:root[data-theme-preset='dialup'] {
+  /* What lib/ui/dialup/'s isDialup asks: the chat-room chrome, bevels and title bars, instead of the app's glass. */
+  --app-chrome-style: bevel;
+  /* The window: its silver face, and the bevel's two rings, light from the upper left (outer then inner on the
+     top-left, inner then outer on the bottom-right). */
+  --app-chrome: #C0C0C0;
+  --app-on-chrome: #000000;
+  --app-bevel-hi: #FFFFFF;
+  --app-bevel-lo: #DFDFDF;
+  --app-bevel-shadow: #808080;
+  --app-bevel-dark: #000000;
+  /* The title bar: navy, brightening toward the far end only past the words (white on #1084D0 is 4:1). Named
+     -titlebar, not -title: `--app-title` is already the type scale's list-title size, above. */
+  --app-titlebar: #000080;
+  --app-titlebar-end: #1084D0;
+  --app-titlebar-ink: #FFFFFF;
+  --app-titlebar-inactive: #808080;
+  --app-titlebar-inactive-ink: #C0C0C0;
+  /* Names in a transcript: yours red, everyone else's navy, and in a room of many one of six per person (picked by
+     the address, as bubble colours are), each 4.5:1 or more on the white page. */
+  --app-name-mine: #B00000;
+  --app-name-theirs: #000080;
+  --app-name-1: #000080;
+  /* Olive, not maroon: #800000 read as the same red as your own name (#B00000). 5.6:1 on white. */
+  --app-name-2: #6B6B00;
+  --app-name-3: #006400;
+  --app-name-4: #800080;
+  --app-name-5: #005F5F;
+  --app-name-6: #7F3F00;
+  /* The desktop behind the windows, in a wide window's gutters only (on a phone it would read as a fault). */
+  --app-desktop: #008080;
+  --app-tooltip: #FFFFE1;
+  --app-on-tooltip: #000000;
+  /* A chosen row: navy with white words. */
+  --app-highlight: #000080;
+  --app-on-highlight: #FFFFFF;
+  --app-danger: #B00000;
+  --app-unread: #000080;
+  --app-chosen: #000080;
+  --app-info: #000080;
+  --app-online: #006400;
+  --app-warn: #7F5F00;
+  --app-pinned: #7F5F00;
+  --app-text-selection: color-mix(in srgb, #000080 30%, transparent);
+  --app-ink-level: 0;
+  --app-raised: var(--app-gray-1);
+  --app-scrim: oklch(0 0 0 / 0.40);
+  --app-rule: var(--app-gray-7);
+  --app-mark: color-mix(in oklch, #FFFF00 60%, transparent);
+  /* Your colour is the look's own while bubbles are 'theme' (lib/accent.dart leaves the accent alone then). */
+  --app-accent: #000080;
+  --app-on-accent: #FFFFFF;
+  --app-bubble-mine: #000080;
+  --app-on-bubble-mine: #FFFFFF;
+  --app-bubble-theirs: var(--app-gray-3);
+  --app-bubble-rim: var(--app-gray-7);
+  /* No glass in 1998: every pane the kit draws in glass is the silver face. */
+  --glacier-glass-thin: #C0C0C0;
+  --glacier-glass-regular: #C0C0C0;
+  --glacier-glass-thick: #C0C0C0;
+  --glacier-glass-border: #808080;
+  --glacier-glass-highlight: transparent;
+  --glacier-surface-raised: #C0C0C0;
+  --glacier-overlay: oklch(0 0 0 / 0.40);
+  --glacier-segment-track: #C0C0C0;
+  --glacier-slider-thumb: #C0C0C0;
+  --glacier-border: var(--app-gray-7);
+  --glacier-border-subtle: var(--app-gray-4);
+  --glacier-border-strong: var(--app-gray-12);
+  --glacier-hairline: 1px;
+  --app-line: 1px;
+  --glacier-focus-ring: #000000;
+  --glacier-selection: color-mix(in oklch, #000080 30%, transparent);
+  /* Weights 400 and 700 only, no tracking, square everything (a pill too), and nothing moves: windows then simply
+     appeared. The same near-nothing the kit uses for reduced motion, so every animation still runs to its end. */
+  --app-tracking-display: 0;
+  --app-tracking-title: 0;
+  --glacier-radius-scale: 0;
+  --glacier-radius-full: 0px;
+  --app-tracking-caps: 0;
+  --app-tracking-caps-close: 0;
+  --glacier-duration-instant: 0.01ms;
+  --glacier-duration-fast: 0.01ms;
+  --glacier-duration-normal: 0.01ms;
+  --glacier-duration-slow: 0.01ms;
+  --glacier-duration-slower: 0.01ms;
+  --app-pop: 0.01ms linear;
+  --app-turn: 0.01ms linear;
+  --app-settle: 0.01ms linear;
+}
+/* Runestone: an old adventure game's interface as its players' dark stone packs draw it (Matt, 2026-11-27: "make a
+   theme in Ghost that fits this with the runescape font and everything", of the Dark Vanilla resource pack for Old
+   School RuneScape's interface, by Nichy, in melkypie/resource-packs; then "use the light background for chats like
+   dark vanilla uses"). Charcoal stone windows with chiselled edges, near-black panels, the game's lettering colours
+   (yellow words, orange headings, white on what is pressed, each over a hard black shadow), and a chat written on
+   pale grey parchment in black, blue and dark red, as the pack's chatbox is. Dark only.
+
+   Nothing of the pack's is in the app: its colours were read off it (panels #242424, stone #363636 to #3E3E3E, frame
+   lines #4D4D4D and #171717, the red "new messages" button #401E1E, the chatbox parchment #BCBCBC), and every edge
+   and face is drawn by lib/ui/dialup/, the chrome Dial-Up draws its windows with, from the tokens below
+   (`--app-chrome-style: bevel`). The face is Runestone (assets/fonts/CC0-Runestone.txt).
+   Measured on the panel (#1C1C1C): yellow 16.0:1, orange 7.9:1, the grey of secondary words 8.2:1, red 5.8:1; on the
+   stone (#2E2E2E) white 13.6:1 and red 4.6:1; on the parchment (#BEBEBE) blue 4.6:1 and dark red 5.9:1. */
+:root[data-theme-preset='runestone'] {
+  --glacier-gray-1: #1C1C1C;
+  --glacier-gray-2: #202020;
+  --glacier-gray-3: #272727;
+  --glacier-gray-4: #3A3A3A;
+  --glacier-gray-5: #303030;
+  --glacier-gray-6: #4D4D4D;
+  --glacier-gray-7: #6E6E6E;
+  --glacier-gray-8: #8A8A8A;
+  --glacier-gray-9: #B4B4B4;
+  --glacier-gray-10: #D8D8D8;
+  /* Secondary words are the game's orange and the page's ink its yellow: the scale's light end is its lettering. */
+  --glacier-gray-11: #FF981F;
+  --glacier-gray-12: #FFFF00;
+}
+:root:root:root:root[data-theme-preset='runestone'] {
+  /* The chat-room chrome (lib/ui/dialup/): windows, wells, push buttons and title bars, in stone; and drawn from a
+     resource pack's own pictures where the person has fetched one (lib/packs/), whose colours are then laid over the
+     ones below (ResourcePack.css). */
+  --app-chrome-style: bevel;
+  --app-chrome-sprites: pack;
+  /* No border of its own round the list beside a pane (lib/ui/shell.dart): two panels of one frame. */
+  --app-chrome-frames: none;
+  /* Every icon in square pixels (lib/art/app_icon.dart draws lib/art/pixel_icons.g.dart's), and emoji where they are
+     read (lib/art/pixel_emoji.dart). */
+  --app-icons: pixel;
+  --app-emoji: pixel;
+  /* What a page still loading is sketched in, and what is washed over a pressed row: grey, where the ink is yellow. */
+  --app-skeleton: #D8D8D8;
+  --app-wash: color-mix(in oklch, #FFFFFF 9%, transparent);
+  --app-chrome: #2E2E2E;
+  --app-on-chrome: #FFFFFF;
+  /* A chiselled edge: light from the upper left, the pack's frame lines for the inner ring. */
+  --app-bevel-hi: #5C5C5C;
+  --app-bevel-lo: #434343;
+  --app-bevel-shadow: #171717;
+  --app-bevel-dark: #000000;
+  /* An interface's heading: orange words on the darkest stone, flat, and a red X to close it. */
+  --app-titlebar: #141414;
+  --app-titlebar-end: #141414;
+  --app-titlebar-ink: #FF981F;
+  --app-titlebar-inactive: #1E1E1E;
+  --app-titlebar-inactive-ink: #8A8A8A;
+  --app-titlebar-close: #FF4A3A;
+  /* Names and words on the dark panels (a reply's line over the composer, who is in a space): the colours the game
+     writes chat in over the world. The chat itself is on parchment (`.parchment`, below). */
+  --app-name-mine: #FFFFFF;
+  --app-name-theirs: #00FFFF;
+  --app-name-1: #00FFFF;
+  --app-name-2: #FFFF00;
+  --app-name-3: #00FF00;
+  --app-name-4: #FF981F;
+  --app-name-5: #FF80FF;
+  --app-name-6: #80C0FF;
+  --app-line-mine: #9090FF;
+  --app-line-theirs: #FFFFFF;
+  --app-desktop: #000000;
+  /* The game's hover tip: black words on pale yellow. */
+  --app-tooltip: #FFFFA0;
+  --app-on-tooltip: #000000;
+  /* A chosen row: lighter stone, and white words as under the pointer in the game. */
+  --app-highlight: #4D4D4D;
+  --app-on-highlight: #FFFFFF;
+  --app-danger: #FF6060;
+  --app-unread: #00FF00;
+  --app-chosen: #FFFFFF;
+  --app-info: #00FFFF;
+  --app-online: #00FF00;
+  --app-warn: #FF981F;
+  --app-pinned: #FF981F;
+  --app-count: #B01414;
+  --app-on-count: #FFFFFF;
+  --app-text-selection: color-mix(in srgb, #FF981F 45%, transparent);
+  --app-ink-level: 0.93;
+  --app-raised: var(--app-gray-3);
+  --app-scrim: oklch(0 0 0 / 0.60);
+  --app-rule: var(--app-gray-6);
+  --app-mark: color-mix(in oklch, #FFFF00 30%, transparent);
+  --app-accent: #FF981F;
+  --app-on-accent: #000000;
+  --app-bubble-mine: #FF981F;
+  --app-on-bubble-mine: #000000;
+  --app-bubble-theirs: var(--app-gray-5);
+  --app-bubble-rim: var(--app-gray-6);
+  /* No glass in a stone frame: every pane the kit draws in glass is the window's face. */
+  --glacier-glass-thin: #2E2E2E;
+  --glacier-glass-regular: #2E2E2E;
+  --glacier-glass-thick: #2E2E2E;
+  --glacier-glass-border: #4D4D4D;
+  --glacier-glass-highlight: transparent;
+  --glacier-surface-raised: #2E2E2E;
+  --glacier-overlay: oklch(0 0 0 / 0.60);
+  --glacier-segment-track: #2E2E2E;
+  --glacier-slider-thumb: #5C5C5C;
+  --glacier-border: var(--app-gray-6);
+  --glacier-border-subtle: var(--app-gray-4);
+  --glacier-border-strong: var(--app-gray-8);
+  --glacier-hairline: 1px;
+  --app-line: 1px;
+  --glacier-focus-ring: #FFFFFF;
+  --glacier-selection: color-mix(in oklch, #FF981F 45%, transparent);
+  /* The game's letters: a regular and a bold and nothing between, no tracking, each word over a hard black shadow one
+     pixel down and right (the kit's `--glacier-text-shadow`, a local addition: packages/glacier/VENDORED.md). */
+  --glacier-font-weight-medium: 400;
+  --glacier-font-weight-semibold: 700;
+  --glacier-text-shadow: 1px 1px 0 #000000;
+  --app-tracking-display: 0;
+  --app-tracking-title: 0;
+  --app-tracking-caps: 0;
+  --app-tracking-caps-close: 0;
+  /* Square everything, and nothing moves: the game's windows simply appear (as Dial-Up's do). */
+  --glacier-radius-scale: 0;
+  --glacier-radius-full: 0px;
+  --glacier-duration-instant: 0.01ms;
+  --glacier-duration-fast: 0.01ms;
+  --glacier-duration-normal: 0.01ms;
+  --glacier-duration-slow: 0.01ms;
+  --glacier-duration-slower: 0.01ms;
+  --app-pop: 0.01ms linear;
+  --app-turn: 0.01ms linear;
+  --app-settle: 0.01ms linear;
+}
+/* The chatbox (lib/ui/message_line.dart's Transcript, and every field words are typed in: lib/ui/dialup/parts.dart's
+   DialupWell): pale grey parchment, as Dark Vanilla keeps the game's. Black names, what you say in the game's blue and
+   what is said to you in its dark red, and no shadow under any of it, as the game writes on parchment. Every colour a
+   page or the kit reads is said again here: a scope inherits the page's computed colours, never their recipes. */
+[data-theme-preset='runestone'] .parchment,
+[data-theme-preset='runestone'] .dialup-well {
+  /* What lib/ui/dialup/bevel.dart asks of a well, to draw a pack's chatbox as its ground and frame. */
+  --app-well: parchment;
+  --app-gray-1: #BEBEBE;
+  --app-gray-2: #B8B8B8;
+  --app-gray-3: #B0B0B0;
+  --app-gray-4: #9A9A9A;
+  --app-gray-5: #A4A4A4;
+  --app-gray-6: #8C8C8C;
+  --app-gray-7: #6A6A6A;
+  --app-gray-8: #585858;
+  --app-gray-9: #3C3C3C;
+  --app-gray-10: #2A2A2A;
+  --app-gray-11: #1E1E1E;
+  --app-gray-12: #000000;
+  --app-paper: #BEBEBE;
+  --app-paper-2: #B0B0B0;
+  --app-paper-3: #A4A4A4;
+  --app-rule: #8C8C8C;
+  --app-ink: #000000;
+  --app-ink-2: #1E1E1E;
+  --app-ink-3: #3C3C3C;
+  --app-ink-4: #6A6A6A;
+  --app-wash: color-mix(in oklch, #000000 9%, transparent);
+  --app-raised: #B0B0B0;
+  --glacier-bg: #BEBEBE;
+  --glacier-surface: #B0B0B0;
+  --glacier-surface-raised: #B0B0B0;
+  --glacier-surface-sunken: #B8B8B8;
+  --glacier-hover: #B0B0B0;
+  --glacier-active: #A4A4A4;
+  --glacier-border: #8C8C8C;
+  --glacier-border-subtle: #9A9A9A;
+  --glacier-border-strong: #000000;
+  --glacier-text: #000000;
+  --glacier-text-muted: #1E1E1E;
+  --glacier-text-subtle: #3C3C3C;
+  --glacier-text-disabled: #6A6A6A;
+  --glacier-text-shadow: none;
+  --glacier-focus-ring: #000000;
+  --glacier-selection: color-mix(in oklch, #0000FF 30%, transparent);
+  --app-text-selection: color-mix(in srgb, #0000FF 30%, transparent);
+  --app-mark: color-mix(in oklch, #FFFF00 60%, transparent);
+  /* Everyone's name is black, as the game writes one; in a room of many each person keeps one of six dark inks. */
+  --app-name-mine: #000000;
+  --app-name-theirs: #000000;
+  --app-name-1: #00007F;
+  --app-name-2: #7F0000;
+  --app-name-3: #005000;
+  --app-name-4: #7E007E;
+  --app-name-5: #004F4F;
+  --app-name-6: #6B3E00;
+  --app-line-mine: #0000FF;
+  --app-line-theirs: #7F0000;
+  --app-danger: #8F0000;
+  --app-unread: #7F0000;
+  --app-chosen: #000000;
+  --app-info: #00007F;
+  --app-online: #005000;
+  --app-warn: #6B3E00;
+  --app-pinned: #6B3E00;
+  --app-bubble-theirs: #A4A4A4;
+  --app-bubble-rim: #8C8C8C;
+}
+/* A field in its well: the parchment is its ground and the frame its only edge, as Dial-Up's white one is. */
+[data-theme-preset='runestone'] .dialup-well {
+  --glacier-surface: #BEBEBE;
+  --glacier-border: transparent;
+  --glacier-border-strong: transparent;
+}
+/* What stands on a heading's band, and the stone panel along a page's foot, as Dial-Up's (below). */
+[data-theme-preset='runestone'] .dialup-band {
+  --app-ink: var(--app-titlebar-ink);
+  --app-ink-2: var(--app-titlebar-ink);
+  --app-ink-3: #D8D8D8;
+  --glacier-text: var(--app-titlebar-ink);
+  --glacier-text-muted: #D8D8D8;
+  --glacier-bg: var(--app-titlebar);
+}
+[data-theme-preset='runestone'] .dialup-panel {
+  --glacier-bg: var(--app-chrome);
+}
+
+/* The count on a taskbar button is red, as the design asks, where --app-unread is navy. */
+:root:root:root:root[data-theme-preset='dialup'] {
+  --app-count: #B00000;
+  --app-on-count: #FFFFFF;
+}
+/* What stands on a title bar (lib/ui/dialup/parts.dart DialupBand): the page's ink is the band's white there, so a
+   page's own header and its icon buttons read on navy without knowing they are on it. */
+[data-theme-preset='dialup'] .dialup-band {
+  --app-ink: var(--app-titlebar-ink);
+  --app-ink-2: var(--app-titlebar-ink);
+  --app-ink-3: #DFDFDF;
+  --glacier-text: var(--app-titlebar-ink);
+  --glacier-text-muted: #DFDFDF;
+  --glacier-bg: var(--app-titlebar);
+}
+/* The silver panel along a page's foot (DialupPanel): what is drawn on the page's ground there is the window's face. */
+[data-theme-preset='dialup'] .dialup-panel {
+  --glacier-bg: var(--app-chrome);
+}
+
+/* A kit field in a sunken frame (DialupWell): white, the frame its only edge. */
+[data-theme-preset='dialup'] .dialup-well {
+  --glacier-surface: var(--app-paper);
+  --glacier-border: transparent;
+  --glacier-border-strong: transparent;
+}
+
+/* The section colours of Settings' row icons and the avatars' colours (`data-hue`, lib/kit/settings_css.dart, which
+   is laid over this sheet with lower specificity), settled into each look: Uplink's indigo was the one cold patch on
+   Mist's, Lamplight's and Sharp's pages (the review of the looks, 2026-11-16). Dial-Up draws its icons in plain ink.
+   Both --hue and --hue-dark, since settings.css makes the dark page's --hue its --hue-dark. */
+:root:root:root:root[data-theme-preset='mist'] [data-hue='indigo'] {
+  --hue: #0C7F7A;
+  --hue-dark: #0C7F7A;
+}
+/* Mist's blue and purple stay a blue and a purple, sea-washed to sit on its page: folded into its teal as well, three
+   of a circle's colours and a Files space's documents and notes all read the same (the review of Circles, 2026-11-17). */
+:root:root:root:root[data-theme-preset='mist'] [data-hue='blue'] {
+  --hue: #2A6A9C;
+  --hue-dark: #2A6A9C;
+}
+:root:root:root:root[data-theme-preset='mist'] [data-hue='purple'] {
+  --hue: #7A5C9E;
+  --hue-dark: #7A5C9E;
+}
+:root:root:root:root[data-theme-preset='lamplight'] [data-hue='indigo'],
+:root:root:root:root[data-theme-preset='lamplight'] [data-hue='blue'],
+:root:root:root:root[data-theme-preset='lamplight'] [data-hue='purple'],
+:root:root:root:root[data-theme-preset='lamplight'] [data-hue='slate'],
+:root:root:root:root[data-theme-preset='lamplight'] [data-hue='cyan'] {
+  --hue: #E5A152;
+  --hue-dark: #E5A152;
+}
+:root:root:root:root[data-theme-preset='sharp'] [data-hue='indigo'] {
+  --hue: var(--app-accent);
+  --hue-dark: var(--app-accent);
+}
+:root:root:root:root[data-theme-preset='dialup'] [data-hue] {
+  --hue: var(--app-ink);
+  --hue-dark: var(--app-ink);
+}
+/* Runestone's icons are its headings' orange: one lettering colour, as the game's side panels keep to. */
+:root:root:root:root[data-theme-preset='runestone'] [data-hue] {
+  --hue: #FF981F;
+  --hue-dark: #FF981F;
+}
+
+/* Dial-Up's face (lib/looks.dart stamps it): Arimo, bundled, drawn to Arial's measures. */
+[data-font='arimo'] {
+  --glacier-font-sans: 'Arimo', Arial, Helvetica, sans-serif;
+}
+
+/* Runestone's face (lib/looks.dart stamps it): the game's own square letters, bundled; letters it has none of (it
+   stops at Western Europe's) are Inter's. */
+[data-font='runestone'] {
+  --glacier-font-sans: 'Runestone', 'Inter Variable', sans-serif;
+}
+
+/* A look of one's own in the terminal's face (lib/custom_theme.dart's fonts, GMFB-41): the app's own mono. */
+[data-font='mono'] {
+  --glacier-font-sans: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+
+/* The Readable font (Settings › Appearance; GMFB-41, from the Uplink gap review: "dyslexia font"): Atkinson
+   Hyperlegible Next, bundled, in place of every look's own face, Dial-Up's and Runestone's too. Above the looks' rules
+   (specificity 5), since a face chosen for reading must win. Code stays in the mono. */
+:root:root:root:root:root:root[data-font='readable'] {
+  --glacier-font-sans: 'Atkinson Hyperlegible Next Variable', 'Inter Variable', sans-serif;
+}
+
+/*
+ * The rail on a computer: its rings and circles' faces a little smaller than the pill's (lib/ui/nav_rail.dart; Matt,
+ * 2026-11-20: "make the navigtion rail icons just a bit smaller as well", then "leave them the same size on mobile").
+ */
+:root[data-platform='desktop'] {
+  --app-rail-ring: calc(var(--app-ring) * 0.86);
+}

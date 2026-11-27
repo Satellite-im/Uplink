@@ -1,0 +1,113 @@
+{
+  "note": "What reads as a sign-in code. The notification's Copy button (android Notifier.otp, CodesTest.kt) and the list's Codes section (lib/plugins/codes.dart signInCode, test/plugin_codes_test.dart) are both held to these, so the two finders cannot drift apart. code is null where the text has none.",
+  "cases": [
+    {
+      "text": "Your verification code is 482913. Don't share it with anyone.",
+      "code": "482913"
+    },
+    {
+      "text": "123-456 is your Example login code",
+      "code": "123456"
+    },
+    {
+      "text": "Use PIN 9041 to sign in",
+      "code": "9041"
+    },
+    {
+      "text": "Your code is 482913",
+      "code": "482913"
+    },
+    {
+      "text": "Use 111222 to sign in",
+      "code": "111222"
+    },
+    {
+      "text": "Your code: 482 913",
+      "code": "482913"
+    },
+    {
+      "text": "YOUR CODE IS 5512",
+      "code": "5512"
+    },
+    {
+      "text": "Your PIN is 1234.",
+      "code": "1234"
+    },
+    {
+      "text": "Your one-time passcode is 0042, good for ten minutes",
+      "code": "0042"
+    },
+    {
+      "text": "Enter 77120934 to finish your log in",
+      "code": "77120934"
+    },
+    {
+      "text": "Call me at 5551234567 when you land",
+      "code": null
+    },
+    {
+      "text": "See you at 7",
+      "code": null
+    },
+    {
+      "text": "Your order 48291333 has shipped",
+      "code": null
+    },
+    {
+      "text": "Verification code 123456789",
+      "code": null
+    },
+    {
+      "text": "Security alert: a sign in from a new phone at 10:42",
+      "code": null
+    },
+    {
+      "text": "Password reset: https://example.com/r/12345678",
+      "code": null
+    },
+    {
+      "text": "Your login is due 2026-11-14",
+      "code": null
+    },
+    {
+      "text": "Use code SAVE20 for 20% off",
+      "code": null
+    },
+    {
+      "text": "Security deposit of 1,250.00 received",
+      "code": null
+    },
+    {
+      "text": "Your PIN purchase was 1234.56",
+      "code": null
+    },
+    {
+      "text": "Verify your number with 550211",
+      "code": "550211"
+    },
+    {
+      "text": "OTP: 9921",
+      "code": "9921"
+    },
+    {
+      "text": "Your PIN-code is 4821",
+      "code": "4821"
+    },
+    {
+      "text": "Your order 482913 is shipping today",
+      "code": null
+    },
+    {
+      "text": "Thanks for shopping with us. Receipt 77120",
+      "code": null
+    },
+    {
+      "text": "Opinion poll 2024 results are in",
+      "code": null
+    },
+    {
+      "text": "Barcode 12345678 was scanned at the depot",
+      "code": null
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calls · Uplink docs</title>
+<meta name="description" content="Joining voice, the call's controls, each person's volume, and guests from a browser.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Circles, spaces and calls</div>
+    <h1>Calls</h1>
+    <p class="lede">Joining voice, the call's controls, each person's volume, and guests from a browser.</p>
+    <p>A chat-and-voice space has a call that's always open, like a voice channel: hop in, talk, hop out. Sound goes straight between the people in it, sealed end to end, at high quality.</p>
+
+<h2 id="join">Join a call</h2>
+<p>Open a chat-and-voice space and tap <b>Join voice</b>. Who's already in it shows above. On a phone, a space with people talking opens straight on its call.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Lounge</span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg></span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-avatar" data-hue="rose">MC</span><span class="m-avatar" data-hue="blue">JO</span><span class="m-txt"><b>Maya and Jo</b><small>In voice</small></span></div>
+  <span class="m-btn primary tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Join voice</span></span>
+</div></div></figure>
+
+<p>The call is on the screen as soon as you tap, and says what it is still waiting for in a line at its top: <b>Connecting…</b> with <i>Reaching the relay server</i>, <i>Starting the microphone</i> (a few seconds on a Mac), <i>Joining the call</i>, then <i>Reaching Maya</i> until someone can be heard, and <b>Connected</b> for a moment once they can. The people already in the call are drawn in grey until each is there. The same line says <b>Reconnecting…</b> if the relay server is lost in the middle of a call; whoever you were connected to is still heard.</p>
+
+<h2 id="friend">Call a friend</h2>
+<p>Open a chat with a friend who has a username and press the phone or the camera at its top: <b>Voice call</b> or <b>Video call</b>. No space is made for it; the call is between the two of you.</p>
+<ul>
+  <li><b>It rings</b> on every device of theirs that is connected, phone, Mac and PC, for 35 seconds, with <b>Answer</b> and <b>Decline</b>. On a locked Android phone it takes the whole screen, as a phone call does. Answering on one device stops the others ringing.</li>
+  <li><b>Afterwards</b> the chat keeps a line for it on both sides: a missed call, a declined one, or no answer.</li>
+  <li><b>It is the same call</b> as a space's: everything on this page works in it, sharing your screen included.</li>
+</ul>
+<p><b>Ring when the app is closed (Android).</b> Uplink has no push service behind it, so a call can only ring on a phone that is connected, and Android disconnects an app soon after you leave it. To be rung anyway, switch on <span class="ui-path">Settings › Notifications › Ring when the app is closed</span>. The app then stays connected after you close it:</p>
+<ul>
+  <li>Android shows a small, quiet notification while it does (<b>Ready for calls</b>), and it uses some battery.</li>
+  <li>Say yes when Android asks whether Uplink may run unrestricted, or press <b>Run while the phone sleeps</b> under the switch. Without that, a phone left untouched for a while may hold the app back, and a call can ring late or not at all.</li>
+  <li>After the phone restarts, open Uplink once. A notification reminds you.</li>
+</ul>
+<p>It is off until you switch it on. With it off, a call made while your app is closed shows as a missed call the next time you open it. A computer rings while Uplink is open on it.</p>
+
+<h2 id="controls">In the call</h2>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">Lounge</span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-avatar" data-hue="rose">MC</span><span class="m-avatar" data-hue="blue">JO</span><span class="m-avatar" data-hue="green">YOU</span></div>
+  <div class="m-row m-raw"><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#mic"/></svg><span>Mute</span></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Deafen</span></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#video"/></svg></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#screen-share"/></svg></span><span class="m-btn danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#phone-off"/></svg><span>Leave</span></span></div>
+</div></div><figcaption>The call's controls.</figcaption></figure>
+<table>
+  <tr><th>Control</th><th>Does</th></tr>
+  <tr><td>Mute</td><td>Stops your microphone.</td></tr>
+  <tr><td>Deafen</td><td>Hear nobody, and say nothing. <b>Hear again</b> undoes it.</td></tr>
+  <tr><td>Camera</td><td>Turns your video on or off.</td></tr>
+  <tr><td>Share screen</td><td>Shows everyone your screen, or one window. See <a href="#screen">Share your screen</a>.</td></tr>
+  <tr><td>Leave</td><td>Leaves the call. The space and its chat stay.</td></tr>
+</table>
+<p>On a computer, a circle's space shows the call above its chat. <b>Share screen</b>, beside <b>Leave</b>, shares a screen or a window with the call; press it again to stop. Drag the line between the call and the chat to give either more room.</p>
+<p>While you're in a call and look at something else, a small bubble of faces floats on top; tap it to go back.</p>
+
+<h2 id="pop-out">Pop out the video</h2>
+<p>In a call with video or a shared screen, go to another chat, the list or Settings and the call's picture stays with you, small, over the app. It shows the picture that matters most: someone's shared screen first, then whoever is talking, then the latest camera to come on (your own only when it's all there is). In an open space, only a shared screen pops out.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">Messages</span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#maximize"/></svg><span>Back to the call</span></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#mic"/></svg><span>Mute</span></span><span class="m-btn danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#phone-off"/></svg><span>Leave</span></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#x"/></svg><span>Close</span></span></div>
+</div></div><figcaption>The call's picture over the app, its buttons showing.</figcaption></figure>
+<ul>
+  <li><b>Tap it</b> (or move the pointer over it) for its buttons: <b>Back to the call</b>, <b>Mute</b>, <b>Leave</b> and <b>Close</b>.</li>
+  <li><b>Drag it</b> to any corner; it snaps there, clear of the title bar and the message box, and stays in that corner next time.</li>
+  <li><b>On a computer</b>, its corner button makes it larger or smaller.</li>
+  <li><b>Close</b> puts the picture away for this call only; the call goes on, and its bar comes back with a <b>Pop out</b> button to bring it back.</li>
+  <li><b>Pop out</b> is also in the call's own buttons (in a space, the call's menu): it leaves the call's page with the picture showing.</li>
+</ul>
+<p>A call with no video keeps its bar, as before. Going back to the call's page puts the picture back there.</p>
+<p><b>On Android</b>, leave the app during a call with video (the home button, or another app) and it shrinks to a small window over everything, showing the same picture with <b>Mute</b> and <b>Leave</b>. Tap the window to come back to the app where you were. It only does this during a video call or a shared screen.</p>
+
+<h2 id="screen">Share your screen</h2>
+<p>Open the call's menu (the three dots at its top) and press <b>Share screen</b>. It works on Mac, Windows, Linux and Android.</p>
+<ul>
+  <li><b>On a computer</b>, pick a whole screen or one window. On a Mac, the first time, allow Uplink in <span class="ui-path">System Settings › Privacy &amp; Security › Screen Recording</span>, then try again.</li>
+  <li><b>Its sound too</b>, on a Windows PC and a Mac: leave <b>Share sound too</b> on over the screens and windows, and what the computer plays goes with the picture. On a PC that is a window's own sound, or everything the PC plays for a whole screen. On a Mac it is everything the Mac plays, whichever you pick (macOS 14.4 or later; the Mac asks once whether Uplink may record system audio). The call's own voices are never part of it, so nobody hears themselves back. Linux and Android share the picture alone for now.</li>
+  <li><b>On Android</b>, the phone asks before it shares, and you can choose one app or the whole screen. A notification says <b>Sharing your screen</b> while it's on.</li>
+</ul>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">Lounge</span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#screen-share"/></svg><span>Maya Chen's screen</span></span><span class="m-btn primary"><span>Back to call</span></span></div>
+</div></div><figcaption>Someone's screen, large.</figcaption></figure>
+<p>Everyone else sees your screen large and whole, never cropped. <b>Back to call</b> puts it away, and a line over the call says who is sharing, with <b>View</b> to bring it back. While you share, a line says <b>You're sharing your screen</b>, with <b>Stop</b>.</p>
+<p><b>Hearing a shared screen.</b> Where someone shares their screen with its sound, the large view has a speaker button beside <b>Full screen</b>. Press it for how loud that sound is on your device, from nothing to all of it, with a button to silence it; it is yours alone and is kept for the next share. Deafened, you hear none of it. It works wherever you watch from, a phone and a browser included.</p>
+<p>Your screen goes out in place of your camera: while you share, others see your screen, not your camera, and your camera is back when you stop. Its sound goes beside the call, not through your microphone: muting yourself doesn't silence it, a recording of the call doesn't take it, and captions don't write it out. If your role in a space can't show video, it can't share a screen either. Like the rest of the call, picture and sound go encrypted between you: the relay can't see or hear them.</p>
+
+<h2 id="people">Each person's volume</h2>
+<p>Press and hold someone in the call:</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Jo</div>
+    <div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-x"/></svg><span>Mute for me</span><small>Only you stop hearing them</small></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg><span>Volume for Jo</span><small>0 to 200%</small></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Add as a friend</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#copy"/></svg><span>Copy name</span></div>
+  </div>
+</div></div></figure>
+<p>There are two mutes, and they are separate. <b>Mute for me</b> is yours alone: only you stop hearing them, they aren't told, and nobody else is affected. Their row shows a crossed speaker and <b>muted for you</b>.</p>
+<p>In a space, a moderator also sees <b>Mute for everyone</b> (their role needs <b>Mute others</b>, and has to be above the other person's). Nobody in the space hears that person, and they can't unmute themselves: their microphone button shows a lock, and says why when they press it. Everyone sees a lock and <b>muted for everyone</b> on their row, so it is clear it wasn't their own doing. Any moderator above them can switch it off again. It doesn't rely on the muted person's app: every app in the call silences them itself.</p>
+<p>A moderator's mute lasts while the person stays in the space. An admin's or the owner's is written into the space's roles, so it still holds when they come back. A moderator can also put someone out of the space if their role allows it.</p>
+
+<h2 id="stage">A stage: a few speak, many listen</h2>
+<p>For a talk, a show or a town hall. Whoever manages the space opens the call's menu and chooses <b>Make it a stage</b>. From then on, everyone who comes in listens: they hear the speakers and can write in the chat, but their microphone stays off.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Call</div>
+    <div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>End the stage · 24 listening · 2 ✋</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hand"/></svg><span>Raise your hand</span></div>
+  </div>
+</div></div></figure>
+<ul>
+  <li><b>Raise your hand</b> (a listener's menu) puts a ✋ by your name, so the hosts know you'd like to speak.</li>
+  <li>A host presses and holds someone and chooses <b>Bring up to speak</b>, or <b>Move to the audience</b> to send them back.</li>
+  <li>The menu says how many are listening and how many hands are up. <b>End the stage</b> lets everyone speak again.</li>
+</ul>
+<p>Listeners don't connect to each other, only to the speakers, so a stage holds far more people than an ordinary call.</p>
+
+<h2 id="sound">Sound settings</h2>
+<p><span class="ui-path">Settings › Voice and video</span> has your microphone and speaker, the sound's quality, stereo, music mode (for playing an instrument), and noise removal (RNNoise or DeepFilterNet), which cleans background noise off your voice before it's sent. The call's menu has <b>Voice settings…</b> too.</p>
+
+<h2 id="guests">Guests from a browser</h2>
+<p>Someone without the app can join a space's call from a browser. Copy the space's link from its menu (<b>Invite people</b>) and send it. They open it, choose their microphone and camera, and tap <b>Join</b> as a guest, or sign up with a username kept in that browser.</p>
+<figure class="mock wide"><div class="m-screen"><div class="m-head"><span class="m-title">gogho.st/join</span></div><div class="m-body">
+  <p class="m-p">Join Lounge</p>
+  <label class="m-field"><span>Your name</span><span class="m-input">Riley</span></label>
+  <div class="m-row m-raw"><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#mic"/></svg><span>Microphone</span></span><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#video"/></svg><span>Camera</span></span></div>
+  <span class="m-btn primary tap"><span>Join</span></span>
+</div></div><figcaption>The browser page a space's link opens.</figcaption></figure>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>Strict networks</b><p>Calls connect through Uplink's relay first, which gets through almost any network: a phone on a mobile network, a workplace, school or hotel network. If the relay can't be reached, the call tries a direct path between you instead, by itself. The relay passes the call along still encrypted between you: it can't hear or see it.</p></div></aside>
+
+<h2 id="extras">With plugins</h2>
+<p>Add <a href="/docs/record-call/">Record call</a>, <a href="/docs/live-captions/">Live captions</a>, <a href="/docs/watch-together/">Watch together</a>, <a href="/docs/soundboard/">Soundboard</a>, <a href="/docs/spotify/">Spotify</a> or <a href="/docs/auto-leveler/">Auto leveler</a> for more in calls. They show in the call's menu, and Record call, Soundboard and Spotify put a button in the space's header.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/sms-spaces/"><small>Previous</small>SMS spaces</a><a class="next" href="/docs/files/"><small>Next</small>Files spaces</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#join">Join a call</a><a href="#friend">Call a friend</a><a href="#controls">In the call</a><a href="#pop-out">Pop out the video</a><a href="#screen">Share your screen</a><a href="#people">Each person's volume</a><a href="#stage">A stage: a few speak, many listen</a><a href="#sound">Sound settings</a><a href="#guests">Guests from a browser</a><a href="#extras">With plugins</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

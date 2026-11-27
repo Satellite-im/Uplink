@@ -1,0 +1,77 @@
+<p>A plugin of your own sorts texts the way you'd like them sorted: bills in a tab of their own with the amount on the row, a parcel's tracking number a press away, receipts marked read as they come. It's one file you write by hand that says what to look for in a text and what to do with it. You try it on your own device in Developer mode, then send it to the Marketplace, where it's reviewed before anyone else can add it.</p>
+
+<h2 id="can">What a plugin can do</h2>
+<ul>
+  <li><b>Tag texts by their words</b>: "your bill is ready", "amount due $45.20", a tracking number. A tag can keep what it found, like the amount.</li>
+  <li><b>Give texts a tab of their own</b> beside Messages and Codes, or a <b>kind</b> in the list's filter that people show or hide.</li>
+  <li><b>Draw its texts' rows</b>: a value large on the row (the amount, a tracking number), a short caption, a face with a letter and a colour, and a button at the row's end.</li>
+  <li><b>Add buttons</b>: lines in a conversation's menu in the list, a button in a conversation's header, lines in a message's menu. A button can say something, copy words to the clipboard, write a reply for you to send, mark the conversation read, move it to one of the plugin's tabs or back to Messages, or open the plugin's own web page.</li>
+  <li><b>Act as texts come</b>: mark texts in its own tabs and kinds as read, or take their notification away, but only behind a switch in its settings that starts off.</li>
+  <li><b>Have settings of its own</b>: switches, choices, and words the person types (more words for bills, say), shown on its page in the Marketplace.</li>
+</ul>
+
+<h2 id="cant">What it can't do</h2>
+<ul>
+  <li>It can't reach the internet, and it isn't code: nothing in it runs. It's a description the app follows. A button you press can open its one web page in your browser, and that's all.</li>
+  <li>It never sees your contacts' texts, group texts, texts sent with Uplink's encryption, your own messages, chats on other networks (Telegram, Signal and the rest), or circles and spaces.</li>
+  <li>It never acts on a text with a sign-in code in it. It can tag one, but never sort it into a tab, mark it read or silence it.</li>
+  <li>It can't change the words of a message, or who a conversation is from: a row always keeps the conversation's own name.</li>
+  <li>It's for you alone, on one device. Plugins from other developers can't be turned on for a whole circle yet.</li>
+</ul>
+
+<h2 id="file">One file: ghost-plugin/1</h2>
+<p>A plugin is one file, <code>&lt;id&gt;.ghostplugin</code>, of JSON in the <b>ghost-plugin/1</b> format: its name and description, its icon, what it may do, its settings, and its rules. It finds words in a text with <a href="/docs/plugin-phrases/">phrases</a> like <code>amount due {amount}</code>, never with code or regular expressions, so no plugin can hang the app, and one that's slow is paused. Every field is on <a href="/docs/plugin-format/">The plugin file</a>.</p>
+<pre><code>{
+  "format": "ghost-plugin/1",
+  "id": "mybills",
+  "version": "1.0.0",
+  "name": "My bills",
+  "tagline": "Bills in a tab of their own",
+  "description": "Texts that say a bill is ready go to a Bills tab, with the amount on the row.",
+  "symbol": "calculator",
+  "hue": "amber",
+  "shelf": "organise",
+  "labels": ["bills"],
+  "permissions": ["sort"],
+  "rules": {
+    "tags": [{"tag": "bill", "any": ["your bill is ready", "amount due {amount}"], "detail": {"from": "token"}}],
+    "sections": [{"key": "bills", "label": "Bills", "icon": "calculator", "kind": "tab", "takes": {"tagged": ["bill"]}, "row": {"value": "{tag:bill}"}}]
+  }
+}</code></pre>
+<p>That's a whole plugin, as small as one can be: Developer mode loads it as it is. To submit it, it also needs an icon, your username and a help address (<a href="/docs/plugin-format/#example">the whole Bills file</a> has them).</p>
+
+<h2 id="where">Where it runs</h2>
+<ul>
+  <li><b>An Android phone</b>: everything, as your texts come.</li>
+  <li><b>A computer paired with an Android phone</b>: it sorts the phone's texts there too, once it's added on the computer (plugins are added on each device on its own). Marking read and silencing as texts come happen on the phone only.</li>
+  <li><b>A Mac or Windows PC on its own</b> has no texts, so a plugin does nothing there.</li>
+  <li><b>iPhone</b>: plugins from other developers aren't on iPhone at all, because of the App Store's rules for apps that add other developers' features. Developer mode can still load your own there, to try it with <b>Try it</b>.</li>
+</ul>
+
+<h2 id="path">From an idea to the Marketplace</h2>
+<steps>
+<step title="Write it">
+<p>Start from one of the examples below and change it, or write one from nothing with <a href="/docs/plugin-format/">The plugin file</a> beside you. Any text editor will do.</p>
+</step>
+<step title="Try it in Developer mode">
+<p>Load it in <ui>Settings › Developer › Plugins in development</ui> from a file, a link or the clipboard, then try it on a text without waiting for one to come. Change it, press <b>Reload</b>, try it again. <a href="/docs/plugin-quick-start/">Your first plugin</a> walks through it.</p>
+</step>
+<step title="Submit it">
+<p><ui>Marketplace › Submit a plugin</ui>: the plugin, its icon, description and tags, a screenshot or two, and a note for the reviewer. <a href="/docs/plugin-submit/">Submit it to the Marketplace</a>.</p>
+</step>
+<step title="Review">
+<p>A person at Uplink reads the whole file, tries it, and approves it, asks for changes or turns it down. <ui>Marketplace › My submissions</ui> shows where it stands, and the app tells you when that changes.</p>
+</step>
+<step title="Listed">
+<p>Approved, it's in Discover for everyone with the <b>Reviewed</b> mark, under your username. People see what it can do before they add it, and can report it from its page.</p>
+</step>
+</steps>
+
+<h2 id="examples">The examples</h2>
+<p>Two complete plugins to start from, each one file:</p>
+<table>
+  <tr><th>Example</th><th>What it shows</th></tr>
+  <tr><td><a href="/docs/examples/bills.ghostplugin">Bills</a></td><td>An amount found in a text and shown large on its row, a tab and a kind, a setting of the person's own words, and marking receipts read behind a switch.</td></tr>
+  <tr><td><a href="/docs/examples/parcels.ghostplugin">Parcels</a></td><td>Words between words, tracking codes, a choice setting, a reply to send, a link, moving a conversation back to Messages, and silencing behind a switch.</td></tr>
+</table>
+<p>They're on this site at <code>https://gogho.st/docs/examples/bills.ghostplugin</code> and <code>https://gogho.st/docs/examples/parcels.ghostplugin</code>, which Developer mode can load as they are, and in the app's repository in <a href="https://github.com/InfamousVague/ghost-messaging/tree/main/examples/plugins">examples/plugins on GitHub</a>, with a note on each. Their ids, <code>bills</code> and <code>parcels</code>, can't be submitted: give yours an id of its own.</p>

@@ -1,0 +1,87 @@
+<p>From nothing to a plugin of your own in a few minutes: load the example Bills plugin in Developer mode, try it on a text, switch it on, then change it and load it again. Trying it works on every platform; seeing it sort your texts needs an Android phone.</p>
+
+<h2 id="on">Turn on Developer mode</h2>
+<steps>
+<step title="Tap Version twelve times">
+<p>Open <ui>Settings › About</ui> and tap <b>Version</b> twelve times in a row. Taps more than two seconds apart start the count again, and from the eighth a note says how many are left. On a Mac or Windows PC, press <b>Version</b> in its <ui>Settings › About</ui> the same way.</p>
+<m-screen title="About" back>
+  <m-section title="Uplink">
+    <m-row icon="ghost" hue="teal" label="Version" value="0.10.1" tap/>
+    <m-row icon="sparkles" hue="amber" label="What's new" hint="What the last update brought."/>
+  </m-section>
+</m-screen>
+</step>
+<step title="Settings › Developer appears">
+<p>Developer mode is on, and <ui>Settings › Developer</ui> is there now (on an Android phone, <ui>Settings › API</ui> too). The <b>Developer mode</b> switch at the top of <ui>Settings › Developer</ui> turns it off again; plugins in development stop while it's off, and come back when it's on.</p>
+</step>
+</steps>
+
+<h2 id="get">Get the Bills plugin</h2>
+<p>In <ui>Settings › Developer › Plugins in development</ui>, tap <b>Load a plugin from a link</b> and give it this address:</p>
+<pre><code>https://gogho.st/docs/examples/bills.ghostplugin</code></pre>
+<p>That works on every platform. Or copy the file's words from anywhere (it's plain text) and tap <b>Paste a plugin</b>.</p>
+
+<h2 id="load">What you see</h2>
+<p>Bills gets a row of its own, switched off until you agree to what it can do: its version, where it came from, and whether it's running.</p>
+<m-screen title="Developer" back caption="Settings › Developer, with Bills loaded from a link.">
+  <m-section>
+    <m-row icon="braces" hue="indigo" label="Developer mode" switch="on"/>
+  </m-section>
+  <m-section title="Plugins in development" foot="Load a plugin you're making to try it on this phone. It isn't reviewed, and runs only while Developer mode is on.">
+    <m-row icon="folder-open" hue="amber" label="Load a plugin from a file" hint="A .ghostplugin file."/>
+    <m-row icon="clipboard-paste" hue="blue" label="Paste a plugin" hint="Its words, copied from anywhere."/>
+    <m-row icon="link" hue="purple" label="Load a plugin from a link" hint="https, or http://127.0.0.1 with adb reverse. Reload fetches it again."/>
+    <m-row icon="calculator" hue="amber" label="Bills" hint="1.0.0 · from a link · needs your OK" switch="off" tap/>
+    <m-row icon="send" hue="teal" label="Submit a plugin to the Marketplace" chev/>
+    <m-row icon="book-open" hue="slate" label="How to build and test one" chev/>
+  </m-section>
+</m-screen>
+<p>A plugin with problems or warnings says how many of each on its row. A warning doesn't stop it loading. Open it to read them: <a href="/docs/plugin-testing/#problems">what each one means</a>.</p>
+
+<h2 id="try">Try it on a text</h2>
+<p>Tap the Bills row to open its page. Under <b>Try it</b>, type this and tap <b>Try it</b>:</p>
+<pre><code>Your bill is ready. Amount due: $45.20 by 3 Dec.</code></pre>
+<p>No text needs to come and nothing is sent: it runs Bills on those words as if they came from a number not in your contacts. It says Bills tags the text <b>bill</b> with <b>$45.20</b>, puts it in its <b>Bills</b> tab with $45.20 on the row, and offers <b>Copy the amount</b>. That works on every platform, an iPhone's too.</p>
+<m-screen title="Bills" back caption="Try it, on a plugin's page in Settings › Developer.">
+  <div class="m-section-title">Try it</div>
+  <m-field value="Your bill is ready. Amount due: $45.20 by 3 Dec."/>
+  <m-btn kind="primary" icon="flask-conical" tap>Try it</m-btn>
+  <m-section>
+    <m-row icon="tag" hue="amber" label="Tags" value="bill: $45.20"/>
+    <m-row icon="list-filter" hue="amber" label="Its tab" value="Bills"/>
+    <m-row icon="calculator" hue="amber" label="Its row" value="$45.20 · A bill"/>
+    <m-row icon="copy" hue="slate" label="Copy the amount" hint="On its row, in the list's menu and in a message's menu"/>
+  </m-section>
+</m-screen>
+<p>Where a built-in plugin would take the text first in your app, Try it says so under its answer: here, <b>In this app, Kinds of text › Payment reminders takes this text first</b>. That's the next step's reason.</p>
+
+<h2 id="add">Switch it on</h2>
+<p>Back in <ui>Settings › Developer</ui>, switch Bills on. The first time, a sheet says what it can do, made from the file itself, and that nobody has reviewed it. Tap <b>Switch it on</b>.</p>
+<m-screen>
+  <m-sheet title="Switch on Bills?">
+    <m-row icon="calculator" hue="amber" label="Bills" hint="By @yourname"/>
+    <m-p>Not reviewed by anyone: switch this on only if you made it.</m-p>
+    <m-row icon="eye" hue="slate" label="Reads texts from numbers not in your contacts" hint="Their words and who they're from, on this phone, to sort them."/>
+    <m-row icon="list-filter" hue="slate" label="Sorts texts into its own tabs and kinds"/>
+    <m-row icon="check-check" hue="slate" label="Can mark texts as read"/>
+    <m-row icon="copy" hue="slate" label="Copies to your clipboard when you ask"/>
+    <m-row icon="shield-check" hue="slate" label="Can't reach the internet"/>
+    <m-item icon="plus" tap>Switch it on</m-item>
+    <m-item icon="x">Not now</m-item>
+  </m-sheet>
+</m-screen>
+<p>On an Android phone, <b>Kinds of text</b> sorts bills before any plugin from another developer, into its Payment reminders. To see your Bills tab, open <ui>Marketplace › Kinds of text</ui> and switch off <b>Payment reminders</b> in its settings. Now a text like the one you tried goes to Bills:</p>
+<m-screen rail="messages" circles="Book Club:rose|Night Owls:indigo" caption="The Bills tab: the amount large on the row, and a press to copy it.">
+  <m-tabs items="Messages|Codes|Bills" active="Bills"/>
+  <m-row-raw><span class="m-avatar" data-hue="slate">72</span><span class="m-txt"><b class="m-big">$45.20</b><small>72975 · A bill</small></span><m-btn kind="secondary" icon="copy" tap/></m-row-raw>
+</m-screen>
+<p>A conversation's row keeps its own name; Bills only adds the amount and its caption. While a plugin in development is on, the list says so in a quiet line, <b>A plugin in development is on · Settings › Developer</b>, because its rows look like any other plugin's.</p>
+
+<h2 id="change">Change it, and load it again</h2>
+<p>Save the file on your computer, change a phrase (add <code>"your invoice is ready"</code> to the first rule's <code>any</code>, say), and load your copy from a link your computer serves. With the phone plugged in by USB:</p>
+<pre><code>python3 -m http.server 8080        # in the folder with your bills.ghostplugin
+adb reverse tcp:8080 tcp:8080      # the phone's 127.0.0.1:8080 is now your computer's</code></pre>
+<p>Then, in <ui>Settings › Developer › Plugins in development</ui>, load a plugin from this link. With the same id, your copy takes the place of the one from gogho.st, switched on or off as that was:</p>
+<pre><code>http://127.0.0.1:8080/bills.ghostplugin</code></pre>
+<p>From then on, each time you save the file, tap <b>Reload</b> on its page and try it again. Plain <code>http</code> works only to the device itself like this; anything else needs <code>https</code>. On a Mac or Windows PC there's no <code>adb</code> to it: serve the folder the same way and load <code>http://localhost:8080/bills.ghostplugin</code>, or on a Mac load the file itself, which <b>Reload</b> reads again.</p>
+<note kind="tip" title="Before you submit it"><p>Give your copy an id of its own, and a name: the examples' ids can't be submitted. A reload whose id has changed is refused, so load it as a new plugin, then remove the old one. Next: <a href="/docs/plugin-format/">The plugin file</a>, or <a href="/docs/plugin-testing/">everything Developer mode can do</a>.</p></note>

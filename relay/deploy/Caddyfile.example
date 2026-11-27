@@ -1,0 +1,20 @@
+# Caddy in front of an Uplink relay (docs/SELF_HOSTING.md). Caddy gets and renews the certificate itself.
+# Replace relay.example.com with your domain. The whole site is the relay: every path goes to it.
+#
+# With deploy/compose.yaml the relay is at relay:8787. Running Caddy on the host beside the systemd service
+# (deploy/ghost-relay.service), use 127.0.0.1:8787 instead.
+
+relay.example.com {
+	# Files spaces upload in pieces of up to 8 MiB, and the relay refuses bodies over 10 MiB itself.
+	request_body {
+		max_size 10MiB
+	}
+	reverse_proxy relay:8787 {
+		# Pass uploads and downloads on as they come, not buffered.
+		flush_interval -1
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 2m
+		}
+	}
+}

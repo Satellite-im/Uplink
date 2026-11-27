@@ -1,0 +1,77 @@
+{
+  "about": "Argon2id (version 0x13, 32 bytes out) as both halves of the app's password stretching must give it: pointycastle's on a phone and a computer (test/argon2_test.dart) and @noble/hashes' in a browser (tool/web/build-argon2.mjs checks web/argon2id.js against these, and tool/web/e2e.mjs asks the page itself). password is text, read as UTF-8; salt and key are hex; m is KiB, t passes, p lanes.",
+  "vectors": [
+    {
+      "password": "password",
+      "salt": "736f6d6573616c74",
+      "m": 65536,
+      "t": 2,
+      "p": 1,
+      "key": "09316115d5cf24ed5a15a31a3ba326e5cf32edc24702987c02b6566f61913cf7",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "password",
+      "salt": "736f6d6573616c74",
+      "m": 256,
+      "t": 2,
+      "p": 1,
+      "key": "9dfeb910e80bad0311fee20f9c0e2b12c17987b4cac90c2ef54d5b3021c68bfe",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "password",
+      "salt": "736f6d6573616c74",
+      "m": 256,
+      "t": 2,
+      "p": 2,
+      "key": "6d093c501fd5999645e0ea3bf620d7b8be7fd2db59c20d9fff9539da2bf57037",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "password",
+      "salt": "736f6d6573616c74",
+      "m": 65536,
+      "t": 1,
+      "p": 1,
+      "key": "f6a5adc1ba723dddef9b5ac1d464e180fcd9dffc9d1cbf76cca2fed795d9ca98",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "differentpassword",
+      "salt": "736f6d6573616c74",
+      "m": 65536,
+      "t": 2,
+      "p": 1,
+      "key": "0b84d652cf6b0c4beaef0dfe278ba6a80df6696281d7e0d2891b817d8c458fde",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "password",
+      "salt": "6469666673616c74",
+      "m": 65536,
+      "t": 2,
+      "p": 1,
+      "key": "bdf32b05ccc42eb15d58fd19b1f856b113da1e9a5874fdcc544308565aa8141c",
+      "of": "the Argon2 reference implementation's own test (phc-winner-argon2 src/test.c, Argon2id, version 0x13)"
+    },
+    {
+      "password": "correct horse battery",
+      "salt": "000102030405060708090a0b0c0d0e0f",
+      "m": 65536,
+      "t": 3,
+      "p": 1,
+      "key": "904b42492da04031a468a6d1d51689848c15e5c88d8587b0186dce574b8c4bcc",
+      "of": "an account's own settings (AccountCrypto.argonMemoryKiB, argonPasses): 64 MiB, 3 passes"
+    },
+    {
+      "password": "pässwörd ✓ 密码",
+      "salt": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0",
+      "m": 8192,
+      "t": 1,
+      "p": 1,
+      "key": "77c0de75fad654eacb20e9d1765772181f3cd18926fe10fe672b5488c519618f",
+      "of": "a password that is not ASCII: both halves read it as UTF-8"
+    }
+  ]
+}

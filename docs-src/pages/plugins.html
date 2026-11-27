@@ -1,0 +1,90 @@
+<p>Plugins are extras you choose: sort your texts, translate them, record calls, watch together. Some are on from the start; others you add when you want them. They're all in the <b>Marketplace</b>, the store on the rail between Archive and Settings. Everything a plugin does happens on your device unless its page says otherwise.</p>
+
+<h2 id="open">Open the Marketplace</h2>
+<p>Tap the store on the rail, or in the dock if you use one; on Dial-Up's taskbar it's <b>Market</b>. On a phone it opens on its list: <b>Search the Marketplace</b>, then <b>Discover</b> (every plugin), <b>Added</b> (yours), <b>Updates</b> while one is waiting, and under <b>Make your own</b>, <b>Submit a plugin</b>, <b>My submissions</b> and <b>How to build a plugin</b>. On a computer, or a Fold opened out, Discover opens beside the list. The ring's number is how many updates are waiting.</p>
+<m-screen title="Discover" wide rail="marketplace" railtap="marketplace" circles="Book Club:rose|Night Owls:indigo" caption="Discover: every plugin, built in and from other developers.">
+  <m-chips items="All|Added|For circles|From developers|Organise" on="All"/>
+  <div class="m-section-title">Featured</div>
+  <m-plugin name="Translate" icon="languages" hue="blue" line="Read texts in other languages" tap="add"/>
+  <m-plugin name="Codes" icon="key-round" hue="green" line="Sign-in codes in a tab of their own" added/>
+  <div class="m-section-title">More to add</div>
+  <m-plugin name="Trips" icon="ticket" hue="cyan" line="Train, bus and flight texts in a tab of their own" by="maya" reviewed/>
+  <m-plugin name="Record call" icon="circle-dot" hue="coral" line="A track for each voice, named, in one MP4"/>
+</m-screen>
+<m-screen title="Marketplace" rail="marketplace" circles="Book Club:rose|Night Owls:indigo" caption="On a phone, the Marketplace opens on its list.">
+  <m-field placeholder="Search the Marketplace"/>
+  <m-banner><b>Marketplace</b><br>Extras for your messages, built in or from other developers, each on this phone alone.</m-banner>
+  <m-section>
+    <m-row icon="compass" hue="blue" label="Discover" hint="16 plugins" chev tap/>
+    <m-row icon="check-check" hue="green" label="Added" hint="9 added" chev/>
+    <m-row icon="download" hue="purple" label="Updates" hint="1 waiting" chev/>
+  </m-section>
+  <m-section title="Make your own">
+    <m-row icon="send" hue="teal" label="Submit a plugin" hint="Send one you made for review" chev/>
+    <m-row icon="list-checks" hue="amber" label="My submissions" hint="None yet" chev/>
+    <m-row icon="book-open" hue="slate" label="How to build a plugin" chev/>
+  </m-section>
+</m-screen>
+<p>Press and hold the ring on a phone, or right-click it on a computer, for its menu: a line for each part of the Marketplace.</p>
+
+<h2 id="find">Add or remove a plugin</h2>
+<p>In Discover, featured ones are at the top, then the ones you've added, then <b>More to add</b>, then those for circles. The chips pick one shelf: <b>All</b>, <b>Added</b>, <b>For circles</b>, <b>From developers</b>, and each category. The search finds a plugin by its name, its words, its tags or who made it, and so does <b>Search the Marketplace</b>.</p>
+<p>Tap a plugin for its page: what it adds, how it looks, <b>What it reads and keeps</b>, and <b>Add to Uplink</b> or <b>Remove</b>. Once it's added, its settings are on its page too. Plugins' settings aren't in Settings any more, but searching Settings for a plugin, or for one of its settings, opens it here.</p>
+<p>A plugin from another developer has <b>Help from the developer</b> on its page too, their help link or email, and <b>Report this plugin</b>. Removing one asks first, <b>Remove Trips</b> or <b>Keep it</b>: it's deleted from that device, and your choices for it are kept if you add it again.</p>
+<p>A tab a plugin made leads back to it: press and hold the tab, or right-click it on a computer, for <b>About</b> and the plugin's name, which opens its page here.</p>
+
+<h2 id="developers">Plugins from other developers</h2>
+<p>Besides the built-in plugins, the Marketplace has plugins made by other people. Each one is reviewed by Uplink before it's listed.</p>
+<ul>
+  <li>Their cards say who made them, <b>By @maya</b>, with the <b>Reviewed</b> mark; their pages say <b>Reviewed by Uplink</b>. Built-in plugins say <b>Built in</b>.</li>
+  <li>Adding one asks first, in a sheet that says everything it can do, made from the plugin itself: <a href="/docs/plugin-permissions/">what a plugin may do</a>.</li>
+  <li>They only ever see texts from numbers not in your contacts, on the one device they're added on: <b>Reads texts from numbers not in your contacts</b>. Never your contacts' texts, group texts, encrypted texts, your own, chats on other networks, or circles and spaces, and nothing at all while Uplink can't read your contacts. And they <b>Can't reach the internet</b>: a button you press can open the plugin's page in your browser, or copy words to your clipboard.</li>
+  <li>They never act on a text with a sign-in code in it.</li>
+  <li><b>Built-in plugins sort first: a text Codes, Spam filter or a kind of Kinds of text takes stays theirs.</b> To let a plugin's tab have bills or parcels, switch off that kind in <ui>Marketplace › Kinds of text</ui>.</li>
+  <li>Something wrong with one? <b>Report this plugin</b> on its page. Every report is read.</li>
+  <li>They aren't on iPhone: "Plugins from other developers aren't on iPhone."</li>
+</ul>
+<p>Want to make one? <a href="/docs/build-a-plugin/">Build a plugin</a>. A plugin someone is making shows <b>In development · not reviewed</b>, only on their own device, while Developer mode is on.</p>
+
+<h2 id="updates">Updates</h2>
+<ul>
+  <li>When a plugin you've added has a new version, the Marketplace's ring shows a number, and <ui>Marketplace › Updates</ui> lists it, with what's new and <b>Update</b>. <b>Update all</b> updates those that can't do anything more than before. With none waiting it says <b>Everything's up to date</b>.</li>
+  <li>An update that can do more than the version you have asks first: "Update Trips?", with only what it can now do.</li>
+  <li>A plugin's page says <b>Update to 1.1.0</b> too, where one is waiting. Updates are never put in without you, and an update keeps a plugin on or off as you had it.</li>
+  <li>A plugin that's withdrawn from the Marketplace switches itself off, and the app says so. Its page gives the reason and offers <b>Remove</b>. One this version of the app can't check or run says why on its page, marked <b>Withdrawn</b> or <b>Not working</b> on its card, with <b>Remove</b>.</li>
+</ul>
+
+<h2 id="circle">For a whole circle</h2>
+<p>Some built-in plugins (marked <b>Circle</b> below) can be turned on for everyone in a circle, so every member has them in its spaces without adding them. Whoever may change the circle turns them on in <ui>Circle settings › Plugins</ui>. Plugins from other developers are for one device, and can't be turned on for a circle.</p>
+<m-screen title="Plugins" back caption="Circle settings › Plugins.">
+  <m-section title="For everyone in the circle" foot="Turned on here, a plugin works in this circle's spaces for every member, without anyone adding it.">
+    <m-row icon="circle-dot" hue="coral" label="Record call" switch="on"/>
+    <m-row icon="type" hue="blue" label="Live captions" switch="off" tap/>
+    <m-row icon="film" hue="purple" label="Watch together" switch="on"/>
+    <m-row icon="audio-lines" hue="green" label="Spotify" switch="off"/>
+  </m-section>
+</m-screen>
+
+<h2 id="all">Every built-in plugin</h2>
+<table>
+  <tr><th>Plugin</th><th>What it does</th><th>Starts</th></tr>
+  <tr><td><a href="/docs/record-call/">Record call</a></td><td>Record a call, a named track for each voice. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/scribe/">Scribe</a></td><td>Write out a recording, who said what. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/live-captions/">Live captions</a></td><td>Everyone's words in a call, as they're said. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/watch-together/">Watch together</a></td><td>Play a video for everyone in a call. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/soundboard/">Soundboard</a></td><td>Pads that play a sound for everyone in a call. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/notion/">Notion</a></td><td>Notion pages and boards opened out under a link in a circle's spaces. Circle only.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/spotify/">Spotify</a></td><td>A queue of songs for a call, played from one person's Spotify on a Mac or a PC. Circle only.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/auto-leveler/">Auto leveler</a></td><td>Everyone in a call at about the same loudness, on your device. Circle.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/voice-changer/">Voice changer</a></td><td>Voice messages in another voice, with your own ElevenLabs key.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/translate/">Translate</a></td><td>Translate texts on your phone.</td><td>Off</td></tr>
+  <tr><td><a href="/docs/codes/">Codes</a></td><td>Sign-in codes in their own tab.</td><td>On</td></tr>
+  <tr><td><a href="/docs/spam/">Spam filter</a></td><td>Spam in its own tab.</td><td>On</td></tr>
+  <tr><td><a href="/docs/kinds/">Kinds of text</a></td><td>Sorts strangers' texts by kind, with a filter.</td><td>On</td></tr>
+  <tr><td><a href="/docs/unknown-numbers/">Unknown numbers</a></td><td>What an unknown number likely is.</td><td>On</td></tr>
+  <tr><td><a href="/docs/quiet-hours/">Quiet hours</a></td><td>Strangers silent at night.</td><td>On</td></tr>
+  <tr><td><a href="/docs/link-previews/">Link previews</a></td><td>Links as cards.</td><td>On</td></tr>
+  <tr><td><a href="/docs/quick-actions/">Quick actions</a></td><td>Buttons for dates, addresses, tracking numbers.</td><td>On</td></tr>
+  <tr><td><a href="/docs/replies/">Replies</a></td><td>Suggested replies and reminders.</td><td>On</td></tr>
+  <tr><td><a href="/docs/cleaner/">Cleaner</a></td><td>Delete conversations by kind.</td><td>On</td></tr>
+</table>

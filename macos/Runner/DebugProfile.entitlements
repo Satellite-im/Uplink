@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Not sandboxed, as the release is not (Release.entitlements says why): the two keep what they keep in the
+	     same places, and a debug build can be walked through an update of itself. -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<!-- A voice message is recorded with the Mac's microphone (Runner/DeskSound.swift), only while one is being
+	     recorded: the hardened runtime wants this said, and macOS asks the person the first time. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- Voice and video channels (lib/voice): the camera, only while video is on in one. -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<!-- Spotify in a circle's calls (Runner/Spotify.swift): pressing the Spotify app's own buttons, only once this Mac's
+	     person pressed Start there; macOS asks them the first time (Info.plist, NSAppleEventsUsageDescription). -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,107 @@
+<p>A plugin is one file of JSON, named <code>&lt;id&gt;.ghostplugin</code>, in the <b>ghost-plugin/1</b> format: one object holding the fields below. It's at most 256 KB (262,144 bytes) and nested at most 8 deep. Numbers in it are whole numbers, and <code>null</code> appears only where a field says it may. A key the format doesn't have is a problem at any depth (<code>unknown_field</code>), so a reviewer sees everything a plugin holds. Developer mode loads any file name, and the file laid out however you like.</p>
+
+<h2 id="fields">The fields</h2>
+<table>
+  <tr><th>Field</th><th>What it is</th><th>Rules</th></tr>
+  <tr><td><code>format</code></td><td>The format</td><td>Required. Exactly <code>"ghost-plugin/1"</code>.</td></tr>
+  <tr><td><code>id</code></td><td>Your plugin's id</td><td>Required. 3 to 24 lower-case letters and digits, starting with a letter; not one the app keeps (<a href="#ids">below</a>).</td></tr>
+  <tr><td><code>version</code></td><td>This version, like <code>1.0.0</code></td><td>Required. Three whole numbers with dots between, each 0 to 99999 with no leading zero. Compared number by number: 1.10.0 is newer than 1.9.0.</td></tr>
+  <tr><td><code>name</code></td><td>What it's called</td><td>Required. 1 to 32 characters, one line. Not a built-in plugin's name nor Uplink's.</td></tr>
+  <tr><td><code>tagline</code></td><td>Its short line, under its name</td><td>Required. 1 to 60, one line.</td></tr>
+  <tr><td><code>description</code></td><td>What it does, on its page</td><td>Required. 1 to 1,500; line breaks allowed.</td></tr>
+  <tr><td><code>icon</code></td><td>Its picture</td><td>A square PNG in base64 (<a href="#icon">below</a>). Not needed in Developer mode; needed to submit it.</td></tr>
+  <tr><td><code>symbol</code></td><td>The plain icon drawn where a row needs one, and on its tile when it has no picture</td><td>An icon name (<a href="#names">below</a>). <code>puzzle</code> if left out.</td></tr>
+  <tr><td><code>hue</code></td><td>Its colour</td><td>Required. One of the sixteen hues below.</td></tr>
+  <tr><td><code>shelf</code></td><td>Its category in the Marketplace</td><td>Required. <code>organise</code>, <code>safety</code>, <code>messages</code> or <code>tools</code>.</td></tr>
+  <tr><td><code>labels</code></td><td>Its tags in the Marketplace: on its card, on its page and in search</td><td>Required. 1 to 4 different ones from the sixteen below.</td></tr>
+  <tr><td><code>permissions</code></td><td>What it may do beyond reading texts</td><td>Required, and may be <code>[]</code>. Each one a rule uses must be listed (<code>needs_permission</code>), and each one listed must be used (<code>permission_unused</code>). <a href="/docs/plugin-permissions/">What a plugin may do</a>.</td></tr>
+  <tr><td><code>links</code></td><td>The one web page its buttons may open</td><td>0 or 1 https address (<a href="#addresses">below</a>), <code>[]</code> if left out.</td></tr>
+  <tr><td><code>shots</code></td><td>The SHA-256s of its screenshots, in order</td><td>0 to 4. The submission form fills this in from the screenshots you add; leave it out.</td></tr>
+  <tr><td><code>developer</code></td><td>Your username</td><td>Needed to submit it; the form puts yours in. 3 to 20 lower-case letters, digits, dots and underscores, starting with a letter or digit, with no <code>..</code> and none of uplink, ghost, gogho, official, verified or support in it.</td></tr>
+  <tr><td><code>support</code></td><td>Where people get help with it</td><td>Needed to submit it. An https address or an email address (<a href="#addresses">below</a>), at most 200 characters. Shown on its page for anyone to see.</td></tr>
+  <tr><td><code>whatsNew</code></td><td>What this version changed</td><td>0 to 500 characters; line breaks allowed.</td></tr>
+  <tr><td><code>minApp</code></td><td>The oldest Uplink it works in</td><td>A version, as <code>version</code>. An older app refuses it (<code>needs_newer_app</code>).</td></tr>
+  <tr><td><code>settings</code></td><td>Its own settings</td><td>0 to 24 (<a href="#settings">below</a>); <code>[]</code> if left out.</td></tr>
+  <tr><td><code>rules</code></td><td>What it does</td><td>Required. <code>{"tags", "sections", "actions", "incoming"}</code>, each optional, with at least one tag rule or one section (<code>empty_pack</code>). <a href="/docs/plugin-rules/">Tags, tabs and buttons</a>.</td></tr>
+</table>
+
+<h3>Hues</h3>
+<p><code>amber</code> <code>blue</code> <code>coral</code> <code>cyan</code> <code>green</code> <code>indigo</code> <code>lime</code> <code>magenta</code> <code>mint</code> <code>orange</code> <code>purple</code> <code>red</code> <code>rose</code> <code>slate</code> <code>yellow</code> <code>graphite</code></p>
+<h3>Categories (<code>shelf</code>)</h3>
+<p><code>organise</code> (Organise), <code>safety</code> (Safety), <code>messages</code> (Messages), <code>tools</code> (Tools).</p>
+<h3>Tags (<code>labels</code>)</h3>
+<table>
+  <tr><th>In the file</th><th>Shown as</th><th>In the file</th><th>Shown as</th></tr>
+  <tr><td><code>bills</code></td><td>Bills</td><td><code>money</code></td><td>Money</td></tr>
+  <tr><td><code>codes</code></td><td>Codes</td><td><code>quiet</code></td><td>Quiet</td></tr>
+  <tr><td><code>deliveries</code></td><td>Deliveries</td><td><code>replies</code></td><td>Replies</td></tr>
+  <tr><td><code>events</code></td><td>Events</td><td><code>safety</code></td><td>Safety</td></tr>
+  <tr><td><code>filters</code></td><td>Filters</td><td><code>school</code></td><td>School</td></tr>
+  <tr><td><code>health</code></td><td>Health</td><td><code>shopping</code></td><td>Shopping</td></tr>
+  <tr><td><code>language</code></td><td>Language</td><td><code>sorting</code></td><td>Sorting</td></tr>
+  <tr><td><code>travel</code></td><td>Travel</td><td><code>work</code></td><td>Work</td></tr>
+</table>
+<h3 id="addresses">Web and email addresses</h3>
+<p>A web address (in <code>links</code>, a <code>link</code> button's <code>url</code>, or <code>support</code>) is <code>https</code>, at most 200 characters, with no user name or password, no port, no <code>#</code> part, no spaces and no <code>{</code> or <code>}</code>. A query is allowed, but it's fixed: nothing from a text is ever put into an address. Its host is two or more parts of lower-case letters, digits and inner hyphens (<code>example.com</code>), none starting <code>xn--</code>; never an IP address, never a name ending <code>.local</code>, <code>.lan</code>, <code>.home</code>, <code>.internal</code>, <code>.localhost</code> or <code>.arpa</code>, and never gogho.st or ghost-sms.com, whose addresses the app opens itself (<code>bad_url</code> otherwise). An email address, for <code>support</code> only, is the usual <code>name@example.com</code>, its domain held to the same rules (<code>bad_email</code>).</p>
+<h3 id="names">Icon names</h3>
+<p>For <code>symbol</code>, and a section's, an action's or a setting's <code>icon</code>: any of the app's own icon names below. <code>ghost</code>, <code>store</code> and <code>shield-check</code> are kept for the app itself (its mark, the Marketplace and "Can't reach the internet"), and any other name is <code>bad_icon_name</code>.</p>
+<icon-names/>
+
+<h2 id="ids">Ids, sections, tags and keys</h2>
+<table>
+  <tr><th>What</th><th>In the file</th><th>In the app</th></tr>
+  <tr><td>The plugin</td><td><code>id</code>: 3 to 24 lower-case letters and digits, starting with a letter</td><td><code>x</code> and its id: Bills is <code>xbills</code>. You'll see it in <code>plugins.list</code> and <code>filters.classify</code>, and its switch is <code>plugin_xbills</code>. No built-in plugin's id starts with <code>x</code>, so yours can never be mixed up with one.</td></tr>
+  <tr><td>A section</td><td><code>key</code>: 1 to 12 lower-case letters, no digits</td><td><code>x</code>, its id, <code>0</code>, its key: <code>xbills0bills</code>. Never <code>other</code>.</td></tr>
+  <tr><td>A tag</td><td><code>tag</code>: 1 to 16 lower-case letters and digits, starting with a letter</td><td><code>xbills.bill</code>. A plugin's rules read only its own tags: it can't see, give or fake Spam's or Codes'.</td></tr>
+  <tr><td>A setting</td><td><code>key</code>: 1 to 24 lower-case letters and digits, starting with a letter</td><td>Kept as <code>plugin_xbills_extra</code>.</td></tr>
+  <tr><td>An action</td><td><code>id</code>: 1 to 24 lower-case letters and digits, starting with a letter</td><td>Unique within the plugin.</td></tr>
+  <tr><td>A choice</td><td><code>value</code>: 1 to 16 lower-case letters and digits</td><td>Unique within its setting.</td></tr>
+</table>
+<p>A pattern broken is <code>bad_key</code> (<code>bad_id</code> for the plugin's id). These ids are the app's own, and no plugin may have them (<code>id_reserved</code>): <code>codes</code> <code>kinds</code> <code>spam</code> <code>embeds</code> <code>actions</code> <code>replies</code> <code>quiet</code> <code>strangers</code> <code>cleaner</code> <code>translate</code> <code>recordcall</code> <code>scribe</code> <code>captions</code> <code>watch</code> <code>debt</code> <code>political</code> <code>sales</code> <code>scams</code> <code>reminders</code> <code>food</code> <code>deliveries</code> <code>appointments</code> <code>notices</code> <code>other</code> <code>ghost</code> <code>ghostmessaging</code> <code>official</code> <code>admin</code> <code>system</code> <code>market</code> <code>marketplace</code> <code>store</code> <code>plugin</code> <code>plugins</code> <code>settings</code> <code>messages</code>, and any id with <code>uplink</code>, <code>ghost</code> or <code>gogho</code> in it.</p>
+<p>The examples' ids, <code>bills</code> and <code>parcels</code>, load in Developer mode like any other, but can't be submitted (<code>id_example</code>: "That's the example's id: give your plugin an id of its own."), so nobody takes the id every reader of these pages starts with.</p>
+
+<h2 id="icon">The icon</h2>
+<ul>
+  <li>Not needed in Developer mode: without one, the plugin's tile draws its <code>symbol</code> on its hue. Submitting needs one, and the submission form makes it for you from any picture you choose or paste (256 pixels a side, smaller if it must be), so you only need what follows to put one in the file yourself.</li>
+  <li>A PNG, square, 64 to 512 pixels a side, holding only the chunks <code>IHDR</code>, <code>PLTE</code>, <code>tRNS</code>, <code>sRGB</code>, <code>gAMA</code>, <code>pHYs</code>, <code>IDAT</code> and <code>IEND</code>, with nothing after <code>IEND</code>: so no animation, no text, no EXIF and no colour profile (<code>bad_icon</code> otherwise).</li>
+  <li>In base64, the standard alphabet with <code>=</code> padding and no spaces or line breaks: at most 48,000 characters, and at most 36,000 bytes once decoded.</li>
+  <li>It's drawn over the plugin's hue, filling its tile. Transparent parts show the hue, so a white glyph on transparency looks like a built-in plugin's tile.</li>
+</ul>
+<p>To make the base64 on a Mac:</p>
+<pre><code>base64 -i icon.png | tr -d '\n'</code></pre>
+<p>In PowerShell on Windows:</p>
+<pre><code>[Convert]::ToBase64String([IO.File]::ReadAllBytes('icon.png'))</code></pre>
+
+<h2 id="text">Words in a plugin</h2>
+<p>Every string in a plugin, its phrases included, keeps these rules (<code>bad_text</code>, or <code>phrase_bad_text</code> for a phrase):</p>
+<ul>
+  <li>No space at its start or end.</li>
+  <li>One line. Only the <code>description</code>, <code>whatsNew</code> and settings' <code>hint</code>s may have line breaks, and only the plain one (<code>\n</code>).</li>
+  <li>Nothing invisible: no control characters, zero-width spaces or joiners, direction marks or overrides, soft hyphens, private-use characters (one draws a company's logo on some systems), tag characters, or blank-looking letters that make a name look empty.</li>
+  <li>Lengths are counted as JavaScript and Dart count them, in UTF-16 code units: most letters are one, and an emoji is often two.</li>
+</ul>
+<p>A name, and a section's label, can't be a built-in plugin's or one of their tabs' and kinds', nor have <code>uplink</code>, <code>ghost</code> or <code>gogho</code> in it (<code>name_reserved</code>). They're compared with look-alikes folded first, so "Сodes" with a Cyrillic С, or "Ｃｏｄｅｓ" in wide letters, is still Codes.</p>
+
+<h2 id="settings">Settings</h2>
+<p>Each setting is an object with a <code>type</code>, shown on the plugin's page in the order written; a <code>heading</code> starts a new card.</p>
+<table>
+  <tr><th><code>type</code></th><th>Fields</th><th>Shown as</th></tr>
+  <tr><td><code>toggle</code></td><td><code>key</code>, <code>label</code> (1 to 60), <code>hint</code> (1 to 200), <code>icon</code>, and <code>default</code> (<code>true</code> or <code>false</code>, required)</td><td>A switch</td></tr>
+  <tr><td><code>choice</code></td><td><code>key</code>, <code>label</code>, <code>hint</code>, <code>icon</code>, <code>options</code> (2 to 8 of <code>{"value", "label" (1 to 40), "hint" (1 to 120)}</code>), and <code>default</code> (one of the values: <code>choice_default</code> otherwise)</td><td>A choice of one</td></tr>
+  <tr><td><code>words</code></td><td><code>key</code>, <code>label</code>, <code>hint</code>, <code>icon</code>, <code>placeholder</code> (1 to 60)</td><td>A field for the person's own words, a line each or with commas between: <a href="/docs/plugin-phrases/#yours">what a rule does with them</a></td></tr>
+  <tr><td><code>note</code></td><td><code>label</code>, <code>hint</code>, <code>icon</code></td><td>A line of words</td></tr>
+  <tr><td><code>heading</code></td><td><code>label</code>, <code>hint</code></td><td>A heading over the next card</td></tr>
+</table>
+<ul>
+  <li><code>hint</code>, <code>icon</code> and <code>placeholder</code> may be left out; everything else in the table is required.</li>
+  <li>Keys are unique across a plugin's settings (<code>duplicate</code>). A rule that names a setting must name one there, of the right kind (<code>unknown_setting</code>).</li>
+  <li>A toggle an incoming rule names must start off (<code>"default": false</code>), and is switched off again when the plugin is removed. On a computer or an iPhone its hint says it does nothing there.</li>
+  <li>The person's choices are kept when they remove the plugin, and are there again if they add it back.</li>
+</ul>
+
+<h2 id="canonical">The form it's sent in</h2>
+<p>When you submit a plugin, the app sends it in one fixed form: every object's keys sorted, no spaces or line breaks, every string written the one way. The Marketplace takes only that form, so a plugin's SHA-256 names exactly one file, and a change of one character is a new file that needs a new review. You never have to make it yourself: the submission form does, from whatever you loaded. Developer mode takes the file just as you wrote it.</p>
+
+<h2 id="example">The whole Bills file</h2>
+<p>The example on this site, <a href="/docs/examples/bills.ghostplugin">bills.ghostplugin</a>, as it is. <a href="/docs/examples/parcels.ghostplugin">Parcels</a> is the other one.</p>
+<example-file name="bills"/>

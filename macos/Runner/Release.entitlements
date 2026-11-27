@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Only the microphone is asked for (below). The app is not sandboxed: it updates itself by putting the new version where the old one
+	  is (Runner/UpdatesChannel.swift), which a sandboxed app cannot do, and it is not sold in the Mac App Store,
+	  the one place that requires the sandbox. It is signed with the Developer ID under the hardened runtime
+	  (tool/release-mac.mjs). Reaching the phone and the relay needs no entitlement outside the sandbox; finding the
+	  phone on the local network is asked of the person by macOS (Info.plist, NSLocalNetworkUsageDescription).
+	-->
+	<!-- A voice message is recorded with the Mac's microphone (Runner/DeskSound.swift), only while one is being
+	     recorded: the hardened runtime wants this said, and macOS asks the person the first time. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- Voice and video channels (lib/voice): the camera, only while video is on in one. -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<!-- Spotify in a circle's calls (Runner/Spotify.swift): pressing the Spotify app's own buttons, only once this Mac's
+	     person pressed Start there; macOS asks them the first time (Info.plist, NSAppleEventsUsageDescription). -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+</dict>
+</plist>

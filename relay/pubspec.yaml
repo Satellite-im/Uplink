@@ -1,0 +1,11 @@
+name: ghost_relay
+description: "Uplink's relay: passes sealed frames between a phone and the computer it is paired with."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.0
+
+# Nothing but Dart's own library: what runs on a server is this folder and nothing fetched.
+dev_dependencies:
+  test: ^1.25.0

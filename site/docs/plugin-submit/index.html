@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Submit it to the Marketplace · Uplink docs</title>
+<meta name="description" content="The submission form, what review looks at, listing it, and sending a new version.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Build a plugin</div>
+    <h1>Submit it to the Marketplace</h1>
+    <p class="lede">The submission form, what review looks at, listing it, and sending a new version.</p>
+    <p>When your plugin works, send it to the Marketplace from <span class="ui-path">Marketplace › Submit a plugin</span>. A person at Uplink reviews it, and once it's approved anyone can add it, under your username. You can send new versions, take it off the Marketplace and list it again from <span class="ui-path">Marketplace › My submissions</span>.</p>
+
+<h2 id="before">What you need first</h2>
+<ul>
+  <li><b>A username</b>, claimed in <span class="ui-path">Settings › Me</span> a week ago or more: your plugin is listed under it ("A username can submit plugins a week after it's claimed.").</li>
+  <li><b>Your Uplink identity on the device you send from.</b> A computer that follows its phone doesn't have one of its own: on it, use <span class="ui-path">Settings › Me › Become the same you as your phone</span>, or send from the phone.</li>
+  <li><b>The app on Uplink's own server.</b> Plugins are reviewed there; if <span class="ui-path">Settings › Routes</span> has the app on another, <b>Send for review</b> says so and waits until you switch back.</li>
+  <li><b>Not an iPhone</b>: plugins from other developers aren't on iPhone, so neither is Submit a plugin.</li>
+</ul>
+<p>Developer mode isn't needed to submit, though you'll want it to try your plugin first. The Marketplace may also ask for a verified number (<span class="ui-path">Settings › Me › Number</span>).</p>
+
+<h2 id="phone">From your computer to your phone</h2>
+<p>You'll likely write the file on a computer and send it from your phone. Any of these gets it there:</p>
+<ul>
+  <li><code>adb push yours.ghostplugin /sdcard/Download/</code>, then in the form tap <b>Choose the plugin file</b> and pick it from Downloads.</li>
+  <li>Load it in Developer mode from a link through <code>adb reverse</code> (<a href="/docs/plugin-testing/#load">how</a>), then tap <b>Use one in development</b> in the form.</li>
+  <li>Load it with <code>plugins.devInstall</code> from your computer (<a href="/docs/plugin-testing/#api">how</a>), then <b>Use one in development</b>.</li>
+  <li>Or send it from the computer itself: there, <span class="ui-path">Settings › Me › Become the same you as your phone</span>, then <b>Paste the plugin</b>, or on a Mac <b>Choose the plugin file</b>.</li>
+</ul>
+
+<h2 id="form">The form</h2>
+<p><span class="ui-path">Marketplace › Submit a plugin</span>, from top to bottom. Load your plugin first: everything below it is filled in from the file, and you can change any of it there.</p>
+<div class="pair">
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Submit a plugin</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">The plugin</div><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder-open"/></svg></span><span class="m-txt"><b>Choose the plugin file</b></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clipboard-paste"/></svg></span><span class="m-txt"><b>Paste the plugin</b></span></div>
+    <div class="m-row tap"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg></span><span class="m-txt"><b>Use one in development</b></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calculator"/></svg></span><span class="m-txt"><b>mybills · 1.0.0</b><small>1 tag rule, 1 tab</small></span></div>
+  </div></div>
+  <div class="m-section-title">How it's listed</div>
+  <div class="m-field"><span>Icon</span><span class="m-upload"><span class="m-well"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image-plus"/></svg></span><small>Choose a picture, or paste one on a computer. A square of it is made for you.</small></span></div>
+  <label class="m-field"><span>Name</span><span class="m-input">My bills</span></label>
+  <label class="m-field"><span>Short line</span><span class="m-input">Bills in a tab of their own</span></label>
+  <label class="m-field"><span>Description</span><span class="m-input m-area">Texts that say a bill is ready go to a Bills tab, with the amount on the row.</span></label>
+  <div class="m-section"><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="slate"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#layout-grid"/></svg></span><span class="m-txt"><b>Category</b></span><span class="m-end"><span class="m-value">Organise</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg></span><span class="m-txt"><b>Colour</b></span><span class="m-end"><span class="m-value">Amber</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <div class="m-chips"><span class="m-chip on"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#check"/></svg>Bills</span><span class="m-chip on"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#check"/></svg>Money</span><span class="m-chip tap">Sorting</span><span class="m-chip">Shopping</span><span class="m-chip">Work</span></div>
+</div></div><figcaption>The plugin, and how it's listed.</figcaption></figure>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Submit a plugin</span></div><div class="m-body">
+  <div class="m-section-title">This version</div>
+  <label class="m-field"><span>Version</span><span class="m-input">1.0.0</span></label>
+  <label class="m-field"><span>What's new</span><span class="m-input m-area empty">What this version changed</span></label>
+  <label class="m-field"><span>Help link or email</span><span class="m-input">https://example.com/mybills</span></label>
+  <div class="m-section-title">Screenshots</div>
+  <div class="m-field"><span>Add a screenshot</span><span class="m-upload"><span class="m-well"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image-plus"/></svg></span><small>Everyone sees these once it's listed. Use made-up texts, never real conversations or anyone's number.</small></span></div>
+  <div class="m-section"><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image"/></svg></span><span class="m-txt"><b>Add a picture of the samples</b></span></div>
+    <div class="m-row"><span class="m-txt"><b>List it once it's approved</b></span><span class="m-end"><span class="m-switch on"></span></span></div>
+  </div></div>
+  <label class="m-field"><span>Notes</span><span class="m-input m-area empty">For the reviewer</span></label>
+  <div class="m-section"><div class="m-card">
+    <div class="m-row tap"><span class="m-txt"><b>I made this plugin, and it follows the Marketplace guidelines</b></span><span class="m-end"><span class="m-switch on"></span></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="slate"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#book-open"/></svg></span><span class="m-txt"><b>Read the Marketplace guidelines</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <p class="m-p">As @maya. Your username, help link and screenshots are shown to everyone once it's listed.</p>
+  <span class="m-btn primary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Send for review</span></span>
+</div></div><figcaption>This version, screenshots, and sending it.</figcaption></figure>
+</div>
+<table>
+  <tr><th>Field</th><th>What it takes</th></tr>
+  <tr><td><b>The plugin</b></td><td><b>Choose the plugin file</b> (Android and a Mac), <b>Paste the plugin</b>, or <b>Use one in development</b> (when one is loaded). A line then says what it found in the file, or its problems. <b>Try it</b> is there once it's loaded.</td></tr>
+  <tr><td><b>Icon</b></td><td><b>Choose a picture</b> (not on Windows, which has no picture panel for it) or, on a computer, <b>Paste a picture</b>. Any picture: a square PNG is made from its middle, 256 pixels a side.</td></tr>
+  <tr><td><b>Name</b></td><td>1 to 32 characters, not a built-in plugin's.</td></tr>
+  <tr><td><b>Short line</b></td><td>1 to 60.</td></tr>
+  <tr><td><b>Description</b></td><td>1 to 1,500, as many lines as you like.</td></tr>
+  <tr><td><b>Category</b></td><td>Organise, Safety, Messages or Tools.</td></tr>
+  <tr><td><b>Colour</b></td><td>One of the sixteen hues.</td></tr>
+  <tr><td><b>Tags</b></td><td>1 to 4 of the sixteen: what people search and browse by.</td></tr>
+  <tr><td><b>Version</b></td><td>Three numbers, higher than the version listed now, where it's listed.</td></tr>
+  <tr><td><b>What's new</b></td><td>Up to 500 characters. Needed for a new version of a plugin that's listed.</td></tr>
+  <tr><td><b>Help link or email</b></td><td>An https address or an email address. Shown on your plugin's page for anyone to see.</td></tr>
+  <tr><td><b>Screenshots</b></td><td>Up to four: <b>Add a screenshot</b> (not on Windows), <b>Paste a picture</b> (on a computer), or <b>Add a picture of the samples</b>, which draws the list's rows for the sample texts your plugin sorts. Each is made into a new PNG, at most 2,400 pixels a side and 1 MB.</td></tr>
+  <tr><td><b>List it once it's approved</b></td><td>On: listed as soon as it's approved. Off: approved, it waits for you to list it in My submissions.</td></tr>
+  <tr><td><b>Notes</b></td><td>Up to 1,000 characters, for the reviewer alone.</td></tr>
+  <tr><td><b>I made this plugin, and it follows the Marketplace guidelines</b></td><td>Must be on. <b>Read the Marketplace guidelines</b> opens <a href="/docs/plugin-guidelines/">them</a>.</td></tr>
+</table>
+<ul>
+  <li><b>Screenshots are shown to everyone.</b> Use made-up texts and numbers, never real conversations or anyone's number. <b>Add a picture of the samples</b> is made-up already.</li>
+  <li><b>It's checked as you go.</b> As soon as your plugin is loaded, and whenever you change its version, the form asks the Marketplace whether it would take it: an id another developer has, a username another developer sends under, a username too new, a version not newer than the one listed, the very same file sent before. Any of these shows under The plugin, before you've filled in the rest. Where the Marketplace couldn't be asked (it was busy, or out of reach), nothing is held back: it's asked again when you send it. Whatever it said, <b>Ask the Marketplace again</b> asks once more.</li>
+  <li><b>The form is kept as you go</b>, for each plugin: leave it to claim a username or to reload your plugin, and it's all there when you come back. Loading a corrected copy with the same id keeps whatever you changed in the form; a copy with another id asks first whether to start again with it.</li>
+  <li><b>Send for review</b> is ready once there are no problems and the switch is on. It says <b>Sent for review</b>, and opens My submissions with the new one marked.</li>
+</ul>
+
+<h2 id="listing">Listing it</h2>
+<ul>
+  <li><b>List it once it's approved</b>, on by default, lists it as soon as it's approved. Off, it's approved and waits; list it from <span class="ui-path">Marketplace › My submissions</span> when you're ready.</li>
+  <li><b>Take it off the Marketplace</b>, on its heading in My submissions: "People who added it keep it. Nobody new can add it until you list it again."</li>
+  <li><b>List it again</b> puts it back, where you were the one who took it off. Where review took it off, only review can list it again.</li>
+</ul>
+
+<h2 id="review">What review looks at</h2>
+<p>The reviewer reads the whole plugin in the same app you have, with these in front of them:</p>
+<ul>
+  <li><b>What it can do</b>: the same lines people will see before they add it, made from the file, and for a new version, what's new in them.</li>
+  <li><b>Look closely</b>: every rule that acts on texts, gathered so none hides among the phrases: every number it names, every incoming rule and the switch it needs, every reply it writes and every copy it makes, its link, every phrase with no anchor, and what changed among these since the last version.</li>
+  <li><b>Checks</b>: that the file is the very one the Marketplace holds, sent the way the app sends it, and every problem and warning.</li>
+  <li><b>Try it</b>, on the samples and on texts of the reviewer's own.</li>
+  <li><b>The file</b>, all of it, and what changed since your last version or since changes were asked for.</li>
+  <li>Your listing: the screenshots (with no real person's texts or number), what's new, your help link and your notes; and your username's history.</li>
+</ul>
+<p>Then it's <b>Approve and list</b>, <b>Ask for changes</b> or <b>Reject</b>, the last two always with a note saying why.</p>
+
+<h2 id="status">Where it stands</h2>
+<p><span class="ui-path">Marketplace › My submissions</span> lists your plugins, each with whether it's listed, and every version you've sent under it:</p>
+<table>
+  <tr><th>Status</th><th>What it means</th></tr>
+  <tr><td><span class="m-status" data-kind="submitted">Waiting for review</span></td><td>Sent; nobody has started on it yet.</td></tr>
+  <tr><td><span class="m-status" data-kind="in_review">In review</span></td><td>A reviewer has started on it.</td></tr>
+  <tr><td><span class="m-status" data-kind="changes_requested">Changes asked for</span></td><td>The reviewer's note says what to change.</td></tr>
+  <tr><td><span class="m-status" data-kind="approved">Approved</span></td><td>Approved, with "· listed" or "· not listed" for the version that's current. "Withdrawn by review" and why, where review took an approved version back.</td></tr>
+  <tr><td><span class="m-status" data-kind="rejected">Not accepted</span></td><td>Turned down, with a note saying why.</td></tr>
+  <tr><td><span class="m-status" data-kind="withdrawn">Withdrawn</span></td><td>You withdrew it.</td></tr>
+  <tr><td><span class="m-status" data-kind="superseded">Replaced by a newer version</span></td><td>You sent another version before this one was decided.</td></tr>
+</table>
+<p>You don't have to keep looking: when one changes the app tells you, once: "My bills 1.0.0: changes asked for. See Marketplace › My submissions.", "My bills 1.0.0 was approved and is listed." (or "… was approved. List it from My submissions when you're ready."), "My bills 1.0.0 wasn't accepted.", or "My bills was taken off the Marketplace."</p>
+
+<h2 id="changes">Changes asked for, and new versions</h2>
+<ul>
+  <li>A submission's page has its notes, the reviewer's and yours, each with the date; what it can do; its screenshots; and <b>Copy the package</b>, the file as sent.</li>
+  <li><b>Submit a new version</b> opens the form with that file and your listing's words, its screenshots kept, and its version one higher where it was approved (the same where changes were asked for). Load your corrected file, and the form keeps what you'd written in it.</li>
+  <li>Sent again after changes, the reviewer sees what changed since they asked, and your note.</li>
+  <li>Once a new version of a listed plugin is approved, everyone who has it is offered it as an update, and its screenshots carry over unless you removed them.</li>
+</ul>
+
+<h2 id="withdraw">Withdrawing one</h2>
+<ul>
+  <li>While a submission is waiting, in review or has changes asked for, <b>Withdraw</b> on its page takes it back.</li>
+  <li>Once a version is approved, take the plugin off the Marketplace instead (<a href="#listing">above</a>): people who have it keep it.</li>
+  <li>Review can withdraw a version it approved, if it turns out to break the <a href="/docs/plugin-guidelines/">guidelines</a>. It then switches off on every device that has it, and My submissions says <b>Withdrawn by review</b> with the reason.</li>
+</ul>
+
+<h2 id="signed">What "Reviewed" means</h2>
+<p>Approving a plugin is a signature, made on the reviewer's own device, over exactly that file: its id, its version and its SHA-256. Every Uplink app carries the reviewer's key and checks that signature when the plugin is added and every time the app starts, so no server, ours included, can pass off a changed file, or one nobody reviewed, as reviewed. A change of one character is a new file that needs a new review.</p>
+<p><b>Reviewed</b> on a card, and <b>Reviewed by Uplink</b> on a plugin's page, say that a person read that file and its listing, and found it does what it says within the guidelines. It says nothing about who you are.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/plugin-testing/"><small>Previous</small>Try it in Developer mode</a><a class="next" href="/docs/plugin-guidelines/"><small>Next</small>Marketplace guidelines</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#before">What you need first</a><a href="#phone">From your computer to your phone</a><a href="#form">The form</a><a href="#listing">Listing it</a><a href="#review">What review looks at</a><a href="#status">Where it stands</a><a href="#changes">Changes asked for, and new versions</a><a href="#withdraw">Withdrawing one</a><a href="#signed">What &quot;Reviewed&quot; means</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+Uplink's WhatsApp helper (sidecar/whatsapp)
+
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not
+distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+It is built on whatsmeow (https://github.com/tulir/whatsmeow), Copyright (c) Tulir Asokan and contributors, also under
+the Mozilla Public License 2.0, whose source is at that address; and on go-sqlite3
+(https://github.com/mattn/go-sqlite3), Copyright (c) Yasuhiro Matsumoto, under the MIT licence, which includes SQLite
+(public domain). Their own licence files come with their source in the Go module cache (go.mod pins the versions).
+
+The helper's source is published with every release of Uplink that ships it.

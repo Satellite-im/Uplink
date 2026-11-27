@@ -1,0 +1,115 @@
+<p>A chat-and-voice space has a call that's always open, like a voice channel: hop in, talk, hop out. Sound goes straight between the people in it, sealed end to end, at high quality.</p>
+
+<h2 id="join">Join a call</h2>
+<p>Open a chat-and-voice space and tap <b>Join voice</b>. Who's already in it shows above. On a phone, a space with people talking opens straight on its call.</p>
+<m-screen title="Lounge" back actions="shield-check">
+  <m-row-raw><span class="m-avatar" data-hue="rose">MC</span><span class="m-avatar" data-hue="blue">JO</span><span class="m-txt"><b>Maya and Jo</b><small>In voice</small></span></m-row-raw>
+  <m-btn kind="primary" icon="headphones" tap>Join voice</m-btn>
+</m-screen>
+
+<p>The call is on the screen as soon as you tap, and says what it is still waiting for in a line at its top: <b>Connecting…</b> with <i>Reaching the relay server</i>, <i>Starting the microphone</i> (a few seconds on a Mac), <i>Joining the call</i>, then <i>Reaching Maya</i> until someone can be heard, and <b>Connected</b> for a moment once they can. The people already in the call are drawn in grey until each is there. The same line says <b>Reconnecting…</b> if the relay server is lost in the middle of a call; whoever you were connected to is still heard.</p>
+
+<h2 id="friend">Call a friend</h2>
+<p>Open a chat with a friend who has a username and press the phone or the camera at its top: <b>Voice call</b> or <b>Video call</b>. No space is made for it; the call is between the two of you.</p>
+<ul>
+  <li><b>It rings</b> on every device of theirs that is connected, phone, Mac and PC, for 35 seconds, with <b>Answer</b> and <b>Decline</b>. On a locked Android phone it takes the whole screen, as a phone call does. Answering on one device stops the others ringing.</li>
+  <li><b>Afterwards</b> the chat keeps a line for it on both sides: a missed call, a declined one, or no answer.</li>
+  <li><b>It is the same call</b> as a space's: everything on this page works in it, sharing your screen included.</li>
+</ul>
+<p><b>Ring when the app is closed (Android).</b> Uplink has no push service behind it, so a call can only ring on a phone that is connected, and Android disconnects an app soon after you leave it. To be rung anyway, switch on <ui>Settings › Notifications › Ring when the app is closed</ui>. The app then stays connected after you close it:</p>
+<ul>
+  <li>Android shows a small, quiet notification while it does (<b>Ready for calls</b>), and it uses some battery.</li>
+  <li>Say yes when Android asks whether Uplink may run unrestricted, or press <b>Run while the phone sleeps</b> under the switch. Without that, a phone left untouched for a while may hold the app back, and a call can ring late or not at all.</li>
+  <li>After the phone restarts, open Uplink once. A notification reminds you.</li>
+</ul>
+<p>It is off until you switch it on. With it off, a call made while your app is closed shows as a missed call the next time you open it. A computer rings while Uplink is open on it.</p>
+
+<h2 id="controls">In the call</h2>
+<m-screen title="Lounge" caption="The call's controls.">
+  <m-row-raw><span class="m-avatar" data-hue="rose">MC</span><span class="m-avatar" data-hue="blue">JO</span><span class="m-avatar" data-hue="green">YOU</span></m-row-raw>
+  <m-row-raw><m-btn kind="secondary" icon="mic">Mute</m-btn><m-btn kind="secondary" icon="headphones">Deafen</m-btn><m-btn kind="secondary" icon="video"></m-btn><m-btn kind="secondary" icon="screen-share"></m-btn><m-btn kind="danger" icon="phone-off">Leave</m-btn></m-row-raw>
+</m-screen>
+<table>
+  <tr><th>Control</th><th>Does</th></tr>
+  <tr><td>Mute</td><td>Stops your microphone.</td></tr>
+  <tr><td>Deafen</td><td>Hear nobody, and say nothing. <b>Hear again</b> undoes it.</td></tr>
+  <tr><td>Camera</td><td>Turns your video on or off.</td></tr>
+  <tr><td>Share screen</td><td>Shows everyone your screen, or one window. See <a href="#screen">Share your screen</a>.</td></tr>
+  <tr><td>Leave</td><td>Leaves the call. The space and its chat stay.</td></tr>
+</table>
+<p>On a computer, a circle's space shows the call above its chat. <b>Share screen</b>, beside <b>Leave</b>, shares a screen or a window with the call; press it again to stop. Drag the line between the call and the chat to give either more room.</p>
+<p>While you're in a call and look at something else, a small bubble of faces floats on top; tap it to go back.</p>
+
+<h2 id="pop-out">Pop out the video</h2>
+<p>In a call with video or a shared screen, go to another chat, the list or Settings and the call's picture stays with you, small, over the app. It shows the picture that matters most: someone's shared screen first, then whoever is talking, then the latest camera to come on (your own only when it's all there is). In an open space, only a shared screen pops out.</p>
+<m-screen title="Messages" caption="The call's picture over the app, its buttons showing.">
+  <m-row-raw><m-btn kind="secondary" icon="maximize">Back to the call</m-btn><m-btn kind="secondary" icon="mic">Mute</m-btn><m-btn kind="danger" icon="phone-off">Leave</m-btn><m-btn kind="secondary" icon="x">Close</m-btn></m-row-raw>
+</m-screen>
+<ul>
+  <li><b>Tap it</b> (or move the pointer over it) for its buttons: <b>Back to the call</b>, <b>Mute</b>, <b>Leave</b> and <b>Close</b>.</li>
+  <li><b>Drag it</b> to any corner; it snaps there, clear of the title bar and the message box, and stays in that corner next time.</li>
+  <li><b>On a computer</b>, its corner button makes it larger or smaller.</li>
+  <li><b>Close</b> puts the picture away for this call only; the call goes on, and its bar comes back with a <b>Pop out</b> button to bring it back.</li>
+  <li><b>Pop out</b> is also in the call's own buttons (in a space, the call's menu): it leaves the call's page with the picture showing.</li>
+</ul>
+<p>A call with no video keeps its bar, as before. Going back to the call's page puts the picture back there.</p>
+<p><b>On Android</b>, leave the app during a call with video (the home button, or another app) and it shrinks to a small window over everything, showing the same picture with <b>Mute</b> and <b>Leave</b>. Tap the window to come back to the app where you were. It only does this during a video call or a shared screen.</p>
+
+<h2 id="screen">Share your screen</h2>
+<p>Open the call's menu (the three dots at its top) and press <b>Share screen</b>. It works on Mac, Windows, Linux and Android.</p>
+<ul>
+  <li><b>On a computer</b>, pick a whole screen or one window. On a Mac, the first time, allow Uplink in <ui>System Settings › Privacy &amp; Security › Screen Recording</ui>, then try again.</li>
+  <li><b>Its sound too</b>, on a Windows PC and a Mac: leave <b>Share sound too</b> on over the screens and windows, and what the computer plays goes with the picture. On a PC that is a window's own sound, or everything the PC plays for a whole screen. On a Mac it is everything the Mac plays, whichever you pick (macOS 14.4 or later; the Mac asks once whether Uplink may record system audio). The call's own voices are never part of it, so nobody hears themselves back. Linux and Android share the picture alone for now.</li>
+  <li><b>On Android</b>, the phone asks before it shares, and you can choose one app or the whole screen. A notification says <b>Sharing your screen</b> while it's on.</li>
+</ul>
+<m-screen title="Lounge" caption="Someone's screen, large.">
+  <m-row-raw><m-btn kind="secondary" icon="screen-share">Maya Chen's screen</m-btn><m-btn kind="primary">Back to call</m-btn></m-row-raw>
+</m-screen>
+<p>Everyone else sees your screen large and whole, never cropped. <b>Back to call</b> puts it away, and a line over the call says who is sharing, with <b>View</b> to bring it back. While you share, a line says <b>You're sharing your screen</b>, with <b>Stop</b>.</p>
+<p><b>Hearing a shared screen.</b> Where someone shares their screen with its sound, the large view has a speaker button beside <b>Full screen</b>. Press it for how loud that sound is on your device, from nothing to all of it, with a button to silence it; it is yours alone and is kept for the next share. Deafened, you hear none of it. It works wherever you watch from, a phone and a browser included.</p>
+<p>Your screen goes out in place of your camera: while you share, others see your screen, not your camera, and your camera is back when you stop. Its sound goes beside the call, not through your microphone: muting yourself doesn't silence it, a recording of the call doesn't take it, and captions don't write it out. If your role in a space can't show video, it can't share a screen either. Like the rest of the call, picture and sound go encrypted between you: the relay can't see or hear them.</p>
+
+<h2 id="people">Each person's volume</h2>
+<p>Press and hold someone in the call:</p>
+<m-screen>
+  <m-menu title="Jo">
+    <m-item icon="volume-x" hint="Only you stop hearing them" tap>Mute for me</m-item>
+    <m-item icon="volume-2" hint="0 to 200%">Volume for Jo</m-item>
+    <m-item icon="user-plus">Add as a friend</m-item>
+    <m-item icon="copy">Copy name</m-item>
+  </m-menu>
+</m-screen>
+<p>There are two mutes, and they are separate. <b>Mute for me</b> is yours alone: only you stop hearing them, they aren't told, and nobody else is affected. Their row shows a crossed speaker and <b>muted for you</b>.</p>
+<p>In a space, a moderator also sees <b>Mute for everyone</b> (their role needs <b>Mute others</b>, and has to be above the other person's). Nobody in the space hears that person, and they can't unmute themselves: their microphone button shows a lock, and says why when they press it. Everyone sees a lock and <b>muted for everyone</b> on their row, so it is clear it wasn't their own doing. Any moderator above them can switch it off again. It doesn't rely on the muted person's app: every app in the call silences them itself.</p>
+<p>A moderator's mute lasts while the person stays in the space. An admin's or the owner's is written into the space's roles, so it still holds when they come back. A moderator can also put someone out of the space if their role allows it.</p>
+
+<h2 id="stage">A stage: a few speak, many listen</h2>
+<p>For a talk, a show or a town hall. Whoever manages the space opens the call's menu and chooses <b>Make it a stage</b>. From then on, everyone who comes in listens: they hear the speakers and can write in the chat, but their microphone stays off.</p>
+<m-screen>
+  <m-menu title="Call">
+    <m-item icon="megaphone" tap>End the stage · 24 listening · 2 ✋</m-item>
+    <m-item icon="hand">Raise your hand</m-item>
+  </m-menu>
+</m-screen>
+<ul>
+  <li><b>Raise your hand</b> (a listener's menu) puts a ✋ by your name, so the hosts know you'd like to speak.</li>
+  <li>A host presses and holds someone and chooses <b>Bring up to speak</b>, or <b>Move to the audience</b> to send them back.</li>
+  <li>The menu says how many are listening and how many hands are up. <b>End the stage</b> lets everyone speak again.</li>
+</ul>
+<p>Listeners don't connect to each other, only to the speakers, so a stage holds far more people than an ordinary call.</p>
+
+<h2 id="sound">Sound settings</h2>
+<p><ui>Settings › Voice and video</ui> has your microphone and speaker, the sound's quality, stereo, music mode (for playing an instrument), and noise removal (RNNoise or DeepFilterNet), which cleans background noise off your voice before it's sent. The call's menu has <b>Voice settings…</b> too.</p>
+
+<h2 id="guests">Guests from a browser</h2>
+<p>Someone without the app can join a space's call from a browser. Copy the space's link from its menu (<b>Invite people</b>) and send it. They open it, choose their microphone and camera, and tap <b>Join</b> as a guest, or sign up with a username kept in that browser.</p>
+<m-screen title="gogho.st/join" wide caption="The browser page a space's link opens.">
+  <m-p>Join Lounge</m-p>
+  <m-field label="Your name" value="Riley"/>
+  <m-row-raw><m-btn kind="secondary" icon="mic">Microphone</m-btn><m-btn kind="secondary" icon="video">Camera</m-btn></m-row-raw>
+  <m-btn kind="primary" tap>Join</m-btn>
+</m-screen>
+<note kind="info" title="Strict networks"><p>Calls connect through Uplink's relay first, which gets through almost any network: a phone on a mobile network, a workplace, school or hotel network. If the relay can't be reached, the call tries a direct path between you instead, by itself. The relay passes the call along still encrypted between you: it can't hear or see it.</p></note>
+
+<h2 id="extras">With plugins</h2>
+<p>Add <a href="/docs/record-call/">Record call</a>, <a href="/docs/live-captions/">Live captions</a>, <a href="/docs/watch-together/">Watch together</a>, <a href="/docs/soundboard/">Soundboard</a>, <a href="/docs/spotify/">Spotify</a> or <a href="/docs/auto-leveler/">Auto leveler</a> for more in calls. They show in the call's menu, and Record call, Soundboard and Spotify put a button in the space's header.</p>

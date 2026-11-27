@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scan this code · Uplink</title>
+<meta name="description" content="Shows the QR code your phone's Uplink made, for Google Messages or Signal on that phone to scan.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#040406">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" href="/icon.png">
+<!--
+  Pairing Uplink on a phone with Google Messages on the same phone (Matt, 2026-11-15: "Can you build the on phone
+  google messages connection too?"). The phone cannot scan its own screen, so Uplink shares a link to this page with a
+  secret after the #, which a browser never sends to a server. From the secret come a room on Uplink's relay and the key
+  for what is said in it, as a hangout's (../join/voice.js): Uplink on the phone says each new QR code there, sealed,
+  about every half minute; this page opens it and draws it with qrcode.js (Kazuhiko Arase, MIT). The relay sees only
+  that two are in some room.
+  Signal's Link new device uses the same room (lib/net/pair_room.dart). Its code is a sgnl://linkdevice address, not
+  an https one, and this page once drew https codes alone, so a Signal link opened here never showed its code (Matt,
+  2026-11-16: "Sharing the telgram pair link for another computer doesn't work"). Each code's address now says which
+  app it is for, and the page reads as that app's.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/uplink.css">
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (_) {}</script>
+<style>
+  /* In Uplink's look (/uplink.css). The code itself always sits on white, for the camera. */
+  .page { position: relative; min-height: 100vh; min-height: 100dvh; }
+  .page > .u-slot--bg { position: fixed; }
+  .page > .u-slot--bg::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,4,6,.55), rgba(4,4,6,.85)); }
+  main { position: relative; z-index: 1; max-width: 34rem; margin: 0 auto; padding: 2.5rem var(--u-gutter) max(3rem, env(safe-area-inset-bottom)); }
+  h1 { font-family: var(--u-display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: clamp(1.9rem, 7vw, 2.8rem); line-height: .98; letter-spacing: -.01em; margin: 0 0 .8rem; }
+  main > p { color: var(--u-ink-2); margin: 0 0 1.2rem; }
+  .qr { position: relative; background: #fff; border-radius: var(--u-r); padding: 1.1rem; display: grid; place-items: center; margin: 1.4rem 0; box-shadow: var(--u-shadow); }
+  .qr::after { content: ""; position: absolute; inset: var(--u-inset); border: 1.25px solid #040406; border-radius: calc(var(--u-r) - 3px); pointer-events: none; opacity: .5; }
+  .qr svg, .qr img { width: min(80vw, 22rem); height: auto; image-rendering: pixelated; }
+  ol { list-style: none; counter-reset: step; margin: 0 0 1.2rem; padding: 0; display: grid; gap: .6rem; color: var(--u-ink-2); }
+  ol li { counter-increment: step; display: flex; gap: .8rem; align-items: baseline; }
+  ol li::before { content: counter(step); flex: none; display: inline-grid; place-items: center; width: 1.7rem; height: 1.7rem; border: 1.5px solid var(--u-ink); border-radius: var(--u-r-sm); transform: skewX(var(--u-slant)); font: italic 800 .9rem/1 var(--u-display); color: var(--u-ink); }
+  ol strong { color: var(--u-ink); }
+  .missing { margin: 1.4rem 0; }
+  #state { color: var(--u-ink-3); font-size: .95rem; }
+</style>
+</head>
+<body>
+<div class="page">
+<div class="u-slot u-slot--bg u-stars" aria-hidden="true"><img class="u-slot-img" src="/art/space/join.webp" alt="" loading="lazy" onerror="this.remove()"></div>
+<header class="u-bar">
+  <div class="u-wrap">
+    <a class="u-brand" href="/"><img src="/art/uplink-logo.webp" width="1200" height="918" alt="Uplink"></a>
+    <a class="u-btn u-btn--line u-btn--sm u-push" href="/docs/"><span>Help</span></a>
+  </div>
+</header>
+<main>
+  <span class="u-kicker">Pair on this phone</span>
+  <h1 id="title">Scan this with your phone</h1>
+  <p id="lede">Uplink on your phone made this code so it can reach an app on that same phone.</p>
+  <div id="qr" class="qr" hidden></div>
+  <div id="missing" class="missing u-sticker" hidden>This link has no code in it. Open the link Uplink shared from your phone, whole.</div>
+  <ol id="steps-gm" hidden>
+    <li><span>On your phone, open <strong>Google Messages</strong>.</span></li>
+    <li><span>Tap your profile picture, then <strong>Device pairing</strong>, then <strong>QR code scanner</strong>.</span></li>
+    <li><span>Point the phone at this code. Uplink says when it is paired.</span></li>
+  </ol>
+  <ol id="steps-signal" hidden>
+    <li><span>On your phone, open <strong>Signal</strong>.</span></li>
+    <li><span>Open <strong>Settings</strong>, then <strong>Linked devices</strong>, then <strong>Link new device</strong>.</span></li>
+    <li><span>Point the phone at this code. Uplink says when it is linked.</span></li>
+  </ol>
+  <p id="state">Waiting for your phone…</p>
+</main>
+</div>
+<script src="qrcode.js"></script>
+<script type="module">
+  import { identity, connectHub, unhex, hex, splitRelay } from '../join/voice.js';
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  // After the secret, the relay the phone's app uses where it is not Uplink's own (#SECRET@relay.example.com,
+  // lib/invites/link_relay.dart): the room is on that relay, so its hub is the one dialled.
+  const { rest: secret, relay } = splitRelay(location.hash.slice(1));
+  // Leave no copy behind in the address bar.
+  history.replaceState(null, '', location.pathname + location.search);
+  const state = document.getElementById('state');
+  const box = document.getElementById('qr');
+  async function hmac(key, data) {
+    const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return new Uint8Array(await crypto.subtle.sign('HMAC', k, data));
+  }
+  // lib/net/crypto.dart NetCrypto.derive and open.
+  const derive = (key, label) => hmac(key, new Uint8Array([...enc.encode('ghost-net ' + label), 1]));
+  const AAD = enc.encode('ghost-net-v1');
+  if (!/^[0-9a-f]{64}$/.test(secret)) {
+    document.getElementById('missing').hidden = false;
+    state.hidden = true;
+  } else {
+    const s = unhex(secret);
+    const room = hex((await derive(s, 'gmpair room')).slice(0, 16));
+    const token = hex(await derive(s, 'gmpair token'));
+    const key = await crypto.subtle.importKey('raw', await derive(s, 'gmpair key'), 'AES-GCM', false, ['decrypt']);
+    // Which app a code is for, by its address: Google Messages' pairing codes are https, Signal's sgnl://linkdevice.
+    const APPS = {
+      gm: { title: 'Scan this with Google Messages', lede: 'Uplink on your phone made this code so it can reach Google Messages on that same phone.', fresh: 'A fresh code comes from your phone about every half minute.', done: 'Paired. You can close this page.' },
+      signal: { title: 'Scan this with Signal', lede: 'Uplink on your phone made this code so it can become one of your Signal devices, as Signal Desktop is.', fresh: 'When Signal makes a new code, it comes here from your phone.', done: 'Linked. You can close this page.' },
+    };
+    const appFor = (url) => (url.startsWith('sgnl://linkdevice') ? 'signal' : url.startsWith('https://') ? 'gm' : null);
+    let app = null;
+    const draw = (url) => {
+      app = appFor(url);
+      const words = APPS[app];
+      document.getElementById('title').textContent = words.title;
+      document.getElementById('lede').textContent = words.lede;
+      document.title = words.title + ' · Uplink';
+      document.getElementById('steps-gm').hidden = app !== 'gm';
+      document.getElementById('steps-signal').hidden = app !== 'signal';
+      const qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
+      box.hidden = false;
+      state.textContent = words.fresh;
+    };
+    try {
+      const hubUrl = new URLSearchParams(location.search).get('hub') ?? (relay ? `wss://${relay}/hub` : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/hub`);
+      const hub = await connectHub(hubUrl, await identity(false));
+      hub.bin.add(async (d) => {
+        if (d[0] !== 2 || hex(d.slice(1, 17)) !== room) return;
+        let clear;
+        try { clear = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: d.slice(33, 45), additionalData: AAD, tagLength: 128 }, key, d.slice(45))); } catch (_) { return; }
+        let m;
+        try { m = JSON.parse(dec.decode(clear)); } catch (_) { return; }
+        if (m.t === 'qr' && typeof m.url === 'string' && appFor(m.url)) draw(m.url);
+        if (m.t === 'paired') { box.hidden = true; state.textContent = (APPS[app] ?? APPS.gm).done; }
+      });
+      hub.json.add((m) => { if (m.closed) state.textContent = 'The connection closed. Reload this page.'; });
+      hub.say({ join: room, token });
+      // Nothing from the phone yet: say what to do rather than wait in silence.
+      setTimeout(() => { if (box.hidden && app === null) state.textContent = 'Nothing has come from your phone yet. Keep Uplink open on your phone, on the screen that showed the code, and this page fills in.'; }, 10000);
+    } catch (e) {
+      state.textContent = e.message;
+    }
+  }
+</script>
+</body>
+</html>

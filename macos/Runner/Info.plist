@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>$(PRODUCT_COPYRIGHT)</string>
+	<!-- A circle's invite opened from its page (site/join: ghostmsg://join/#c.…), handed to the app by AppDelegate. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Uplink invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ghostmsg</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Finding the phone on the local network (Bonjour): macOS asks once, with these words. -->
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ghostmsg._tcp</string>
+	</array>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Uplink writes out a recorded call's words on this device. Nothing is sent anywhere.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Uplink uses the microphone for a voice message you record, and in a voice channel or call you join. It listens at no other time.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Uplink uses the camera when you turn video on in a voice channel or call.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Uplink plays, pauses and skips songs in Spotify when you start the music in a circle's call.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Uplink takes the sound of the Spotify app to play it to the people in your call, and what your Mac plays when you share your screen with its sound.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Uplink finds your phone on the network you share, to show its texts and send through it without a server in between, and, where you switch the Local network route on, your own devices and your friends' on that network.</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.social-networking</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+</dict>
+</plist>

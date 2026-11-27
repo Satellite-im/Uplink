@@ -1,0 +1,3 @@
+# Long lines, as the rest of this repository writes them, and nothing broken over several that fits on one.
+max_width = 150
+use_small_heuristics = "Max"

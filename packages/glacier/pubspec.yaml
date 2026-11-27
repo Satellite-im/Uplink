@@ -1,0 +1,17 @@
+name: glacier
+description: The Glacier UI kit in Flutter, ported one to one from @glacier/react and @glacier/tokens.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+flutter:
+  assets:
+    - assets/css/tokens.css

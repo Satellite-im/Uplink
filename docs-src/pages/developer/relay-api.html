@@ -1,0 +1,228 @@
+<p>The relay is mostly two WebSockets, the hub and the pairing relay. Beside them it answers a small set of plain HTTP routes: a circle's sealed files, the plugin Marketplace, feedback, bounties, the pages that link a handle, and, where it is given the folder, the app built for a browser. This page lists every one. Relays that talk to each other, home records and a call's media relay have no HTTP routes of their own: they are spoken over the hub's socket. The public relay is at <code>https://gogho.st</code>. Anyone can run their own from the source: <code>dart run relay/bin/relay.dart --port 8787</code>. The WebSocket protocols are on <a href="/docs/developer/hub/">The hub and pairing protocols</a>, and a Postman collection of these routes is on <a href="/docs/developer/api/">API overview and Postman</a>.</p>
+
+<h2 id="conventions">Conventions</h2>
+<ul>
+  <li><b>CORS for one address, on two routes.</b> These routes are for the app and for scripts, not for a page in a browser on another site: the relay sets no <code>Access-Control-*</code> header, but for the two things the app in a browser sends from an address of its own, <code>POST /feedback</code> and <code>POST /market/abuse</code>. A relay set with that address (<code>GHOST_APP_ORIGIN</code>) answers both with <code>Vary: Origin</code>, and, to a request whose <code>Origin</code> is exactly that address, with <code>Access-Control-Allow-Origin</code> naming it. An <code>OPTIONS</code> from that origin is answered <code>204</code> with <code>Access-Control-Allow-Methods: POST</code>, <code>Access-Control-Allow-Headers: content-type, x-ghost-key, x-ghost-time, x-ghost-sig, x-ghost-body-sha256, x-ghost-body-length</code> and <code>Access-Control-Max-Age: 600</code>. No other route, and no other origin, is told anything.</li>
+  <li><b>No match is not an error.</b> A request that fits no route, whatever its method, answers <code>200</code> with the plain text <code>Ghost Messaging relay</code>. There is no separate health route: this is it.</li>
+  <li><b>JSON</b> answers are <code>application/json; charset=utf-8</code>. Request bodies are read as UTF-8 JSON or raw bytes; no <code>Content-Type</code> is looked at.</li>
+  <li><b>Hex is lowercase.</b> Ids and hashes in paths must match their shape exactly, or the route does not exist.</li>
+  <li><b>Times</b> are whole milliseconds since 1970, as decimal digits.</li>
+  <li><b>Per-address limits</b> on these routes go by the first value of <code>X-Forwarded-For</code>, or the connection's address where there is none. The hub counts differently: see <a href="/docs/developer/hub/#sign-in">Signing in to the hub</a>.</li>
+</ul>
+<p>Each module says no in its own shape:</p>
+<table>
+  <tr><th>Module</th><th>A refusal</th><th>Notes</th></tr>
+  <tr><td>Files</td><td><code>{"err": "No such space."}</code></td><td>A sentence. A few carry more: <code>have</code>, <code>done</code>, <code>seq</code>.</td></tr>
+  <tr><td>Feedback</td><td><code>{"error": "Feedback is sent with POST."}</code></td><td>A sentence, under <code>error</code>, not <code>err</code>.</td></tr>
+  <tr><td>Marketplace</td><td><code>{"ok": false, "error": "not_found", "message": "There's nothing here by that name."}</code></td><td><code>error</code> is a fixed code; <code>message</code> is for people. Every success carries <code>"ok": true</code>.</td></tr>
+  <tr><td>Bounties</td><td><code>{"error": "Not here."}</code></td><td>A sentence, under <code>error</code>, as feedback's.</td></tr>
+  <tr><td>The app in a browser</td><td><code>Not found</code></td><td>Plain text with <code>404</code>. A wrong method is <code>405</code> with no body.</td></tr>
+</table>
+<p>Outside the modules, a path or a query whose percent-escapes are not UTF-8 answers <code>400</code> with no body, and an error nothing else caught answers <code>500</code> with no body. Both close the connection.</p>
+
+<h2 id="signing">Signing a request</h2>
+<p>Writes to Files, feedback, and most of the Marketplace are signed with the install's own key, the same one the hub knows it by. No account or password is involved. A bounty is signed the same way, by one key the relay was given.</p>
+<table>
+  <tr><th>Thing</th><th>Format</th></tr>
+  <tr><td>Key</td><td>P-256 (secp256r1). The public key is 33 bytes compressed: <code>02</code> or <code>03</code>, then x. In a header it is standard base64 with padding, 44 characters.</td></tr>
+  <tr><td>Signature</td><td>ECDSA over the SHA-256 of the signed string. 64 bytes: r (32, big-endian) then s (32). Not DER. Standard base64, 88 characters.</td></tr>
+  <tr><td>Id</td><td>The first 16 bytes of the SHA-256 of the 33 key bytes, as 32 lowercase hex digits. This is who the relay says wrote something.</td></tr>
+  <tr><td>Body hash</td><td>SHA-256 of the body's bytes, 64 lowercase hex digits. For an empty body: <code>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code>.</td></tr>
+</table>
+<p>All three modules take the same three headers and sign five lines joined by a line feed (<code>\n</code>), as UTF-8, with no line feed after the last. Only the first line and a few rules differ.</p>
+<pre><code>x-ghost-key:  &lt;base64 of the 33-byte public key&gt;
+x-ghost-time: &lt;milliseconds since 1970&gt;
+x-ghost-sig:  &lt;base64 of the 64-byte signature&gt;</code></pre>
+<p>The relay remembers what each key signed, so the same request sent twice is refused the second time. To try again, sign again with a new time.</p>
+
+<h3>Files</h3>
+<p>Every Files route but <code>GET /files</code> also carries the space's token: <code>Authorization: Ghost &lt;token&gt;</code>, 64 lowercase hex digits. Reads need only the token. Writes need the token and the signature.</p>
+<pre><code>ghost-files v1
+&lt;METHOD&gt;
+&lt;path and query, as sent&gt;
+&lt;time&gt;
+&lt;body sha256 hex&gt;</code></pre>
+<ul>
+  <li>The third line is the whole request target, query included: <code>/files/0123456789abcdef0123456789abcdef/log?after=7</code>.</li>
+  <li>The time may be up to 10 minutes from the relay's clock, either way.</li>
+  <li>Where the body is not read (<code>DELETE /files/{space}</code>, <code>POST …/done</code>), sign the empty body's hash.</li>
+  <li>For a blob's piece sent with <code>x-ghost-body-sha256</code>, the last line is that header's value, and the signature is checked before the body is read.</li>
+  <li>Any failure answers <code>401 {"err": "Bad signature."}</code>.</li>
+</ul>
+
+<h3>Feedback</h3>
+<pre><code>ghost-feedback v1
+POST
+/feedback
+&lt;time&gt;
+&lt;body sha256 hex&gt;</code></pre>
+<ul>
+  <li>The third line is the path alone, with no query.</li>
+  <li>The time may be up to 5 minutes from the relay's clock.</li>
+</ul>
+
+<h3>Marketplace</h3>
+<pre><code>ghost-market v1
+&lt;METHOD&gt;
+&lt;path&gt;
+&lt;time&gt;
+&lt;body sha256 hex&gt;</code></pre>
+<ul>
+  <li>The third line is the path alone. A signed request with any query string is refused.</li>
+  <li>The time may be up to 5 minutes from the relay's clock.</li>
+  <li>A <code>POST</code> must say its body up front, in two more headers: <code>x-ghost-body-sha256</code> (64 lowercase hex digits; the last signed line) and <code>x-ghost-body-length</code> (the length in bytes, equal to <code>Content-Length</code>). A chunked body is refused.</li>
+  <li>A <code>GET</code> or <code>DELETE</code> must send neither of those headers and no body, and signs the empty body's hash.</li>
+  <li>A missing header answers <code>401 unsigned</code>. A bad key, time or signature, or a repeat, answers <code>401 bad_signature</code>. A broken shape (a query, a header sent twice, a length that does not match) answers <code>400 bad_request</code>.</li>
+</ul>
+<p>A signed <code>GET /market/mine</code> looks like this:</p>
+<pre><code>GET /market/mine HTTP/1.1
+Host: gogho.st
+x-ghost-key: AqGyw9Tl9gcYKTpLXG1+j5ChssPU5fYHGCk6S1xtfo+Q
+x-ghost-time: 1795000000000
+x-ghost-sig: &lt;88 base64 characters&gt;</code></pre>
+<p>and its signature is over these bytes:</p>
+<pre><code>ghost-market v1
+GET
+/market/mine
+1795000000000
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code></pre>
+
+<h3>Bounties</h3>
+<pre><code>ghost-bounty v1
+POST
+/bounty
+&lt;time&gt;
+&lt;body sha256 hex&gt;</code></pre>
+<ul>
+  <li>The same three headers. <code>x-ghost-key</code> must be the relay's bounty key (<code>GHOST_BOUNTY_KEY</code>), not an install's.</li>
+  <li>The third line is always <code>/bounty</code>.</li>
+  <li>The time may be up to 5 minutes from the relay's clock. A repeat is refused.</li>
+  <li>Any failure answers <code>401 {"error": "Not signed by the bounty key, or too old."}</code>.</li>
+</ul>
+
+<h3>Signatures inside Marketplace bodies</h3>
+<p>Review's decisions are signed a second time, by the reviewer's key, so that the apps can check them without trusting the relay. Each is the same kind of signature over lines joined by <code>\n</code>, and travels as a JSON object with exactly the fields shown. Here <code>key</code> and <code>sig</code> are strict base64: the standard alphabet, padded, no whitespace.</p>
+<table>
+  <tr><th>What</th><th>Signed string</th><th>Object</th></tr>
+  <tr><td>Approval</td><td><code>ghost-market approve v1\n&lt;plugin&gt;\n&lt;version&gt;\n&lt;sha256&gt;</code></td><td><code>{"v": 1, "plugin", "version", "sha256", "key", "sig", "at"}</code></td></tr>
+  <tr><td>Revocation</td><td><code>ghost-market revoke v1\n&lt;plugin&gt;\n&lt;sha256&gt;\n&lt;at&gt;\n&lt;why&gt;</code></td><td><code>{"v": 1, "plugin", "sha256", "at", "why", "key", "sig"}</code></td></tr>
+  <tr><td>Retirement</td><td><code>ghost-market retire v1\n&lt;key&gt;</code> (the key's base64 text)</td><td><code>{"v": 1, "key", "at", "sig"}</code></td></tr>
+</table>
+
+<h2 id="general">General</h2>
+<p>The relay has one answer for anything it does not recognise. A script can use it to see that a relay is there.</p>
+<relay-routes group="general"/>
+
+<h2 id="link">Sign-in links</h2>
+<p>These are pages for a browser, not an API to call. When someone links a Discord, Telegram or X handle, the app asks the hub for a sign-in address and opens it. The address holds a state made for that install, good for 10 minutes and for one sign-in. The relay checks the sign-in with the network, links the handle, and tells the install over the hub. A network whose keys are not set on the server is off, and its page says the link is no good.</p>
+<relay-routes group="link"/>
+
+<h2 id="word">Invite words</h2>
+<p>A circle can be joined by a word. The relay keeps, under the SHA-256 of the word, a sealed link of at most 1024 characters that the app gave it over the hub. It never sees the word or what the link opens. This one route is how the site's join page looks a word up.</p>
+<relay-routes group="word"/>
+
+<h2 id="files">Files</h2>
+<p>A space's files live on the relay as sealed blobs, beside an ordered log of sealed operations that says what the files are. The relay can't read either: names, keys and contents are sealed by the apps. It sees the space's id, each blob's size, when things were written, and the id of the install that wrote them.</p>
+<p>A space is named by an id (32 hex digits) and guarded by a token (64 hex digits), both made by the apps from the space's secret. The relay keeps only the token's hash, and a wrong token is answered exactly as a space that isn't there. Anyone with the token can read. Writing also takes a signature, so a blob is written and finished only by whoever started it, and removed by them, the space's owner, or a moderator who shows the space's signed roster.</p>
+<p>Uploading a file is three steps: reserve a blob with its size, send its pieces in order, then finish it. An upload cut short carries on from <code>have</code>. A blob not finished holds its room in the space until it is finished or dropped, and the space's state lists the newest hundred of them under <code>parts</code>, so an app can show an upload that stopped halfway and carry it on or remove it.</p>
+<table>
+  <tr><th>Limit</th><th>Default</th></tr>
+  <tr><td>One file</td><td>50,004,194,304 bytes</td></tr>
+  <tr><td>One space</td><td>100,000,000,000 bytes, 10,000 blobs</td></tr>
+  <tr><td>One piece of a blob</td><td>8 MiB</td></tr>
+  <tr><td>One log operation</td><td>32,768 bytes</td></tr>
+  <tr><td>A space's log</td><td>20,000 entries, 16 MiB</td></tr>
+  <tr><td>Writes by one install</td><td>600 a minute</td></tr>
+  <tr><td>Spaces made by one install</td><td>20</td></tr>
+  <tr><td>A space nobody opens</td><td>Removed after 90 days</td></tr>
+  <tr><td>An unfinished blob</td><td>Dropped 24 hours after its last write</td></tr>
+</table>
+<relay-routes group="files"/>
+
+<h2 id="feedback">Feedback</h2>
+<p>The app's Share feedback sends one signed report. The relay files it on the server's feedback board and answers with the ticket's id. It keeps nothing itself. A username in the report is filed as given when the signing key holds that username, and marked not verified otherwise. On a relay with no board set up the route answers <code>503</code>.</p>
+<p>Limits: 5 reports an hour and 20 a day from one install, 300 a day from everyone, 10 MiB a report, three screenshots of 3 MiB each.</p>
+<relay-routes group="feedback"/>
+
+<h2 id="market">Marketplace</h2>
+<p>The Marketplace holds plugins from other developers and the queue they wait in for review. A plugin's package is one JSON file in the <a href="/docs/plugin-format/">ghost-plugin/1</a> format, sent in canonical form (keys sorted, no whitespace) and named by its SHA-256.</p>
+<p>Anyone can read the catalog, the withdrawals list, approved packages and listed screenshots. A developer signs with the key that holds the username in the plugin's <code>developer</code> field. Review is an install that holds one of the relay's admin usernames and signed in to the admin page over the hub in the last 8 hours, or the last 30 minutes for approving, revoking, blocking and listing. No password travels over these routes.</p>
+<p>The relay is not trusted with a plugin. An approval is the reviewer's own signature over the plugin's id, version and hash, and the app checks it against review keys it already knows before it adds anything. The catalog carries no names or pictures: the app fetches each package and reads them from it.</p>
+<p>The relay keeps packages, screenshots, submissions with their notes, reports, and a log of what review did. A report is kept without its sender's key.</p>
+<p>The same review takes reports of people and messages (<code>/market/abuse</code>). The app seals each one to the review keys before it sends it, so the relay holds an envelope it can't read, and never who sent it. It keeps the newest 150, letting go first of the oldest one marked done.</p>
+<table>
+  <tr><th>Limit</th><th>Default</th></tr>
+  <tr><td>One package</td><td>262,144 bytes</td></tr>
+  <tr><td>Screenshots</td><td>4, PNG, 1 MiB each, 64 to 2,400 pixels a side</td></tr>
+  <tr><td>A signed body</td><td>6 MiB</td></tr>
+  <tr><td>Submissions</td><td>5 a day and 3 waiting, by one developer</td></tr>
+  <tr><td>A new username</td><td>Can submit 7 days after it is claimed</td></tr>
+  <tr><td>Public reads</td><td>240 a minute from one address; the catalog and withdrawals 10 a minute</td></tr>
+  <tr><td>Signed requests</td><td>300 an hour by one key, 60 a minute from one address</td></tr>
+  <tr><td>Reports of people</td><td>5 an hour and 15 a day by one key, 20 a day from one address, 15 a day by one verified number or account; 48,000 characters sealed</td></tr>
+</table>
+<note kind="info" title="Checking a plugin without sending it">
+<p><code>POST /market/submissions</code> with <code>{"check": true, "package": "…"}</code> runs the relay's checks and keeps nothing. <a href="/docs/plugin-submit/">Submit a plugin</a> covers the app's side.</p>
+</note>
+<relay-routes group="market"/>
+
+<h2 id="bounty">Bounties</h2>
+<p>A relay can be given one key that may give souls: the bounty key. Its holder signs a <code>POST /bounty</code> naming an install, a number of souls and a reason. The relay adds the souls, writes the grant in the admin log beside the admin page's own, and tells the install over the hub if it is connected. The key can do nothing else. On a relay with no bounty key the route answers <code>404</code>.</p>
+<p>Limits: 1 to 500 souls at a time, 30 grants a day, a body of 4,096 bytes, a reason of 200 characters.</p>
+<relay-routes group="bounty"/>
+
+<h2 id="souls">Sending souls</h2>
+<p>A person can send some of their souls to someone else on the same relay. The sender signs a <code>POST /souls/send</code> with their own hub key, so the relay knows whose souls to move: the id of the key that signed. The headers are the three a bounty carries, over the five lines <code>ghost-souls v1</code>, <code>POST</code>, the path, the time and the body's SHA-256 in hex.</p>
+<p>Souls only move. The sender's count goes down and the receiver's goes up by the same number in one step, with a receipt, and all three are written to disk together before the relay answers. The receiver must hold a username on this relay, so souls can't be sent to nobody. Both people are told their new count over the hub if they are connected.</p>
+<p>Each sending carries an <code>id</code> the sender makes up. The relay moves souls once for an id: a request sent again because its answer was lost gets the first receipt back with <code>"again": true</code>. The app writes that id into the card it puts in the chat, and the other person's app asks <code>POST /souls/receipt</code> before it shows the card as souls sent. A receipt is given only to the two people in it.</p>
+<p>Limits: 1 to 100 souls at a time; 300 souls and 10 sendings from one person in 24 hours; 20 askings to send and 300 receipt checks an hour by one key; 600 signed requests an hour from one address; a body of 1,024 bytes. Receipts are kept for a day at least, and the newest 5,000 after that.</p>
+<p>Every answer of these two routes is JSON with <code>ok</code>. A relay from before them answers the paths as it answers any it doesn't know, with <code>200</code> and a line of text, and the app reads that as "not available yet".</p>
+<relay-routes group="souls"/>
+
+<h2 id="app">The app in a browser</h2>
+<p>A relay started with <code>--web &lt;folder&gt;</code> serves the app built for a browser under <code>/app/</code>, as plain files. A page in a browser may speak only to where it came from, and the hub sends no CORS headers, so the page and the hub have to be one address: this is how a relay gives its people the app in a browser. Without the folder there is no <code>/app/</code>, and these paths get the root answer.</p>
+<ul>
+  <li><code>GET</code> and <code>HEAD</code> only. Nothing is written or kept about who asked.</li>
+  <li>Only files inside the folder, links followed. A folder is never listed.</li>
+  <li><code>index.html</code>, and any file whose name does not hold a hash of its contents, answers <code>Cache-Control: no-cache</code> with an <code>ETag</code>. A name with eight or more hex digits between dots before its ending (<code>main.dart.3f9a1c2b.js</code>) answers <code>public, max-age=31536000, immutable</code>.</li>
+  <li>Nothing is compressed as it is asked for. A <code>.br</code> or <code>.gz</code> copy beside a file, no older than it, is sent where <code>Accept-Encoding</code> takes it.</li>
+  <li>Every answer carries the page's own <code>Content-Security-Policy</code> (read from its <code>&lt;meta&gt;</code>, with <code>frame-ancestors 'none'</code> added), <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy: no-referrer</code>, <code>Cross-Origin-Opener-Policy: same-origin</code>, <code>Cross-Origin-Resource-Policy: same-origin</code> and <code>Permissions-Policy: camera=(), microphone=(), geolocation=(), display-capture=()</code>. HSTS is left to the web server in front.</li>
+</ul>
+<relay-routes group="app"/>
+
+<h2 id="own">Running your own</h2>
+<p>The relay is one Dart program with no dependencies beyond Dart's own library. It listens over plain HTTP on this machine alone unless told otherwise, so on a server it sits behind a web server that holds the certificate.</p>
+<pre><code>dart run relay/bin/relay.dart [--host 127.0.0.1] [--port 8787] [--data relay-data] [--web &lt;folder&gt;] [--verbose]</code></pre>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td><code>--host &lt;address&gt;</code></td><td><code>127.0.0.1</code></td><td>Where to listen.</td></tr>
+  <tr><td><code>--port &lt;number&gt;</code></td><td><code>$PORT</code>, else <code>8787</code></td><td>The port.</td></tr>
+  <tr><td><code>--data &lt;folder&gt;</code></td><td><code>relay-data</code></td><td>Where everything it keeps is written.</td></tr>
+  <tr><td><code>--web &lt;folder&gt;</code></td><td><code>$GHOST_WEB_DIR</code>, else none</td><td>The folder <code>flutter build web</code> made, served under <code>/app/</code>.</td></tr>
+  <tr><td><code>--verbose</code></td><td>off</td><td>Says when an install joins or leaves. Never an address, never a whole id.</td></tr>
+  <tr><td><code>--help</code>, <code>-h</code></td><td></td><td>Prints the flags.</td></tr>
+</table>
+<p>Everything else is set in the environment. Each family is optional: a feature whose values are not set is off, and every limit has a default.</p>
+<table>
+  <tr><th>Family</th><th>What it sets</th><th>Most useful</th></tr>
+  <tr><td><code>GHOST_PUBLIC_URL</code></td><td>The relay's public address, used to build sign-in links and the networks' return addresses.</td><td>Default <code>https://ghost-sms.com</code>: set it to your own.</td></tr>
+  <tr><td><code>GHOST_HUB_NAMES</code></td><td>The hosts the hub is reached at, commas between. With them the hub takes a sign-in bound to the host the app dialled.</td><td>Unset, the hub takes the older sign-in alone. See <a href="/docs/developer/hub/#sign-in">Signing in to the hub</a>.</td></tr>
+  <tr><td><code>GHOST_FED</code>, <code>GHOST_FED_*</code>, <code>GHOST_PUBLIC_HUB</code></td><td>Whether this relay links with other relays, with which, and how much it takes from each.</td><td><code>GHOST_FED</code> (<code>off</code>, the default; <code>open</code>; <code>list</code>), <code>GHOST_PUBLIC_HUB</code> (this relay's own hub address, <code>wss://relay.example.com/hub</code>: without it no other relay's hello is taken), <code>GHOST_FED_ALLOW</code> and <code>GHOST_FED_BLOCK</code> (hosts or relay names), <code>GHOST_FED_VIA</code>, <code>GHOST_FED_STANDING</code>, <code>GHOST_FED_PACKETS_A_MINUTE</code> (1200), <code>GHOST_FED_BYTES_A_DAY</code> (512 MiB), <code>GHOST_FED_LOOKUPS_AN_HOUR</code> (600), <code>GHOST_FED_PORTS</code>, <code>GHOST_FED_PLAIN</code>. See <a href="/docs/developer/hub/#federation">Relays that talk to each other</a>.</td></tr>
+  <tr><td><code>GHOST_TURN_*</code></td><td>The media relay a call falls back on: a TURN server's shared secret and addresses. The hub hands a short-lived username and password to whoever joins a room.</td><td><code>GHOST_TURN_SECRET</code> and <code>GHOST_TURN_URLS</code> (commas between; both, or calls are direct only), <code>GHOST_TURN_TTL</code> (seconds; 86400).</td></tr>
+  <tr><td><code>GHOST_LINK_HELPERS</code></td><td>Servers that help two devices link directly, told to each app as it signs in.</td><td>Up to 4 <code>https://</code> addresses, commas between, 200 characters each.</td></tr>
+  <tr><td><code>GHOST_WIRE_*</code></td><td>What all WebSocket connections may hold in memory together, and when one is ended for it.</td><td><code>GHOST_WIRE_MB</code> (64; 8 to 4096), <code>GHOST_WIRE_EACH_MB</code> (8; 1 to 1024), <code>GHOST_WIRE_STALL_S</code> (10; 2 to 600), <code>GHOST_WIRE_IN_STALL_S</code> (20; 2 to 600).</td></tr>
+  <tr><td><code>GHOST_WEB_DIR</code>, <code>GHOST_APP_ORIGIN</code></td><td>The app in a browser: the folder served under <code>/app/</code>, and the one other address whose page may read the answers to feedback and reports.</td><td><code>GHOST_APP_ORIGIN</code> is an origin as a browser names it: <code>https://host</code>, with a port where there is one. Anything else is left off, and said on stderr.</td></tr>
+  <tr><td><code>GHOST_BOUNTY_KEY</code></td><td>The bounty key's public half: 33 bytes as 66 hex digits.</td><td>Unset, <code>POST /bounty</code> answers <code>404</code>.</td></tr>
+  <tr><td><code>GHOST_DISCORD_*</code>, <code>GHOST_X_*</code>, <code>GHOST_TELEGRAM_*</code></td><td>Each network's sign-in.</td><td><code>GHOST_DISCORD_ID</code> and <code>GHOST_DISCORD_SECRET</code>; <code>GHOST_X_ID</code> (<code>GHOST_X_SECRET</code> optional); <code>GHOST_TELEGRAM_BOT</code> and <code>GHOST_TELEGRAM_TOKEN</code>.</td></tr>
+  <tr><td><code>GHOST_TWILIO_*</code>, <code>GHOST_TEXT_TO</code>, <code>GHOST_TEXTS_A_DAY</code></td><td>Verifying a phone number by a texted code.</td><td><code>GHOST_TWILIO_SID</code>, <code>GHOST_TWILIO_TOKEN</code>, <code>GHOST_TWILIO_VERIFY</code> (all three, or it is off); <code>GHOST_TEXT_TO</code> (number prefixes that may be texted, default <code>+1</code>); <code>GHOST_TEXTS_A_DAY</code> (200).</td></tr>
+  <tr><td><code>GHOST_ADMIN_*</code></td><td>The admin page, and so who review is.</td><td><code>GHOST_ADMIN_USER</code>, <code>GHOST_ADMIN_HASH</code> (empty: nobody can sign in), <code>GHOST_ADMIN_NAMES</code> (usernames that may).</td></tr>
+  <tr><td><code>GHOST_APNS_*</code></td><td>Waking a closed iPhone.</td><td><code>GHOST_APNS_KEY_FILE</code>, <code>GHOST_APNS_KEY_ID</code>, <code>GHOST_APNS_TEAM_ID</code>, <code>GHOST_APNS_TOPIC</code>. Without them tokens are kept and nothing is sent.</td></tr>
+  <tr><td><code>GHOST_FILES_*</code></td><td>Files' limits.</td><td><code>GHOST_FILES_MAX_FILE</code>, <code>GHOST_FILES_SPACE_QUOTA</code>, <code>GHOST_FILES_TOTAL</code> (300,000,000,000 bytes for all spaces), <code>GHOST_FILES_IDLE_DAYS</code> (90), <code>GHOST_FILES_WRITES_PER_MINUTE</code> (600), <code>GHOST_FILES_MAX_BODY</code> (8 MiB, at most 10).</td></tr>
+  <tr><td><code>GHOST_NOTION_*</code></td><td>Feedback's board.</td><td><code>GHOST_NOTION_TOKEN</code> and <code>GHOST_NOTION_FEEDBACK</code>. Both, or feedback answers <code>503</code>.</td></tr>
+  <tr><td><code>GHOST_MARKET_*</code></td><td>The Marketplace's switch, limits and review keys.</td><td><code>GHOST_MARKET_ON</code> (<code>1</code>; <code>0</code> turns it off), <code>GHOST_MARKET_REVIEW_KEYS</code> (a comma list of review keys in base64; empty takes the signed-in admin's own key), <code>GHOST_MARKET_NEED_VERIFIED</code> (<code>0</code>), <code>GHOST_MARKET_NAME_AGE_DAYS</code> (7), <code>GHOST_MARKET_MAX_PACKAGE</code> (262144), <code>GHOST_MARKET_TOTAL</code> (1 GiB on disk), <code>GHOST_MARKET_REPORTS_A_DAY</code> (500: what installs with no verified number or linked account may report in a day, all together).</td></tr>
+</table>
+<note kind="warn" title="The app only trusts review keys it knows">
+<p>Your own relay can run a Marketplace, but the app adds a plugin only when its approval is signed by a review key the app was built with. Approvals from your relay's reviewers mean nothing to an unchanged app.</p>
+</note>
+<p>A relay that links with others makes a key of its own the first time it starts, <code>relay-key.json</code> in the data folder, readable by its own user alone. Its name to other relays is made from that key: keep the file, and keep it private.</p>
+<p>The full list of variables, with each one's least and most, is in the source: <code>relay/lib/files.dart</code>, <code>relay/lib/market.dart</code>, <code>relay/lib/handles.dart</code>, <code>relay/lib/feedback.dart</code>, <code>relay/lib/pushes.dart</code>, <code>relay/lib/federation.dart</code>, <code>relay/lib/turn.dart</code>, <code>relay/lib/ws_door.dart</code> and <code>relay/bin/relay.dart</code>.</p>

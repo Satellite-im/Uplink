@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A Files-space video or sound plays as it comes down, from a server the app runs on the phone itself
+     (lib/files/file_stream.dart; Matt, 2026-11-18: "would it be possible to setup streaming and buffering of the
+     file?"). ExoPlayer reaches it over plain HTTP, which Android refuses by default: allowed for this device's own
+     loopback address and nothing else. Everything else stays HTTPS only, as before. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
