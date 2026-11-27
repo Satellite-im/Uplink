@@ -1,0 +1,70 @@
+<p>Link your other chat accounts and their conversations show in Messages beside your texts: read, reply, react, all in one place. Each is in <ui>Settings › Connections</ui>, one section per network. Your messages go between your device and that network directly, never through Uplink's server.</p>
+
+<h2 id="official-and-plugins">Official networks and plugins</h2>
+<p><b>Telegram</b> and <b>Signal</b> are Uplink's official networks: they're there from the start, under <ui>Settings › Connections</ui>, ready to sign in to. (Your texts, through Google Messages, are separate and on by default.)</p>
+<p>The others — WhatsApp, Matrix, Microsoft Teams, Google Chat, Messenger, Instagram, Discord, X and Slack — are <b>plugins</b>. They're off until you switch them on, and while off they don't run or show any chats. Open one under <ui>Connections › Plugins</ui> and turn on <b>Use <i>network</i></b> to connect it; turn it off and it's signed out and left alone. Plugins aren't official Uplink connections: each signs in the way that network's own website or app does, and some don't allow other apps at all, so you agree to a warning first. If you'd already connected one, it stays on when you update.</p>
+
+<m-screen title="Connections" back>
+  <m-section title="Connected"><m-row icon="send" hue="cyan" label="Telegram" hint="Signed in as @you" chev tap/></m-section>
+  <m-section title="Official networks"><m-row icon="message-square" hue="blue" label="Signal" hint="Not signed in" chev/></m-section>
+  <m-section title="Plugins"><m-row icon="message-circle" hue="green" label="WhatsApp" hint="Off" chev/><m-row icon="hash" hue="slate" label="Matrix" hint="Off" chev/></m-section>
+</m-screen>
+
+<h2 id="telegram">Telegram</h2>
+<steps>
+<step title="Your phone number">
+<p>Open <ui>Settings › Connections › Telegram › Sign in to Telegram</ui> and type the number of your Telegram account, with its country code.</p>
+<m-screen title="Sign in to Telegram" back><m-field label="Your phone number" value="+1 555 010 0199"/><m-btn kind="primary" tap>Next</m-btn></m-screen>
+</step>
+<step title="The code">
+<p>Telegram sends a code to your Telegram app (or texts it). Type it in.</p>
+</step>
+<step title="Your two-step password, if you have one">
+<p>If your Telegram account has a cloud password, Uplink asks for it. Then your chats arrive.</p>
+</step>
+</steps>
+<p>On a computer, you can tap <b>Sign in with your phone</b> instead and approve it on your phone.</p>
+
+<h2 id="signal">Signal</h2>
+<steps>
+<step title="Link Signal">
+<p>Open <ui>Settings › Connections › Signal › Link Signal</ui>. A QR code shows.</p>
+<m-screen title="Link Signal to Uplink" back><m-p>Scan this with Signal</m-p><m-qr/></m-screen>
+</step>
+<step title="Scan it with Signal">
+<p>On the phone where Signal is set up: Signal's <ui>Settings › Linked devices › Link new device</ui>, then scan the code. Uplink becomes one of your linked devices, like Signal's desktop app.</p>
+</step>
+</steps>
+<p>Messages from before you linked don't come over; everything from then on does.</p>
+
+<h2 id="whatsapp">WhatsApp</h2>
+<note kind="warn" title="WhatsApp doesn't support this"><p>WhatsApp has no official way for other apps to link, and it may ban accounts it sees using unofficial apps. Uplink tells you this before linking. Only link an account you could live without.</p></note>
+<steps>
+<step title="Read the warning">
+<p>WhatsApp is a plugin: open <ui>Settings › Connections › WhatsApp</ui> and turn on <b>Use WhatsApp</b> first. It shows the warning; tap <b>I understand, link WhatsApp</b> to go on.</p>
+</step>
+<step title="Scan or type the code">
+<p>Scan the QR code with WhatsApp's <ui>Linked devices › Link a device</ui>, or tap <b>Link with phone number instead</b> and type the 8-character code into WhatsApp.</p>
+<m-screen title="Link WhatsApp to Uplink" back><m-p>Scan this with WhatsApp</m-p><m-qr/><m-btn kind="ghost" tap>Link with phone number instead</m-btn></m-screen>
+</step>
+</steps>
+
+<h2 id="matrix">Matrix</h2>
+<p>Any Matrix server works. Open <ui>Settings › Connections › Matrix</ui>, type your server or whole user id (like <code>@you:matrix.org</code>; empty means matrix.org), and sign in in the browser. Servers that still take a password have <b>Or with a password</b>. To read older encrypted messages, use <b>Unlock older messages</b> with your recovery key.</p>
+
+<h2 id="others">Coming soon</h2>
+<table>
+  <tr><th>Network</th><th>Status</th></tr>
+  <tr><td>Bluesky</td><td><soon/> Built; sign-in uses an app password with direct messages allowed.</td></tr>
+  <tr><td>Mastodon</td><td><soon/> Built.</td></tr>
+  <tr><td>Microsoft Teams</td><td><soon/> Work or school accounts only; your IT may need to approve it.</td></tr>
+  <tr><td>Google Chat</td><td><soon/> Google Workspace accounts only.</td></tr>
+</table>
+<p>Discord isn't linked as an account (Discord bans that), but its voice channels can be: see <a href="/docs/discord/">Discord servers</a>.</p>
+
+<h2 id="unlink">Unlinking</h2>
+<p>Open the network in <ui>Settings › Connections</ui> and sign out or unlink. Its chats leave Uplink; nothing is deleted from the network itself.</p>
+
+<h2 id="discord-x-slack">Discord, X and Slack</h2>
+<p>These three sign in with your browser's session, as Messenger and Instagram do: the <a href="/docs/browser-extension/">browser extension</a> does it for every device, or paste a request copied from the site's developer tools. <b>Discord</b> brings your direct messages and group chats (this is apart from linking a server's voice channels, which uses Uplink's bot). <b>X</b> brings your direct messages; they're end-to-end encrypted, so Uplink asks once for your 4-digit X Chat passcode (the one x.com/messages asks for) and doesn't keep it. <b>Slack</b> brings one workspace's channels and direct messages.</p>
+<p>None of them allows other apps. Discord's terms forbid automating a user account and Discord can disable an account that does; X may lock or limit an account; a Slack workspace's admins may sign the session out.</p>

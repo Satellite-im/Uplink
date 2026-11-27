@@ -1,0 +1,6 @@
+.dart_tool
+test
+tool
+deploy
+*.env
+relay-data

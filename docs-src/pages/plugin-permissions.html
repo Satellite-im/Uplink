@@ -1,0 +1,84 @@
+<p>A plugin's <code>permissions</code> list what it may do beyond reading texts to tag them. Each one a rule uses must be listed (<code>needs_permission</code>), and each one listed must be used (<code>permission_unused</code>), so the list is always exactly what the plugin does. People see it before they add a plugin, and on its page under <b>What it reads and keeps</b>, in lines the app makes from the file itself: never from the developer's own words, and never from anything the Marketplace's server says.</p>
+
+<h2 id="list">The permissions, and what people see</h2>
+<table>
+  <tr><th>Permission</th><th>Needed for</th><th>The line people see</th></tr>
+  <tr><td>(always)</td><td></td><td><b>Reads texts from numbers not in your contacts</b>: Their words and who they're from, on this phone, to sort them. Never your contacts' texts, group texts, texts sent with Uplink's encryption, your own, chats on other networks, or circles and spaces. Nothing at all while Uplink can't read your contacts.</td></tr>
+  <tr><td><code>sort</code></td><td>any tab or kind</td><td><b>Sorts texts into its own tabs and kinds</b>: They leave Messages for its tab while it's added. Remove it and they're back. Texts with a sign-in code in them are never sorted.</td></tr>
+  <tr><td><code>move</code></td><td>a <code>move</code> button</td><td><b>Moves a conversation when you ask</b>: Only when you press its button, into its own tabs or back to Messages.</td></tr>
+  <tr><td><code>markread</code></td><td>a <code>markread</code> button, or an incoming rule that marks read</td><td><b>Can mark texts as read</b>: Only the conversation you press it on, or texts in its own tabs and kinds as they come once you switch that on in its settings. A text marked read loses its notification.</td></tr>
+  <tr><td><code>mute</code></td><td>an incoming rule that silences</td><td><b>Can silence notifications</b>: Only texts in its own tabs and kinds, once you switch that on in its settings. Each one's notification is taken away as it comes.</td></tr>
+  <tr><td><code>copy</code></td><td>a <code>copy</code> button</td><td><b>Copies to your clipboard when you ask</b>: Only when you press its button.</td></tr>
+  <tr><td><code>write</code></td><td>a <code>write</code> button</td><td><b>Writes a reply for you to send</b>: Only when you press its button. Nothing is sent until you send it.</td></tr>
+  <tr><td><code>links</code></td><td>a <code>link</code> button</td><td><b>Opens example.com in your browser</b>, with its link's own host: Only when you press its button. The address never changes, and nothing from your texts goes with it.</td></tr>
+  <tr><td>(always)</td><td></td><td><b>Can't reach the internet</b>: It has no way to send anything over the internet itself. A button you press can open its page in your browser or copy words to your clipboard.</td></tr>
+</table>
+<p>They're shown in that order. "This phone" is the device it's on: on a computer the first line says "on this computer", and on an iPhone "on this iPhone".</p>
+<h3>On a computer or an iPhone</h3>
+<p>Incoming rules run only on the phone, so on a computer or an iPhone the lines say less:</p>
+<ul>
+  <li>The <b>Can silence notifications</b> line is left out.</li>
+  <li><b>Can mark texts as read</b> is there only for a <code>markread</code> button, with the hint "Only the conversation you press it on."</li>
+  <li>In what it adds, the lines for incoming rules become one: "On your phone it can also mark read or silence texts as they come; not on this computer." (or "not on this iPhone.")</li>
+</ul>
+<h3>What it adds</h3>
+<p>Under the lines above, the sheet and the plugin's page say what it adds, made from its rules in this order:</p>
+<ul>
+  <li>each tab: "A Bills tab in the list";</li>
+  <li>each kind: "A kind in the list's filter: Receipts";</li>
+  <li>"Choices in a conversation's menu in the list", "A button in a conversation's header" and "Choices in a message's menu", each once where a button is there;</li>
+  <li>on a phone, each incoming rule: "Can mark Receipts texts as read as they come, once you switch it on", or "Can silence Parcels texts as they come, once you switch it on";</li>
+  <li>"Settings of its own, on its page", where it has settings.</li>
+</ul>
+
+<h2 id="consent">What people see before they add one</h2>
+<p>Adding a plugin from the Marketplace asks first, in a sheet drawn from the plugin's own file, checked against its review. For a plugin like Bills:</p>
+<div class="pair">
+<m-screen caption="Adding a reviewed plugin from the Marketplace.">
+  <m-sheet title="Add Bills?">
+    <m-row icon="calculator" hue="amber" label="Bills" hint="By @maya"/>
+    <m-p><b>Reviewed by Uplink</b></m-p>
+    <m-row icon="eye" hue="slate" label="Reads texts from numbers not in your contacts" hint="Their words and who they're from, on this phone, to sort them."/>
+    <m-row icon="list-filter" hue="slate" label="Sorts texts into its own tabs and kinds" hint="They leave Messages for its tab while it's added."/>
+    <m-row icon="check-check" hue="slate" label="Can mark texts as read" hint="Only the conversation you press it on, or texts in its own tabs and kinds as they come once you switch that on in its settings."/>
+    <m-row icon="copy" hue="slate" label="Copies to your clipboard when you ask" hint="Only when you press its button."/>
+    <m-row icon="shield-check" hue="slate" label="Can't reach the internet" hint="It has no way to send anything over the internet itself."/>
+    <m-p>It adds: a Bills tab in the list; a kind in the list's filter: Receipts; choices in a conversation's menu in the list; choices in a message's menu; it can mark Receipts texts as read as they come, once you switch it on; settings of its own, on its page.</m-p>
+    <m-p>It works on this phone alone. Remove it at any time from its page in the Marketplace.</m-p>
+    <m-item icon="plus" tap>Add Bills</m-item>
+    <m-item icon="x">Not now</m-item>
+  </m-sheet>
+</m-screen>
+<m-screen caption="Switching on a plugin in development for the first time.">
+  <m-sheet title="Switch on Bills?">
+    <m-row icon="calculator" hue="amber" label="Bills" hint="By @yourname"/>
+    <m-p><b>Not reviewed by anyone: switch this on only if you made it.</b></m-p>
+    <m-row icon="eye" hue="slate" label="Reads texts from numbers not in your contacts"/>
+    <m-row icon="list-filter" hue="slate" label="Sorts texts into its own tabs and kinds"/>
+    <m-row icon="check-check" hue="slate" label="Can mark texts as read"/>
+    <m-row icon="copy" hue="slate" label="Copies to your clipboard when you ask"/>
+    <m-row icon="shield-check" hue="slate" label="Can't reach the internet"/>
+    <m-item icon="plus" tap>Switch it on</m-item>
+    <m-item icon="x">Not now</m-item>
+  </m-sheet>
+</m-screen>
+</div>
+<ul>
+  <li>A plugin in development shows the same sheet the first time it's switched on, titled <b>Switch on Bills?</b>, with <b>Not reviewed by anyone: switch this on only if you made it.</b> in place of the review, and <b>Switch it on</b> and <b>Not now</b>.</li>
+  <li>It shows again whenever a reload can do more than was agreed to: a new permission, a new link, a new tab or kind. Until then the plugin stays off.</li>
+  <li>An update from the Marketplace that can do more asks first too, showing only what's new: "Update Bills?", "It can now:" and the new lines.</li>
+  <li>A plugin loaded from a computer through the API is never switched on unseen: it's switched on only where the phone has agreed to all it can do already, and the phone says it was loaded.</li>
+</ul>
+
+<h2 id="never">What no permission allows</h2>
+<p>Some things no plugin from another developer can do at all, whatever it lists:</p>
+<ul>
+  <li><b>Change what a message says.</b> No rule shows other words in a bubble, as Translate does: a stranger's plugin rewriting what someone said could put words in their mouth.</li>
+  <li><b>Choose a conversation's name</b>, hide one of its kinds from the start, or see a group.</li>
+  <li><b>Draw anything of its own</b>: no buttons above the list, under a message, beside the box, in a call or in Settings. Its buttons go only in <a href="/docs/plugin-rules/#actions">the four places</a> it's given.</li>
+  <li><b>Work for a whole circle</b>, or for a space. A plugin from another developer is for the one device it's added on.</li>
+  <li><b>Reach the network</b>, run code, or use regular expressions.</li>
+  <li><b>Put words from a text in an address</b>, or open more than one address.</li>
+  <li><b>Run while the app is closed.</b> Its incoming rules run on the phone while the app is open.</li>
+  <li><b>See your contacts' texts, group texts, encrypted texts, your own messages</b>, chats on other networks, or circles and spaces.</li>
+</ul>

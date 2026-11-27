@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spotify · Uplink docs</title>
+<meta name="description" content="A queue of songs for a circle's call, played from one person's Spotify.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Plugins</div>
+    <h1>Spotify</h1>
+    <p class="lede">A queue of songs for a circle's call, played from one person's Spotify.</p>
+    <p>Spotify plays music to a circle's call. One person's own Spotify app plays, everyone in the call hears it in stereo, and everyone who may speak can add songs to one queue.</p>
+<p><b>Turn it on:</b> for a whole circle, in <span class="ui-path">Circle settings › Plugins</span>. It does nothing outside a circle's spaces.</p>
+
+<h2 id="turn-on">Turn it on for a circle</h2>
+<p>Whoever may change the circle turns it on once, for everyone in it. Nobody else adds or sets up anything.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Plugins</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">For everyone in the circle</div><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg></span><span class="m-txt"><b>Soundboard</b></span><span class="m-end"><span class="m-switch on"></span></span></div>
+    <div class="m-row tap"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg></span><span class="m-txt"><b>Spotify</b></span><span class="m-end"><span class="m-switch"></span></span></div>
+  </div></div>
+</div></div><figcaption>Circle settings › Plugins.</figcaption></figure>
+
+<h2 id="start">Play music to the call</h2>
+<p>Someone on a Mac or a PC with the Spotify app plays it; here they are called the DJ. Their own Spotify account plays, and Uplink never asks for its password.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Open Spotify on your computer</h3>
+<p>Open the Spotify app and sign in. Choosing which song plays needs Spotify Premium. Put on headphones.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Join the call, and open Spotify in it</h3>
+<p>Press the note in the space's header, or <b>Spotify</b> in the call's menu.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">Lounge</span></div><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Call</div><div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span><small>A plugin</small></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Invite</span></div></div>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Press Start</h3>
+<p>What your Spotify was already playing is what the call hears first. Otherwise it waits for a song.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Spotify</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card"><div class="m-row tap"><span class="m-ico" data-hue="mint"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#play"/></svg></span><span class="m-txt"><b>Start</b><small>Play your Spotify to the call</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div></div></div>
+</div></div></figure>
+</div></li>
+</ol>
+<p>One person plays at a time: whoever started first, until they press <b>Stop</b> or leave the call. Then someone else can start. Stopping pauses a song that came from the queue, and leaves one you chose in Spotify yourself playing for you.</p>
+<p>On a stage, or anywhere your role can't speak, you can't play music or choose songs. If a moderator mutes the DJ for everyone, their music stops too.</p>
+
+<h3 id="mac">On a Mac</h3>
+<p>macOS 14.4 or later. The first time, macOS asks you two things, and the music needs both:</p>
+<ul>
+  <li><b>May Uplink control Spotify?</b> This is what presses Spotify's play, pause and skip. If you said no, turn it on in <span class="ui-path">System Settings › Privacy &amp; Security › Automation</span>.</li>
+  <li><b>May it record system audio?</b> This is what takes Spotify's sound. Uplink takes the sound of the Spotify app only. If you said no, the music is silent for everyone: turn it on in <span class="ui-path">System Settings › Privacy &amp; Security › Screen &amp; System Audio Recording</span>.</li>
+</ul>
+
+<h3 id="pc">On a Windows PC</h3>
+<p>Windows 10 version 2004 or later, with Spotify from spotify.com or from the Microsoft Store. Windows asks you nothing.</p>
+<p>Windows plays a song by opening it in Spotify, so Spotify may come to the front, and sometimes it shows the song without starting it. Uplink then asks Spotify to play. If that doesn't do it, you are told <b>Spotify opened but didn't start the song. Press play on it there.</b> Press play in Spotify and the queue goes on.</p>
+
+<h2 id="queue">Add songs</h2>
+<p>In Spotify, on any device, press <span class="ui-path">Share › Copy Song Link</span>. Paste it under <b>Add a song</b>.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Spotify</span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-avatar" data-hue="purple">♪</span><span class="m-txt"><b>Cut To The Feeling</b><small>Carly Rae Jepsen · From Maya's Spotify</small></span></div>
+  <div class="m-row m-raw"><span class="m-btn primary"><span>Pause</span></span><span class="m-btn secondary"><span>Skip</span></span></div>
+  <div class="m-section"><div class="m-section-title">Add a song</div><div class="m-card">
+    <label class="m-field"><span>A song's link</span><span class="m-input">https://open.spotify.com/track/…</span></label>
+    <div class="m-row tap"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#plus"/></svg></span><span class="m-txt"><b>Add it to the queue</b></span></div>
+  </div></div>
+  <div class="m-section"><div class="m-section-title">Up next · 2</div><div class="m-card">
+    <div class="m-row"><span class="m-txt"><b>Never Gonna Give You Up</b><small>Added by you</small></span></div>
+    <div class="m-row"><span class="m-txt"><b>Dancing Queen</b><small>Added by Jo</small></span></div>
+  </div></div>
+</div></div><figcaption>The queue, as someone listening sees it.</figcaption></figure>
+<ul>
+  <li>Anyone whose role may speak in the space can add songs, move them up and down, pause, play and skip.</li>
+  <li>You can take away a song you added. The DJ can take away any.</li>
+  <li>The queue holds 100 songs, at most 20 from each person.</li>
+  <li>Albums, playlists and podcasts can't be added: paste a song's link.</li>
+  <li>The queue is kept on the DJ's computer, and goes when they stop.</li>
+  <li>If the DJ picks another song in Spotify itself, that plays, and the queue goes on after it. When the queue runs out, Spotify is paused.</li>
+</ul>
+<p>While music plays, <b>Spotify</b> is listed among the people in the call, and a line over the call has the song, pause, skip and <b>Queue</b>.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-banner"><b>Cut To The Feeling</b> Carly Rae Jepsen</div>
+</div></div></figure>
+
+<h2 id="hear">How loud it is for you</h2>
+<p>Under <b>On this device</b> the music has a loudness of its own, only for you. At 0% it isn't sent to you at all. Deafened, you hear none of it; muting your microphone changes nothing. The DJ hears it from Spotify itself, so they have no slider there.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Spotify</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">On this device</div><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="indigo"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-2"/></svg></span><span class="m-txt"><b>Loudness</b></span><span class="m-end"><span class="m-value">60%</span></span></div>
+  </div></div>
+</div></div></figure>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>The DJ should wear headphones</b><p>On speakers, their microphone hears the music and sends it a second time.</p></div></aside>
+
+<h2 id="lossless">Lossless</h2>
+<p>Everyone hears the music in high quality: stereo, at the highest rate a call's sound has. It can also come without loss, as it was taken from the DJ's Spotify, 48 kHz and 16 bits with nothing left out. You hear high quality first; lossless takes over once it has played cleanly for a second, and high quality is back at once if it stops. Where they cross, you hear a moment of the song again, as lossless is about half a second behind.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Spotify</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">On this device</div><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="cyan"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg></span><span class="m-txt"><b>You hear</b><small>The music as it was captured, 48 kHz, 16 bits, with nothing left out.</small></span><span class="m-end"><span class="m-value">Lossless</span></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="indigo"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#music"/></svg></span><span class="m-txt"><b>Lossless music</b></span><span class="m-end"><span class="m-switch on"></span></span></div>
+  </div></div>
+</div></div><figcaption>What you hear, and the switch.</figcaption></figure>
+<p>It plays where all of this is so. Where it isn't, <b>You hear</b> says why, in a line.</p>
+<ul>
+  <li><b>You wear headphones.</b> On speakers, your microphone would send the music back to the call: a call takes its own sound out of your microphone, and lossless is played beside it. Where your device can't tell, <b>I'm wearing headphones</b> is there for you to say so, for what you hear it on now.</li>
+  <li><b>Your headset isn't in a call.</b> A Bluetooth headset whose microphone is in use plays everything at a call's quality. Choose another microphone, or wired headphones.</li>
+  <li><b>You and the DJ are connected directly.</b> It is never sent through the relay. To find a direct way, the music's connection tries every path first where you can have lossless, so the DJ's device and yours learn each other's internet address, as in a call that isn't relayed.</li>
+  <li><b>The connection keeps up.</b> It takes about 1 Mbit/s, and at most 1.5. If it stutters you have high quality for a while, and it is tried again by itself.</li>
+  <li><b>The DJ can send it.</b> Up to six people at once have it from one DJ, fewer if their upload can't take it. The DJ sees how many, and what it takes.</li>
+</ul>
+<p>The switch <b>Lossless music</b> is yours, kept on this device. On a Mac, macOS plays it a little quieter in a call than it plays the call itself.</p>
+<aside class="note tip"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lightbulb"/></svg><div><b>If you are the DJ</b><p>Nobody can hear more than your Spotify plays. Set <span class="ui-path">Audio quality</span> to <b>Lossless</b> in Spotify's own settings, which needs Premium, and turn off anything there that changes the sound. If your Bluetooth headset's microphone is in use, your computer plays everything at a call's quality, Spotify too, and that is all there is to send: you are told, and another microphone or wired headphones put it right.</p></div></aside>
+
+<h2 id="recorded">What is and isn't recorded</h2>
+<ul>
+  <li>The music is never in a <a href="/docs/record-call/">recording</a> of the call, its <a href="/docs/live-captions/">captions</a> or <a href="/docs/scribe/">Scribe</a>. Without headphones, though, the DJ's microphone can pick it up, and then it is heard under their voice.</li>
+  <li>Nothing of the music is stored anywhere. It goes live from the DJ's computer to each person in the call, encrypted as the call is, and it is Spotify's sound and no other app's.</li>
+  <li>What is said of the queue (songs, who added them) goes in the call, sealed as the call is. The relay can't read it.</li>
+  <li>The device that adds a song asks Spotify what it is called, and each device in the call loads the covers from Spotify.</li>
+</ul>
+
+<h2 id="devices">What each device can do</h2>
+<table>
+  <tr><th>On</th><th>Play music to the call</th><th>Listen and queue songs</th><th>Hear it lossless</th></tr>
+  <tr><td>Mac</td><td>Yes, macOS 14.4 or later</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Windows</td><td>Yes, Windows 10 version 2004 or later</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Linux</td><td>No</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Android</td><td>No</td><td>Yes</td><td>With a wired or USB headset the call plays to</td></tr>
+  <tr><td>iPhone</td><td>No</td><td>Yes</td><td>With headphones</td></tr>
+  <tr><td>Browser</td><td>No</td><td>Yes, without covers</td><td>No</td></tr>
+</table>
+<p>Someone on a version from before this, or a guest who joined from a space's link in a browser, is in the call as ever and hears no music.</p>
+
+<h2 id="terms">Spotify's terms</h2>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>For a small private call</b><p>Spotify's terms are for personal use and don't allow rebroadcasting. This is for a few friends in a private call, and the account of whoever plays carries that risk.</p></div></aside>
+
+<h2 id="trouble">If something is wrong</h2>
+<table>
+  <tr><th>What you see</th><th>What to do</th></tr>
+  <tr><td>There is no Spotify in the call</td><td>The circle hasn't turned it on, or the space isn't a circle's.</td></tr>
+  <tr><td>Someone on a Mac or a PC with Spotify can start it</td><td>This device can't play to a call. It can listen and add songs once someone starts.</td></tr>
+  <tr><td>Spotify isn't open</td><td>Open the Spotify app on the same computer, sign in, and press <b>Start</b>. Spotify's web player doesn't work for this.</td></tr>
+  <tr><td>macOS isn't letting Uplink press Spotify's buttons</td><td>Turn Spotify on for Uplink in <span class="ui-path">System Settings › Privacy &amp; Security › Automation</span>.</td></tr>
+  <tr><td>No sound is coming from Spotify</td><td>On a Mac, see <a href="#mac">the second permission</a>. On a PC, check Spotify in the Windows volume mixer. On either, check that Spotify plays on this computer and not on a speaker or phone.</td></tr>
+  <tr><td>Spotify opened but didn't start the song</td><td>On a PC: press play on it in Spotify.</td></tr>
+  <tr><td>That song couldn't be played</td><td>Spotify didn't play it: it may not be there in the DJ's country, or their account can't choose songs. The next one plays; after three in a row the music waits.</td></tr>
+  <tr><td>You hear nothing, and others do</td><td>Check <b>Loudness</b> under <b>On this device</b>, and that you aren't deafened. A connection that drops is made again by itself.</td></tr>
+  <tr><td>You hear says High quality, and you want lossless</td><td>The line under it says why. See <a href="#lossless">Lossless</a>.</td></tr>
+  <tr><td>Everyone hears the music twice</td><td>The DJ's microphone is hearing their speakers: headphones.</td></tr>
+</table>
+
+    <nav class="prevnext"><a class="prev" href="/docs/notion/"><small>Previous</small>Notion</a><a class="next" href="/docs/auto-leveler/"><small>Next</small>Auto leveler</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#turn-on">Turn it on for a circle</a><a href="#start">Play music to the call</a><a href="#queue">Add songs</a><a href="#hear">How loud it is for you</a><a href="#lossless">Lossless</a><a href="#recorded">What is and isn't recorded</a><a href="#devices">What each device can do</a><a href="#terms">Spotify's terms</a><a href="#trouble">If something is wrong</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

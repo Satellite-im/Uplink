@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  :root {
+    --ink:#f3f3f4; --ink2:#b7b7be; --ink3:#85858c; --bg:#161619;
+    --raised:#212126; --rule:#30303a; --ok:#4bd08a; --accent:#f3f3f4;
+  }
+  html,body { width:1280px; height:800px; overflow:hidden; }
+  body {
+    background: radial-gradient(1100px 700px at 78% 18%, #20202a 0%, var(--bg) 60%);
+    color: var(--ink); font: 15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex; align-items:center; gap:64px; padding:0 84px;
+  }
+  .left { width:560px; }
+  .kicker { display:flex; align-items:center; gap:10px; color:var(--ink3); font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:13px; }
+  .kicker .dot { width:26px; height:26px; border-radius:7px; background:var(--ink); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:15px; }
+  h1 { font-size:52px; line-height:1.06; font-weight:680; letter-spacing:-.02em; margin:22px 0 18px; }
+  h1 em { font-style:normal; color:var(--ink2); }
+  p.sub { font-size:20px; line-height:1.5; color:var(--ink2); margin-bottom:26px; max-width:520px; }
+  ul { list-style:none; display:flex; flex-direction:column; gap:14px; }
+  li { display:flex; align-items:flex-start; gap:12px; font-size:16.5px; color:var(--ink); }
+  li svg { flex:none; width:22px; height:22px; margin-top:1px; color:var(--ok); }
+  li b { font-weight:620; }
+  .right { flex:1; display:flex; justify-content:center; }
+
+  /* Faithful popup mock (matches src/popup) */
+  .popup { width:360px; background:var(--bg); border:1px solid var(--rule); border-radius:18px;
+           box-shadow:0 40px 90px rgba(0,0,0,.55), 0 4px 14px rgba(0,0,0,.4); padding:18px 18px 20px; }
+  .ph { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .ph h2 { font-size:16px; font-weight:650; letter-spacing:.01em; }
+  .ph .link { color:var(--ink3); font-size:13px; text-decoration:underline; }
+  .who { font-weight:600; margin-bottom:14px; }
+  .who span { color:var(--ink3); font-weight:500; }
+  .svc { border:1px solid var(--rule); border-radius:12px; padding:11px 12px; margin-bottom:9px; display:flex; align-items:center; justify-content:space-between; }
+  .svc .name { font-weight:600; }
+  .badge { font-size:11.5px; padding:3px 9px; border-radius:999px; background:var(--raised); white-space:nowrap; }
+  .badge.ok { color:var(--ok); }
+  .badge.off { color:var(--ink3); }
+  .go { margin-top:4px; width:100%; border:0; background:var(--accent); color:var(--bg);
+        padding:11px; border-radius:11px; font:inherit; font-weight:650; font-size:14.5px; text-align:center; }
+  .gcard { border:1px solid var(--rule); border-radius:12px; padding:11px 12px; margin-top:12px; }
+  .gcard .top { display:flex; align-items:center; justify-content:space-between; }
+  .gcard .hint { color:var(--ink3); font-size:12px; line-height:1.4; margin-top:6px; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="kicker"><span class="dot">✦</span> Uplink</div>
+    <h1>Sign in once.<br><em>Synced to every device.</em></h1>
+    <p class="sub">Messenger and Instagram have no API — Uplink uses your browser's own sign-in. This extension captures it and syncs it, sealed, to all your devices.</p>
+    <ul>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Log in to Messenger or Instagram in your browser — <b>your phone and laptop log in too</b></span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Sealed end to end</b> — the relay stores only a blob it can't read</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>No cURL, no copy-paste, no tracking — <b>open source</b></span></li>
+    </ul>
+  </div>
+  <div class="right">
+    <div class="popup">
+      <div class="ph"><h2>Uplink keys</h2><span class="link">Sign out</span></div>
+      <div class="who">matt <span>· synced to 3 devices</span></div>
+      <div class="svc"><span class="name">Messenger</span><span class="badge ok">✓ Synced</span></div>
+      <div class="svc"><span class="name">Instagram</span><span class="badge ok">✓ Synced</span></div>
+      <div class="go">Capture &amp; sync all</div>
+      <div class="gcard">
+        <div class="top"><span class="name">Google Messages (RCS)</span><span class="badge off">Not set up</span></div>
+        <div class="hint">Hands your Google sign-in to your devices in a private window — nothing is read from this browser.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

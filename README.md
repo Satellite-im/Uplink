@@ -1,111 +1,190 @@
-<h1 align="center">
-  <img src="ui/extra/images/logo.png" width=200 height=200/><br>
-  Uplink
-</h1>
+<p align="center">
+  <img src="site/icon.png" width="120" alt="Uplink's logo: a white speech bubble that reads UP LINK, on black">
+</p>
 
-<h4 align="center">Privacy First, Modular, P2P messaging client built atop Warp.</h4>
+<h1 align="center">Uplink</h1>
 
-<br/>
+<p align="center">
+  <b>High-quality text, voice and video. In one app.</b><br>
+  Your texts, your friends, your group calls and your other chat apps in one place, on your phone and your computer.
+</p>
 
-Uplink is written in pure Rust with a UI in [Dioxus](https://github.com/DioxusLabs) (which is also written in Rust). It was developed as a new foundation for implementing Warp features in a universal application.
+<p align="center">
+  <a href="https://gogho.st/"><b>gogho.st</b></a> &nbsp;·&nbsp;
+  <a href="#get-uplink">Download</a> &nbsp;·&nbsp;
+  <a href="https://gogho.st/app/">Open in a browser</a> &nbsp;·&nbsp;
+  <a href="https://gogho.st/docs/">Docs and help</a>
+</p>
 
-The goal should be to build a hyper-customizable application that can run anywhere and support extensions.
+<p align="center">
+  <img src="site/art/space/hero.webp" width="100%" alt="A dish on a ridge sends one thin beam of light up into the stars">
+</p>
 
-![Uplink UI](https://i.imgur.com/X4AGeLz.png)
+Uplink is a messenger for Android, Mac, Windows, Linux and the browser. It starts as your texting app, with every
+conversation you already have, and adds what texts never had: chats and calls with friends that are sealed end to end,
+group spaces you can drop into and talk, and your WhatsApp, Telegram, Signal and Discord chats in the same list as your
+texts. It is free, it keeps itself up to date, and all of its source is here.
 
----
-## Pre-Compiled Development
+> **Uplink is in alpha.** It is released often and things still change.
+> [Join the alpha](https://gogho.st/docs/alpha/) to try it early and tell us what breaks.
 
-For rapid inspection of our deployed binaries you can open the settings once signed into Uplink, then navigate to "about" and click the version number 10 times which will enable a "developer" section in the settings. From here you can enabled experimental features as well as helpful dev tools.
+## Get Uplink
 
+| On | How |
+| --- | --- |
+| **Android** | [Download the APK](https://gogho.st/ghost-messaging.apk) on your phone and open it. Allow your browser to install apps if Android asks. |
+| **Mac** | [Download the disk image](https://gogho.st/ghost-messaging-mac.dmg), open it and drag Uplink to Applications. Signed, and checked by Apple. |
+| **Windows** | [Download the installer](https://gogho.st/ghost-messaging-setup.exe) and run it. Then open Uplink from the Start menu. |
+| **Linux** | A [.deb](https://gogho.st/ghost-messaging-linux.deb) for Ubuntu, Debian and their family, or a [.tar.gz](https://gogho.st/ghost-messaging-linux-x64.tar.gz) for any other: unpack it and run `ghost-messaging`. |
+| **Browser** | [gogho.st/app](https://gogho.st/app/). Nothing to install. |
+| **iPhone** | Not out yet. |
 
-## Quickstart
+On Android, choose **Set as default SMS app**, or let Uplink work beside the texting app you have. On a computer,
+pair it with your phone to have your texts there too: on the phone open **Settings › Computers** and scan the code the
+computer shows. Every copy updates itself from then on, with no store in between. The
+[install guide](https://gogho.st/docs/install/) has each step.
 
-To get running fast, ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
+The downloads are still named `ghost-messaging`: Uplink was called Ghost Messaging until November 2026, and the files,
+the `gogho.st` address and the names inside the source kept theirs so that nothing already installed would break.
 
-**Standard Run:**
+## What it does
+
+<img src="site/art/space/messages.webp" width="260" align="right" alt="Points of light arcing between a planet and a ring of satellites">
+
+### One app instead of three
+
+Your texts, your friends and your calls live together. Start in a chat, step into the group's space, turn video on,
+and the conversation is still all in one place.
+
+- **Messages.** Texts and picture messages, plus encrypted chats with friends on Uplink: reactions, effects,
+  stickers, and groups with names and faces. Sent, delivered and read each have their tick.
+- **Reactions that land.** A ❤️ from an iPhone or a Pixel sits on the message it was for, not in a line of its own.
+- **Sorted for you.** One-time codes get a tab of their own with the company's logo, ready to copy. Sales and spam
+  find theirs, so the people you talk to come first.
+- **Friends by username.** Pick a username, add friends by theirs, and make groups you can call all at once.
+
+<br clear="right">
+
+<img src="site/art/space/calls.webp" width="260" align="right" alt="A wave of light rippling between two planets">
+
+### Talk like you're in the same room
+
+Every group has a space that stays open, so talking is as easy as texting: see who is in, drop in, drop out.
+
+- **Sound and picture.** 510 kb/s stereo, noise suppression that keeps fans, keyboards and traffic out (RNNoise and
+  DeepFilterNet), a music mode, and video up to 4K. Share a whole screen or one window.
+- **Join by link.** A space has a link anyone can open, in the app or straight from a browser, with a chat beside
+  the call.
+- **Yours to run.** Roles and moderators, and plugins that record a call, write it out, caption it live or let
+  everyone watch a video together.
+
+<br clear="right">
+
+<img src="site/art/space/networks.webp" width="260" align="right" alt="A constellation of satellites linked by thin lines of light">
+
+### Every chat app, beside your texts
+
+Sign in once and your other chats join your texts in one list, newest first, each marked with its app: **WhatsApp,
+Telegram, Signal, Discord, Messenger, Instagram, Slack, X, Matrix**, and RCS through Google Messages. Read them,
+answer them and send pictures without switching apps.
+
+Each network runs on your own device and talks straight to its own servers. Your chats, codes and sign-ins never pass
+through ours. It is their messages only, not their calls, and not every network is on every computer yet (Telegram and
+Signal aren't on Windows). iMessage is not available to apps other than Apple's own.
+[How each one is linked](https://gogho.st/docs/networks/).
+
+<br clear="right">
+
+<img src="site/art/space/desktop.webp" width="340" align="right" alt="An observatory window onto a ringed planet, a desk and a glowing screen in front of it">
+
+### On your computer
+
+Uplink for Mac, Windows and Linux shows every conversation, sends texts through your phone (sealed between the two),
+and joins calls and spaces itself. It also runs with no phone at all, signed in to your account.
+[Pairing a computer](https://gogho.st/docs/pairing/).
+
+<br clear="right">
+
+<img src="site/art/space/privacy.webp" width="260" align="right" alt="A sealed capsule of light inside a thin geometric shield">
+
+### Private by default
+
+- **Sealed end to end.** Chats between Uplink users, your computer's link to your phone, and calls are encrypted on
+  the devices themselves. Our server passes them along and can't read them.
+- **No account to make.** Your number stays on your phone. A username and linked accounts are yours to turn on, and
+  to remove.
+- **Texts stay texts.** SMS and picture messages go through your carrier as they always have. Nothing is copied to us.
+- **Check it, or run it.** Every part is in this repository, and you can
+  [run your own relay](https://gogho.st/docs/self-hosting/) and point the app at it.
+
+[Privacy and safety, in full](https://gogho.st/docs/privacy/).
+
+<br clear="right">
+
+<img src="site/art/space/effects.webp" width="260" align="right" alt="A nebula bursting like fireworks">
+
+### Make it yours
+
+- **Effects.** Balloons for "Happy birthday", confetti for "Congrats", lasers for "pew pew".
+- **Looks.** Four of them, from Uplink's own to one drawn like an old adventure game, with texture packs, your
+  bubble colours, chat backgrounds and emoji set (your phone's own, Noto, Twemoji, OpenMoji or a clean outline).
+  [Looks, colours and fonts](https://gogho.st/docs/appearance/).
+- **Plugins.** The [Marketplace](https://gogho.st/docs/plugins/) adds what you want and nothing you don't: a spam
+  filter, translation, a soundboard, a voice changer, Spotify and Notion, and more. A plugin is a small file anyone
+  can write: [build one](https://gogho.st/docs/build-a-plugin/).
+
+<br clear="right">
+
+## Open source
+
+Uplink is open source so that anyone can check what it does with their messages. All of it is here: the phone app, the
+Mac, Windows and Linux apps, the app in a browser, the relay server that carries sealed messages between devices, the
+call's sound processing, and the helpers that speak to other chat networks.
+
+- **Licence.** The GNU Affero General Public License v3 ([LICENSE](LICENSE)). Anyone who runs a changed copy for
+  others to use, the relay included, owes those people its source. Third-party parts keep their own licences.
+- **What is not here.** The keys releases are signed with, and the server's own credentials. A build made from this
+  source is not signed as a release is, so it installs as a separate app.
+
+## Build it
+
+You need [Flutter](https://docs.flutter.dev/get-started/install) (stable, with Dart 3.11 or newer).
+
+```sh
+flutter pub get
+flutter test                                                  # the app's tests
+flutter build apk --release --target-platform android-arm64   # the phone app
+flutter build macos                                           # the Mac app; or `flutter build windows`, `flutter build linux`
+node tool/build-web.mjs                                       # the app in a browser, into build/web
+(cd relay && dart test && dart run bin/relay.dart)            # the relay, at ws://127.0.0.1:8787
 ```
-cargo run --bin uplink
-```
 
-**Rapid Release Testing:**
-This version will run close to release but without recompiling crates every time.
-```
-cargo run --bin uplink --profile=rapid
-```
+A few parts have build scripts of their own in [`tool/`](tool): the direct-link core (Rust, `build-p2p.sh`), the
+helpers for other chat networks (Go, `build-*sidecar.sh`) and Telegram's library (`build-tdlib.sh`). The app builds
+without them and leaves those features out.
 
----
+| Where | What |
+| --- | --- |
+| [`lib/`](lib) | The app: one Flutter project for the phone, the computer and the browser. |
+| `android/` `ios/` `macos/` `windows/` `linux/` `web/` | Each platform's own half: texts and notifications on Android, windows and updates on a computer. |
+| [`relay/`](relay) | The relay server, in Dart's own library and nothing else. |
+| [`native/`](native) | The call's sound processing, and the core of direct links between devices. |
+| [`sidecar/`](sidecar) | The helpers that speak to other chat networks, each a small program of its own. |
+| [`extension/`](extension) [`discord/`](discord) | The browser extension that shares your sign-ins with your devices, and the Discord bot. |
+| [`packages/glacier/`](packages/glacier) | Glacier, the UI kit everything is drawn with. |
+| [`site/`](site) [`docs-src/`](docs-src) | [gogho.st](https://gogho.st/) and its docs. The pictures on this page are the site's. |
+| [`tool/`](tool) [`test/`](test) | Build and release scripts, and the tests. |
+| [`docs/`](docs) | Design notes, and [the record](docs/RECORD.md) of every feature as it was built. |
 
+## Run your own relay
 
-## Dependency List
+The relay is a small server that passes sealed messages between devices. It can't read them, and you don't have to
+use ours: [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) sets one up, with a container or without, and
+[the guide on the site](https://gogho.st/docs/self-hosting/) shows how to point the app at it.
 
-**macOS M1+**
-| Dep  | Install Command                                                  |
-|------|------------------------------------------------------------------|
-| Build Tools| xcode-select --install |
-| Homebrew | /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" |
-| Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh |
-| cmake | brew install cmake |
-| ffmpeg | brew install ffmpeg |
-| audio opus | brew install opus |
+## Help and feedback
 
-For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
-And for Windows, I followed the steps on this site here
-
-**Windows 10+**
-| Dep  | Install Command                                                  |
-|------|------------------------------------------------------------------|
-| Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
-| ffmpeg | [Installation Guide](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
-
-
-**Ubuntu WSL (Maybe also Ubuntu + Debian)**
-| Dep  | Install Command                                                  |
-|------|------------------------------------------------------------------|
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| Build Essentials | `sudo apt install build-essential` |
-| pkg-config | `sudo apt-get install pkg-config` |
-| alsa-sys | `sudo apt install librust-alsa-sys-dev` |
-| libgtk-dev | `sudo apt-get install libgtk-3-dev` |
-| libsoup-dev | `sudo apt install libsoup-3.0-dev` |
-| Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
-| ffmpeg| `sudo apt-get install ffmpeg` |
-| libopus-dev| `sudo apt-get install libopus-dev` |
-| libxdo-dev| `sudo apt install libxdo-dev` |
-
-**Fedora 38**
-| Dep  | Install Command                                                  |
-|------|------------------------------------------------------------------|
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| Build Essentials | `sudo dnf groupinstall "Development Tools" "Development Libraries"` |
-| pkg-config | `sudo dnf install pkg-config` |
-| alsa libs & headers | `sudo dnf install alsa-lib-devel` |
-| libgtk-dev | `sudo dnf install gtk3-devel` |
-| libsoup-dev | `sudo dnf install libsoup3-devel` |
-| Tauri Deps | `sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget librsvg2-devel libindicator-devel` |
-| ffmpeg| `sudo dnf install ffmpeg` |
-| libopus-dev| `sudo dnf install opus-devel` |
-| libxdo-dev| `sudo dnf install libxdo-devel` |
-
-## How to add the extension settings in Uplink:
-
-- Open Uplink and navigate to Settings > Extensions > Settings > Open Extensions.
-- In another Finder window, open Uplink.
-- Inside Uplink, go to Target > Debug, where you'll find the Emoji selector.
-- Drag the Emoji selector to the Extensions window that is still open.
-- Close all open windows.
-- Finally, run cargo run trace2.
-
-https://github.com/Satellite-im/Uplink/assets/29093946/6f2d5129-4a07-4704-8cc2-0a011056f1e2
-
-
-## Contributing
-
-All contributions are welcome! Please keep in mind we're still a relatively small team, and any work done to ensure contributions don't cause bugs or issues in the application is much appreciated.
-
-Guidelines for contributing are located in the [`contributing_process.md`](docs/contributing_process.md).
-
-# Contributors
-
-![GitHub Contributors Image](https://contrib.rocks/image?repo=Satellite-im/Uplink)
-
+- **Using Uplink:** [gogho.st/docs](https://gogho.st/docs/).
+- **Building on it:** the [developer docs](https://gogho.st/docs/developer/) cover how the app is built and both of
+  its APIs.
+- **Something wrong, or something missing?** Choose **Share feedback** in the app. It takes screenshots too.

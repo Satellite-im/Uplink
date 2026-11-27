@@ -1,0 +1,7 @@
+# The Rust the direct network's core is built and tested with, the same everywhere: tool/build-p2p.sh, the Windows and
+# Linux workflows (messaging-windows.yml, messaging-linux.yml, messaging-p2p-core.yml), and any `cargo` run in this
+# folder; rustup installs it the first time it is asked for. iroh 1.5 asks for 1.91 or later. The targets a build
+# needs are added by whatever builds for them (tool/build-p2p.sh adds its own).
+[toolchain]
+channel = "1.94.1"
+profile = "minimal"

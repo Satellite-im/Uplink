@@ -1,0 +1,718 @@
+{
+  "scenarios": [
+    {
+      "name": "as the app ships",
+      "rules": "{\"v\":1,\"kinds\":{\"groups\":true,\"networks\":true,\"spamFirst\":true,\"weakNeeded\":2,\"list\":[{\"id\":\"debt\",\"hide\":true,\"notSpam\":true,\"strong\":[\"(?:attempt|trying) to collect a debt\",\"debt collector\",\"collections? (?:agency|department|account|notice)\",\"(?:placed|referred|sent|assigned) (?:in|into|to|for) collections?\",\"settle (?:your|this|the) (?:debt|balance|account)\",\"(?:resolve|settle) (?:your|this) (?:outstanding )?(?:debt|balance)\",\"reported to (?:the )?credit bureaus?\",\"debt (?:relief|consolidation|settlement|help|resolution)\",\"(?:pds|national|freedom|accredited) debt\",\"financial hardship\",\"(?:an )?option tied to the amount\"],\"weak\":[\"past due\",\"delinquent\",\"outstanding balance\",\"collections?\",\"creditor\",\"settlement offer\",\"credit (?:report|score|bureau)\"],\"words\":[]},{\"id\":\"political\",\"hide\":true,\"notSpam\":false,\"strong\":[\"paid for by\",\"election day\",\"(?:mail-?in|absentee|your) ballots?\",\"polls? (?:open|close|are open|location)\",\"chip in\",\"(?:vote|voting) (?:early|yes on|no on|by mail|in person)\",\"(?:register(?:ed)?|make a plan) to vote\",\"(?:democrats?|republicans?|gop|dnc|rnc|maga)\",\"(?:presidential|senate|congressional|gubernatorial|midterm|primary) (?:race|election|campaign)\",\"(?:local|important|community) issues?\",\"issues? (?:survey|poll)\",\"research-?polls?\",\"gauging (?:views|opinions)\",\"campaign updates\",\"residents (?:across|of) (?:our|the|your)\",\"(?:tell|urge|ask|call on|contact|write to|email|call) (?:congress|your (?:senators?|representatives?|reps?|congress(?:man|woman|person)?|lawmakers?|legislators?|elected officials?))\",\"(?:take action|make your voice heard|add your (?:name|voice))\"],\"weak\":[\"vote\",\"election\",\"campaign\",\"candidates?\",\"donat(?:e|ion|ions)\",\"congress(?:man|woman)?\",\"senators?\",\"governor\",\"president\",\"petition\",\"rally\",\"endorse\",\"where you stand on\"],\"words\":[]},{\"id\":\"sales\",\"hide\":true,\"notSpam\":false,\"strong\":[\"(?:we(?:'| a)re|we have a crew|our crew is|we will be) (?:working |out )?in your (?:area|neighbou?rhood)\",\"tree (?:trimmings?|removals?|services?|cutting|work|projects?|care)\",\"(?:local )?arborists?\",\"gutters? (?:cleaning|guards?|replacement|install)\",\"(?:buy|buying|purchase|purchasing) your (?:house|home|property|land)\",\"(?:traditional listing|direct sale)\",\"(?:cash|an offer|a cash offer) (?:for|on) your (?:house|home|property|land)\",\"(?:interested in|thought about|considering) selling (?:your )?(?:house|home|property|land)?\",\"we buy (?:houses|homes|property)\",\"roof(?:ing)? (?:inspections?|replacement|repairs?|estimates?)\",\"no-?cost (?:roof |home )?(?:inspections?|estimates?|quotes?)\",\"(?:kitchen|bathroom|shower|home) (?:& |and )?(?:bathroom )?remodels?\",\"(?:health |life |auto |car |home )?insurance (?:quotes?|plans?)\",\"(?:want|like|need|interested in) (?:a |some )?(?:free )?quotes?\",\"(?:send|get) you (?:a few |some |a )?(?:free )?quotes?\",\"pre-?approved (?:for )?\\\\$?\\\\d\",\"(?:tickets are )?selling fast\",\"eligible to add\",\"solar (?:panels?|savings|consultation|program)\",\"(?:pressure|power) washing\",\"(?:attic |home |spray foam )?insulation\",\"gutter (?:service|work|repair)s?\",\"(?:hvac|furnace|ac|a/c|heat pump|water heater) (?:tune-?up|service|install(?:ation)?|replacement|quote)s?\",\"free .{0,60}quote\",\"(?:lawn|landscaping|yard) (?:care|service|services|maintenance)\",\"pest control\",\"window (?:cleaning|replacement)\",\"driveway (?:sealing|paving|repair)\",\"free (?:estimate|estimates|quote|quotes|inspection|consultation)\",\"promo code\",\"(?:health|ppo|medical|dental) (?:plans?|options?|insurance|coverage)\",\"(?:low(?:er)?|no) (?:monthly|deductibles?|copays?|premiums?)\",\"(?:price|cost) estimate\",\"(?:simple|quick|few|free) quotes?\",\"(?:pricing|quotes?) for\",\"compar(?:e|ing) (?:options|plans|terms)\",\"(?:access|get|qualify for|borrow) up to \\\\$?[\\\\d,.]+k?\",\"new low rates\",\"\\\\$[\\\\d,]+ for \\\\$?\\\\d+/mo\",\"(?:get you )?featured in\",\"(?:pr|media) (?:consultant|researcher|agency|feature)\",\"editors are looking\",\"(?:a |new |fresh )+website\",\"(?:make|build) (?:you )?(?:one|it) (?:live )?for free\",\"last chance\",\"walk-?in or book\",\"(?:usa today|business insider|forbes|yahoo finance) feature\",\"online reputation\",\"better value when\",\"don'?t miss out\",\"free trial\",\"save up to\",\"keep you in the loop\",\"(?:events|specials),? (?:and|&) \",\"(?:sale|offer) ends\",\"\\\\d+% off\",\"shop now\"],\"weak\":[\"neighbou?rhood\",\"your (?:home|house|property)\",\"special offer\",\"limited time\",\"discounts?\",\"deals?\",\"(?:reply|text|txt) ?stop|stop ?to ?(?:end|opt|quit|cancel|unsubscribe)|unsubscribe|opt[ -]?out\",\"book (?:now|today)\",\"\\\\$\\\\d+(?:\\\\.\\\\d\\\\d)?/mo\",\"quotes?\"],\"words\":[]},{\"id\":\"scams\",\"hide\":true,\"notSpam\":false,\"strong\":[\"years old and (?:still )?single\",\"long time no see\",\"(?:i )?sent you (?:the )?pictures from\",\"one day we.ll meet\",\"(?:largest|exclusive) private club\",\"beautiful women\",\"(?:part-?time|work-?from-?home|remote|outside sales) (?:role|job|position|opportunity)\",\"(?:we'?re|we are) hiring\",\"(?:technical )?recruiter with\",\"(?:virtual|online) interview\",\"(?:your )?(?:resume|résumé) (?:for|was|has been) (?:\\\\S+ ){0,6}?reviewed\",\"available to travel anytime\"],\"weak\":[],\"words\":[]},{\"id\":\"reminders\",\"hide\":false,\"notSpam\":true,\"strong\":[\"payment (?:is )?(?:due|reminder|scheduled|received|confirmation)\",\"(?:amount|balance|minimum payment) due\",\"due (?:on|by) (?:\\\\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|mon|tue|wed|thu|fri|sat|sun|today|tomorrow)\",\"autopay\",\"(?:your )?(?:bill|statement) is (?:ready|available|due)\",\"(?:rent|premium|invoice|bill) (?:is )?due\",\"(?:past[- ]due|unpaid) (?:bill|balance|payment|amount)\",\"(?:issues?|problems?|trouble) collecting (?:your )?payment\",\"(?:scheduled for |service )interruption\"],\"weak\":[\"bill\",\"statement\",\"payment\",\"past due\",\"balance\",\"account ending\",\"pay (?:now|online|here)\"],\"words\":[]},{\"id\":\"food\",\"hide\":false,\"notSpam\":true,\"strong\":[\"door-?dash|uber ?eats|grubhub|postmates|instacart|seamless|caviar|gopuff|deliveroo|just ?eat|skip ?the ?dishes|waitr|favor delivery|shipt\",\"(?:your )?dasher\",\"(?:your )?(?:food|meal|takeout|take-out|groceries|grocery order|pizza) (?:is|has|will be|was) (?:here|on (?:its|the) way|ready|arriving|being prepared|delivered|picked up|out for delivery)\",\"(?:restaurant|kitchen) (?:is preparing|has (?:started|accepted)|confirmed) your order\",\"(?:your )?(?:driver|courier|shopper) (?:is|has) (?:on (?:the|their) way|arriving|arrived|picked up|nearby|outside|here|almost there)\",\"(?:leave|left) (?:it |your order |the food )?at (?:the|your) door\",\"order (?:is )?ready for pick-?up\",\"dropped off your .{0,30}(?:groceries|order|food)\"],\"weak\":[\"order\",\"food\",\"restaurant\",\"driver\",\"pick(?:ed)?-?up\",\"tip\",\"eta\",\"minutes? away\",\"meal\",\"groceries\"],\"words\":[]},{\"id\":\"deliveries\",\"hide\":false,\"notSpam\":true,\"strong\":[\"out for delivery\",\"(?:has been|was|is|were|should be) delivered\",\"delivered today\",\"(?:order|package|parcel|delivery) (?:was|has been) (?:dropped off|left)\",\"(?:has |have )?(?:shipped|been shipped)\",\"tracking (?:number|#|no\\\\.?|id|info|information|link|update)\",\"track your (?:package|order|shipment|parcel|delivery)\",\"(?:package|parcel|order|shipment) (?:is )?(?:on its way|arriving|arrives|will arrive|delayed)\",\"arriving (?:today|tomorrow|by)\",\"expected (?:delivery|arrival)\"],\"weak\":[\"order\",\"package\",\"parcel\",\"shipment\",\"delivery\",\"arriv(?:e|ing|al)\",\"ups|fedex|usps|dhl|amazon|ontrac|lasership|dasher\"],\"words\":[]},{\"id\":\"appointments\",\"hide\":false,\"notSpam\":true,\"strong\":[\"appointments? (?:reminder|confirmed|confirmation|is (?:on|at|scheduled|tomorrow|today)|on|at|for|with)\",\"reply (?:c|y|yes|1) to confirm\",\"(?:your )?(?:reservation|booking) (?:is )?(?:confirmed|for|on|at|reminder)\",\"(?:check-?in|check in) (?:is )?(?:at|opens|now open)\",\"reminder: you have\",\"(?:your )?appt\\\\.?\",\"(?:service professional|technician|tech) .{0,120}(?:is )?on (?:the|their|his|her) way\",\"i'?m (?:en|in) route\",\"(?:join|joining) your video visit\",\"(?:your )?(?:chat|call|visit) with us is coming up\",\"your table is ready\",\"(?:return to|come to) the host stand\"],\"weak\":[\"appointment\",\"reservation\",\"booking\",\"reschedule\",\"clinic\",\"dentist\",\"doctor\",\"scheduled for\"],\"words\":[]},{\"id\":\"notices\",\"hide\":false,\"notSpam\":true,\"strong\":[\"(?:successfully )?(?:been )?unsubscribed\",\"(?:reply|text|txt) start to\",\"no (?:more|longer receive) (?:any )?(?:more )?messages\",\"welcome to [a-z0-9]\",\"you will receive up to\",\"msg(?:\\\\.| )?(?:&|and) ?data rates\",\"msg frequency\",\"thanks? (?:you )?for (?:your purchase|ordering|your order|visiting|parking|using|choosing|shopping)\",\"(?:view|see) your (?:receipt|tickets|order)\",\"receipt\",\"(?:take|begin|share|complete) (?:a|our|the|this)? ?(?:quick |short )?survey\",\"survey\",\"(?:your )?feedback (?:is important|matters)\",\"(?:rate|review) (?:your visit|my work|us|your experience)\",\"tell us how we did\",\"how did we do\",\"share your thoughts\",\"two[- ]factor\",\"sign(?:ed)?[- ]in (?:from|to)\",\"(?:pin|password|settings) (?:was|were|has been|have) changed\",\"(?:didn'?t make this request|if this wasn'?t you|if you did not request)\",\"verification link\",\"(?:mobile )?authenticator\",\"deposit of \\\\$[\\\\d,.]+\",\"available balance\",\"you'?ll be charged\",\"return was accepted\",\"documents?(?:\\\\(s\\\\))? (?:are|is) available\",\"(?:subscriber )?profile has been deleted\",\"membership expires\",\"(?:card|payment method) on file\",\"(?:invited you|rsvp)\",\"(?:service|pickup|collection) (?:.{0,40} )?(?:is |has been )?delayed\",\"your feedback\",\"reply yes to (?:continue|confirm|join)\",\"sent you a (?:new )?snap\",\"free message\",\"network msg\",\"response has been recorded\",\"(?:your )?(?:delivery|order) (?:from .{1,40} )?has been (?:canceled|cancelled)\",\"(?:test )?results? (?:are ready|with you|is ready)\",\"(?:the )?referral\",\"patient alerts\",\"automated (?:system|message)\"],\"weak\":[\"(?:reply|txt|text) (?:help|stop)\",\"opt[ -]?(?:out|in)\",\"your account\",\"account\",\"notifications?\",\"alerts?\"],\"words\":[]}]},\"spam\":{\"hide\":true,\"groups\":true,\"networks\":true,\"base\":2,\"codesLenient\":true,\"shortLenient\":true,\"strongDouble\":true,\"rules\":[{\"id\":\"link\",\"words\":\"(?:https?://|www\\\\.)[^\\\\s]+|(?<![@\\\\w.-])[a-z0-9-]{2,}\\\\.(?:com|net|org|info|biz|xyz|top|click|link|online|site|shop|store|vip|icu|buzz|club|win|live|ly|cc|co|io|me|app)(?:/[^\\\\s]*)?(?![\\\\w-]|\\\\.[a-z])\",\"sender\":null,\"strong\":false},{\"id\":\"email\",\"words\":null,\"sender\":\"@\",\"strong\":false},{\"id\":\"prize\",\"words\":\"(?<![a-z0-9])(?:you(?:['’]ve| have)? won|winner|prize|lottery|jackpot|gift ?cards?|free gift|congratulations|been selected|claim (?:your|now|it|here))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"pressure\",\"words\":\"(?<![a-z0-9])(?:urgent(?! care)|urgently|immediately|act now|final notice|last chance|expires? (?:today|tonight|soon)|within \\\\d+ ?(?:hours|hrs|hour|h)|suspended|suspension|locked|restricted|deactivated|unusual activity|suspicious activity|(?:verify|confirm|update) your (?:account|identity|information|details|payment|billing)|unpaid|overdue|outstanding balance|late fees?|pay now|penalt(?:y|ies)|avoid (?:additional |further |late )?(?:fees|charges|penalties|suspension)|(?:account|service) (?:has been|will be) (?:closed|terminated|cancell?ed|disabled))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"money\",\"words\":\"(?<![a-z0-9])(?:loans?|pre-?approved|debt relief|crypto|bitcoin|investments?|investing|earn \\\\$?\\\\d[\\\\d,]*|\\\\$\\\\d[\\\\d,]* (?:a|per|each|every) (?:day|week)|work from home|cash prize|refund (?:is |of \\\\S+ is )?(?:pending|waiting|available|ready)|tax refund|(?:pay|send|payment|paid) (?:via|through|with|by|using) (?:zelle|venmo|cash ?app|gift ?cards?|bitcoin|crypto|usdt)|usdt|trading (?:platform|signals?|mentor)|guaranteed (?:returns?|profits?))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"delivery\",\"words\":\"(?<![a-z0-9])(?:(?:package|parcel|shipment|delivery)(?![a-z0-9]).{0,60}(?<![a-z0-9])(?:undeliverable|failed|on hold|held|rescheduled?|incomplete|incorrect|customs fees?|redelivery)|(?:could ?n[o'’]t|can ?not|can['’]t|unable to|failed to) (?:be )?deliver(?:ed)?)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"job\",\"words\":\"(?<![a-z0-9])(?:part-?time (?:remote |online )?(?:job|jobs|work|position|positions|opportunity|assistants?)|remote (?:online )?(?:job|work|position|opportunity)|recruit(?:er|ing|ment)|online partners|(?:resume|résumé) (?:has|have) been recommended|earn \\\\$?\\\\d{2,}[\\\\d,]*(?:\\\\s*[-–]\\\\s*\\\\$?\\\\d+)?\\\\s*(?:usd|dollars|a day|per day|daily))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"abroad\",\"words\":null,\"sender\":\"^\\\\+(?!1)\\\\d\",\"strong\":false},{\"id\":\"hidden\",\"words\":\"[\\\\u200b\\\\u200c\\\\u200d\\\\u2060\\\\ufeff]|[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff\\\\ua640-\\\\ua69f](?=[a-z])|(?<=[a-z])[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff]\",\"sender\":null,\"strong\":false},{\"id\":\"lonely\",\"words\":\"(?<![a-z0-9])(?:lonely|hotties|singles near|local (?:girls|women|singles)|meet ?up tonight|instant meetup|premium connections|exclusive circle|discreet|companionship|distinguished gentlemen|social engagement services)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"toll\",\"words\":\"(?<![a-z0-9])(?:(?:unpaid|outstanding|overdue|pending) tolls?|toll (?:services?|balance|bill|charges?|violations?|notice|fees?|payment)|e-?z ?pass|sunpass|fastrak|peach ?pass|txtag|i-?pass|the toll roads|(?:dmv|department of motor vehicles)|traffic (?:violations?|tickets?|citations?)|parking (?:violations?|tickets?|citations?|fines?)|(?:driving|driver.?s)? ?(?:licen[cs]e|registration) (?:suspension|will be suspended|has been suspended))(?![a-z0-9])\",\"sender\":null,\"strong\":true},{\"id\":\"replyy\",\"words\":\"(?<![a-z0-9])(?:reply (?:with )?[\\\"“]?(?:y|yes|1)[\\\"”]?,? (?:and|then|to)? ?(?:re-?open|exit|return|activate|get|enable|open|click)|(?:activate|enable) the (?:link|url)|(?:copy|paste) (?:the|this) (?:link|url|address) (?:in|into|to) (?:your )?(?:browser|safari|chrome)|(?:link|url) (?:is|was) (?:not|in)active)\",\"sender\":null,\"strong\":true},{\"id\":\"shortlink\",\"words\":\"(?<![\\\\w.])(?:bit\\\\.ly|tinyurl\\\\.com|t\\\\.co|is\\\\.gd|rb\\\\.gy|cutt\\\\.ly|tiny\\\\.cc|ow\\\\.ly|shorturl\\\\.at|s\\\\.id|t\\\\.ly|rebrand\\\\.ly|bl\\\\.ink|qrco\\\\.de|v\\\\.gd|shorturl\\\\.gg|u\\\\.to|t2m\\\\.io|2no\\\\.co)/\",\"sender\":null,\"strong\":false},{\"id\":\"opener\",\"words\":\"^\\\\W*(?:hi|hello|hey|hiya|good (?:morning|afternoon|evening))\\\\b[^a-z]{0,12}(?:is this|are you|it'?s been|how are you|how have you been|long time)|wrong number|sorry to (?:bother|disturb) you|(?:did|do) you (?:still )?remember me|i got your (?:number|contact) from|is this (?:still )?(?:mr|ms|mrs|miss|dr)\\\\.?\\\\s\",\"sender\":null,\"strong\":false},{\"id\":\"brand\",\"words\":\"(?<![a-z0-9])(?:amazon|apple ?(?:id|pay|support)|icloud|paypal|usps|fedex|ups|dhl|wells ?fargo|chase (?:bank|card|alert|fraud)|bank of america|citi ?bank|capital one|netflix|irs|social security|medicare|venmo|zelle|cash ?app|coinbase|binance|geek squad|norton|mcafee|microsoft|walmart|costco|best ?buy|verizon|at&t|t-?mobile|comcast|xfinity|spectrum)(?![a-z0-9])\",\"sender\":null,\"strong\":false}],\"alwaysWords\":[],\"neverWords\":[],\"alwaysSenders\":[],\"neverSenders\":[]},\"filed\":{}}",
+      "cases": [
+        {
+          "text": "Chip in $5 to keep us in this race! Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Election day is Tuesday. Make a plan to vote.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "The vote on the campaign is this week",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Who is the best candidate for the job?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "This is an attempt to collect a debt. Call 800-555-0100.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Hi, this is Acme Recovery about your account",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hi neighbor! Our crew is in your neighborhood this week doing tree trimming.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Long time no see! I sent you the pictures from the trip",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Your package is out for delivery. Tracking number 1Z999AA10123456784",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "USPS: your package is on hold, pay the redelivery fee at usps-redeliver.top now",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Congratulations! You have won a $500 gift card, claim now at prizes.xyz",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "URGENT: your account is suspended, verify your account at bit.ly/x1",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Join our crypto club today",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Your Chase verification code is 482913. If this wasn't you, act immediately: chase.com",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hey, are we still on for dinner tonight?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": false,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001",
+            "+15559870002"
+          ],
+          "group": true,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Hello friend",
+          "senders": [
+            "+447700900123",
+            "promo@example.com"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 41,
+          "hush": true
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 42,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 43,
+          "hush": false
+        },
+        {
+          "text": "Your package is out for delivery",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 44,
+          "hush": false
+        }
+      ]
+    },
+    {
+      "name": "political shown, sales off, strict, words of their own, filed by hand",
+      "rules": "{\"v\":1,\"kinds\":{\"groups\":true,\"networks\":true,\"spamFirst\":true,\"weakNeeded\":1,\"list\":[{\"id\":\"debt\",\"hide\":true,\"notSpam\":true,\"strong\":[\"(?:attempt|trying) to collect a debt\",\"debt collector\",\"collections? (?:agency|department|account|notice)\",\"(?:placed|referred|sent|assigned) (?:in|into|to|for) collections?\",\"settle (?:your|this|the) (?:debt|balance|account)\",\"(?:resolve|settle) (?:your|this) (?:outstanding )?(?:debt|balance)\",\"reported to (?:the )?credit bureaus?\",\"debt (?:relief|consolidation|settlement|help|resolution)\",\"(?:pds|national|freedom|accredited) debt\",\"financial hardship\",\"(?:an )?option tied to the amount\"],\"weak\":[\"past due\",\"delinquent\",\"outstanding balance\",\"collections?\",\"creditor\",\"settlement offer\",\"credit (?:report|score|bureau)\"],\"words\":[\"acme recovery\",\"balance owed\"]},{\"id\":\"political\",\"hide\":false,\"notSpam\":false,\"strong\":[\"paid for by\",\"election day\",\"(?:mail-?in|absentee|your) ballots?\",\"polls? (?:open|close|are open|location)\",\"chip in\",\"(?:vote|voting) (?:early|yes on|no on|by mail|in person)\",\"(?:register(?:ed)?|make a plan) to vote\",\"(?:democrats?|republicans?|gop|dnc|rnc|maga)\",\"(?:presidential|senate|congressional|gubernatorial|midterm|primary) (?:race|election|campaign)\",\"(?:local|important|community) issues?\",\"issues? (?:survey|poll)\",\"research-?polls?\",\"gauging (?:views|opinions)\",\"campaign updates\",\"residents (?:across|of) (?:our|the|your)\",\"(?:tell|urge|ask|call on|contact|write to|email|call) (?:congress|your (?:senators?|representatives?|reps?|congress(?:man|woman|person)?|lawmakers?|legislators?|elected officials?))\",\"(?:take action|make your voice heard|add your (?:name|voice))\"],\"weak\":[\"vote\",\"election\",\"campaign\",\"candidates?\",\"donat(?:e|ion|ions)\",\"congress(?:man|woman)?\",\"senators?\",\"governor\",\"president\",\"petition\",\"rally\",\"endorse\",\"where you stand on\"],\"words\":[]},{\"id\":\"scams\",\"hide\":true,\"notSpam\":false,\"strong\":[\"years old and (?:still )?single\",\"long time no see\",\"(?:i )?sent you (?:the )?pictures from\",\"one day we.ll meet\",\"(?:largest|exclusive) private club\",\"beautiful women\",\"(?:part-?time|work-?from-?home|remote|outside sales) (?:role|job|position|opportunity)\",\"(?:we'?re|we are) hiring\",\"(?:technical )?recruiter with\",\"(?:virtual|online) interview\",\"(?:your )?(?:resume|résumé) (?:for|was|has been) (?:\\\\S+ ){0,6}?reviewed\",\"available to travel anytime\"],\"weak\":[],\"words\":[]},{\"id\":\"reminders\",\"hide\":false,\"notSpam\":true,\"strong\":[\"payment (?:is )?(?:due|reminder|scheduled|received|confirmation)\",\"(?:amount|balance|minimum payment) due\",\"due (?:on|by) (?:\\\\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|mon|tue|wed|thu|fri|sat|sun|today|tomorrow)\",\"autopay\",\"(?:your )?(?:bill|statement) is (?:ready|available|due)\",\"(?:rent|premium|invoice|bill) (?:is )?due\",\"(?:past[- ]due|unpaid) (?:bill|balance|payment|amount)\",\"(?:issues?|problems?|trouble) collecting (?:your )?payment\",\"(?:scheduled for |service )interruption\"],\"weak\":[\"bill\",\"statement\",\"payment\",\"past due\",\"balance\",\"account ending\",\"pay (?:now|online|here)\"],\"words\":[]},{\"id\":\"food\",\"hide\":false,\"notSpam\":true,\"strong\":[\"door-?dash|uber ?eats|grubhub|postmates|instacart|seamless|caviar|gopuff|deliveroo|just ?eat|skip ?the ?dishes|waitr|favor delivery|shipt\",\"(?:your )?dasher\",\"(?:your )?(?:food|meal|takeout|take-out|groceries|grocery order|pizza) (?:is|has|will be|was) (?:here|on (?:its|the) way|ready|arriving|being prepared|delivered|picked up|out for delivery)\",\"(?:restaurant|kitchen) (?:is preparing|has (?:started|accepted)|confirmed) your order\",\"(?:your )?(?:driver|courier|shopper) (?:is|has) (?:on (?:the|their) way|arriving|arrived|picked up|nearby|outside|here|almost there)\",\"(?:leave|left) (?:it |your order |the food )?at (?:the|your) door\",\"order (?:is )?ready for pick-?up\",\"dropped off your .{0,30}(?:groceries|order|food)\"],\"weak\":[\"order\",\"food\",\"restaurant\",\"driver\",\"pick(?:ed)?-?up\",\"tip\",\"eta\",\"minutes? away\",\"meal\",\"groceries\"],\"words\":[]},{\"id\":\"deliveries\",\"hide\":true,\"notSpam\":true,\"strong\":[\"out for delivery\",\"(?:has been|was|is|were|should be) delivered\",\"delivered today\",\"(?:order|package|parcel|delivery) (?:was|has been) (?:dropped off|left)\",\"(?:has |have )?(?:shipped|been shipped)\",\"tracking (?:number|#|no\\\\.?|id|info|information|link|update)\",\"track your (?:package|order|shipment|parcel|delivery)\",\"(?:package|parcel|order|shipment) (?:is )?(?:on its way|arriving|arrives|will arrive|delayed)\",\"arriving (?:today|tomorrow|by)\",\"expected (?:delivery|arrival)\"],\"weak\":[\"order\",\"package\",\"parcel\",\"shipment\",\"delivery\",\"arriv(?:e|ing|al)\",\"ups|fedex|usps|dhl|amazon|ontrac|lasership|dasher\"],\"words\":[]},{\"id\":\"appointments\",\"hide\":false,\"notSpam\":true,\"strong\":[\"appointments? (?:reminder|confirmed|confirmation|is (?:on|at|scheduled|tomorrow|today)|on|at|for|with)\",\"reply (?:c|y|yes|1) to confirm\",\"(?:your )?(?:reservation|booking) (?:is )?(?:confirmed|for|on|at|reminder)\",\"(?:check-?in|check in) (?:is )?(?:at|opens|now open)\",\"reminder: you have\",\"(?:your )?appt\\\\.?\",\"(?:service professional|technician|tech) .{0,120}(?:is )?on (?:the|their|his|her) way\",\"i'?m (?:en|in) route\",\"(?:join|joining) your video visit\",\"(?:your )?(?:chat|call|visit) with us is coming up\",\"your table is ready\",\"(?:return to|come to) the host stand\"],\"weak\":[\"appointment\",\"reservation\",\"booking\",\"reschedule\",\"clinic\",\"dentist\",\"doctor\",\"scheduled for\"],\"words\":[]},{\"id\":\"notices\",\"hide\":false,\"notSpam\":true,\"strong\":[\"(?:successfully )?(?:been )?unsubscribed\",\"(?:reply|text|txt) start to\",\"no (?:more|longer receive) (?:any )?(?:more )?messages\",\"welcome to [a-z0-9]\",\"you will receive up to\",\"msg(?:\\\\.| )?(?:&|and) ?data rates\",\"msg frequency\",\"thanks? (?:you )?for (?:your purchase|ordering|your order|visiting|parking|using|choosing|shopping)\",\"(?:view|see) your (?:receipt|tickets|order)\",\"receipt\",\"(?:take|begin|share|complete) (?:a|our|the|this)? ?(?:quick |short )?survey\",\"survey\",\"(?:your )?feedback (?:is important|matters)\",\"(?:rate|review) (?:your visit|my work|us|your experience)\",\"tell us how we did\",\"how did we do\",\"share your thoughts\",\"two[- ]factor\",\"sign(?:ed)?[- ]in (?:from|to)\",\"(?:pin|password|settings) (?:was|were|has been|have) changed\",\"(?:didn'?t make this request|if this wasn'?t you|if you did not request)\",\"verification link\",\"(?:mobile )?authenticator\",\"deposit of \\\\$[\\\\d,.]+\",\"available balance\",\"you'?ll be charged\",\"return was accepted\",\"documents?(?:\\\\(s\\\\))? (?:are|is) available\",\"(?:subscriber )?profile has been deleted\",\"membership expires\",\"(?:card|payment method) on file\",\"(?:invited you|rsvp)\",\"(?:service|pickup|collection) (?:.{0,40} )?(?:is |has been )?delayed\",\"your feedback\",\"reply yes to (?:continue|confirm|join)\",\"sent you a (?:new )?snap\",\"free message\",\"network msg\",\"response has been recorded\",\"(?:your )?(?:delivery|order) (?:from .{1,40} )?has been (?:canceled|cancelled)\",\"(?:test )?results? (?:are ready|with you|is ready)\",\"(?:the )?referral\",\"patient alerts\",\"automated (?:system|message)\"],\"weak\":[\"(?:reply|txt|text) (?:help|stop)\",\"opt[ -]?(?:out|in)\",\"your account\",\"account\",\"notifications?\",\"alerts?\"],\"words\":[]}]},\"spam\":{\"hide\":true,\"groups\":true,\"networks\":true,\"base\":2,\"codesLenient\":true,\"shortLenient\":true,\"strongDouble\":true,\"rules\":[{\"id\":\"link\",\"words\":\"(?:https?://|www\\\\.)[^\\\\s]+|(?<![@\\\\w.-])[a-z0-9-]{2,}\\\\.(?:com|net|org|info|biz|xyz|top|click|link|online|site|shop|store|vip|icu|buzz|club|win|live|ly|cc|co|io|me|app)(?:/[^\\\\s]*)?(?![\\\\w-]|\\\\.[a-z])\",\"sender\":null,\"strong\":false},{\"id\":\"email\",\"words\":null,\"sender\":\"@\",\"strong\":false},{\"id\":\"prize\",\"words\":\"(?<![a-z0-9])(?:you(?:['’]ve| have)? won|winner|prize|lottery|jackpot|gift ?cards?|free gift|congratulations|been selected|claim (?:your|now|it|here))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"pressure\",\"words\":\"(?<![a-z0-9])(?:urgent(?! care)|urgently|immediately|act now|final notice|last chance|expires? (?:today|tonight|soon)|within \\\\d+ ?(?:hours|hrs|hour|h)|suspended|suspension|locked|restricted|deactivated|unusual activity|suspicious activity|(?:verify|confirm|update) your (?:account|identity|information|details|payment|billing)|unpaid|overdue|outstanding balance|late fees?|pay now|penalt(?:y|ies)|avoid (?:additional |further |late )?(?:fees|charges|penalties|suspension)|(?:account|service) (?:has been|will be) (?:closed|terminated|cancell?ed|disabled))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"money\",\"words\":\"(?<![a-z0-9])(?:loans?|pre-?approved|debt relief|crypto|bitcoin|investments?|investing|earn \\\\$?\\\\d[\\\\d,]*|\\\\$\\\\d[\\\\d,]* (?:a|per|each|every) (?:day|week)|work from home|cash prize|refund (?:is |of \\\\S+ is )?(?:pending|waiting|available|ready)|tax refund|(?:pay|send|payment|paid) (?:via|through|with|by|using) (?:zelle|venmo|cash ?app|gift ?cards?|bitcoin|crypto|usdt)|usdt|trading (?:platform|signals?|mentor)|guaranteed (?:returns?|profits?))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"delivery\",\"words\":\"(?<![a-z0-9])(?:(?:package|parcel|shipment|delivery)(?![a-z0-9]).{0,60}(?<![a-z0-9])(?:undeliverable|failed|on hold|held|rescheduled?|incomplete|incorrect|customs fees?|redelivery)|(?:could ?n[o'’]t|can ?not|can['’]t|unable to|failed to) (?:be )?deliver(?:ed)?)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"job\",\"words\":\"(?<![a-z0-9])(?:part-?time (?:remote |online )?(?:job|jobs|work|position|positions|opportunity|assistants?)|remote (?:online )?(?:job|work|position|opportunity)|recruit(?:er|ing|ment)|online partners|(?:resume|résumé) (?:has|have) been recommended|earn \\\\$?\\\\d{2,}[\\\\d,]*(?:\\\\s*[-–]\\\\s*\\\\$?\\\\d+)?\\\\s*(?:usd|dollars|a day|per day|daily))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"abroad\",\"words\":null,\"sender\":\"^\\\\+(?!1)\\\\d\",\"strong\":false},{\"id\":\"hidden\",\"words\":\"[\\\\u200b\\\\u200c\\\\u200d\\\\u2060\\\\ufeff]|[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff\\\\ua640-\\\\ua69f](?=[a-z])|(?<=[a-z])[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff]\",\"sender\":null,\"strong\":false},{\"id\":\"lonely\",\"words\":\"(?<![a-z0-9])(?:lonely|hotties|singles near|local (?:girls|women|singles)|meet ?up tonight|instant meetup|premium connections|exclusive circle|discreet|companionship|distinguished gentlemen|social engagement services)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"toll\",\"words\":\"(?<![a-z0-9])(?:(?:unpaid|outstanding|overdue|pending) tolls?|toll (?:services?|balance|bill|charges?|violations?|notice|fees?|payment)|e-?z ?pass|sunpass|fastrak|peach ?pass|txtag|i-?pass|the toll roads|(?:dmv|department of motor vehicles)|traffic (?:violations?|tickets?|citations?)|parking (?:violations?|tickets?|citations?|fines?)|(?:driving|driver.?s)? ?(?:licen[cs]e|registration) (?:suspension|will be suspended|has been suspended))(?![a-z0-9])\",\"sender\":null,\"strong\":true},{\"id\":\"replyy\",\"words\":\"(?<![a-z0-9])(?:reply (?:with )?[\\\"“]?(?:y|yes|1)[\\\"”]?,? (?:and|then|to)? ?(?:re-?open|exit|return|activate|get|enable|open|click)|(?:activate|enable) the (?:link|url)|(?:copy|paste) (?:the|this) (?:link|url|address) (?:in|into|to) (?:your )?(?:browser|safari|chrome)|(?:link|url) (?:is|was) (?:not|in)active)\",\"sender\":null,\"strong\":true},{\"id\":\"shortlink\",\"words\":\"(?<![\\\\w.])(?:bit\\\\.ly|tinyurl\\\\.com|t\\\\.co|is\\\\.gd|rb\\\\.gy|cutt\\\\.ly|tiny\\\\.cc|ow\\\\.ly|shorturl\\\\.at|s\\\\.id|t\\\\.ly|rebrand\\\\.ly|bl\\\\.ink|qrco\\\\.de|v\\\\.gd|shorturl\\\\.gg|u\\\\.to|t2m\\\\.io|2no\\\\.co)/\",\"sender\":null,\"strong\":false},{\"id\":\"opener\",\"words\":\"^\\\\W*(?:hi|hello|hey|hiya|good (?:morning|afternoon|evening))\\\\b[^a-z]{0,12}(?:is this|are you|it'?s been|how are you|how have you been|long time)|wrong number|sorry to (?:bother|disturb) you|(?:did|do) you (?:still )?remember me|i got your (?:number|contact) from|is this (?:still )?(?:mr|ms|mrs|miss|dr)\\\\.?\\\\s\",\"sender\":null,\"strong\":false},{\"id\":\"brand\",\"words\":\"(?<![a-z0-9])(?:amazon|apple ?(?:id|pay|support)|icloud|paypal|usps|fedex|ups|dhl|wells ?fargo|chase (?:bank|card|alert|fraud)|bank of america|citi ?bank|capital one|netflix|irs|social security|medicare|venmo|zelle|cash ?app|coinbase|binance|geek squad|norton|mcafee|microsoft|walmart|costco|best ?buy|verizon|at&t|t-?mobile|comcast|xfinity|spectrum)(?![a-z0-9])\",\"sender\":null,\"strong\":false}],\"alwaysWords\":[\"crypto club\"],\"neverWords\":[],\"alwaysSenders\":[],\"neverSenders\":[]},\"filed\":{\"41\":false,\"42\":true,\"43\":false,\"44\":true}}",
+      "cases": [
+        {
+          "text": "Chip in $5 to keep us in this race! Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Election day is Tuesday. Make a plan to vote.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "The vote on the campaign is this week",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Who is the best candidate for the job?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "This is an attempt to collect a debt. Call 800-555-0100.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Hi, this is Acme Recovery about your account",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Hi neighbor! Our crew is in your neighborhood this week doing tree trimming.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Long time no see! I sent you the pictures from the trip",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Your package is out for delivery. Tracking number 1Z999AA10123456784",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "USPS: your package is on hold, pay the redelivery fee at usps-redeliver.top now",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Congratulations! You have won a $500 gift card, claim now at prizes.xyz",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "URGENT: your account is suspended, verify your account at bit.ly/x1",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Join our crypto club today",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Your Chase verification code is 482913. If this wasn't you, act immediately: chase.com",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hey, are we still on for dinner tonight?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": false,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001",
+            "+15559870002"
+          ],
+          "group": true,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hello friend",
+          "senders": [
+            "+447700900123",
+            "promo@example.com"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 41,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 42,
+          "hush": true
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 43,
+          "hush": false
+        },
+        {
+          "text": "Your package is out for delivery",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 44,
+          "hush": true
+        }
+      ]
+    },
+    {
+      "name": "kinds off, spam strictest",
+      "rules": "{\"v\":1,\"kinds\":null,\"spam\":{\"hide\":true,\"groups\":true,\"networks\":true,\"base\":1,\"codesLenient\":false,\"shortLenient\":false,\"strongDouble\":true,\"rules\":[{\"id\":\"link\",\"words\":\"(?:https?://|www\\\\.)[^\\\\s]+|(?<![@\\\\w.-])[a-z0-9-]{2,}\\\\.(?:com|net|org|info|biz|xyz|top|click|link|online|site|shop|store|vip|icu|buzz|club|win|live|ly|cc|co|io|me|app)(?:/[^\\\\s]*)?(?![\\\\w-]|\\\\.[a-z])\",\"sender\":null,\"strong\":false},{\"id\":\"email\",\"words\":null,\"sender\":\"@\",\"strong\":false},{\"id\":\"prize\",\"words\":\"(?<![a-z0-9])(?:you(?:['’]ve| have)? won|winner|prize|lottery|jackpot|gift ?cards?|free gift|congratulations|been selected|claim (?:your|now|it|here))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"pressure\",\"words\":\"(?<![a-z0-9])(?:urgent(?! care)|urgently|immediately|act now|final notice|last chance|expires? (?:today|tonight|soon)|within \\\\d+ ?(?:hours|hrs|hour|h)|suspended|suspension|locked|restricted|deactivated|unusual activity|suspicious activity|(?:verify|confirm|update) your (?:account|identity|information|details|payment|billing)|unpaid|overdue|outstanding balance|late fees?|pay now|penalt(?:y|ies)|avoid (?:additional |further |late )?(?:fees|charges|penalties|suspension)|(?:account|service) (?:has been|will be) (?:closed|terminated|cancell?ed|disabled))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"money\",\"words\":\"(?<![a-z0-9])(?:loans?|pre-?approved|debt relief|crypto|bitcoin|investments?|investing|earn \\\\$?\\\\d[\\\\d,]*|\\\\$\\\\d[\\\\d,]* (?:a|per|each|every) (?:day|week)|work from home|cash prize|refund (?:is |of \\\\S+ is )?(?:pending|waiting|available|ready)|tax refund|(?:pay|send|payment|paid) (?:via|through|with|by|using) (?:zelle|venmo|cash ?app|gift ?cards?|bitcoin|crypto|usdt)|usdt|trading (?:platform|signals?|mentor)|guaranteed (?:returns?|profits?))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"delivery\",\"words\":\"(?<![a-z0-9])(?:(?:package|parcel|shipment|delivery)(?![a-z0-9]).{0,60}(?<![a-z0-9])(?:undeliverable|failed|on hold|held|rescheduled?|incomplete|incorrect|customs fees?|redelivery)|(?:could ?n[o'’]t|can ?not|can['’]t|unable to|failed to) (?:be )?deliver(?:ed)?)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"job\",\"words\":\"(?<![a-z0-9])(?:part-?time (?:remote |online )?(?:job|jobs|work|position|positions|opportunity|assistants?)|remote (?:online )?(?:job|work|position|opportunity)|recruit(?:er|ing|ment)|online partners|(?:resume|résumé) (?:has|have) been recommended|earn \\\\$?\\\\d{2,}[\\\\d,]*(?:\\\\s*[-–]\\\\s*\\\\$?\\\\d+)?\\\\s*(?:usd|dollars|a day|per day|daily))(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"abroad\",\"words\":null,\"sender\":\"^\\\\+(?!1)\\\\d\",\"strong\":false},{\"id\":\"hidden\",\"words\":\"[\\\\u200b\\\\u200c\\\\u200d\\\\u2060\\\\ufeff]|[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff\\\\ua640-\\\\ua69f](?=[a-z])|(?<=[a-z])[\\\\u0391-\\\\u03c9\\\\u0400-\\\\u04ff\\\\u13a0-\\\\u13ff]\",\"sender\":null,\"strong\":false},{\"id\":\"lonely\",\"words\":\"(?<![a-z0-9])(?:lonely|hotties|singles near|local (?:girls|women|singles)|meet ?up tonight|instant meetup|premium connections|exclusive circle|discreet|companionship|distinguished gentlemen|social engagement services)(?![a-z0-9])\",\"sender\":null,\"strong\":false},{\"id\":\"toll\",\"words\":\"(?<![a-z0-9])(?:(?:unpaid|outstanding|overdue|pending) tolls?|toll (?:services?|balance|bill|charges?|violations?|notice|fees?|payment)|e-?z ?pass|sunpass|fastrak|peach ?pass|txtag|i-?pass|the toll roads|(?:dmv|department of motor vehicles)|traffic (?:violations?|tickets?|citations?)|parking (?:violations?|tickets?|citations?|fines?)|(?:driving|driver.?s)? ?(?:licen[cs]e|registration) (?:suspension|will be suspended|has been suspended))(?![a-z0-9])\",\"sender\":null,\"strong\":true},{\"id\":\"replyy\",\"words\":\"(?<![a-z0-9])(?:reply (?:with )?[\\\"“]?(?:y|yes|1)[\\\"”]?,? (?:and|then|to)? ?(?:re-?open|exit|return|activate|get|enable|open|click)|(?:activate|enable) the (?:link|url)|(?:copy|paste) (?:the|this) (?:link|url|address) (?:in|into|to) (?:your )?(?:browser|safari|chrome)|(?:link|url) (?:is|was) (?:not|in)active)\",\"sender\":null,\"strong\":true},{\"id\":\"shortlink\",\"words\":\"(?<![\\\\w.])(?:bit\\\\.ly|tinyurl\\\\.com|t\\\\.co|is\\\\.gd|rb\\\\.gy|cutt\\\\.ly|tiny\\\\.cc|ow\\\\.ly|shorturl\\\\.at|s\\\\.id|t\\\\.ly|rebrand\\\\.ly|bl\\\\.ink|qrco\\\\.de|v\\\\.gd|shorturl\\\\.gg|u\\\\.to|t2m\\\\.io|2no\\\\.co)/\",\"sender\":null,\"strong\":false},{\"id\":\"opener\",\"words\":\"^\\\\W*(?:hi|hello|hey|hiya|good (?:morning|afternoon|evening))\\\\b[^a-z]{0,12}(?:is this|are you|it'?s been|how are you|how have you been|long time)|wrong number|sorry to (?:bother|disturb) you|(?:did|do) you (?:still )?remember me|i got your (?:number|contact) from|is this (?:still )?(?:mr|ms|mrs|miss|dr)\\\\.?\\\\s\",\"sender\":null,\"strong\":false},{\"id\":\"brand\",\"words\":\"(?<![a-z0-9])(?:amazon|apple ?(?:id|pay|support)|icloud|paypal|usps|fedex|ups|dhl|wells ?fargo|chase (?:bank|card|alert|fraud)|bank of america|citi ?bank|capital one|netflix|irs|social security|medicare|venmo|zelle|cash ?app|coinbase|binance|geek squad|norton|mcafee|microsoft|walmart|costco|best ?buy|verizon|at&t|t-?mobile|comcast|xfinity|spectrum)(?![a-z0-9])\",\"sender\":null,\"strong\":false}],\"alwaysWords\":[],\"neverWords\":[],\"alwaysSenders\":[],\"neverSenders\":[]},\"filed\":{}}",
+      "cases": [
+        {
+          "text": "Chip in $5 to keep us in this race! Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Election day is Tuesday. Make a plan to vote.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "The vote on the campaign is this week",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Who is the best candidate for the job?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "This is an attempt to collect a debt. Call 800-555-0100.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hi, this is Acme Recovery about your account",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hi neighbor! Our crew is in your neighborhood this week doing tree trimming.",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Long time no see! I sent you the pictures from the trip",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Your package is out for delivery. Tracking number 1Z999AA10123456784",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "USPS: your package is on hold, pay the redelivery fee at usps-redeliver.top now",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Congratulations! You have won a $500 gift card, claim now at prizes.xyz",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "URGENT: your account is suspended, verify your account at bit.ly/x1",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Join our crypto club today",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Your Chase verification code is 482913. If this wasn't you, act immediately: chase.com",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hey, are we still on for dinner tonight?",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": false,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001",
+            "+15559870002"
+          ],
+          "group": true,
+          "stranger": true,
+          "thread": 7,
+          "hush": false
+        },
+        {
+          "text": "Hello friend",
+          "senders": [
+            "+447700900123",
+            "promo@example.com"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 7,
+          "hush": true
+        },
+        {
+          "text": "Paid for by Friends of Pat Rivera",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 41,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 42,
+          "hush": false
+        },
+        {
+          "text": "See you at 7",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 43,
+          "hush": false
+        },
+        {
+          "text": "Your package is out for delivery",
+          "senders": [
+            "+15559870001"
+          ],
+          "group": false,
+          "stranger": true,
+          "thread": 44,
+          "hush": false
+        }
+      ]
+    }
+  ]
+}

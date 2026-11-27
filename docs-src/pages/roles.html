@@ -1,0 +1,70 @@
+<p>Roles say who can do what in a circle, the way a Discord server's do: make roles, put them in order, give them to people, and let each space change the rules for itself. Find them in <ui>Circle settings › Roles</ui>.</p>
+
+<h2 id="who">Owner, admins, roles and @everyone</h2>
+<table>
+  <tr><th>Who</th><th>Can</th></tr>
+  <tr><td><b>Owner</b></td><td>Everything: give any role, make admins, and delete the circle. The person who made it.</td></tr>
+  <tr><td><b>Admins</b></td><td>Everything but deleting the circle or making admins. Made by the owner.</td></tr>
+  <tr><td><b>Roles</b></td><td>What each role allows, in order: the higher a role is, the more it outranks. Nobody can manage a role at or above their own highest.</td></tr>
+  <tr><td><b>@everyone</b></td><td>What everyone in the circle may do, whatever their roles. Always under every role.</td></tr>
+</table>
+
+<h2 id="permissions">The seven permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Lets people</th></tr>
+  <tr><td>Change the circle</td><td>Change its name, picture, colour and icon, and turn plugins on for everyone.</td></tr>
+  <tr><td>Manage spaces</td><td>Add, rename, change, arrange and delete spaces.</td></tr>
+  <tr><td>Manage roles</td><td>Make and change roles, and give them to people.</td></tr>
+  <tr><td>Invite people</td><td>Bring people in, and see the invite link.</td></tr>
+  <tr><td>Write</td><td>Send messages in chat spaces.</td></tr>
+  <tr><td>Talk</td><td>Join voice spaces and talk.</td></tr>
+  <tr><td>Share files</td><td>Add files in Files spaces.</td></tr>
+</table>
+
+<h2 id="make">Make a role</h2>
+<steps>
+<step title="New role">
+<p>In <ui>Circle settings › Roles</ui>, tap <b>New role</b>. It's made at the bottom, over @everyone.</p>
+<m-screen title="Roles · 3" back wide>
+  <m-section>
+    <m-row icon="crown" hue="amber" label="Owner" hint="Above every role: can do everything"/>
+    <m-row icon="shield-check" hue="rose" label="Moderators" hint="2 people" chev/>
+    <m-row icon="badge-check" hue="blue" label="Regulars" hint="6 people" chev/>
+    <m-row icon="users" hue="slate" label="@everyone" hint="Everyone in the circle, under every role" chev/>
+  </m-section>
+  <m-btn kind="primary" icon="plus" tap>New role</m-btn>
+</m-screen>
+</step>
+<step title="Name it and choose a colour">
+<p>Under <b>Display</b>, rename it and pick a colour. Names in chats are drawn in the colour of each person's highest role that has one.</p>
+</step>
+<step title="Choose what it allows">
+<p>Under <b>Permissions</b>, switch on what the role lets people do.</p>
+<m-screen title="Moderators" back>
+  <m-tabs items="Display|Permissions|Members" active="Permissions"/>
+  <m-section>
+    <m-row label="Manage spaces" hint="Add, rename, change, arrange and delete spaces" switch="on"/>
+    <m-row label="Invite people" hint="Bring people in, and see the invite link" switch="on" tap/>
+    <m-row label="Manage roles" hint="Make and change roles, and give them to people" switch="off"/>
+  </m-section>
+</m-screen>
+</step>
+<step title="Give it to people">
+<p>Under <b>Members</b>, tick who has it. Or tap someone in the circle's members list: their card has their roles to change.</p>
+</step>
+</steps>
+<p>Drag a role by its handle to move it up or down, or use <b>Move up</b> and <b>Move down</b> in its menu.</p>
+
+<h2 id="per-space">A space's own permissions</h2>
+<p>Each space can change the rules for itself: open the space's settings, then <b>Permissions</b>. For each role, each permission has three settings.</p>
+<m-screen title="Announcements · Permissions" back>
+  <m-section title="@everyone"><m-tri label="Write" on="deny" tap="deny"/></m-section>
+  <m-section title="Moderators"><m-tri label="Write" on="allow"/></m-section>
+</m-screen>
+<p>Here, an <b>Announcements</b> space where only moderators can write: <b>Deny</b> Write for @everyone, <b>Allow</b> it for Moderators. <b>As the circle says</b> leaves it to the circle's roles.</p>
+
+<h2 id="remove">Removing someone</h2>
+<p>The owner or an admin can remove someone: tap them in the members list, then <b>Remove</b>. Their app leaves the circle, and nobody in it hears them again.</p>
+<note kind="warn" title="Removing someone doesn't change the circle's key">
+<p>Removing someone stops their app joining the circle. But a circle's messages are sealed with a key everyone in it has, and that key doesn't change when someone leaves, so an old or altered app that kept the key could still read what's said. For anything they mustn't read, make a new circle and invite the people who should be in it.</p>
+</note>

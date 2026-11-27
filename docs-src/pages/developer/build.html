@@ -1,0 +1,107 @@
+<p>Everything is in one repository, <a href="https://github.com/InfamousVague/ghost-messaging">github.com/InfamousVague/ghost-messaging</a>, under the AGPL-3.0. A build from source isn't signed as the releases are, so it installs as a separate app beside the real one.</p>
+
+<h2 id="need">What you need</h2>
+<ul>
+  <li><b>Flutter</b> (stable), which brings Dart. The relay uses the same Dart and nothing else.</li>
+  <li>For Android: the Android SDK and a phone or emulator. For a Mac or iPhone build: Xcode.</li>
+  <li><b>Node</b> for the scripts in <code>tool/</code>, the Discord bot and the browser extension; <b>Go</b> only to build the helper programs in <code>sidecar/</code>.</li>
+  <li><b>Rust</b> only for the direct route's core and the link helper. <code>native/p2p/rust-toolchain.toml</code> pins the version (1.94.1), and <code>tool/build-p2p.sh</code> stops with any other.</li>
+  <li>For the browser build's end-to-end test: Playwright's Chromium and WebKit (<code>npx playwright install chromium webkit</code>).</li>
+</ul>
+
+<h2 id="run">Run it</h2>
+<pre><code>flutter pub get
+flutter run                                    # on the connected phone, or -d macos / windows / linux
+flutter build apk --release --target-platform android-arm64
+flutter build macos</code></pre>
+<p>A computer's build starts in <code>lib/desktop/main.dart</code>; with no phone paired it runs on its own, with an account and no texts. The app talks to the relay at gogho.st unless <ui>Settings › Routes</ui> is given another.</p>
+<p>The helper programs for other networks are not built by <code>flutter run</code>. Build the one you want first (<code>tool/build-signalsidecar.sh</code>, <code>tool/build-accountsidecar.sh messenger mac</code>…): on a computer the app looks for it beside itself and then under <code>build/&lt;name&gt;-sidecar/</code>, where those scripts put it.</p>
+
+<h2 id="web">Build it for a browser</h2>
+<pre><code>node tool/build-web.mjs                        # into build/web, to be served under /app/ by a relay
+dart run relay/bin/relay.dart --web build/web  # then open http://127.0.0.1:8787/app/
+node tool/web/e2e.mjs                          # two people using it, in Chromium and then WebKit</code></pre>
+<p><code>tool/build-web.mjs</code> is <code>flutter build web -t lib/web/main.dart</code> with what the page needs said for it: the engine served from the build's own folder, no code made from text at run time, no service worker, and <code>main.dart.js</code> named by its hash. Before it builds it runs <code>test/web_build_test.dart</code> (the page's policy, its files and its headers) and <code>tool/web/check-argon2.mjs</code> (the Argon2id worker against <code>test/vectors/argon2id.json</code>). Its options:</p>
+<table>
+  <tr><th>Option</th><th>What it does</th></tr>
+  <tr><td><code>--base /app/</code></td><td>Where the page will be served from.</td></tr>
+  <tr><td><code>--hub wss://…/hub</code></td><td>The hub it speaks to. With none it speaks to the hub beside the page: <code>/hub</code> where the page is <code>/app/</code>.</td></tr>
+  <tr><td><code>--out &lt;folder&gt;</code></td><td>Somewhere other than <code>build/web</code>.</td></tr>
+  <tr><td><code>--profile</code></td><td>Names kept in the JavaScript, for reading what went wrong.</td></tr>
+</table>
+<p>Letters the app's own fonts have no shape for (Chinese, Arabic, mathematics…) are drawn from Noto fonts served beside the page, never fetched from Google by a visitor's browser. <code>node tool/web/fallback-fonts.mjs --fetch</code> brings them to <code>build/fallback-fonts</code> once; without them such letters are boxes. <code>web/argon2id.js</code> is committed, and <code>tool/web/build-argon2.mjs</code> builds it again from the extension's pinned packages.</p>
+
+<h2 id="relay">Run the relay</h2>
+<pre><code>cd relay
+dart pub get                                   # the test package only
+dart run bin/relay.dart --port 8787 --verbose  # ws://127.0.0.1:8787/hub and /relay/&lt;channel&gt;
+dart compile exe bin/relay.dart -o ghost-relay # one file to run on a server</code></pre>
+<p>It listens on this machine alone unless given <code>--host</code>, keeps everything under <code>--data</code> (<code>relay-data</code>), and serves the browser build under <code>/app/</code> with <code>--web &lt;folder&gt;</code>. Every other choice is a variable in its environment, and none is required: <code>relay/deploy/relay.env.example</code> lists them all, grouped by what each switches on.</p>
+<p>Put it behind a web server that holds the certificate and passes everything to it, WebSockets included: <code>/hub</code>, <code>/relay/*</code>, <code>/files*</code>, <code>/market*</code>, <code>/link/*</code>, <code>/word/*</code>, <code>/feedback</code>, and <code>/app/*</code> where it serves the app. <code>relay/deploy</code> has samples for Caddy and nginx, a systemd service, and a compose file that runs <code>relay/Dockerfile</code> with Caddy in front. Then point an app at it: <ui>Settings › Routes</ui> takes the hub's address.</p>
+<table>
+  <tr><th>To switch on</th><th>Set</th></tr>
+  <tr><td>Passing packets to other relays</td><td><code>GHOST_FED=open</code> or <code>list</code>, with <code>GHOST_PUBLIC_HUB</code>, the address other relays dial to check yours. Off by default.</td></tr>
+  <tr><td>Sign-ins bound to your relay's host</td><td><code>GHOST_HUB_NAMES</code></td></tr>
+  <tr><td>Calls through a TURN server</td><td><code>GHOST_TURN_SECRET</code> and <code>GHOST_TURN_URLS</code>, for a coturn you run with the same secret (<code>relay/deploy/turnserver.conf.example</code>).</td></tr>
+  <tr><td>Link helpers for direct links</td><td><code>GHOST_LINK_HELPERS</code>, for an <code>iroh-relay</code> you run (below).</td></tr>
+  <tr><td>The app in a browser</td><td><code>--web</code> or <code>GHOST_WEB_DIR</code></td></tr>
+</table>
+<p><code>docs/SELF_HOSTING.md</code> in the repository is the full guide, and says what a relay of your own does and doesn't reach. <a href="/docs/developer/relay-api/#own">Running your own</a> has the short version.</p>
+
+<h2 id="direct">The direct route's core and a link helper</h2>
+<pre><code>sh tool/build-p2p.sh mac                       # build/p2p/mac/libghost_p2p.dylib; also: android, ios
+(cd native/p2p &amp;&amp; cargo test --release --locked)
+sh tool/build-link.sh host                     # build/link/host/iroh-relay, for this machine
+(cd native/link-check &amp;&amp; cargo run)            # starts that helper and links two nodes through it</code></pre>
+<p><code>native/p2p</code> builds to one library with a small C interface (<code>include/ghost_p2p.h</code>), which <code>lib/net/p2p/node_ffi.dart</code> loads. Windows and Linux build theirs with a plain <code>cargo build --release --locked</code> on their release runners. Nothing is fetched but what <code>Cargo.lock</code> names.</p>
+<p>A link helper is iroh's own relay server, built from source by <code>tool/build-link.sh</code> (<code>server</code> for Linux, <code>host</code> for this machine) at a pinned version and checksum. <code>cargo run -- https://your.helper:port</code> in <code>native/link-check</code> checks one that is running somewhere. <code>relay/deploy/link-helper.toml.example</code> and <code>ghost-link.service</code> are what a server needs.</p>
+<note kind="info" title="Built, not yet loaded">No build of the app starts a node yet (<a href="/docs/developer/architecture/#direct">the direct route</a> is switched off in the source), so the app runs the same with or without the library.</note>
+
+<h2 id="tests">Tests</h2>
+<table>
+  <tr><th>Run</th><th>What it covers</th></tr>
+  <tr><td><code>flutter test</code></td><td>The app: about 270 files in <code>test/</code>, by feature. Screen tests draw each screen and compare it with the picture in <code>test/shots</code>; <code>--update-goldens</code> writes them again. Several start the real relay in the test's own process and send through it. The direct route runs against a stand-in mesh (<code>test/support/fake_p2p.dart</code>).</td></tr>
+  <tr><td><code>flutter test test/platform_info_test.dart test/aside_test.dart test/source_guards_test.dart</code></td><td>The guard tests (<code>tool/lib/guards.mjs</code>): they read the source for what would break the browser build without a compile error, and the Android and Mac releases run them before they build anything.</td></tr>
+  <tr><td><code>cd relay &amp;&amp; dart test</code></td><td>The relay, part by part: the hub, relays that talk and their limits, the doors, the app's files and headers, and <code>self_host_test.dart</code>, which starts the program with an empty environment and checks the sample env file lists every variable it reads.</td></tr>
+  <tr><td><code>cd android &amp;&amp; ./gradlew :app:testDebugUnitTest</code></td><td>The Kotlin that needs no phone: the MMS format, the encryption, the link's sealing and session, bubbles, notifications held back, formatting taken out of a preview.</td></tr>
+  <tr><td><code>cd native/p2p &amp;&amp; cargo test --release --locked</code></td><td>The direct route's core: nodes in one process, linked over loopback and through a link helper inside the test. A workflow runs the same on Linux and Windows (<code>messaging-p2p-core.yml</code>).</td></tr>
+  <tr><td><code>native/voicefx/test/run.sh</code></td><td>The microphone engine on this computer: noise down, gain, the limiter, odd block sizes.</td></tr>
+  <tr><td><code>cd extension &amp;&amp; npm test</code></td><td>The browser extension's sealing and its talk with the relay.</td></tr>
+  <tr><td><code>cd discord &amp;&amp; npm test</code></td><td>The Discord bot and its bridge.</td></tr>
+  <tr><td><code>go test ./...</code> in a <code>sidecar/</code> folder</td><td>That helper program.</td></tr>
+  <tr><td><code>node tool/web/e2e.mjs</code></td><td>The browser build end to end: a relay on this machine serving it, and Chromium and WebKit driving the page as two people.</td></tr>
+  <tr><td><code>flutter test tool/net/live_hub_test.dart --dart-define=HUB=wss://…/hub</code></td><td>Two made-up installs through a running relay. <code>tool/net</code> has one of these for each of the relay's parts.</td></tr>
+  <tr><td><code>flutter test integration_test/… -d macos</code></td><td>On a real device: the desktop link against a phone, the native recorder and transcripts, a recording played back, a call's video, and the direct route's real core (<code>p2p_core_test.dart</code>).</td></tr>
+</table>
+<p>Where two languages must agree to the byte (Kotlin and Dart on a seal, the app and the relay on a home record or a plugin's checks, Dart and JavaScript on Argon2id), both are tested against the same fixed values, kept in <code>test/*_vectors.json</code> and <code>test/vectors</code>.</p>
+
+<h2 id="scripts">Scripts</h2>
+<table>
+  <tr><th>Script</th><th>What it does</th></tr>
+  <tr><td><code>tool/build-docs.mjs</code></td><td>Builds these docs from <code>docs-src</code> into <code>site/docs</code>, with the API reference and the Postman collection. <code>--check</code> fails where <code>site/docs</code> isn't what <code>docs-src</code> makes.</td></tr>
+  <tr><td><code>tool/ghost-api.mjs</code></td><td>A command-line client for <a href="/docs/developer/app-api/">the app's API</a>.</td></tr>
+  <tr><td><code>tool/build-web.mjs</code>, <code>tool/web/*.mjs</code></td><td>The browser build, its end-to-end test, its fallback fonts and its Argon2id worker (<a href="#web">above</a>).</td></tr>
+  <tr><td><code>tool/build-p2p.sh</code>, <code>build-link.sh</code></td><td>The direct route's core for a Mac, Android or an iPhone, and the link helper (<a href="#direct">above</a>).</td></tr>
+  <tr><td><code>tool/build-*sidecar.sh</code>, <code>build-tdlib.sh</code></td><td>Build the helper programs and Telegram's library for each platform. <code>build-accountsidecar.sh &lt;name&gt; [mac|linux|windows|android]</code> builds any of the account helpers.</td></tr>
+  <tr><td><code>tool/release*.mjs</code></td><td>Build, check and publish a release for Android, Mac, Windows and Linux. The Android and Mac ones run the guard tests first (<code>tool/lib/guards.mjs</code>), and each ends by publishing the source (<code>tool/publish-source.mjs</code>).</td></tr>
+  <tr><td><code>tool/deploy-relay.mjs</code>, <code>deploy-site.mjs</code>, <code>deploy-discord.mjs</code>, <code>deploy-turn.mjs</code>, <code>deploy-link.mjs</code></td><td>Put the relay, the site (and with <code>--app</code> the browser build), the Discord bot, a TURN server and a link helper on Uplink's own server. They are written for that server; for your own, follow <code>docs/SELF_HOSTING.md</code>.</td></tr>
+  <tr><td><code>tool/phosphor.mjs</code>, <code>cosmetic_art.sh</code> and the <code>.py</code> files</td><td>Make the icons, stickers, effects, sounds (the soundboard's among them) and profile decorations the app ships with.</td></tr>
+</table>
+
+<h2 id="api-docs">Keeping the API docs true</h2>
+<p>The API pages and the Postman collection are made, not written:</p>
+<ul>
+  <li><b>The app's API</b> comes from the app's own registry. After changing <code>lib/api/methods.dart</code>, run <code>UPDATE_API_DOCS=1 flutter test test/api_reference_test.dart</code>, which writes <code>docs-src/api/app-methods.json</code>. Without the variable the same test fails where the file is behind the code.</li>
+  <li><b>The relay's routes</b> are listed in <code>docs-src/api/relay-routes.mjs</code>. A route added to <code>relay/lib</code> is added there.</li>
+  <li><code>node tool/build-docs.mjs</code> then draws both references and writes the collection.</li>
+</ul>
+
+<h2 id="comments">How the code is commented</h2>
+<p>The source is written to be read. The conventions, so a change fits in:</p>
+<ul>
+  <li>A file opens by saying what it is for and where it sits: a doc comment on its main class, or on <code>library;</code>.</li>
+  <li>Classes, and any method whose name and signature don't say enough, have a line or two on what they are for and what they promise. Comments say why, and what a caller can rely on; they don't repeat the code.</li>
+  <li>Inside a function, a comment sits above a step whose reason isn't plain: a workaround, an order that matters, a detail of a protocol.</li>
+  <li>Plain words. "Chooses a route for each thing sent" rather than "route selection manager".</li>
+  <li>Where a file has a twin in another language (<code>DeskCrypto.kt</code> and <code>lib/desktop/link/crypto.dart</code>), each names the other.</li>
+</ul>

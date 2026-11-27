@@ -1,0 +1,37 @@
+<p>You don't need any of this to use Uplink. It's here for when you want to know what your account is, where it's kept, and what happens when you sign in somewhere else.</p>
+
+<h2 id="identity">One identity, on every device</h2>
+<p>Your account is a key that's yours alone, made from your 12 recovery words. Every device you sign in on becomes that same you: your friends see one person, a circle sees one member, and everything sent to you reaches each of your devices.</p>
+<ul>
+  <li><b>Your username</b> (like <code>@alex</code>) is how friends find you. It points at your key.</li>
+  <li><b>Your password</b> unlocks a sealed backup of your key, so you can sign in with a username and password instead of the words.</li>
+  <li><b>Your 12 recovery words</b> <i>are</i> the key. They work without the password, and nothing else can replace them.</li>
+</ul>
+
+<h2 id="address">The account address</h2>
+<p>The address that starts with <code>0x</code>, shown when your account is made and in <ui>Settings › Me › Account</ui>, is your account's public name. It's the same in any wallet app that takes your 12 words, because it's made from them in the same standard way. Uplink doesn't use it for money; it's simply the one name your account has everywhere. Sharing it is safe; sharing your words is not.</p>
+
+<h2 id="backup">What the server keeps</h2>
+<p>The relay server at gogho.st keeps your username and a backup of your key, sealed with your password, which is stretched on your device first. The server can't open it. It never sees your recovery words, your password, or your messages.</p>
+<table>
+  <tr><th>Kept by the server</th><th>Never sent to it</th></tr>
+  <tr><td>Your username, and the key it points to</td><td>Your recovery words</td></tr>
+  <tr><td>Your sealed backup (only your password opens it)</td><td>Your password</td></tr>
+  <tr><td>Your verified number, if you verify one, to text you codes</td><td>What you write, to anyone</td></tr>
+</table>
+
+<h2 id="computer">A computer paired with your phone</h2>
+<p>A Mac or PC paired with your phone used to be someone of its own. Now it can be the same you: in <ui>Settings › Me › Account</ui> on the computer, tap <b>Become the same you as your phone</b>, or sign in to the account your phone is in.</p>
+<m-screen title="Account" back wide caption="On a paired computer.">
+  <m-section>
+    <m-row icon="smartphone" hue="green" label="Become the same you as your phone" hint="Keeps who you are now, the same you as your phone" chev tap/>
+    <m-row icon="key-round" hue="blue" label="Sign in to your Uplink account" hint="The account your phone is in" chev/>
+  </m-section>
+</m-screen>
+
+<h2 id="lost">If you lose a device</h2>
+<ol>
+  <li>Sign in on another device, with your username and password or your words.</li>
+  <li>In <ui>Settings › Me › Account › Signed in on these devices</ui>, remove the lost one. It's signed out the next time it connects: a lost iPhone, computer without a phone or browser then deletes everything of your account from itself, and a lost Android phone forgets your recovery words and its keys.</li>
+  <li>If you think someone has your words, make a new account and tell your friends; the words can't be changed.</li>
+</ol>

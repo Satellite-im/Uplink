@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Texts and conversations · Uplink docs</title>
+<meta name="description" content="Sending, reactions, edits, ticks, stickers, effects and conversation settings.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Messaging</div>
+    <h1>Texts and conversations</h1>
+    <p class="lede">Sending, reactions, edits, ticks, stickers, effects and conversation settings.</p>
+    <p>Your texts (SMS and picture messages) work as in any texting app, with more: reactions, edits, effects, stickers and voice messages.</p>
+
+<h2 id="list">The conversations list</h2>
+<ul>
+  <li><b>Unread conversations are at the top</b>, the newest first, then everything you've read. Pinned ones stay above both. A muted conversation keeps its place by date.</li>
+  <li><b>Reading a conversation doesn't move it.</b> One you open from the top stays where it is while you're in the app, so nothing shifts under your finger; a new message still takes its conversation to the top. The list is put back in order when you leave the app or its window, switch tabs, search, or pull it down.</li>
+  <li><b>Each row's last line is the newest message</b> in that conversation, whichever way it came (SMS, a picture message, or RCS beside Google Messages). A row can show something else on purpose: <b>Draft:</b> what you've typed and not sent, or a short summary in italics after a » when several messages are unread.</li>
+  <li><b>Swipe</b> a conversation left to archive it; keep swiping to delete. Swipe right to pin it to the top.</li>
+  <li><b>Long-press</b> one for pin, mute, block, delete and more, or to choose several.</li>
+  <li><b>Search</b> at the top finds names, numbers and words, snoozed conversations too.</li>
+  <li><b>Snooze</b>: long-press a conversation and choose <b>Snooze…</b>. See <a href="#snooze">Snooze a conversation</a>.</li>
+  <li><b>Mark all read</b> (the round button by the title) covers spaces, Telegram and Signal too.</li>
+</ul>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">Messages</span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#check-check"/></svg></span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#plus"/></svg></span></div><div class="m-body">
+  <div class="m-convo tap"><span class="m-avatar" data-hue="mint">MC</span><span class="m-txt"><b>Maya Chen</b><small>See you at 7!</small></span><span class="m-end"><small>4:12</small><span class="m-count">2</span></span></div>
+  <div class="m-convo"><span class="m-avatar" data-hue="indigo">D</span><span class="m-txt"><b>Dad</b><small>📷 Picture</small></span><span class="m-end"><small>Yesterday</small></span></div>
+</div></div></figure>
+
+<h2 id="send">Sending</h2>
+<p>Type and send as usual. Beside the box: pictures (up to five in one message), stickers, GIFs and emoji, and the microphone for a voice message (press and hold where Send would be).</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Maya Chen</span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg></span></div><div class="m-body">
+  <div class="m-msg them"><span class="m-bubble">Dinner at Luca's?</span><small class="m-time">4:10</small></div>
+  <div class="m-msg me"><span class="m-bubble">Yes! 7?</span><small class="m-time">4:12</small></div>
+  <div class="m-row m-raw"><span class="m-iconbtn"><svg class="i"><use href="/docs/icons.svg#plus"/></svg></span><label class="m-field"><span class="m-input empty">Text message</span></label><span class="m-iconbtn"><svg class="i"><use href="/docs/icons.svg#mic"/></svg></span></div>
+</div></div></figure>
+
+<h2 id="formatting">Formatting</h2>
+<p>Write these round words in any message and Uplink draws them formatted, in chats with friends, in spaces and in Telegram, Signal and the other networks' chats:</p>
+<table>
+  <tr><th>Write</th><th>To get</th></tr>
+  <tr><td><code>**bold**</code></td><td><b>bold</b></td></tr>
+  <tr><td><code>*italic*</code> or <code>_italic_</code></td><td><i>italic</i></td></tr>
+  <tr><td><code>~~strike~~</code></td><td><s>strike</s></td></tr>
+  <tr><td><code>`code`</code></td><td><code>code</code></td></tr>
+  <tr><td><code>```</code> on lines before and after</td><td>a block of code</td></tr>
+  <tr><td><code>&gt; </code> at the start of a line</td><td>a quote</td></tr>
+  <tr><td><code>||spoiler||</code></td><td>hidden until tapped</td></tr>
+  <tr><td><code>[words](https://…)</code></td><td>a link under those words</td></tr>
+</table>
+<p>Links and @mentions still work inside formatting, and nothing inside code is formatted. Each kind stays on one line (except code blocks). To write a marker itself, put a backslash before it: <code>\*</code>.</p>
+<p>The markers go as you typed them, so a text, Telegram or an older Uplink shows the asterisks. While you type to a friend or in a space they are dimmed in the box, and in a chat with a friend, choosing words offers <b>Bold</b>, <b>Italic</b> and <b>Code</b>. Notifications show the words without the markers, and a spoiler as ▒.</p>
+
+<h2 id="ticks">Ticks</h2>
+<table>
+  <tr><th>Mark</th><th>Means</th></tr>
+  <tr><td>A clock</td><td>Sending.</td></tr>
+  <tr><td>One tick</td><td>Sent.</td></tr>
+  <tr><td>Two ticks</td><td>Delivered to their phone. In colour: read (picture and group messages, from phones that say so).</td></tr>
+  <tr><td>A lock</td><td>Encrypted: see <a href="/docs/encryption/">Encrypted texts</a>.</td></tr>
+</table>
+<p>Delivery reports and read receipts are in <span class="ui-path">Settings › Receipts</span>.</p>
+
+<h2 id="hold">Press and hold a message</h2>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-row m-raw"><span style="font-size:1.5rem">❤️ 👍 👎 😂 ‼️ ❓</span></div>
+  <div class="m-menu"><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#pencil"/></svg><span>Edit</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#copy"/></svg><span>Copy text</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sparkles"/></svg><span>Effects</span></div><div class="m-item danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#trash-2"/></svg><span>Delete message</span></div></div>
+</div></div></figure>
+<ul>
+  <li><b>React</b> with an emoji; it shows under the message.</li>
+  <li><b>Edit</b>: a text can't change once it's on their phone, so you choose <b>Change on this phone only</b> or <b>Send correction</b>.</li>
+  <li><b>Effects</b>: send it with a screen effect (confetti, hearts and 18 more), seen by anyone using Uplink.</li>
+</ul>
+
+<h2 id="snooze">Snooze a conversation</h2>
+<p>Long-press a conversation in Messages and choose <b>Snooze…</b>, then for how long: an hour, three hours, this evening, tomorrow morning, or next Monday.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-menu"><div class="m-menu-title">Snooze Maya Chen</div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>For an hour</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>For 3 hours</span></div>
+    <div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Until tomorrow (9 AM)</span></div>
+    <div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Until next week (Monday, 9 AM)</span></div>
+  </div>
+</div></div></figure>
+<p>It leaves Messages until then. Its messages still arrive, and search still finds it. When the time comes it's back at the top with a notification, and it stays at the top until you open it. Long-press it and choose <b>Unsnooze</b> to bring it back early. Snoozes are kept on the device you set them on, and the app needs to be running for one to end on time; if it was closed, the conversation comes back when the app next opens.</p>
+
+<h2 id="export">Export a conversation</h2>
+<p>In a conversation's settings, <b>Export conversation</b> saves every message as a Markdown file (<code>.md</code>), which any notes app or text editor opens. It has the conversation's name, a heading for each day, and each message with who sent it, when, and any pictures or files named under it. The pictures and files themselves aren't in it. On a phone you choose where to save it; on a Mac a save panel opens; on Windows and Linux it goes to Downloads.</p>
+<p>A space's chat exports the same way: <b>Export chat</b> in the space's settings, or long-press the space in Messages. Its threads come too.</p>
+
+<h2 id="settings">A conversation's settings</h2>
+<p>Tap the cog, or the conversation's name at the top:</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Maya Chen</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#pin"/></svg></span><span class="m-txt"><b>Pin to top</b></span><span class="m-end"><span class="m-switch"></span></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="slate"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#volume-x"/></svg></span><span class="m-txt"><b>Mute notifications</b></span><span class="m-end"><span class="m-switch"></span></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image"/></svg></span><span class="m-txt"><b>Chat background</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="rose"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg></span><span class="m-txt"><b>Your bubbles here</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg></span><span class="m-txt"><b>Encryption</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg></span><span class="m-txt"><b>Export conversation</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+</div></div></figure>
+<p>A group text also has <b>Group name</b>, <b>Add people</b> and <b>Leave group</b>. A chat background syncs to the others if they use Uplink too.</p>
+
+<h2 id="look">Looks, stickers and effects</h2>
+<p><span class="ui-path">Settings › Appearance</span> has the looks (Uplink, Sharp, Dial-Up and Runestone) and the textures each is drawn with, light and dark, your bubble colour and text size. <span class="ui-path">Settings › Emoji</span>, <span class="ui-path">Settings › Effects</span> and <span class="ui-path">Settings › Sounds</span> have the rest.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/plugin-guidelines/"><small>Previous</small>Marketplace guidelines</a><a class="next" href="/docs/google-messages/"><small>Next</small>Beside Google Messages</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#list">The conversations list</a><a href="#send">Sending</a><a href="#formatting">Formatting</a><a href="#ticks">Ticks</a><a href="#hold">Press and hold a message</a><a href="#snooze">Snooze a conversation</a><a href="#export">Export a conversation</a><a href="#settings">A conversation's settings</a><a href="#look">Looks, stickers and effects</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

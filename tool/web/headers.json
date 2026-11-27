@@ -1,0 +1,19 @@
+{
+  "about": "What the app's address tells the browser on every answer, the worker's (argon2id.js) as much as the page's: app.gogho.st's Caddy block (tool/deploy-site.mjs) and a relay's /app/ (relay/lib/web_app.dart), each held to this list by a test (test/web_build_test.dart, relay/test/web_app_test.dart). Content-Security-Policy is the page's own policy (web/index.html, its connect-src naming the hub the build is made for) followed by frame-ancestors 'none', which only a header can say. Strict-Transport-Security is app.gogho.st's alone: a relay's server in front of it says its own.",
+  "every": {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(), display-capture=()"
+  },
+  "app": {
+    "Strict-Transport-Security": "max-age=31536000"
+  },
+  "frameAncestors": "frame-ancestors 'none'",
+  "cache": {
+    "plain": "no-cache",
+    "hashed": "public, max-age=31536000, immutable"
+  }
+}

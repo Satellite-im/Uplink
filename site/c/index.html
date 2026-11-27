@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Join a circle · Uplink</title>
+<meta name="description" content="An Uplink circle's invite.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#040406">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!--
+  A circle's invite word (Matt, 2026-11-19: "add the custom invite code word as a default feature"): gogho.st/c/<word>,
+  one page for every word (the site's web server sends each /c/<word> here; tool/deploy-site.mjs).
+
+  It asks the relay for the circle's link the word holds, by a hash of the word, never the word (relay/lib/invite_words.dart),
+  opens it with a key made from the word, and goes on to the circle's own link (/join/#c.…), whose page says what the
+  circle is and leads to the app. The derivation and the sealing are the app's (lib/circles/invite_word.dart): the two
+  must stay the same.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/uplink.css">
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (_) {}</script>
+<style>
+  /* An invite page in Uplink's look (/uplink.css): one sticker card over the join picture's starfield. */
+  :root { --red: #ff6b5e; }
+  :root[data-theme="light"] { --red: #c8322a; }
+  .page { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  .page > .u-slot--bg { position: fixed; }
+  .page > .u-slot--bg::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 55% at 50% 48%, rgba(4,4,6,.72), rgba(4,4,6,.2) 75%); }
+  main { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; padding: 3rem var(--u-gutter) 3.5rem; }
+  .card { width: 100%; max-width: 30rem; text-align: center; padding: 2.4rem 1.6rem 2rem; }
+  .card .u-needle { left: 86%; bottom: 58%; height: calc(42% + 4.5rem); width: 2px; opacity: .8; }
+  .card .logo { width: 7.5rem; height: auto; margin: 0 auto 1.4rem; }
+  .card .u-kicker { margin-bottom: .6rem; }
+  h1 { font-family: var(--u-display); font-style: italic; font-weight: 900; font-size: clamp(1.9rem, 7vw, 2.6rem); line-height: 1.02; letter-spacing: -.01em; margin: 0 0 .7rem; overflow-wrap: anywhere; }
+  .card p { margin: 0 auto 1.6rem; max-width: 24rem; }
+  .card p.err { color: var(--red); }
+  .card .u-btns { justify-content: center; padding-left: 0; }
+  .foot { position: relative; z-index: 1; text-align: center; font-size: .84rem; color: var(--u-ink-3); padding: 0 var(--u-gutter) 1.5rem; }
+  .foot a { color: var(--u-ink-2); }
+</style>
+</head>
+<body>
+<div class="page">
+<div class="u-slot u-slot--bg u-stars" aria-hidden="true"><img class="u-slot-img" src="/art/space/join.webp" alt="" loading="lazy" onerror="this.remove()"></div>
+<main>
+  <div class="card u-sticker">
+    <i class="u-needle u-needle--glow" aria-hidden="true"></i>
+    <img class="logo" src="/art/uplink-logo.webp" width="1200" height="918" alt="Uplink">
+    <span class="u-kicker">Circle invite</span>
+    <h1 id="title">Opening the invite…</h1>
+    <p id="line">Looking up this circle.</p>
+    <div class="u-btns"><a class="u-btn u-btn--solid" href="/"><span>Get Uplink</span></a></div>
+  </div>
+</main>
+<p class="foot">Uplink: text, voice and video in one app. <a href="/">gogho.st</a> · <a href="/docs/">Help</a></p>
+</div>
+<script>
+(async () => {
+  const LABEL = 'ghost-invite-word/v1';
+  const ROUNDS = 60000;
+  const $ = (id) => document.getElementById(id);
+  const fail = (title, line) => { $('title').textContent = title; $('line').textContent = line; $('line').className = 'err'; };
+
+  // The word as the app tidies it (lib/circles/invite_word.dart, tidyInviteWord).
+  let w = decodeURIComponent(location.pathname.replace(/^\/c\//, '').replace(/\/$/, '')).trim().toLowerCase();
+  w = w.replace(/[\s_]+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
+  if (w.length < 3 || w.length > 32) return fail('That isn’t an invite', 'An invite word is 3 to 32 letters, numbers or hyphens.');
+  document.title = `${w} · Uplink`;
+
+  const enc = new TextEncoder();
+  const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const hash = hex(await crypto.subtle.digest('SHA-256', enc.encode(`${LABEL}:${w}`)));
+    const res = await fetch(`/word/${hash}`, { cache: 'no-store' });
+    if (res.status === 404) return fail('No such circle', `No circle has the invite word “${w}”. Check it with whoever sent it.`);
+    if (!res.ok) throw new Error(`the relay answered ${res.status}`);
+    const { b } = await res.json();
+    const bytes = Uint8Array.from(atob(b), (c) => c.charCodeAt(0));
+    const base = await crypto.subtle.importKey('raw', enc.encode(w), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(LABEL), iterations: ROUNDS }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const clear = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(0, 12), additionalData: enc.encode(LABEL) }, key, bytes.slice(12));
+    const link = new TextDecoder().decode(clear);
+    // Only a circle's own link (lib/circles/circles.dart, linkIn): nowhere else.
+    const m = /^https:\/\/gogho\.st\/join\/(#c\.[0-9a-f]{64}(?:\.[A-Za-z0-9_-]*)?(?:\.0[23][0-9a-f]{64})?)$/.exec(link);
+    if (!m) throw new Error('it isn’t a circle’s link');
+    location.replace(`/join/${m[1]}`);
+  } catch (e) {
+    fail('Couldn’t open the invite', `Try again in a moment (${e.message || e}).`);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,9 +1,74 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
 .DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
 
-target
-kit/src/compiled_styles.css
-ui/src/compiled_styles.css
-.uplink
-.env
-ui/wix/*.zip
-__MACOSX
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Widget Preview related
+.widget_preview/
+*.apk
+
+# The Google Messages sidecar built for the phone (tool/build-gmsidecar.sh android): a build product.
+/android/app/src/main/jniLibs/*/libgmsidecar.so
+# The Signal helper and the C++ library it needs (tool/build-signalsidecar.sh android --ship), built for each release.
+/android/app/src/main/jniLibs/*/libsignalsidecar.so
+/android/app/src/main/jniLibs/*/libc++_shared.so
+# The WhatsApp helper (tool/build-whatsappsidecar.sh android --ship), built for each release; and one built in its own folder.
+/android/app/src/main/jniLibs/*/libwhatsappsidecar.so
+/sidecar/whatsapp/whatsapp-sidecar
+# The account helpers (tool/build-accountsidecar.sh <name> android --ship), built for each release; and ones built in
+# their own folders by a plain `go build`.
+/android/app/src/main/jniLibs/*/libmessengersidecar.so
+/android/app/src/main/jniLibs/*/libinstagramsidecar.so
+/android/app/src/main/jniLibs/*/liblinkedinsidecar.so
+/sidecar/messenger/messengersidecar
+/sidecar/instagram/instagramsidecar
+/sidecar/linkedin/linkedinsidecar
+# The Matrix helper (tool/build-matrixsidecar.sh android --ship), built for each release; its other builds are in build/.
+/android/app/src/main/jniLibs/*/libmatrixsidecar.so
+# The direct network's core (native/p2p, tool/build-p2p.sh): cargo's output, and the libraries built from it for each
+# platform (which /build/ above already covers; named here so nobody wonders).
+/native/p2p/target/
+/build/p2p/
+# The link helper's proof (native/link-check, a crate of its own): cargo's output. The helper itself is built into build/.
+/native/link-check/target/

@@ -1,0 +1,207 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>voicebench</title>
+<script>
+// One member of an Uplink voice channel, in a browser: the app's own protocol (lib/voice/voice.dart,
+// lib/voice/rtc.dart, lib/net/hub_carrier.dart, lib/net/crypto.dart) written again in JavaScript, so that many can be
+// put in one channel and measured (tool/voicebench/run.mjs). Same hub greeting and signature, same room names and
+// sealing, same offers (the newcomer offers), same Opus settings and video limits.
+const enc = new TextEncoder(), dec = new TextDecoder();
+const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+const unhex = (h) => new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16)));
+const b64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
+const sha256 = async (b) => new Uint8Array(await crypto.subtle.digest('SHA-256', b));
+async function hmac(key, data) {
+  const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, data));
+}
+// NetCrypto.derive: HMAC-SHA256(key, "ghost-net <label>" + 0x01).
+const derive = (key, label) => hmac(key, new Uint8Array([...enc.encode('ghost-net ' + label), 1]));
+const AAD = enc.encode('ghost-net-v1');
+async function aesKey(raw) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']); }
+async function seal(key, clear) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: AAD, tagLength: 128 }, key, clear));
+  return new Uint8Array([...iv, ...ct]);
+}
+async function open(key, sealed) {
+  try { return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: sealed.slice(0, 12), additionalData: AAD, tagLength: 128 }, key, sealed.slice(12))); } catch (_) { return null; }
+}
+
+// lib/voice/voice.dart highestOpus.
+function highestOpus(sdp) {
+  const lines = sdp.split('\r\n');
+  const opus = /^a=rtpmap:(\d+) opus\/48000/i;
+  const pts = new Set(lines.filter((l) => opus.test(l)).map((l) => l.match(opus)[1]));
+  if (!pts.size) return sdp;
+  const want = { minptime: '10', useinbandfec: '1', stereo: '1', 'sprop-stereo': '1', maxaveragebitrate: '510000', maxplaybackrate: '48000', cbr: '1', usedtx: '0' };
+  const out = [];
+  for (const l of lines) {
+    const f = l.match(/^a=fmtp:(\d+) (.*)$/);
+    if (f && pts.has(f[1])) {
+      const p = {};
+      for (const kv of f[2].split(';')) { const i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); }
+      Object.assign(p, want);
+      out.push('a=fmtp:' + f[1] + ' ' + Object.entries(p).map(([k, v]) => k + '=' + v).join(';'));
+      continue;
+    }
+    out.push(l);
+    const r = l.match(opus);
+    if (r && !lines.some((x) => x.startsWith('a=fmtp:' + r[1] + ' '))) out.push('a=fmtp:' + r[1] + ' ' + Object.entries(want).map(([k, v]) => k + '=' + v).join(';'));
+  }
+  return out.join('\r\n');
+}
+
+// lib/voice/voice.dart videoFor: each copy sized by how many others are in the call.
+const videoFor = (others) => others <= 1 ? { scale: 1, bitrate: 12000000 } : others === 2 ? { scale: 1.5, bitrate: 4000000 } : others <= 4 ? { scale: 2, bitrate: 2000000 } : { scale: 3, bitrate: 1000000 };
+
+const bench = {
+  peers: new Map(), log: [], members: new Set(),
+  async start({ hub, seed, name, video, videoBitrate = 12000000, width = 1920, height = 1080, fixed = false }) {
+    this.videoBitrate = videoBitrate;
+    this.fixed = fixed;
+    // Keys: P-256, the public half compressed to 33 bytes as the app sends it.
+    const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+    const raw = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
+    const pub = new Uint8Array([raw[64] & 1 ? 3 : 2, ...raw.slice(1, 33)]);
+    this.id = hex((await sha256(pub)).slice(0, 16));
+    const s = unhex(seed);
+    this.room = hex((await derive(s, 'voice room')).slice(0, 16));
+    this.token = hex(await derive(s, 'voice token'));
+    this.key = await aesKey(await derive(s, 'voice key'));
+    this.name = name;
+    // Sound as the app takes it: 48 kHz stereo, echo cancellation on, gain and noise suppression off.
+    this.mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false, channelCount: 2, sampleRate: 48000 }, video: false });
+    if (video) this.cam = await navigator.mediaDevices.getUserMedia({ video: { width, height, frameRate: 30 } });
+    const ws = this.ws = new WebSocket(hub);
+    ws.binaryType = 'arraybuffer';
+    await new Promise((done, fail) => {
+      ws.onerror = () => fail(new Error('hub'));
+      ws.onmessage = async (e) => {
+        if (typeof e.data !== 'string') return this.packet(new Uint8Array(e.data));
+        const m = JSON.parse(e.data);
+        if (m.hello) {
+          const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, new Uint8Array([...enc.encode('ghost-hub v1 '), ...unhex(m.hello)])));
+          ws.send(JSON.stringify({ id: this.id, key: b64(pub), sig: b64(sig) }));
+        } else if ('ok' in m && !m.room) {
+          if (!m.ok) return fail(new Error('refused'));
+          ws.send(JSON.stringify({ join: this.room, token: this.token }));
+        } else if (m.room === this.room && 'ok' in m) {
+          for (const id of m.members) this.members.add(id);
+          this.say({ t: 'me', n: this.name, m: false, v: !!video });
+          for (const id of m.members) this.offer(id);
+          setTimeout(() => this.retune(), 1500);
+          done();
+        } else if (m.room === this.room && m.came) {
+          this.members.add(m.came);
+          this.say({ t: 'me', n: this.name, m: false, v: !!video });
+          setTimeout(() => this.retune(), 1500);
+        } else if (m.room === this.room && m.went) {
+          this.members.delete(m.went);
+          this.peers.get(m.went)?.close();
+          this.peers.delete(m.went);
+          this.retune();
+        }
+      };
+    });
+    return this.id;
+  },
+  async say(what) {
+    const sealed = await seal(this.key, enc.encode(JSON.stringify(what)));
+    this.ws.send(new Uint8Array([2, ...unhex(this.room), ...sealed]));
+  },
+  async packet(d) {
+    if (d[0] !== 2 || d.length < 34) return;
+    const from = hex(d.slice(17, 33));
+    const clear = await open(this.key, d.slice(33));
+    if (!clear) return;
+    const m = JSON.parse(dec.decode(clear));
+    if (m.to && m.to !== this.id) return;
+    if (m.t === 'offer') {
+      const pc = this.pc(from, false);
+      await pc.setRemoteDescription({ type: 'offer', sdp: m.sdp });
+      await this.flush(from);
+      for (const t of pc.getTransceivers()) {
+        const kind = t.receiver.track?.kind;
+        if (kind === 'audio') await t.sender.replaceTrack(this.mic.getAudioTracks()[0]);
+        if (kind === 'video') await t.sender.replaceTrack(this.cam?.getVideoTracks()[0] ?? null);
+        t.direction = 'sendrecv';
+      }
+      const answer = await pc.createAnswer();
+      const sdp = highestOpus(answer.sdp);
+      await pc.setLocalDescription({ type: 'answer', sdp });
+      await this.highest(pc);
+      this.say({ t: 'answer', to: from, sdp });
+    } else if (m.t === 'answer') {
+      const pc = this.peers.get(from);
+      await pc.setRemoteDescription({ type: 'answer', sdp: m.sdp });
+      await this.flush(from);
+    } else if (m.t === 'ice') {
+      const pc = this.pc(from, false);
+      if (pc.remoteDescription) await pc.addIceCandidate(m.c); else (this.early[from] ??= []).push(m.c);
+    }
+  },
+  early: {},
+  async flush(from) { for (const c of this.early[from] ?? []) await this.peers.get(from).addIceCandidate(c); delete this.early[from]; },
+  pc(id) {
+    let pc = this.peers.get(id);
+    if (pc) return pc;
+    pc = new RTCPeerConnection({ iceServers: [] });
+    pc.onicecandidate = (e) => { if (e.candidate) this.say({ t: 'ice', to: id, c: { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex } }); };
+    this.peers.set(id, pc);
+    return pc;
+  },
+  async offer(id) {
+    const pc = this.pc(id);
+    pc.addTransceiver(this.mic.getAudioTracks()[0], { direction: 'sendrecv', streams: [this.mic] });
+    const vf = this.fixed ? { scale: 1, bitrate: this.videoBitrate } : videoFor(this.peers.size);
+    const v = pc.addTransceiver('video', { direction: 'sendrecv', sendEncodings: [{ maxBitrate: vf.bitrate, maxFramerate: 30, scaleResolutionDownBy: vf.scale }] });
+    if (this.cam) await v.sender.replaceTrack(this.cam.getVideoTracks()[0]);
+    const offer = await pc.createOffer();
+    const sdp = highestOpus(offer.sdp);
+    await pc.setLocalDescription({ type: 'offer', sdp });
+    await this.highest(pc);
+    this.say({ t: 'offer', to: id, sdp });
+  },
+  async highest(pc) {
+    // As the app did before the bench (fixed: 1080p and 12 Mb/s to everyone, resolution held), or as it does now.
+    const vf = this.fixed ? { scale: 1, bitrate: this.videoBitrate } : videoFor(this.peers.size);
+    for (const s of pc.getSenders()) {
+      const p = s.getParameters();
+      if (!p.encodings?.length) continue;
+      for (const e of p.encodings) {
+        e.maxBitrate = s.track?.kind === 'audio' ? 510000 : vf.bitrate;
+        if (s.track?.kind === 'video') e.scaleResolutionDownBy = vf.scale;
+      }
+      if (s.track?.kind === 'video') p.degradationPreference = this.fixed ? 'maintain-resolution' : 'balanced';
+      try { await s.setParameters(p); } catch (_) {}
+    }
+  },
+  retune() { for (const pc of this.peers.values()) this.highest(pc); },
+  // Every connection's numbers as WebRTC keeps them, summed and kept per peer.
+  async stats() {
+    const out = { id: this.id, peers: [] };
+    for (const [id, pc] of this.peers) {
+      const r = await pc.getStats();
+      const p = { id, state: pc.connectionState };
+      for (const s of r.values()) {
+        if (s.type === 'outbound-rtp') {
+          p[s.kind + 'Sent'] = s.bytesSent; p[s.kind + 'Packets'] = s.packetsSent;
+          if (s.kind === 'video') Object.assign(p, { sentW: s.frameWidth, sentH: s.frameHeight, sentFps: s.framesPerSecond, limit: s.qualityLimitationReason, encoder: s.encoderImplementation, encodeMs: s.framesEncoded ? (s.totalEncodeTime / s.framesEncoded) * 1000 : null });
+        }
+        if (s.type === 'inbound-rtp') {
+          p[s.kind + 'Got'] = s.bytesReceived; p[s.kind + 'Lost'] = s.packetsLost; p[s.kind + 'Jitter'] = s.jitter;
+          if (s.kind === 'audio') Object.assign(p, { concealed: s.concealedSamples, samples: s.totalSamplesReceived, codecId: s.codecId });
+          if (s.kind === 'video') Object.assign(p, { gotW: s.frameWidth, gotH: s.frameHeight, gotFps: s.framesPerSecond, dropped: s.framesDropped, decodeMs: s.framesDecoded ? (s.totalDecodeTime / s.framesDecoded) * 1000 : null, freezes: s.freezeCount });
+        }
+        if (s.type === 'candidate-pair' && s.nominated && s.state === 'succeeded') p.rtt = s.currentRoundTripTime;
+        if (s.type === 'codec' && s.mimeType === 'audio/opus') p.opus = s.sdpFmtpLine;
+      }
+      out.peers.push(p);
+    }
+    return out;
+  },
+  leave() { this.ws.send(JSON.stringify({ leave: this.room })); for (const pc of this.peers.values()) pc.close(); },
+};
+window.bench = bench;
+</script>

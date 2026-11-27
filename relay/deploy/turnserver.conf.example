@@ -1,0 +1,34 @@
+# coturn for Uplink calls (docs/SELF_HOSTING.md). Optional: without it, calls go straight between the two
+# devices, and a call between two that can't reach each other directly doesn't connect.
+#
+# Copy to /etc/turnserver.conf (or deploy/turnserver.conf for compose.yaml's coturn), fill in the three values, and
+# put the same secret and addresses in the relay's env file:
+#   GHOST_TURN_SECRET=<the static-auth-secret below>
+#   GHOST_TURN_URLS=turn:relay.example.com:3478?transport=udp,turn:relay.example.com:3478?transport=tcp
+# A secret: `openssl rand -hex 32`. Open UDP and TCP 3478 and UDP 49160-49200 in the firewall.
+
+listening-port=3478
+fingerprint
+# The relay hands out short-lived usernames and passwords made with this secret (relay/lib/turn.dart).
+use-auth-secret
+static-auth-secret=CHANGE-ME-TO-A-LONG-RANDOM-SECRET
+realm=relay.example.com
+# This machine's public address. Behind NAT (most cloud servers): external-ip=<public>/<private>.
+# external-ip=203.0.113.10
+min-port=49160
+max-port=49200
+# Calls only: no TCP relaying to arbitrary hosts, no peers on private networks, no multicast.
+no-tcp-relay
+no-multicast-peers
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=100.64.0.0-100.127.255.255
+# If coturn runs on the same machine as clients relay to each other through it, it must be allowed to relay to its
+# own public address: allowed-peer-ip=<this machine's public address>
+# allowed-peer-ip=203.0.113.10
+no-cli
+log-file=stdout
+simple-log

@@ -1,0 +1,58 @@
+<p>Voice changer sends your voice messages in another voice. It keeps how you said it: your timing, your tone, a laugh or a whisper. It uses ElevenLabs, with your own ElevenLabs account.</p>
+<p><b>Add it:</b> <ui>Marketplace › Voice changer › Add</ui>.</p>
+<note kind="warning" title="Your recording goes to ElevenLabs"><p>While this is on, each voice message you record goes from your device to ElevenLabs to be changed, then is sent. That recording is not private to you and the people you send it to, and it counts against your ElevenLabs plan. Uplink's servers never see your key or the recording.</p></note>
+
+<h2 id="setup">Set it up</h2>
+<steps>
+<step title="Get a key">
+<p>At elevenlabs.io, open <b>Developers › API keys</b> and create one. If you restrict the key, let it use Voice Changer and read Voices.</p>
+</step>
+<step title="Paste it in">
+<p>Open <ui>Settings › Voice changer › ElevenLabs key</ui>, paste the key and tap <b>Keep this key</b>. The app checks it with ElevenLabs first. It's kept on this device only and never shown again.</p>
+<m-screen title="Voice changer" back>
+  <m-section>
+    <m-row icon="key-round" hue="indigo" label="ElevenLabs key" value="Add" chev tap/>
+    <m-row icon="audio-lines" hue="indigo" label="Voice" value="Choose" chev/>
+  </m-section>
+</m-screen>
+</step>
+<step title="Choose a voice">
+<p>You see every voice in your ElevenLabs account: ElevenLabs' own and any you made or saved there. Tap play to hear a sample, and tap a voice to choose it.</p>
+<m-screen title="Voice" back>
+  <m-section title="Your ElevenLabs voices">
+    <m-row icon="audio-lines" hue="indigo" label="Rachel" hint="female · young · american" chev tap/>
+    <m-row icon="audio-lines" hue="indigo" label="Adam" hint="male · middle aged" chev/>
+  </m-section>
+</m-screen>
+</step>
+</steps>
+
+<h2 id="send">Send a voice message</h2>
+<p>Record a voice message as usual in a space or a chat on your Android phone. A line under the recording says whose voice it goes in. When you send, it takes a few seconds to change, then goes.</p>
+<ul>
+  <li>It works in spaces and in chats on other networks (Telegram, Signal and the rest). Voice messages in ordinary texts still go in your own voice.</li>
+  <li>If a recording can't be changed (no connection, or your plan has run out), it is <b>not</b> sent, and you're told why. It never goes out in your own voice by mistake.</li>
+</ul>
+
+<h2 id="calls">In calls, live</h2>
+<p>Turn on <b>Change my voice in calls, live</b> and, in a space's call, everyone hears you in the voice you chose. ElevenLabs needs a whole phrase before it can change it, so each thing you say is heard a second or two after you say it, at your pauses (or every four seconds if you keep talking).</p>
+<m-screen>
+  <m-banner><b>You sound like Rachel</b> · about 1.8 s behind</m-banner>
+</m-screen>
+<ul>
+  <li>Your own voice is never heard in the call while it's on. Between phrases, others hear silence.</li>
+  <li>Nothing is sent while you're muted, and what you say while muted is dropped.</li>
+  <li>If ElevenLabs can't change a phrase (no connection, or your plan has run out), the line over the call turns red and says why. You stay silent rather than heard as yourself; tap <b>My own voice</b> to go back.</li>
+  <li>It costs what your ElevenLabs plan charges for every minute you talk.</li>
+</ul>
+
+<h2 id="settings">Settings</h2>
+<m-screen title="Voice changer" back>
+  <m-section>
+    <m-row icon="mic" hue="indigo" label="Change my voice messages" hint="Off: they go out in your own voice, and nothing is sent to ElevenLabs." switch="on" tap/>
+    <m-row icon="audio-lines" hue="indigo" label="Change my voice in calls, live" hint="Heard in your chosen voice a second or two late." switch="off"/>
+    <m-row icon="ear" hue="indigo" label="Take out background noise" switch="on"/>
+    <m-row icon="trash-2" hue="indigo" label="Forget the key" danger chev/>
+  </m-section>
+</m-screen>
+<p><b>Forget the key</b> takes the key, the voice and the list of voices off this device. To stop the key working anywhere, delete it in your ElevenLabs account too.</p>

@@ -1,0 +1,66 @@
+<p>Record call records a space's call to one video file (MP4): first everyone together, then each voice on a track of its own, named for them. Edit one person's voice without the others, or listen to just one. Everyone in the call is asked first, and only people who say yes are in it.</p>
+<p><b>Add it:</b> <ui>Marketplace › Record call › Add</ui>, or for a whole circle in <ui>Circle settings › Plugins</ui>. Works on Android, Mac, iPhone and Windows.</p>
+
+<h2 id="record">Record a call</h2>
+<steps>
+<step title="Join the call, then Record">
+<p>While you're in a space's call, a <b>Record</b> button sits in the space's header, beside its settings. It's also in the call's menu.</p>
+<m-screen title="Lounge" back actions="shield-check">
+  <m-row-raw><span class="m-txt"><b>Lounge</b><small>3 in voice</small></span><m-btn kind="secondary" icon="circle-dot" tap>Record</m-btn></m-row-raw>
+</m-screen>
+</step>
+<step title="Everyone is asked">
+<p>A red line goes over the call for everyone. Each person's app asks whether their voice may be in it. Until they tap <b>Include me</b>, it isn't.</p>
+<div class="pair">
+<m-screen caption="What you see.">
+  <m-banner><b>● Recording 0:42</b> · Maya, Jo</m-banner>
+  <m-row-raw><m-btn kind="secondary" icon="sliders-horizontal">Mixer</m-btn><m-btn kind="danger" icon="circle-stop">Stop</m-btn></m-row-raw>
+</m-screen>
+<m-screen caption="What everyone else sees.">
+  <m-banner><b>Alex is recording this call.</b> Include your voice?</m-banner>
+  <m-row-raw><m-btn kind="secondary">Leave me out</m-btn><m-btn kind="primary" tap>Include me</m-btn></m-row-raw>
+</m-screen>
+</div>
+<p>A line in the space's chat says it too, so people on older versions know.</p>
+</step>
+<step title="Open the mixer">
+<p>Tap <b>Mixer</b> on your red line. It fills the screen with each voice as a track: its waveform growing as the call goes on, a meter, and mute and solo. Switch to the mixer face for a fader per voice, to set how loud each is in the track of everyone mixed. Tap the arrow at the top to close it; it closes by itself when the recording ends.</p>
+<figure class="shot"><img src="/shots/record-timeline.webp" width="1280" height="624" loading="lazy" alt="The timeline in a call of eight: Everyone mixed at the top, then a track per person with their waveform, a meter, and M and S. Kofi is muted."><figcaption>The timeline, in a call of eight. Everyone mixed is at the top, then one track per person. Kofi is muted (the lit <b>M</b>), and the numbers beside Theo, Sam and Lena are their faders.</figcaption></figure>
+<figure class="shot"><img src="/shots/record-mixer.webp" width="1280" height="624" loading="lazy" alt="The mixer face of the same call: a channel strip per person with a meter, a fader and its decibels, and M and S; Everyone mixed on the left."><figcaption>The mixer face of the same call. Each person has a meter and a fader, with its decibels above. Everyone mixed is on the left and shows what the faders make. <b>Timeline</b> at the top switches back.</figcaption></figure>
+</step>
+<step title="Stop">
+<p>Tap <b>Stop</b> (in red, in the same place). The file is made on your device: it takes a moment. You're told where it went.</p>
+</step>
+</steps>
+
+<h2 id="where">Where recordings go</h2>
+<ul>
+  <li><b>On your device</b>, always: in <b>Recordings</b> (from the call's menu), to play, share, save a copy, or delete.</li>
+  <li><b>In a circle</b>, also into a folder of one of its Files spaces, for everyone in the circle. Until the circle chooses, that's its first Files space, in a folder named <b>Recordings</b>. If the circle has no Files space, or you can't add files there, it stays on your device and says why.</li>
+</ul>
+<h3 id="save-location">Choose where a circle's recordings are saved</h3>
+<p>In <ui>Circle settings › Plugins</ui>, under <b>Call recordings</b> (if you may change the circle):</p>
+<m-screen title="Plugins" back>
+  <m-section title="Call recordings" foot="A call recorded in any of Book Club's spaces is saved here for the circle, as well as on the device that recorded it.">
+    <m-row icon="folder-open" hue="amber" label="Files space" value="Shared" chev tap/>
+    <m-row icon="folder" hue="amber" label="Folder" value="Recordings" chev/>
+  </m-section>
+</m-screen>
+<p>Use <code>/</code> for a folder inside another, like <code>Sessions/2026</code>.</p>
+
+<h2 id="recordings">Recordings</h2>
+<m-screen title="Recordings" back>
+  <m-section>
+    <m-row icon="audio-lines" hue="coral" label="Lounge · Nov 19" hint="42:10 · Maya, Jo, Sam" chev tap/>
+  </m-section>
+  <m-menu><m-item icon="play">Play</m-item><m-item icon="sliders-horizontal">Open in the mixer</m-item><m-item icon="type">Write out the words</m-item><m-item icon="send">Send to Lounge</m-item><m-item icon="share-2">Share</m-item><m-item icon="trash-2" danger>Delete</m-item></m-menu>
+</m-screen>
+<p><b>Write out the words</b> needs <a href="/docs/scribe/">Scribe</a>.</p>
+
+<h3 id="mix-again">Mix a recording again</h3>
+<p>Tap a recording, then <b>Open in the mixer</b>. It opens like the mixer during a call: each voice as a track with its waveform, a meter, mute and solo, and a fader per voice on the mixer face. Tap <b>Play</b> to hear it as the faders are set. Tap anywhere on the tracks to jump there.</p>
+<p>Tap <b>Save mix</b> to keep it: a new recording is made beside the first, with everyone mixed as you set it and each voice still on its own track. The first recording isn't changed. The new one says <b>mixed again</b> in the list.</p>
+<p>The first time, each voice takes a moment to open. After that it opens straight away. On iPhone, a fader can turn a voice down but not up past how it was recorded.</p>
+
+<h2 id="consent">Consent and the law</h2>
+<p>Everyone is told and asked, and nobody's voice is in a recording without their yes. Laws on recording conversations differ by place; asking is on you as well as the app.</p>

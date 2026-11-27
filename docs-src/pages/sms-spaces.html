@@ -1,0 +1,49 @@
+<p>An SMS space is a circle's chat that people without the app can be in, by text. One member's Android phone does the texting: it texts each message to everyone in it by text, and brings their replies back into the space.</p>
+
+<h2 id="how">How it works</h2>
+<ul>
+  <li>Every message written in the space is texted from the texter's phone to each person in it by text, as <b>Name: words</b>. A picture or file is said in words, like <i>(a file: menu.pdf)</i>.</li>
+  <li>What they text back comes into the space marked 📱, so everyone in the app sees it.</li>
+  <li>Each person is texted on their own, so nobody's number goes to the others.</li>
+  <li>The texts are sent from the texter's number and count on their phone plan.</li>
+</ul>
+<div class="pair">
+<m-screen title="Family texts" back caption="In the app.">
+  <m-bubble from="them" name="Mum">📱 Mum: Dinner at 6?</m-bubble>
+  <m-bubble from="me">Yes, I'll bring dessert</m-bubble>
+</m-screen>
+<m-screen title="Alex" back caption="On Mum's phone, in her usual texting app.">
+  <m-bubble from="them">Alex: Yes, I'll bring dessert</m-bubble>
+  <m-bubble from="me">Dinner at 6?</m-bubble>
+</m-screen>
+</div>
+
+<h2 id="make">Make one</h2>
+<steps>
+<step title="New space › SMS space">
+<p>In the circle, tap <b>New space</b> and choose <b>SMS space</b>. Your phone becomes its texter.</p>
+<m-screen title="New space" back>
+  <m-section><m-space kind="sms" name="SMS space" line="People without the app are in it by text, sent from your phone and your number." tap/></m-section>
+</m-screen>
+<note kind="info" title="The texter's phone"><p>It must be an Android phone with Uplink as its texting app, and Uplink must be running for texts to go and come. Only that phone knows the numbers of the people in it.</p></note>
+</step>
+<step title="Add people by text">
+<p>Open the space, tap <b>People by text</b> in its header, and under <b>Add someone by text</b> enter a name and number, then <b>Add and text them</b>. They get a text saying how it works and how to leave.</p>
+<m-screen title="People by text" back>
+  <m-section title="Add someone by text">
+    <m-field placeholder="Name" value="Mum"/>
+    <m-field placeholder="Phone number" value="+1 555 010 0142"/>
+  </m-section>
+  <m-btn kind="primary" icon="user-plus" tap>Add and text them</m-btn>
+</m-screen>
+</step>
+</steps>
+
+<h2 id="automatic">Members with a verified number are in it by themselves</h2>
+<p>Members of the circle who have <a href="/docs/profile/#number">verified their number</a> don't need adding: when their app comes into the space, it gives the texter's phone their number, sealed so only that phone can read it, and they're texted from then on. They aren't texted their own messages. <b>People by text</b> marks them <i>a member, by their linked number</i>.</p>
+
+<h2 id="leave">Leaving</h2>
+<ul>
+  <li>Anyone in it by text can text <b>STOP</b> to leave. They're told, and stay out.</li>
+  <li>The texter can take someone out: in <b>People by text</b>, tap them, then <b>Take out of the space</b>. They stay out too, until added again by hand.</li>
+</ul>

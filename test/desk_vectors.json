@@ -1,0 +1,61 @@
+{
+  "note": "Made by tool/desk_vectors.mjs with Node. Do not edit by hand.",
+  "input": {
+    "deskPrivate": "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020101",
+    "phonePrivate": "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40",
+    "secret": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+    "deskEphemeral": "4142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f60",
+    "phoneEphemeral": "6162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f01",
+    "deskNonce": "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf",
+    "phoneNonce": "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
+  },
+  "deskPublic": "0397cecc7f5f1a64d5c47303a6b22504d9e28628cf61b22d0a7fe60f4d5a394173",
+  "phonePublic": "031f140146bfb1b251f84f4ddbe0d4cdcfd77afd984a9520e35794021f8312bb9e",
+  "pairKey": "196b3bbea005610df777efea61532677e1c59146c6ada8af804ea92113e3960f",
+  "id": "d387c0690aec58b7",
+  "relayChannel": "1f12f4ff69ce7af929f783e3658916c0",
+  "relayToken": "c24045900183c4c5cc417ddacfec3723790f8bdc832e9ed601b9d6dffcc35604",
+  "code": "874151",
+  "pairingId": "d1ba78acdde98cac",
+  "pairingChannel": "038e20e133dd203378c441e729799fad",
+  "pairingToken": "30c753d3d8b5562b11283a1f17af00e501b59c6b928c2ea3a5ef60b786a377cd",
+  "deskEphemeralPublic": "03261efbd3550cf068ef013ed7366ba32f5d6fe557b4b2abce8ade58cba168a55e",
+  "phoneEphemeralPublic": "023e2285ba9b239027fa73f98a5633e3a0d53692c7d5d3257d64cb4c7fa33dcb87",
+  "deskKey": "58a9f42063c4d84af7ed771322c57c2eaa41893d05d9087a8a3eca112b79a0af",
+  "phoneKey": "c0945aecb70884d586443d29c06aff82a0415bf6645a8c5b6606ddfb2c9fa39d",
+  "offer": {
+    "k": "A5fOzH9fGmTVxHMDprIlBNnihijPYbItCn/mD01aOUFz",
+    "s": "oKGio6SlpqeoqaqrrK2urw==",
+    "n": "Matt's MacBook",
+    "m": "both",
+    "r": "wss://ghost-sms.com/relay"
+  },
+  "offerText": "GHOSTPAIR1:eyJrIjoiQTVmT3pIOWZHbVRWeEhNRHBySWxCTm5paGlqUFliSXRDbi9tRDAxYU9VRnoiLCJzIjoib0tHaW82U2xwcWVvcWFxcnJLMnVydz09IiwibiI6Ik1hdHQncyBNYWNCb29rIiwibSI6ImJvdGgiLCJyIjoid3NzOi8vZ2hvc3Qtc21zLmNvbS9yZWxheSJ9",
+  "offerLink": "ghostmsg://pair/eyJrIjoiQTVmT3pIOWZHbVRWeEhNRHBySWxCTm5paGlqUFliSXRDbi9tRDAxYU9VRnoiLCJzIjoib0tHaW82U2xwcWVvcWFxcnJLMnVydz09IiwibiI6Ik1hdHQncyBNYWNCb29rIiwibSI6ImJvdGgiLCJyIjoid3NzOi8vZ2hvc3Qtc21zLmNvbS9yZWxheSJ9",
+  "frames": [
+    {
+      "from": "desk",
+      "counter": 0,
+      "text": "{\"t\":\"req\",\"id\":1,\"m\":\"conversations\"}",
+      "sealed": "2c71d0272329fdd04ad65d38c6d11f79dd2c1c33271eeb6082c08351a6a1c6497d40d673f2f19812ba7c4f0b5c6b5d2aaecd292c9fc0"
+    },
+    {
+      "from": "desk",
+      "counter": 1,
+      "text": "{\"t\":\"req\",\"id\":2,\"m\":\"send\",\"a\":{\"key\":\"k1\",\"addresses\":[\"+15550100\"],\"body\":\"On my way 👻\"}}",
+      "sealed": "43ba887d528dea6f262b9d48a11cd7018a59703b78db76940567f4ad0628e9cbf891df16d24045d74eef8f6c4ee3934c1ec720af962f35c28da2314441cb1cc877a57068699cc25175a9ff8d2157ef57bb0a3bab8725a99124b07fd3600e1406269577476634aac0d1eda1e1d48f55f9"
+    },
+    {
+      "from": "phone",
+      "counter": 0,
+      "text": "{\"t\":\"res\",\"id\":1,\"ok\":true,\"r\":[]}",
+      "sealed": "03defd349afa847b11ef6852fb5d4d32c46d4daa143a751cc2fc92e66ddf91d22dfb48b06892156efb689deecb85ee1c2dee62"
+    },
+    {
+      "from": "phone",
+      "counter": 1,
+      "text": "{\"t\":\"ev\",\"m\":\"changed\",\"a\":{\"thread\":42}}",
+      "sealed": "a90e06a41e3a7b796f5de0e346f4b7ef5df66d30219209d618a13baa6d831b0922bbe5c4d8c6dc0d4acc5bc47d883ecf1a62c7650b098a04f866"
+    }
+  ]
+}

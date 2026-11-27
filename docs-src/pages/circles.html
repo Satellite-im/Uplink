@@ -1,0 +1,79 @@
+<p>A circle is a group of people with a sidebar of its own spaces: chat and voice, text, files, or an SMS space for people without the app. Think of a friend group, a club, a team or a family. Everything said in it is sealed end to end, so only its members can read it.</p>
+
+<h2 id="make">Make a circle</h2>
+<steps>
+<step title="New › New circle">
+<p>Tap the circled plus under your circles in the rail, then <b>New circle</b>. <b>New</b> at the rail's foot has <b>New circle</b> too.</p>
+<m-screen rail="messages" circles="Book Club:rose|Night Owls:indigo" railtap="add-circle">
+  <m-menu title="Add a circle"><m-item icon="circle" tap>New circle</m-item><m-item icon="link-2">Join a circle by link</m-item></m-menu>
+</m-screen>
+</step>
+<step title="Name it, and pick a colour and icon">
+<p>Give it a name, a colour and an icon. A picture of your own is optional, shown on the circle's face.</p>
+<m-screen title="New circle" back>
+  <m-field label="Name" value="Book Club"/>
+  <m-section title="Colour"><m-row-raw><span class="m-avatar" data-hue="indigo">BC</span><span class="m-avatar" data-hue="teal">BC</span><span class="m-avatar" data-hue="rose">BC</span><span class="m-avatar" data-hue="amber">BC</span></m-row-raw></m-section>
+</m-screen>
+</step>
+<step title="Choose its first spaces">
+<p>Under <b>First spaces</b> the circle starts with a couple of spaces. Press one to rename it or change what it's for; add more, Files spaces too, any time.</p>
+<m-screen title="New circle" back>
+  <m-section title="First spaces" foot="Press one to rename it or change what it's for.">
+    <m-space kind="text" name="General" line="Texting"/>
+    <m-space kind="voice" name="Lounge" line="Chat and voice"/>
+  </m-section>
+</m-screen>
+</step>
+<step title="Bring friends, and make it">
+<p>Under <b>Bring friends</b>, tick friends to invite straight away. You can invite anyone else afterwards.</p>
+</step>
+</steps>
+
+<h2 id="invite">Invite people</h2>
+<p>Open the circle, tap its name at the top, then <b>Members</b>, then <b>Add people</b>. (Or <b>Invite people</b> in the same menu.)</p>
+<m-screen title="Invite people" back>
+  <m-section title="Friends"><m-row-raw><span class="m-avatar" data-hue="rose">MC</span><span class="m-txt"><b>Maya Chen</b><small>@maya</small></span><span class="m-switch on"></span></m-row-raw></m-section>
+  <m-section>
+    <m-row icon="message-square" hue="green" label="Text an invite" hint="To anyone in your contacts, by text" chev/>
+    <m-row icon="link" hue="blue" label="Copy invite link" hint="Anyone with it can join, from the app" tap/>
+    <m-row icon="share-2" hue="purple" label="Share link…" hint="Send it with another app"/>
+    <m-row icon="qr-code" hue="slate" label="QR code" hint="For someone beside you to scan" chev/>
+  </m-section>
+</m-screen>
+<ul>
+  <li><b>Friends</b> get the invite in the app, as a card with <b>Join</b> and <b>Not now</b>.</li>
+  <li><b>Text an invite</b> texts a link to anyone in your contacts. If they don't have the app, the link takes them to a page to get it, and the app opens the circle once it's installed.</li>
+  <li><b>Copy invite link</b> and <b>Share link…</b>: anyone with the link can join, so share it with people you know.</li>
+</ul>
+<note kind="tip" title="Who can invite"><p>Whoever has the <b>Invite people</b> permission. Out of the box that's everyone; change it in <a href="/docs/roles/">Roles and permissions</a>.</p></note>
+
+<h2 id="join">Join a circle</h2>
+<ul>
+  <li><b>From a friend's invite</b>: a card shows in Messages. Tap <b>Join</b>.</li>
+  <li><b>From a link</b>: tap it on your phone and Uplink opens on the invite. Or copy it, then <ui>New › Join a circle by link</ui>, paste, and <b>Join</b>.</li>
+  <li><b>Without the app yet</b>: the link opens a page at gogho.st/join to get it. Install it, pick a username, and the app opens the circle.</li>
+</ul>
+<m-screen caption="An invite, waiting in Messages.">
+  <m-banner><b>Maya invited you to Book Club</b><br>4 spaces · 9 members</m-banner>
+  <m-btn kind="primary" tap>Join</m-btn><m-btn kind="ghost">Not now</m-btn>
+</m-screen>
+
+<h2 id="inside">Inside a circle</h2>
+<p>A circle opens in the list's place: its banner and name at the top and its spaces under their headings. The rail stays where it is, with a bar beside the circle that's open.</p>
+<m-screen title="Book Club" back actions="chevron-down" rail="circle" circles="Book Club:rose|Night Owls:indigo" open="Book Club">
+  <m-space kind="text" name="General" line="Sam: Chapter 9 tonight?" unread="3"/>
+  <m-space kind="voice" name="Lounge" line="Maya and Jo talking"/>
+  <m-space kind="files" name="Shared" line="12 files"/>
+</m-screen>
+<ul>
+  <li>Tap the circle's name for its menu: <b>Members</b>, <b>Invite people</b>, <b>New space</b> and <b>Arrange spaces</b> (if your role may), <b>Circle settings</b> and <b>Leave circle</b>. Right-clicking its picture in the rail, or pressing and holding it, opens the same menu.</li>
+  <li>A space with people in its call lists them under it, each with their picture and name. While you're in that call too, whoever is talking has a green ring.</li>
+  <li><b>Messages</b> at the top of the rail takes you back to your conversations; another circle's picture opens that circle.</li>
+  <li>Scroll the spaces up and the banner shrinks to just the name, then grows back at the top.</li>
+</ul>
+
+<h2 id="plugins">Plugins for the whole circle</h2>
+<p>In <ui>Circle settings › Plugins</ui>, whoever may change the circle can turn on plugins for everyone in it: <a href="/docs/record-call/">Record call</a>, <a href="/docs/live-captions/">Live captions</a>, <a href="/docs/watch-together/">Watch together</a>, <a href="/docs/soundboard/">Soundboard</a>, <a href="/docs/spotify/">Spotify</a>, <a href="/docs/notion/">Notion</a> and others. <a href="/docs/plugins/#circle">For a whole circle</a> has the list.</p>
+
+<h2 id="leave">Leave or delete a circle</h2>
+<p>In <ui>Circle settings</ui>, <b>Leave circle</b> takes you out; you can come back with an invite. The owner can <b>Delete circle</b>, which takes it away for everyone.</p>

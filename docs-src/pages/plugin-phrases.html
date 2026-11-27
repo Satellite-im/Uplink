@@ -1,0 +1,125 @@
+<p>A plugin finds words in a text with <b>phrases</b>: plain words, like <code>your bill is ready</code>, with <b>tokens</b> where something varies, like <code>amount due {amount}</code>. There are no regular expressions and no code. The app turns each phrase into a search of its own making, with every repeat in it bounded, so a phrase can't run away with a phone however long or strange the text it reads.</p>
+
+<h2 id="phrase">A phrase</h2>
+<p>A phrase is 1 to 120 characters on one line, keeping the rules for <a href="/docs/plugin-format/#text">words in a plugin</a>. Read from left to right:</p>
+<ul>
+  <li><code>{</code> starts a <b>token</b>, which runs to the next <code>}</code>: a name, then optionally <code>:N</code> or <code>:N-M</code>. <code>{digits:6}</code> is <code>{digits:6-6}</code>, exactly six digits.</li>
+  <li><code>{{</code> is a plain <code>{</code>, and <code>}}</code> a plain <code>}</code>.</li>
+  <li>A run of spaces is one gap, which matches any run of space in the text: one space, several, a line break.</li>
+  <li>Everything else is matched as it is: letters in any case, and every other character as itself. A <code>.</code> is a full stop, never "any character".</li>
+</ul>
+
+<h2 id="tokens">The tokens</h2>
+<table>
+  <tr><th>Token</th><th>Matches</th><th>For example</th></tr>
+  <tr><td><code>{digits:N-M}</code></td><td>A run of N to M digits, not part of a longer run. 1 to 24, and <code>1-24</code> if you give no numbers.</td><td><code>your code is {digits:4-8}</code> finds 123456 in "Your code is 123456.", and nothing in "Your code is 1234567890".</td></tr>
+  <tr><td><code>{number}</code></td><td>A number: 1,234, 1.234,5, 98765 or 12.5. The whole run of digits, dots and commas it sits on, or nothing: 192.168.1.1 is no number.</td><td><code>order {number}</code> finds 1,234 in "Order 1,234 shipped".</td></tr>
+  <tr><td><code>{amount}</code></td><td>A number with a currency sign or code before or after it: $45.20, 45,00 EUR, £30. The signs are $, €, £, ¥ and ₹; the codes USD, EUR, GBP, CAD and AUD, in any case.</td><td><code>amount due {amount}</code> finds $1,234.56 in "Amount due $1,234.56 by Friday", and nothing in "Amount due 45 by Friday".</td></tr>
+  <tr><td><code>{code:N-M}</code></td><td>A whole word of N to M letters and digits with at least one digit in it. 4 to 24, and <code>4-10</code> if you give no numbers.</td><td><code>code {code:4-8}</code> finds AB12CD in "Use code AB12CD to sign in", and nothing in "Use code ABCDEF to sign in".</td></tr>
+  <tr><td><code>{word}</code></td><td>One word: letters, digits, <code>'</code> and <code>-</code>.</td><td><code>{word} delivery</code> finds Acme in "Your Acme delivery is near".</td></tr>
+  <tr><td><code>{words:N-M}</code></td><td>N to M words of anything but spaces, between two plain parts of the phrase. 0 to 4, and <code>1-3</code> if you give no numbers.</td><td><code>your {words:0-3} has shipped</code> finds "new blue parcel" in "Your new blue parcel has shipped!"</td></tr>
+  <tr><td><code>{url}</code></td><td>A web address starting <code>http://</code>, <code>https://</code> or <code>www.</code>.</td><td><code>track {url}</code> finds https://example.com/t/123 in "track https://example.com/t/123 now".</td></tr>
+  <tr><td><code>{email}</code></td><td>An email address.</td><td><code>from {email}</code> finds bob.smith+x@mail.example.co.uk in "Reply from bob.smith+x@mail.example.co.uk."</td></tr>
+  <tr><td><code>{phone}</code></td><td>A phone number of 7 to 15 digits, with spaces, brackets, dots or dashes among them. The whole run it sits on, or nothing: two numbers with only a space between them read as one run.</td><td><code>{phone}</code> finds +1 (555) 010-0100 in "Call +1 (555) 010-0100 today".</td></tr>
+  <tr><td><code>{date}</code></td><td>A date: 12/03/2026, 2026-11-20, March 5th, 5 jan. Months are in English.</td><td><code>on {date}</code> finds March 5th in "Your appointment on March 5th at 3pm".</td></tr>
+  <tr><td><code>{time}</code></td><td>A time: 3pm, 10:30 a.m., 14:05.</td><td><code>at {time}</code> finds 10:30 a.m. in "See you at 10:30 a.m. sharp".</td></tr>
+</table>
+
+<h2 id="rules">The rules a phrase keeps</h2>
+<p>A phrase that breaks one of these doesn't load, and says which at its place in the file (<code>rules.tags[0].any[2]</code>). They're checked in this order, and the first one broken is the problem given.</p>
+<table>
+  <tr><th>Rule</th><th>Broken by</th><th>Problem</th></tr>
+  <tr><td>Two tokens need something between them.</td><td><code>{digits:4}{digits:4}</code></td><td><code>phrase_tokens_touch</code></td></tr>
+  <tr><td>A token can't touch a letter or digit. Punctuation may touch one: <code>#{digits:4-10}</code> and <code>code:{code}</code> are fine.</td><td><code>bill{digits:4}</code></td><td><code>phrase_token_touches_word</code></td></tr>
+  <tr><td><code>{words}</code> needs a space on each side, so it can't be first or last.</td><td><code>{words:1-2} bill</code></td><td><code>phrase_words_edge</code></td></tr>
+  <tr><td><code>{url}</code> must be followed by a space or the end of the phrase.</td><td><code>{url}.</code></td><td><code>phrase_url_followed</code></td></tr>
+  <tr><td>At most 4 tokens, and only one <code>{words}</code> and one <code>{url}</code> among them.</td><td><code>a {digits} b {digits} c {digits} d {digits} e {digits}</code></td><td><code>phrase_too_many_tokens</code></td></tr>
+  <tr><td>A phrase with no token needs at least two letters or digits.</td><td><code>a</code></td><td><code>phrase_too_short</code></td></tr>
+</table>
+<p>Besides those: a token the app doesn't know, numbers it can't take, a <code>{</code> with no <code>}</code> or a <code>}</code> on its own is <code>phrase_bad_token</code> (<code>{digits:0}</code>, <code>{digits:9-4}</code>, <code>{foo}</code>, <code>code {code:3}</code>, <code>go {words:5}</code>, <code>x {word:2} y</code>, <code>bill }</code>). An empty phrase, one over 120 characters, one with a space at its start or end, a line break or an invisible character is <code>phrase_bad_text</code>.</p>
+
+<h2 id="matches">How a phrase matches</h2>
+<ul>
+  <li><b>Whole words.</b> A phrase that starts or ends with a letter or digit matches only whole words there: <code>bill</code> finds "bill" in "Your bill is ready", but nothing in "Your billing statement".</li>
+  <li><b>Any case.</b> Letters match in either case, accented ones too: <code>your appt</code> finds "YOUR APPT", and <code>café</code> finds "CAFÉ".</li>
+  <li><b>Curly quotes and dashes.</b> Before matching, the text and the phrase both have curly quotes made straight, dashes made <code>-</code> and odd spaces made plain ones, so <code>don't forget</code> finds "Don’t forget" written with a curly apostrophe.</li>
+  <li><b>The first 2,000 characters</b> of a text are read, and the rest isn't.</li>
+  <li><b>The anchor.</b> A phrase's longest run of plain letters and digits (a to z, 0 to 9), at least three long, is its anchor: the first, where two are as long. The phrase is only tried on a text that has its anchor in it, in any case, which is how hundreds of phrases stay quick. <code>your code is {digits:4-8}</code>'s anchor is <code>your</code>, and <code>tracking no. {code:8-24}</code>'s is <code>tracking</code>. A phrase with no such run, like <code>{phone}</code>, <code>at {time}</code> or <code>café</code>, is <b>anchorless</b>: it's tried on every text, so a plugin may have only 8.</li>
+</ul>
+
+<h2 id="details">What a match gives</h2>
+<p>A match gives two things: the whole of what the phrase matched, and what its <b>first token</b> found. A tag rule's <code>detail</code> keeps one of them for its tag, for a row or a copy button to show:</p>
+<ul>
+  <li><code>{"from": "token"}</code>: what the first token found. <code>amount due: {amount}</code> on "Amount due: 45,00 EUR." keeps 45,00 EUR.</li>
+  <li><code>{"from": "match"}</code>: the whole match. The same phrase keeps "Amount due: 45,00 EUR".</li>
+</ul>
+<p>Each is trimmed, and an empty one keeps nothing: <code>your {words:0-3} has shipped</code> matches "Your has shipped", with no detail.</p>
+
+<h2 id="limits">Limits</h2>
+<table>
+  <tr><th>What</th><th>At most</th></tr>
+  <tr><td>A text, as read</td><td>its first 2,000 characters</td></tr>
+  <tr><td>A phrase</td><td>120 characters</td></tr>
+  <tr><td>Tokens in a phrase</td><td>4, one <code>{words}</code> and one <code>{url}</code> among them</td></tr>
+  <tr><td><code>any</code>, <code>all</code> and <code>none</code> in a rule</td><td>30, 8 and 20</td></tr>
+  <tr><td>Phrases in a plugin, every <code>any</code>, <code>all</code> and <code>none</code></td><td>200 (<code>too_many_phrases</code>)</td></tr>
+  <tr><td>Anchorless phrases in a plugin</td><td>8 (<code>too_many_anchorless</code>)</td></tr>
+  <tr><td>Plugins on one device, from the Marketplace and in development together</td><td>16 (<code>too_many_packs</code>)</td></tr>
+  <tr><td>Phrases in all of a device's plugins</td><td>1,600 (<code>too_many_phrases</code>)</td></tr>
+  <tr><td>The person's own words in a <code>wordsFrom</code></td><td>the first 50, each cut to 60 characters</td></tr>
+  <tr><td>What a token finds</td><td>24 digits; a code of 24; a word of 32; 4 words of 32 each; a web address of 200; an email address of 64 characters, an <code>@</code>, and up to five parts of 63</td></tr>
+</table>
+
+<h2 id="speed">A slow plugin</h2>
+<p>A phrase can't run away, but a plugin of 200 phrases on a busy phone could still be slow, so the app times every plugin from the Marketplace or in development as it reads each text:</p>
+<ul>
+  <li>A text that takes it 20 milliseconds or more is read again at once; if that takes as long, it's a strike. So a slow plugin is caught, and a phone that was only busy for a moment isn't held against it.</li>
+  <li>More than 100 milliseconds of reading in any one second is a strike too, where its texts took it a millisecond or more each on average. The app reads every conversation again whenever a switch or a setting changes, and a plugin that's quick on each text isn't held against that.</li>
+  <li>More than half of any one second spent reading is a strike however quick it is on each text, so a plugin that's nearly a millisecond a text can't hold the app for seconds every time a switch changes.</li>
+  <li>The first text after it starts never counts: that's when its phrases are made ready.</li>
+  <li>Five strikes in ten minutes pause it. It does nothing while paused, its page says <b>Paused: it was slowing the app down.</b> with <b>Turn it back on</b>, and the pause is kept, across restarts, until then or a new version.</li>
+</ul>
+
+<h2 id="examples">Examples</h2>
+<table>
+  <tr><th>Phrase</th><th>Text</th><th>Gives</th></tr>
+  <tr><td><code>your code is {digits:4-8}</code></td><td>Your code is 123456.</td><td>123456</td></tr>
+  <tr><td><code>your code is {digits:4-8}</code></td><td>Your code is 1234567890</td><td>no match (ten digits)</td></tr>
+  <tr><td><code>code {code:4-8}</code></td><td>Use code AB12CD to sign in</td><td>AB12CD</td></tr>
+  <tr><td><code>code {code:4-8}</code></td><td>Use code ABCDEF to sign in</td><td>no match (no digit)</td></tr>
+  <tr><td><code>amount due {amount}</code></td><td>Amount due $1,234.56 by Friday</td><td>$1,234.56</td></tr>
+  <tr><td><code>amount due {amount}</code></td><td>Amount due 45 by Friday</td><td>no match (no currency)</td></tr>
+  <tr><td><code>amount due {amount}</code></td><td>Amount due: 45,00 EUR</td><td>no match (the colon isn't in the phrase)</td></tr>
+  <tr><td><code>amount due: {amount}</code></td><td>Amount due: 45,00 EUR.</td><td>45,00 EUR</td></tr>
+  <tr><td><code>your {words:0-3} has shipped</code></td><td>Your parcel has shipped</td><td>parcel</td></tr>
+  <tr><td><code>your {words:0-3} has shipped</code></td><td>Your has shipped</td><td>a match, with nothing found</td></tr>
+  <tr><td><code>your {words:0-3} has shipped</code></td><td>Your new blue parcel has shipped!</td><td>new blue parcel</td></tr>
+  <tr><td><code>your {words:0-3} has shipped</code></td><td>Your very big new blue parcel has shipped</td><td>no match (five words)</td></tr>
+  <tr><td><code>bill</code></td><td>Your billing statement</td><td>no match (not a whole word)</td></tr>
+  <tr><td><code>bill</code></td><td>Your bill is ready</td><td>bill</td></tr>
+  <tr><td><code>track {url}</code></td><td>Track it: https://example.com/t/123</td><td>no match (the "it:")</td></tr>
+  <tr><td><code>track {url}</code></td><td>track https://example.com/t/123 now</td><td>https://example.com/t/123</td></tr>
+  <tr><td><code>{phone}</code></td><td>Call +1 (555) 010-0100 today</td><td>+1 (555) 010-0100</td></tr>
+  <tr><td><code>on {date}</code></td><td>Your appointment on March 5th at 3pm</td><td>March 5th</td></tr>
+  <tr><td><code>on {date}</code></td><td>Booked on 12/03/2026.</td><td>12/03/2026</td></tr>
+  <tr><td><code>on {date}</code></td><td>See you on 5 jan</td><td>5 jan</td></tr>
+  <tr><td><code>at {time}</code></td><td>See you at 3pm</td><td>3pm</td></tr>
+  <tr><td><code>at {time}</code></td><td>See you at 10:30 a.m. sharp</td><td>10:30 a.m.</td></tr>
+  <tr><td><code>don't forget</code></td><td>Don’t forget your parcel (a curly apostrophe)</td><td>Don't forget</td></tr>
+  <tr><td><code>your appt</code></td><td>YOUR APPT is at 9</td><td>YOUR APPT</td></tr>
+  <tr><td><code>café</code></td><td>Le CAFÉ est ouvert</td><td>CAFÉ</td></tr>
+  <tr><td><code>from {email}</code></td><td>Reply from bob.smith+x@mail.example.co.uk.</td><td>bob.smith+x@mail.example.co.uk</td></tr>
+  <tr><td><code>ref #{digits:4-10}</code></td><td>Booking ref #88213 confirmed</td><td>88213</td></tr>
+  <tr><td><code>{word} delivery</code></td><td>Your Acme delivery is near</td><td>Acme</td></tr>
+  <tr><td><code>order {number}</code></td><td>Order 1,234 shipped</td><td>1,234</td></tr>
+  <tr><td><code>order {number}</code></td><td>Order 98765 shipped</td><td>98765</td></tr>
+  <tr><td><code>tracking no. {code:8-24}</code></td><td>Tracking no. JD014600006295117</td><td>JD014600006295117</td></tr>
+  <tr><td><code>ticket {{ref}} {digits:3}</code></td><td>Ticket {ref} 123</td><td>123</td></tr>
+  <tr><td><code>50% off</code></td><td>Get 50% off today</td><td>50% off</td></tr>
+  <tr><td><code>a.b.c</code></td><td>see aXbXc here</td><td>no match (a <code>.</code> is a full stop)</td></tr>
+</table>
+<p>Where a phrase has a token, "Gives" is what its first token found; where it has none, the whole match.</p>
+
+<h2 id="yours">The person's own words</h2>
+<p>A <code>words</code> setting lets the person type words of their own, a line each or with commas between. A tag rule's <code>wordsFrom</code> names that setting, and each of the first 50 entries, cut to 60 characters, becomes a phrase that joins the rule's <code>any</code>. Their words are taken as plain words: braces in them are plain braces, never tokens. They match as any phrase does, as whole words in any case, and an entry that can't be a phrase (a single letter, say) is passed over without a word.</p>
+<p>Bills' <b>More words for bills</b> is one, with <code>council tax, water rates</code> as the example in its field.</p>

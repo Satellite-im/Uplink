@@ -1,0 +1,56 @@
+<p>Uplink is built so the people running its server can't read what you say. There are no ads, and the app is open source, so anyone can check.</p>
+
+<h2 id="sealed">What's sealed end to end</h2>
+<table>
+  <tr><th>What</th><th>Sealed end to end?</th></tr>
+  <tr><td>Messages between friends, and in groups of friends</td><td>Yes, with <a href="#forward">forward secrecy</a></td></tr>
+  <tr><td>Circles and spaces: chat, files, polls</td><td>Yes, with a key the circle's members share</td></tr>
+  <tr><td>Calls</td><td>Yes, between the people in them: through Uplink's relay, or directly where the relay can't be reached, still sealed</td></tr>
+  <tr><td>Your texts with one person, with <a href="/docs/encryption/">encryption</a> on</td><td>Yes</td></tr>
+  <tr><td>Ordinary texts and picture messages</td><td>No: they go through your carrier, as all texts do</td></tr>
+  <tr><td>Telegram, Signal, WhatsApp and Matrix chats</td><td>As those networks seal them; they go between your device and the network, not through Uplink</td></tr>
+</table>
+
+<h2 id="server">What the server sees</h2>
+<ul>
+  <li>Which installs talk to each other, and when, as any server passing messages would.</li>
+  <li>Your username, and your account backup sealed with your password (which it never sees).</li>
+  <li>Your verified number, if you verify one, to text you codes. It's shown to nobody unless you choose.</li>
+  <li>Never: what you write, your files, your recovery words or your password.</li>
+</ul>
+
+<h2 id="device">On your device</h2>
+<p>Spam filtering, sorting, translation, summaries, captions and transcripts all happen on your device. Your texts stay in your phone's own store. Plugins say on their pages what they can see.</p>
+<p>Plugins from other developers are reviewed before they're listed. They never see your contacts' texts, group texts, encrypted texts or your own (and nothing at all while Uplink can't read your contacts, since it couldn't tell them from strangers), and they have no way to send anything over the internet: a button you press can open the plugin's page in your browser or copy words to your clipboard.</p>
+<p>The Marketplace is fetched from our server, which sees your device's address and which plugins you add, and keeps no record of either. A report sends the plugin, what you chose and wrote, and your username only if you say so. A plugin you submit is listed with your username, help address and screenshots.</p>
+
+<h2 id="block">Blocking and archiving</h2>
+<ul>
+  <li><b>Block</b> someone from a conversation's menu or their card; an Uplink person when you <a href="#reporting">report</a> them. <ui>Settings › Blocked</ui> lists everyone you've blocked, Telegram and Signal people too, and unblocks them.</li>
+  <li><b>Archive</b> a conversation by swiping it left. <ui>Settings › Archived</ui> (or Archive in the rail) has them; a new message brings one back.</li>
+</ul>
+
+<h2 id="forward">Forward secrecy</h2>
+<p>Messages between friends, and the copies your devices send each other, are sealed so that they stay safe even if your recovery words, your password or your account backup leak later. Each of your devices makes a fresh key every day and deletes it about two weeks later. A message is sealed with a one-off key that is thrown away as soon as it's sent. Someone who saved the scrambled traffic can't open it afterwards, even with your recovery words.</p>
+<ul>
+  <li><b>What it doesn't cover:</b> the messages saved on your devices (whoever has your unlocked phone can read your history), who you talk to and when, and data texts. It also doesn't cover circles yet, or messages to someone who has a device on an older version of Uplink; those use the earlier sealing.</li>
+  <li>If your recovery words leak, someone could pretend to be you from then on. Compare <a href="/docs/encryption/#verify">safety numbers</a> if something seems off, and make a new account if your words were exposed.</li>
+</ul>
+<h2 id="reporting">Reporting</h2>
+<p>Report someone who sends spam, harasses you, pretends to be someone else or shares something illegal. Uplink doesn't scan anyone's messages: a report is how the team hears about it.</p>
+<ul>
+  <li><b>A message:</b> press and hold it in a chat with a friend, a group of friends, or a space, and choose <ui>Report</ui>.</li>
+  <li><b>A person:</b> open their card (tap their name or picture) and choose <ui>Report</ui>.</li>
+  <li>Choose why, add a note if you like, and press <ui>Send report</ui>. Reporting a person also offers to <b>block</b> them: you stop being friends, and their friend requests and messages to you are dropped. Unblock them in <ui>Settings › Blocked</ui>.</li>
+</ul>
+<p>Our server can't read your chats, so a message report takes the message and up to five messages either side of it with it, because you choose to hand them over. The report is sealed on your device so that only the Uplink reviewer can open it: the server keeps it without being able to read it. Your username goes with it, so the reviewer can tell reports apart; the person you report isn't told who reported them.</p>
+<p><ui>Settings › Reports you've made</ui> lists what you've reported from this device: who, why and when, never the messages.</p>
+
+<h2 id="circles">In circles</h2>
+<p>A circle's messages are sealed with a key everyone in it has. Forward secrecy doesn't cover circles yet. Removing someone stops their app joining, but it doesn't change that key, so an old or altered app that kept it could still read what's said. For anything a removed person mustn't read, make a new circle. See <a href="/docs/roles/#remove">Removing someone</a>.</p>
+
+<h2 id="leave">Leaving</h2>
+<ul>
+  <li><ui>Settings › Me › Remove everything about me</ui> unlinks every account and your number, and clears your watch list, on the phone and on the server.</li>
+  <li><ui>Settings › Me › Account › Sign out of this device</ui> signs the device out. On an iPhone or a computer without a phone it offers to delete everything of your account from it too, and a browser always does; an Android phone, or a computer linked to one, keeps its texts and conversations. Remove other devices from <b>Signed in on these devices</b>.</li>
+</ul>

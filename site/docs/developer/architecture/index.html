@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How the app is built · Uplink developer docs</title>
+<meta name="description" content="The major parts of Uplink, where each lives in the source, and what it talks to.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/developer/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/developer/">Developer docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the developer docs" aria-label="Search the developer docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">The source</div><a href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a><a href="/docs/developer/architecture/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#network"/></svg><span>How the app is built</span></a><a href="/docs/developer/flows/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#workflow"/></svg><span>How the parts work together</span></a><a href="/docs/developer/build/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#terminal"/></svg><span>Build, test and run it</span></a></div><div class="nav-group"><div class="nav-title">APIs</div><a href="/docs/developer/api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#book-open"/></svg><span>API overview and Postman</span></a><a href="/docs/developer/app-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>App API</span></a><a href="/docs/developer/relay-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Relay server API</span></a><a href="/docs/developer/hub/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg><span>The hub and pairing protocols</span></a></div><a class="nav-other" href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg><span>Back to the docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>The source</div>
+    <h1>How the app is built</h1>
+    <p class="lede">The major parts of Uplink, where each lives in the source, and what it talks to.</p>
+    <p>Uplink is one Flutter app for Android, iPhone, Mac, Windows, Linux and the browser, a small relay server, and a few helper programs. This page is a map of the source for someone about to read or change it: what each part is for, where it lives, and what it talks to. Paths are from the repository's root (<a href="https://github.com/InfamousVague/ghost-messaging">github.com/InfamousVague/ghost-messaging</a>).</p>
+
+<div class="arch" role="img" aria-label="The app's layers: screens, the app's services, the routes, then the relay server and the phone network; native code and helper programs beside them.">
+  <div class="arch-row"><div class="arch-box wide"><b>Screens</b><small>lib/ui, lib/kit, packages/glacier; lib/web starts them in a browser</small></div></div>
+  <div class="arch-row">
+    <div class="arch-box"><b>Texts</b><small>lib/sms.dart</small></div>
+    <div class="arch-box"><b>People</b><small>lib/friends, lib/me, lib/account</small></div>
+    <div class="arch-box"><b>Circles, spaces, calls</b><small>lib/circles, lib/voice, lib/files</small></div>
+    <div class="arch-box"><b>Other networks</b><small>lib/inbox</small></div>
+    <div class="arch-box"><b>Plugins</b><small>lib/plugins, lib/market</small></div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-box"><b>Whoever answers the screens</b><small>Android itself, a paired phone, or the app alone (a browser included)</small></div>
+    <div class="arch-box wide"><b>Routes</b><small>lib/net: the switchboard, forward secrecy, the hub route, the direct route, the SMS route</small></div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-box"><b>Native code</b><small>android/, ios/, macos/, windows/, linux/, native/voicefx, native/p2p</small></div>
+    <div class="arch-box"><b>Relay server</b><small>relay/: hub, other relays, pairing, files, Marketplace, the app in a browser</small></div>
+    <div class="arch-box"><b>Helper programs</b><small>sidecar/, discord/, extension/</small></div>
+  </div>
+</div>
+
+<h2 id="map">Where things are</h2>
+<table>
+  <tr><th>Folder</th><th>What it holds</th></tr>
+  <tr><td><code>lib/</code></td><td>The app, in Dart, for every platform. <code>lib/web</code> is its start in a browser.</td></tr>
+  <tr><td><code>web/</code></td><td>The page the browser build is loaded by: <code>index.html</code> with its policy, the loader, and <code>argon2id.js</code>, the one piece of JavaScript it carries.</td></tr>
+  <tr><td><code>android/</code></td><td>The Android half, in Kotlin: SMS and MMS, notifications, encryption keys, the link to paired computers, the Google Messages bridge, bubbles, a friend's call ringing, the updater.</td></tr>
+  <tr><td><code>ios/</code>, <code>macos/</code>, <code>windows/</code>, <code>linux/</code></td><td>Each platform's runner, with the native pieces the app calls: call recording, captions, transcripts, voice messages, sounds, updates, deep links. Windows' are C++ files in <code>windows/runner</code> (<code>call_recorder.cpp</code>, <code>speech.cpp</code>, <code>desk_sound.cpp</code>, <code>ducking.cpp</code>).</td></tr>
+  <tr><td><code>native/voicefx</code></td><td>The microphone's noise removal, gain and live voice effects, in C (RNNoise, DeepFilterNet where built in, and Signalsmith Stretch behind <code>stretch.cpp</code>), shared by every platform.</td></tr>
+  <tr><td><code>native/p2p</code></td><td>The direct route's core, in Rust on iroh: a node that opens framed streams to another node by its id. It carries bytes and decides nothing; <a href="#direct">every rule is Dart</a>.</td></tr>
+  <tr><td><code>native/link-check</code></td><td>A Rust program that starts or dials a link helper and links two nodes through it, to prove one works.</td></tr>
+  <tr><td><code>packages/glacier</code></td><td>Glacier, the UI kit the screens are drawn with. A copy; it is changed in its own repository.</td></tr>
+  <tr><td><code>relay/</code></td><td>The relay server: a Dart program with no dependencies beyond Dart's own library. <code>relay/deploy</code> holds what running one needs: a compose file for <code>relay/Dockerfile</code>, sample web server blocks, service files and <code>relay.env.example</code>.</td></tr>
+  <tr><td><code>sidecar/</code></td><td>Go programs the app runs beside itself, one for each network that needs one: Google Messages, Signal, WhatsApp, Matrix, Messenger, Instagram, Discord, X and Slack. (<code>sidecar/linkedin</code> is in the tree; the app doesn't offer LinkedIn.)</td></tr>
+  <tr><td><code>discord/</code></td><td>A Node program: the bot that shows a Discord server's voice channels and bridges one into a space. Not the helper for Discord's own chats, which is <code>sidecar/discord</code>.</td></tr>
+  <tr><td><code>extension/</code></td><td><a href="/docs/browser-extension/">The browser extension</a>, in TypeScript: it reads the sign-in cookies of the networks signed in to in the browser and keeps them, sealed, for the account's devices.</td></tr>
+  <tr><td><code>tool/</code></td><td>Build, release and deploy scripts, asset generators, the browser build's own checks (<code>tool/web</code>), and tests that run against a live relay (<code>tool/net</code>).</td></tr>
+  <tr><td><code>site/</code>, <code>docs-src/</code></td><td>gogho.st and these docs. <code>docs-src</code> is the source; <code>tool/build-docs.mjs</code> writes <code>site/docs</code>.</td></tr>
+  <tr><td><code>docs/</code></td><td>Maintainers' notes, one per large feature: the network (<code>network.md</code>), direct links, relays that talk and the browser (<code>OPEN_NETWORK.md</code>), forward secrecy (<code>FORWARD_SECRECY.md</code>), running a relay (<code>SELF_HOSTING.md</code>), the desktop link, friends, groups, the Marketplace.</td></tr>
+  <tr><td><code>examples/plugins</code></td><td>Example plugins in the <a href="/docs/plugin-format/">ghost-plugin/1</a> format.</td></tr>
+  <tr><td><code>test/</code>, <code>integration_test/</code></td><td>The app's tests, and the pictures its screen tests are held to (<code>test/shots</code>).</td></tr>
+</table>
+
+<h2 id="seam">One app, several ways of running</h2>
+<p>Every screen asks for what it needs through one object, <code>Sms.instance</code> (<code>lib/sms.dart</code>): the conversations, a thread's messages, sending, the settings. <code>Sms</code> passes each call by name to whatever is set as <code>Sms.calls</code>, and <b>which object that is decides how the app runs</b>. The screens are the same in every case.</p>
+<table>
+  <tr><th>Answered by</th><th>Where</th><th>Used when</th></tr>
+  <tr><td>The platform channel <code>ghost_messaging/sms</code></td><td><code>lib/sms.dart</code>, <code>android/…/MainActivity.kt</code></td><td>An Android phone. Kotlin reads and writes Android's own SMS and MMS database.</td></tr>
+  <tr><td><code>OverlayCalls</code></td><td><code>lib/standalone/overlay.dart</code></td><td>Android, wrapped round the channel: conversations with <code>@username</code> friends are answered in Dart, the rest passed on.</td></tr>
+  <tr><td><code>StandaloneCalls</code></td><td><code>lib/standalone/standalone.dart</code></td><td>An iPhone, a computer with no phone linked, or a browser: the app's own network and nothing from a phone. What it keeps is behind <code>StandaloneStore</code> (<code>lib/standalone/store.dart</code>): a folder and the Keychain (<code>StandaloneFiles</code>), or in a browser sealed records in IndexedDB (<code>WebStandaloneStore</code>, <code>lib/web/store.dart</code>).</td></tr>
+  <tr><td><code>LinkCalls</code></td><td><code>lib/desktop/remote.dart</code></td><td>A computer paired with an Android phone: each call becomes a sealed request to the phone.</td></tr>
+  <tr><td><code>DeskOwnCalls</code></td><td><code>lib/desktop/own_calls.dart</code></td><td>A paired computer the phone has handed its identity to: friends and circles run on the computer itself, texts still come from the phone.</td></tr>
+</table>
+<p><code>lib/main.dart</code> chooses: a computer goes to <code>desktopMain()</code> (<code>lib/desktop/main.dart</code>), an iPhone starts on its own, and Android starts on the channel. A browser's build has its own entry, <code>lib/web/main.dart</code>, which goes to <code>lib/web/app.dart</code>. From there both paths load the person's choices (<code>AppState</code>, <code>lib/app_state.dart</code>), the plugins, the API, and then the network through <code>startPeople</code> (<code>lib/people.dart</code>), which starts the routes, friends, what checks the relay, groups, spaces and circles in that order.</p>
+
+<h2 id="texts">Texts on Android</h2>
+<p>The app keeps no copy of your texts: they live in Android's SMS and MMS database, which is why changing texting apps loses nothing. The Kotlin side is in <code>android/app/src/main/kotlin/com/infamousvague/ghostmessaging</code>.</p>
+<table>
+  <tr><th>File</th><th>What it does</th></tr>
+  <tr><td><code>MainActivity.kt</code></td><td>Answers the channel's calls and sends events back (<code>ghost_messaging/events</code>): a conversation changed, something to open.</td></tr>
+  <tr><td><code>Store.kt</code></td><td>Reads and writes Android's database: the list, threads, messages, contacts.</td></tr>
+  <tr><td><code>Messaging.kt</code></td><td>Sending (<code>Sender</code>) and the receivers for texts arriving, MMS arriving, and sent and delivered reports.</td></tr>
+  <tr><td><code>Pdu.kt</code></td><td>The MMS wire format, written and read by hand.</td></tr>
+  <tr><td><code>Notifier.kt</code>, <code>NotifyHush.kt</code>, <code>MarkdownPlain.kt</code></td><td>Notifications, with Reply and Mark as read. None is shown for a text the list hides: the plugins' rules are written down for Kotlin by <code>lib/plugins/notify_hush.dart</code>, since the app may be closed when a text arrives. A preview's formatting markers are taken out.</td></tr>
+  <tr><td><code>Bubbles.kt</code>, <code>BubbleActivity.kt</code></td><td>A conversation as a bubble at the side of the screen, in a Flutter engine of its own started at <code>bubbleMain</code> (<code>lib/main.dart</code>, <code>lib/bubble.dart</code>).</td></tr>
+  <tr><td><code>IncomingCall.kt</code></td><td>A friend's call as a phone shows one: Answer and Decline, full screen while the phone is locked.</td></tr>
+  <tr><td><code>E2e.kt</code>, <code>E2eCrypto.kt</code></td><td><a href="/docs/encryption/">Encrypted texts</a> with one person, and the phone's key pair, held under the Android Keystore.</td></tr>
+  <tr><td><code>GmBridge.kt</code>, <code>GmWeb.kt</code></td><td>Running <a href="/docs/google-messages/">beside Google Messages</a>: reading its notifications, or its web connection through <code>sidecar/gmessages</code>.</td></tr>
+  <tr><td><code>Desk.kt</code>, <code>DeskSession.kt</code>, <code>DeskCrypto.kt</code>, <code>DeskService.kt</code></td><td>The phone's half of the link to <a href="/docs/pairing/">paired computers</a>.</td></tr>
+</table>
+
+<h2 id="routes">Routes: how apps reach each other</h2>
+<p>Everything between two Uplink apps (a friend's message, a call's setup, a space's chat) goes through <code>lib/net</code>. Its idea is the <b>route</b>: one way of getting bytes to another install, behind an interface (<code>Carrier</code>, <code>lib/net/carrier.dart</code>) so a new one can be added without the app above knowing.</p>
+<table>
+  <tr><th>Part</th><th>Where</th><th>What it does</th></tr>
+  <tr><td>Envelope and packet</td><td><code>lib/net/packet.dart</code></td><td>An envelope is a small JSON message with a kind (<code>text</code>, <code>call</code>, <code>room</code>, <code>hello</code>…). A packet is an envelope as a route carries it: a byte of version and flags, the sender's 16-byte name, then the envelope, sealed. The flags say whether it is sealed, a part, sealed for forward secrecy, or passed on unopened by another device of the account. Long ones cross a short route in parts.</td></tr>
+  <tr><td>The switchboard</td><td><code>lib/net/switchboard.dart</code></td><td>Chooses a route for each thing sent, falls back to the next, seals and opens, joins parts, drops second copies, and answers what asks for an answer.</td></tr>
+  <tr><td>The hub route</td><td><code>lib/net/hub_carrier.dart</code>, <code>hub_link.dart</code></td><td>A connection to the relay server's hub. Also where presence and rooms come from. <a href="/docs/developer/hub/">Its protocol</a>. What carries the connection is behind <code>HubLink</code>: <code>dart:io</code>'s WebSocket on a phone or a computer (<code>hub_link_io.dart</code>), the browser's own in a page (<code>hub_link_web.dart</code>).</td></tr>
+  <tr><td>The direct route</td><td><code>lib/net/p2p</code>, <code>native/p2p</code></td><td>Packets straight between devices, with no server between. <a href="#direct">Below</a>.</td></tr>
+  <tr><td>The SMS route</td><td><code>lib/net/sms_carrier.dart</code>, <code>android/…/NetSms.kt</code></td><td>Packets as data texts: 133 bytes each, six at most, costing a text each, and able to wake a closed app.</td></tr>
+  <tr><td>Keys and sealing</td><td><code>lib/net/crypto.dart</code>, <code>fast_gcm.dart</code>, <code>android/…/Net.kt</code></td><td>P-256 key agreement, HKDF-SHA256 and AES-256-GCM. Kotlin and Dart are held to the same bytes by tests on both sides. <code>fast_gcm.dart</code> has two halves that give the same bytes: one for 64-bit integers, one for a browser's.</td></tr>
+  <tr><td>Forward secrecy</td><td><code>lib/net/forward_secrecy.dart</code></td><td>Prekeys each device makes and deletes, and the sealing under a one-off key for each packet. <a href="#fs">Below</a>.</td></tr>
+  <tr><td>Where people live</td><td><code>lib/net/home_record.dart</code>, <code>homes.dart</code>, <code>relay_ask.dart</code>, <code>relay_choice.dart</code></td><td>The signed record of which relay an account uses, looking a username up on another relay, and moving to a relay of one's own. <a href="#relays">Below</a>.</td></tr>
+  <tr><td>Checking the relay</td><td><code>lib/net/ledger.dart</code>, <code>name_watch.dart</code></td><td>What the relay says, compared with what friends' devices say. <a href="#check">Below</a>.</td></tr>
+  <tr><td>The app's hold on it all</td><td><code>lib/net/net.dart</code></td><td><code>Net</code>: starts the routes, knows who can be reached, and is what the rest of the app sends through.</td></tr>
+</table>
+<p>The routes are tried in the person's order (<a href="/docs/routes/">Settings › Routes</a>, drawn by <code>lib/ui/network.dart</code>); where they have chosen none it is the hub, the direct route, the local network, then SMS (<code>Switchboard.order</code>). One is passed over when it is off, down, can't reach that person, can't hold the packet, or costs money and the message isn't one allowed to. Three routes are written: the hub, the direct route and SMS. The order names a local-network route (<code>lan</code>) that has no carrier yet.</p>
+
+<h2 id="fs">Forward secrecy</h2>
+<p>A packet to a friend used to be sealed with the pair's key alone, which comes from the two accounts' long-term keys. Whoever later learned an account's words and had kept the packets could open them all. <code>ForwardSecrecy</code> (<code>lib/net/forward_secrecy.dart</code>) closes that:</p>
+<ul>
+  <li>Each device makes a key pair of its own, a <b>prekey</b>, that is never in the account's backup. It makes a new one every day and deletes each one's private half after fifteen days.</li>
+  <li>A device offers its newest prekey inside the sealed envelopes it sends (<code>Envelope.fs</code>), so no server is needed and a relay that knows nothing of it carries it.</li>
+  <li>A packet to someone whose devices have offered prekeys is sealed under a key pair made for that packet alone and forgotten after. The pair's key still goes into the sealing, which is what says who sent it.</li>
+  <li>To a build from before, or over a route that carries only small packets (a data text), the switchboard seals the old way. A device that can't open a forward-secret packet answers with its prekey (envelope kind <code>fsk</code>) so the next try reaches it.</li>
+</ul>
+<p>A circle's key is changed when someone is put out of it (<code>lib/circles/circle_keys.dart</code>). <code>docs/FORWARD_SECRECY.md</code> in the repository is the whole design.</p>
+
+<h2 id="direct">The direct route</h2>
+<p>The direct route (<code>P2pCarrier</code>, id <code>p2p</code>, shown as Direct) carries the same sealed packets between devices themselves. The relay still comes first: it is the fast path and the one that keeps things for someone who is away. Direct is a way through when the relay can't carry something, and what the relay is <a href="#check">checked</a> over.</p>
+<table>
+  <tr><th>Part</th><th>Where</th><th>What it does</th></tr>
+  <tr><td>The core</td><td><code>native/p2p</code> (Rust, on iroh)</td><td>A node: a key made on the device, whose public half is its node id. It dials, gets through NATs, falls back to a <b>link helper</b> (iroh's relay server, which is not Uplink's relay), and turns away any node the app has not allowed. It publishes nothing and looks nobody up.</td></tr>
+  <tr><td>The contract</td><td><code>lib/net/p2p/node.dart</code></td><td><code>P2pNode</code>: what the Dart above relies on. The real one is <code>IrohNode</code> over <code>dart:ffi</code> (<code>node_ffi.dart</code>, <code>node_ffi_io.dart</code>), made by <code>makeP2pNode()</code> (<code>node_factory.dart</code>); tests use a stand-in mesh (<code>test/support/fake_p2p.dart</code>); a browser has none. On Android <code>P2pCore.kt</code> loads the library when the first node starts, and not before.</td></tr>
+  <tr><td>Device cards</td><td><code>lib/net/p2p/card.dart</code></td><td><code>DeviceCard</code>: an account's signed word that a node id is one of its devices. Anyone can check one with nothing but the card.</td></tr>
+  <tr><td>Who links, and when</td><td><code>lib/net/p2p/p2p.dart</code></td><td><code>P2p</code>: links only with the account's own devices and with friends. Cards and whereabouts are told in sealed envelopes of kind <code>p2p</code> (<code>card</code>, <code>card?</code>, <code>meet</code>). <code>P2pPolicy</code> says when a node runs: a computer's stays up, a phone's is started for something to say and stopped two minutes after its last stream closes.</td></tr>
+  <tr><td>The carrying</td><td><code>lib/net/p2p/p2p_carrier.dart</code></td><td>Sends a packet to every device a card is held for, on a stream that is open or dialled by where the device last said it was. Each end of a stream proves whose device it is before anything is taken. It never keeps anything.</td></tr>
+</table>
+<p>Link helpers are named by the relay as an app signs in to its hub (<code>HubCarrier.helpers</code>, from the relay's <code>GHOST_LINK_HELPERS</code>). With none, devices link only where they can reach each other's addresses as they are.</p>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>Not switched on yet</b>The route, its settings and its tests are in the source, and <code>Net</code> starts it wherever <code>Net.p2pNode</code> gives it a node. Nothing in <code>lib/</code> sets that yet: only tests do. Until a build wires <code>makeP2pNode()</code> in, <code>Net.p2p</code> is null and Settings › Routes shows no Direct.</div></aside>
+
+<h2 id="check">Checking the relay</h2>
+<p>The relay is trusted with little, and two parts check what is left.</p>
+<ul>
+  <li><b>The name watch</b> (<code>NameWatch</code>, <code>lib/net/name_watch.dart</code>). A friend added by username was found by asking the relay who holds the name. The app asks the same again about once a day for each such friend, and of its own name as it signs in. An answer that is a different key is shown on that friend, and the friend is told. An add-me link (<code>lib/friends/add_link.dart</code>) carries the start of the key after <code>#</code>, and <code>Buddies.add</code> refuses an answer that doesn't match. The lookups share one budget (<code>lib/me/lookup_budget.dart</code>).</li>
+  <li><b>The ledger</b> (<code>Ledger</code>, <code>lib/net/ledger.dart</code>). The switchboard tells it what was sent to each friend, by which route and what the route said, and what came (<code>SendLog</code>). It keeps names and times for seven days, never a message's words, in a folder no backup takes (<code>lib/net/kept_files.dart</code>). When a direct stream to a friend's device opens, the two compare (envelope kind <code>ldg</code>): what never arrived is sent again straight, and what the relay said of it is put down. It compares only over direct links, so it runs where the direct route does.</li>
+</ul>
+<p>Settings › Routes shows what both found (<code>relayCheckSection</code>, <code>lib/ui/network.dart</code>).</p>
+
+<h2 id="relays">Friends on another relay</h2>
+<p>An app talks to one relay. <a href="/docs/routes/">Anyone can run their own</a>, and relays can pass sealed packets to each other, so two friends need not share one.</p>
+<ul>
+  <li><b>A home record</b> (<code>HomeRecord</code>, <code>lib/net/home_record.dart</code>; the relay's twin is <code>relay/lib/home_record.dart</code>) is an account's signed statement of the relay addresses it lives at, with a count that only goes up. Both sides are held to <code>test/home_record_vectors.json</code>.</li>
+  <li><code>Homes</code> (<code>lib/net/homes.dart</code>) makes this account's record, gives it to the relay as the app signs in, and keeps friends' records. Friends tell each other theirs in a sealed envelope of kind <code>home</code> (<code>lib/friends/buddies.dart</code>).</li>
+  <li><code>@maya@relay.example</code> names someone on another relay. <code>Homes.whois</code> asks the app's own relay, which asks the other over a link. Where its own relay doesn't link with others, the app asks the other relay itself, under a key made for that one question (<code>whoisAt</code>, <code>lib/net/relay_ask.dart</code>).</li>
+  <li><code>lib/net/relay_choice.dart</code> is moving to another relay: what a typed address becomes, and whether an Uplink relay answers there before the app moves.</li>
+</ul>
+<p>Every packet still goes through the app's own relay. The passing on is <a href="#relay">the relay's work</a>. Usernames, account backups, circles, spaces and calls stay on the relay they were made on.</p>
+
+<h2 id="identity">Who someone is</h2>
+<ul>
+  <li><b>An install</b> is a P-256 key pair. Its name everywhere on the network is the first 16 bytes of the SHA-256 of its public key, in hex. The relay knows installs by that name and nothing else. Every device of one account holds the same key, so each also has a device name of its own (<code>hub_device</code>, made in <code>Net.start</code>), which the hub, forward secrecy and circles' keys tell devices apart by.</li>
+  <li><b>An account</b> (<code>lib/account</code>) is twelve recovery words. From them come an address that names the account, and the keys that seal its backup, which is kept on the relay sealed twice: once under the password, once under the words. <a href="/docs/how-accounts-work/">How your account works</a> is the plain account of it. In a browser the password is stretched by <code>web/argon2id.js</code> on a worker (<code>lib/account/argon2_browser.dart</code>).</li>
+  <li><b>A profile</b> (<code>lib/me/me.dart</code>): the username, linked handles and verified number, kept by the relay's directory as hashes. What dresses a profile (a border, a banner, a name effect) is <code>lib/me/cosmetics.dart</code>.</li>
+  <li><b>Friends</b>: by number (<code>lib/friends/friends.dart</code>, for people encryption is on with) and by username (<code>lib/friends/buddies.dart</code>). Groups of friends are <code>lib/friends/groups.dart</code>: each message goes to each member by the routes.</li>
+  <li><b>Where an account lives</b> is its <a href="#relays">home record</a>, and <b>which nodes are its devices</b> its <a href="#direct">device cards</a>. Both are signed by the account's key.</li>
+</ul>
+
+<h2 id="spaces">Circles, spaces and calls</h2>
+<p>A <b>space</b> (in the code, a hangout or voice channel) is 32 random bytes, its seed. The room's name on the hub, the token that lets someone in and the key everything in it is sealed with are all made from the seed (<code>VoiceChannel</code>, <code>lib/voice/voice.dart</code>), so whoever holds a space's link holds all three and the relay holds none.</p>
+<ul>
+  <li><code>lib/voice/channels.dart</code> (<code>Voice</code>): the spaces someone is in, and making, sharing, joining and leaving them.</li>
+  <li><code>lib/voice/hangout.dart</code> (<code>HangoutRoom</code>): a space's chat. History is passed between members; the hub only holds packets for whoever is away.</li>
+  <li><code>lib/voice/rtc.dart</code>: the call itself, WebRTC from each member to each other. Offers, answers and candidates are sealed with the space's key and said in its room; sound and picture never go through the relay's hub.</li>
+  <li><b>A way through when two devices can't reach each other.</b> A connection looks for a path with public STUN servers, and with a TURN server where the relay has one: the hub hands whoever joins a room a short-lived username and password for it (<code>relay/lib/turn.dart</code>, <code>HubCarrier.callRelay</code>, <code>RtcMedia.iceServers</code>). Where one was handed out, a connection starts through it alone and falls back to trying every path (<code>FallbackMedia</code>, <code>lib/voice/voice.dart</code>). The TURN server passes WebRTC's own encrypted packets and can't hear the call.</li>
+  <li><code>lib/voice/open_space.dart</code>: an <a href="/docs/open-spaces/">open space</a>, a call with a floor on top. Places and groups are said in the call's room, sealed like its offers, and how far apart two people stand becomes a gain on each one's sound (<code>PlacedMedia</code>); the floor is drawn by <code>lib/ui/open_space_view.dart</code>. Followed step by step in <a href="/docs/developer/flows/#open-space">How the parts work together</a>.</li>
+  <li><code>lib/voice/friend_calls.dart</code> (<code>FriendCalls</code>): ringing one friend, with no space made. The call's seed is made from the two friends' names, so only they can work it out; ringing, declining and cancelling are sealed <code>voice</code> envelopes sent by the routes. On Android the ringing is <code>IncomingCall.kt</code>.</li>
+  <li>In a call: the auto leveler (<code>lib/voice/leveler.dart</code>), the soundboard (<code>lib/voice/soundboard.dart</code>: only a sound's id is said in the room, each device plays its own copy), the live voice changer (<code>lib/voice/live_changer.dart</code>, an effect in <code>native/voicefx</code>), and on a computer screen sharing (<code>lib/ui/screen_share.dart</code>). Each of the first three is switched by a plugin of the same name in <code>lib/plugins</code>.</li>
+  <li>Spotify in a circle's call (<code>lib/voice/spotify.dart</code>): the queue is held by the DJ's device (<code>spotify_queue.dart</code>, <code>spotify_deck.dart</code>) and said in the call's room as <code>mu</code>; the music goes to each listener over a connection of its own (<code>spotify_link.dart</code>). On a Mac (<code>macos/Runner/Spotify.swift</code>, <code>SpotifySound.swift</code>, <code>MusicLink.swift</code>) it is AppleScript, a Core Audio tap on Spotify's processes, and a second WebRTC factory whose sound device is that sound; on Windows (<code>windows/runner/spotify.cpp</code>, <code>spotify_sound.cpp</code>) it is Windows' media controls, WASAPI's loopback of Spotify's process tree, and a track of flutter_webrtc's own. <code>tool/spotify/check.sh</code> listens to the Mac's link without a sound.</li>
+  <li>Recordings: <code>lib/voice/recorder.dart</code> writes one MP4 with a track for each person, <code>recording_playback.dart</code> opens one again in the mixer, and on Windows <code>mp4_merge.dart</code> joins the one-track files <code>windows/runner/call_recorder.cpp</code> makes.</li>
+  <li><code>lib/voice/roles.dart</code>: a space's roles, as a numbered list signed by its owner.</li>
+  <li><code>lib/circles</code>: a <b>circle</b> is one seed and a signed manifest listing its spaces, roles and settings (<code>CircleManifest</code>, <code>lib/circles/circle.dart</code>). Members pass the newest manifest to each other. When someone is put out of a circle its key is changed, so the seed they keep opens nothing said after (<code>CircleKeys</code>, <code>lib/circles/circle_keys.dart</code>).</li>
+  <li><code>lib/files</code>: a <a href="/docs/files/">Files space</a>. Files are sealed on the device in 256 KiB pieces (<code>lib/net/file_seal.dart</code>) and kept by the relay, which sees sizes and never names or contents. <a href="/docs/files/#my-files">My files</a> (<code>lib/files/drive.dart</code>) is one more Files space to the relay: its seed is made from the key the account's devices share (<code>Me.mineKey</code>), and every device writes to it with one key pair made from that seed, so each is the drive's owner and none has to be told of it.</li>
+</ul>
+
+<h2 id="inbox">Other networks</h2>
+<p><code>lib/inbox</code> puts <a href="/docs/networks/">other services' chats</a> in the same list. Each is an <code>InboxNetwork</code> (<code>lib/inbox/inbox.dart</code>) with its own way of connecting:</p>
+<table>
+  <tr><th>Network</th><th>How</th></tr>
+  <tr><td>Telegram</td><td>TDLib, loaded into the app through <code>dart:ffi</code> (<code>lib/inbox/td_json.dart</code>, <code>td_json_io.dart</code>).</td></tr>
+  <tr><td>Signal, WhatsApp, Matrix</td><td>A helper program each (<code>sidecar/</code>), started by the app and spoken to in lines of JSON over its input and output. Each helper's <code>PROTOCOL.md</code> says what is said. Their chats are written to disk off the drawing thread by <code>KeptWriter</code> (<code>lib/inbox/kept_writer.dart</code>).</td></tr>
+  <tr><td>Messenger, Instagram, Discord, X, Slack</td><td>An <b>account helper</b> each (<code>sidecar/messenger</code>, <code>instagram</code>, <code>discord</code>, <code>twitter</code>, <code>slack</code>), all speaking one protocol (<code>sidecar/ACCOUNT_HELPERS.md</code>), so one class drives them all: <code>AccountHelper</code> (<code>lib/inbox/account_helper.dart</code>), told apart by a <code>HelperService</code>. None of these services allows other apps. A helper signs in as the person, with the cookies of a browser signed in to their account, and the app says so first.</td></tr>
+  <tr><td>Google Chat, Microsoft Teams</td><td>Their own web APIs, straight from the app.</td></tr>
+  <tr><td>Bluesky, Mastodon</td><td>Written (<code>bluesky.dart</code>, <code>mastodon.dart</code>), listed as coming soon and never started.</td></tr>
+</table>
+<p>The cookies an account helper signs in with come one of two ways. Pasted: a request copied from the browser's developer tools, read by <code>lib/inbox/cookie_paste.dart</code>. Or synced: <a href="/docs/browser-extension/">the browser extension</a> (<code>extension/</code>) reads them, seals them with a key only the account's devices have, and keeps them on the relay; each device reads them back and signs in (<code>CurlSync</code>, <code>lib/inbox/curl_sync.dart</code>).</p>
+<p><code>lib/inbox/human_check.dart</code> holds a first message from someone new on a chosen network until its sender answers a small question. Several networks are also cards in the Marketplace, sharing one switch with Settings (<code>lib/plugins/networks.dart</code>).</p>
+<p>No chat from these networks goes through Uplink's relay. The sealed cookies are the one thing of theirs it keeps, and it can't read them. A browser has no helper programs, so the web client has none of these networks.</p>
+
+<h2 id="link">Paired computers</h2>
+<p>A computer paired with a phone shows the phone's texts by asking the phone for them. The computer's half is <code>lib/desktop/link</code> (<code>PhoneLink</code>, <code>LinkSession</code>); the phone's is <code>DeskSession.kt</code>. They connect over the local network where they can and through the relay's pairing channel where they can't, and either way every frame is sealed with keys made from the pairing, so the relay passes bytes it can't read. What the computer has read is kept sealed on its disk (<code>lib/desktop/cache.dart</code>).</p>
+
+<h2 id="plugins">Plugins and the Marketplace</h2>
+<p>A plugin adds to the conversations list and to texts through a few fixed points (<code>lib/plugins/plugin.dart</code>): tagging a message, a section or tab in the list, a button, a rule for what arrives. The built-in ones are Dart classes (<code>lib/plugins/registry.dart</code>). One from another developer is <b>data, never code</b>: a JSON file (<code>lib/plugins/pack</code>) the app reads into those same points, held to what it declared by <code>GatedHost</code>.</p>
+<p>Which plugins are on is synced between an account's devices (<code>PluginSync</code>, <code>lib/plugins/plugin_sync.dart</code>): a list in the same sealed slot on the relay as the extension's cookies. A circle can hold some plugins for all its members: the soundboard and the auto leveler are on in a circle's spaces when the circle has them on.</p>
+<p>The Marketplace (<code>lib/market</code>, and <code>relay/lib/market.dart</code> on the server) lists reviewed plugins. An approval is a reviewer's signature over the plugin's id, version and its file's SHA-256, checked against keys the app ships with, at install and at every start: the server can withhold a plugin but can't make one look reviewed.</p>
+
+<h2 id="relay">The relay server</h2>
+<p><code>relay/bin/relay.dart</code> reads its options and environment, makes each part over one data folder, and starts one HTTP server; <code>relay/lib/relay.dart</code> sends each request to its part.</p>
+<table>
+  <tr><th>Part</th><th>File</th><th>What it does</th></tr>
+  <tr><td>Pairing channels</td><td><code>relay.dart</code></td><td>Passes sealed frames between a phone and its computer while both are connected. Keeps no frame.</td></tr>
+  <tr><td>The hub</td><td><code>hub.dart</code></td><td>Where installs find each other: signing in with a key, packets passed or held for whoever is away, presence, rooms. A sign-in can be bound to the host the app dialled (v2, where the relay is told its names with <code>GHOST_HUB_NAMES</code>), so it is no use at another relay. A connection is a <code>HubSocket</code>, which need not be a WebSocket.</td></tr>
+  <tr><td>The doors</td><td><code>ws_door.dart</code></td><td>Every WebSocket's upgrade and dial, with a ceiling on a message's length checked from the frames' headers, before a byte of it is held. <code>WireBudget</code> bounds what all connections hold together.</td></tr>
+  <tr><td>Other relays</td><td><code>federation.dart</code>, <code>fed_dial.dart</code>, <code>home_record.dart</code></td><td>Links to other relays, off unless <code>GHOST_FED</code> is <code>open</code> or <code>list</code>. Each relay has a key and proves it; a packet for someone whose home record names another relay is passed there, and what another relay passes on is taken only for people whose record names that relay. <code>fed_dial.dart</code> holds every address dialled to public hosts, checked before the dial and dialled as checked.</td></tr>
+  <tr><td>The directory</td><td><code>handles.dart</code>, <code>accounts.dart</code>, <code>texts.dart</code>, <code>invites.dart</code>, <code>invite_words.dart</code></td><td>Usernames, linked handles, number verification by a texting service, sealed account backups and each account's list of devices, the extension's sealed cookies, invitations and circles' invite words. Reached through the hub's connection.</td></tr>
+  <tr><td>Files</td><td><code>files.dart</code>, <code>files_roster.dart</code></td><td>Files spaces' sealed pieces and their log.</td></tr>
+  <tr><td>Marketplace</td><td><code>market.dart</code>, <code>market_pack.dart</code>, <code>market_store.dart</code></td><td>Plugins' submissions, review and listing, and reports of a person or a message (<code>POST /market/abuse</code>; the app's half is <code>lib/safety/abuse_report.dart</code>).</td></tr>
+  <tr><td>Calls' fallback</td><td><code>turn.dart</code></td><td>Makes the short-lived TURN username and password the hub hands out with a room, from a secret shared with a TURN server (coturn) its keeper runs. Without the secret, calls are direct only.</td></tr>
+  <tr><td>The app in a browser</td><td><code>web_app.dart</code></td><td>Serves the folder <code>tool/build-web.mjs</code> built as plain files under <code>/app/</code>, with the page's security headers, where the relay is started with <code>--web</code>. <a href="#web">Below</a>.</td></tr>
+  <tr><td>Pushes, feedback, bounties</td><td><code>pushes.dart</code>, <code>feedback.dart</code>, <code>bounty.dart</code></td><td>A "New message" push to an iPhone something is held for; feedback sent from the app; souls granted for a tester's fixed bug by a signed <code>POST /bounty</code>. Souls one person sends another by a signed <code>POST /souls/send</code> are <code>souls_send.dart</code>; the counts and receipts are in <code>handles.dart</code>. None does anything without its variables.</td></tr>
+  <tr><td>Keeping</td><td><code>kept_log.dart</code></td><td>A keyed store on disk as a log of changes, appended as they happen and written whole again now and then in an isolate.</td></tr>
+  <tr><td>Arithmetic</td><td><code>p256.dart</code>, <code>secp256k1.dart</code>, <code>sha256.dart</code>, <code>sha1.dart</code>, <code>keccak.dart</code></td><td>Signature checking and hashes, written out so the relay depends on nothing.</td></tr>
+</table>
+<p>What it can see is the same throughout: which installs talk, when, and how much. Linked to other relays, it also sees which of its people talk to people on which relay. <a href="/docs/developer/relay-api/">Its HTTP routes</a> and <a href="/docs/developer/hub/">its WebSocket protocols</a> are documented in full, and <code>docs/SELF_HOSTING.md</code> in the repository says how to run one and what a relay of your own reaches.</p>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>A relay in the app</b>The relay is plain Dart so that the app can one day run the same hub in itself, and the seams for it are in place (<code>HubLink</code>, <code>HubSocket</code>, the <code>ghost-relay://</code> address a home record can hold). The hosting itself is not in the source yet.</div></aside>
+
+<h2 id="web">The app in a browser</h2>
+<p>The web client is the same Dart, built by dart2js from its own entry (<code>lib/web/main.dart</code>), running as one more device of an account. It is the standalone way of running: <code>lib/web/app.dart</code> sets <code>StandaloneCalls</code> over the browser's store and calls <code>startPeople</code>, as a computer with no phone linked does.</p>
+<table>
+  <tr><th>Part</th><th>Where</th><th>What it does</th></tr>
+  <tr><td>The start</td><td><code>lib/web/app.dart</code></td><td>Opens the store, works out the hub's address (the one the build names, or <code>/hub</code> beside a page served at <code>/app/</code>), and starts only what a page can run.</td></tr>
+  <tr><td>The store</td><td><code>lib/web/store.dart</code></td><td><code>WebStandaloneStore</code>: every record in IndexedDB sealed with AES-256-GCM under a key the browser made as not extractable. The recovery words and the password's key are not kept at all.</td></tr>
+  <tr><td>The browser</td><td><code>lib/web/browser.dart</code>, <code>browser_web.dart</code></td><td>What the app asks of the browser: somewhere to keep things, being the only tab of itself, opening a link, starting again. <code>browser_web.dart</code> is the one file that speaks to JavaScript.</td></tr>
+  <tr><td>HTTP, emoji, About</td><td><code>lib/web/http.dart</code>, <code>emoji.dart</code>, <code>settings.dart</code></td><td>The page's own <code>fetch</code> for a report and feedback; an emoji font fetched when first wanted; Settings › About, which says what the browser keeps and what isn't there.</td></tr>
+  <tr><td>The page</td><td><code>web/</code>, <code>tool/web/headers.json</code></td><td><code>index.html</code> with its content policy, the loader (<code>flutter_bootstrap.js</code>: no service worker, fallback fonts from beside the page), the Argon2id worker, and the headers every server of it must send.</td></tr>
+</table>
+<p>Code that can't compile or run in a browser is split, and the whole of <code>lib/</code> goes through the split:</p>
+<ul>
+  <li><code>lib/platform_info.dart</code> answers "is this Android?" in place of <code>dart:io</code>'s <code>Platform</code>, which throws in a browser.</li>
+  <li><code>lib/aside.dart</code> (<code>runAside</code>) is <code>Isolate.run</code> where there are isolates, and the same work in place where there are none.</li>
+  <li>Files that need <code>dart:ffi</code> or <code>dart:io</code> have two halves chosen by a conditional import: <code>td_json</code>, <code>lib/files/apple_sha</code>, <code>lib/account/gzip</code>, <code>lib/net/hub_link</code>, <code>fast_gcm</code>, <code>kept_files</code>, <code>lib/net/p2p/node_ffi</code>.</li>
+</ul>
+<p>Guard tests read the source to hold it to this (<code>test/platform_info_test.dart</code>, <code>test/aside_test.dart</code>, <code>test/source_guards_test.dart</code>), and the Android and Mac releases run them before they build.</p>
+<p>Not in a browser, as its own About says (<code>notInBrowserYet</code>, <code>lib/web/settings.dart</code>): calls, voice messages and sounds, Files spaces, plugins and the Marketplace, chats on other networks, and texts through a phone. It has no direct route either, so it keeps no ledger.</p>
+
+<h2 id="screens">Screens</h2>
+<ul>
+  <li><code>lib/ui/shell.dart</code> (<code>AppShell</code>) is the frame: the list and what is open beside it, side by side where the window is wide.</li>
+  <li><code>lib/ui/conversations.dart</code> is the list, <code>lib/ui/thread.dart</code> a conversation, <code>lib/ui/hangout_screen.dart</code> a space, <code>lib/ui/voice_screen.dart</code> a call.</li>
+  <li><code>lib/ui/settings.dart</code> and <code>settings_panes.dart</code> are Settings, built from the rows in <code>lib/kit</code>. <code>lib/ui/network.dart</code> is Settings › Routes: each route, the relay in use, Direct, and what checking the relay found.</li>
+  <li><code>lib/desktop/ui</code> is what only a computer has: the set-up wizard, the title bar, the update bar. A computer's own voice messages are <code>lib/desktop/desk_voice.dart</code> and <code>desk_player.dart</code>.</li>
+  <li><code>lib/art</code> holds the icons, <code>lib/looks.dart</code> the looks, <code>lib/custom_theme.dart</code> a look of the person's own, and <code>lib/effects.dart</code>, <code>stickers.dart</code> and <code>reactions.dart</code> what texts can wear.</li>
+  <li>What a message's words can do: formatting markers drawn as bold, code, quotes and spoilers (<code>lib/message_format.dart</code>), and emoji by shortcode as they are typed (<code>lib/emoji_shortcodes.dart</code>).</li>
+  <li>What a conversation can do: be snoozed until a time (<code>lib/snooze.dart</code>), be exported as a Markdown file (<code>lib/export_chat.dart</code>), and have a person or a message in it reported (<code>lib/safety/abuse_report.dart</code>, <code>lib/ui/report_sheet.dart</code>).</li>
+</ul>
+
+<h2 id="api">The app's own API</h2>
+<p><code>lib/api</code> is a registry of methods (<code>conversations.list</code>, <code>messages.send</code>…), each with its parameters, what it answers and an example. The same methods are called from Settings' own test area, over HTTP on the device, and from anywhere through the relay, sealed. See <a href="/docs/developer/api/">API overview and Postman</a>.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/developer/"><small>Previous</small>Developer docs</a><a class="next" href="/docs/developer/flows/"><small>Next</small>How the parts work together</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#map">Where things are</a><a href="#seam">One app, several ways of running</a><a href="#texts">Texts on Android</a><a href="#routes">Routes: how apps reach each other</a><a href="#fs">Forward secrecy</a><a href="#direct">The direct route</a><a href="#check">Checking the relay</a><a href="#relays">Friends on another relay</a><a href="#identity">Who someone is</a><a href="#spaces">Circles, spaces and calls</a><a href="#inbox">Other networks</a><a href="#link">Paired computers</a><a href="#plugins">Plugins and the Marketplace</a><a href="#relay">The relay server</a><a href="#web">The app in a browser</a><a href="#screens">Screens</a><a href="#api">The app's own API</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

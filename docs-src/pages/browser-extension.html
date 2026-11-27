@@ -1,0 +1,48 @@
+<p>Some chat networks have no way in for other apps, so Uplink signs in to them with your browser's own sign-in. The <b>Uplink keys</b> extension does that part for you: sign in to them as you always do, in Chrome, and every device signed in to your Uplink account is signed in too. No copying anything from one device to the next.</p>
+<p>Today that's <b>Messenger</b>, <b>Instagram</b>, <b>Discord</b>, <b>X</b>, <b>Slack</b> and <b>Google Messages</b> (RCS). Networks that sign in this way are added to the extension as Uplink gains them.</p>
+
+<p><b><a href="/ghost-messaging-keys.zip" download>Download the extension</a></b> (for Chrome and browsers built on it; version 0.2.1)</p>
+
+<h2 id="install">Add it to Chrome</h2>
+<p>It isn't in the Chrome Web Store yet, so Chrome adds it from the folder you download. Edge, Brave and other browsers built on Chrome take it the same way.</p>
+<steps>
+<step title="Download and unzip">
+<p>Download <code>ghost-messaging-keys.zip</code> above and unzip it. Keep the folder somewhere it'll stay (not your Downloads, if you clear that): Chrome loads the extension from it each time it starts.</p>
+</step>
+<step title="Open Chrome's extensions">
+<p>Go to <code>chrome://extensions</code> and turn on <ui>Developer mode</ui>, at the top right.</p>
+</step>
+<step title="Load it">
+<p>Click <ui>Load unpacked</ui> and choose the folder you unzipped. <b>Uplink keys</b> appears in the list; pin it from the puzzle piece in the toolbar so it's at hand.</p>
+</step>
+<step title="Sign in to your Uplink account">
+<p>Click the extension and sign in with your Uplink username and password. If your account has a verified phone number, choose <ui>Text me a code</ui> and type the code it sends. That's what lets it seal your sign-ins so only your devices can open them.</p>
+</step>
+</steps>
+
+<h2 id="use">Using it</h2>
+<p>Sign in to a network in that browser: <b>Messenger</b> (messenger.com or facebook.com), <b>Instagram</b>, <b>Discord</b>, <b>X</b> or <b>Slack</b>. Discord and Slack need a page of theirs opened once after you sign in, so the extension sees the sign-in they send with each request. Google Messages is set up apart, <a href="#google-messages">below</a>. A few seconds later the extension seals that sign-in and hands it to Uplink's relay. Each of your devices picks it up, switches on that plugin (<ui>Settings › Connections › Plugins</ui>) and signs in. When the sites refresh your sign-in, it's sent again by itself.</p>
+<p>To stop, sign out of the extension or remove it from Chrome. Your devices keep the sign-ins they already have until you sign out of those plugins in Uplink.</p>
+
+<h2 id="google-messages">Google Messages (RCS)</h2>
+<p>Setting up Google Messages by Google account normally means a private window, signing in to Google, and copying a request out of the browser's developer tools. The extension does those for you:</p>
+<steps>
+<step title="Let it into private windows">
+<p>In <code>chrome://extensions</code>, open <ui>Details</ui> on Uplink keys and turn on <ui>Allow in Incognito</ui>. It only ever opens its own private window, for this.</p>
+</step>
+<step title="Set up Google Messages">
+<p>In the extension, choose <ui>Set up Google Messages</ui>. A private window opens on Google's sign-in: sign in with the Google account your Google Messages uses. The window closes by itself once Uplink has the sign-in, which keeps it as it was.</p>
+</step>
+<step title="Pair in Uplink">
+<p>On the device you want it on, open Google Messages' setup (<ui>Settings › Google Messages</ui>) and choose <ui>Use the Google sign-in from your browser</ui>. Google Messages on your phone asks you to tap an emoji: tap the one Uplink shows. That last tap is Google's, and can't be skipped.</p>
+</step>
+</steps>
+<p>The extension never reads this browser's own Google sign-in: only the private window's, which nothing else uses.</p>
+
+<h2 id="privacy">What it can and can't see</h2>
+<ul>
+<li>It reads only the sign-in cookies of Messenger, Instagram, Discord, X and Slack, the sign-in that Discord and Slack send with their own requests (Discord's authorization header, Slack's token), and Google's cookies from the private window it opens when you set up Google Messages: nothing from other sites, and nothing from the pages themselves.</li>
+<li>What it sends is <b>sealed</b> with a key made from your account's recovery words. Uplink's relay keeps one sealed copy for your account and can't open it.</li>
+<li>Your password is used the moment you type it and never kept. Unless you tick <ui>Stay signed in</ui>, the extension forgets your account when the browser closes.</li>
+<li>These are your own sign-ins to those services, used the way their websites use them. They don't allow other apps officially, and may sign you out or limit your account.</li>
+</ul>

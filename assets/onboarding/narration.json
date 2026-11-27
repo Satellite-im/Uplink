@@ -1,0 +1,45 @@
+{
+  "made": "tool/onboarding_voice.py",
+  "voice": {
+    "id": "cgSgspJ2msm6clMCkdW9",
+    "name": "Jessica"
+  },
+  "files": {
+    "welcome": {
+      "words": "ab09f02ff89499a8",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 86351
+    },
+    "texts": {
+      "words": "91c8582a6c023cb2",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 77992
+    },
+    "calls": {
+      "words": "4c9f2622270f2372",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 67125
+    },
+    "start": {
+      "words": "9ff189555edeacc9",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 29927
+    },
+    "together": {
+      "words": "ab62f91207d41494",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 96591
+    },
+    "everywhere": {
+      "words": "5667f687f5c78fee",
+      "model": "eleven_v4",
+      "voice": "cgSgspJ2msm6clMCkdW9",
+      "bytes": 61900
+    }
+  }
+}

@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The hub and pairing protocols · Uplink developer docs</title>
+<meta name="description" content="What an app says to the relay server over a WebSocket: signing in, packets, presence, rooms and the directory.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/developer/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/developer/">Developer docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the developer docs" aria-label="Search the developer docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">The source</div><a href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a><a href="/docs/developer/architecture/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#network"/></svg><span>How the app is built</span></a><a href="/docs/developer/flows/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#workflow"/></svg><span>How the parts work together</span></a><a href="/docs/developer/build/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#terminal"/></svg><span>Build, test and run it</span></a></div><div class="nav-group"><div class="nav-title">APIs</div><a href="/docs/developer/api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#book-open"/></svg><span>API overview and Postman</span></a><a href="/docs/developer/app-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>App API</span></a><a href="/docs/developer/relay-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Relay server API</span></a><a href="/docs/developer/hub/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg><span>The hub and pairing protocols</span></a></div><a class="nav-other" href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg><span>Back to the docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>APIs</div>
+    <h1>The hub and pairing protocols</h1>
+    <p class="lede">What an app says to the relay server over a WebSocket: signing in, packets, presence, rooms and the directory.</p>
+    <p>The relay server speaks two WebSocket protocols. The <b>hub</b> is where installs find each other: any address ending in <code>/hub</code>, so <code>wss://gogho.st/hub</code>. A <b>pairing channel</b> joins one phone to one of its computers: an address ending in 32 hex digits, <code>wss://gogho.st/relay/&lt;channel&gt;</code>. Both pass sealed bytes the server can't read. A third is spoken between relay servers: one relay dials another's hub and, in place of an app's sign-in, says it is a relay (<a href="#federation">Relays that talk to each other</a>). Its plain HTTP routes are in <a href="/docs/developer/relay-api/">the relay's HTTP routes</a>, and how the app uses all of this is in <a href="/docs/developer/architecture/#routes">Routes</a>.</p>
+<p>On all of them, a text frame is one JSON object and a binary frame is a sealed packet. The server pings each socket every 30 seconds, never compresses a message, and holds every message to a length before it reads it (<a href="#door">Message sizes and the memory budget</a>). The code is <code>relay/lib/hub.dart</code>, <code>relay/lib/relay.dart</code>, <code>relay/lib/federation.dart</code> and <code>relay/lib/ws_door.dart</code>; the app's side of the hub is <code>lib/net/hub_carrier.dart</code>.</p>
+
+<h2 id="identity">Who an install is</h2>
+<p>An install is a P-256 (secp256r1) key pair made on the device. The hub knows it by a name made from the public key. There is no account to make first: anyone with a key can sign in.</p>
+<table>
+  <tr><th>Thing</th><th>What it is</th></tr>
+  <tr><td>Public key</td><td>33 bytes, compressed: <code>02</code> or <code>03</code>, then x. Sent as base64 in the sign-in, <code>whois</code> and <code>acct-put</code>; as 66 lowercase hex digits for a read-only room's <code>owner</code>.</td></tr>
+  <tr><td>Name (id)</td><td>The first 16 bytes of SHA-256 of those 33 bytes, as 32 lowercase hex digits. In binary frames it is the 16 raw bytes.</td></tr>
+  <tr><td>Signature</td><td>ECDSA over SHA-256 of the message, as 64 raw bytes: r, then s, big-endian. Not DER. Sent as base64 in the sign-in and in <code>bind</code>; as 128 lowercase hex digits in a read-only room's grants.</td></tr>
+  <tr><td>Account address</td><td>An <a href="/docs/how-accounts-work/">Uplink account</a> is a second key, secp256k1, known by an Ethereum-style address: <code>0x</code> and 40 hex digits. Only the <a href="#dir-accounts">account messages</a> use it.</td></tr>
+</table>
+<p>All hex the server reads is lowercase.</p>
+
+<h2 id="sign-in">Signing in to the hub</h2>
+<ol>
+  <li>Open a WebSocket to <code>wss://gogho.st/hub</code>. With 20,000 sockets open already, the upgrade is refused with HTTP <code>503</code>.</li>
+  <li>The hub speaks first, with a number made for this connection (32 random bytes, as 64 hex digits):
+<pre><code>{"hello": "&lt;64 hex&gt;", "peek": true, "react": true, "v2": true,
+ "relay": {"id": "&lt;32 hex&gt;", "key": "&lt;base64&gt;", "url": "wss://relay.example.com/hub", "fed": true}}</code></pre>
+  <code>peek</code> says this hub knows the look-only sign-in below. <code>react</code> says it takes <a href="#rooms-frames">reaction packets</a>. <code>v2</code> is there only on a hub that knows the hosts it is reached at, and says it takes the sign-in bound to a host, below. <code>relay</code> is there only on a relay that <a href="#federation">talks to other relays</a>: its own name and key, its hub's address where it claims one (<code>url</code>), and the relay it stays linked to where it has one (<code>via</code>).</li>
+  <li>Within 10 seconds, answer with one text frame of 16,384 bytes at most:
+<pre><code>{"id": "&lt;32 hex&gt;", "key": "&lt;base64, 33 bytes&gt;", "sig": "&lt;base64, 64 bytes&gt;", "device": "desk-1",
+ "v": 2, "host": "gogho.st"}</code></pre></li>
+  <li>The hub answers, then hands over what it held for you as binary frames:
+<pre><code>{"ok": true, "held": 3, "now": 1763900000000, "since": 1763800000000, "helpers": ["https://…"]}</code></pre>
+  <code>now</code> is the hub's clock and <code>since</code> is when it started, both in milliseconds. What a hub holds is in memory, so a packet it said it held before <code>since</code> is gone. <code>helpers</code> is there only where the relay names link helpers: up to 4 <code>https://</code> addresses of servers that help two devices link directly.</li>
+</ol>
+<table>
+  <tr><th>Field</th><th>What it holds</th></tr>
+  <tr><td><code>id</code></td><td>Your name. It must be the one made from <code>key</code>.</td></tr>
+  <tr><td><code>key</code></td><td>Your public key, base64.</td></tr>
+  <tr><td><code>sig</code></td><td>Your signature, base64. Without <code>v</code>: over the 13 bytes of <code>ghost-hub v1 </code> (with its space) followed by the 32 raw bytes of the hub's number: the hex decoded, not the hex text. With <code>"v": 2</code>: over the 13 bytes of <code>ghost-hub v2 </code>, one byte holding the length of <code>host</code>, the bytes of <code>host</code> in lower case, then the 32 bytes of the hub's number.</td></tr>
+  <tr><td><code>v</code></td><td>Optional. <code>2</code> for the sign-in bound to a host. Use it when the hello said <code>"v2": true</code>.</td></tr>
+  <tr><td><code>host</code></td><td>With <code>"v": 2</code>: the host you dialled, with its port only where that is not 443 or 80. It must be one the hub is reached at, compared in lower case.</td></tr>
+  <tr><td><code>device</code></td><td>Optional. Which of your devices this is, 64 characters at most. Left out, too long or not a string, it counts as the empty string.</td></tr>
+  <tr><td><code>peek</code></td><td>Optional. <code>true</code> makes this a look only.</td></tr>
+  <tr><td><code>mode</code></td><td>Optional. <code>busy</code> or <code>invisible</code>: how you are shown from the first moment, where this is your name's first device here. See <a href="#presence">Presence</a>.</td></tr>
+  <tr><td><code>fed</code></td><td><code>1</code> from another relay, never from an app: the frame is then a <a href="#federation-link">relay's hello</a>, with other fields.</td></tr>
+</table>
+<h3 id="sign-in-v2">Bound to a host</h3>
+<p>A v1 signature says nothing of where it was made, so a server an app was pointed at could pass the app's own relay's number to it and sign in there with the answer. A v2 signature is good only at a hub reached by the host it names. Once the hub has seen a key sign in with v2, it takes no v1 from that key while it knows its own hosts, and answers <code>{"ok": false, "err": "This account signs in a newer way now: update Uplink on this device."}</code>. Refused again within the hour, the answer comes 2 minutes late, with the connection open meanwhile. The hub remembers 200,000 such keys across restarts, letting go first of those that hold no username. A hub that knows no hosts takes v1 from anyone and never says <code>v2</code>.</p>
+<p>One name can be signed in from 8 devices at once. A new connection with the same <code>device</code> takes the older one's place, and a ninth device takes the place of the one connected longest. The connection that lost its place is closed with <code>4409</code>.</p>
+<p>Where the hub counts what one place does, a place is the connection's address: an IPv4 address, or the first 48 bits of an IPv6 one. Behind a proxy on the same machine or a private network, it is the last address in <code>X-Forwarded-For</code>, the one the proxy saw.</p>
+
+<h3>A look</h3>
+<p>With <code>"peek": true</code> the hub says how much is waiting and closes the socket with <code>1000</code> (<code>looked</code>). Nothing is handed over or removed, and no other connection of yours is replaced. A closed app uses it to see whether it should wake.</p>
+<pre><code>{"ok": true, "held": 3, "peek": true, "here": false}</code></pre>
+<p><code>here</code> says whether any device of this name is connected now.</p>
+
+<h3>Refusals and close codes</h3>
+<table>
+  <tr><th>Code</th><th>Reason</th><th>When</th></tr>
+  <tr><td><code>4400</code></td><td><code>bad hello</code></td><td>The first frame wasn't JSON text, the base64 didn't decode, <code>id</code> isn't made from <code>key</code>, or the signature is wrong. Sent first: <code>{"ok": false, "err": "bad hello"}</code>. Also a v2 sign-in whose <code>host</code> is not one of the hub's (<code>err</code> is then <code>This relay isn't reached as &lt;host&gt;.</code>), and a v1 sign-in from a key that signs in with v2.</td></tr>
+  <tr><td><code>4401</code></td><td><code>no hello</code></td><td>No sign-in was accepted within 10 seconds.</td></tr>
+  <tr><td><code>4409</code></td><td><code>replaced</code></td><td>A newer connection took this device's place.</td></tr>
+  <tr><td><code>1000</code></td><td><code>looked</code></td><td>A look was answered.</td></tr>
+  <tr><td><code>1009</code></td><td><code>too big</code></td><td>A binary frame was empty or longer than 65,568 bytes.</td></tr>
+  <tr><td><code>4403</code></td><td>The reason</td><td>Another relay's hello was refused. See <a href="#federation-link">Linking</a>.</td></tr>
+  <tr><td><code>4503</code></td><td><code>full</code></td><td>The hub filled while this connection was being made.</td></tr>
+  <tr><td><code>1001</code></td><td></td><td>The server is stopping.</td></tr>
+  <tr><td>None</td><td></td><td>The socket is dropped with no close frame for a message past <a href="#door">what the door takes</a>, or a connection that holds too much.</td></tr>
+</table>
+
+<h3>After signing in</h3>
+<p>A text frame is known by its keys, tried in this order: <code>ping</code>, <code>push</code>, <code>dir</code>, <code>watch</code>, <code>mode</code>, <code>away</code>, <code>join</code>, <code>anchor</code>, <code>leave</code>, <code>look</code>, <code>unlook</code>. The first that matches decides. <code>{"ping": 1}</code> is answered <code>{"pong": 1}</code>, with whatever value was sent.</p>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>No answer means ignored</b><p>A frame that isn't a JSON object, a <code>dir</code> the server doesn't know, an unknown first byte and a binary frame too short for its kind all get no answer. A client can't tell ignored from lost.</p></div></aside>
+
+<h2 id="packets">Packets to a person</h2>
+<p>A binary frame's first byte is its kind. Kind <code>0x01</code> is a packet to one name. The payload is sealed by the apps; the hub doesn't read it. The hub puts the sender's name in itself, so nobody can send under another's.</p>
+<table>
+  <tr><th>Direction</th><th>Bytes</th><th>Holds</th></tr>
+  <tr><td rowspan="4">To the hub</td><td>0</td><td><code>0x01</code></td></tr>
+  <tr><td>1 to 4</td><td><code>seq</code>: a number you choose, uint32, big-endian. It comes back in the answer.</td></tr>
+  <tr><td>5 to 20</td><td>The recipient's name, 16 bytes.</td></tr>
+  <tr><td>21 on</td><td>The payload, one byte at least.</td></tr>
+  <tr><td rowspan="3">From the hub</td><td>0</td><td><code>0x01</code></td></tr>
+  <tr><td>1 to 16</td><td>The sender's name, 16 bytes.</td></tr>
+  <tr><td>17 on</td><td>The payload.</td></tr>
+</table>
+<p>A whole frame is 65,568 bytes at most (64 KiB and 32 bytes for headers). A longer one, or an empty one, closes the connection with <code>1009</code>.</p>
+<p>The packet goes to every connected device of the recipient except the connection that sent it. Each one is answered with a text frame:</p>
+<table>
+  <tr><th>Answer</th><th>Meaning</th></tr>
+  <tr><td><code>{"ack": &lt;seq&gt;, "here": true}</code></td><td>Passed to at least one connected device.</td></tr>
+  <tr><td><code>{"ack": &lt;seq&gt;, "here": false}</code></td><td>Nobody was there. It is held, and a <a href="#pushes">push</a> is asked for where the recipient registered one.</td></tr>
+  <tr><td><code>{"nak": &lt;seq&gt;, "err": "full"}</code></td><td>Nobody was there and it could not be held.</td></tr>
+  <tr><td><code>{"ack": &lt;seq&gt;, "here": false, "fed": true}</code></td><td>The recipient lives on another relay, and that relay took it. Whether they are connected there is never said across relays.</td></tr>
+  <tr><td><code>{"ack": &lt;seq&gt;, "here": false, "fed": true, "waiting": true}</code></td><td>The recipient lives on another relay that can't be reached just now. The packet waits on this relay until it can.</td></tr>
+  <tr><td><code>{"nak": &lt;seq&gt;, "err": "home"}</code></td><td>For another relay, but this relay holds no <a href="#dir-home">home record</a> of yours that names it. Give your record and send again.</td></tr>
+  <tr><td><code>{"nak": &lt;seq&gt;, "err": "busy"}</code></td><td>For another relay, and you are past what one install may send across relays, or may make this relay dial.</td></tr>
+  <tr><td><code>{"nak": &lt;seq&gt;, "err": "far"}</code></td><td>Their relay is one this relay doesn't link with, or can't reach.</td></tr>
+  <tr><td><code>{"nak": &lt;seq&gt;, "err": "refused"}</code></td><td>Their relay would not take it.</td></tr>
+</table>
+<p>The answers with <code>fed</code>, and the last four refusals, come only from a relay that <a href="#federation">talks to other relays</a>, and only for a recipient who is not connected here and whose home record names another relay. A packet you send to your own name is never passed on.</p>
+<h3>Held for someone away</h3>
+<p>The hub holds up to 200 frames and 1 MiB for one name, 96 MiB for everyone together, for 7 days. Against the 96 MiB each held frame counts as its bytes and 256 more. When the name next signs in, its mailbox is emptied and everything not too old is handed over, right after <code>{"ok": true, "held": n}</code>. An <code>ack</code> means the hub took the packet, not that the other app opened it.</p>
+<p>The frames are handed over in order, only as fast as the connection takes them. Any not written by the time the connection closes go back to the mailbox. A packet a device sent to its own name is not handed back to that device: it stays held for the name's other devices.</p>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Held in memory</b><p>Held packets are kept in memory only. A restart of the server loses them. The <code>since</code> in the sign-in's answer says when the hub last started.</p></div></aside>
+
+<h2 id="presence">Presence</h2>
+<p>A connection asks about names with <code>watch</code>, and from then on is told when they come and go. Watches add up for the life of the connection, to 500 names. There is no message to stop watching.</p>
+<pre><code>{"watch": ["&lt;id&gt;", "&lt;id&gt;"]}</code></pre>
+<p>Answered at once, about the names in that message:</p>
+<pre><code>{"here": ["&lt;id&gt;"], "away": ["&lt;id&gt;"], "busy": ["&lt;id&gt;"], "seen": {"&lt;id&gt;": 1763900000000}}</code></pre>
+<table>
+  <tr><th>Field</th><th>Meaning</th></tr>
+  <tr><td><code>here</code></td><td>Names connected now.</td></tr>
+  <tr><td><code>away</code></td><td>Names connected with every device put away.</td></tr>
+  <tr><td><code>busy</code></td><td>Names connected that chose to be shown as busy.</td></tr>
+  <tr><td><code>seen</code></td><td>For names not connected, when each was last here, in milliseconds since 1970. The hub remembers this for 200,000 names.</td></tr>
+</table>
+<table>
+  <tr><th>Message</th><th>From</th><th>Meaning</th></tr>
+  <tr><td><code>{"away": true}</code> or <code>false</code></td><td>You</td><td>This device was put away, or is back in use. Not answered.</td></tr>
+  <tr><td><code>{"came": "&lt;id&gt;"}</code></td><td>Hub</td><td>The name's first device connected.</td></tr>
+  <tr><td><code>{"went": "&lt;id&gt;", "at": &lt;ms&gt;}</code></td><td>Hub</td><td>Its last device disconnected. <code>at</code> is when it was put away, if it had been, else now.</td></tr>
+  <tr><td><code>{"away": "&lt;id&gt;", "is": &lt;bool&gt;, "at": &lt;ms&gt;}</code></td><td>Hub</td><td>Whether all of its devices are away has changed.</td></tr>
+  <tr><td><code>{"mode": "online"}</code>, <code>"busy"</code> or <code>"invisible"</code></td><td>You</td><td>How your name is shown, said by any of its devices and held while one is connected. Any other word counts as <code>online</code>. Not answered.</td></tr>
+  <tr><td><code>{"busy": "&lt;id&gt;", "is": &lt;bool&gt;}</code></td><td>Hub</td><td>The name became busy, or stopped being.</td></tr>
+</table>
+<p>An invisible name is shown to its watchers as gone. They are sent <code>went</code> when it hides. While it hides it is in none of <code>here</code>, <code>away</code> and <code>busy</code>, no <code>came</code> or <code>away</code> is sent for it, and its last-seen time stays where it was. When it stops hiding, watchers are sent <code>came</code>, then <code>away</code> if its devices are put away. A mode said in the sign-in holds from the first moment, so a name that signs in invisible never shows as come.</p>
+
+<h2 id="rooms">Rooms</h2>
+<p>A room is how more than two installs talk, such as a space or a circle's channel. Its name is 32 hex digits and its token 64 hex digits, both made by the apps. The first to join sets the token; the hub keeps only its SHA-256. A room with nobody in it is forgotten, though the packets it kept are not.</p>
+<pre><code>{"join": "&lt;32 hex&gt;", "token": "&lt;64 hex&gt;"}</code></pre>
+<table>
+  <tr><th>Answer</th><th>When</th></tr>
+  <tr><td><code>{"room": "&lt;room&gt;", "ok": true, "members": ["&lt;id&gt;"]}</code></td><td>Joined. <code>members</code> is the other names in it, not yours. In a read-only room there is also <code>"ro": "writer"</code> or <code>"ro": "reader"</code>. On a relay with a media relay for calls there is also <code>ice</code>, below. The room's kept packets follow as binary frames.</td></tr>
+  <tr><td><code>{"room": …, "ok": false, "err": "bad room"}</code></td><td>The name isn't 32 hex digits or the token isn't 64.</td></tr>
+  <tr><td><code>{"room": …, "ok": false, "err": "bad anchor"}</code></td><td>A read-only join whose name isn't made from its <code>base</code> and <code>owner</code>.</td></tr>
+  <tr><td><code>{"room": …, "ok": false, "err": "refused"}</code></td><td>The wrong token, or this connection is in the other room of that name (ordinary or read-only).</td></tr>
+  <tr><td><code>{"room": …, "ok": false, "err": "full"}</code></td><td>The room has 64 names and yours isn't one, or the hub has 50,000 rooms and this would be a new one.</td></tr>
+</table>
+<p>Every device of a name can be in a room. The room counts names, not devices.</p>
+<h3 id="rooms-ice">A media relay for calls</h3>
+<p>A call's sound and picture go between the devices, not through the hub. Where two devices can't reach each other, they need a TURN server to pass the packets. A relay set up with one hands whoever joins a room a username and password for it, in the answer to <code>join</code>:</p>
+<pre><code>"ice": {"urls": ["turn:relay.example.com:3478?transport=udp"], "username": "1763986400:0f1e2d3c4b5a6978", "credential": "&lt;base64&gt;"}</code></pre>
+<p>It is an <code>RTCIceServer</code> entry as WebRTC takes it. <code>username</code> is the time it stops working, in seconds since 1970, a colon, and the first 16 characters of your name. <code>credential</code> is the base64 HMAC-SHA1 of the username under a secret the relay shares with the TURN server. It works for 24 hours unless the relay is set otherwise. Nothing about the room goes into it, and only a device that joined a room is given one. Without a TURN server there is no <code>ice</code>, and calls are direct only.</p>
+<table>
+  <tr><th>Message</th><th>From</th><th>Meaning</th></tr>
+  <tr><td><code>{"room": "&lt;room&gt;", "came": "&lt;id&gt;"}</code></td><td>Hub</td><td>A name's first device joined. Sent to everyone else in the room.</td></tr>
+  <tr><td><code>{"room": "&lt;room&gt;", "went": "&lt;id&gt;"}</code></td><td>Hub</td><td>A name's last device left or disconnected.</td></tr>
+  <tr><td><code>{"leave": "&lt;room&gt;"}</code></td><td>You</td><td>Leaves the room. Not answered.</td></tr>
+  <tr><td><code>{"look": "&lt;room&gt;", "token": "&lt;64 hex&gt;"}</code></td><td>You</td><td>Asks who is in an ordinary room without joining it. 200 looks a connection at most.</td></tr>
+  <tr><td><code>{"room": "&lt;room&gt;", "look": ["&lt;id&gt;"]}</code></td><td>Hub</td><td>Who is in the room now, sent at once and again whenever that changes. An empty list for a room that doesn't exist. With the wrong token, nothing is said, now or later.</td></tr>
+  <tr><td><code>{"unlook": "&lt;room&gt;"}</code></td><td>You</td><td>Stops the looking. Not answered.</td></tr>
+  <tr><td><code>{"anchor": "&lt;room&gt;", "gv": …, "g": {…}, "gs": "…"}</code></td><td>You</td><td>Hands a read-only room you are in a newer list of admins. Not answered.</td></tr>
+  <tr><td><code>{"room": "&lt;room&gt;", "ro": "refused"}</code></td><td>Hub</td><td>A reader in a read-only room sent a kept packet. It was neither kept nor passed on.</td></tr>
+</table>
+
+<h3 id="rooms-frames">Room frames</h3>
+<table>
+  <tr><th>Direction</th><th>Bytes</th><th>Holds</th></tr>
+  <tr><td rowspan="3">To the hub</td><td>0</td><td><code>0x02</code> a packet, <code>0x03</code> a packet to keep, <code>0x04</code> a reaction.</td></tr>
+  <tr><td>1 to 16</td><td>The room's name, 16 bytes.</td></tr>
+  <tr><td>17 on</td><td>The payload, one byte at least. A reaction's is 512 bytes at most.</td></tr>
+  <tr><td rowspan="4">From the hub</td><td>0</td><td><code>0x02</code> for a packet, kept or not; <code>0x04</code> for a reaction.</td></tr>
+  <tr><td>1 to 16</td><td>The room's name.</td></tr>
+  <tr><td>17 to 32</td><td>The sender's name, 16 bytes.</td></tr>
+  <tr><td>33 on</td><td>The payload.</td></tr>
+</table>
+<table>
+  <tr><th>Kind</th><th>What the hub does</th></tr>
+  <tr><td><code>0x02</code></td><td>Passes it to every other connection in the room, the sender's other devices too. Not answered. Ignored from someone not in the room.</td></tr>
+  <tr><td><code>0x03</code></td><td>As <code>0x02</code>, and keeps it for whoever joins later. It arrives as <code>0x02</code>.</td></tr>
+  <tr><td><code>0x04</code></td><td>Keeps it and passes it to everyone else in the room, readers too. One over 512 bytes is dropped without a word.</td></tr>
+</table>
+<p>A room keeps its newest 300 frames for 7 days, within 256 MiB over all rooms. A device that joins with the token they were kept under is handed them, in order, after the answer to its <code>join</code>, only as fast as its connection takes them. A packet sent to the room meanwhile arrives after them, never among them.</p>
+<aside class="note tip"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lightbulb"/></svg><div><b>Older hubs</b><p>A hub that doesn't say <code>"react": true</code> in its hello doesn't know kind <code>0x04</code>. The app sends a reaction to one as a kept packet instead.</p></div></aside>
+
+<h3 id="read-only">Read-only rooms</h3>
+<p>In a read-only room only the owner and the admins the owner named may post. Its name is tied to the owner's key, so nobody else can open it first. Join with an <code>ro</code> object:</p>
+<pre><code>{"join": "&lt;room&gt;", "token": "&lt;token&gt;",
+ "ro": {"base": "&lt;32 hex&gt;", "owner": "&lt;66 hex&gt;", "gv": 2,
+        "g": {"&lt;admin id&gt;": "&lt;128 hex&gt;"}, "gs": "&lt;128 hex&gt;"}}</code></pre>
+<table>
+  <tr><th>Field</th><th>What it holds</th></tr>
+  <tr><td><code>base</code></td><td>16 bytes the app chose, as hex.</td></tr>
+  <tr><td><code>owner</code></td><td>The owner's public key, 33 bytes as hex. The room's name must be the first 16 bytes of SHA-256 of <code>ghost-ro|</code>, then the 16 bytes of <code>base</code>, then the 33 bytes of <code>owner</code>.</td></tr>
+  <tr><td><code>g</code></td><td>The admins: each name with the owner's signature over <code>ghost-circle admin|&lt;owner hex&gt;|&lt;id&gt;</code>. 200 entries at most. An entry whose signature is wrong doesn't count.</td></tr>
+  <tr><td><code>gv</code></td><td>Optional. The list's generation, a whole number. A list with a higher one replaces the one the room has.</td></tr>
+  <tr><td><code>gs</code></td><td>Needed when <code>gv</code> is above 0: the owner's signature over <code>ghost-circle grants|&lt;owner hex&gt;|&lt;gv&gt;|&lt;g as JSON&gt;</code>, with <code>g</code>'s keys sorted and no spaces.</td></tr>
+</table>
+<p>The owner's own name always may post. A reader's <code>0x03</code> is refused, a reader's <code>0x02</code> reaches the writers only, and a reader's <code>0x04</code> reaches everyone. A read-only room is kept apart from an ordinary room of the same name, and a connection can be in one of the two at a time. <code>anchor</code> takes the same <code>gv</code>, <code>g</code> and <code>gs</code> later on.</p>
+
+<h2 id="pushes">Pushes</h2>
+<p>An iPhone's app tells the hub its Apple push token, so that it can be woken when a packet is held for it. Android phones look for themselves, with <a href="#sign-in">a look</a>.</p>
+<table>
+  <tr><th>Message</th><th>Effect</th><th>Answer</th></tr>
+  <tr><td><code>{"push": {"apns": "&lt;hex&gt;", "sandbox": false}}</code></td><td>Keeps the token for this device of this name, by the <code>device</code> it signed in with. <code>apns</code> is 32 to 200 hex digits. <code>sandbox</code> counts only as <code>true</code>. The same token under another device of the name is forgotten there.</td><td><code>{"push": true}</code>, or <code>false</code> from a server that sends no pushes.</td></tr>
+  <tr><td><code>{"push": null}</code></td><td>Forgets this device's token. So does any value that isn't such an object.</td><td>The same.</td></tr>
+</table>
+<p>When a packet is held for a name, every device of it that registered a token is sent one notification. It says only <b>Uplink</b> and <b>New message</b>, once a minute for one name at most. The server never has the words of a message to put in it.</p>
+
+<h2 id="directory">The directory</h2>
+<p>Messages with a <code>dir</code> key ask the server's directory: usernames, linked handles, badges, accounts and invitations. Each is <code>{"dir": "&lt;name&gt;", …}</code> and its answer comes back on the same connection as another <code>dir</code> message. They aren't numbered: match an answer by its <code>dir</code> and the fields it repeats.</p>
+<p>A refusal looks the same for all of them. <code>err</code> is a sentence to show the person:</p>
+<pre><code>{"dir": "err", "about": "claim", "err": "A username is 3 to 20 letters, numbers, dots or underscores."}</code></pre>
+<p>The messages under Usernames, Linked handles, Number verification and Badges also repeat the <code>p</code> that was sent. Something unexpected is answered <code>That did not work. Try again in a while.</code> A server run without one of these parts answers <code>This server keeps no accounts.</code> (or <code>no invite words</code>, <code>no invites</code>, <code>no handles</code>).</p>
+<p>Two hashes appear throughout, both SHA-256 as 64 hex digits. A username's key is the hash of <code>ghost-name v1|&lt;username&gt;</code>. A handle's key <code>k</code> is the hash of <code>ghost-handle v1|&lt;network&gt;|&lt;handle&gt;</code>. Both are tidied first: trimmed, lower case, no leading <code>@</code>, and a phone number in E.164 form.</p>
+
+<h3 id="dir-names">Usernames and profile</h3>
+<p>A username is 3 to 20 characters from <code>a-z</code>, <code>0-9</code>, <code>.</code> and <code>_</code>, starting with a letter or digit, with no two dots together. Some words are reserved (<code>admin</code>, <code>support</code>, <code>uplink</code> and the like). An install holds one at a time.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>hello</code></td><td><code>name</code>: your own username, optional.</td><td><code>{"dir": "hello", "ways", "listed", "links", "watching", "souls", "special"}</code>. <code>ways</code> says how each network is linked here: <code>signin</code>, <code>proof</code>, <code>text</code> or <code>off</code>. <code>links</code> is a list of <code>{"p", "k", "at"}</code>. Then <code>souls-gifts</code> where something was given that the app has not said it showed, and any <code>linked</code> and <code>joined</code> that happened while you were away.</td></tr>
+  <tr><td><code>name</code></td><td>Nothing.</td><td><code>{"dir": "name", "k": …}</code>: your username's key, or <code>null</code>.</td></tr>
+  <tr><td><code>claim</code></td><td><code>name</code></td><td><code>{"dir": "claim", "name", "ok": true, "k"}</code>. Held by someone else: <code>{"dir": "claim", "name", "ok": false, "err": "taken"}</code>. Claiming another gives up the one you had.</td></tr>
+  <tr><td><code>release</code></td><td>Nothing.</td><td><code>{"dir": "released"}</code>. Anyone may claim it from then.</td></tr>
+  <tr><td><code>whois</code></td><td><code>name</code></td><td><code>{"dir": "whois", "name", "id", "key"}</code>: the holder's name and public key (base64), which is all it takes to write to them. Nobody: <code>{"dir": "whois", "name", "none": true}</code>. 120 an hour for one name, all its devices together. On a relay that talks to other relays the answer also carries <code>home</code>, the holder's <a href="#dir-home">home record</a>, where one is held; and with <code>at</code> the name is asked of another relay.</td></tr>
+  <tr><td><code>keep</code></td><td><code>blob</code>: a string, 262,144 characters at most. Empty forgets it.</td><td><code>{"dir": "keep", "ok": true}</code>. One sealed blob for each install, replaced whole.</td></tr>
+  <tr><td><code>kept</code></td><td>Nothing.</td><td><code>{"dir": "kept", "blob": …}</code>: the blob, or <code>null</code>.</td></tr>
+  <tr><td><code>curl-keep</code></td><td><code>blob</code>: a string, 131,072 characters at most. Empty forgets it.</td><td><code>{"dir": "curl-keep", "ok": true}</code>. A second sealed blob for each name, kept apart from the first and replaced whole. The app keeps there the sign-ins to other networks that an account's devices share, sealed with a key only those devices have.</td></tr>
+  <tr><td><code>curl-kept</code></td><td>Nothing.</td><td><code>{"dir": "curl-kept", "blob": …}</code>: that blob, or <code>null</code>.</td></tr>
+</table>
+
+<h3 id="dir-handles">Linked handles</h3>
+<p><code>p</code> names a network. <code>discord</code>, <code>telegram</code> and <code>x</code> are linked by signing in through a browser. <code>bluesky</code>, <code>mastodon</code> and <code>github</code> are linked by putting a code in the public profile. <code>phone</code> is linked by a texted code, below.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>link</code></td><td><code>p</code>: a sign-in network.</td><td><code>{"dir": "link", "p", "url"}</code>: a page to open in a browser, good for 10 minutes. <code>linked</code> follows when the sign-in is done.</td></tr>
+  <tr><td><code>proof</code></td><td><code>p</code>: a profile network; <code>handle</code></td><td><code>{"dir": "proof", "p", "handle", "code"}</code>: the code to put in the profile, <code>ghost-</code> and 10 hex digits.</td></tr>
+  <tr><td><code>check</code></td><td><code>p</code>, <code>handle</code></td><td>Reads the profile. <code>linked</code> where the code is in it, else a refusal. 40 reads an hour, shared with <code>follows</code>.</td></tr>
+  <tr><td><code>unlink</code></td><td><code>p</code></td><td><code>{"dir": "unlinked", "p"}</code>. No answer for a network the server doesn't know.</td></tr>
+  <tr><td><code>listed</code></td><td><code>on</code>: true or false.</td><td><code>{"dir": "listed", "on"}</code>. Turned on, those watching for one of your handles are told you joined. A phone number is never announced.</td></tr>
+  <tr><td><code>watch</code></td><td><code>add</code>, <code>remove</code>: lists of handle keys.</td><td><code>{"dir": "watching", "n"}</code>: how many you now watch, 5,000 at most. Then <code>{"dir": "joined", "list", "already": true}</code> for those added that a listed install holds already.</td></tr>
+  <tr><td><code>follows</code></td><td><code>p</code>: a profile network; <code>handle</code>: your own linked handle.</td><td><code>{"dir": "follows", "p", "handles"}</code>: who that account follows, 5,000 at most.</td></tr>
+  <tr><td><code>forget</code></td><td>Nothing.</td><td><code>{"dir": "forgotten"}</code>. Your links, listing and watch list are gone. Your username, souls, badges and kept blob are not touched.</td></tr>
+</table>
+<p>Two messages come unasked:</p>
+<table>
+  <tr><th>Message</th><th>When</th></tr>
+  <tr><td><code>{"dir": "linked", "p", "handle", "k", "about"}</code></td><td>A link was proved. <code>about</code>, with <code>name</code> and <code>picture</code>, comes only after a browser sign-in and only when there is something in it.</td></tr>
+  <tr><td><code>{"dir": "joined", "list": ["&lt;k&gt;"]}</code></td><td>A listed install linked a handle you watch. Up to 300 wait for you while you are away.</td></tr>
+</table>
+
+<h3 id="dir-number">Number verification</h3>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>text</code></td><td><code>p</code>: <code>phone</code>; <code>handle</code>: the number, with its country code.</td><td><code>{"dir": "text", "p": "phone", "handle"}</code>, the number in E.164 form. A code was texted to it. Nothing is linked yet.</td></tr>
+  <tr><td><code>code</code></td><td><code>p</code>: <code>phone</code>; <code>handle</code>; <code>code</code>: the digits.</td><td><code>{"dir": "linked", "p": "phone", "handle", "k"}</code></td></tr>
+</table>
+<p>An install may ask for 3 codes an hour and 6 a day, and so may a number. A code lasts 10 minutes and takes 10 tries an hour. Which countries can be texted, and how many texts go out in a day, are the server's settings. A refusal's <code>err</code> says which limit was met.</p>
+
+<h3 id="dir-badges">Badges, souls and admin</h3>
+<p>The special badges are <code>bughunter</code>, <code>alpha</code>, <code>founder</code>, <code>team</code>, <code>supporter</code> and <code>helper</code>. Souls are a count that belongs to each install and is told to nobody else.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>badges</code></td><td><code>ids</code>, <code>names</code>: lists of names and usernames, the first 64 of each.</td><td><code>{"dir": "badges", "ids", "names"}</code>: those of them that verified a phone number. Never the number. Where there is something to say, also <code>show</code> and <code>showNames</code> (the badge each shows) and <code>special</code> and <code>specialNames</code> (all of each one's badges). 240 an hour.</td></tr>
+  <tr><td><code>souls?</code></td><td>Nothing.</td><td><code>{"dir": "souls", "n", "special", "show"}</code>: your souls, your badges and the one you show. <code>show</code> is left out when there is none.</td></tr>
+  <tr><td><code>showcase</code></td><td><code>badge</code>: one of yours, or an empty string for the default.</td><td>The <code>souls</code> message.</td></tr>
+</table>
+<p>The <code>souls</code> message also comes unasked when something is given: with <code>got</code> and <code>why</code> for souls, or with <code>badge</code> for a badge. What the admin gives also carries <code>gift</code>, an id of 16 hex digits, and is kept until the app says it showed it, the newest 50 for one install:</p>
+<table>
+  <tr><th>Message</th><th>From</th><th>Meaning</th></tr>
+  <tr><td><code>{"dir": "souls-gifts", "list": [{"g", "at", "souls", "why"}, {"g", "at", "badge"}], "n", "special"}</code></td><td>Hub</td><td>Sent after the answer to <code>hello</code>: everything given and not yet shown, oldest first, with your souls and badges now. <code>at</code> is an ISO 8601 time.</td></tr>
+  <tr><td><code>{"dir": "souls-seen", "ids": ["&lt;g&gt;"]}</code></td><td>You</td><td>Those were shown. They are not sent again. Not answered.</td></tr>
+</table>
+<p>Souls given through <a href="/docs/developer/relay-api/#bounty"><code>POST /bounty</code></a> come as a <code>souls</code> message with <code>got</code> and <code>why</code>, to an install that is connected.</p>
+<p>Souls a person sends another through <a href="/docs/developer/relay-api/#souls"><code>POST /souls/send</code></a> come the same way: the receiver hears a <code>souls</code> message with <code>got</code> and a <code>why</code> of <code>From &lt;username&gt;</code>, the sender one with their new count.</p>
+<p>The admin messages are for whoever runs the server. They work only on a connection that signed in with <code>admin-login</code>, from an install the server is set to allow; the sign-in lasts 8 hours and ends with the connection. Anyone else is answered <code>{"dir": "&lt;the dir&gt;", "ok": false, "err": "Sign in to the admin page first."}</code>.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>admin-login</code></td><td><code>user</code>, <code>pass</code></td><td><code>{"dir": "admin", "ok": true}</code>, or <code>"ok": false</code> with <code>err</code>. 5 tries an hour.</td></tr>
+  <tr><td><code>admin-users</code></td><td>Nothing.</td><td><code>{"dir": "admin-users", "ok": true, "users": […]}</code>: everyone known to the server.</td></tr>
+  <tr><td><code>admin-log</code></td><td>Nothing.</td><td><code>{"dir": "admin-log", "ok": true, "grants": […]}</code>: the newest 200 things given.</td></tr>
+  <tr><td><code>admin-give</code></td><td><code>to</code>: a name; <code>souls</code>: a whole number, not 0, 100,000 either way at most; <code>why</code></td><td><code>{"dir": "admin-give", "ok": true, "to", "n"}</code>: the new total.</td></tr>
+  <tr><td><code>admin-badge</code></td><td><code>to</code>; <code>badge</code>; <code>on</code>: true or false.</td><td><code>{"dir": "admin-badge", "ok": true, "to", "special"}</code></td></tr>
+</table>
+
+<h3 id="dir-accounts">Accounts</h3>
+<p>An <a href="/docs/how-accounts-work/">Uplink account</a> is an address holding two sealed backups of one identity: one sealed by the password, one by the recovery words. The server can open neither. Four of these messages must be signed by the account's key, and come in an envelope:</p>
+<pre><code>{"dir": "acct-put", "body": "{\"op\":\"put\",\"a\":\"0x…\",\"by\":\"&lt;your id&gt;\",\"at\":1763900000000,…}", "sig": "&lt;130 hex&gt;"}</code></pre>
+<ul>
+  <li><code>body</code> is a JSON object written as a string, 196,608 characters at most (2,048 for <code>acct-devices</code>). It always holds <code>op</code> (<code>put</code>, <code>seed</code>, <code>devices</code> or <code>delete</code>), <code>a</code> (the address), <code>by</code> (the name of the connection saying it) and <code>at</code> (the time in milliseconds, within 10 minutes of the server's clock).</li>
+  <li><code>sig</code> is a secp256k1 signature over the EIP-191 personal-message hash of <code>body</code>'s bytes exactly as sent: keccak256 of <code>\x19Ethereum Signed Message:\n</code>, the byte length in decimal, then the body. 65 bytes (r, s, v) as hex, <code>0x</code> optional, v as 27 or 28 or as 0 or 1, low s only. The address it recovers to must be <code>a</code>.</li>
+  <li>Each body is taken once. Saying it again is refused.</li>
+</ul>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>acct-put</code> (signed)</td><td>In <code>body</code>: <code>id</code> and <code>key</code> (the identity's name and public key, base64); <code>bind</code> (that key's signature, base64, over <code>ghost-account bind v1|&lt;address, lower case&gt;</code>); <code>pw</code> and <code>seed</code> (the two sealed backups, 65,536 characters each at most); <code>pwv</code> (SHA-256 of the password proof, hex).</td><td><code>{"dir": "acct-put", "ok": true, "a"}</code>. One account for an identity, and one identity for an account.</td></tr>
+  <tr><td><code>acct-find</code></td><td><code>name</code>: a username.</td><td><code>{"dir": "acct-find", "name", "phone", "kdf"}</code>: whether a texted code is needed, and the settings to stretch the password with (<code>v</code>, <code>k</code>, <code>m</code>, <code>t</code>, <code>p</code>, <code>s</code>). No account: <code>{"dir": "acct-find", "name", "none": true}</code>. 30 an hour.</td></tr>
+  <tr><td><code>acct-text</code></td><td><code>name</code>; <code>number</code>: the account's verified number.</td><td><code>{"dir": "acct-text", "name", "sent": true}</code>. Only the right number is texted. 5 wrong numbers an hour.</td></tr>
+  <tr><td><code>acct-get</code></td><td><code>name</code>; <code>auth</code>: the password proof, 32 bytes as hex; <code>number</code> and <code>code</code> where the account has a verified number.</td><td><code>{"dir": "acct-get", "name", "a", "blob"}</code>: the address and the password-sealed backup. Where a code is needed and none came: <code>{"dir": "acct-get", "name", "phone": true}</code>. 6 tries an hour for a connection, 10 for an account.</td></tr>
+  <tr><td><code>acct-seed</code> (signed)</td><td>Nothing more.</td><td><code>{"dir": "acct-seed", "a", "blob", "pw"}</code>: both backups, for someone who signed in with the recovery words. No account: <code>{"dir": "acct-seed", "a", "none": true}</code>.</td></tr>
+  <tr><td><code>acct-devices</code> (signed)</td><td>In <code>body</code>, optional: <code>add</code> as <code>{"d", "n", "p"}</code> (a device's id of 32 hex digits, its name and its platform); <code>remove</code> (a device id). Neither just lists.</td><td><code>{"dir": "acct-devices", "a", "list"}</code>: each device as <code>{"d", "n", "p", "at", "seen"}</code>. 20 devices at most. The signed <code>body</code> and <code>sig</code> of a removal are kept for the removed device, for the 20 removed most lately.</td></tr>
+  <tr><td><code>acct-hello</code></td><td><code>a</code>: the address; <code>d</code>: this device's id.</td><td><code>{"dir": "acct-hello", "a", "known", "account"}</code>: whether this device is on the account, and whether the account exists. For a device the account removed there is also <code>"removed": {"body", "sig"}</code>: the account's own signed removal, which the device can check for itself.</td></tr>
+  <tr><td><code>acct-leave</code></td><td><code>a</code>: the address; <code>d</code>: this device's id.</td><td><code>{"dir": "acct-leave", "a", "gone"}</code>: whether a device was taken off the list. Not signed: it is for a device that holds no account key, such as a page in a browser signing out, and it removes that one device and nothing else.</td></tr>
+  <tr><td><code>acct-delete</code> (signed)</td><td>Nothing more.</td><td><code>{"dir": "acct-delete", "a", "ok": true}</code>, also when there was none.</td></tr>
+</table>
+<p>The password itself never reaches the server. The app stretches it with Argon2id, sends a proof made from the result as <code>auth</code>, and the server checks only that the proof's SHA-256 is the <code>pwv</code> it was given. Signed changes, and <code>acct-leave</code>, are held to 60 an hour for a connection's name. A server that can't read the accounts it keeps answers every account message <code>This server can't read the accounts it keeps just now. Nothing has been changed: try again later.</code></p>
+
+<h3 id="dir-invites">Invitations</h3>
+<p>An invitation waits for someone who isn't on the app yet, under a hash of their number: <code>h</code> is the handle key of that number on the network <code>phone</code>. <code>b</code> is the invitation, sealed by the app, as base64 of 2,048 characters at most.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>invite</code></td><td><code>list</code>: 1 to 25 of <code>{"h", "b", "t"}</code>. <code>t</code> is an optional tag of 64 hex digits; a newer invitation with the same tag for the same number replaces the older.</td><td><code>{"dir": "invite", "left"}</code>: how many were kept. The sender needs a verified number or a linked account. 40 an hour and 120 a day.</td></tr>
+  <tr><td><code>invites</code></td><td><code>h</code></td><td><code>{"dir": "invites", "h", "list"}</code>: each as <code>{"i", "b", "at"}</code>. Only for the install that verified that number by text.</td></tr>
+  <tr><td><code>invites-drop</code></td><td><code>h</code>; <code>ids</code>: a list of <code>i</code>.</td><td><code>{"dir": "invites-drop", "left"}</code>: how many still wait.</td></tr>
+</table>
+<p>A number has 20 waiting at most, 3 of them from one sender, and each waits 30 days.</p>
+
+<h3 id="dir-words">Invite words</h3>
+<p>A circle's invite word stands for its invite link. The word is never sent: <code>h</code> is its SHA-256 as 64 hex digits, and <code>b</code> is the link sealed by the app, 1,024 characters at most.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>word-set</code></td><td><code>h</code>, <code>b</code></td><td><code>{"dir": "word-set", "h", "ok": true}</code>. Refused where another install holds the word. 10 words an install, 20 set an hour.</td></tr>
+  <tr><td><code>word-drop</code></td><td><code>h</code></td><td><code>{"dir": "word-drop", "h", "ok": true}</code>, also when there was no such word. Refused for someone else's.</td></tr>
+  <tr><td><code>word</code></td><td><code>h</code></td><td><code>{"dir": "word", "h", "b": …}</code>: the sealed link, or <code>null</code>.</td></tr>
+</table>
+<p>A word not set again within 365 days is let go. The same lookup is there over HTTP, as <code>GET /word/&lt;h&gt;</code>.</p>
+
+<h3 id="dir-home">Home records and names on other relays</h3>
+<p>These three are answered only by a relay that <a href="#federation">talks to other relays</a>. On any other, <code>home</code> and <code>home?</code> get no answer, as any <code>dir</code> the server doesn't know, and <code>at</code> is not looked at.</p>
+<p>A home record says where an account lives, signed by the account. It is the one thing a relay believes about where someone is.</p>
+<pre><code>{"v": 1, "a": "&lt;32 hex&gt;", "k": "&lt;base64, 33 bytes&gt;", "h": ["wss://relay.example.com/hub"],
+ "n": 4, "t": 1763900000000, "s": "&lt;base64, 64 bytes&gt;"}</code></pre>
+<table>
+  <tr><th>Field</th><th>What it holds</th></tr>
+  <tr><td><code>a</code>, <code>k</code></td><td>The account's name and public key. The name must be the one made from the key.</td></tr>
+  <tr><td><code>h</code></td><td>1 to 3 addresses, each up to 200 characters of printable ASCII. A hub's address (<code>wss://host/hub</code>), or, for a relay with no address of its own, <code>ghost-relay://&lt;relay name&gt;?n=&lt;node id&gt;&amp;via=&lt;the public relay it stays linked to&gt;</code>.</td></tr>
+  <tr><td><code>n</code></td><td>A count from 1 to 4,294,967,295 that only goes up.</td></tr>
+  <tr><td><code>t</code></td><td>When it was made, in milliseconds. At most 5 minutes ahead of the relay's clock. The record is good for 30 days from then.</td></tr>
+  <tr><td><code>s</code></td><td>The account's signature over: the 14 bytes of <code>ghost-home v1</code> and a line feed; the name (16 bytes); <code>n</code> (4 bytes, big-endian); <code>t</code> (8 bytes, big-endian); the number of addresses (1 byte); then each address as its length (1 byte) and its bytes.</td></tr>
+</table>
+<p>Of two records for one account the one believed has the higher <code>n</code>, then the later <code>t</code>, then the greater signature byte by byte. Two hub addresses are compared as written by one rule: <code>wss</code> or <code>ws</code>, the host in lower case, the port only where it is not the scheme's own, no slash at the end of the path, and no user, query or fragment.</p>
+<table>
+  <tr><th>Message</th><th>Takes</th><th>Answer</th></tr>
+  <tr><td><code>home</code></td><td><code>rec</code>: a home record. Your own, or a friend's so that this relay can route to them.</td><td><code>{"dir": "home", "a", "ok": true, "n"}</code>: the count of the record now held for that account. Or <code>{"dir": "home", "a", "ok": false, "err"}</code>, where <code>err</code> is <code>busy</code> (too many checks just now: give it again later), <code>old</code> (past its 30 days) or <code>bad</code>. 600 records checked an hour for one install; the record already held is not checked again.</td></tr>
+  <tr><td><code>home?</code></td><td><code>a</code>: your own name.</td><td><code>{"dir": "home?", "a", "rec"}</code>: your record as held here. <code>{"dir": "home?", "a", "none": true}</code> where there is none, or <code>a</code> is anyone else's.</td></tr>
+  <tr><td><code>whois</code> with <code>at</code></td><td><code>name</code>; <code>at</code>: the other relay's host, with a port where it has one. Its hub is taken to be <code>wss://&lt;at&gt;/hub</code>.</td><td><code>{"dir": "whois", "name", "at", "id", "key", "home"}</code>: asked of that relay over a link. <code>home</code> is there where that relay gave the holder's record. Nobody, or no answer: <code>{"dir": "whois", "name", "at", "none": true, "why"}</code>. An answer about this relay itself also carries <code>"here": true</code>.</td></tr>
+</table>
+<p><code>why</code> is left out when it is only that nobody holds the name. Otherwise it is <code>off</code> (this relay doesn't link with that one), <code>refused</code> (that one won't link with this), <code>down</code> (it couldn't be reached, or didn't answer in 8 seconds) or <code>busy</code>. A lookup at another relay counts against the same 120 an hour as any <code>whois</code>, and one install may make its relay dial 8 relays an hour for the first time.</p>
+<p>A relay keeps the records its own people gave it across restarts, 20,000 at most, and the 10,000 others it used most lately in memory. Nobody is told another account's record but with the username its holder chose to be found by, or over a link between relays.</p>
+
+<h2 id="federation">Relays that talk to each other</h2>
+<p>Two people whose apps use different relays can write to each other. Each app stays on its own relay, and the relays pass the sealed packets between them. It is off unless the relay's keeper turns it on, either with any relay that proves its key or only with those listed. A relay with it off makes no key, keeps no record, and its hub is as the rest of this page describes without it.</p>
+<p>A relay is a key pair like an install's. Its name is made from its public key the same way, and its hub's hello carries both in <code>relay</code>. What it adds to what a relay can see is which of its people write to people on which other relay. Still never what.</p>
+<table>
+  <tr><th>Rule</th><th>What it means</th></tr>
+  <tr><td>A relay speaks only for its own people</td><td>A packet passed on as from someone is taken only where that someone's home record names the relay that passed it.</td></tr>
+  <tr><td>One hop</td><td>A packet from another relay is handed to someone here or held for them, never passed to a third relay. The one exception is a relay with no address of its own, below.</td></tr>
+  <tr><td>Only for people known here</td><td>A packet from another relay is held only for a name that is connected, was seen since the hub started, holds a username here, or gave its own home record here.</td></tr>
+  <tr><td>No presence across relays</td><td>The other relay is told that a packet was taken, never whether its recipient is connected.</td></tr>
+  <tr><td>Addresses are checked before they are dialled</td><td><code>wss://</code> only, port 443, a path ending <code>/hub</code>, 200 characters. Every address the name resolves to must be public, and the connection is made to the address that was checked. 10 seconds to connect. A redirect is a refusal. A keeper can allow other ports and <code>ws://</code>.</td></tr>
+</table>
+
+<h3 id="federation-link">Linking</h3>
+<p>A link is one WebSocket, opened by the relay that needs it, to the other relay's hub address.</p>
+<ol>
+  <li>The dialled hub says its hello, as to any app. It must carry <code>relay</code> with an <code>id</code> made from its <code>key</code>.</li>
+  <li>The dialler answers, in place of an app's sign-in:
+<pre><code>{"fed": 1, "id": "&lt;32 hex&gt;", "key": "&lt;base64, 33 bytes&gt;", "sig": "&lt;base64, 64 bytes&gt;",
+ "url": "wss://dialler.example.com/hub", "c": "&lt;64 hex&gt;", "stay": true}</code></pre></li>
+  <li>The dialled relay answers yes, or no:
+<pre><code>{"ok": true, "fed": 1, "id": "&lt;32 hex&gt;", "key": "&lt;base64&gt;", "sig": "&lt;base64&gt;"}
+{"ok": false, "err": "not listed"}</code></pre></li>
+</ol>
+<table>
+  <tr><th>Field</th><th>What it holds</th></tr>
+  <tr><td><code>id</code>, <code>key</code></td><td>The relay's name and public key.</td></tr>
+  <tr><td><code>c</code></td><td>32 random bytes the dialler made up for this link, as hex.</td></tr>
+  <tr><td><code>url</code></td><td>Optional. The dialler's own hub address, written by the rule above. Left out by a relay that has none.</td></tr>
+  <tr><td><code>stay</code></td><td>Optional, true or false. <code>true</code> from a relay with no address that means to stay linked.</td></tr>
+  <tr><td>The dialler's <code>sig</code></td><td>Over the 18 bytes of <code>ghost-fed-dial v2 </code> (with its space); the hub's number (32 bytes); the dialler's name and the dialled relay's name (16 bytes each); <code>c</code> (32 bytes); one byte, 1 for <code>stay</code> and 0 otherwise; the address that was dialled; and the dialler's <code>url</code>, empty where it has none. Each address is one byte of length, then its bytes.</td></tr>
+  <tr><td>The answer's <code>sig</code></td><td>Over the 13 bytes of <code>ghost-fed v2 </code>; <code>c</code>; the dialler's name; its own name; and the address it was dialled at, as one byte of length and its bytes.</td></tr>
+</table>
+<p>Both sign both names and the address dialled, so what one signs for this link is of no use on another. The dialled relay takes the hello only where the address dialled is its own. It believes the dialler's <code>url</code> only after it has dialled that address itself and seen the same key in the hello there, which it remembers for an hour. What is for an address goes only over a link this relay dialled to that address, never over one that came in claiming it.</p>
+<p>A refusal is sent as <code>{"ok": false, "err": …}</code> and the socket closed with <code>4403</code> and the same word:</p>
+<table>
+  <tr><th><code>err</code></th><th>When</th></tr>
+  <tr><td><code>fed off</code></td><td>This relay links with none, or is stopping. A relay with federation off does not get this far: it answers <code>bad hello</code> and closes with <code>4400</code>, as to any hello it can't read.</td></tr>
+  <tr><td><code>no address</code></td><td>This relay claims no address of its own, so it takes no hello.</td></tr>
+  <tr><td><code>bad hello</code></td><td>A field of the wrong shape, an <code>id</code> not made from <code>key</code>, or a wrong signature.</td></tr>
+  <tr><td><code>self</code></td><td>The hello carries this relay's own name.</td></tr>
+  <tr><td><code>bad address</code></td><td><code>url</code> is not a hub's address written by the rule, or not one that may be dialled.</td></tr>
+  <tr><td><code>blocked</code>, <code>not listed</code></td><td>Its keeper's lists say no.</td></tr>
+  <tr><td><code>busy</code></td><td>Too many hellos this minute (30 from relays not yet seen at their address, together; 30 from each one that has been), no dial left to look at the address, or no room for another link.</td></tr>
+  <tr><td><code>address</code></td><td>The key seen at <code>url</code> is not the one in the hello.</td></tr>
+</table>
+<p>A link is opened when first needed and closed after 10 minutes with nothing crossing it. A relay that could not be reached is tried again after 5 seconds, then twice as long each time, up to 10 minutes. The dialler closes with <code>1000</code> and a word: <code>idle</code>, <code>stuck</code> (a packet unanswered for 30 seconds), <code>room</code>, <code>slow</code> (a hello not finished in 10 seconds), <code>no</code> or <code>self</code>.</p>
+
+<h3 id="federation-frames">On a link</h3>
+<table>
+  <tr><th>Frame</th><th>Bytes</th><th>Holds</th></tr>
+  <tr><td rowspan="5">A packet for someone on the other relay</td><td>0</td><td><code>0x05</code></td></tr>
+  <tr><td>1 to 4</td><td>A number the sender chooses, uint32, big-endian. It comes back in the answer.</td></tr>
+  <tr><td>5 to 20</td><td>The recipient's name, 16 bytes.</td></tr>
+  <tr><td>21 to 36</td><td>The sender's name, 16 bytes.</td></tr>
+  <tr><td>37 on</td><td>The payload, as the sender's app gave it to its hub: 65,568 bytes at most.</td></tr>
+  <tr><td rowspan="3">A packet for someone on a relay that stays linked to the other</td><td>0</td><td><code>0x06</code></td></tr>
+  <tr><td>1 to 36</td><td>As <code>0x05</code>.</td></tr>
+  <tr><td>37 to 52, then 53 on</td><td>That relay's name, 16 bytes, then the payload.</td></tr>
+</table>
+<p>Each is answered <code>{"ack": &lt;number&gt;}</code> or <code>{"nak": &lt;number&gt;, "err": …}</code>. At most 64 wait for an answer on one link at once.</p>
+<table>
+  <tr><th><code>err</code></th><th>Meaning</th><th>What the sending relay does</th></tr>
+  <tr><td><code>home</code></td><td>No record of the sender's that names the sending relay is held.</td><td>Says the record and sends once more.</td></tr>
+  <tr><td><code>to</code></td><td>Nobody of that name has signed in here; or, for <code>0x06</code>, the recipient's record doesn't name that relay through this one.</td><td>Says the recipient's record and sends once more, then gives up.</td></tr>
+  <tr><td><code>moved</code></td><td>The record held here says they live elsewhere. It has just been said on the link.</td><td>Routes the packet again by that record, once.</td></tr>
+  <tr><td><code>limit</code></td><td>The sending relay is past its packets a minute or bytes a day.</td><td rowspan="2">Keeps the packet, leaves this relay alone for 15 seconds, then twice as long each time up to an hour, then sends one packet alone to see.</td></tr>
+  <tr><td><code>busy</code></td><td>Too busy to check the sender's record a moment ago.</td></tr>
+  <tr><td><code>full</code></td><td>No room to hold it for the recipient.</td><td>Tells the sender <code>full</code>.</td></tr>
+  <tr><td><code>big</code>, <code>far</code></td><td>The payload is over 65,568 bytes; or, for <code>0x06</code>, that relay may not stay linked here.</td><td>Tells the sender <code>refused</code>.</td></tr>
+</table>
+<p>Text frames on a link:</p>
+<table>
+  <tr><th>Message</th><th>Meaning</th></tr>
+  <tr><td><code>{"fed": "home", "rec": {…}}</code></td><td>A home record: to show whom the relay speaks for, or where someone lives. Checked like one an app gives. Not answered. 240 a minute from one relay.</td></tr>
+  <tr><td><code>{"fed": "whois", "q": &lt;number&gt;, "name": "maya"}</code></td><td>Who holds this username on your relay?</td></tr>
+  <tr><td><code>{"fed": "whois", "q": &lt;number&gt;, "id", "key", "home"}</code></td><td>The holder's name and key, and their record where one is held. Nobody: <code>{"fed": "whois", "q", "none": true}</code>, with <code>"why": "busy"</code> where the asking relay is past its lookups an hour.</td></tr>
+  <tr><td><code>{"ping": &lt;value&gt;}</code></td><td>Answered <code>{"pong": &lt;value&gt;}</code> where the value is a whole number or a string of 32 characters at most, 60 a minute.</td></tr>
+</table>
+<p>A text frame over 8,192 characters is ignored. A binary frame over 65,792 bytes, or a text frame over 65,536 characters, closes the link with <code>1009</code>. The relay that dialled reads no message over 131,072 bytes from the hub it dialled.</p>
+
+<h3 id="federation-waiting">What waits</h3>
+<p>A packet for a relay that can't be reached waits on the sender's relay. The sender's app is told <code>"waiting": true</code> at once, or after 4 seconds without an answer. For a relay linked with before, it waits up to 7 days. An address never once linked with is tried four times or for 2 minutes, then what waits for it is refused with <code>far</code> and the address is left alone for 10 minutes. What waits is in memory, and a restart loses it.</p>
+
+<h3 id="federation-standing">A relay with no address</h3>
+<p>A relay that can't be dialled, such as one hosted from an app, names a public relay to stay linked to. It dials that relay with <code>"stay": true</code> and no <code>url</code>, and keeps the link up. Its people's home records give the address <code>ghost-relay://&lt;its name&gt;?…&amp;via=&lt;that relay's hub&gt;</code>. Another relay reaches them by sending the public relay a <code>0x06</code> frame naming the hosted one, and the public relay passes it down the standing link as <code>0x05</code>. The hosted relay sends everything not for its own people up the same link, and the public relay passes it on to the relay the recipient lives on. That is two links at most. A public relay does this only where its keeper lets relays stay, for any or for those named. It is off by default.</p>
+
+<h2 id="door">Message sizes and the memory budget</h2>
+<p>Every WebSocket the relay takes or dials passes a guard that reads the frames' headers before anything else reads the message. A message past the limit ends the connection before a byte of it is held. The socket is dropped: there is no close frame and no code.</p>
+<table>
+  <tr><th>Where</th><th>First message</th><th>Any later message</th></tr>
+  <tr><td>The hub</td><td>16,384 bytes</td><td>1,048,576 bytes</td></tr>
+  <tr><td>A pairing channel</td><td>16,384 bytes</td><td>1,114,176 bytes. A binary frame over 1,048,640 that fits is closed with <code>1009</code>.</td></tr>
+  <tr><td>A link, read by the relay that dialled it</td><td>16,384 bytes</td><td>131,072 bytes</td></tr>
+</table>
+<ul>
+  <li>A message may come in 1,024 frames at most.</li>
+  <li>No compression is offered or taken. An upgrade whose <code>Sec-WebSocket-Key</code> is not 1 to 64 printable ASCII characters is answered <code>400</code>.</li>
+  <li>A control frame is 125 bytes at most. A ping or pong with a payload that comes between the pieces of one message is passed on after that message's last piece; more than 32 of them inside one message ends the connection. An empty one goes through at once.</li>
+</ul>
+<p>All connections together may hold 64 MB in memory: the parts of messages still coming in, and what waits to go out. A connection is ended for what it holds only in these cases:</p>
+<table>
+  <tr><th>Case</th><th>When</th></tr>
+  <tr><td>Past its share</td><td>More than 8 MB has waited to go out to it for 10 seconds on end.</td></tr>
+  <tr><td>A message coming in stalled</td><td>It has neither finished nor grown by 16 KiB in 20 seconds.</td></tr>
+  <tr><td>Everyone together past the budget</td><td>Those stalled longest go first, then those that hold the most, until the rest fit.</td></tr>
+</table>
+<p>A connection whose own answers wait past 1 MiB is not read from until they fall below 256 KiB, so one that floods pings, or anything else that is answered, slows only itself. What the hub hands over of what it keeps waits while more than 256 KiB is on its way to that connection. The four numbers a keeper can change are in <a href="/docs/developer/relay-api/#own">Running your own</a>.</p>
+
+<h2 id="pairing">Pairing channels</h2>
+<p>A channel passes frames between a phone and one <a href="/docs/pairing/">paired computer</a>. Its name is the last part of the address: 32 lowercase hex digits. No headers or query are read. A WebSocket to any other address that doesn't end in <code>hub</code> is answered <code>404</code>.</p>
+<p>The first frame, within 10 seconds, says the channel's token and which end this is:</p>
+<pre><code>{"auth": "&lt;64 hex&gt;", "role": "phone"}</code></pre>
+<table>
+  <tr><th>Field</th><th>What it holds</th></tr>
+  <tr><td><code>auth</code></td><td>The channel's token. The first connection to a channel sets it, and the relay keeps only its SHA-256. Later ones must say the same.</td></tr>
+  <tr><td><code>role</code></td><td><code>phone</code> or <code>desk</code>. One socket for each; a newer one in the same role replaces the older.</td></tr>
+  <tr><td><code>temp</code></td><td>Optional. <code>true</code>, on the hello that makes the channel, makes it a temporary one, made for pairing.</td></tr>
+</table>
+<p>After that:</p>
+<table>
+  <tr><th>Message</th><th>From</th><th>Meaning</th></tr>
+  <tr><td><code>{"ok": true, "peer": &lt;bool&gt;}</code></td><td>Relay</td><td>You are in. <code>peer</code> says whether the other end is connected now.</td></tr>
+  <tr><td><code>{"ok": false, "err": "bad hello"}</code></td><td>Relay</td><td>The hello wasn't JSON text, or its <code>auth</code> or <code>role</code> was wrong. Closed with <code>4400</code>.</td></tr>
+  <tr><td><code>{"ok": false, "err": "refused"}</code></td><td>Relay</td><td>Not this channel's token, or the relay has all the channels it keeps. Closed with <code>4403</code>.</td></tr>
+  <tr><td><code>{"peer": true}</code></td><td>Relay</td><td>The other end joined.</td></tr>
+  <tr><td><code>{"peer": false}</code></td><td>Relay</td><td>The other end's socket closed.</td></tr>
+  <tr><td>A binary frame</td><td>Either end</td><td>Passed to the other end as it came, 1,048,640 bytes at most (1 MiB and 64 bytes). The hello is 16,384 bytes at most.</td></tr>
+  <tr><td><code>{"dropped": true}</code></td><td>Relay</td><td>Your binary frame went nowhere: the other end isn't connected.</td></tr>
+  <tr><td><code>{"delete": true}</code></td><td>You</td><td>Unpairs. The channel is removed and both ends closed with <code>4410</code>.</td></tr>
+  <tr><td><code>{"ping": &lt;value&gt;}</code></td><td>You</td><td>Answered <code>{"pong": &lt;value&gt;}</code>.</td></tr>
+</table>
+<p>Any other text frame is ignored.</p>
+
+<h3>Close codes</h3>
+<table>
+  <tr><th>Code</th><th>Reason</th><th>When</th></tr>
+  <tr><td><code>4400</code></td><td><code>bad hello</code></td><td>A malformed hello.</td></tr>
+  <tr><td><code>4401</code></td><td><code>no token</code></td><td>No hello was accepted within 10 seconds.</td></tr>
+  <tr><td><code>4403</code></td><td><code>refused</code></td><td>The wrong token, or no room for a new channel.</td></tr>
+  <tr><td><code>4409</code></td><td><code>replaced</code></td><td>A newer connection took this role.</td></tr>
+  <tr><td><code>4410</code></td><td><code>deleted</code>, <code>expired</code> or <code>unused</code></td><td>The channel is gone: unpaired, a temporary one past its 10 minutes, or one nobody joined for 90 days.</td></tr>
+  <tr><td><code>1009</code></td><td><code>too big</code></td><td>A binary frame over 1,048,640 bytes.</td></tr>
+  <tr><td><code>1001</code></td><td></td><td>The server is stopping.</td></tr>
+  <tr><td>None</td><td></td><td>The socket is dropped with no close frame for a message over 1,114,176 bytes, a hello over 16,384, or a connection that holds too much (<a href="#door">Message sizes and the memory budget</a>).</td></tr>
+</table>
+
+<h3>What is kept</h3>
+<p>No frame is kept or queued. With the other end away a frame is dropped and its sender told. Of a channel the relay keeps its name, the hash of its token and the day it was last joined, and forgets it 90 days after that day when nobody is connected. A temporary channel is never written down. It lasts 10 minutes, or until both ends have left if that is sooner.</p>
+
+<h2 id="limits">Limits</h2>
+<p>These are the values in the code. A server someone else runs may have changed the ones marked as settings.</p>
+<table>
+  <tr><th>Limit</th><th>Value</th></tr>
+  <tr><td>Hub: sockets open at once</td><td>20,000 (a setting)</td></tr>
+  <tr><td>Hub: time to sign in</td><td>10 seconds</td></tr>
+  <tr><td>Hub: devices connected for one name</td><td>8</td></tr>
+  <tr><td>Hub: one binary frame</td><td>65,568 bytes</td></tr>
+  <tr><td>Hub: the sign-in frame</td><td>16,384 bytes</td></tr>
+  <tr><td>Hub: any later message</td><td>1,048,576 bytes, in 1,024 frames at most</td></tr>
+  <tr><td>Hub: keys remembered as signing in with v2</td><td>200,000 (a setting); 30 new ones an hour from one place, 5,000 from everywhere</td></tr>
+  <tr><td>Hub: a late answer to an old sign-in</td><td>2 minutes, 1,000 waiting at once</td></tr>
+  <tr><td>Hub: link helpers named</td><td>4, of 200 characters each</td></tr>
+  <tr><td>Hub: held for one name</td><td>200 frames, 1 MiB</td></tr>
+  <tr><td>Hub: held for everyone</td><td>96 MiB (a setting), each frame counted with 256 bytes more</td></tr>
+  <tr><td>Hub: how long a packet is held</td><td>7 days</td></tr>
+  <tr><td>Hub: names one connection watches</td><td>500</td></tr>
+  <tr><td>Hub: last-seen times remembered</td><td>200,000 names</td></tr>
+  <tr><td>Room: names in one</td><td>64</td></tr>
+  <tr><td>Room: rooms at once</td><td>50,000</td></tr>
+  <tr><td>Room: kept frames</td><td>The newest 300, for 7 days</td></tr>
+  <tr><td>Room: kept over all rooms</td><td>256 MiB</td></tr>
+  <tr><td>Room: one reaction</td><td>512 bytes</td></tr>
+  <tr><td>Room: looks for one connection</td><td>200</td></tr>
+  <tr><td>Room: admins of a read-only room</td><td>200</td></tr>
+  <tr><td>Room: a media relay's username and password</td><td>24 hours (a setting)</td></tr>
+  <tr><td>Pushes: for one name</td><td>1 a minute</td></tr>
+  <tr><td>Directory: <code>whois</code></td><td>120 an hour for one name, here or at another relay</td></tr>
+  <tr><td>Directory: <code>badges</code></td><td>240 an hour, 64 names and 64 usernames each</td></tr>
+  <tr><td>Directory: kept blob</td><td>262,144 characters</td></tr>
+  <tr><td>Directory: the second kept blob (<code>curl-keep</code>)</td><td>131,072 characters</td></tr>
+  <tr><td>Directory: gifts kept until shown</td><td>50 for one install</td></tr>
+  <tr><td>Directory: handles watched</td><td>5,000</td></tr>
+  <tr><td>Directory: profile reads (<code>check</code>, <code>follows</code>)</td><td>40 an hour</td></tr>
+  <tr><td>Directory: a sign-in link</td><td>10 minutes</td></tr>
+  <tr><td>Number: codes asked for</td><td>3 an hour, 6 a day, for an install and for a number</td></tr>
+  <tr><td>Number: tries at a code</td><td>10 an hour; a code lasts 10 minutes</td></tr>
+  <tr><td>Accounts: one sealed backup</td><td>65,536 characters</td></tr>
+  <tr><td>Accounts: signed body</td><td>196,608 characters (2,048 for <code>acct-devices</code>), its time within 10 minutes</td></tr>
+  <tr><td>Accounts: signed changes and <code>acct-leave</code></td><td>60 an hour</td></tr>
+  <tr><td>Accounts: <code>acct-find</code></td><td>30 an hour</td></tr>
+  <tr><td>Accounts: password tries</td><td>6 an hour for a connection, 10 for an account</td></tr>
+  <tr><td>Accounts: wrong numbers</td><td>5 an hour</td></tr>
+  <tr><td>Accounts: devices on one</td><td>20</td></tr>
+  <tr><td>Accounts: on one server</td><td>200,000, 256 MiB of backups</td></tr>
+  <tr><td>Invitations: in one message</td><td>25</td></tr>
+  <tr><td>Invitations: sent</td><td>40 an hour, 120 a day</td></tr>
+  <tr><td>Invitations: waiting for one number</td><td>20, 3 from one sender, 30 days each</td></tr>
+  <tr><td>Invitations: one sealed invitation</td><td>2,048 characters</td></tr>
+  <tr><td>Invitations: on one server</td><td>20,000, 24 MiB</td></tr>
+  <tr><td>Invite words: held by one install</td><td>10</td></tr>
+  <tr><td>Invite words: set</td><td>20 an hour</td></tr>
+  <tr><td>Invite words: one sealed link</td><td>1,024 characters</td></tr>
+  <tr><td>Invite words: on one server</td><td>200,000; each let go after 365 days unset</td></tr>
+  <tr><td>Home records: one record</td><td>1 to 3 addresses of 200 characters; good for 30 days</td></tr>
+  <tr><td>Home records: checked for one install</td><td>600 an hour; 20 a second for everyone</td></tr>
+  <tr><td>Home records: kept</td><td>20,000 of the relay's own people; 10,000 others in memory</td></tr>
+  <tr><td>Relays: links open at once</td><td>64</td></tr>
+  <tr><td>Relays: other relays waited on at once</td><td>256</td></tr>
+  <tr><td>Relays: taken from one linked relay</td><td>1,200 packets a minute, 512 MiB a day, 600 names asked an hour (settings); 240 records a minute</td></tr>
+  <tr><td>Relays: sent across by one install</td><td>A quarter of the packets a minute and an eighth of the bytes a day; 8 relays dialled for the first time an hour</td></tr>
+  <tr><td>Relays: waiting for one relay</td><td>2,000 packets, 16 MiB, 7 days</td></tr>
+  <tr><td>Relays: waiting for all relays</td><td>32 MiB, each packet counted with 384 bytes more</td></tr>
+  <tr><td>Relays: waiting from one sender, or for one recipient</td><td>200 packets, 1 MiB</td></tr>
+  <tr><td>Relays: unanswered on one link</td><td>64 packets, 64 names asked</td></tr>
+  <tr><td>Relays: hellos from relays not yet seen at their address</td><td>30 a minute</td></tr>
+  <tr><td>Relays: dials</td><td>30 first dials, 30 tries again and 10 looks at a claimed address a minute; 10 seconds each</td></tr>
+  <tr><td>Relays: a link with nothing crossing it</td><td>Closed after 10 minutes</td></tr>
+  <tr><td>Relays: the key seen at an address</td><td>Believed for an hour</td></tr>
+  <tr><td>Pairing: time to say the token</td><td>10 seconds</td></tr>
+  <tr><td>Pairing: one binary frame</td><td>1,048,640 bytes</td></tr>
+  <tr><td>Pairing: the hello</td><td>16,384 bytes</td></tr>
+  <tr><td>Pairing: a temporary channel</td><td>10 minutes</td></tr>
+  <tr><td>Pairing: an unused channel</td><td>90 days</td></tr>
+  <tr><td>Pairing: channels at once</td><td>200,000</td></tr>
+  <tr><td>All: server pings</td><td>Every 30 seconds</td></tr>
+  <tr><td>All: held in memory by every connection together</td><td>64 MB (a setting)</td></tr>
+  <tr><td>All: waiting to go out to one connection</td><td>8 MB for 10 seconds (settings)</td></tr>
+  <tr><td>All: a message coming in that stalls</td><td>20 seconds (a setting)</td></tr>
+</table>
+<p>A text frame and a binary frame are held to the same length: the guard in front of each socket counts a message's bytes, whatever its kind.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/developer/relay-api/"><small>Previous</small>Relay server API</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#identity">Who an install is</a><a href="#sign-in">Signing in to the hub</a><a href="#packets">Packets to a person</a><a href="#presence">Presence</a><a href="#rooms">Rooms</a><a href="#pushes">Pushes</a><a href="#directory">The directory</a><a href="#federation">Relays that talk to each other</a><a href="#door">Message sizes and the memory budget</a><a href="#pairing">Pairing channels</a><a href="#limits">Limits</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

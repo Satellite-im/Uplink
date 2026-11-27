@@ -1,0 +1,79 @@
+<p>An Uplink account keeps who you are: your username, friends and circles. With it you can sign in on another device and be the same you there, or get everything back on a new phone. Your texts aren't part of it; they stay in your phone's own store.</p>
+
+<h2 id="create">Create an account</h2>
+<p>You make one the first time you open Uplink: pick a username and a password and tap <b>Continue</b>. Your account is made then and there.</p>
+<steps>
+<step title="Pick a username and a password">
+<p>The username is how people find you. The password is at least 10 characters; with it and your username you sign in on another device. It's stretched on your device first, so this takes a moment.</p>
+<m-screen caption="The first screen.">
+  <m-field label="Username" value="alex"/>
+  <m-field label="Password" value="••••••••••••"/>
+  <m-btn kind="primary" tap>Continue</m-btn>
+</m-screen>
+</step>
+<step title="Write down your 12 recovery words">
+<p>Uplink shows 12 words. Write them down, on paper, in this order, and keep them somewhere safe. Make sure nobody can see your screen.</p>
+<m-screen title="Write these down" back caption="Your words will be different. Never type them into a website or tell them to anyone.">
+  <m-words/>
+  <m-btn kind="primary" tap>I've written them down</m-btn>
+</m-screen>
+<note kind="warn" title="The words are the account"><p>Anyone with your 12 words can sign in as you, and without them (or your password) nobody, not even us, can get your account back. Uplink will never ask for them except to sign in.</p></note>
+</step>
+<step title="Check them, or skip">
+<p>Tap them in order, or type three of them. <b>See the words again</b> takes you back. <b>Skip this check</b> goes straight on; you can see your words again any time with <ui>Settings › Me › Account › Show recovery words</ui>.</p>
+<m-screen title="Check your words" back>
+  <m-tabs items="Tap them in order|Type three of them" active="Tap them in order"/>
+  <m-p>3 of 12</m-p>
+  <m-btn kind="secondary">Skip this check</m-btn>
+</m-screen>
+</step>
+</steps>
+<p>Set Uplink up before sign-up asked for a password, and have no account yet? Make one in <ui>Settings › Me › Account › Create an account</ui>: a password, then the same words.</p>
+
+<h2 id="sign-in">Sign in on another device</h2>
+<p>On the new device: <ui>Settings › Me › Account › Sign in to your Uplink account</ui>. Sign in with your username and password, or with your 12 recovery words alone.</p>
+<m-screen title="Sign in to your Uplink account" back caption="If your account has a verified number, a code is texted to it as well.">
+  <m-tabs items="Username|Recovery words|Phone" active="Username"/>
+  <m-field label="Username" value="alex"/>
+  <m-field label="Password" value="••••••••••••"/>
+  <m-btn kind="primary" tap>Sign in</m-btn>
+</m-screen>
+<h3 id="scan">Or scan a code with your phone</h3>
+<p>If your Android phone is already signed in, it can sign the new device in for you, with nothing to type.</p>
+<steps>
+<step title="Show the code on the new device">
+<p>On its sign-in screen, choose <b>Phone</b>. It shows a QR code. The code holds nothing of your account, and a new one takes its place every two minutes.</p>
+</step>
+<step title="Scan it with your phone">
+<p>On the phone: <ui>Settings › Me › Account › Sign in a new device</ui>, and point the camera at the code. The scanner in <ui>Settings › Computers</ui> reads it too.</p>
+</step>
+<step title="Compare the six digits">
+<p>Both show six digits. If they are the same, tap <b>They match, sign it in</b> on the phone. If they differ, tap <b>They don't match</b>: nothing is sent.</p>
+</step>
+<step title="Unlock">
+<p>The phone asks for its lock first: your Uplink PIN or fingerprint if you lock the app (<ui>Settings › Lock the app</ui>), otherwise the phone's fingerprint or face. A phone with neither asks for your account's password. Then the new device signs in. No texted code is asked.</p>
+</step>
+</steps>
+<note kind="warn" title="Only for a device in front of you"><p>Saying yes signs that device in as you, with everything of your account. Never do it for a code someone else shows you or sends you, whoever they say they are. A device signed in this way is listed under <b>Signed in on these devices</b>, where you can remove it.</p></note>
+<p>Both devices need to be on the same relay. Scanning works from an Android phone for now.</p>
+
+<note kind="warn" title="Signing in replaces what's on the device"><p>Signing in makes the device your account. Anything on it from before, as someone else, is replaced, and the app starts again. Your texts are not touched.</p></note>
+
+<h2 id="manage">Devices, password and signing out</h2>
+<p>Everything is in <ui>Settings › Me › Account</ui>:</p>
+<m-screen title="Account" back>
+  <m-section title="Your account">
+    <m-row icon="badge-check" hue="purple" label="Address" value="0x8f3…c21a" />
+    <m-row icon="key-round" hue="amber" label="Change password" chev/>
+    <m-row icon="file-text" hue="slate" label="Show recovery words" hint="After your password" chev/>
+  </m-section>
+  <m-section title="Signed in on these devices"><m-row icon="smartphone" hue="green" label="Pixel 9" hint="This device"/><m-row icon="laptop" hue="blue" label="MacBook Air" chev/></m-section>
+  <m-section><m-row icon="log-out" label="Sign out of this device" danger/></m-section>
+</m-screen>
+<ul>
+  <li><b>Change password</b>: your backup is sealed again with the new one. Your recovery words stay the same.</li>
+  <li><b>Signed in on these devices</b>: remove a device you no longer have. A browser is signed out within a few minutes (or as soon as it's next opened), and a phone or computer the next time it starts: an iPhone, a computer without a phone or a browser deletes everything of your account from itself, other networks' sign-ins and call recordings included; an Android phone, or a computer linked to one, forgets your recovery words and its keys for circles and forward secrecy, and keeps its username, friends and conversations. Each browser you sign in on, and each private window, is a device here until it signs out or you remove it.</li>
+  <li><b>Sign out of this device</b>: the device becomes someone new. Your friends and circles stay with your account and come back when you sign in again. On an iPhone or a computer without a phone, your conversations, spaces and choices stay on the device unless you choose <b>Sign out and delete everything here</b>, which also signs out of your other networks there and deletes its call recordings; on an Android phone your texts and conversations stay.</li>
+  <li><b>Sign out of this browser</b>: in a browser, everything of your account is deleted from it, always.</li>
+</ul>
+<note kind="info" title="In a browser"><p>A browser keeps neither your recovery words nor your password's key, so it asks for your password to show the words, change the password, list or remove your devices, and bring your backup up to date (<ui>Update your backup</ui>). Everything else it keeps is sealed with a key the browser holds for the page, but anything running in the page, such as a browser extension allowed on it, could open it. It keeps a copy of your backup sealed with your password, which someone who got it could try passwords against, so make your password long. Signing out deletes everything from the browser, but the browser may keep the deleted bytes among its own files for a while: on a computer others use, use a private window, or clear the browser's data for the app.</p></note>

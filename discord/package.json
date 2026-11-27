@@ -1,0 +1,21 @@
+{
+  "name": "ghost-messaging-discord",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Uplink's Discord bot: who is in a linked server's voice channels, and the voice and chat bridge to Uplink spaces.",
+  "type": "module",
+  "main": "src/bot.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node src/bot.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@discordjs/voice": "0.19.2",
+    "@evan/opus": "1.0.3",
+    "discord.js": "14.27.0",
+    "werift": "0.27.0"
+  }
+}

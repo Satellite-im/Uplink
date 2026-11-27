@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Run your own relay · Uplink docs</title>
+<meta name="description" content="Run the relay on a server of your own: what you give up, Docker or a single program, TLS, TURN for calls, and its settings.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Privacy and settings</div>
+    <h1>Run your own relay</h1>
+    <p class="lede">Run the relay on a server of your own: what you give up, Docker or a single program, TLS, TURN for calls, and its settings.</p>
+    <p>Uplink's relay is one small program. Anyone can run it on a server of their own and point their app at it under <span class="ui-path">Settings › Routes › Relay server</span>. This page is for whoever runs that server: what you get and what you give up, how to run it with Docker or as a single program, calls through your own TURN server, a link helper, and how to check it and keep it updated.</p>
+
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Read this first</b>
+<p>The app talks to one relay at a time for everything that goes through a relay. Moving to your own changes who you can reach and what still works. The next section says how, plainly. It suits a group that moves together, such as a family or a team.</p>
+</div></aside>
+
+<h2 id="reach">What you get, and what you don't</h2>
+<p>Relays can pass sealed packets to each other, so friends can be on different relays. That is the keeper's choice on each relay, and it is off unless switched on (<a href="#other-relays">below</a>). Everything else a relay keeps is still that relay's own.</p>
+<table>
+  <tr><th>What</th><th>On a relay of your own</th></tr>
+  <tr><td>Friends by username: requests, messages, reactions, edits, read marks</td><td><b>Yes</b>, between people on your relay. With people on another relay too, where both relays talk to each other: add them as <code>@maya@their.relay</code>.</td></tr>
+  <tr><td>Circles and spaces</td><td>Only between people on the same relay. A link made on your relay names it at its end (<code>…@relay.example.com</code>): opened by someone on another relay, the app says which relay the circle is on instead of joining an empty room there, and a browser guest opening a space's link is connected to the relay it names.</td></tr>
+  <tr><td>Calls</td><td>Only between people on the same relay: a call is a room on one relay. The app says so instead of ringing a friend on another relay. Calls that can't go straight between two devices need <a href="#turn">your own TURN server</a>.</td></tr>
+  <tr><td>Who is online, away, last seen</td><td>Not shown for a friend on another relay.</td></tr>
+  <tr><td>Your account (username and password, the sealed backup)</td><td>Kept on the relay you made it on. Signing in on a new device works only with that device on the same relay, and the sign-in screen says which relay it asks. An app moved to a relay that doesn't hold its account keeps everything and offers <b>List this device again</b>, which puts the account on that relay from the device.</td></tr>
+  <tr><td>Your username</td><td>Kept on each relay apart. <code>@maya</code> on yours and <code>@maya@relay.example</code> can be two people. When the app moves to another relay your username is claimed there too where it is free; where someone else holds it, your profile asks you to choose one for that relay. The one on the relay you left is yours again when you go back.</td></tr>
+  <tr><td>Add-me links (<code>gogho.st/add/…</code>)</td><td>A link made on your relay names it after the key (<code>#KEY@relay.example.com</code>). Whoever opens it is asked for on that relay, from whichever relay they use; a link that names none is someone on gogho.st. The link's key makes sure it is only ever the person who shared it.</td></tr>
+  <tr><td>Circle invite words (<code>gogho.st/c/…</code>)</td><td>Kept on each relay apart. A word made on your relay works typed into <b>Join a circle</b> by people on your relay; the gogho.st page only knows gogho.st's words.</td></tr>
+  <tr><td>Files spaces</td><td>Kept on your relay's disk, for people on your relay.</td></tr>
+  <tr><td>Texts (SMS), encrypted ones included</td><td>Unchanged. They go over the phone network, not through any relay.</td></tr>
+  <tr><td>The Marketplace</td><td>Always Uplink's, read from gogho.st whatever relay you use. Submitting a plugin needs a username claimed on gogho.st, so it doesn't work from your relay.</td></tr>
+  <tr><td>Verifying your number; linking Discord, X, Telegram</td><td>Off unless you set up your own Twilio Verify service and your own apps with those networks.</td></tr>
+  <tr><td>Waking a closed iPhone</td><td>Not possible. It needs Apple's push key for the app, which only the app's publisher holds. An iPhone gets what was held for it the next time the app is opened.</td></tr>
+  <tr><td>Share feedback</td><td>Goes to your relay where you set up a board for it; where you didn't, the app sends it to gogho.st instead, since it is about the app.</td></tr>
+  <tr><td>A computer paired to the phone</td><td>Messages go through the phone, so through your relay, and the computer's own connection for spaces goes to the relay the phone uses.</td></tr>
+  <tr><td>Souls</td><td>Counted by each relay apart. The Souls page says whose count it shows; bug bounties are given on gogho.st.</td></tr>
+  <tr><td>App updates, these docs, the website</td><td>From gogho.st, as before.</td></tr>
+</table>
+<p><b>Not done yet:</b> circles, spaces and calls across relays (the app uses one relay at a time, and an invite to a circle elsewhere says which relay to use first); who is online across relays; and signing in by username on another relay than the account's own, until a device that holds the account lists itself there.</p>
+
+<h2 id="serves">What it is</h2>
+<p>One program on one port (8787 unless told otherwise), speaking plain HTTP and WebSockets. It has no dependencies beyond Dart's own library. You put a web server in front of it for TLS.</p>
+<table>
+  <tr><th>Path</th><th>What</th></tr>
+  <tr><td><code>/hub</code> (WebSocket)</td><td>The hub: apps sign in with their key, find each other and pass sealed packets. It holds packets for people who are away (in memory, 96 MB at most), and keeps presence, rooms for circles, spaces and calls, usernames, sealed account backups and invite words.</td></tr>
+  <tr><td><code>/relay/&lt;channel&gt;</code> (WebSocket)</td><td>A phone and its paired computer when they're on different networks.</td></tr>
+  <tr><td><code>/files/…</code></td><td>Files spaces' sealed files, on disk.</td></tr>
+  <tr><td><code>/word/&lt;hash&gt;</code></td><td>A circle's invite word.</td></tr>
+  <tr><td><code>/link/…</code></td><td>The pages a network sign-in comes back to, only with those networks set up.</td></tr>
+  <tr><td><code>/market/…</code></td><td>A Marketplace. The apps never read yours; the sample settings close it.</td></tr>
+  <tr><td><code>/app/…</code></td><td>The app in a browser, only where you give it a folder to serve.</td></tr>
+  <tr><td>anything else</td><td><code>Ghost Messaging relay</code> as plain text: a quick check that it is up.</td></tr>
+</table>
+<p>It writes only under its data folder (<code>--data</code>): pairings, usernames, sealed account backups, Files, invites and invite words. Back that folder up if you care about any of it. Nothing it holds can be read without the apps' keys, but which installs talk to which is visible to whoever runs it, as with any server.</p>
+
+<h2 id="need">What you need</h2>
+<ul>
+  <li>A server with a domain name pointed at it.</li>
+  <li>Ports 80 and 443 open.</li>
+  <li>A few hundred MB of memory.</li>
+  <li>The source: <a href="https://github.com/InfamousVague/ghost-messaging">github.com/InfamousVague/ghost-messaging</a>. Every sample file named on this page is in <code>relay/deploy/</code>, and the image is built from <code>relay/Dockerfile</code>.</li>
+</ul>
+<p>The examples use <code>relay.example.com</code>. Put your own domain in its place.</p>
+
+<h2 id="docker">With Docker Compose</h2>
+<p>This runs the relay with Caddy in front of it. Caddy gets and renews the certificate by itself once your domain's DNS points at the server. It needs Docker Compose 2.24 or later.</p>
+<pre><code>cd relay/deploy
+cp relay.env.example relay.env               # and edit: nothing in it is required
+cp Caddyfile.example Caddyfile               # put your domain in place of relay.example.com
+docker compose up -d
+curl https://relay.example.com/              # Ghost Messaging relay</code></pre>
+<p>The relay isn't published on any port of its own; only Caddy reaches it. What it keeps is in the <code>relay-data</code> volume.</p>
+<p>Compose pulls the relay's image, which every release publishes for x64 and arm64 machines: <code>ghcr.io/infamousvague/ghost-relay</code>, tagged with the version and <code>latest</code>. The image alone, without Compose:</p>
+<pre><code>docker run -d --name ghost-relay --restart unless-stopped -p 127.0.0.1:8787:8787 \
+  -v ghost-relay-data:/data --env-file relay.env ghcr.io/infamousvague/ghost-relay:latest</code></pre>
+<p>To build it yourself instead, from the source's folder: <code>docker build -t ghost-relay relay</code>, and use <code>ghost-relay</code> in place of the published name.</p>
+<p>It runs as an unprivileged user, in an image with nothing but the program, the C library and certificates. Put a web server in front of it for TLS, as in the next section.</p>
+
+<h2 id="systemd">As a single program, with systemd</h2>
+<p>Each release publishes the program for Linux on x64 and arm64, with the service file beside it, on the <a href="https://github.com/InfamousVague/ghost-messaging/releases">releases page</a> (<code>relay-</code> and the version). Download the one for your machine, check it, and install it as a service:</p>
+<pre><code>V=0.12.42 A=x64                              # or arm64
+curl -LO https://github.com/InfamousVague/ghost-messaging/releases/download/relay-$V/ghost-relay-$V-linux-$A.tar.gz
+curl -LO https://github.com/InfamousVague/ghost-messaging/releases/download/relay-$V/ghost-relay-$V-linux-$A.tar.gz.sha256
+sha256sum -c ghost-relay-$V-linux-$A.tar.gz.sha256 &amp;&amp; tar xzf ghost-relay-$V-linux-$A.tar.gz &amp;&amp; cd ghost-relay-$V-linux-$A
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin ghost-relay
+sudo install -d -m 755 /opt/ghost-relay &amp;&amp; sudo install -m 755 ghost-relay /opt/ghost-relay/ghost-relay
+sudo install -d -o ghost-relay -g ghost-relay -m 700 /var/lib/ghost-relay
+sudo install -o root -g ghost-relay -m 640 relay.env /etc/ghost-relay.env
+sudo cp deploy/ghost-relay.service /etc/systemd/system/
+sudo systemctl daemon-reload &amp;&amp; sudo systemctl enable --now ghost-relay</code></pre>
+<p>It listens on <code>127.0.0.1:8787</code> only, writes only to <code>/var/lib/ghost-relay</code>, and restarts if it stops. The settings file is optional: the service starts without one. To build the program yourself instead, with Dart 3.11 or later: <code>dart compile exe bin/relay.dart -o ghost-relay</code> in the source's <code>relay</code> folder.</p>
+<p>Then put a web server in front of it for TLS:</p>
+<ul>
+  <li><b>Caddy:</b> <code>relay/deploy/Caddyfile.example</code>, with <code>relay:8787</code> changed to <code>127.0.0.1:8787</code>.</li>
+  <li><b>nginx:</b> <code>relay/deploy/nginx.conf.example</code>, with a certificate from certbot or similar.</li>
+</ul>
+<p>Whichever you use, it must pass WebSockets on, let a 10 MiB request body through (Files' pieces are up to 8 MiB), and not cut an open WebSocket off after a minute. Keep it on the same machine as the relay, so the relay sees each person's own address.</p>
+
+<h2 id="env">The environment variables</h2>
+<p><code>relay/deploy/relay.env.example</code> lists every variable the relay reads, grouped by what each switches on. <b>None is required:</b> with no file at all it runs the hub, pairings, Files and invite words with their defaults. One <code>NAME=value</code> a line, no quotes, no spaces. Some values are secrets, so keep the filled-in copy where only root or the relay's own user can read it.</p>
+<p>The sample sets three things, and you should keep them:</p>
+<table>
+  <tr><th>Variable</th><th>What it is</th></tr>
+  <tr><td><code>GHOST_PUBLIC_URL</code></td><td>Your relay's https address, with no slash after. Its built-in default is not yours.</td></tr>
+  <tr><td><code>GHOST_ADMIN_NAMES</code></td><td>Set empty. Its built-in default is someone else's username.</td></tr>
+  <tr><td><code>GHOST_MARKET_ON</code></td><td>Set to <code>0</code>, which closes the relay's own Marketplace. The apps never read yours.</td></tr>
+</table>
+<p>The rest are optional:</p>
+<table>
+  <tr><th>Variable</th><th>What it switches on</th></tr>
+  <tr><td><code>PORT</code></td><td>The port, where <code>--port</code> isn't given (8787). <code>--host</code> and <code>--data</code> are options on the command line, not variables.</td></tr>
+  <tr><td><code>GHOST_HUB_NAMES</code></td><td>Every host name your relay is reached at, commas between. Sign-ins are then bound to the name the app dialled (<a href="#bound">below</a>).</td></tr>
+  <tr><td><code>GHOST_HUB_KEEP_HELD</code></td><td><code>1</code> keeps what is held for people who are away on the server's disk too, still sealed, so a restart doesn't lose it.</td></tr>
+  <tr><td><code>GHOST_WIRE_MB</code>, <code>GHOST_WIRE_EACH_MB</code>, <code>GHOST_WIRE_STALL_S</code>, <code>GHOST_WIRE_IN_STALL_S</code></td><td>How much every connection may hold together (64 MB), how much may wait for one (8 MB) and for how long (10 seconds going out, 20 coming in) before it is ended. The defaults suit a relay with 300 MB; give more where it has more.</td></tr>
+  <tr><td><code>GHOST_TURN_SECRET</code>, <code>GHOST_TURN_URLS</code>, <code>GHOST_TURN_TTL</code></td><td>Calls through <a href="#turn">your own TURN server</a>. The secret and the addresses go together: both, or neither.</td></tr>
+  <tr><td><code>GHOST_LINK_HELPERS</code></td><td>Where your <a href="#link-helper">link helpers</a> are: https addresses, commas between, 4 at most. Without it devices make direct links only on one network.</td></tr>
+  <tr><td><code>GHOST_FED</code>, <code>GHOST_PUBLIC_HUB</code>, <code>GHOST_FED_ALLOW</code>, <code>GHOST_FED_BLOCK</code></td><td><a href="#other-relays">Talking to other relays</a>: <code>off</code> (the default), <code>open</code> or <code>list</code>, your hub's own address, and the relays allowed or never linked with.</td></tr>
+  <tr><td><code>GHOST_FED_PACKETS_A_MINUTE</code>, <code>GHOST_FED_BYTES_A_DAY</code>, <code>GHOST_FED_LOOKUPS_AN_HOUR</code></td><td>What one linked relay may send yours.</td></tr>
+  <tr><td><code>GHOST_FED_PORTS</code>, <code>GHOST_FED_PLAIN</code></td><td>More ports other relays may be dialled at, and <code>1</code> to dial without TLS, which you want only between machines you run yourself.</td></tr>
+  <tr><td><code>GHOST_FED_VIA</code>, <code>GHOST_FED_STANDING</code></td><td>For a relay with no address of its own: the public relay it stays linked to. And, on a public relay, which such relays may stay linked to it.</td></tr>
+  <tr><td><code>GHOST_FILES_…</code></td><td>Files spaces' limits, each with a default. The defaults allow very large files: lower <code>GHOST_FILES_TOTAL</code> to fit your disk.</td></tr>
+  <tr><td><code>GHOST_WEB_DIR</code>, <code>GHOST_APP_ORIGIN</code></td><td>The app in a browser: a folder holding the browser build, served under <code>/app/</code> (the same as <code>--web</code>), or the address it is served from where that is one of its own.</td></tr>
+  <tr><td><code>GHOST_TWILIO_SID</code>, <code>GHOST_TWILIO_TOKEN</code>, <code>GHOST_TWILIO_VERIFY</code>, <code>GHOST_TEXT_TO</code>, <code>GHOST_TEXTS_A_DAY</code></td><td>Verifying phone numbers by text, with your own Twilio Verify service. Without the first three nobody can verify a number on your relay.</td></tr>
+  <tr><td><code>GHOST_DISCORD_ID</code>, <code>GHOST_DISCORD_SECRET</code>, <code>GHOST_X_ID</code>, <code>GHOST_X_SECRET</code>, <code>GHOST_TELEGRAM_BOT</code>, <code>GHOST_TELEGRAM_TOKEN</code>, <code>GHOST_GITHUB_TOKEN</code></td><td>Linking accounts in <span class="ui-path">Settings › Me</span>. Each needs your own app registered with that network. A network left empty is "not set up" in the app.</td></tr>
+  <tr><td><code>GHOST_ADMIN_USER</code>, <code>GHOST_ADMIN_HASH</code></td><td>The admin page. Of little use on your relay: the app shows it only to one built-in username.</td></tr>
+  <tr><td><code>GHOST_MARKET_…</code></td><td>The Marketplace's limits. Leave them alone with <code>GHOST_MARKET_ON=0</code>.</td></tr>
+  <tr><td><code>GHOST_APNS_…</code>, <code>GHOST_NOTION_…</code>, <code>GHOST_BOUNTY_KEY</code></td><td>Only Uplink's own relay can use these. Leave them empty.</td></tr>
+</table>
+<p>The sample file says what each one is, with its default.</p>
+
+<h2 id="bound">Sign-ins bound to your relay</h2>
+<p>Recommended. List every host name your relay is reached at, commas between, with a port only where it is not 443:</p>
+<pre><code>GHOST_HUB_NAMES=relay.example.com,www.relay.example.com</code></pre>
+<p>With them the hub asks apps to sign in bound to the name they dialled, and refuses a sign-in made for another relay. That stops a relay one of your people was pointed at from signing in to yours as them.</p>
+<ul>
+  <li>An app that dialled a name you didn't list is refused, so list them all.</li>
+  <li>Keep every listed name registered to you for as long as it is listed.</li>
+  <li>Switch it on only once your people's apps are up to date. From an account's first sign-in of this kind, its older builds are refused and told to update.</li>
+</ul>
+
+<h2 id="turn">Calls through your own TURN server</h2>
+<p>Calls go straight between the two devices where they can. Where they can't (two strict networks, some mobile networks), they need a TURN server to pass through. Without one on your relay such calls don't connect. The TURN server is coturn.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Install coturn</h3>
+<p><code>apt install coturn</code>, or with the Compose file: <code>docker compose --profile calls up -d</code>.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Its settings</h3>
+<p>Copy <code>relay/deploy/turnserver.conf.example</code> to <code>/etc/turnserver.conf</code> (or to <code>deploy/turnserver.conf</code> for Compose). Fill in the secret (<code>openssl rand -hex 32</code>), your domain as the realm, and your public address. If people may reach each other through this same machine, allow its own public address with <code>allowed-peer-ip</code>.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Open its ports</h3>
+<p>UDP and TCP 3478, and UDP 49160 to 49200.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Tell the relay</h3>
+<p>In the relay's settings file, set the same secret and where coturn is, then restart the relay:</p>
+<pre><code>GHOST_TURN_SECRET=the-secret-from-turnserver.conf
+GHOST_TURN_URLS=turn:relay.example.com:3478?transport=udp,turn:relay.example.com:3478?transport=tcp</code></pre>
+<p>The relay then hands each call short-lived credentials made with that secret.</p>
+</div></li>
+</ol>
+
+<h2 id="link-helper">A link helper</h2>
+<p>Optional. The apps can also make <a href="/docs/routes/#direct">direct links</a> between a person's own devices and their friends' devices. Two devices on one network link by themselves. Across networks they need a <b>link helper</b>: a server both can reach, which tells each the address the internet sees it at, passes their first packets, and carries their traffic for as long as no straight path can be made.</p>
+<p>It is iroh's relay server, <code>iroh-relay</code>. It is not the Uplink relay, and the two know nothing of each other. The app ships with none: it uses the ones its relay names, and with none named its devices link only on one network. A link helper sees which device ids link, from which addresses, and how much they send. It never sees an account's name or what is said.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Build it</h3>
+<p><code>tool/build-link.sh host</code> on the server itself (Rust 1.91 or later) gives <code>build/link/host/iroh-relay</code>. Nothing prebuilt is fetched.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Its settings</h3>
+<p>Copy <code>relay/deploy/link-helper.toml.example</code> to <code>/etc/ghost-link/config.toml</code> and put your relay's name in it. As written the helper shares a machine with the web server that has ports 80 and 443, so it takes a port of its own and apps reach it at <code>https://relay.example.com:7843</code>. Copy the settings' names, don't retype them: the server passes over one it doesn't know without a word.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>A certificate</h3>
+<p>It needs a certificate for that name, as two files where the settings say (<code>/etc/ghost-link/certs/relay.example.com.crt</code> and <code>.key</code>, readable by the helper's user). The web server already has one: copy the pair, and copy it again whenever it is renewed. The helper reads the two files again once a day, so nothing needs restarting.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>The service</h3>
+<p><code>relay/deploy/ghost-link.service</code>, with the steps at its top: a user of its own with no shell, and nothing writable but its own folder.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Open its ports</h3>
+<p>TCP 7843, where apps reach it, and UDP 7842, where it tells a device its address. Keep that number: apps look for it there. 7844 and 7845 are for the machine itself and stay closed.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Tell the relay</h3>
+<p>In the relay's settings file, then restart the relay. Its hub hands the address to each app as it signs in.</p>
+<pre><code>GHOST_LINK_HELPERS=https://relay.example.com:7843</code></pre>
+</div></li>
+</ol>
+<p>Then check it:</p>
+<pre><code>curl https://relay.example.com:7843/healthz          # {"status":"ok","version":"1.5.0","git_hash":"unknown"}
+cd native/link-check
+cargo run -- https://relay.example.com:7843          # two devices sign in, link through it and straight; exits 0</code></pre>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>Before relying on it</b>
+<ul>
+<li><b>Anyone who knows the address can link through it</b>, Uplink or not. What bounds it is the limit in its settings (one device may send 256 KiB a second through it, after a first megabyte) and the service's memory and processor.</li>
+<li><b>A network that lets nothing out but ports 80 and 443</b> cannot reach a helper on 7843. Devices there link only where they can reach each other as they are; the relay carries everything else, as it always did.</li>
+</ul>
+</div></aside>
+
+<h2 id="other-relays">Talking to other relays</h2>
+<p>Optional, and off unless you switch it on. Off, your relay is an island: its people reach only each other through it. To let them be friends with people on other relays, set two things in the settings file and restart the relay:</p>
+<pre><code>GHOST_FED=open                                 # or: list, with GHOST_FED_ALLOW=relay.example.org,another.example.net
+GHOST_PUBLIC_HUB=wss://relay.example.com/hub   # your relay's own hub address, as the world reaches it</code></pre>
+<ul>
+  <li><code>open</code> links with any relay that proves its key; <code>list</code> only with the relays in <code>GHOST_FED_ALLOW</code>. <code>GHOST_FED_BLOCK</code> names relays never linked with, in either mode.</li>
+  <li>The other relay has to have it on too, and not block yours. Friendship across relays takes both.</li>
+  <li>Your relay must be reachable at <code>GHOST_PUBLIC_HUB</code> from outside, since other relays dial it to check yours is who it says. It must also be able to dial out on port 443.</li>
+  <li>It then keeps a key of its own in its data folder (<code>relay-key.json</code>). Keep it, and keep it private: it is who your relay is to the others.</li>
+  <li>It sees one thing more: which of its people talk to people on which other relay, and when. Still never what.</li>
+</ul>
+<p>As it starts, the relay says whether it talks to other relays, and its own name. That name is what another relay's keeper puts in their list to name yours. In the app, <span class="ui-path">Settings › Routes</span> then shows <b>Passes messages to other relays</b>. What crosses relays and what doesn't is on <a href="/docs/routes/#across">the Routes page</a>.</p>
+
+<h2 id="check">Check it works</h2>
+<pre><code>curl https://relay.example.com/                 # Ghost Messaging relay
+curl https://relay.example.com/market           # {"ok":true,"open":false,...} with GHOST_MARKET_ON=0
+journalctl -u ghost-relay -f                    # or: docker compose logs -f relay</code></pre>
+<p>The program says on start what it has: pairings and handles kept, Files spaces, whether a TURN server is set, and which sign-ins are on.</p>
+
+<h2 id="app">Point the app at it</h2>
+<p>On each device, open <span class="ui-path">Settings › Routes › Relay server</span>. Type your relay's address (<code>relay.example.com</code> is enough; it becomes <code>wss://relay.example.com/hub</code>) and press <b>Check it and use it</b>.</p>
+
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Routes</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">Relay server</div><div class="m-card">
+    <label class="m-field"><span>Another relay server's address</span><span class="m-input">relay.example.com</span></label>
+    <div class="m-row tap"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#check"/></svg></span><span class="m-txt"><b>Check it and use it</b><small>Nothing changes unless an Uplink relay answers there.</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+</div></div><figcaption>Settings › Routes, before moving to a relay of your own.</figcaption></figure>
+
+<p>The app connects and waits for the hub's greeting. If an Uplink relay doesn't answer, nothing changes and it says why. If one does, it says what moving means and switches only when you say so. The section always shows which relay is in use, and <b>Go back to Uplink's relay</b> switches back in one press.</p>
+<p>Everyone you want in a circle, a space or a call with has to set the same address. More about this screen is on <a href="/docs/routes/#own-relay">the Routes page</a>.</p>
+
+<h2 id="update">Keep it updated</h2>
+<ul>
+  <li><b>With Docker Compose:</b> <code>docker compose pull &amp;&amp; docker compose up -d</code> in <code>relay/deploy</code>.</li>
+  <li><b>With systemd:</b> download the newer release (or build again), then <code>sudo install -m 755 ghost-relay /opt/ghost-relay/ghost-relay</code> and <code>sudo systemctl restart ghost-relay</code>.</li>
+  <li><b>The link helper:</b> build again, install the program over the old one, and <code>sudo systemctl restart ghost-link</code>.</li>
+</ul>
+<p>A restart drops whoever is connected, and the apps reconnect by themselves. It also loses held packets and presence, which are only in memory unless you set <code>GHOST_HUB_KEEP_HELD=1</code>.</p>
+<p>The same guide, with more about how relays talk to each other, is in the repository: <a href="https://github.com/InfamousVague/ghost-messaging/blob/main/docs/SELF_HOSTING.md">docs/SELF_HOSTING.md</a>.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/routes/"><small>Previous</small>Routes</a><a class="next" href="/docs/coming-soon/"><small>Next</small>Coming soon</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#reach">What you get, and what you don't</a><a href="#serves">What it is</a><a href="#need">What you need</a><a href="#docker">With Docker Compose</a><a href="#systemd">As a single program, with systemd</a><a href="#env">The environment variables</a><a href="#bound">Sign-ins bound to your relay</a><a href="#turn">Calls through your own TURN server</a><a href="#link-helper">A link helper</a><a href="#other-relays">Talking to other relays</a><a href="#check">Check it works</a><a href="#app">Point the app at it</a><a href="#update">Keep it updated</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

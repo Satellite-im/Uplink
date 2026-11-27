@@ -1,0 +1,32 @@
+/* The popup's page around the Glacier kit (tokens.css, then the kit's own glacier.css, both copied in by build.mjs):
+   its width, the page colour and the type, all from the kit's tokens, light and dark as the system is. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+:root {
+  /* The app's accent and the colours that mean something, as its app.css (messaging/assets/css/app.css) sets them
+     over ink.css: the page's ink and paper, so Sign in is an ink button as Send is in the app. */
+  --app-accent: var(--app-ink);
+  --app-on-accent: var(--app-paper);
+  --app-danger: #dd3a30;
+  --app-info: #4f5bd5;
+  --app-online: #2fb35a;
+  --app-warn: #c27c00;
+}
+html,
+body {
+  margin: 0;
+  background: var(--glacier-bg);
+  color: var(--glacier-text);
+  font-family: var(--glacier-font-sans);
+  font-size: 14px;
+}
+body {
+  width: 360px;
+  min-height: 120px;
+}
+.popup {
+  padding: 16px;
+}

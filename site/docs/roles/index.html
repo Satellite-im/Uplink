@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roles and permissions · Uplink docs</title>
+<meta name="description" content="Who can do what in a circle, and changing it space by space.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Circles, spaces and calls</div>
+    <h1>Roles and permissions</h1>
+    <p class="lede">Who can do what in a circle, and changing it space by space.</p>
+    <p>Roles say who can do what in a circle, the way a Discord server's do: make roles, put them in order, give them to people, and let each space change the rules for itself. Find them in <span class="ui-path">Circle settings › Roles</span>.</p>
+
+<h2 id="who">Owner, admins, roles and @everyone</h2>
+<table>
+  <tr><th>Who</th><th>Can</th></tr>
+  <tr><td><b>Owner</b></td><td>Everything: give any role, make admins, and delete the circle. The person who made it.</td></tr>
+  <tr><td><b>Admins</b></td><td>Everything but deleting the circle or making admins. Made by the owner.</td></tr>
+  <tr><td><b>Roles</b></td><td>What each role allows, in order: the higher a role is, the more it outranks. Nobody can manage a role at or above their own highest.</td></tr>
+  <tr><td><b>@everyone</b></td><td>What everyone in the circle may do, whatever their roles. Always under every role.</td></tr>
+</table>
+
+<h2 id="permissions">The seven permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Lets people</th></tr>
+  <tr><td>Change the circle</td><td>Change its name, picture, colour and icon, and turn plugins on for everyone.</td></tr>
+  <tr><td>Manage spaces</td><td>Add, rename, change, arrange and delete spaces.</td></tr>
+  <tr><td>Manage roles</td><td>Make and change roles, and give them to people.</td></tr>
+  <tr><td>Invite people</td><td>Bring people in, and see the invite link.</td></tr>
+  <tr><td>Write</td><td>Send messages in chat spaces.</td></tr>
+  <tr><td>Talk</td><td>Join voice spaces and talk.</td></tr>
+  <tr><td>Share files</td><td>Add files in Files spaces.</td></tr>
+</table>
+
+<h2 id="make">Make a role</h2>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>New role</h3>
+<p>In <span class="ui-path">Circle settings › Roles</span>, tap <b>New role</b>. It's made at the bottom, over @everyone.</p>
+<figure class="mock wide"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Roles · 3</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#crown"/></svg></span><span class="m-txt"><b>Owner</b><small>Above every role: can do everything</small></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="rose"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg></span><span class="m-txt"><b>Moderators</b><small>2 people</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg></span><span class="m-txt"><b>Regulars</b><small>6 people</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="slate"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg></span><span class="m-txt"><b>@everyone</b><small>Everyone in the circle, under every role</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <span class="m-btn primary tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#plus"/></svg><span>New role</span></span>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Name it and choose a colour</h3>
+<p>Under <b>Display</b>, rename it and pick a colour. Names in chats are drawn in the colour of each person's highest role that has one.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Choose what it allows</h3>
+<p>Under <b>Permissions</b>, switch on what the role lets people do.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Moderators</span></div><div class="m-body">
+  <div class="m-tabs"><span class="">Display</span><span class="on">Permissions</span><span class="">Members</span></div>
+  <div class="m-section"><div class="m-card">
+    <div class="m-row"><span class="m-txt"><b>Manage spaces</b><small>Add, rename, change, arrange and delete spaces</small></span><span class="m-end"><span class="m-switch on"></span></span></div>
+    <div class="m-row tap"><span class="m-txt"><b>Invite people</b><small>Bring people in, and see the invite link</small></span><span class="m-end"><span class="m-switch on"></span></span></div>
+    <div class="m-row"><span class="m-txt"><b>Manage roles</b><small>Make and change roles, and give them to people</small></span><span class="m-end"><span class="m-switch"></span></span></div>
+  </div></div>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Give it to people</h3>
+<p>Under <b>Members</b>, tick who has it. Or tap someone in the circle's members list: their card has their roles to change.</p>
+</div></li>
+</ol>
+<p>Drag a role by its handle to move it up or down, or use <b>Move up</b> and <b>Move down</b> in its menu.</p>
+
+<h2 id="per-space">A space's own permissions</h2>
+<p>Each space can change the rules for itself: open the space's settings, then <b>Permissions</b>. For each role, each permission has three settings.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Announcements · Permissions</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">@everyone</div><div class="m-card"><div class="m-tri"><b>Write</b><div class="m-tabs"><span class="on tap">Deny</span><span class="">As the circle says</span><span class="">Allow</span></div></div></div></div>
+  <div class="m-section"><div class="m-section-title">Moderators</div><div class="m-card"><div class="m-tri"><b>Write</b><div class="m-tabs"><span class="">Deny</span><span class="">As the circle says</span><span class="on">Allow</span></div></div></div></div>
+</div></div></figure>
+<p>Here, an <b>Announcements</b> space where only moderators can write: <b>Deny</b> Write for @everyone, <b>Allow</b> it for Moderators. <b>As the circle says</b> leaves it to the circle's roles.</p>
+
+<h2 id="remove">Removing someone</h2>
+<p>The owner or an admin can remove someone: tap them in the members list, then <b>Remove</b>. Their app leaves the circle, and nobody in it hears them again.</p>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Removing someone doesn't change the circle's key</b>
+<p>Removing someone stops their app joining the circle. But a circle's messages are sealed with a key everyone in it has, and that key doesn't change when someone leaves, so an old or altered app that kept the key could still read what's said. For anything they mustn't read, make a new circle and invite the people who should be in it.</p>
+</div></aside>
+
+    <nav class="prevnext"><a class="prev" href="/docs/spaces/"><small>Previous</small>Spaces</a><a class="next" href="/docs/open-spaces/"><small>Next</small>Open spaces</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#who">Owner, admins, roles and @everyone</a><a href="#permissions">The seven permissions</a><a href="#make">Make a role</a><a href="#per-space">A space's own permissions</a><a href="#remove">Removing someone</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

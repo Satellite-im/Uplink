@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your account · Uplink docs</title>
+<meta name="description" content="Create an account, keep your recovery words safe, and sign in on another device.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Getting started</div>
+    <h1>Your account</h1>
+    <p class="lede">Create an account, keep your recovery words safe, and sign in on another device.</p>
+    <p>An Uplink account keeps who you are: your username, friends and circles. With it you can sign in on another device and be the same you there, or get everything back on a new phone. Your texts aren't part of it; they stay in your phone's own store.</p>
+
+<h2 id="create">Create an account</h2>
+<p>You make one the first time you open Uplink: pick a username and a password and tap <b>Continue</b>. Your account is made then and there.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Pick a username and a password</h3>
+<p>The username is how people find you. The password is at least 10 characters; with it and your username you sign in on another device. It's stretched on your device first, so this takes a moment.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <label class="m-field"><span>Username</span><span class="m-input">alex</span></label>
+  <label class="m-field"><span>Password</span><span class="m-input">••••••••••••</span></label>
+  <span class="m-btn primary tap"><span>Continue</span></span>
+</div></div><figcaption>The first screen.</figcaption></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Write down your 12 recovery words</h3>
+<p>Uplink shows 12 words. Write them down, on paper, in this order, and keep them somewhere safe. Make sure nobody can see your screen.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Write these down</span></div><div class="m-body">
+  <ol class="m-words"><li>orbit</li><li>lantern</li><li>velvet</li><li>canyon</li><li>mosaic</li><li>ripple</li><li>harbor</li><li>ember</li><li>quartz</li><li>meadow</li><li>tundra</li><li>falcon</li></ol>
+  <span class="m-btn primary tap"><span>I've written them down</span></span>
+</div></div><figcaption>Your words will be different. Never type them into a website or tell them to anyone.</figcaption></figure>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>The words are the account</b><p>Anyone with your 12 words can sign in as you, and without them (or your password) nobody, not even us, can get your account back. Uplink will never ask for them except to sign in.</p></div></aside>
+</div></li>
+<li class="step"><div class="step-body"><h3>Check them, or skip</h3>
+<p>Tap them in order, or type three of them. <b>See the words again</b> takes you back. <b>Skip this check</b> goes straight on; you can see your words again any time with <span class="ui-path">Settings › Me › Account › Show recovery words</span>.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Check your words</span></div><div class="m-body">
+  <div class="m-tabs"><span class="on">Tap them in order</span><span class="">Type three of them</span></div>
+  <p class="m-p">3 of 12</p>
+  <span class="m-btn secondary"><span>Skip this check</span></span>
+</div></div></figure>
+</div></li>
+</ol>
+<p>Set Uplink up before sign-up asked for a password, and have no account yet? Make one in <span class="ui-path">Settings › Me › Account › Create an account</span>: a password, then the same words.</p>
+
+<h2 id="sign-in">Sign in on another device</h2>
+<p>On the new device: <span class="ui-path">Settings › Me › Account › Sign in to your Uplink account</span>. Sign in with your username and password, or with your 12 recovery words alone.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Sign in to your Uplink account</span></div><div class="m-body">
+  <div class="m-tabs"><span class="on">Username</span><span class="">Recovery words</span><span class="">Phone</span></div>
+  <label class="m-field"><span>Username</span><span class="m-input">alex</span></label>
+  <label class="m-field"><span>Password</span><span class="m-input">••••••••••••</span></label>
+  <span class="m-btn primary tap"><span>Sign in</span></span>
+</div></div><figcaption>If your account has a verified number, a code is texted to it as well.</figcaption></figure>
+<h3 id="scan">Or scan a code with your phone</h3>
+<p>If your Android phone is already signed in, it can sign the new device in for you, with nothing to type.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Show the code on the new device</h3>
+<p>On its sign-in screen, choose <b>Phone</b>. It shows a QR code. The code holds nothing of your account, and a new one takes its place every two minutes.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Scan it with your phone</h3>
+<p>On the phone: <span class="ui-path">Settings › Me › Account › Sign in a new device</span>, and point the camera at the code. The scanner in <span class="ui-path">Settings › Computers</span> reads it too.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Compare the six digits</h3>
+<p>Both show six digits. If they are the same, tap <b>They match, sign it in</b> on the phone. If they differ, tap <b>They don't match</b>: nothing is sent.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Unlock</h3>
+<p>The phone asks for its lock first: your Uplink PIN or fingerprint if you lock the app (<span class="ui-path">Settings › Lock the app</span>), otherwise the phone's fingerprint or face. A phone with neither asks for your account's password. Then the new device signs in. No texted code is asked.</p>
+</div></li>
+</ol>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Only for a device in front of you</b><p>Saying yes signs that device in as you, with everything of your account. Never do it for a code someone else shows you or sends you, whoever they say they are. A device signed in this way is listed under <b>Signed in on these devices</b>, where you can remove it.</p></div></aside>
+<p>Both devices need to be on the same relay. Scanning works from an Android phone for now.</p>
+
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Signing in replaces what's on the device</b><p>Signing in makes the device your account. Anything on it from before, as someone else, is replaced, and the app starts again. Your texts are not touched.</p></div></aside>
+
+<h2 id="manage">Devices, password and signing out</h2>
+<p>Everything is in <span class="ui-path">Settings › Me › Account</span>:</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Account</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">Your account</div><div class="m-card">
+    <div class="m-row"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg></span><span class="m-txt"><b>Address</b></span><span class="m-end"><span class="m-value">0x8f3…c21a</span></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg></span><span class="m-txt"><b>Change password</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="slate"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg></span><span class="m-txt"><b>Show recovery words</b><small>After your password</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <div class="m-section"><div class="m-section-title">Signed in on these devices</div><div class="m-card"><div class="m-row"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg></span><span class="m-txt"><b>Pixel 9</b><small>This device</small></span></div><div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg></span><span class="m-txt"><b>MacBook Air</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div></div></div>
+  <div class="m-section"><div class="m-card"><div class="m-row danger"><span class="m-ico" data-hue="coral"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#log-out"/></svg></span><span class="m-txt"><b>Sign out of this device</b></span></div></div></div>
+</div></div></figure>
+<ul>
+  <li><b>Change password</b>: your backup is sealed again with the new one. Your recovery words stay the same.</li>
+  <li><b>Signed in on these devices</b>: remove a device you no longer have. A browser is signed out within a few minutes (or as soon as it's next opened), and a phone or computer the next time it starts: an iPhone, a computer without a phone or a browser deletes everything of your account from itself, other networks' sign-ins and call recordings included; an Android phone, or a computer linked to one, forgets your recovery words and its keys for circles and forward secrecy, and keeps its username, friends and conversations. Each browser you sign in on, and each private window, is a device here until it signs out or you remove it.</li>
+  <li><b>Sign out of this device</b>: the device becomes someone new. Your friends and circles stay with your account and come back when you sign in again. On an iPhone or a computer without a phone, your conversations, spaces and choices stay on the device unless you choose <b>Sign out and delete everything here</b>, which also signs out of your other networks there and deletes its call recordings; on an Android phone your texts and conversations stay.</li>
+  <li><b>Sign out of this browser</b>: in a browser, everything of your account is deleted from it, always.</li>
+</ul>
+<aside class="note info"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#info"/></svg><div><b>In a browser</b><p>A browser keeps neither your recovery words nor your password's key, so it asks for your password to show the words, change the password, list or remove your devices, and bring your backup up to date (<span class="ui-path">Update your backup</span>). Everything else it keeps is sealed with a key the browser holds for the page, but anything running in the page, such as a browser extension allowed on it, could open it. It keeps a copy of your backup sealed with your password, which someone who got it could try passwords against, so make your password long. Signing out deletes everything from the browser, but the browser may keep the deleted bytes among its own files for a while: on a computer others use, use a private window, or clear the browser's data for the app.</p></div></aside>
+
+    <nav class="prevnext"><a class="prev" href="/docs/first-run/"><small>Previous</small>The first time you open it</a><a class="next" href="/docs/how-accounts-work/"><small>Next</small>How your account works</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#create">Create an account</a><a href="#sign-in">Sign in on another device</a><a href="#manage">Devices, password and signing out</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

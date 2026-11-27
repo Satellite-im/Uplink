@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Add a friend · Uplink</title>
+<meta name="description" content="Add someone as a friend on Uplink.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#040406">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!--
+  Someone's add-me link (GMFB-34: "A gogho.st/add/<username> link and QR code that opens a friend request"): one page
+  for every username (the site's web server sends each /add/<name> here; tool/deploy-site.mjs). Opened on a phone with
+  the app, Android opens the app itself (an App Link); otherwise this page says who it is and leads to the app, which
+  asks before sending the request (lib/friends/add_link.dart). What follows # (the start of their account's name) is
+  carried into the app as it is, and no server ever sees it.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/uplink.css">
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (_) {}</script>
+<style>
+  /* An invite page in Uplink's look (/uplink.css): one sticker card over the join picture's starfield. */
+  :root { --red: #ff6b5e; }
+  :root[data-theme="light"] { --red: #c8322a; }
+  .page { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  .page > .u-slot--bg { position: fixed; }
+  .page > .u-slot--bg::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 55% at 50% 48%, rgba(4,4,6,.72), rgba(4,4,6,.2) 75%); }
+  main { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; padding: 3rem var(--u-gutter) 3.5rem; }
+  .card { width: 100%; max-width: 30rem; text-align: center; padding: 2.4rem 1.6rem 2rem; }
+  .card .u-needle { left: 86%; bottom: 58%; height: calc(42% + 4.5rem); width: 2px; opacity: .8; }
+  .card .logo { width: 7.5rem; height: auto; margin: 0 auto 1.4rem; }
+  .card .u-kicker { margin-bottom: .6rem; }
+  h1 { font-family: var(--u-display); font-style: italic; font-weight: 900; font-size: clamp(1.9rem, 7vw, 2.6rem); line-height: 1.02; letter-spacing: -.01em; margin: 0 0 .7rem; overflow-wrap: anywhere; }
+  .card p { margin: 0 auto 1.6rem; max-width: 24rem; }
+  .card p.err { color: var(--red); }
+  .card .u-btns { justify-content: center; padding-left: 0; }
+  .foot { position: relative; z-index: 1; text-align: center; font-size: .84rem; color: var(--u-ink-3); padding: 0 var(--u-gutter) 1.5rem; }
+  .foot a { color: var(--u-ink-2); }
+</style>
+</head>
+<body>
+<div class="page">
+<div class="u-slot u-slot--bg u-stars" aria-hidden="true"><img class="u-slot-img" src="/art/space/join.webp" alt="" loading="lazy" onerror="this.remove()"></div>
+<main>
+  <div class="card u-sticker">
+    <i class="u-needle u-needle--glow" aria-hidden="true"></i>
+    <img class="logo" src="/art/uplink-logo.webp" width="1200" height="918" alt="Uplink">
+    <span class="u-kicker">Friend request</span>
+    <h1 id="title">Add a friend</h1>
+    <p id="line">On Uplink.</p>
+    <div class="u-btns">
+      <a class="u-btn u-btn--solid" id="open" href="/"><span>Open in Uplink</span></a>
+      <a class="u-btn u-btn--line" href="/"><span>Get Uplink</span></a>
+    </div>
+  </div>
+</main>
+<p class="foot">Uplink: text, voice and video in one app. <a href="/">gogho.st</a> · <a href="/docs/">Help</a></p>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  // The username as the app tidies it (lib/me/me.dart goodUsername: 3 to 20 letters, numbers, dots or underscores).
+  const name = decodeURIComponent(location.pathname.replace(/^\/add\//, '').replace(/\/$/, '')).trim().replace(/^@/, '').toLowerCase();
+  if (!/^[a-z0-9._]{3,20}$/.test(name)) {
+    $('title').textContent = 'That isn’t an add-me link';
+    $('line').textContent = 'A username is 3 to 20 letters, numbers, dots or underscores.';
+    $('line').className = 'err';
+    $('open').remove();
+    return;
+  }
+  document.title = `@${name} · Uplink`;
+  $('title').textContent = `Add @${name}`;
+  $('line').textContent = `@${name} would like to be friends on Uplink. Open it in the app to send them a request.`;
+  // The start of their account's name, after # (never sent to any server, this one included): carried into the app,
+  // which refuses the relay's answer for the username where its key doesn't begin so (lib/friends/add_link.dart).
+  // After the key, the relay their username is on where it is not Uplink's own (#KEY@relay.example.com,
+  // GMFB-25): carried into the app too, which asks that relay for the name.
+  const [key, relay = ''] = location.hash.replace(/^#/, '').toLowerCase().split('@');
+  const keyOk = /^[0-9a-f]{8,32}$/.test(key);
+  const relayOk = keyOk && relay.length <= 120 && /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+(:[0-9]{1,5})?$/.test(relay);
+  if (relayOk) $('line').textContent = `@${name}, on the relay ${relay}, would like to be friends on Uplink. Open it in the app to send them a request.`;
+  // The app's own address for it (android ghostmsg://add/<name>): the app asks before sending anything.
+  $('open').href = `ghostmsg://add/${encodeURIComponent(name)}${keyOk ? '#' + key + (relayOk ? '@' + relay : '') : ''}`;
+})();
+</script>
+</body>
+</html>

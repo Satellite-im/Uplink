@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your profile and number · Uplink docs</title>
+<meta name="description" content="Your name, picture, status and username, and verifying your phone number.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Getting started</div>
+    <h1>Your profile and number</h1>
+    <p class="lede">Your name, picture, status and username, and verifying your phone number.</p>
+    <p>Your profile is what friends, and people in your spaces and circles, see of you. It lives in <span class="ui-path">Settings › Me</span>.</p>
+
+<h2 id="profile">Name, picture and status</h2>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Profile</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card">
+    <div class="m-row tap"><span class="m-ico" data-hue="rose"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image"/></svg></span><span class="m-txt"><b>Picture</b><small>Shown to your friends, and people in your spaces and circles</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round"/></svg></span><span class="m-txt"><b>Name</b></span><span class="m-end"><span class="m-value">Alex</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smile"/></svg></span><span class="m-txt"><b>Status</b></span><span class="m-end"><span class="m-value">Back at 6</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#at-sign"/></svg></span><span class="m-txt"><b>Username</b></span><span class="m-end"><span class="m-value">@alex</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <div class="m-section"><div class="m-section-title">What friends see</div><div class="m-card"><div class="m-row"><span class="m-ico" data-hue="teal"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg></span><span class="m-txt"><b>Show friends my number and linked accounts</b></span><span class="m-end"><span class="m-switch"></span></span></div></div></div>
+</div></div><figcaption>Settings › Me › Profile.</figcaption></figure>
+<ul>
+  <li><b>Picture</b> and <b>status</b> (up to 80 characters) go to your friends only, never to the relay server. Your status shows in spaces and circles too.</li>
+  <li><b>Username</b> is how people add you as a friend. <b>Give up @…</b> lets anyone take it after you; your friends stay your friends.</li>
+  <li><b>Show friends my number and linked accounts</b> puts them on the card friends see when they tap your face or @name.</li>
+</ul>
+<p>Anyone can tap your face or @name in a space to see your card: picture, status, and buttons to add you or write to you.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-sheet"><div class="m-sheet-title">Maya Chen</div>
+    <p class="m-p">@maya · Reading, back soon</p>
+    <span class="m-btn primary tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Add a friend</span></span>
+    <label class="m-field"><span class="m-input empty">Message Maya</span></label>
+  </div>
+</div></div><figcaption>A profile card.</figcaption></figure>
+
+<h2 id="number">Verify your phone number</h2>
+<p>Verifying your number lets friends who have it find you, and lets members of a circle with an <a href="/docs/sms-spaces/">SMS space</a> get its messages by text without anyone adding them. It's optional.</p>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Open Number</h3>
+<p><span class="ui-path">Settings › Me › Number</span> says <b>Not verified</b>. Tap it.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Me</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card"><div class="m-row tap"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#phone"/></svg></span><span class="m-txt"><b>Number</b><small>Not verified</small></span><span class="m-end"><span class="m-value">+1 555 010 0199</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div></div></div>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Text me a code</h3>
+<p>Check the number and tap <b>Text me a code</b>.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Verify your number</span></div><div class="m-body">
+  <label class="m-field"><span>Your number</span><span class="m-input">+1 555 010 0199</span></label>
+  <span class="m-btn primary tap"><span>Text me a code</span></span>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>The code fills itself in</h3>
+<p>On your phone, the code is read from the text as it arrives; you can type it too. It lasts ten minutes. On a computer, it's verified through your paired phone.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Verify your number</span></div><div class="m-body"><span class="m-code"><span>4</span><span>8</span><span>2</span><span>9</span><span>1</span><span>3</span></span><p class="m-p">Texted to +1 555 010 0199.</p></div></div></figure>
+</div></li>
+</ol>
+<p>Your number is never shown to anyone unless you switch on <b>Show friends my number and linked accounts</b>. Remove it any time: tap <b>Number</b>, then <b>Remove verification</b>.</p>
+
+<h2 id="linked">Linked accounts and friends joining</h2>
+<p>Under <b>Linked accounts</b>, link your Discord, Telegram or X account by signing in to it. Then friends who look for that handle can find you. Bluesky, Mastodon and GitHub are <span class="badge soon">Coming soon</span>.</p>
+<p><span class="ui-path">Settings › Friends joining</span> works the other way: add the handles of people you know on Discord, Telegram or X, and you're told when they join Uplink. Those apps don't let another app read your friend list, so you add them yourself.</p>
+<p><b>Remove everything about me</b> unlinks every account and your number, and clears your watch list, on the phone and on the server.</p>
+
+<h2 id="account-key">Your account key</h2>
+<p>Your account is known on the network by a key, the same on every device you use. <span class="ui-path">Settings › Me › Profile</span> shows it written as a <b>did:key</b>, a standard way to write a key as text, with <b>Copy</b> and <b>Share</b>. A friend's card shows theirs.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Profile</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">Your account key</div><div class="m-card">
+    <div class="m-row tap"><span class="m-ico" data-hue="blue"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg></span><span class="m-txt"><b>did:key:zDnaerDaTF5B…FU2169</b><small>Copy</small></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="teal"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg></span><span class="m-txt"><b>Share it</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="purple"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#pen-line"/></svg></span><span class="m-txt"><b>Sign a statement</b><small>Words to paste anywhere, which show they came from this account</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg></span><span class="m-txt"><b>Check a statement</b><small>Paste one to see whose it is</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+</div></div><figcaption>Settings › Me › Profile › Your account key.</figcaption></figure>
+<ul>
+  <li><b>Sign a statement</b>: write up to 280 characters, like "I am @alex on Uplink", and you get a block of text to paste in a bio, a post or a page elsewhere. It shows those words came from your account, and when.</li>
+  <li><b>Check a statement</b>: paste a block to see whose it is: yours, a friend's, or an account you don't know. Nothing is sent anywhere to check it.</li>
+  <li>Anyone can check a statement without the app or our servers: the block names the account's key, and the signature is a standard one (P-256 with SHA-256). The format, and a small script that checks one, are in the app's source.</li>
+</ul>
+
+<h2 id="vouches">Vouching for friends</h2>
+<p>On a friend's card, <b>Vouch for @name</b> says their account really is them, for a year. The card says when yours runs out; <b>Vouch for @name again</b> renews it for another year, and you can take it back whenever you like.</p>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-sheet"><div class="m-sheet-title">Maya Chen</div>
+    <p class="m-p">@maya · Vouched for by 2 of your friends</p>
+    <span class="m-btn secondary tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-check"/></svg><span>Vouch for @maya</span></span>
+  </div>
+</div></div><figcaption>A friend's card, vouched for by two of your friends.</figcaption></figure>
+<ul>
+  <li>A card counts only the vouches of <b>your own friends</b>, and tapping the count shows their names. There's no count of everyone. Your vouch reaches your friend's friends with their profile, but nobody else, and each of them counts it only if you are their friend too.</li>
+  <li>On a computer paired with your phone, vouching is done on the phone.</li>
+  <li>Your vouch goes to that friend, sealed, and travels with their profile to their friends. Each one is signed by your key, so nobody can make one up in your name, the relay included.</li>
+  <li>In <span class="ui-path">Profile › Vouches</span> you see who vouches for you, and can hide them from your friends. Removing or blocking a friend drops their vouch.</li>
+</ul>
+
+    <nav class="prevnext"><a class="prev" href="/docs/how-accounts-work/"><small>Previous</small>How your account works</a><a class="next" href="/docs/circles/"><small>Next</small>Make a circle and invite people</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#profile">Name, picture and status</a><a href="#number">Verify your phone number</a><a href="#linked">Linked accounts and friends joining</a><a href="#account-key">Your account key</a><a href="#vouches">Vouching for friends</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

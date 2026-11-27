@@ -1,0 +1,46 @@
+<p>Texts normally travel through your carrier as plain words. With someone who also has Uplink, you can seal your texts end to end, so only your two phones can read them, whatever carries them.</p>
+
+<h2 id="on">Turn it on with someone</h2>
+<steps>
+<step title="Open the conversation's Encryption">
+<p>In your conversation with them, tap the cog (or their name), then <b>Encryption</b>.</p>
+<m-screen title="Maya Chen" back>
+  <m-section><m-row icon="lock" hue="green" label="Encryption" hint="Off" chev tap/></m-section>
+</m-screen>
+</step>
+<step title="Send my key">
+<p>Encrypt your texts with them so only your two phones can read them. They need Uplink too. This sends them one text with your key.</p>
+<m-screen title="Encryption" back>
+  <m-p>Encrypt your texts with Maya so only your two phones can read them. They need Uplink too.</m-p>
+  <m-btn kind="primary" icon="key-round" tap>Send my key</m-btn>
+</m-screen>
+</step>
+<step title="They turn it on">
+<p>They see your key arrive and tap <b>Turn on</b>. From then on your texts with them are sealed, and show a lock.</p>
+<m-screen title="Alex" back caption="On their phone.">
+  <m-banner><b>Alex wants to encrypt your texts.</b></m-banner>
+  <m-row-raw><m-btn kind="secondary">Decline</m-btn><m-btn kind="primary" tap>Turn on</m-btn></m-row-raw>
+</m-screen>
+</step>
+</steps>
+<note kind="tip" title="Uplink can say who has it"><p>Uplink sends an invisible hello to find out who else uses it, so it can offer encryption. Switch that off in <ui>Settings › Encryption</ui> if you'd rather not.</p></note>
+
+<h2 id="verify">Check it's really them</h2>
+<p>Compare the <b>safety number</b>, 30 digits shown on both phones, side by side or on a call. If they match, tap <b>They match: mark as verified</b>. If they ever change, Uplink tells you: their key changed, perhaps a new phone, perhaps someone else.</p>
+<m-screen title="Safety number with Maya" back>
+  <m-p>Safety number:</m-p>
+  <m-p><code>48213 77102 39914 60028 11573 90246</code></m-p>
+  <m-btn kind="primary" tap>They match: mark as verified</m-btn>
+</m-screen>
+
+<h2 id="covers">What it covers, and what it doesn't</h2>
+<table>
+  <tr><th>Sealed</th><th>Not sealed</th></tr>
+  <tr><td>Your texts with that one person</td><td>Group texts</td></tr>
+  <tr><td></td><td>Pictures and voice messages sent as picture messages (MMS)</td></tr>
+  <tr><td></td><td>Who you text and when: your carrier still sees that</td></tr>
+</table>
+<p>Messages between <a href="/docs/friends/">friends</a> and in circles and spaces go over Uplink instead of texts, and are always sealed end to end, pictures and all.</p>
+
+<h2 id="off">Turning it off</h2>
+<p>In the conversation's <b>Encryption</b>, tap <b>Turn off encryption</b>. If their texts start coming unsealed (they removed Uplink, say), Uplink warns you and offers to turn it off.</p>

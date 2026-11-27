@@ -1,0 +1,18 @@
+// Application-level settings for the Runner target.
+//
+// This may be replaced with something auto-generated from metadata (e.g., pubspec.yaml) in the
+// future. If not, the values below would default to using the project name when this becomes a
+// 'flutter create' template.
+
+// The application's name. By default this is also the title of the Flutter window. It is the app's file too
+// (Uplink.app) and the program inside it; both were "Ghost Messaging" until 2026-11-27. A copy installed under that
+// name keeps its file's name through an update (the updater swaps whatever one app the download holds into the place
+// the running copy is in: Runner/UpdatesChannel.swift), so Finder and the Dock go on showing the old name for that
+// copy until its file is renamed; the menu bar and what macOS asks say Uplink at once.
+PRODUCT_NAME = Uplink
+
+// The application's bundle identifier
+PRODUCT_BUNDLE_IDENTIFIER = com.infamousvague.ghostmessaging.mac
+
+// The copyright displayed in application information
+PRODUCT_COPYRIGHT = Uplink for the Mac: your phone's texts, sealed between the two.

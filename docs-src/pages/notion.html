@@ -1,0 +1,46 @@
+<p>Notion opens a Notion link out under its message in a circle's spaces: a page as its title, status and first lines, a database as a board. One person sets it up for the circle, and everyone in it sees the cards with nothing to set up themselves.</p>
+<p><b>Add it:</b> for a circle only, in <ui>Circle settings › Plugins</ui>.</p>
+
+<h2 id="set-up">Set it up for a circle</h2>
+<steps>
+<step title="Make an integration in Notion">
+<p>In Notion, open <ui>Settings › Connections › Develop or manage integrations</ui> and make an <b>internal</b> integration. Under its capabilities, leave only <b>Read content</b> on. Copy its secret: the token, which starts with <code>ntn_</code>.</p>
+</step>
+<step title="Share pages with it">
+<p>On each page or database the circle should see, open <ui>••• › Connections</ui> and add the integration. It can read those pages and the pages inside them, and nothing else.</p>
+</step>
+<step title="Give the circle the token">
+<p>In Uplink, open <ui>Circle settings › Plugins › Notion › Notion token</ui> and paste it. Notion is asked whether the token is good before it is kept, and the plugin is switched on.</p>
+<m-screen title="Plugins" back caption="Circle settings › Plugins.">
+  <m-section title="Notion" foot="Notion links written in the circle's spaces open out under the message, for everyone here.">
+    <m-row icon="key-round" label="Notion token" value="Ends in 4f2a" chev tap/>
+  </m-section>
+</m-screen>
+</step>
+</steps>
+<p>You need <b>Change the circle</b> to do this. Everyone else sees that Notion is set up, and not the token.</p>
+
+<h2 id="links">What a link becomes</h2>
+<ul>
+  <li><b>A page:</b> its icon and title, up to four of its database's properties (status first, then people, dates, choices), and its first lines.</li>
+  <li><b>A database:</b> a board. Its rows stand under the columns of its status, or of its first single choice where it has no status. Each column shows its first four rows and how many more there are.</li>
+  <li><b>A row opened over its database</b> is drawn as the row.</li>
+</ul>
+<p>Tap a card to open it in Notion. Up to three Notion links in one message are opened out. What was read is shown again for five minutes before Notion is asked again.</p>
+
+<h2 id="who-can-read">Who can read what</h2>
+<p>The token is kept in the circle's own signed page, which every member's device holds, and each device asks Notion itself. The relay server is never asked and sees none of it.</p>
+<p>That means everyone in the circle, and anyone given its invite, holds the token and could read whatever the integration was shared in Notion, whether or not a link to it was ever written here. So:</p>
+<ul>
+  <li>Share with the integration only what the whole circle may see.</li>
+  <li>Give it read access only.</li>
+  <li>To cut someone off after they leave, delete the integration in Notion and make a new one. Taking the token away here stops the cards, but not someone who kept a copy.</li>
+</ul>
+
+<h2 id="problems">When a card says it can't be read</h2>
+<ul>
+  <li><b>Not shared with this circle's Notion:</b> the page was not added to the integration. In Notion, open <ui>••• › Connections</ui> on the page and add it.</li>
+  <li><b>The token was refused:</b> the integration was deleted or its secret changed. Whoever set it up puts in a new token.</li>
+  <li><b>Notion is busy:</b> Notion lets an integration ask about three times a second, shared by everyone in the circle. Try again in a moment.</li>
+</ul>
+<p>Notion cards are not drawn in the browser client, in chats that are not a circle's space, or under the Dial-Up look.</p>

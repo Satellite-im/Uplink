@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Record call · Uplink docs</title>
+<meta name="description" content="Record a call to one file with a named track for each voice.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Plugins</div>
+    <h1>Record call</h1>
+    <p class="lede">Record a call to one file with a named track for each voice.</p>
+    <p>Record call records a space's call to one video file (MP4): first everyone together, then each voice on a track of its own, named for them. Edit one person's voice without the others, or listen to just one. Everyone in the call is asked first, and only people who say yes are in it.</p>
+<p><b>Add it:</b> <span class="ui-path">Marketplace › Record call › Add</span>, or for a whole circle in <span class="ui-path">Circle settings › Plugins</span>. Works on Android, Mac, iPhone and Windows.</p>
+
+<h2 id="record">Record a call</h2>
+<ol class="steps">
+<li class="step"><div class="step-body"><h3>Join the call, then Record</h3>
+<p>While you're in a space's call, a <b>Record</b> button sits in the space's header, beside its settings. It's also in the call's menu.</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Lounge</span><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg></span></div><div class="m-body">
+  <div class="m-row m-raw"><span class="m-txt"><b>Lounge</b><small>3 in voice</small></span><span class="m-btn secondary tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record</span></span></div>
+</div></div></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Everyone is asked</h3>
+<p>A red line goes over the call for everyone. Each person's app asks whether their voice may be in it. Until they tap <b>Include me</b>, it isn't.</p>
+<div class="pair">
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-banner"><b>● Recording 0:42</b> · Maya, Jo</div>
+  <div class="m-row m-raw"><span class="m-btn secondary"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sliders-horizontal"/></svg><span>Mixer</span></span><span class="m-btn danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-stop"/></svg><span>Stop</span></span></div>
+</div></div><figcaption>What you see.</figcaption></figure>
+<figure class="mock"><div class="m-screen"><div class="m-body">
+  <div class="m-banner"><b>Alex is recording this call.</b> Include your voice?</div>
+  <div class="m-row m-raw"><span class="m-btn secondary"><span>Leave me out</span></span><span class="m-btn primary tap"><span>Include me</span></span></div>
+</div></div><figcaption>What everyone else sees.</figcaption></figure>
+</div>
+<p>A line in the space's chat says it too, so people on older versions know.</p>
+</div></li>
+<li class="step"><div class="step-body"><h3>Open the mixer</h3>
+<p>Tap <b>Mixer</b> on your red line. It fills the screen with each voice as a track: its waveform growing as the call goes on, a meter, and mute and solo. Switch to the mixer face for a fader per voice, to set how loud each is in the track of everyone mixed. Tap the arrow at the top to close it; it closes by itself when the recording ends.</p>
+<figure class="shot"><img src="/shots/record-timeline.webp" width="1280" height="624" loading="lazy" alt="The timeline in a call of eight: Everyone mixed at the top, then a track per person with their waveform, a meter, and M and S. Kofi is muted."><figcaption>The timeline, in a call of eight. Everyone mixed is at the top, then one track per person. Kofi is muted (the lit <b>M</b>), and the numbers beside Theo, Sam and Lena are their faders.</figcaption></figure>
+<figure class="shot"><img src="/shots/record-mixer.webp" width="1280" height="624" loading="lazy" alt="The mixer face of the same call: a channel strip per person with a meter, a fader and its decibels, and M and S; Everyone mixed on the left."><figcaption>The mixer face of the same call. Each person has a meter and a fader, with its decibels above. Everyone mixed is on the left and shows what the faders make. <b>Timeline</b> at the top switches back.</figcaption></figure>
+</div></li>
+<li class="step"><div class="step-body"><h3>Stop</h3>
+<p>Tap <b>Stop</b> (in red, in the same place). The file is made on your device: it takes a moment. You're told where it went.</p>
+</div></li>
+</ol>
+
+<h2 id="where">Where recordings go</h2>
+<ul>
+  <li><b>On your device</b>, always: in <b>Recordings</b> (from the call's menu), to play, share, save a copy, or delete.</li>
+  <li><b>In a circle</b>, also into a folder of one of its Files spaces, for everyone in the circle. Until the circle chooses, that's its first Files space, in a folder named <b>Recordings</b>. If the circle has no Files space, or you can't add files there, it stays on your device and says why.</li>
+</ul>
+<h3 id="save-location">Choose where a circle's recordings are saved</h3>
+<p>In <span class="ui-path">Circle settings › Plugins</span>, under <b>Call recordings</b> (if you may change the circle):</p>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Plugins</span></div><div class="m-body">
+  <div class="m-section"><div class="m-section-title">Call recordings</div><div class="m-card">
+    <div class="m-row tap"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder-open"/></svg></span><span class="m-txt"><b>Files space</b></span><span class="m-end"><span class="m-value">Shared</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+    <div class="m-row"><span class="m-ico" data-hue="amber"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg></span><span class="m-txt"><b>Folder</b></span><span class="m-end"><span class="m-value">Recordings</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div><p class="m-foot">A call recorded in any of Book Club's spaces is saved here for the circle, as well as on the device that recorded it.</p></div>
+</div></div></figure>
+<p>Use <code>/</code> for a folder inside another, like <code>Sessions/2026</code>.</p>
+
+<h2 id="recordings">Recordings</h2>
+<figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Recordings</span></div><div class="m-body">
+  <div class="m-section"><div class="m-card">
+    <div class="m-row tap"><span class="m-ico" data-hue="coral"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg></span><span class="m-txt"><b>Lounge · Nov 19</b><small>42:10 · Maya, Jo, Sam</small></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div>
+  </div></div>
+  <div class="m-menu"><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#play"/></svg><span>Play</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sliders-horizontal"/></svg><span>Open in the mixer</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Write out the words</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Send to Lounge</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg><span>Share</span></div><div class="m-item danger"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#trash-2"/></svg><span>Delete</span></div></div>
+</div></div></figure>
+<p><b>Write out the words</b> needs <a href="/docs/scribe/">Scribe</a>.</p>
+
+<h3 id="mix-again">Mix a recording again</h3>
+<p>Tap a recording, then <b>Open in the mixer</b>. It opens like the mixer during a call: each voice as a track with its waveform, a meter, mute and solo, and a fader per voice on the mixer face. Tap <b>Play</b> to hear it as the faders are set. Tap anywhere on the tracks to jump there.</p>
+<p>Tap <b>Save mix</b> to keep it: a new recording is made beside the first, with everyone mixed as you set it and each voice still on its own track. The first recording isn't changed. The new one says <b>mixed again</b> in the list.</p>
+<p>The first time, each voice takes a moment to open. After that it opens straight away. On iPhone, a fader can turn a voice down but not up past how it was recorded.</p>
+
+<h2 id="consent">Consent and the law</h2>
+<p>Everyone is told and asked, and nobody's voice is in a recording without their yes. Laws on recording conversations differ by place; asking is on you as well as the app.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/plugins/"><small>Previous</small>The Marketplace</a><a class="next" href="/docs/scribe/"><small>Next</small>Scribe</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#record">Record a call</a><a href="#where">Where recordings go</a><a href="#recordings">Recordings</a><a href="#consent">Consent and the law</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

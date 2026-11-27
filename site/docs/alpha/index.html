@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Join the alpha · Uplink docs</title>
+<meta name="description" content="Try Uplink before it launches: what to install, and how to join the testers' circle.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/">Docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the docs" aria-label="Search the docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">Getting started</div><a href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Welcome</span></a><a href="/docs/alpha/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Join the alpha</span></a><a href="/docs/install/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#download"/></svg><span>Install the app</span></a><a href="/docs/first-run/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>The first time you open it</span></a><a href="/docs/account/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Your account</span></a><a href="/docs/how-accounts-work/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#badge-check"/></svg><span>How your account works</span></a><a href="/docs/profile/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-user"/></svg><span>Your profile and number</span></a></div><div class="nav-group"><div class="nav-title">Circles, spaces and calls</div><a href="/docs/circles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>Make a circle and invite people</span></a><a href="/docs/spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Spaces</span></a><a href="/docs/roles/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>Roles and permissions</span></a><a href="/docs/open-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#compass"/></svg><span>Open spaces</span></a><a href="/docs/sms-spaces/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#smartphone"/></svg><span>SMS spaces</span></a><a href="/docs/calls/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#headphones"/></svg><span>Calls</span></a><a href="/docs/files/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#folder"/></svg><span>Files spaces</span></a></div><div class="nav-group"><div class="nav-title">Plugins</div><a href="/docs/plugins/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#store"/></svg><span>The Marketplace</span></a><a href="/docs/record-call/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#circle-dot"/></svg><span>Record call</span></a><a href="/docs/scribe/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Scribe</span></a><a href="/docs/live-captions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#type"/></svg><span>Live captions</span></a><a href="/docs/watch-together/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#film"/></svg><span>Watch together</span></a><a href="/docs/soundboard/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#megaphone"/></svg><span>Soundboard</span></a><a href="/docs/notion/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-text"/></svg><span>Notion</span></a><a href="/docs/spotify/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Spotify</span></a><a href="/docs/auto-leveler/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Auto leveler</span></a><a href="/docs/voice-changer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#audio-lines"/></svg><span>Voice changer</span></a><a href="/docs/performance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#gauge"/></svg><span>Performance</span></a><a href="/docs/translate/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#languages"/></svg><span>Translate</span></a><a href="/docs/codes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#key-round"/></svg><span>Codes</span></a><a href="/docs/spam/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#ban"/></svg><span>Spam filter</span></a><a href="/docs/kinds/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Kinds of text</span></a><a href="/docs/unknown-numbers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round-search"/></svg><span>Unknown numbers</span></a><a href="/docs/quiet-hours/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Quiet hours</span></a><a href="/docs/link-previews/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Link previews</span></a><a href="/docs/quick-actions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#calendar-plus"/></svg><span>Quick actions</span></a><a href="/docs/replies/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#reply"/></svg><span>Replies</span></a><a href="/docs/cleaner/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#brush-cleaning"/></svg><span>Cleaner</span></a><a href="/docs/discord/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#bot"/></svg><span>Discord servers</span></a></div><div class="nav-group"><div class="nav-title">Build a plugin</div><a href="/docs/build-a-plugin/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>Build a plugin</span></a><a href="/docs/plugin-quick-start/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#rocket"/></svg><span>Your first plugin</span></a><a href="/docs/plugin-format/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#file-code"/></svg><span>The plugin file</span></a><a href="/docs/plugin-rules/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-filter"/></svg><span>Tags, tabs and buttons</span></a><a href="/docs/plugin-phrases/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#text-search"/></svg><span>Phrases and tokens</span></a><a href="/docs/plugin-permissions/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#shield-check"/></svg><span>What a plugin may do</span></a><a href="/docs/plugin-testing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><span>Try it in Developer mode</span></a><a href="/docs/plugin-submit/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Submit it to the Marketplace</span></a><a href="/docs/plugin-guidelines/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#list-checks"/></svg><span>Marketplace guidelines</span></a></div><div class="nav-group"><div class="nav-title">Messaging</div><a href="/docs/texts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>Texts and conversations</span></a><a href="/docs/google-messages/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-circle"/></svg><span>Beside Google Messages</span></a><a href="/docs/friends/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-plus"/></svg><span>Friends</span></a><a href="/docs/networks/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#send"/></svg><span>Telegram, Signal and more</span></a><a href="/docs/encryption/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lock"/></svg><span>Encrypted texts</span></a></div><div class="nav-group"><div class="nav-title">Computers</div><a href="/docs/computers/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#laptop"/></svg><span>Mac, Windows and Linux apps</span></a><a href="/docs/pairing/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#qr-code"/></svg><span>Pair a computer with your phone</span></a><a href="/docs/browser-extension/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#puzzle"/></svg><span>The browser extension</span></a></div><div class="nav-group"><div class="nav-title">Privacy and settings</div><a href="/docs/privacy/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#eye"/></svg><span>Privacy and safety</span></a><a href="/docs/settings/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#settings"/></svg><span>Settings, at a glance</span></a><a href="/docs/appearance/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#palette"/></svg><span>Looks, colours and fonts</span></a><a href="/docs/keyboard-shortcuts/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#keyboard"/></svg><span>Keyboard shortcuts</span></a><a href="/docs/routes/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Routes</span></a><a href="/docs/self-hosting/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#hard-drive"/></svg><span>Run your own relay</span></a><a href="/docs/coming-soon/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#clock"/></svg><span>Coming soon</span> <span class="badge soon">Soon</span></a></div><a class="nav-other" href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>Getting started</div>
+    <h1>Join the alpha</h1>
+    <p class="lede">Try Uplink before it launches: what to install, and how to join the testers' circle.</p>
+    <p>Thank you for trying Uplink early. Five steps, about three minutes. Answer the questions and the steps fit your device. Your answers and ticks stay in this browser.</p>
+
+<div class="alpha-invite" data-invite="yes" hidden>
+<aside class="note alpha"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><div><b>You've been invited</b>
+<p>This page carries your invite to <b id="circle-name">the Alpha testers circle</b>. Step 5 opens it.</p>
+</div></aside>
+</div>
+
+<h2 id="questions">First, a few questions</h2>
+<div class="qs">
+  <div class="q"><p>What will you test on?</p>
+    <div class="choices" data-q="device">
+      <button type="button" data-v="android">Android phone</button><button type="button" data-v="mac">Mac</button><button type="button" data-v="windows">Windows</button><button type="button" data-v="iphone">iPhone</button>
+    </div>
+    <p class="hint" data-when="device=iphone" hidden>The iPhone app isn't out yet. Pick a computer for now and you'll still get the whole circle: chat, voice, video and files.</p>
+  </div>
+  <div class="q" data-when="device=android" hidden><p>Will Uplink be your texting app?</p>
+    <div class="choices" data-q="sms">
+      <button type="button" data-v="beside">Not yet, keep my current app <small>Recommended</small></button><button type="button" data-v="default">Yes, send and get my texts in Uplink</button>
+    </div>
+    <p class="hint">It's an alpha: running it beside your current app is the safe way to start. You can make it your texting app any time in Settings.</p>
+  </div>
+  <div class="q" data-when="device=android sms=default" hidden><p>Do you use Google Messages' chat features (RCS)?</p>
+    <div class="choices" data-q="rcs"><button type="button" data-v="yes">Yes, or not sure</button><button type="button" data-v="no">No</button></div>
+  </div>
+  <div class="q"><p>Is Uplink installed already?</p>
+    <div class="choices" data-q="have"><button type="button" data-v="no">No, it's new to me</button><button type="button" data-v="yes">Yes</button></div>
+  </div>
+</div>
+
+<h2 id="steps">Then, five steps</h2>
+<ol class="steps alpha-steps">
+<li class="step" data-step="1"><div class="step-body">
+  <h3>Download the app</h3>
+  <p data-when="device=android" hidden>The Android app comes straight from us, not the Play Store.</p>
+  <p data-when="device=mac" hidden>A disk image for Macs on Apple silicon or Intel, macOS 12 or later.</p>
+  <p data-when="device=windows" hidden>An installer for Windows 10 and 11.</p>
+  <p data-when="device=" hidden>Pick your device above for the right download.</p>
+  <p class="dl">
+    <a class="m-btn primary" data-when="device=android" hidden href="/ghost-messaging.apk">Download for Android <small data-version="apk"></small></a>
+    <a class="m-btn primary" data-when="device=mac device=iphone" hidden href="/ghost-messaging-mac.dmg">Download for Mac <small data-version="mac"></small></a>
+    <a class="m-btn primary" data-when="device=windows" hidden href="/ghost-messaging-setup.exe">Download for Windows <small data-version="windows"></small></a>
+  </p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="2"><div class="step-body">
+  <h3>Install it</h3>
+  <div data-when="device=android" hidden>
+    <ul>
+      <li>Open the downloaded file from your notifications or <span class="ui-path">Files › Downloads</span>.</li>
+      <li>If Android says your browser can't install apps, tap <b>Settings</b>, switch on <b>Allow from this source</b>, then go back and tap <b>Install</b>.</li>
+      <li>If Play Protect asks about an unknown app, tap <b>More details › Install anyway</b>.</li>
+    </ul>
+    <figure class="mock"><div class="m-screen"><div class="m-body">
+      <div class="m-section"><div class="m-section-title">Install unknown apps</div><div class="m-card"><div class="m-row tap"><span class="m-ico" data-hue="rose"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg></span><span class="m-txt"><b>Your browser</b><small>Allow from this source</small></span><span class="m-end"><span class="m-switch on"></span></span></div></div></div>
+    </div></div><figcaption>Android's own question, the first time.</figcaption></figure>
+  </div>
+  <div data-when="device=mac device=iphone" hidden>
+    <ul><li>Open the downloaded disk image, then drag <b>Uplink</b> into <b>Applications</b>.</li><li>Open it from Applications. It updates itself from then on.</li></ul>
+  </div>
+  <div data-when="device=windows" hidden>
+    <ul><li>Run <code>ghost-messaging-setup.exe</code> and follow the installer.</li><li>Open <b>Uplink</b> from the Start menu. It updates itself from then on.</li></ul>
+  </div>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="3"><div class="step-body">
+  <h3>Pick a username and password</h3>
+  <p data-when="device=mac device=windows device=iphone device=" hidden>The first screen asks for two things: a username, which is how the other testers find you, and a password, which makes your Uplink account so you can sign in on another device. Tap <b>Continue</b>.</p>
+  <div data-when="device=mac device=windows device=iphone device=" hidden><figure class="mock"><div class="m-screen"><div class="m-body">
+    <p class="m-p">Pick a username and a password.</p>
+    <label class="m-field"><span>Username</span><span class="m-input">alex</span></label>
+    <label class="m-field"><span>Password</span><span class="m-input">••••••••••••</span></label>
+    <span class="m-btn primary tap"><span>Continue</span></span>
+    <p class="m-p">Already have an account?</p>
+    <span class="m-btn secondary"><span>Sign in</span></span>
+  </div></div><figcaption>The whole first screen.</figcaption></figure></div>
+  <div data-when="device=android" hidden>
+    <p>First, one page about your texts (below). Then a username, which is how the other testers find you, and a password, which makes your Uplink account so you can sign in on another device. Tap <b>Continue</b>.</p>
+  </div>
+  <div data-when="device=android sms=beside" hidden>
+    <p>On the texts page, tap <b>Use beside Google Messages</b>. Your texts stay where they are, and you don't need to make Uplink your texting app.</p>
+    <figure class="mock"><div class="m-screen"><div class="m-body">
+      <span class="m-btn secondary"><span>Set as default SMS app</span></span>
+      <span class="m-btn primary tap"><span>Use beside Google Messages</span></span>
+    </div></div><figcaption>The welcome's texts page.</figcaption></figure>
+  </div>
+  <div data-when="device=android sms=default" hidden>
+    <p>On the texts page, tap <b>Set as default SMS app</b> and say yes when Android asks.</p>
+    <p>If Android refuses, tap <b>Open Android's page for Uplink</b>, then <b>⋮ › Allow restricted settings</b>, and try again.</p>
+    <div data-when="device=android sms=default rcs=yes" hidden><aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Turn off RCS chats first</b><p>While they're on in Google Messages, people who use RCS keep sending you chats that never arrive as texts. The welcome shows a <b>Coming from Google Messages? Do this first</b> card that opens the right setting.</p></div></aside></div>
+  </div>
+  <p>Next come your 12 recovery words. Write them down if you can: with them you can get your account back without your password. Then tap them in order to check, or tap <b>Skip this check</b> and you're in. You can see them again any time in <span class="ui-path">Settings › Me › Account</span>.</p>
+  <p>Already have an Uplink account? Tap <b>Sign in</b> under <b>Already have an account?</b> on that same screen instead. You don't need to pair a phone to join the circle; skip it if Uplink offers it. More in <a href="/docs/first-run/">The first time you open it</a>.</p>
+  <aside class="note alpha"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#flask-conical"/></svg><div><b>Signing up got simpler</b><p>If you joined before, you went through six pages and made your account later in Settings. New testers now pick a username and password on the first screen and are done. Nothing changes for you.</p></div></aside>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="4"><div class="step-body">
+  <h3>Add your name and picture</h3>
+  <p>Go to <span class="ui-path">Settings › Me › Profile</span> and add a name and picture, so the other testers know who's talking.</p>
+  <figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-iconbtn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg></span><span class="m-title">Profile</span></div><div class="m-body">
+    <div class="m-section"><div class="m-card"><div class="m-row tap"><span class="m-ico" data-hue="mint"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#image"/></svg></span><span class="m-txt"><b>Picture</b></span><span class="m-end"><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div><div class="m-row"><span class="m-ico" data-hue="green"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#user-round"/></svg></span><span class="m-txt"><b>Name</b></span><span class="m-end"><span class="m-value">Alex</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div><div class="m-row"><span class="m-ico" data-hue="coral"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#at-sign"/></svg></span><span class="m-txt"><b>Username</b></span><span class="m-end"><span class="m-value">@alex</span><svg class="i m-chev" aria-hidden="true"><use href="/docs/icons.svg#chevron-right"/></svg></span></div></div></div>
+  </div></div></figure>
+  <p>Verifying your number and linking other accounts can wait. See <a href="/docs/profile/">Your profile and number</a>.</p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+<li class="step" data-step="5"><div class="step-body">
+  <h3>Join the Alpha testers circle</h3>
+  <div data-invite="yes" hidden>
+    <p data-when="device=android" hidden>Tap <b>Open the invite</b> on this phone. Uplink opens on the circle's invite: tap <b>Join</b>.</p>
+    <p data-when="device=mac device=windows device=iphone device=" hidden>Tap <b>Copy the invite</b>, then in Uplink tap <span class="ui-path">New › Join a circle by link</span>, paste it, and tap <b>Join</b>.</p>
+    <p class="dl"><a class="m-btn primary" id="open-invite" data-when="device=android" hidden href="#">Open the invite</a> <button type="button" class="m-btn secondary" id="copy-invite"><span>Copy the invite</span></button></p>
+  </div>
+  <div data-invite="no">
+    <p>Use the invite link you were sent: it starts with <code>gogho.st/join/</code>.</p>
+    <ul><li>Tap it on your phone and Uplink opens on the invite: tap <b>Join</b>.</li><li>Or copy it, then in Uplink tap <span class="ui-path">New › Join a circle by link</span>, paste it, and tap <b>Join</b>.</li></ul>
+  </div>
+  <figure class="mock"><div class="m-screen"><div class="m-head"><span class="m-title">New</span></div><div class="m-body">
+    <div class="m-menu"><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#message-square"/></svg><span>New message</span></div><div class="m-item"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#users"/></svg><span>New circle</span></div><div class="m-item tap"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#link"/></svg><span>Join a circle by link</span></div></div>
+  </div></div></figure>
+  <p>Once you're in, say hi, and post anything odd you notice, with a screenshot if you can. That's the whole job.</p>
+  <p class="mark"><button type="button">Mark done</button></p>
+</div></li>
+</ol>
+<div id="all-done" hidden><aside class="note tip"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#lightbulb"/></svg><div><b>You're in. Thank you!</b><p>Updates arrive in the app by themselves. Each one says what's new, so look out for things to try.</p></div></aside></div>
+
+<h2 id="reporting">Telling us what you find</h2>
+<ul>
+  <li>Post it in the Alpha testers circle: what you did, what you expected, and what happened, with a screenshot if you can.</li>
+  <li>For a problem with texts or pictures, include the report from <span class="ui-path">Settings › Developer › Copy report</span>: it says what the app tried, never what your messages said.</li>
+  <li>Things marked <span class="badge soon">Coming soon</span> in these docs aren't out yet.</li>
+</ul>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const KEY = 'ghost-alpha-guide';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) {}
+  const answers = Object.assign({ device: '', sms: '', rcs: '', have: '' }, saved.answers);
+  const done = new Set(saved.done || []);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ answers, done: [...done] })); } catch (_) {} };
+  if (!answers.device) {
+    const ua = navigator.userAgent;
+    answers.device = /Android/i.test(ua) ? 'android' : /iPhone|iPad/i.test(ua) ? 'iphone' : /Mac/i.test(ua) ? 'mac' : /Windows/i.test(ua) ? 'windows' : '';
+  }
+  // The circle's invite, carried after the # (#c.<seed>.<name>.<owner>, as the circle's link has it after /join/).
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const m = /^c\.([0-9a-f]{64})(?:\.([A-Za-z0-9_-]*))?(?:\.(0[23][0-9a-f]{64}))?$/.exec(hash);
+  const invite = m ? 'https://gogho.st/join/#' + hash : null;
+  if (m && m[2]) {
+    try {
+      const b64 = m[2].replace(/-/g, '+').replace(/_/g, '/');
+      const name = new TextDecoder().decode(Uint8Array.from(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)), (ch) => ch.charCodeAt(0)));
+      if (name.trim()) $('#circle-name').textContent = name.trim();
+    } catch (_) {}
+  }
+  for (const el of $$('[data-invite]')) el.hidden = (el.dataset.invite === 'yes') !== !!invite;
+  if (invite) {
+    $('#open-invite').href = invite;
+    $('#copy-invite').onclick = async () => {
+      const label = $('#copy-invite span');
+      try { await navigator.clipboard.writeText(invite); label.textContent = 'Copied'; } catch (_) { prompt('Copy the invite:', invite); }
+      setTimeout(() => (label.textContent = 'Copy the invite'), 1800);
+    };
+  }
+  const matches = (rule) => {
+    const want = {};
+    for (const part of rule.split(/\s+/)) { const [k, v] = part.split('='); (want[k] ||= []).push(v); }
+    return Object.entries(want).every(([k, vs]) => vs.includes(answers[k] || ''));
+  };
+  const steps = $$('.alpha-steps .step');
+  const render = () => {
+    for (const group of $$('[data-q]')) for (const b of $$('button', group)) b.setAttribute('aria-pressed', String(answers[group.dataset.q] === b.dataset.v));
+    for (const el of $$('[data-when]')) el.hidden = !matches(el.dataset.when);
+    for (const step of steps) {
+      const n = Number(step.dataset.step);
+      const isDone = done.has(n) || (answers.have === 'yes' && n <= 2);
+      step.classList.toggle('done', isDone);
+      $('.mark button', step).textContent = isDone ? 'Undo' : 'Mark done';
+    }
+    $('#all-done').hidden = steps.filter((s) => s.classList.contains('done')).length < 5;
+  };
+  for (const group of $$('[data-q]')) group.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    answers[group.dataset.q] = b.dataset.v;
+    save();
+    render();
+  });
+  for (const step of steps) {
+    const n = Number(step.dataset.step);
+    $('.mark button', step).onclick = () => {
+      if (answers.have === 'yes' && n <= 2) return;
+      done.has(n) ? done.delete(n) : done.add(n);
+      save();
+      render();
+    };
+  }
+  for (const [id, feed] of [['apk', '/apk.json'], ['mac', '/mac.json'], ['windows', '/windows.json']]) {
+    fetch(feed, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((info) => {
+      if (info && info.version) for (const el of $$(`[data-version="${id}"]`)) el.textContent = info.version;
+    }).catch(() => {});
+  }
+  render();
+})();
+</script>
+
+    <nav class="prevnext"><a class="prev" href="/docs/"><small>Previous</small>Welcome</a><a class="next" href="/docs/install/"><small>Next</small>Install the app</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#questions">First, a few questions</a><a href="#steps">Then, five steps</a><a href="#reporting">Telling us what you find</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

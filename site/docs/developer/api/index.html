@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>API overview and Postman · Uplink developer docs</title>
+<meta name="description" content="The two APIs, how each is reached and signed, and a Postman collection of both.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/developer/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/developer/">Developer docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the developer docs" aria-label="Search the developer docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">The source</div><a href="/docs/developer/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a><a href="/docs/developer/architecture/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#network"/></svg><span>How the app is built</span></a><a href="/docs/developer/flows/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#workflow"/></svg><span>How the parts work together</span></a><a href="/docs/developer/build/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#terminal"/></svg><span>Build, test and run it</span></a></div><div class="nav-group"><div class="nav-title">APIs</div><a href="/docs/developer/api/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#book-open"/></svg><span>API overview and Postman</span></a><a href="/docs/developer/app-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>App API</span></a><a href="/docs/developer/relay-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Relay server API</span></a><a href="/docs/developer/hub/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg><span>The hub and pairing protocols</span></a></div><a class="nav-other" href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg><span>Back to the docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>APIs</div>
+    <h1>API overview and Postman</h1>
+    <p class="lede">The two APIs, how each is reached and signed, and a Postman collection of both.</p>
+    <p>Uplink has two APIs. <b>The app's API</b> controls one running app: its conversations, plugins, other networks and screens. <b>The relay server's API</b> is what every app speaks to the server that carries messages between them. Both are documented in full here, and both are in one Postman collection.</p>
+
+<h2 id="postman">The Postman collection</h2>
+<p><a href="/docs/api/ghost-messaging.postman_collection.json" download><b>ghost-messaging.postman_collection.json</b></a> (Postman's v2.1 format; Insomnia, Bruno and others read it too). In Postman: <b>Import</b>, then choose the file or paste its address, <code>https://gogho.st/docs/api/ghost-messaging.postman_collection.json</code>.</p>
+<p>It holds every method of the app's API and every HTTP route of the relay, each with its parameters described and an example body. It is made from the same lists these pages are drawn from, so it matches them. Set its variables before the first call:</p>
+<table>
+  <tr><th>Variable</th><th>Starts as</th><th>What it is</th></tr>
+  <tr><td><code>app</code></td><td><code>http://127.0.0.1:8765</code></td><td>Where the app serves its API (<a href="/docs/developer/app-api/#on">Turn it on</a>).</td></tr>
+  <tr><td><code>token</code></td><td>empty</td><td>The app's token, from <span class="ui-path">Settings › API › Copy the token</span>. Sent as <code>Authorization: Bearer</code> on every app request.</td></tr>
+  <tr><td><code>relay</code></td><td><code>https://gogho.st</code></td><td>The relay server. Your own, if you run one.</td></tr>
+  <tr><td><code>filesToken</code></td><td>empty</td><td>A Files space's token, for the Files routes.</td></tr>
+  <tr><td><code>ghostKey</code>, <code>ghostTime</code>, <code>ghostSig</code></td><td>empty</td><td>The signing headers of a signed relay route (below).</td></tr>
+</table>
+<aside class="note warn"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#triangle-alert"/></svg><div><b>Signed routes</b>
+<p>Some relay routes are signed with an install's private key, over the request's method, path, time and body. Postman can't make that signature by itself, so those requests carry the headers as variables for you to fill from your own code. <a href="/docs/developer/relay-api/#signing">Signing a request</a> says exactly what is signed. Routes anyone may read work as they are.</p>
+</div></aside>
+<p>The hub and the pairing channels are WebSockets with binary frames, which a collection of HTTP requests can't hold. They are written out in <a href="/docs/developer/hub/">The hub and pairing protocols</a>.</p>
+
+<h2 id="app">The app's API</h2>
+<table>
+  <tr><th></th><th></th></tr>
+  <tr><td>Where</td><td>On the device, <code>http://127.0.0.1:8765</code> (the port can be changed); on your network too where allowed; from anywhere through the relay, sealed.</td></tr>
+  <tr><td>Who may call</td><td>Whoever holds the token (HTTP) or the connection string (through the relay). Off until turned on in developer mode.</td></tr>
+  <tr><td>Shape</td><td><code>POST /api/&lt;method&gt;</code> with the parameters as a JSON object. Answers <code>{"ok": true, "result": …}</code> or <code>{"ok": false, "error": {"code", "message"}}</code>.</td></tr>
+  <tr><td>Reference</td><td><a href="/docs/developer/app-api/">App API</a>: every method.</td></tr>
+</table>
+
+<h2 id="relay">The relay server's API</h2>
+<table>
+  <tr><th></th><th></th></tr>
+  <tr><td>Where</td><td><code>https://gogho.st</code>, or any server running <code>relay/</code>.</td></tr>
+  <tr><td>Who may call</td><td>Anyone, for what is public (the Marketplace's catalog). A Files space's routes need its token. Routes that change something are signed with an install's key.</td></tr>
+  <tr><td>Shape</td><td>Plain HTTP with JSON or raw bytes, for files, the Marketplace and feedback. WebSockets for the hub and pairing.</td></tr>
+  <tr><td>Reference</td><td><a href="/docs/developer/relay-api/">Relay server API</a> (HTTP) and <a href="/docs/developer/hub/">The hub and pairing protocols</a> (WebSocket).</td></tr>
+</table>
+
+<h2 id="see">What the relay can and can't see</h2>
+<p>The relay is built to carry what it can't read. Packets, rooms' chat, calls' setup, files and account backups are sealed on the device with keys the server never holds. It sees which installs connect, which talk to which, when, and how much. It knows an install by a name made from its public key, and keeps usernames, linked handles and numbers as hashes. <a href="/docs/privacy/">Privacy and safety</a> says the same for people who aren't reading the source.</p>
+
+    <nav class="prevnext"><a class="prev" href="/docs/developer/build/"><small>Previous</small>Build, test and run it</a><a class="next" href="/docs/developer/app-api/"><small>Next</small>App API</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#postman">The Postman collection</a><a href="#app">The app's API</a><a href="#relay">The relay server's API</a><a href="#see">What the relay can and can't see</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

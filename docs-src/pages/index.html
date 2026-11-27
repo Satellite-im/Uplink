@@ -1,0 +1,47 @@
+<p>Uplink is one app for the people you talk to: your texts, your friends on Uplink, your circles with their chats, calls and files, and your Telegram, Signal and other chats, side by side. Messages between Uplink apps are sealed end to end, there are no ads, and the app is open source.</p>
+
+<note kind="alpha" title="Uplink is in alpha">
+<p>It works well enough to use every day, but things still change quickly and some features are marked <soon/>. If you're testing it, start with <a href="/docs/alpha/">Join the alpha</a>, and tell us anything odd in the Alpha testers circle.</p>
+</note>
+
+<h2 id="start">Start here</h2>
+<div class="cards">
+  <a href="/docs/install/"><svg class="i"><use href="/docs/icons.svg#download"/></svg><b>Install the app</b><small>Android, Mac, Windows or Linux, and what to say yes to.</small></a>
+  <a href="/docs/first-run/"><svg class="i"><use href="/docs/icons.svg#rocket"/></svg><b>The first time you open it</b><small>The welcome, and whether Uplink takes over your texts.</small></a>
+  <a href="/docs/account/"><svg class="i"><use href="/docs/icons.svg#key-round"/></svg><b>Your account</b><small>Create one, keep your recovery words safe, sign in elsewhere.</small></a>
+  <a href="/docs/circles/"><svg class="i"><use href="/docs/icons.svg#users"/></svg><b>Circles</b><small>A group with its own spaces: chat, voice, files and texts.</small></a>
+  <a href="/docs/plugins/"><svg class="i"><use href="/docs/icons.svg#store"/></svg><b>The Marketplace</b><small>Plugins, built in and from other developers.</small></a>
+  <a href="/docs/pairing/"><svg class="i"><use href="/docs/icons.svg#laptop"/></svg><b>Your texts on a computer</b><small>Pair the Mac, Windows or Linux app with your phone.</small></a>
+  <a href="/docs/build-a-plugin/"><svg class="i"><use href="/docs/icons.svg#code"/></svg><b>Build a plugin</b><small>Make your own, try it in Developer mode, and submit it.</small></a>
+  <a href="/docs/developer/"><svg class="i"><use href="/docs/icons.svg#braces"/></svg><b>Developer docs</b><small>How the app is built, both APIs, and a Postman collection.</small></a>
+</div>
+
+<h2 id="tour">Finding your way around</h2>
+<p>Everything starts from the <b>rail</b> down the left of the screen, the same on every page, as Discord and Slack have. At its head is <b>Messages</b>, your conversations. Under it are your <b>circles</b>, each as its picture: tap one to open it, and a halo in its colour marks the one that's open. A dot beside a circle means something's unread; a red number means someone mentioned you. The circled plus under them starts a new circle or joins one by its link. At the foot: <b>New</b> (start a conversation, a group, a space or a circle), <b>Contacts</b>, <b>Archive</b>, the <b>Marketplace</b> (plugins, as a store) and <b>Settings</b>.</p>
+<p>Hold a pointer over any of them for its name. Right-click one, or press and hold it on a phone, for its menu: a circle's has its settings and members, Archive's marks everything in it read, and the Marketplace's and Settings' jump to a section.</p>
+<m-screen rail="messages" circles="Book Club:rose|Night Owls:indigo" caption="The conversations list, with the rail down its left: Messages, your circles, then New, Contacts, Archive, Marketplace and Settings.">
+  <m-tabs items="Messages|Codes|Circles" active="Messages"/>
+  <m-convo name="Maya Chen" preview="See you at 7!" time="4:12" unread="2"/>
+  <m-convo name="Dad" preview="📷 Picture" time="Yesterday"/>
+  <m-convo name="Book Club" preview="Sam: Chapter 9 tonight?" time="Mon"/>
+</m-screen>
+<note kind="tip" title="Prefer a dock?">The rail is how you move around the app from 0.9.36. <ui>Settings › Developer › Navigation</ui> can put back a dock along the foot instead: <b>One dock</b> is the same on every page, and <b>Changing dock</b> is the earlier way, where a circle had a dock of its own.</note>
+<p>At the top of Messages are three tabs: <b>Messages</b> (texts and chats), <b>Codes</b> (sign-in codes, kept out of the way) and <b>Circles</b>.</p>
+
+<h2 id="words">A few words we use</h2>
+<table>
+  <tr><th>Word</th><th>What it means</th></tr>
+  <tr><td>Circle</td><td>A group of people with a sidebar of spaces, a bit like a small server. You can be in as many as you like.</td></tr>
+  <tr><td>Space</td><td>A room in a circle (or on its own): chat and voice, text only, files, or an SMS space for people without the app.</td></tr>
+  <tr><td>Friend</td><td>Someone you talk to over Uplink rather than by text: added by their username, or by their number once you've sealed your texts together.</td></tr>
+  <tr><td>Connections</td><td>Your other chat accounts linked into Uplink: Telegram, Signal, WhatsApp, Matrix.</td></tr>
+  <tr><td>Routes</td><td>How messages travel between Uplink apps: over the relay, or by text.</td></tr>
+  <tr><td>Plugin</td><td>An extra you add from the <ui>Marketplace</ui>: for yourself, or, built in, for everyone in a circle.</td></tr>
+</table>
+
+<h2 id="devices">On which devices</h2>
+<ul>
+  <li><b>Android phone</b>: everything, including your texts (SMS and picture messages).</li>
+  <li><b>Mac, Windows and Linux</b>: friends, circles, calls, files and your other chats on their own, and your texts when paired with your Android phone.</li>
+  <li><b>iPhone</b> <soon/>: friends, circles and calls. Apple doesn't let apps send or read texts outside the EU, so no texts.</li>
+</ul>

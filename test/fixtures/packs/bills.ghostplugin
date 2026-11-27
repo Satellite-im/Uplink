@@ -1,0 +1,133 @@
+{
+  "format": "ghost-plugin/1",
+  "id": "bills",
+  "version": "1.0.0",
+  "name": "Bills",
+  "tagline": "Bills and payment reminders in a tab of their own",
+  "description": "Texts from companies about a bill (a statement that's ready, an amount due) go to a Bills tab, with the amount large on the row and a press to copy it. Receipts for payments you've made are a kind in the list's filter, which can mark them read as they come. Nobody in your contacts is ever sorted.",
+  "icon": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAaklEQVR42u3awQ0AIAgAMfZfGoeQEMHeAMb0AT6MkCRJkq7K5gAAAPA2wLTzAQAAAAAAAAD1F6x68AAAAMAQBAAAAABbAAAAAIYgAAAAAGzbAgAAADAEAQAAAADAFgC/xAAA+AtAkiRJwzpcxpX3TIHg+gAAAABJRU5ErkJggg==",
+  "symbol": "calculator",
+  "hue": "amber",
+  "shelf": "organise",
+  "labels": [
+    "bills",
+    "money",
+    "sorting"
+  ],
+  "permissions": [
+    "sort",
+    "copy",
+    "markread"
+  ],
+  "developer": "yourname",
+  "support": "https://example.com/plugins/bills",
+  "settings": [
+    {
+      "type": "toggle",
+      "key": "autoread",
+      "label": "Mark receipts as read",
+      "hint": "As they come: texts that say a payment went through.",
+      "default": false,
+      "icon": "check-check"
+    },
+    {
+      "type": "words",
+      "key": "extra",
+      "label": "More words for bills",
+      "hint": "A text with any of these goes to Bills too.",
+      "placeholder": "council tax, water rates"
+    }
+  ],
+  "rules": {
+    "tags": [
+      {
+        "tag": "bill",
+        "any": [
+          "your bill is ready",
+          "your statement is ready",
+          "amount due {amount}",
+          "amount due: {amount}",
+          "payment of {amount} is due",
+          "minimum payment due"
+        ],
+        "wordsFrom": "extra",
+        "detail": {
+          "from": "token"
+        }
+      },
+      {
+        "tag": "paid",
+        "any": [
+          "payment received",
+          "thank you for your payment",
+          "payment of {amount} received",
+          "we've received your payment"
+        ],
+        "detail": {
+          "from": "token"
+        }
+      }
+    ],
+    "sections": [
+      {
+        "key": "bills",
+        "label": "Bills",
+        "icon": "calculator",
+        "kind": "tab",
+        "takes": {
+          "tagged": [
+            "bill"
+          ],
+          "untagged": [
+            "paid"
+          ]
+        },
+        "row": {
+          "value": "{tag:bill}",
+          "caption": "A bill",
+          "end": "copyamount"
+        }
+      },
+      {
+        "key": "receipts",
+        "label": "Receipts",
+        "icon": "check-check",
+        "kind": "filter",
+        "takes": {
+          "tagged": [
+            "paid"
+          ]
+        }
+      }
+    ],
+    "actions": [
+      {
+        "id": "copyamount",
+        "label": "Copy the amount",
+        "icon": "copy",
+        "slots": [
+          "row",
+          "list.conversation.menu",
+          "conversation.message.menu"
+        ],
+        "when": {
+          "tagged": [
+            "bill"
+          ]
+        },
+        "do": "copy",
+        "text": "{tag:bill}",
+        "say": "Amount copied"
+      }
+    ],
+    "incoming": [
+      {
+        "in": "receipts",
+        "do": [
+          "markread"
+        ],
+        "setting": "autoread"
+      }
+    ]
+  }
+}

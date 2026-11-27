@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing:border-box; margin:0; }
+  :root { --ink:#f3f3f4; --ink2:#b7b7be; --ink3:#85858c; --bg:#161619; }
+  html,body { width:440px; height:280px; overflow:hidden; }
+  body {
+    background: radial-gradient(420px 300px at 80% 10%, #23232e 0%, var(--bg) 62%);
+    color:var(--ink); font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+    padding:34px 36px; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .badge { width:54px; height:54px; border-radius:15px; background:var(--ink); color:var(--bg);
+           display:flex; align-items:center; justify-content:center; }
+  .badge svg { width:30px; height:30px; }
+  h1 { font-size:27px; line-height:1.12; font-weight:680; letter-spacing:-.015em; margin-top:18px; }
+  p { color:var(--ink2); font-size:14.5px; margin-top:9px; max-width:360px; }
+  .foot { color:var(--ink3); font-size:12.5px; font-weight:600; letter-spacing:.04em; display:flex; align-items:center; gap:8px; }
+  .foot .ok { color:#4bd08a; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 6.3-6.3"/><path d="m14 7 3 3"/><path d="m18 4 3 3"/></svg>
+    </div>
+    <h1>Sign in once,<br>synced everywhere</h1>
+    <p>Uplink keys — capture your Messenger and Instagram sign-in and sync it, sealed, to every device.</p>
+  </div>
+  <div class="foot"><span class="ok">●</span> End-to-end sealed · open source</div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home screen widgets by night. -->
+<resources>
+    <color name="widget_bg">#FF161616</color>
+    <color name="widget_ink">#FFF2F2F2</color>
+    <color name="widget_ink2">#FFA0A0A0</color>
+    <color name="widget_rule">#1FFFFFFF</color>
+</resources>

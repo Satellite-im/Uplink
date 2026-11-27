@@ -1,0 +1,28 @@
+<p>Performance shows what Uplink itself is using, in a small row across the top of the window: how much of the processor, how much memory, how many frames it's drawing, and how many spikes there have been. It keeps a log you can copy and send, which is the quickest way to tell us what the app was doing when it felt slow or used up a battery.</p>
+<p><b>Add it:</b> <ui>Marketplace › Performance › Add</ui>. Remove it there when you're done: it's a tool for looking into the app, not something to leave on.</p>
+
+<h2 id="row">The row</h2>
+<p>It sits under the title bar on a computer and under the status bar on a phone, above everything else.</p>
+<table>
+  <tr><th>It says</th><th>Meaning</th></tr>
+  <tr><td><b>CPU 4%</b></td><td>How much of one processor core the whole app used over the last two seconds. More than 100% is more than one core at once. A dash where the device doesn't say.</td></tr>
+  <tr><td><b>212 MB</b></td><td>The memory the app holds.</td></tr>
+  <tr><td><b>60 fps</b></td><td>How many frames it drew each second. Nothing changing on the screen is 0, as it should be.</td></tr>
+  <tr><td><b>2 spikes</b></td><td>How many times something stood out since you added it.</td></tr>
+  <tr><td>The little graph</td><td>The processor over the last three minutes. A spike is red.</td></tr>
+</table>
+
+<h2 id="spikes">What counts as a spike</h2>
+<ul>
+  <li>The processor at half a core or more. A busy stretch is one spike, and the log says how long it lasted.</li>
+  <li>A frame that took a tenth of a second or more to draw.</li>
+  <li>The app held up for three tenths of a second or more: the window stopped answering for that long.</li>
+</ul>
+
+<h2 id="log">The log</h2>
+<p>Press <b>Log</b> to read it, or <b>Copy</b> to put it on the clipboard. It has a line for each spike and one a minute saying what that minute came to. On Android and Linux the minute's line names the busiest parts of the app.</p>
+<p>It keeps reading while the app is put away, more slowly, and marks those minutes <b>Put away</b>. So to find out what the app does to a phone's battery: add Performance, use the phone as you would for an hour, then open the app and copy the log.</p>
+<p>The log is kept on your device, holds the last 500 lines, and is gone when the app closes. Nothing is sent anywhere unless you copy it and send it yourself.</p>
+
+<h2 id="limits">Where it says less</h2>
+<p>Windows and the browser don't tell an app how much of the processor it uses. There the row shows memory, frames and hold-ups, and a dash for the processor.</p>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The app's own links (GMFB-34): someone's add-me link opened from its page (site/add: ghostmsg://add/NAME#KEY),
+	     a circle's invite (site/join: ghostmsg://join/#c.…), a relay's; handed to the app by SceneDelegate.swift. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Uplink invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ghostmsg</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Those links are the app's to read (lib/desktop/links.dart), not routes for Flutter's navigator to push. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Uplink writes out a recorded call's words on this device. Nothing is sent anywhere.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>To unlock Uplink with your face in place of your PIN, where you switched that on.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>For voice messages and calls.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>For video in calls, and to scan your phone's pairing code.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>To find your Android phone on this network and talk to it directly.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ghostmsg._tcp</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Uplink</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>ghost_messaging</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<!-- A Files-space video or sound plays as it comes down, from a server the app runs on the phone itself at
+	     http://127.0.0.1 (lib/files/file_stream.dart; Matt, 2026-11-18: "would it be possible to setup streaming and
+	     buffering of the file?"). App Transport Security leaves loopback alone already; this says so for local
+	     addresses only, and every other connection stays HTTPS. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home screen widgets (GhostWidgets.kt): the app's paper and ink by day. -->
+<resources>
+    <color name="widget_bg">#FFFFFFFF</color>
+    <color name="widget_ink">#FF111111</color>
+    <color name="widget_ink2">#FF5C5C5C</color>
+    <color name="widget_rule">#14000000</color>
+    <string name="widget_unread_name">Unread</string>
+    <string name="widget_unread_about">How many conversations are waiting, and who from.</string>
+    <string name="widget_chats_name">Conversations</string>
+    <string name="widget_chats_about">Your newest conversations; press one to open it.</string>
+    <string name="widget_people_name">People</string>
+    <string name="widget_people_about">The people you wrote with last, a press away.</string>
+</resources>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Developer docs · Uplink developer docs</title>
+<meta name="description" content="For people reading, building or scripting Uplink: how it is built, and both of its APIs.">
+<meta name="theme-color" content="#040406">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&amp;display=swap">
+<link rel="stylesheet" href="/docs/glacier-tokens.css">
+<link rel="stylesheet" href="/docs/docs.css">
+<script>try{var t=localStorage.getItem('docs-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-search="/docs/developer/search.json">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <button class="menu-btn" type="button" aria-label="Open the list of pages" aria-expanded="false" aria-controls="sidebar"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#menu"/></svg></button>
+  <a class="brand" href="/"><img src="/art/uplink-logo.webp" alt="Uplink" width="1200" height="918"></a>
+  <a class="brand-docs" href="/docs/developer/">Developer docs</a>
+  <div class="search">
+    <svg class="i" aria-hidden="true"><use href="/docs/icons.svg#search"/></svg>
+    <input id="search" type="search" placeholder="Search the developer docs" aria-label="Search the developer docs" autocomplete="off">
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" type="button" aria-label="Switch between light and dark"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#sun-moon"/></svg></button>
+  <a class="get" href="/#get"><span>Get Uplink</span></a>
+</header>
+<div class="frame">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-title">The source</div><a href="/docs/developer/" aria-current="page"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#braces"/></svg><span>Developer docs</span></a><a href="/docs/developer/architecture/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#network"/></svg><span>How the app is built</span></a><a href="/docs/developer/flows/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#workflow"/></svg><span>How the parts work together</span></a><a href="/docs/developer/build/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#terminal"/></svg><span>Build, test and run it</span></a></div><div class="nav-group"><div class="nav-title">APIs</div><a href="/docs/developer/api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#book-open"/></svg><span>API overview and Postman</span></a><a href="/docs/developer/app-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#code"/></svg><span>App API</span></a><a href="/docs/developer/relay-api/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#globe"/></svg><span>Relay server API</span></a><a href="/docs/developer/hub/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#share-2"/></svg><span>The hub and pairing protocols</span></a></div><a class="nav-other" href="/docs/"><svg class="i" aria-hidden="true"><use href="/docs/icons.svg#arrow-left"/></svg><span>Back to the docs</span></a></aside>
+  <main id="main" class="page">
+    <div class="crumb"><span class="needle" aria-hidden="true"></span>The source</div>
+    <h1>Developer docs</h1>
+    <p class="lede">For people reading, building or scripting Uplink: how it is built, and both of its APIs.</p>
+    <p>These pages are for people reading or changing Uplink's source, running their own relay, or driving the app from a script. Everything here is open source under the AGPL-3.0: <a href="https://github.com/InfamousVague/ghost-messaging">github.com/InfamousVague/ghost-messaging</a>. For how to use the app, see <a href="/docs/">the docs</a>.</p>
+
+<h2 id="source">The source</h2>
+<div class="cards">
+  <a href="/docs/developer/architecture/"><svg class="i"><use href="/docs/icons.svg#network"/></svg><b>How the app is built</b><small>The major parts, where each lives, and what it talks to.</small></a>
+  <a href="/docs/developer/flows/"><svg class="i"><use href="/docs/icons.svg#workflow"/></svg><b>How the parts work together</b><small>A text, a message, a call, pairing and a plugin, followed from the tap to the wire.</small></a>
+  <a href="/docs/developer/build/"><svg class="i"><use href="/docs/icons.svg#terminal"/></svg><b>Build, test and run it</b><small>The app and the relay from source, the tests, the scripts, and how the code is commented.</small></a>
+</div>
+
+<h2 id="apis">APIs</h2>
+<div class="cards">
+  <a href="/docs/developer/api/"><svg class="i"><use href="/docs/icons.svg#book-open"/></svg><b>API overview and Postman</b><small>The two APIs, how each is reached and signed, and one collection of both.</small></a>
+  <a href="/docs/developer/app-api/"><svg class="i"><use href="/docs/icons.svg#code"/></svg><b>App API</b><small>Control a running app: every method, what it takes and what it answers.</small></a>
+  <a href="/docs/developer/relay-api/"><svg class="i"><use href="/docs/icons.svg#globe"/></svg><b>Relay server API</b><small>The relay's HTTP routes: files, the Marketplace, feedback and the rest.</small></a>
+  <a href="/docs/developer/hub/"><svg class="i"><use href="/docs/icons.svg#share-2"/></svg><b>The hub and pairing protocols</b><small>What an app says to the relay over a WebSocket.</small></a>
+</div>
+
+<h2 id="plugins">Making a plugin?</h2>
+<p>Plugins need none of this: a plugin is one file, written by hand. <a href="/docs/build-a-plugin/">Build a plugin</a> is where that starts.</p>
+
+    <nav class="prevnext"><span></span><a class="next" href="/docs/developer/architecture/"><small>Next</small>How the app is built</a></nav>
+    <footer class="foot">Something wrong or missing here? Tell us in the Alpha testers circle, or at <a href="https://github.com/InfamousVague/ghost-messaging/issues">the app's GitHub</a>.</footer>
+  </main>
+  <nav class="toc" aria-label="On this page"><div class="nav-title">On this page</div><a href="#source">The source</a><a href="#apis">APIs</a><a href="#plugins">Making a plugin?</a></nav>
+</div>
+<script src="/docs/docs.js" defer></script>
+</body>
+</html>

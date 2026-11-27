@@ -1,0 +1,926 @@
+{
+  "api": "ghost-messaging",
+  "version": 1,
+  "methods": [
+    {
+      "name": "api.describe",
+      "group": "api",
+      "summary": "Every method, its parameters, what it answers and an example: this documentation as JSON.",
+      "params": [],
+      "returns": "{\"api\", \"version\", \"methods\": [...]}",
+      "danger": false
+    },
+    {
+      "name": "api.ping",
+      "group": "api",
+      "summary": "Answers at once: whether the API is there and which version it speaks.",
+      "params": [],
+      "returns": "{\"pong\": true, \"version\": int}",
+      "danger": false
+    },
+    {
+      "name": "app.info",
+      "group": "app",
+      "summary": "The app's version, the device, whether it is the default texting app, and who is signed in where.",
+      "params": [],
+      "returns": "{\"version\", \"platform\", \"defaultSms\", \"username\", \"networks\": [...]}",
+      "danger": false
+    },
+    {
+      "name": "app.log",
+      "group": "app",
+      "summary": "The newest lines of the Developer log (Settings › Developer).",
+      "params": [
+        {
+          "name": "limit",
+          "type": "int",
+          "doc": "How many lines, newest first.",
+          "required": false,
+          "example": 50
+        }
+      ],
+      "returns": "[\"line\", ...]",
+      "danger": false
+    },
+    {
+      "name": "app.prefs.get",
+      "group": "app",
+      "summary": "The person's choices as the app keeps them: one by its key, or all whose keys start with a prefix (all of them with none given).",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "doc": "One choice's key.",
+          "required": false,
+          "example": "theme"
+        },
+        {
+          "name": "prefix",
+          "type": "string",
+          "doc": "All choices starting with this.",
+          "required": false,
+          "example": "plugin_"
+        }
+      ],
+      "returns": "{\"key\": \"value\", ...}",
+      "danger": false,
+      "example": {
+        "prefix": "plugin_spam"
+      }
+    },
+    {
+      "name": "app.prefs.set",
+      "group": "app",
+      "summary": "Sets one of the person's choices, as Settings would. Some take effect only once the screen they belong to is opened again.",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "doc": "The choice's key.",
+          "required": true,
+          "example": "sounds"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "doc": "Its value: on/off for a switch.",
+          "required": true,
+          "example": "on"
+        }
+      ],
+      "returns": "null",
+      "danger": true,
+      "example": {
+        "key": "sounds",
+        "value": "on"
+      }
+    },
+    {
+      "name": "app.update",
+      "group": "app",
+      "summary": "Where the app's own update stands: the version installed, any newer one, and whether it is downloading.",
+      "params": [],
+      "returns": "object",
+      "danger": false
+    },
+    {
+      "name": "contacts.get",
+      "group": "contacts",
+      "summary": "Who a number is, as the phone's contacts have them.",
+      "params": [
+        {
+          "name": "address",
+          "type": "string",
+          "doc": "A phone number.",
+          "required": true,
+          "example": "+15555550100"
+        }
+      ],
+      "returns": "person",
+      "danger": false
+    },
+    {
+      "name": "conversations.archive",
+      "group": "conversations",
+      "summary": "Archives a conversation, or brings it back.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "archived",
+          "type": "bool",
+          "doc": "true to archive, false to bring back.",
+          "required": true,
+          "example": true
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "conversations.delete",
+      "group": "conversations",
+      "summary": "Deletes a conversation from the phone, for every app. It cannot be undone.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "conversations.draft",
+      "group": "conversations",
+      "summary": "What is half written in a conversation; with \"text\", sets it.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "A new draft (empty clears it).",
+          "required": false
+        }
+      ],
+      "returns": "string | null",
+      "danger": false
+    },
+    {
+      "name": "conversations.get",
+      "group": "conversations",
+      "summary": "One conversation by its number.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        }
+      ],
+      "returns": "conversation | null",
+      "danger": false,
+      "example": {
+        "thread": 4
+      }
+    },
+    {
+      "name": "conversations.list",
+      "group": "conversations",
+      "summary": "Conversations of texts (and RCS beside Google Messages), newest first, a page at a time.",
+      "params": [
+        {
+          "name": "limit",
+          "type": "int",
+          "doc": "How many (default 50).",
+          "required": false,
+          "example": 20
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "doc": "Where to start: the \"next\" a page gave.",
+          "required": false,
+          "example": 0
+        },
+        {
+          "name": "archived",
+          "type": "bool",
+          "doc": "The archived ones instead.",
+          "required": false
+        }
+      ],
+      "returns": "{\"items\": [conversation...], \"next\": int|null}",
+      "danger": false,
+      "example": {
+        "limit": 10
+      }
+    },
+    {
+      "name": "conversations.markRead",
+      "group": "conversations",
+      "summary": "Marks a conversation read (in Google Messages too, beside it).",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "conversations.messages",
+      "group": "conversations",
+      "summary": "A conversation's messages, newest first: texts, picture messages and RCS, with their state and attachments.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "doc": "How many (default 100).",
+          "required": false,
+          "example": 30
+        }
+      ],
+      "returns": "[message...]",
+      "danger": false,
+      "example": {
+        "thread": 4,
+        "limit": 20
+      }
+    },
+    {
+      "name": "conversations.mute",
+      "group": "conversations",
+      "summary": "Mutes a conversation's notifications, or unmutes them.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "on",
+          "type": "bool",
+          "doc": "true or false.",
+          "required": true,
+          "example": true
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "conversations.pin",
+      "group": "conversations",
+      "summary": "Pins a conversation to the top of the list, or unpins it.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "on",
+          "type": "bool",
+          "doc": "true or false.",
+          "required": true,
+          "example": true
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "conversations.rename",
+      "group": "conversations",
+      "summary": "Names a group conversation here (empty takes the name away).",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "doc": "The name.",
+          "required": true,
+          "example": "Weekend crew"
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "conversations.threadFor",
+      "group": "conversations",
+      "summary": "The conversation's number for these people, made if there is none yet.",
+      "params": [
+        {
+          "name": "addresses",
+          "type": "list",
+          "doc": "Phone numbers.",
+          "required": true,
+          "example": [
+            "+15555550100"
+          ]
+        }
+      ],
+      "returns": "int",
+      "danger": false
+    },
+    {
+      "name": "filters.classify",
+      "group": "filters",
+      "summary": "What the filters make of a text from someone: its tags (spam, its kind) and the section it would go to.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "The words.",
+          "required": true,
+          "example": "Your package could not be delivered. Reschedule: bit.ly/3xYz"
+        },
+        {
+          "name": "from",
+          "type": "string",
+          "doc": "Who sent it.",
+          "required": false,
+          "example": "+15555550100"
+        },
+        {
+          "name": "contact",
+          "type": "bool",
+          "doc": "Whether they are in your contacts.",
+          "required": false
+        }
+      ],
+      "returns": "{\"tags\": {\"name\": \"detail\"}, \"section\": string|null}",
+      "danger": false,
+      "example": {
+        "text": "Congratulations! You've won a gift card. Claim now: http://prize.example/win"
+      }
+    },
+    {
+      "name": "friends.list",
+      "group": "friends",
+      "summary": "Friends by username, those who asked you, and those you asked; with whether each is on.",
+      "params": [],
+      "returns": "[{\"username\", \"name\", \"state\", \"presence\"}...]",
+      "danger": false
+    },
+    {
+      "name": "messages.delete",
+      "group": "messages",
+      "summary": "Deletes one message from the phone by its kind and id (as conversations.messages gives them).",
+      "params": [
+        {
+          "name": "kind",
+          "type": "string",
+          "doc": "sms, mms or rcs.",
+          "required": true,
+          "example": "sms"
+        },
+        {
+          "name": "id",
+          "type": "int",
+          "doc": "Its id.",
+          "required": true,
+          "example": 1234
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "messages.send",
+      "group": "messages",
+      "summary": "Sends a text to these people, as the app would (RCS beside Google Messages where the conversation is RCS).",
+      "params": [
+        {
+          "name": "addresses",
+          "type": "list",
+          "doc": "Phone numbers.",
+          "required": true,
+          "example": [
+            "+15555550100"
+          ]
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "doc": "The words.",
+          "required": true,
+          "example": "Sent from the API"
+        }
+      ],
+      "returns": "int: the conversation's number",
+      "danger": true
+    },
+    {
+      "name": "net.status",
+      "group": "net",
+      "summary": "The app's routes to other installs: this install's name, the relay server it uses, how each route stands, and who it can reach.",
+      "params": [],
+      "returns": "object",
+      "danger": false
+    },
+    {
+      "name": "networks.changeGroup",
+      "group": "networks",
+      "summary": "Changes a group on its network: any of title, description, timer (seconds), add, remove, admin, unadmin (lists of ids), announcementsOnly.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        },
+        {
+          "name": "change",
+          "type": "object",
+          "doc": "What to change.",
+          "required": true,
+          "example": {
+            "title": "New name"
+          }
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "networks.chats",
+      "group": "networks",
+      "summary": "A network's chats, newest first.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "doc": "How many (default 50).",
+          "required": false
+        }
+      ],
+      "returns": "[chat...]",
+      "danger": false,
+      "example": {
+        "network": "telegram",
+        "limit": 10
+      }
+    },
+    {
+      "name": "networks.group",
+      "group": "networks",
+      "summary": "A group in full: its name, description, timer, people and rules, and what you may change.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        }
+      ],
+      "returns": "object | null",
+      "danger": false
+    },
+    {
+      "name": "networks.list",
+      "group": "networks",
+      "summary": "The other networks: whether each is signed in, and as whom.",
+      "params": [],
+      "returns": "[{\"id\", \"name\", \"state\", \"account\", \"chats\"}...]",
+      "danger": false
+    },
+    {
+      "name": "networks.markRead",
+      "group": "networks",
+      "summary": "Marks a chat read on its network.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "networks.messages",
+      "group": "networks",
+      "summary": "A chat's messages as held, oldest first; loaded from the network first.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        }
+      ],
+      "returns": "[message...]",
+      "danger": false
+    },
+    {
+      "name": "networks.react",
+      "group": "networks",
+      "summary": "Puts a reaction on a message, or takes it off.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "doc": "The message's id.",
+          "required": true
+        },
+        {
+          "name": "emoji",
+          "type": "string",
+          "doc": "The reaction.",
+          "required": true,
+          "example": "👍"
+        },
+        {
+          "name": "remove",
+          "type": "bool",
+          "doc": "Take it off instead.",
+          "required": false
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "networks.reply",
+      "group": "networks",
+      "summary": "Sends words as a reply quoting one of the chat's messages.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "doc": "The id of the message answered.",
+          "required": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "The words.",
+          "required": true
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "networks.send",
+      "group": "networks",
+      "summary": "Sends words in a chat on that network.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "The words.",
+          "required": true,
+          "example": "Sent from the API"
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "plugins.devInstall",
+      "group": "plugins",
+      "summary": "Loads a plugin you are making (a ghost-plugin/1 file) on this phone, unreviewed, as Settings › Developer › Plugins in development does. Developer mode only. dryRun checks it without loading it.",
+      "params": [
+        {
+          "name": "pack",
+          "type": "object",
+          "doc": "The plugin file's JSON. Give this or text.",
+          "required": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "The plugin file's words, as they are on disk. Give this or pack.",
+          "required": false
+        },
+        {
+          "name": "on",
+          "type": "bool",
+          "doc": "Switch it on once loaded: only where you agreed on the phone to everything it can do already (false where not given).",
+          "required": false
+        },
+        {
+          "name": "dryRun",
+          "type": "bool",
+          "doc": "Only check it: what is wrong with it, if anything.",
+          "required": false
+        }
+      ],
+      "returns": "{\"ok\": bool, \"id\": \"bills\", \"plugin\": \"xbills\", \"on\": bool, \"needs\": \"consent on the phone\" (where on was asked and could not be), \"issues\": [{\"code\", \"path\", \"message\", \"severity\"}...]}",
+      "danger": true
+    },
+    {
+      "name": "plugins.devRemove",
+      "group": "plugins",
+      "summary": "Removes a plugin in development from this phone.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "doc": "Its id, as in its file.",
+          "required": true,
+          "example": "bills"
+        }
+      ],
+      "returns": "null",
+      "danger": true
+    },
+    {
+      "name": "plugins.list",
+      "group": "plugins",
+      "summary": "Every plugin, whether it is on, and its own choices: the built-in ones and those from the Marketplace and in development (whose ids start with x).",
+      "params": [],
+      "returns": "[{\"id\", \"name\", \"description\", \"on\", \"prefs\", \"source\": \"builtIn\"|\"reviewed\"|\"dev\", \"version\"}...]",
+      "danger": false
+    },
+    {
+      "name": "plugins.pref",
+      "group": "plugins",
+      "summary": "One of a plugin's own choices (the spam filter's strictness, a sign on or off); with \"value\", sets it.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "doc": "The plugin's id.",
+          "required": true,
+          "example": "spam"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "doc": "The choice.",
+          "required": true,
+          "example": "level"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "doc": "A new value.",
+          "required": false
+        }
+      ],
+      "returns": "string | null",
+      "danger": false,
+      "example": {
+        "id": "spam",
+        "key": "level"
+      }
+    },
+    {
+      "name": "plugins.set",
+      "group": "plugins",
+      "summary": "Turns a plugin on or off.",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "doc": "The plugin's id.",
+          "required": true,
+          "example": "spam"
+        },
+        {
+          "name": "on",
+          "type": "bool",
+          "doc": "true or false.",
+          "required": true,
+          "example": true
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "presence.get",
+      "group": "presence",
+      "summary": "Whether someone is on now, and where, or when they were last seen: a number, a friend's @username, or network:id (Telegram).",
+      "params": [
+        {
+          "name": "address",
+          "type": "string",
+          "doc": "A phone number, @username, or telegram:<user id>.",
+          "required": true,
+          "example": "@friend"
+        }
+      ],
+      "returns": "{\"network\", \"online\", \"lastSeen\", \"words\"} | null",
+      "danger": false
+    },
+    {
+      "name": "ui.compose",
+      "group": "ui",
+      "summary": "Opens New message, with words already written where given.",
+      "params": [
+        {
+          "name": "body",
+          "type": "string",
+          "doc": "Words to start with.",
+          "required": false
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "ui.home",
+      "group": "ui",
+      "summary": "Closes what is open and goes back to the list of conversations.",
+      "params": [],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "ui.openChat",
+      "group": "ui",
+      "summary": "Opens a Telegram or Signal chat on the screen.",
+      "params": [
+        {
+          "name": "network",
+          "type": "string",
+          "doc": "telegram or signal.",
+          "required": true,
+          "example": "telegram"
+        },
+        {
+          "name": "chat",
+          "type": "string",
+          "doc": "The chat's id on that network (networks.chats gives them).",
+          "required": true,
+          "example": "123456789"
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "ui.openConversation",
+      "group": "ui",
+      "summary": "Opens a conversation of texts on the screen.",
+      "params": [
+        {
+          "name": "thread",
+          "type": "int",
+          "doc": "The conversation's number (conversations.list gives them).",
+          "required": true,
+          "example": 4
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "ui.openSettings",
+      "group": "ui",
+      "summary": "Opens Settings, at one of its sections where given (messages, sounds, developer, api, ...). plugins and plugin-<id> open the Marketplace instead.",
+      "params": [
+        {
+          "name": "section",
+          "type": "string",
+          "doc": "A section's id.",
+          "required": false,
+          "example": "api"
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    },
+    {
+      "name": "ui.toast",
+      "group": "ui",
+      "summary": "Shows a short note at the foot of the screen.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "doc": "The words.",
+          "required": true,
+          "example": "Hello from the API"
+        }
+      ],
+      "returns": "null",
+      "danger": false
+    }
+  ]
+}

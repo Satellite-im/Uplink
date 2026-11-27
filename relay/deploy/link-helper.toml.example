@@ -1,0 +1,62 @@
+# A link helper for Uplink's direct links (docs/SELF_HOSTING.md, "A link helper for direct links"): the
+# settings of iroh's relay server, `iroh-relay` 1.5.0, which tool/build-link.sh builds. It is not the Uplink
+# relay: it helps two devices find each other across networks, and carries their sealed traffic where no straight
+# path can be made. It sees which devices link, from which addresses and how much they send; never who they are or
+# what is said.
+#
+# Copy to /etc/ghost-link/config.toml and put your relay's name in place of relay.example.com. As written it shares a
+# machine with a web server that already has ports 80 and 443 and a certificate for that name: it takes a port of its
+# own (7843) and reads a copy of that certificate. Apps then reach it at https://relay.example.com:7843, which is
+# what goes in the relay's env file:
+#   GHOST_LINK_HELPERS=https://relay.example.com:7843
+# Open TCP 7843 and UDP 7842 in the firewall. Nothing else here listens beyond the machine itself.
+#
+# The server passes over a name it does not know without a word, so a misspelt line is a line left out. Every line
+# here is one native/link-check runs against (`cargo run` there starts a helper with this very file).
+# tool/deploy-link.mjs writes this file to our own server, with its name in place of the example's: what changes here
+# changes there.
+
+# Who may link through it: everyone. The apps' device ids are not known to any server of ours, by design, so there is
+# no list to check them against. What holds it to a small machine is the limit below and the service's own (memory,
+# processor: deploy/ghost-link.service). Other values, for later: access.shared_token = ["…"] (the app would have to
+# be handed the token and present it), access.denylist = ["<device id>"].
+access = "everyone"
+
+# The server always opens a plain-HTTP door as well (it answers /generate_204, for telling a captive portal from the
+# open internet). Apps look for that on port 80 of the helper's name, which here is the web server's, so it is kept
+# to this machine. Left unset it would be port 80 on every address.
+http_bind_addr = "127.0.0.1:7844"
+
+# Its counters (bytes carried, devices signed in, connections slowed by the limit; no device ids), for whoever is on
+# this machine: curl -s http://127.0.0.1:7845/metrics. `enable_metrics = false` turns them off.
+enable_metrics = true
+metrics_bind_addr = "127.0.0.1:7845"
+
+# Tells a device the address the internet sees it at (QUIC address discovery), which is what lets two devices behind
+# routers try a straight path at all. Off unless said. It answers on the QUIC port below with the certificate below.
+enable_quic_addr_discovery = true
+
+# How many devices' keys it remembers having checked (each saves working one out again). The default is 1,048,576,
+# up to 56 MB; this is about 1 MB at most.
+key_cache_capacity = 16384
+
+[tls]
+# Where apps reach it, TLS on a port of its own. 0.0.0.0 is every IPv4 address; "[::]:7843" takes IPv6 as well.
+https_bind_addr = "0.0.0.0:7843"
+# QUIC address discovery, on UDP. Keep 7842: an app given only the helper's https address looks for it there.
+quic_bind_addr = "0.0.0.0:7842"
+# The certificate is someone else's to renew (the web server's): read from these two files, and read again once a
+# day, so a renewed copy put in their place is taken up without a restart. PEM, the key as Caddy or certbot writes
+# it. ("Manual" reads them once, at the start. "LetsEncrypt" has the helper get a certificate of its own, which it
+# can only do on a name whose port 443 is its own: docs/SELF_HOSTING.md.)
+cert_mode = "Reloading"
+manual_cert_path = "/etc/ghost-link/certs/relay.example.com.crt"
+manual_key_path = "/etc/ghost-link/certs/relay.example.com.key"
+
+# The most one device may send through it: 256 KiB a second, after a first megabyte at once. A message, a card or a
+# check of what the relay said is far under it; a device that tries to move a film through it is slowed, not cut off.
+# This is the only limit the server keeps by itself: it reads accept_conn_limit and accept_conn_burst too, and in
+# 1.5.0 does nothing with them.
+[limits.client.rx]
+bytes_per_second = 262144
+max_burst_bytes = 1048576

@@ -1,0 +1,55 @@
+<p>Link a Discord server and its voice channels show in Uplink as a group of spaces, with who's in each. Press one and you're in that Discord channel from Uplink: Uplink's bot joins it and carries the sound and the chat both ways, so people in Discord hear you and you hear them.</p>
+
+<h2 id="link">Link a server</h2>
+<p>You need someone who can manage the Discord server for the first step. After that, anyone with the code can link it in their app.</p>
+<steps>
+<step title="New › Add a Discord server">
+<p>Tap <b>New</b> at the foot of the rail.</p>
+<m-screen rail="messages" railtap="new" circles="Book Club:rose|Night Owls:indigo">
+  <m-menu title="Start something new"><m-item icon="users">New circle</m-item><m-item icon="headphones">New space</m-item><m-item icon="message-circle" tap>Add a Discord server</m-item></m-menu>
+</m-screen>
+</step>
+<step title="Add the bot to the server">
+<p>Tap <b>Add the bot to your server</b>. Discord opens: pick the server and authorise it. Skip this if the bot is already there.</p>
+<m-screen title="Add a Discord server" back>
+  <m-section title="1. Add the bot" foot="Opens Discord. Skip this if the bot is already there."><m-row icon="bot" hue="indigo" label="Add the bot to your server" chev tap/></m-section>
+</m-screen>
+</step>
+<step title="Get a code in Discord">
+<p>In any channel of the server, type <code>/ghost link</code>. The bot answers with a six-character code only you see. It works once, for 10 minutes.</p>
+<m-screen title="#general" wide caption="In Discord. Only you see the bot's reply.">
+  <m-bubble from="me">/ghost link</m-bubble>
+  <m-bubble from="them" name="Uplink">Your code is K7Q2XM. In Uplink tap New › Add a Discord server and enter it. It works once, for 10 minutes.</m-bubble>
+</m-screen>
+</step>
+<step title="Enter it">
+<p>Back in Uplink, type the code and tap <b>Link the server</b>.</p>
+<m-screen title="Add a Discord server" back>
+  <m-section title="3. Enter it"><m-row-raw><m-code value="K7Q2XM"/></m-row-raw></m-section>
+  <m-btn kind="primary" tap>Link the server</m-btn>
+</m-screen>
+</step>
+</steps>
+
+<h2 id="use">Talk in a Discord voice channel</h2>
+<p>The server shows as a group in Messages, its voice and stage channels as spaces, with who's in each. Press one to join: Uplink's bot joins that channel for you, and you talk to the people there.</p>
+<m-screen title="Messages">
+  <m-section title="My Discord server">
+    <m-space kind="voice" name="General voice" line="Riley, Sam in Discord" tap/>
+    <m-space kind="voice" name="Gaming" line="Nobody yet"/>
+  </m-section>
+</m-screen>
+<ul>
+  <li>People in Discord see the bot speak as <b>Uplink · your name</b>.</li>
+  <li>Messages in the space go to the channel's chat in Discord, and theirs come back.</li>
+  <li>People in Discord are marked as such in the call; their volume and mute work as anyone's.</li>
+</ul>
+
+<h2 id="commands">The bot's commands</h2>
+<table>
+  <tr><th>In Discord</th><th>Does</th></tr>
+  <tr><td><code>/ghost link</code></td><td>Gives a one-time code to link the server in Uplink.</td></tr>
+  <tr><td><code>/ghost status</code></td><td>Says how many Uplink links the server has.</td></tr>
+  <tr><td><code>/ghost unlink</code></td><td>Takes every link away. The server's group in Uplink says so.</td></tr>
+</table>
+<note kind="info" title="What the bot can see"><p>The bot sees what any member of a voice channel sees: who is in it, and the sound and chat of the channel it's bridging while someone from Uplink is in it. The link is a token kept on your device only.</p></note>

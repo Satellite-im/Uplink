@@ -1,0 +1,3819 @@
+{
+  "info": {
+    "name": "Uplink",
+    "description": "The app's API and the relay server's HTTP routes. Made by tool/build-docs.mjs from the app's own method registry and docs-src/api/relay-routes.mjs; the reference is at https://gogho.st/docs/developer/api/. The hub and pairing channels are WebSockets and are documented at https://gogho.st/docs/developer/hub/.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "app",
+      "value": "http://127.0.0.1:8765",
+      "description": "Where the app serves its API (Settings › API)."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "The app's token (Settings › API › Copy the token)."
+    },
+    {
+      "key": "relay",
+      "value": "https://gogho.st",
+      "description": "The relay server."
+    },
+    {
+      "key": "filesToken",
+      "value": "",
+      "description": "A Files space's token."
+    },
+    {
+      "key": "ghostKey",
+      "value": "",
+      "description": "A signed route's x-ghost-key."
+    },
+    {
+      "key": "ghostTime",
+      "value": "",
+      "description": "A signed route's x-ghost-time."
+    },
+    {
+      "key": "ghostSig",
+      "value": "",
+      "description": "A signed route's x-ghost-sig."
+    },
+    {
+      "key": "ghostBodySha256",
+      "value": "",
+      "description": "A signed Marketplace body's SHA-256, in hex."
+    },
+    {
+      "key": "ghostBodyLength",
+      "value": "",
+      "description": "A signed Marketplace body's length in bytes."
+    }
+  ],
+  "item": [
+    {
+      "name": "App API",
+      "description": "Version 1. POST {{app}}/api/<method> with the parameters as a JSON object and the token. https://gogho.st/docs/developer/app-api/",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Describe every method",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{app}}/api",
+              "host": [
+                "{{app}}"
+              ],
+              "path": [
+                "api"
+              ]
+            },
+            "description": "Everything the API says of itself, as JSON."
+          }
+        },
+        {
+          "name": "api",
+          "item": [
+            {
+              "name": "api.describe",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/api.describe",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "api.describe"
+                  ]
+                },
+                "description": "Every method, its parameters, what it answers and an example: this documentation as JSON.\n\nNo parameters.\n\nAnswers: `{\"api\", \"version\", \"methods\": [...]}`"
+              }
+            },
+            {
+              "name": "api.ping",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/api.ping",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "api.ping"
+                  ]
+                },
+                "description": "Answers at once: whether the API is there and which version it speaks.\n\nNo parameters.\n\nAnswers: `{\"pong\": true, \"version\": int}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "app",
+          "item": [
+            {
+              "name": "app.info",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/app.info",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "app.info"
+                  ]
+                },
+                "description": "The app's version, the device, whether it is the default texting app, and who is signed in where.\n\nNo parameters.\n\nAnswers: `{\"version\", \"platform\", \"defaultSms\", \"username\", \"networks\": [...]}`"
+              }
+            },
+            {
+              "name": "app.log",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/app.log",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "app.log"
+                  ]
+                },
+                "description": "The newest lines of the Developer log (Settings › Developer).\n\nParameters:\n- `limit` (int): How many lines, newest first.\n\nAnswers: `[\"line\", ...]`"
+              }
+            },
+            {
+              "name": "app.prefs.get",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"prefix\": \"plugin_spam\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/app.prefs.get",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "app.prefs.get"
+                  ]
+                },
+                "description": "The person's choices as the app keeps them: one by its key, or all whose keys start with a prefix (all of them with none given).\n\nParameters:\n- `key` (string): One choice's key.\n- `prefix` (string): All choices starting with this.\n\nAnswers: `{\"key\": \"value\", ...}`"
+              }
+            },
+            {
+              "name": "app.prefs.set",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"key\": \"sounds\",\n  \"value\": \"on\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/app.prefs.set",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "app.prefs.set"
+                  ]
+                },
+                "description": "Sets one of the person's choices, as Settings would. Some take effect only once the screen they belong to is opened again.\n\n**Changes or removes something.**\n\nParameters:\n- `key` (string, needed): The choice's key.\n- `value` (string, needed): Its value: on/off for a switch.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "app.update",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/app.update",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "app.update"
+                  ]
+                },
+                "description": "Where the app's own update stands: the version installed, any newer one, and whether it is downloading.\n\nNo parameters.\n\nAnswers: `object`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "contacts",
+          "item": [
+            {
+              "name": "contacts.get",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"address\": \"+15555550100\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/contacts.get",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "contacts.get"
+                  ]
+                },
+                "description": "Who a number is, as the phone's contacts have them.\n\nParameters:\n- `address` (string, needed): A phone number.\n\nAnswers: `person`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "conversations",
+          "item": [
+            {
+              "name": "conversations.archive",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4,\n  \"archived\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.archive",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.archive"
+                  ]
+                },
+                "description": "Archives a conversation, or brings it back.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `archived` (bool, needed): true to archive, false to bring back.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.delete",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.delete",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.delete"
+                  ]
+                },
+                "description": "Deletes a conversation from the phone, for every app. It cannot be undone.\n\n**Changes or removes something.**\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.draft",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.draft",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.draft"
+                  ]
+                },
+                "description": "What is half written in a conversation; with \"text\", sets it.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `text` (string): A new draft (empty clears it).\n\nAnswers: `string | null`"
+              }
+            },
+            {
+              "name": "conversations.get",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.get",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.get"
+                  ]
+                },
+                "description": "One conversation by its number.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n\nAnswers: `conversation | null`"
+              }
+            },
+            {
+              "name": "conversations.list",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"limit\": 10\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.list",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.list"
+                  ]
+                },
+                "description": "Conversations of texts (and RCS beside Google Messages), newest first, a page at a time.\n\nParameters:\n- `limit` (int): How many (default 50).\n- `offset` (int): Where to start: the \"next\" a page gave.\n- `archived` (bool): The archived ones instead.\n\nAnswers: `{\"items\": [conversation...], \"next\": int|null}`"
+              }
+            },
+            {
+              "name": "conversations.markRead",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.markRead",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.markRead"
+                  ]
+                },
+                "description": "Marks a conversation read (in Google Messages too, beside it).\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.messages",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4,\n  \"limit\": 20\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.messages",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.messages"
+                  ]
+                },
+                "description": "A conversation's messages, newest first: texts, picture messages and RCS, with their state and attachments.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `limit` (int): How many (default 100).\n\nAnswers: `[message...]`"
+              }
+            },
+            {
+              "name": "conversations.mute",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4,\n  \"on\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.mute",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.mute"
+                  ]
+                },
+                "description": "Mutes a conversation's notifications, or unmutes them.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `on` (bool, needed): true or false.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.pin",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4,\n  \"on\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.pin",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.pin"
+                  ]
+                },
+                "description": "Pins a conversation to the top of the list, or unpins it.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `on` (bool, needed): true or false.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.rename",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4,\n  \"name\": \"Weekend crew\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.rename",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.rename"
+                  ]
+                },
+                "description": "Names a group conversation here (empty takes the name away).\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n- `name` (string, needed): The name.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "conversations.threadFor",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addresses\": [\n    \"+15555550100\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/conversations.threadFor",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "conversations.threadFor"
+                  ]
+                },
+                "description": "The conversation's number for these people, made if there is none yet.\n\nParameters:\n- `addresses` (list, needed): Phone numbers.\n\nAnswers: `int`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "filters",
+          "item": [
+            {
+              "name": "filters.classify",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"text\": \"Congratulations! You've won a gift card. Claim now: http://prize.example/win\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/filters.classify",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "filters.classify"
+                  ]
+                },
+                "description": "What the filters make of a text from someone: its tags (spam, its kind) and the section it would go to.\n\nParameters:\n- `text` (string, needed): The words.\n- `from` (string): Who sent it.\n- `contact` (bool): Whether they are in your contacts.\n\nAnswers: `{\"tags\": {\"name\": \"detail\"}, \"section\": string|null}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "friends",
+          "item": [
+            {
+              "name": "friends.list",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/friends.list",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "friends.list"
+                  ]
+                },
+                "description": "Friends by username, those who asked you, and those you asked; with whether each is on.\n\nNo parameters.\n\nAnswers: `[{\"username\", \"name\", \"state\", \"presence\"}...]`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "messages",
+          "item": [
+            {
+              "name": "messages.delete",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"sms\",\n  \"id\": 1234\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/messages.delete",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "messages.delete"
+                  ]
+                },
+                "description": "Deletes one message from the phone by its kind and id (as conversations.messages gives them).\n\n**Changes or removes something.**\n\nParameters:\n- `kind` (string, needed): sms, mms or rcs.\n- `id` (int, needed): Its id.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "messages.send",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addresses\": [\n    \"+15555550100\"\n  ],\n  \"body\": \"Sent from the API\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/messages.send",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "messages.send"
+                  ]
+                },
+                "description": "Sends a text to these people, as the app would (RCS beside Google Messages where the conversation is RCS).\n\n**Changes or removes something.**\n\nParameters:\n- `addresses` (list, needed): Phone numbers.\n- `body` (string, needed): The words.\n\nAnswers: `int: the conversation's number`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "net",
+          "item": [
+            {
+              "name": "net.status",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/net.status",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "net.status"
+                  ]
+                },
+                "description": "The app's routes to other installs: this install's name, the relay server it uses, how each route stands, and who it can reach.\n\nNo parameters.\n\nAnswers: `object`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "networks",
+          "item": [
+            {
+              "name": "networks.changeGroup",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\",\n  \"change\": {\n    \"title\": \"New name\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.changeGroup",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.changeGroup"
+                  ]
+                },
+                "description": "Changes a group on its network: any of title, description, timer (seconds), add, remove, admin, unadmin (lists of ids), announcementsOnly.\n\n**Changes or removes something.**\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n- `change` (object, needed): What to change.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "networks.chats",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"limit\": 10\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.chats",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.chats"
+                  ]
+                },
+                "description": "A network's chats, newest first.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `limit` (int): How many (default 50).\n\nAnswers: `[chat...]`"
+              }
+            },
+            {
+              "name": "networks.group",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.group",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.group"
+                  ]
+                },
+                "description": "A group in full: its name, description, timer, people and rules, and what you may change.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n\nAnswers: `object | null`"
+              }
+            },
+            {
+              "name": "networks.list",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.list",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.list"
+                  ]
+                },
+                "description": "The other networks: whether each is signed in, and as whom.\n\nNo parameters.\n\nAnswers: `[{\"id\", \"name\", \"state\", \"account\", \"chats\"}...]`"
+              }
+            },
+            {
+              "name": "networks.markRead",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.markRead",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.markRead"
+                  ]
+                },
+                "description": "Marks a chat read on its network.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "networks.messages",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.messages",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.messages"
+                  ]
+                },
+                "description": "A chat's messages as held, oldest first; loaded from the network first.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n\nAnswers: `[message...]`"
+              }
+            },
+            {
+              "name": "networks.react",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\",\n  \"message\": null,\n  \"emoji\": \"👍\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.react",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.react"
+                  ]
+                },
+                "description": "Puts a reaction on a message, or takes it off.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n- `message` (string, needed): The message's id.\n- `emoji` (string, needed): The reaction.\n- `remove` (bool): Take it off instead.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "networks.reply",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\",\n  \"message\": null,\n  \"text\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.reply",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.reply"
+                  ]
+                },
+                "description": "Sends words as a reply quoting one of the chat's messages.\n\n**Changes or removes something.**\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n- `message` (string, needed): The id of the message answered.\n- `text` (string, needed): The words.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "networks.send",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\",\n  \"text\": \"Sent from the API\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/networks.send",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "networks.send"
+                  ]
+                },
+                "description": "Sends words in a chat on that network.\n\n**Changes or removes something.**\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n- `text` (string, needed): The words.\n\nAnswers: `null`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "plugins",
+          "item": [
+            {
+              "name": "plugins.devInstall",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/plugins.devInstall",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "plugins.devInstall"
+                  ]
+                },
+                "description": "Loads a plugin you are making (a ghost-plugin/1 file) on this phone, unreviewed, as Settings › Developer › Plugins in development does. Developer mode only. dryRun checks it without loading it.\n\n**Changes or removes something.**\n\nParameters:\n- `pack` (object): The plugin file's JSON. Give this or text.\n- `text` (string): The plugin file's words, as they are on disk. Give this or pack.\n- `on` (bool): Switch it on once loaded: only where you agreed on the phone to everything it can do already (false where not given).\n- `dryRun` (bool): Only check it: what is wrong with it, if anything.\n\nAnswers: `{\"ok\": bool, \"id\": \"bills\", \"plugin\": \"xbills\", \"on\": bool, \"needs\": \"consent on the phone\" (where on was asked and could not be), \"issues\": [{\"code\", \"path\", \"message\", \"severity\"}...]}`"
+              }
+            },
+            {
+              "name": "plugins.devRemove",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"bills\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/plugins.devRemove",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "plugins.devRemove"
+                  ]
+                },
+                "description": "Removes a plugin in development from this phone.\n\n**Changes or removes something.**\n\nParameters:\n- `id` (string, needed): Its id, as in its file.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "plugins.list",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/plugins.list",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "plugins.list"
+                  ]
+                },
+                "description": "Every plugin, whether it is on, and its own choices: the built-in ones and those from the Marketplace and in development (whose ids start with x).\n\nNo parameters.\n\nAnswers: `[{\"id\", \"name\", \"description\", \"on\", \"prefs\", \"source\": \"builtIn\"|\"reviewed\"|\"dev\", \"version\"}...]`"
+              }
+            },
+            {
+              "name": "plugins.pref",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"spam\",\n  \"key\": \"level\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/plugins.pref",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "plugins.pref"
+                  ]
+                },
+                "description": "One of a plugin's own choices (the spam filter's strictness, a sign on or off); with \"value\", sets it.\n\nParameters:\n- `id` (string, needed): The plugin's id.\n- `key` (string, needed): The choice.\n- `value` (string): A new value.\n\nAnswers: `string | null`"
+              }
+            },
+            {
+              "name": "plugins.set",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"spam\",\n  \"on\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/plugins.set",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "plugins.set"
+                  ]
+                },
+                "description": "Turns a plugin on or off.\n\nParameters:\n- `id` (string, needed): The plugin's id.\n- `on` (bool, needed): true or false.\n\nAnswers: `null`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "presence",
+          "item": [
+            {
+              "name": "presence.get",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"address\": \"@friend\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/presence.get",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "presence.get"
+                  ]
+                },
+                "description": "Whether someone is on now, and where, or when they were last seen: a number, a friend's @username, or network:id (Telegram).\n\nParameters:\n- `address` (string, needed): A phone number, @username, or telegram:<user id>.\n\nAnswers: `{\"network\", \"online\", \"lastSeen\", \"words\"} | null`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ui",
+          "item": [
+            {
+              "name": "ui.compose",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.compose",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.compose"
+                  ]
+                },
+                "description": "Opens New message, with words already written where given.\n\nParameters:\n- `body` (string): Words to start with.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "ui.home",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.home",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.home"
+                  ]
+                },
+                "description": "Closes what is open and goes back to the list of conversations.\n\nNo parameters.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "ui.openChat",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"network\": \"telegram\",\n  \"chat\": \"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.openChat",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.openChat"
+                  ]
+                },
+                "description": "Opens a Telegram or Signal chat on the screen.\n\nParameters:\n- `network` (string, needed): telegram or signal.\n- `chat` (string, needed): The chat's id on that network (networks.chats gives them).\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "ui.openConversation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"thread\": 4\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.openConversation",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.openConversation"
+                  ]
+                },
+                "description": "Opens a conversation of texts on the screen.\n\nParameters:\n- `thread` (int, needed): The conversation's number (conversations.list gives them).\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "ui.openSettings",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.openSettings",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.openSettings"
+                  ]
+                },
+                "description": "Opens Settings, at one of its sections where given (messages, sounds, developer, api, ...). plugins and plugin-<id> open the Marketplace instead.\n\nParameters:\n- `section` (string): A section's id.\n\nAnswers: `null`"
+              }
+            },
+            {
+              "name": "ui.toast",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"text\": \"Hello from the API\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{app}}/api/ui.toast",
+                  "host": [
+                    "{{app}}"
+                  ],
+                  "path": [
+                    "api",
+                    "ui.toast"
+                  ]
+                },
+                "description": "Shows a short note at the foot of the screen.\n\nParameters:\n- `text` (string, needed): The words.\n\nAnswers: `null`"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Relay server API",
+      "description": "Plain HTTP on the relay server. https://gogho.st/docs/developer/relay-api/",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "General",
+          "description": "What the relay answers when a request matches nothing else.",
+          "item": [
+            {
+              "name": "GET /",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": []
+                },
+                "description": "The answer to any request, of any method and path, that no other route takes. There is no separate health route.\n\nWho: Anyone\n\nAnswers: `200 text/plain: Ghost Messaging relay`\n\nRefusals:\n- `400 (empty)  a path whose percent-escapes are not UTF-8`\n- `404 text/plain: Ghost Messaging relay  a WebSocket upgrade whose last path segment is neither hub nor 32 hex digits`\n- `400 (empty)  a WebSocket upgrade to the hub or a channel whose Sec-WebSocket-Key is not 1 to 64 printable ASCII characters`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign-in links",
+          "description": "Browser pages that prove a Discord, Telegram or X handle is yours.",
+          "item": [
+            {
+              "name": "GET /link/{network}",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/link/:network?s=",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "link",
+                    ":network"
+                  ],
+                  "query": [
+                    {
+                      "key": "s",
+                      "value": "",
+                      "description": "The state the hub made for this install: 32 hex digits, good for 10 minutes.",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "network",
+                      "value": "",
+                      "description": "discord, telegram or x. Anything else gets the root answer."
+                    }
+                  ]
+                },
+                "description": "Starts a sign-in the app asked for over the hub. Sends the browser to the network's own sign-in (Discord, X) or shows Telegram's login widget.\n\nWho: Anyone holding a state from the hub\n\nAnswers: `302 Location: the network's sign-in (discord, x); 200 text/html (telegram)`\n\nRefusals:\n- `400 text/html \"That didn't work\"  the state is unknown, expired or for another network, or that sign-in is not set up`"
+              }
+            },
+            {
+              "name": "GET /link/{network}/callback",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/link/:network/callback?state=&code=&id=&auth_date=&hash=&username=",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "link",
+                    ":network",
+                    "callback"
+                  ],
+                  "query": [
+                    {
+                      "key": "state",
+                      "value": "",
+                      "description": "The state the sign-in was started with.",
+                      "disabled": false
+                    },
+                    {
+                      "key": "code",
+                      "value": "",
+                      "description": "discord and x: the network's authorization code.",
+                      "disabled": true
+                    },
+                    {
+                      "key": "id",
+                      "value": "",
+                      "description": "telegram: the widget's id. Required for telegram.",
+                      "disabled": true
+                    },
+                    {
+                      "key": "auth_date",
+                      "value": "",
+                      "description": "telegram: when the widget signed, in seconds. Required for telegram; at most 86400 seconds old.",
+                      "disabled": true
+                    },
+                    {
+                      "key": "hash",
+                      "value": "",
+                      "description": "telegram: the widget's HMAC-SHA256 over its fields. Required for telegram.",
+                      "disabled": true
+                    },
+                    {
+                      "key": "username",
+                      "value": "",
+                      "description": "telegram: the account's username. Also taken: first_name, last_name, photo_url.",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "network",
+                      "value": "",
+                      "description": "discord, telegram or x."
+                    }
+                  ]
+                },
+                "description": "Where the network sends the browser back. Checks the sign-in, links the handle, and tells the install over the hub. The state works once.\n\nWho: Anyone holding a state from the hub\n\nAnswers: `200 text/html \"Linked\"`\n\nRefusals:\n- `400 text/html \"That didn't work\"  the state is unknown or used, the sign-in was cancelled, the account could not be confirmed or has no username`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invite words",
+          "description": "Looking up a circle's invite word.",
+          "item": [
+            {
+              "name": "GET /word/{h}",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/word/:h",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "word",
+                    ":h"
+                  ],
+                  "variable": [
+                    {
+                      "key": "h",
+                      "value": "",
+                      "description": "SHA-256 of the word, as the app works it out: 64 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "The sealed invite link kept under a word's hash. The word itself is never sent.\n\nWho: Anyone\n\nAnswers: `200 {\"b\": \"<sealed link>\"}`\n\nRefusals:\n- `404 {\"b\": null}  no such word, a hash of the wrong shape, or a method other than GET`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Files",
+          "description": "A space's sealed files: blobs and an ordered log of sealed operations.",
+          "item": [
+            {
+              "name": "GET /files",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/files",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files"
+                  ]
+                },
+                "description": "Says the relay keeps files, and its limits. Answers any method.\n\nWho: Anyone\n\nAnswers: `200 {\"files\": 1, \"maxFile\": 50004194304, \"quota\": 100000000000}`"
+              }
+            },
+            {
+              "name": "PUT /files/{space}",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"owner\": \"02a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90\",\n  \"rv\": {\n    \"v\": 3,\n    \"h\": \"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\",\n    \"ad\": [\n      \"0f1e2d3c4b5a69780f1e2d3c4b5a6978\"\n    ]\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/files/:space",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Makes a space, or opens one that exists. The first PUT sets the space's token. The answer is the space's state, as GET gives it.\n\nWho: Holder of the space token, signed\n\nBody:\n- `owner`: The owner's public key, 66 hex digits. Taken only when it is the signer's own key.\n- `rv`: A roster announcement: {\"v\": version, \"h\": sha256 hex of its signed bytes, \"ad\": [admins' ids], \"g\": the owner's grant (128 hex), from a non-owner}. Ignored when not believed.\n\nAnswers: `201 (made) or 200 (existed) {\"seq\": 0, \"used\": 0, \"quota\": 100000000000, \"maxFile\": 50004194304, \"files\": 0, \"owner\": \"02a1…\", \"rv\": 0, \"cas\": 1, \"parts\": []}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `413 {\"err\": \"Too big.\"}  body over 65536 bytes`\n- `401 {\"err\": \"Bad signature.\"}`\n- `429 {\"err\": \"Slow down.\"}`\n- `403 {\"err\": \"Too many Files spaces made by this device.\"}`\n- `429 {\"err\": \"Too many Files spaces made from here today.\"}`\n- `507 {\"err\": \"Full.\"}`"
+              }
+            },
+            {
+              "name": "GET /files/{space}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "The space's state: its last log number, bytes used, limits, owner and roster version, and in parts the newest 100 uploads not finished yet: each blob's id, who started it (by), its size (z), the bytes here (h) and when it last moved (at).\n\nWho: Holder of the space token\n\nAnswers: `200 {\"seq\": 8, \"used\": 1048592, \"quota\": 100000000000, \"maxFile\": 50004194304, \"files\": 1, \"owner\": \"02a1…\", \"rv\": 3, \"cas\": 1, \"parts\": [{\"id\": \"5d41402abc4b2a76b9719d911017c592\", \"by\": \"<id>\", \"z\": 1048592000, \"h\": 8388608, \"at\": 1763900000000}]}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `405 {\"err\": \"No.\"}  any method but PUT, GET, DELETE`"
+              }
+            },
+            {
+              "name": "DELETE /files/{space}",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Removes the space and everything in it. The body is not read: sign the empty body's hash.\n\nWho: Signed: the space's owner\n\nAnswers: `200 {\"ok\": true}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `401 {\"err\": \"Bad signature.\"}`\n- `403 {\"err\": \"Only the space's owner can remove it.\"}`"
+              }
+            },
+            {
+              "name": "GET /files/{space}/log",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space/log?after=",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "log"
+                  ],
+                  "query": [
+                    {
+                      "key": "after",
+                      "value": "",
+                      "description": "Return entries numbered above this. Default 0.",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Reads the log after a number, a page at a time: at most 500 entries or about 1 MiB.\n\nWho: Holder of the space token\n\nAnswers: `200 {\"ops\": [{\"s\": 1, \"by\": \"<id>\", \"at\": 1763900000000, \"rv\": 3, \"c\": 1, \"o\": \"<base64>\"}], \"seq\": 1, \"more\": false}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `503 {\"err\": \"Busy. Try again in a moment.\"}  with Retry-After: 2`"
+              }
+            },
+            {
+              "name": "POST /files/{space}/log",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "url": {
+                  "raw": "{{relay}}/files/:space/log?after=",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "log"
+                  ],
+                  "query": [
+                    {
+                      "key": "after",
+                      "value": "",
+                      "description": "The log number this was written against. The entry lands at after + 1 or not at all.",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Appends one sealed operation to the log. The body is the operation's raw bytes, 1 to 32768.\n\nWho: Holder of the space token, signed\n\nAnswers: `200 {\"seq\": 8}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `413 {\"err\": \"An operation is at most 32768 bytes.\"}  also an empty body`\n- `401 {\"err\": \"Bad signature.\"}`\n- `429 {\"err\": \"Slow down.\"}`\n- `409 {\"err\": \"The list has moved on. Read it again.\", \"seq\": 8}`\n- `507 {\"err\": \"This space's list is full.\"}`\n- `507 {\"err\": \"This space is full.\"}`\n- `507 {\"err\": \"The files server is full.\"}`"
+              }
+            },
+            {
+              "name": "POST /files/{space}/blobs",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"size\": 1048592,\n  \"pre\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Asks for room for one sealed file and gets its id. The size counts against the space from now.\n\nWho: Holder of the space token, signed\n\nBody:\n- `size` (needed): The sealed file's length in bytes: 16 to maxFile.\n- `pre`: true: every piece will say its hash first (x-ghost-body-sha256); pieces without are refused.\n\nAnswers: `201 {\"id\": \"5d41402abc4b2a76b9719d911017c592\", \"have\": 0}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `413 {\"err\": \"Too big.\"}  body over 1024 bytes`\n- `401 {\"err\": \"Bad signature.\"}`\n- `429 {\"err\": \"Slow down.\"}`\n- `400 {\"err\": \"No size.\"}`\n- `400 {\"err\": \"Too small.\"}`\n- `413 {\"err\": \"A file may be at most 50004194304 bytes.\"}`\n- `507 {\"err\": \"This space is full.\"}`\n- `507 {\"err\": \"The files server is full.\"}`\n- `507 {\"err\": \"This space holds as many files as it can.\"}`\n- `429 {\"err\": \"Too many files on their way from here. Finish those first.\"}`"
+              }
+            },
+            {
+              "name": "GET /files/{space}/blobs/{blob}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "Range",
+                    "value": "",
+                    "description": "One range: bytes=a-b, bytes=a- or bytes=-n.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Downloads a finished blob, whole or one byte range of it.\n\nWho: Holder of the space token\n\nAnswers: `200 or 206 application/octet-stream, with Accept-Ranges: bytes and, for 206, Content-Range`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `404 {\"err\": \"No such file.\"}`\n- `409 {\"err\": \"Not all of it is here yet.\"}`\n- `416 (empty)  with Content-Range: bytes */<length>`"
+              }
+            },
+            {
+              "name": "HEAD /files/{space}/blobs/{blob}",
+              "request": {
+                "method": "HEAD",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "Range",
+                    "value": "",
+                    "description": "One range, as for GET.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "The headers of a download (Content-Length, Accept-Ranges) without the bytes.\n\nWho: Holder of the space token\n\nAnswers: `200 or 206, headers only`\n\nRefusals:\n- `404  no such space or file`\n- `401  no token`\n- `409  not finished`\n- `416  bad range`"
+              }
+            },
+            {
+              "name": "PUT /files/{space}/blobs/{blob}",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "",
+                    "description": "SHA-256 of this piece, 64 hex digits. Sent, it is the body hash that is signed, and the signature is checked before the body is read. Required when the blob was reserved with pre.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "",
+                    "description": "With x-ghost-body-sha256: the piece's length. Defaults to Content-Length and must equal it.",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob?offset=",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob"
+                  ],
+                  "query": [
+                    {
+                      "key": "offset",
+                      "value": "",
+                      "description": "Where this piece starts. Must equal the bytes the relay has (have).",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Uploads the next piece of a blob, at most 8388608 bytes. Pieces go in order, one at a time.\n\nWho: Signed: whoever reserved the blob\n\nAnswers: `200 {\"have\": 8388608}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `404 {\"err\": \"No such file.\"}`\n- `409 {\"err\": \"Already finished.\", \"have\": 1048592, \"done\": true}`\n- `409 {\"err\": \"Send from where it has got to.\", \"have\": 0}`\n- `413 {\"err\": \"A piece is at most 8388608 bytes.\"}`\n- `400 {\"err\": \"The body's hash and length don't match the request.\"}`\n- `413 {\"err\": \"More than the file was said to be.\"}`\n- `401 {\"err\": \"Bad signature.\"}`\n- `403 {\"err\": \"Not yours.\"}`\n- `403 {\"err\": \"Say the piece's hash first.\"}`\n- `429 {\"err\": \"Slow down.\"}`\n- `400 {\"err\": \"The body isn't what its hash said.\"}`\n- `500 {\"err\": \"Something went wrong.\"}  the body stalled for 30 seconds; the piece is dropped`"
+              }
+            },
+            {
+              "name": "GET /files/{space}/blobs/{blob}/state",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob/state",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob",
+                    "state"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "How much of a blob has arrived, to carry on an upload.\n\nWho: Holder of the space token\n\nAnswers: `200 {\"have\": 8388608, \"size\": 1048592000, \"done\": false}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `404 {\"err\": \"No such file.\"}`"
+              }
+            },
+            {
+              "name": "POST /files/{space}/blobs/{blob}/done",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob/done",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob",
+                    "done"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Finishes a blob once every byte is there, so it can be downloaded. The body is ignored: sign the empty body's hash.\n\nWho: Signed: whoever reserved the blob\n\nAnswers: `200 {\"have\": 1048592, \"done\": true}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `404 {\"err\": \"No such file.\"}`\n- `401 {\"err\": \"Bad signature.\"}`\n- `403 {\"err\": \"Not yours.\"}`\n- `409 {\"err\": \"Not all of it is here yet.\"}`"
+              }
+            },
+            {
+              "name": "DELETE /files/{space}/blobs/{blob}",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Ghost {{filesToken}}",
+                    "description": "The Files space's token."
+                  },
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roster\": {\n    \"r\": \"Z2hvc3QtaGFuZ291dCByb3N0ZXJ8eyJvIjoiMDJhMSJ9\",\n    \"s\": \"abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/files/:space/blobs/:blob",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "files",
+                    ":space",
+                    "blobs",
+                    ":blob"
+                  ],
+                  "variable": [
+                    {
+                      "key": "space",
+                      "value": "",
+                      "description": "The space's id: 32 lowercase hex digits."
+                    },
+                    {
+                      "key": "blob",
+                      "value": "",
+                      "description": "The blob's id, as POST /files/{space}/blobs answered it: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Removes a blob, finished or not, and frees its room. A moderator or admin sends the space's signed roster as proof.\n\nWho: Signed: its uploader, the space's owner, or a moderator with a roster\n\nBody:\n- `roster`: {\"r\": base64 of the bytes the roster's author signed, \"s\": the signature, 128 hex}. Looked at only when the signer is neither the uploader nor the owner.\n\nAnswers: `200 {\"ok\": true}`\n\nRefusals:\n- `404 {\"err\": \"No such space.\"}  (also a wrong token)`\n- `401 {\"err\": \"No token.\"}`\n- `404 {\"err\": \"No such file.\"}`\n- `413 {\"err\": \"Too big.\"}  body over 65536 bytes`\n- `401 {\"err\": \"Bad signature.\"}`\n- `403 {\"err\": \"Only whoever added it, the space's owner, or a moderator can remove it.\"}`\n- `429 {\"err\": \"Slow down.\"}`\n- `403 {\"err\": \"No roster.\"}  or \"Not a roster.\"`\n- `403 {\"err\": \"This space's owner hasn't opened it yet, so no roster can be checked.\"}`\n- `403 {\"err\": \"That roster isn't signed by this space's owner or an admin.\"}`\n- `403 {\"err\": \"That roster is older than one this space has seen.\"}`\n- `403 {\"err\": \"This space has seen another roster at that version.\"}`\n- `403 {\"err\": \"That roster skips ahead of what this space has seen.\"}`\n- `403 {\"err\": \"This space's roles don't let you remove that file.\"}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Feedback",
+          "description": "The app's Share feedback, filed on the server's feedback board.",
+          "item": [
+            {
+              "name": "POST /feedback",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "",
+                    "description": "From the app in a browser at the address the relay is set to allow (GHOST_APP_ORIGIN), the answer carries Access-Control-Allow-Origin for it.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"bug\",\n  \"title\": \"Crash when opening a space\",\n  \"text\": \"Tapped a space and the app closed.\",\n  \"username\": \"maya\",\n  \"platform\": \"android\",\n  \"version\": \"0.10.6\",\n  \"shots\": [\n    {\n      \"name\": \"crash.png\",\n      \"mime\": \"image/png\",\n      \"data\": \"iVBORw0KGgo=\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/feedback",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "feedback"
+                  ]
+                },
+                "description": "Files one report, with up to three screenshots. The whole body is at most 10485760 bytes.\n\nWho: Signed: any install\n\nBody:\n- `type` (needed): bug, feature, confusing, praise or other.\n- `text` (needed): What happened. Cut to 5000 characters.\n- `title`: Cut to 120 characters. Left out, the text's first line is used.\n- `username`: The sender's username. Filed as \"(not verified)\" unless the signing key holds it.\n- `platform`: android, iphone, mac, windows or linux.\n- `version`: The app's version. Cut to 40 characters.\n- `shots`: Up to 3 of {\"name\", \"mime\", \"data\"}: mime image/png, image/jpeg, image/webp or image/gif; data base64, at most 3145728 bytes decoded. A bad one is skipped.\n\nAnswers: `200 {\"ok\": true, \"id\": \"GMFB-12\"}`\n\nRefusals:\n- `405 {\"error\": \"Feedback is sent with POST.\"}`\n- `503 {\"error\": \"Feedback isn't set up on this server yet.\"}`\n- `413 {\"error\": \"That's too big to send. Try fewer or smaller screenshots.\"}`\n- `400 {\"error\": \"The feedback didn't arrive whole. Try again.\"}`\n- `401 {\"error\": \"The app's signature didn't check out. Make sure your clock is right, then try again.\"}`\n- `429 {\"error\": \"That's a lot of feedback at once. Thank you! Try again in a while.\"}`\n- `400 {\"error\": \"The feedback couldn't be read.\"}`\n- `400 {\"error\": \"Say what happened, in a few words at least.\"}`\n- `502 {\"error\": \"The feedback board didn't take it just now. Try again in a while.\"}`\n- `502 {\"error\": \"The feedback board couldn't be reached. Try again in a while.\"}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marketplace",
+          "description": "Plugins from other developers: the catalog, submissions and review.",
+          "item": [
+            {
+              "name": "GET /market",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/market",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market"
+                  ]
+                },
+                "description": "Whether the Marketplace is open, its limits, and the labels, shelves, hues and permissions a plugin may name. Answers even when it is off.\n\nWho: Anyone\n\nAnswers: `200 {\"ok\": true, \"market\": 1, \"format\": \"ghost-plugin/1\", \"open\": true, \"limits\": {\"package\": 262144, \"icon\": 48000, \"shot\": 1048576, \"shotSide\": 2400, \"shots\": 4, \"body\": 6291456, \"notes\": 1000}, \"labels\": [...], \"shelves\": [...], \"hues\": [...], \"permissions\": [...]}`\n\nRefusals:\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`\n- `405 {\"ok\": false, \"error\": \"method\"}`"
+              }
+            },
+            {
+              "name": "GET /market/catalog",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "If-None-Match",
+                    "value": "",
+                    "description": "The ETag from an earlier answer. A match answers 304 with no body.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/catalog",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "catalog"
+                  ]
+                },
+                "description": "Every listed plugin's current version: its id, hash, size and the reviewer's signed approval. At most 2000, newest first. Names and pictures are in each package.\n\nWho: Anyone\n\nAnswers: `200 {\"ok\": true, \"v\": 1, \"at\": 1795000000000, \"plugins\": [{\"id\", \"version\", \"sha256\", \"size\", \"approval\": {...}, \"listedAt\", \"updatedAt\"}]}  with an ETag`\n\nRefusals:\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`\n- `503 {\"ok\": false, \"error\": \"off\"}  or \"busy\"`"
+              }
+            },
+            {
+              "name": "GET /market/revoked",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "If-None-Match",
+                    "value": "",
+                    "description": "The ETag from an earlier answer. A match answers 304 with no body.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/revoked",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "revoked"
+                  ]
+                },
+                "description": "The withdrawals list: signed revocations of approved versions, and review keys no longer to be trusted. Oldest first.\n\nWho: Anyone\n\nAnswers: `200 {\"ok\": true, \"v\": 1, \"at\": 0, \"revoked\": [], \"retired\": []}  with an ETag`\n\nRefusals:\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`\n- `503 {\"ok\": false, \"error\": \"off\"}  or \"busy\"`"
+              }
+            },
+            {
+              "name": "GET /market/packages/{sha256}",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/market/packages/:sha256",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "packages",
+                    ":sha256"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sha256",
+                      "value": "",
+                      "description": "SHA-256 of the package: 64 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "An approved version's package: the plugin's canonical JSON bytes, current or earlier, listed or not.\n\nWho: Anyone\n\nAnswers: `200 application/octet-stream, filename \"<id>-<version>.ghostplugin\"`\n\nRefusals:\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `410 {\"ok\": false, \"error\": \"revoked\"}`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`\n- `503 {\"ok\": false, \"error\": \"off\"}  or \"busy\"`"
+              }
+            },
+            {
+              "name": "GET /market/shots/{sha256}",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/market/shots/:sha256",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "shots",
+                    ":sha256"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sha256",
+                      "value": "",
+                      "description": "SHA-256 of the picture: 64 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "A screenshot of a listed plugin's current version.\n\nWho: Anyone\n\nAnswers: `200 image/png`\n\nRefusals:\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`\n- `503 {\"ok\": false, \"error\": \"off\"}  or \"busy\"`"
+              }
+            },
+            {
+              "name": "POST /market/report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"plugin\": \"tidyup\",\n  \"version\": \"1.0.0\",\n  \"reason\": \"broken\",\n  \"text\": \"It stopped sorting.\",\n  \"username\": \"sam.dev\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/report",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "report"
+                  ]
+                },
+                "description": "Reports a plugin to review. The sender's key is not kept with the report.\n\nWho: Signed: any install\n\nBody:\n- `plugin` (needed): The plugin's id. It must have an approved version.\n- `version` (needed): The version, as 1.0.0.\n- `reason` (needed): misleading, harmful, spam, privacy, broken or other.\n- `text`: At most 1000 characters.\n- `username`: The sender's username. Marked verified when the signing key holds it.\n\nAnswers: `201 {\"ok\": true, \"id\": \"<16 hex>\"}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`"
+              }
+            },
+            {
+              "name": "POST /market/submissions",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"package\": \"eyJkZXNjcmlwdGlvbiI6Li4ufQ==\",\n  \"shots\": [\n    {\n      \"mime\": \"image/png\",\n      \"data\": \"iVBORw0KGgo=\"\n    }\n  ],\n  \"notes\": \"First version.\",\n  \"list\": \"now\",\n  \"agree\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/submissions",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "submissions"
+                  ]
+                },
+                "description": "Sends a plugin for review, or with check: true only checks it and keeps nothing. A new submission replaces the plugin's open ones.\n\nWho: Signed: the developer\n\nBody:\n- `package` (needed): Base64 of the plugin's canonical JSON bytes (keys sorted, no whitespace). At most 262144 bytes decoded.\n- `shots`: Up to 4, each {\"mime\": \"image/png\", \"data\": base64} or {\"keep\": sha256 of an earlier one}. Their hashes, in order, must be the plugin's shots list.\n- `notes`: Notes for the reviewer. At most 1000 characters.\n- `list`: now (the default) or later: approved, it waits for its developer to list it.\n- `agree`: Must be true to submit: agreement to the Marketplace guidelines. Left out with check.\n- `check`: true: check only. The body is then exactly check and package.\n\nAnswers: `201 {\"ok\": true, \"submission\": {\"sid\", \"plugin\", \"version\", \"sha256\", \"size\", \"status\": \"submitted\", ...}}; check: 200 {\"ok\": true, \"checked\": true}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"blocked\"}  or \"needs_verified\", \"too_new\", \"not_owner\"`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `400 {\"ok\": false, \"error\": \"must_agree\"}`\n- `400 {\"ok\": false, \"error\": \"invalid_package\", \"issues\": [{\"code\", \"path\", \"message\", \"severity\"}]}`\n- `400 {\"ok\": false, \"error\": \"not_canonical\"}  or \"bad_shot\"`\n- `413 {\"ok\": false, \"error\": \"too_large\"}`\n- `409 {\"ok\": false, \"error\": \"name_used\"}  or \"id_taken\", \"version_not_newer\", \"duplicate\"`\n- `429 {\"ok\": false, \"error\": \"too_many_plugins\"}  or \"open_limit\", \"rate_limited\"`\n- `507 {\"ok\": false, \"error\": \"developer_full\"}  or \"full\"`"
+              }
+            },
+            {
+              "name": "GET /market/mine",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/mine",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "mine"
+                  ]
+                },
+                "description": "The caller's own submissions (newest first, at most 100) and plugins, and whether they are blocked.\n\nWho: Signed: any install\n\nAnswers: `200 {\"ok\": true, \"blocked\": false, \"submissions\": [...], \"plugins\": [{\"id\", \"listing\", \"current\", \"by\", \"note\", \"noteAt\"}]}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}`"
+              }
+            },
+            {
+              "name": "GET /market/submissions/{sid}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/submissions/:sid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "submissions",
+                    ":sid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "One submission: its status, the plugin's words and the notes between developer and reviewer.\n\nWho: Signed: its developer, or review\n\nAnswers: `200 {\"ok\": true, \"submission\": {...}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "GET /market/submissions/{sid}/package",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/submissions/:sid/package",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "submissions",
+                    ":sid",
+                    "package"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "A submission's package bytes, approved or not.\n\nWho: Signed: its developer, or review\n\nAnswers: `200 application/octet-stream, filename \"<plugin>-<version>.ghostplugin\"`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "GET /market/submissions/{sid}/shots/{n}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/submissions/:sid/shots/:n",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "submissions",
+                    ":sid",
+                    "shots",
+                    ":n"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    },
+                    {
+                      "key": "n",
+                      "value": "",
+                      "description": "Which screenshot, from 0: one digit."
+                    }
+                  ]
+                },
+                "description": "One of a submission's screenshots.\n\nWho: Signed: its developer, or review\n\nAnswers: `200 image/png`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "DELETE /market/submissions/{sid}",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/submissions/:sid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "submissions",
+                    ":sid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Withdraws a submission that is still waiting.\n\nWho: Signed: its developer\n\nAnswers: `200 {\"ok\": true, \"submission\": {..., \"status\": \"withdrawn\"}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}  also another developer's`\n- `409 {\"ok\": false, \"error\": \"wrong_state\"}`"
+              }
+            },
+            {
+              "name": "GET /market/review",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/review",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "review"
+                  ]
+                },
+                "description": "The review queue: every open submission, the 50 most recently decided, and counts, with the reports of plugins and of people not yet done.\n\nWho: Review\n\nAnswers: `200 {\"ok\": true, \"open\": [...], \"recent\": [...], \"counts\": {\"submitted\": 0, \"in_review\": 0, \"changes_requested\": 0, \"reports\": 0, \"abuse\": 0}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "GET /market/review/{sid}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/review/:sid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "review",
+                    ":sid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Everything a reviewer needs for one submission: its package, the listed version it would replace, what was asked for before, and its developer.\n\nWho: Review\n\nAnswers: `200 {\"ok\": true, \"submission\": {...}, \"package\": \"<base64>\", \"previous\": null, \"asked\": null, \"history\": [], \"developer\": {\"id\", \"username\", \"blocked\", \"plugins\", \"submissions\", \"firstAt\"}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`"
+              }
+            },
+            {
+              "name": "POST /market/review/{sid}",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"approve\",\n  \"note\": \"Looks good.\",\n  \"approval\": {\n    \"v\": 1,\n    \"plugin\": \"tidyup\",\n    \"version\": \"1.0.0\",\n    \"sha256\": \"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\",\n    \"key\": \"AqGyw9Tl9gcYKTpLXG1+j5ChssPU5fYHGCk6S1xtfo+Q\",\n    \"sig\": \"CzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJg==\",\n    \"at\": 1795000000000\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/review/:sid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "review",
+                    ":sid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "sid",
+                      "value": "",
+                      "description": "The submission's id: 24 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "A decision on a submission. An approval carries the reviewer's own signature over the plugin, which the apps check themselves.\n\nWho: Review (approve: signed in within 30 minutes)\n\nBody:\n- `decision` (needed): start, approve, changes or reject.\n- `note`: Required for changes and reject. 1 to 2000 characters.\n- `approval`: Required for approve, refused otherwise: {\"v\": 1, \"plugin\", \"version\", \"sha256\", \"key\", \"sig\", \"at\"}, signed by the request's own key.\n- `revokes`: approve only: up to 5 revocations of earlier versions, each as POST /market/plugins/{id}/revoke takes.\n\nAnswers: `200 {\"ok\": true, \"submission\": {...}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `409 {\"ok\": false, \"error\": \"wrong_state\"}  or \"version_not_newer\"`\n- `400 {\"ok\": false, \"error\": \"bad_approval\"}`\n- `507 {\"ok\": false, \"error\": \"withdrawals_full\"}`"
+              }
+            },
+            {
+              "name": "POST /market/plugins/{id}/listing",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"listed\": false,\n  \"note\": \"Taking it down while I fix a bug.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/plugins/:id/listing",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "plugins",
+                    ":id",
+                    "listing"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "",
+                      "description": "The plugin's id: a lowercase letter, then 2 to 23 lowercase letters or digits."
+                    }
+                  ]
+                },
+                "description": "Lists an approved plugin in the catalog or takes it off. Its versions stay downloadable either way.\n\nWho: Signed: its developer, or review (signed in within 30 minutes)\n\nBody:\n- `listed` (needed): true to list, false to unlist.\n- `note`: 1 to 500 characters, kept with the plugin.\n\nAnswers: `200 {\"ok\": true, \"plugin\": {\"id\": \"tidyup\", \"listing\": \"unlisted\", \"current\": \"1.0.0\", \"by\": \"owner\", \"note\": \"...\", \"noteAt\": 1795000000000}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `409 {\"ok\": false, \"error\": \"wrong_state\"}  or \"admin_unlisted\"`\n- `403 {\"ok\": false, \"error\": \"blocked\"}`"
+              }
+            },
+            {
+              "name": "POST /market/plugins/{id}/revoke",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"v\": 1,\n  \"plugin\": \"tidyup\",\n  \"sha256\": \"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\",\n  \"at\": 1795000000000,\n  \"why\": \"Sends messages it shouldn't.\",\n  \"key\": \"AqGyw9Tl9gcYKTpLXG1+j5ChssPU5fYHGCk6S1xtfo+Q\",\n  \"sig\": \"CzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJg==\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/plugins/:id/revoke",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "plugins",
+                    ":id",
+                    "revoke"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "",
+                      "description": "The plugin's id: a lowercase letter, then 2 to 23 lowercase letters or digits."
+                    }
+                  ]
+                },
+                "description": "Withdraws one approved package. Its download answers 410 from then on, and the signed revocation joins the withdrawals list.\n\nWho: Review (signed in within 30 minutes)\n\nBody:\n- `v` (needed): Always 1.\n- `plugin` (needed): The plugin's id, the same as in the path.\n- `sha256` (needed): The hash of one of its approved versions.\n- `at` (needed): When, in milliseconds. Covered by the signature.\n- `why` (needed): 1 to 200 characters, one line.\n- `key` (needed): The request's own signing key, base64.\n- `sig` (needed): Base64 signature over the revocation's words.\n\nAnswers: `200 {\"ok\": true, \"revoked\": {...}, \"plugin\": {...}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_approval\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`\n- `507 {\"ok\": false, \"error\": \"withdrawals_full\"}`"
+              }
+            },
+            {
+              "name": "GET /market/reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/reports",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "reports"
+                  ]
+                },
+                "description": "The newest 500 reports, newest first.\n\nWho: Review\n\nAnswers: `200 {\"ok\": true, \"reports\": [{\"rid\", \"plugin\", \"version\", \"reason\", \"text\", \"username\", \"verified\", \"at\", \"done\", \"doneAt\"}]}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "POST /market/reports/{rid}",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"done\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/reports/:rid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "reports",
+                    ":rid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "rid",
+                      "value": "",
+                      "description": "The report's id: 16 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Marks a report done.\n\nWho: Review\n\nBody:\n- `done` (needed): Always true. The body is exactly this.\n\nAnswers: `200 {\"ok\": true}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`"
+              }
+            },
+            {
+              "name": "POST /market/abuse",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "",
+                    "description": "From the app in a browser at the address the relay is set to allow (GHOST_APP_ORIGIN), the answer carries Access-Control-Allow-Origin for it.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sealed\": \"q83vEjRWeJCrze8SNFZ4kKvN7xI0VniQq83vEjRWeJCrze8SNFZ4kKvN7xI0VniQq83vEjRWeJCrze8SNFZ4kKvN7xI0VniQ\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/abuse",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "abuse"
+                  ]
+                },
+                "description": "Reports a person or a message to review. The report is sealed in the app to the review keys: the relay can't read it, and keeps the envelope without its sender's key. The newest 150 are kept.\n\nWho: Signed: any install\n\nBody:\n- `sealed` (needed): The sealed report: strict base64, at most 48000 characters, at least 64 bytes decoded. The body is exactly this.\n\nAnswers: `201 {\"ok\": true, \"id\": \"<16 hex>\"}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `413 {\"ok\": false, \"error\": \"too_large\"}`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}  5 an hour and 15 a day by one key, 20 a day from one address`"
+              }
+            },
+            {
+              "name": "GET /market/abuse",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/market/abuse",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "abuse"
+                  ]
+                },
+                "description": "The reports of people and messages that are kept, newest first, each still sealed. Only a holder of a review key can open one.\n\nWho: Review\n\nAnswers: `200 {\"ok\": true, \"reports\": [{\"rid\", \"sealed\", \"at\", \"done\", \"doneAt\"}]}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`"
+              }
+            },
+            {
+              "name": "POST /market/abuse/{rid}",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"done\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/abuse/:rid",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "abuse",
+                    ":rid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "rid",
+                      "value": "",
+                      "description": "The report's id: 16 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Marks a report of a person or a message done.\n\nWho: Review\n\nBody:\n- `done` (needed): Always true. The body is exactly this.\n\nAnswers: `200 {\"ok\": true}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `404 {\"ok\": false, \"error\": \"not_found\"}`"
+              }
+            },
+            {
+              "name": "POST /market/developers/{dev}/block",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "{{ghostKey}}",
+                    "description": "The install's public key: 33 bytes, compressed, base64."
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "{{ghostTime}}",
+                    "description": "Now, in milliseconds since 1970."
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "{{ghostSig}}",
+                    "description": "The signature over the request: 64 bytes (r then s), base64."
+                  },
+                  {
+                    "key": "x-ghost-body-sha256",
+                    "value": "{{ghostBodySha256}}",
+                    "description": "The body's SHA-256 in hex, said before it is read."
+                  },
+                  {
+                    "key": "x-ghost-body-length",
+                    "value": "{{ghostBodyLength}}",
+                    "description": "The body's length in bytes."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"blocked\": true,\n  \"note\": \"Repeated misleading submissions.\",\n  \"unlist\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/developers/:dev/block",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "developers",
+                    ":dev",
+                    "block"
+                  ],
+                  "variable": [
+                    {
+                      "key": "dev",
+                      "value": "",
+                      "description": "The developer's id: 32 lowercase hex digits."
+                    }
+                  ]
+                },
+                "description": "Blocks a developer from submitting and from listing again, or lifts the block.\n\nWho: Review (signed in within 30 minutes)\n\nBody:\n- `blocked` (needed): true to block, false to unblock.\n- `note`: 1 to 500 characters, kept with the developer and their plugins.\n- `unlist`: true: every listed plugin of theirs is unlisted.\n\nAnswers: `200 {\"ok\": true, \"developer\": {\"id\": \"<32 hex>\", \"username\": \"sam.dev\", \"blocked\": true, \"plugins\": 2, \"submissions\": 5, \"firstAt\": 1795000000000}}`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"unsigned\"}  or \"bad_signature\"`\n- `403 {\"ok\": false, \"error\": \"not_admin\"}`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`"
+              }
+            },
+            {
+              "name": "POST /market/retire",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Length",
+                    "value": "",
+                    "description": "The body's length: at most 4096.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"v\": 1,\n  \"key\": \"AqGyw9Tl9gcYKTpLXG1+j5ChssPU5fYHGCk6S1xtfo+Q\",\n  \"at\": 1795000000000,\n  \"sig\": \"CzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJg==\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/market/retire",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "market",
+                    "retire"
+                  ]
+                },
+                "description": "Retires a review key: its approvals are refused from then on, and the retirement joins the withdrawals list. The request is not signed; the body carries the key's own signature.\n\nWho: Anyone holding the review key\n\nBody:\n- `v` (needed): Always 1.\n- `key` (needed): The review key, base64. One that has approved or revoked something here.\n- `at` (needed): When, in milliseconds. Not covered by the signature.\n- `sig` (needed): Base64 signature by that key over the retirement's words.\n\nAnswers: `200 {\"ok\": true, \"retired\": {\"v\": 1, \"key\": \"...\", \"at\": 1795000000000, \"sig\": \"...\"}}`\n\nRefusals:\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}  10 an hour from one address`\n- `400 {\"ok\": false, \"error\": \"bad_json\"}  or \"bad_request\"`\n- `413 {\"ok\": false, \"error\": \"too_large\"}`\n- `404 {\"ok\": false, \"error\": \"not_found\"}  a key that has signed nothing here`\n- `401 {\"ok\": false, \"error\": \"bad_signature\"}`\n- `507 {\"ok\": false, \"error\": \"withdrawals_full\"}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bounties",
+          "description": "Souls given by the holder of the relay's bounty key.",
+          "item": [
+            {
+              "name": "POST /bounty",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "",
+                    "description": "The bounty key's public half: base64 of its 33 bytes. It must be the key the relay was given.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "",
+                    "description": "Milliseconds since 1970, within 5 minutes of the relay's clock.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "",
+                    "description": "Base64 of the 64-byte signature over the five lines: ghost-bounty v1, POST, /bounty, the time, the body's SHA-256 in hex.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"to\": \"0f1e2d3c4b5a69780f1e2d3c4b5a6978\",\n  \"souls\": 50,\n  \"why\": \"Bug bounty: GMFB-12\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/bounty",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "bounty"
+                  ]
+                },
+                "description": "Gives souls to one install, with a reason, and records it in the admin log. Signed by the bounty key alone, over ghost-bounty v1. At most 30 a day; the body is at most 4096 bytes.\n\nWho: Holder of the bounty key\n\nBody:\n- `to` (needed): Who gets them: an install's id, 32 lowercase hex digits.\n- `souls` (needed): A whole number from 1 to 500.\n- `why` (needed): The reason, shown to the person: 1 to 200 characters.\n\nAnswers: `200 {\"ok\": true, \"to\": \"0f1e…\", \"souls\": 50, \"n\": 150}  n is their total after`\n\nRefusals:\n- `405 {\"error\": \"A bounty is paid with POST.\"}`\n- `404 {\"error\": \"Not here.\"}  no bounty key is set`\n- `413 {\"error\": \"Too long to be a bounty.\"}`\n- `400 {\"error\": \"It didn't arrive whole.\"}  the body stalled for 15 seconds`\n- `401 {\"error\": \"Not signed by the bounty key, or too old.\"}  also a repeat`\n- `400 {\"error\": \"It couldn't be read.\"}`\n- `400 {\"error\": \"to is an Uplink id: 32 hex characters.\"}`\n- `400 {\"error\": \"Between 1 and 500 souls.\"}`\n- `400 {\"error\": \"Say why (the ticket), in at most 200 characters.\"}`\n- `429 {\"error\": \"That's 30 bounties today; more tomorrow.\"}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sending souls",
+          "description": "Souls moved from one person to another, signed by the sender.",
+          "item": [
+            {
+              "name": "POST /souls/send",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "",
+                    "description": "The sender's hub key: base64 of its 33 bytes. Its id is whose souls are sent.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "",
+                    "description": "Milliseconds since 1970, within 5 minutes of the relay's clock.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "",
+                    "description": "Base64 of the 64-byte signature over the five lines: ghost-souls v1, POST, /souls/send, the time, the body's SHA-256 in hex.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"to\": \"0f1e2d3c4b5a69780f1e2d3c4b5a6978\",\n  \"souls\": 20,\n  \"id\": \"6b1f0c2d3e4a59687a8b9c0d1e2f3a4b\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/souls/send",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "souls",
+                    "send"
+                  ]
+                },
+                "description": "Moves souls from the signer to another person on this relay and answers a receipt. Nothing is made or lost: what leaves one count arrives in the other. Asked again with the same id, it answers the first receipt and moves nothing. At most 100 souls at a time, 300 souls and 10 sendings in 24 hours; the body is at most 1024 bytes.\n\nWho: Signed: the sender\n\nBody:\n- `to` (needed): Who gets them: an Uplink id, 32 lowercase hex digits, that holds a username on this relay.\n- `souls` (needed): A whole number from 1 to 100.\n- `id` (needed): The sender's own name for this sending: 32 lowercase hex digits, made up afresh each time. Souls move once for each id.\n\nAnswers: `200 {\"ok\": true, \"receipt\": {\"id\": \"6b1f…\", \"at\": 1764000000000, \"from\": \"a4bb…\", \"to\": \"0f1e…\", \"souls\": 20}, \"n\": 80}  n is the sender's total after; \"again\": true for a repeat of the same id`\n\nRefusals:\n- `405 {\"ok\": false, \"error\": \"method\"}`\n- `413 {\"ok\": false, \"error\": \"too_large\"}`\n- `401 {\"ok\": false, \"error\": \"bad_signature\"}  not signed, too old, or the same signed request again`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}  20 askings an hour by one key, 600 an hour from one address`\n- `400 {\"ok\": false, \"error\": \"bad_request\"}  a body that can't be read, or a to or id that isn't 32 hex digits`\n- `400 {\"ok\": false, \"error\": \"amount\"}  not a whole number from 1 to 100`\n- `400 {\"ok\": false, \"error\": \"yourself\"}`\n- `409 {\"ok\": false, \"error\": \"no_account\"}  the sender holds no username here`\n- `409 {\"ok\": false, \"error\": \"no_receiver\"}  nobody with a username here has that id`\n- `409 {\"ok\": false, \"error\": \"id_used\"}  that id was another sending's`\n- `409 {\"ok\": false, \"error\": \"not_enough\"}`\n- `429 {\"ok\": false, \"error\": \"daily_limit\"}  300 souls or 10 sendings in 24 hours`"
+              }
+            },
+            {
+              "name": "POST /souls/receipt",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-ghost-key",
+                    "value": "",
+                    "description": "The asker's hub key: base64 of its 33 bytes.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-time",
+                    "value": "",
+                    "description": "Milliseconds since 1970, within 5 minutes of the relay's clock.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "x-ghost-sig",
+                    "value": "",
+                    "description": "Base64 of the 64-byte signature over the five lines: ghost-souls v1, POST, /souls/receipt, the time, the body's SHA-256 in hex.",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"6b1f0c2d3e4a59687a8b9c0d1e2f3a4b\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{relay}}/souls/receipt",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "souls",
+                    "receipt"
+                  ]
+                },
+                "description": "Reads the receipt of one sending, for one of the two people in it. The app asks before a card in a chat may say souls were sent. Signed as /souls/send is, over its own path.\n\nWho: Signed: the sender or the receiver\n\nBody:\n- `id` (needed): The sending's id, as its sender made it: 32 lowercase hex digits.\n\nAnswers: `200 {\"ok\": true, \"receipt\": {\"id\": \"6b1f…\", \"at\": 1764000000000, \"from\": \"a4bb…\", \"to\": \"0f1e…\", \"souls\": 20}}  \"receipt\": null where there is none, or the asker is neither person`\n\nRefusals:\n- `401 {\"ok\": false, \"error\": \"bad_signature\"}`\n- `429 {\"ok\": false, \"error\": \"rate_limited\"}  300 askings an hour by one key`\n- `400 {\"ok\": false, \"error\": \"bad_request\"}`"
+              }
+            }
+          ]
+        },
+        {
+          "name": "The app in a browser",
+          "description": "The app built for a browser, served as plain files under /app/ by a relay given the folder.",
+          "item": [
+            {
+              "name": "GET /app/",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "If-None-Match",
+                    "value": "",
+                    "description": "The ETag from an earlier answer. A match answers 304 with no body.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/app",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "app"
+                  ]
+                },
+                "description": "The app's page, index.html. /app without the slash answers 301 to /app/, keeping any query.\n\nWho: Anyone\n\nAnswers: `200 text/html; charset=utf-8, with an ETag and Cache-Control: no-cache`\n\nRefusals:\n- `404 text/plain: Not found  the folder has no index.html`\n- `405 (empty)  with Allow: GET, HEAD`"
+              }
+            },
+            {
+              "name": "GET /app/{path}",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "If-None-Match",
+                    "value": "",
+                    "description": "The ETag from an earlier answer. A match answers 304 with no body.",
+                    "disabled": true
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "",
+                    "description": "br or gzip: a copy packed beforehand is sent where there is one, with Content-Encoding.",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/app/:path",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "app",
+                    ":path"
+                  ],
+                  "variable": [
+                    {
+                      "key": "path",
+                      "value": "",
+                      "description": "The file, as the page names it: one or more parts with slashes between. No part may be . or .., start with a dot, or hold a backslash, a colon or a control character."
+                    }
+                  ]
+                },
+                "description": "One file of the build. Its type goes by its ending. A file with a hash of its contents in its name is kept for a year; any other is asked for again each time. Where name.br or name.gz lies beside it and the browser takes that packing, that is what is sent. A folder is not listed.\n\nWho: Anyone\n\nAnswers: `200 the file, with Content-Type, ETag, Vary: Accept-Encoding and Cache-Control: no-cache, or public, max-age=31536000, immutable`\n\nRefusals:\n- `404 text/plain: Not found  no such file, a folder, a name that isn't plain, or a link that leads outside the folder`\n- `405 (empty)  with Allow: GET, HEAD`"
+              }
+            },
+            {
+              "name": "HEAD /app/{path}",
+              "request": {
+                "method": "HEAD",
+                "header": [],
+                "url": {
+                  "raw": "{{relay}}/app/:path",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "app",
+                    ":path"
+                  ],
+                  "variable": [
+                    {
+                      "key": "path",
+                      "value": "",
+                      "description": "The file, as for GET. Left empty, index.html."
+                    }
+                  ]
+                },
+                "description": "The headers of a file (Content-Type, Content-Length, ETag, Cache-Control) without its bytes.\n\nWho: Anyone\n\nAnswers: `200, headers only`\n\nRefusals:\n- `404 text/plain: Not found`\n- `304 (empty)  If-None-Match matched`"
+              }
+            },
+            {
+              "name": "GET /app/clear-site-data",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Sec-Fetch-Site",
+                    "value": "",
+                    "description": "same-origin, as the browser sets it on the page's own fetch.",
+                    "disabled": false
+                  }
+                ],
+                "url": {
+                  "raw": "{{relay}}/app/clear-site-data",
+                  "host": [
+                    "{{relay}}"
+                  ],
+                  "path": [
+                    "app",
+                    "clear-site-data"
+                  ]
+                },
+                "description": "Tells the browser to clear what this address keeps. The app's page asks for it as it signs out or is removed. Answered only to the page itself; anything else gets 404, as a file that isn't there.\n\nWho: The app's own page\n\nAnswers: `204 (empty)  with Clear-Site-Data: \"storage\" and Cache-Control: no-store`\n\nRefusals:\n- `404 text/plain: Not found  any other Sec-Fetch-Site, or none`"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
