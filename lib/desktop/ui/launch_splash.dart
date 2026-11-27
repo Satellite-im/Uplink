@@ -5,7 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'package:glacier/glacier.dart';
 
 import '../../kit/settings_type.dart' show pageText;
-import '../../ui/common.dart' show GhostLogo;
 import '../updates.dart';
 import '../window_size.dart';
 
@@ -31,8 +30,14 @@ class LaunchSplash extends StatelessWidget {
         child: ValueListenableBuilder<SplashStep>(
           valueListenable: step,
           builder: (context, now, _) => Column(mainAxisSize: MainAxisSize.min, children: [
-            _Breathing(child: GhostLogo(size: t.lenOf('5rem'))),
-            SizedBox(height: t.space(5)),
+            // The logo by itself, in the page's ink: out of the black tile it stood in, and twice the size it had in it
+            // (Matt, 2026-11-27: "remove the uplink logo from the squircle on the loading page. and make it twice as
+            // large"). The mark is white on nothing (tool/app_icon.py), so the ink is what shows it on a light page.
+            _Breathing(
+              child: Image.asset('assets/art/ghost-mark.png', width: t.lenOf('8rem'), height: t.lenOf('8rem'), filterQuality: FilterQuality.medium, color: t.color('app-ink'), colorBlendMode: BlendMode.srcIn, excludeFromSemantics: true),
+            ),
+            // Less under it than the tile had: the mark's own square has room below the bubble.
+            SizedBox(height: t.space(2)),
             Text(
               now.words,
               key: const ValueKey('splash-words'),

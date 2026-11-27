@@ -25,6 +25,9 @@ class ReleaseNotes {
 
 /// Every release's entry, the newest first.
 const List<ReleaseNotes> changelog = [
+  ReleaseNotes('0.12.53', '2026-11-27', [
+    'On a computer, the launch splash shows the Uplink logo by itself, twice as large, where it sat in a black tile.',
+  ]),
   ReleaseNotes('0.12.52', '2026-11-27', [
     'Position a circle\'s picture and banner: choose one in Circle settings and a window opens to drag it and make it larger, round for the picture and wide for the banner, as your own profile picture has.',
     'Circle pictures are sharp: the picture and the banner everyone sees at once are several times larger than they were, and the part you chose also goes up at the picture\'s own size, so it stays sharp on a large screen. Choose a circle\'s picture or banner again to get the sharper one.',

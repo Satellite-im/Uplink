@@ -33,6 +33,15 @@ github.com/InfamousVague/ghost-gmessages-sidecar).
 
 ## What it does
 
+- **The launch splash: the logo by itself** (0.12.53; Matt, 2026-11-27: "remove the uplink logo from the squircle on
+  the loading page. and make it twice as large"). The small window a computer's app opens with while it looks for an
+  update (`lib/desktop/ui/launch_splash.dart`) drew `GhostLogo`, the mark at 4rem inside a black tile of 5rem. It
+  draws the mark alone now, 8rem across, in the page's ink (the mark's picture is white on nothing, and a light page
+  is white too), with less room under it. `test/launch_splash_test.dart` holds it to that and reads the picture
+  before it looks, where the first page of a run was drawn without it. Released the same day as the site's previews
+  of the app lost the app's notice about RCS chats (Matt: "Update the rcs message to not show up on the website app
+  previews"; `site/index.html`, the phone's list and the computer's window): the app still shows that notice to
+  whoever it is for.
 - **Becomes the default SMS app**: the first screen asks Android for the SMS role. Every existing conversation is
   there straight away, because messages live in Android's own SMS/MMS database (the Telephony provider), not the
   app. Switching back to another SMS app loses nothing.
