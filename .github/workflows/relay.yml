@@ -1,0 +1,248 @@
+# The relay, built for anyone to run (GMFB-25, "Self-hosting the relay, documented": "A published container image or
+# release binary"; docs/SELF_HOSTING.md).
+#
+# Where this runs. This file is messaging/.github/workflows/relay.yml in the repository the app is developed in, where
+# it does nothing: a repository runs only the workflows at its own root. Each release publishes messaging/ as the whole
+# of github.com/Satellite-im/Uplink, the app's own repository since 2026-11-27 (Matt, asked "Move the Windows, Linux and
+# relay builds onto Satellite-im/Uplink?": "Yes, move them"), and of github.com/InfamousVague/ghost-messaging, its public
+# copy before that (tool/publish-source.mjs). In each it is .github/workflows/relay.yml and runs: whenever a release
+# changed anything of the relay, and by hand (Actions > Relay > Run workflow). Each publishes under its own name; the
+# docs name the earlier one's until the new one's container has been made public (the last paragraph here).
+#
+# What it makes, for the version in pubspec.yaml (the app's, which a relay built from the same source goes with):
+#
+#   ghost-relay-<version>-linux-x64.tar.gz      the program itself (dart compile exe), relay/deploy's sample files
+#   ghost-relay-<version>-linux-arm64.tar.gz    (compose.yaml, a Caddyfile, a systemd unit, relay.env.example), the
+#                                               README and the LICENSE; each with its SHA-256 beside it
+#
+#       attached to the release "relay-<version>" at github.com/<this repository>/releases
+#
+#   ghcr.io/<owner>/ghost-relay:<version> and :latest, for linux/amd64 and linux/arm64, from relay/Dockerfile
+#
+# Each machine's program is built on a machine of its own kind (an arm64 runner for arm64), never under emulation, and
+# is run once (--help) before anything is published. A fork that runs this publishes under its own name, not ours.
+#
+# One thing a workflow can't do: a container package made here starts private. Once, by hand, the package's page
+# (github.com/users/<owner>/packages/container/ghost-relay/settings) makes it public; the programs attached to the
+# release are public from the start.
+name: Relay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'relay/**'
+      - '.github/workflows/relay.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: relay
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image: ${{ steps.version.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.11'
+      - name: The version, and the image's name
+        id: version
+        run: |
+          version="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml | head -n 1)"
+          test -n "$version" || { echo "No version in pubspec.yaml."; exit 1; }
+          owner="$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/$owner/ghost-relay" >> "$GITHUB_OUTPUT"
+          echo "Relay $version, as ghcr.io/$owner/ghost-relay"
+      - name: Analyze
+        working-directory: relay
+        run: |
+          dart pub get
+          dart analyze lib bin
+      # The relay started as anyone would start it, with nothing set, and every setting it reads listed in
+      # deploy/relay.env.example (relay/test/self_host_test.dart).
+      - name: It runs with nothing set
+        working-directory: relay
+        run: dart test test/self_host_test.dart
+
+  program:
+    name: Program (${{ matrix.arch }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.11'
+      - name: Build
+        working-directory: relay
+        run: |
+          # As the Dockerfile does: without the test package (and the lock file that lists it) there is nothing to fetch.
+          sed -i '/^dev_dependencies:/,$d' pubspec.yaml
+          rm -f pubspec.lock
+          dart pub get --offline
+          dart compile exe bin/relay.dart -o ghost-relay
+          ./ghost-relay --help > /dev/null
+      - name: Pack
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          name="ghost-relay-$VERSION-linux-$ARCH"
+          mkdir -p "out/$name"
+          cp relay/ghost-relay LICENSE "out/$name/"
+          cp relay/README.md "out/$name/README.md"
+          cp -r relay/deploy "out/$name/deploy"
+          tar -C out -czf "$name.tar.gz" "$name"
+          sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
+          cat "$name.tar.gz.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-${{ matrix.arch }}
+          path: |
+            ghost-relay-*.tar.gz
+            ghost-relay-*.tar.gz.sha256
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [check, program]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: program-*
+          merge-multiple: true
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+          IMAGE: ${{ needs.check.outputs.image }}
+        run: |
+          tag="relay-$VERSION"
+          cat > notes.md <<EOF
+          The Uplink relay, built from the same source as Uplink $VERSION.
+
+          - **The program**, for Linux: \`ghost-relay-$VERSION-linux-x64.tar.gz\` or \`-linux-arm64.tar.gz\` below, each with its SHA-256. Inside: \`ghost-relay\`, and \`deploy/\` with a compose file, a Caddyfile, a systemd unit and \`relay.env.example\`.
+          - **A container**: \`docker pull $IMAGE:$VERSION\` (or \`:latest\`), for amd64 and arm64.
+
+          How to run it, what it needs and what a relay of your own reaches: https://gogho.st/docs/self-hosting/
+          EOF
+          sed -i 's/^          //' notes.md
+          # Where this repository holds the app's own releases too (v<version>, tool/release-github.mjs), the latest
+          # release stays the app's: a relay's is never marked the latest there.
+          latest=""
+          if gh release list --repo "$GITHUB_REPOSITORY" --limit 50 --json tagName --jq '.[].tagName' | grep -q '^v[0-9]'; then latest="--latest=false"; fi
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --notes-file notes.md $latest
+          else
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Relay $VERSION" --notes-file notes.md $latest
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber ghost-relay-*.tar.gz ghost-relay-*.tar.gz.sha256
+
+  image:
+    name: Image (${{ matrix.platform }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      # Each machine's image goes up by its digest alone; the next job gives the two one name.
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: relay
+          platforms: ${{ matrix.platform }}
+          labels: |
+            org.opencontainers.image.title=Uplink relay
+            org.opencontainers.image.description=The relay server of Uplink: sealed packets between apps, nothing it can read.
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://gogho.st/docs/self-hosting/
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.version=${{ needs.check.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          outputs: type=image,name=${{ needs.check.outputs.image }},push-by-digest=true,name-canonical=true,push=true
+      - name: Note the digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p digests
+          touch "digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: digests/*
+          if-no-files-found: error
+
+  names:
+    name: Image names
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-*
+          path: digests
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: One name for both machines
+        working-directory: digests
+        env:
+          IMAGE: ${{ needs.check.outputs.image }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          docker buildx imagetools create -t "$IMAGE:$VERSION" -t "$IMAGE:latest" $(printf "$IMAGE@sha256:%s " *)
+          docker buildx imagetools inspect "$IMAGE:$VERSION"
+      # Run once as anyone would pull it: it starts, and says what it is.
+      - name: It runs
+        env:
+          IMAGE: ${{ needs.check.outputs.image }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          docker run -d --name relay -p 127.0.0.1:8787:8787 "$IMAGE:$VERSION"
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8787/ > said.txt 2> /dev/null; then break; fi
+            sleep 1
+          done
+          cat said.txt
+          grep -qi "ghost messaging relay" said.txt
+          docker rm -f relay

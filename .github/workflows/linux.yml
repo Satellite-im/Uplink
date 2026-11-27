@@ -1,0 +1,162 @@
+# Uplink for Linux: the desktop app built on an Ubuntu runner (Matt, 2026-11-20: "add support on the website
+# for linux based systems and downloads"). A Mac cannot build a Linux Flutter app, so this does: by hand (Run workflow,
+# or `gh workflow run linux.yml -f version=0.10.5 -f build=116`), or by pushing a tag linux-*
+# (which runs the workflow as that commit has it, before it is on the default branch). What it makes, as one artifact:
+#   ghost-messaging_<version>_amd64.deb   for Ubuntu, Debian, Mint, Pop!_OS and the rest of the Debian family
+#   ghost-messaging-linux-x64.tar.gz      the app's folder, for any other distribution (run ./ghost-messaging)
+# tool/release-linux.mjs fetches it and puts both on gogho.st with linux.json describing them.
+#
+# Where this runs. This file is messaging/.github/workflows/linux.yml in the repository the app is developed in, where it
+# does nothing: a repository runs only the workflows at its own root. Each release publishes messaging/ as the whole
+# of github.com/Satellite-im/Uplink (tool/publish-source.mjs), and there it is .github/workflows/linux.yml and runs,
+# building what was published beside it (Matt, 2026-11-27, asked "Move the Windows, Linux and relay builds onto
+# Satellite-im/Uplink?": "Yes, move them"). tool/release-linux.mjs starts it there, at main, once the source
+# is published, and holds the build to that commit (tool/lib/runners.mjs).
+name: Uplink for Linux
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version name, as pubspec.yaml has it (0.10.5)
+        required: true
+      build:
+        description: Build number (116)
+        required: true
+      p2p:
+        description: The direct network's core (no leaves it out, and the app has no direct route)
+        required: false
+        default: 'yes'
+  push:
+    tags:
+      - 'linux-*'
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      # A tag push says no version: pubspec.yaml's.
+      VERSION: ${{ inputs.version }}
+      BUILD: ${{ inputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The version
+        run: |
+          if [ -z "$VERSION" ]; then
+            line=$(grep -E '^version:' pubspec.yaml | sed 's/version: *//')
+            echo "VERSION=${line%%+*}" >> "$GITHUB_ENV"
+            echo "BUILD=${line##*+}" >> "$GITHUB_ENV"
+          fi
+
+      # What a Flutter app for Linux builds against, and libmpv for the video player (media_kit_libs_linux).
+      - name: Build tools and libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libmpv-dev mpv xvfb
+
+      # The Flutter the Mac builds with (pubspec.yaml's environment; tool/release.mjs).
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build the app
+        run: flutter build linux --release --build-name=$VERSION --build-number=$BUILD --dart-define=GHOST_BUILD=$BUILD --dart-define=GHOST_VERSION=$VERSION --dart-define=KLIPY_APP_KEY=${{ secrets.KLIPY_APP_KEY }}
+
+      # The direct network's core (native/p2p, Rust on iroh; lib/net/p2p/node_ffi.dart), from nothing but
+      # what its Cargo.lock names, with the Rust its rust-toolchain.toml names: in the app's lib folder as
+      # libghost_p2p.so, where the app looks for it, so in the .deb and the folder alike. Left out (p2p: no), the app
+      # has no direct route and is otherwise the same. A tag push, which can say no p2p, builds it and goes on without
+      # it where it fails: a core that would not build does not hold up a release.
+      - name: Rust for the direct network's core
+        id: rust
+        if: inputs.p2p != 'no'
+        continue-on-error: ${{ github.event_name == 'push' }}
+        working-directory: native/p2p
+        run: |
+          rustup toolchain install --no-self-update
+          rustc --version
+
+      - name: Build the direct network's core
+        id: core
+        if: inputs.p2p != 'no' && steps.rust.outcome == 'success'
+        continue-on-error: ${{ github.event_name == 'push' }}
+        working-directory: native/p2p
+        run: cargo build --release --locked
+
+      - name: Put the direct network's core in the app's folder
+        if: inputs.p2p != 'no' && steps.core.outcome == 'success'
+        run: |
+          cp native/p2p/target/release/libghost_p2p.so build/linux/x64/release/bundle/lib/libghost_p2p.so
+          ls -la build/linux/x64/release/bundle/lib/libghost_p2p.so
+
+      - name: Package it
+        run: |
+          set -e
+          BUNDLE=build/linux/x64/release/bundle
+          OUT=build/linux-packages
+          rm -rf "$OUT" && mkdir -p "$OUT"
+          # The folder, for any distribution.
+          cp linux/packaging/ghost-messaging.desktop linux/packaging/ghost-messaging.png "$BUNDLE/"
+          tar -C build/linux/x64/release -czf "$OUT/ghost-messaging-linux-x64.tar.gz" --transform 's,^bundle,ghost-messaging,' bundle
+          # The Debian package: the folder in /opt, a command, a menu entry and an icon.
+          PKG=build/deb/ghost-messaging
+          rm -rf build/deb && mkdir -p "$PKG/DEBIAN" "$PKG/opt" "$PKG/usr/bin" "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/512x512/apps"
+          cp -r "$BUNDLE" "$PKG/opt/ghost-messaging"
+          ln -s /opt/ghost-ghost-messaging "$PKG/usr/bin/ghost-messaging"
+          cp linux/packaging/ghost-messaging.desktop "$PKG/usr/share/applications/"
+          cp linux/packaging/ghost-messaging.png "$PKG/usr/share/icons/hicolor/512x512/apps/"
+          SIZE=$(du -sk "$PKG/opt" | cut -f1)
+          cat > "$PKG/DEBIAN/control" <<CONTROL
+          Package: ghost-messaging
+          Version: $VERSION
+          Section: net
+          Priority: optional
+          Architecture: amd64
+          Installed-Size: $SIZE
+          Depends: libgtk-3-0, libmpv2 | libmpv1
+          Maintainer: Uplink <hello@gogho.st>
+          Homepage: https://gogho.st
+          Description: Uplink
+           Your texts, friends, circles and spaces, sealed end to end.
+          CONTROL
+          sed -i 's/^          //' "$PKG/DEBIAN/control"
+          # The menu entry names the app's own links (x-scheme-handler/ghostmsg: an add-me link, a circle's invite;
+          # GMFB-34): the desktop's list of which app opens what is made again as it is installed and removed.
+          printf '#!/bin/sh\nset -e\nif command -v update-desktop-database >/dev/null 2>&1; then update-desktop-database -q /usr/share/applications || true; fi\n' > "$PKG/DEBIAN/postinst"
+          cp "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/postrm"
+          chmod 755 "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/postrm"
+          dpkg-deb --build --root-owner-group "$PKG" "$OUT/ghost-messaging_${VERSION}_amd64.deb"
+          ls -la "$OUT"
+
+      # It built; does it run? Installed from the .deb as a person would, started on a screen of its own, and looked
+      # at twenty seconds later: still up.
+      - name: Install it and start it
+        run: |
+          set -e
+          sudo apt-get install -y desktop-file-utils
+          sudo apt-get install -y ./build/linux-packages/ghost-messaging_${VERSION}_amd64.deb
+          # Installed, the app is the one that opens ghostmsg: links (GMFB-34).
+          if grep -q '^x-scheme-handler/ghostmsg=.*ghost-messaging.desktop' /usr/share/applications/mimeinfo.cache; then echo "ghostmsg: links open Uplink"; else echo "ghostmsg: links aren't registered"; exit 1; fi
+          xvfb-run -a -s '-screen 0 1280x800x24' ghost-messaging > build/linux-run.log 2>&1 &
+          sleep 20
+          if pgrep -x ghost-messaging > /dev/null; then echo "Uplink is running"; else echo "It stopped:"; cat build/linux-run.log; exit 1; fi
+          pkill -x ghost-messaging || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghost-messaging-linux
+          path: build/linux-packages/*
+          if-no-files-found: error

@@ -3,10 +3,13 @@
  * Uplink for Linux on gogho.st (Matt, 2026-11-20: "add support on the website for linux based systems and
  * downloads").
  *
- *   node tool/release-linux.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--ref <branch>] [--keep-connection] [--again] [--no-p2p]
+ *   node tool/release-linux.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--ref <branch>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
  *
- * A Mac cannot build the Linux app: .github/workflows/messaging-linux.yml does, on an Ubuntu runner, for the version in
- * pubspec.yaml (this starts it, unless --run names one that already ran). Its two packages are fetched with `gh` and
+ * A Mac cannot build the Linux app: an Ubuntu runner on GitHub does, for the version in pubspec.yaml (this starts it,
+ * unless --run names one that already ran), in Satellite-im/Uplink, the app's own repository
+ * (.github/workflows/linux.yml, published there with the source; tool/lib/runners.mjs). `--on glyph` builds it where
+ * it was built before, in the repository the app is developed in (its messaging-linux.yml, at --ref or its main),
+ * for as long as that workflow is kept. Its two packages are fetched with `gh` and
  * put beside the others in /opt/ghost-sms-release: ghost-messaging-linux.deb (Ubuntu, Debian and their family) and
  * ghost-messaging-linux-x64.tar.gz (any distribution), with linux.json saying the version, sizes and SHA-256s. The
  * site's Linux buttons read linux.json; the site's Caddy block names all three (tool/deploy-site.mjs --caddy).
@@ -21,7 +24,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { requireNotes } from './lib/notes.mjs';
-import { refLacksRelease } from './lib/built_ref.mjs';
+import { finished, runnerFor, started } from './lib/runners.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // The site's address since 2026-11-15 (tool/deploy-site.mjs); /opt/ghost-sms-* keep their names on the box.
@@ -31,7 +34,6 @@ const BACKUPS = '/opt/ghost-sms-releases';
 const DEB = 'ghost-messaging-linux.deb';
 const TAR = 'ghost-messaging-linux-x64.tar.gz';
 const FEED = 'linux.json';
-const WORKFLOW = 'messaging-linux.yml';
 const OUT = join(ROOT, 'build/release-linux');
 
 const args = process.argv.slice(2);
@@ -71,38 +73,28 @@ async function liveRelease() {
   if (now && now.version === versionName && !has('again')) fail(`Uplink for Linux ${versionName} is already on the site (--again to send it again).`);
 }
 
-// The build: started here for this version, or one that already ran.
+const whereBuilt = () => 'uplink';
+
+// Where it is built (tool/lib/runners.mjs): the app's own repository, unless --on glyph says where it was built before.
+const on = flag('on') ?? whereBuilt();
+if (on !== 'uplink' && on !== 'glyph') fail(`--on ${on}: uplink (Satellite-im/Uplink) or glyph (where it was built before).`);
+
+// The build: started here for this version, or one that already ran (--run, with --on where it ran elsewhere).
 let run = flag('run');
+let built = { run, repo: runnerFor(on, 'linux').repo, sha: null };
 if (!run) {
-  const before = new Set(JSON.parse(out('gh', ['run', 'list', '--workflow', WORKFLOW, '--limit', '20', '--json', 'databaseId'])).map((r) => r.databaseId));
-  say(`> Building Uplink for Linux ${versionName} (${versionCode}) on GitHub`);
-  // --no-p2p: the runner leaves the direct network's core out (the workflow's own `p2p` input; the app then has no
-  // direct route). Not said at all otherwise, so a workflow from before the core is asked nothing it doesn't know.
-  // The runner builds what GitHub has at the branch, never what is here: refused unless that is this release
+  say(`> Building Uplink for Linux ${versionName} (${versionCode}) on GitHub, in ${built.repo}`);
+  // The runner builds what its repository holds, never what is here: Satellite-im/Uplink's main is brought up to this
+  // release first and the build held to that commit; the old repository's main is refused unless it is this release
   // (tool/lib/built_ref.mjs: 0.12.24 and 0.12.25 were 0.12.23's code under their numbers).
-  const ref = flag('ref') ?? 'main';
-  const lacks = refLacksRelease(ROOT, ref);
-  if (lacks) fail(`${lacks} Nothing was built.`);
-  out('gh', ['workflow', 'run', WORKFLOW, '--ref', ref, '-f', `version=${versionName}`, '-f', `build=${versionCode}`, ...(has('no-p2p') ? ['-f', 'p2p=no'] : [])]);
-  for (let i = 0; i < 30 && !run; i++) {
-    await sleep(4000);
-    const fresh = JSON.parse(out('gh', ['run', 'list', '--workflow', WORKFLOW, '--limit', '5', '--json', 'databaseId'])).find((r) => !before.has(r.databaseId));
-    if (fresh) run = String(fresh.databaseId);
-  }
-  if (!run) fail('The build did not start on GitHub.');
+  built = await started({ root: ROOT, on, name: 'linux', versionName, versionCode, noP2p: has('no-p2p'), ref: flag('ref'), out, say, fail, sleep });
+  run = built.run;
 }
 say(`  run ${run}`);
-for (;;) {
-  const r = JSON.parse(out('gh', ['run', 'view', run, '--json', 'status,conclusion']));
-  if (r.status === 'completed') {
-    if (r.conclusion !== 'success') fail(`The Linux build ended ${r.conclusion}: gh run view ${run} --log-failed`);
-    break;
-  }
-  await sleep(20000);
-}
+await finished({ run, repo: built.repo, sha: built.sha, what: 'Linux', out, fail, sleep });
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
-out('gh', ['run', 'download', run, '--dir', OUT]);
+out('gh', ['run', 'download', run, '--repo', built.repo, '--dir', OUT]);
 // The workflow names the .deb with its version; it is published under one name, so the site's link never changes.
 const files = [];
 (function find(dir) {

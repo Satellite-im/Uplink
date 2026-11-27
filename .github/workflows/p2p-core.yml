@@ -1,0 +1,46 @@
+# The direct network's core (native/p2p, Rust on iroh; docs/OPEN_NETWORK.md, section 2): its own tests,
+# `cargo test --release --locked`, on Linux and Windows, which the Mac it is written on cannot run. By hand (Run
+# workflow, or `gh workflow run p2p-core.yml`), with the Rust its rust-toolchain.toml names. The tests link
+# nodes over each machine's loopback and its own address on the runner's network, and run a link helper inside the
+# test process; one listens on port 80, and where the runner gives it none it says so and passes.
+#
+# Where this runs. This file is messaging/.github/workflows/p2p-core.yml in the repository the app is developed in, where it
+# does nothing: a repository runs only the workflows at its own root. Each release publishes messaging/ as the whole
+# of github.com/Satellite-im/Uplink (tool/publish-source.mjs), and there it is .github/workflows/p2p-core.yml and runs,
+# building what was published beside it (Matt, 2026-11-27, asked "Move the Windows, Linux and relay builds onto
+# Satellite-im/Uplink?": "Yes, move them"). By hand alone.
+name: Direct network core tests
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: p2p-core-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: native/p2p
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust, as rust-toolchain.toml names it
+        run: |
+          rustup toolchain install --no-self-update
+          rustc --version
+
+      - name: The core's tests
+        run: cargo test --release --locked
+
+      - name: The core builds as the app carries it
+        run: cargo build --release --locked

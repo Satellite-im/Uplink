@@ -1,0 +1,73 @@
+# Uplink: a recording with video, made on Windows and kept to be looked at (GMFB-42; Matt, 2026-11-26:
+# "Build Windows too"). Nobody here has a PC, so this is where windows/runner/call_video.cpp is compiled and run
+# before a release carries it: the app's own test (integration_test/recording_video_native_test.dart) is
+# sent a voice, a camera and a second picture by a Chromium with stand-in devices
+# (tool/voicebench/video_peer.mjs) and records them. What it made is kept as the artifact
+# `windows-video-check`: recording.mp4 to read with ffprobe and look at frames of.
+#
+# Run by pushing the branch `windows-video-check`, or by hand. It publishes nothing and signs nothing.
+#
+# Where this runs. This file is messaging/.github/workflows/windows-video-check.yml in the repository the app is developed in, where it
+# does nothing: a repository runs only the workflows at its own root. Each release publishes messaging/ as the whole
+# of github.com/Satellite-im/Uplink (tool/publish-source.mjs), and there it is .github/workflows/windows-video-check.yml and runs,
+# building what was published beside it (Matt, 2026-11-27, asked "Move the Windows, Linux and relay builds onto
+# Satellite-im/Uplink?": "Yes, move them"). 
+name: Uplink · Windows video recording check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [windows-video-check]
+
+concurrency:
+  group: windows-video-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: flutter pub get
+
+      - name: A browser to call from
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\pw" | Out-Null
+          Push-Location "$env:RUNNER_TEMP\pw"
+          npm init -y | Out-Null
+          npm install playwright
+          npx playwright install chromium
+          Pop-Location
+
+      - name: Record a call with video
+        shell: pwsh
+        run: |
+          $env:GHOST_PLAYWRIGHT = "$env:RUNNER_TEMP\pw\node_modules\playwright\index.mjs"
+          $out = "$env:RUNNER_TEMP\rec"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $peer = Start-Process node -ArgumentList 'tool/voicebench/video_peer.mjs', '47931' -PassThru -NoNewWindow -RedirectStandardOutput "$out\peer.log" -RedirectStandardError "$out\peer.err"
+          flutter test integration_test/recording_video_native_test.dart -d windows "--dart-define=REC_DIR=$($out -replace '\\','/')" --dart-define=REC_PORT=47931
+          $code = $LASTEXITCODE
+          if (-not $peer.HasExited) { Stop-Process -Id $peer.Id -Force }
+          Get-Content "$out\peer.log", "$out\peer.err" -ErrorAction SilentlyContinue
+          exit $code
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-video-check
+          path: ${{ runner.temp }}/rec
+          if-no-files-found: warn

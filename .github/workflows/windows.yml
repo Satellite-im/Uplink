@@ -1,0 +1,215 @@
+# Uplink for Windows: the desktop app built on a Windows runner (Matt, 2026-11-14: "Add a mac and windows
+# build to ghost-sms.com"). A Mac cannot build a Windows Flutter app, so this does, by hand (Run workflow, or
+# `gh workflow run windows.yml -f version=0.7.21 -f build=33`). What it makes is the installer
+# (windows/installer.iss) as an artifact; tool/release-windows.mjs fetches it and puts it on
+# ghost-sms.com. Signed where the repository has the Azure Artifact Signing account (Matt, 2026-11-19: "get the windows
+# build deployed without the warning when downloading so it can be signed"): the secrets AZURE_TENANT_ID,
+# AZURE_CLIENT_ID, AZURE_CLIENT_SECRET (or none, signing in by GitHub's OIDC token through a federated credential),
+# AZURE_SIGNING_ENDPOINT, AZURE_SIGNING_ACCOUNT and AZURE_SIGNING_PROFILE. Without them it builds unsigned as before,
+# and Windows asks before running it the first time.
+#
+# Where this runs. This file is messaging/.github/workflows/windows.yml in the repository the app is developed in, where it
+# does nothing: a repository runs only the workflows at its own root. Each release publishes messaging/ as the whole
+# of github.com/Satellite-im/Uplink (tool/publish-source.mjs), and there it is .github/workflows/windows.yml and runs,
+# building what was published beside it (Matt, 2026-11-27, asked "Move the Windows, Linux and relay builds onto
+# Satellite-im/Uplink?": "Yes, move them"). tool/release-windows.mjs starts it there once that repository has the
+# signing secrets, and until then starts the copy of it the developing repository keeps at its own root
+# (messaging-windows.yml there, the same steps with messaging/ before each path), which has them.
+name: Uplink for Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version name, as pubspec.yaml has it (0.7.21)
+        required: true
+      build:
+        description: Build number (33)
+        required: true
+      p2p:
+        description: The direct network's core (no leaves it out, and the app has no direct route)
+        required: false
+        default: 'yes'
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+# The OIDC token, for signing in to Azure without a client secret.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      # All three, the profile last: it exists only once Microsoft has checked who signs.
+      SIGNING: ${{ secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_SIGNING_PROFILE != '' }}
+      CLIENT_SECRET_SET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
+      AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+      AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+      AZURE_SIGNING_PROFILE: ${{ secrets.AZURE_SIGNING_PROFILE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Flutter the Mac builds with (pubspec.yaml's environment; tool/release.mjs).
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # DeepFilterNet for calls (native/voicefx/deepfilter), by the runner's own Rust: windows/runner/CMakeLists.txt
+      # links it where it is there, and the app offers RNNoise alone where it is not.
+      - name: Build DeepFilterNet
+        working-directory: native/voicefx/deepfilter
+        run: cargo build --release
+
+      - name: Build the app
+        run: flutter build windows --release --build-name=${{ inputs.version }} --build-number=${{ inputs.build }} --dart-define=GHOST_BUILD=${{ inputs.build }} --dart-define=GHOST_VERSION=${{ inputs.version }} --dart-define=KLIPY_APP_KEY=${{ secrets.KLIPY_APP_KEY }}
+
+      # The direct network's core (native/p2p, Rust on iroh; lib/net/p2p/node_ffi.dart), from nothing but
+      # what its Cargo.lock names, with the Rust its rust-toolchain.toml names (rustup, on the runner, installs it):
+      # beside the app as ghost_p2p.dll, where the app looks for it, so in the installer and signed with the rest. Left
+      # out (p2p: no), the app has no direct route and is otherwise the same.
+      - name: Rust for the direct network's core
+        if: inputs.p2p != 'no'
+        working-directory: native/p2p
+        run: |
+          rustup toolchain install --no-self-update
+          rustc --version
+
+      - name: Build the direct network's core
+        if: inputs.p2p != 'no'
+        working-directory: native/p2p
+        run: cargo build --release --locked
+
+      - name: Put the direct network's core beside the app
+        if: inputs.p2p != 'no'
+        shell: pwsh
+        run: |
+          Copy-Item native\p2p\target\release\ghost_p2p.dll build\windows\x64\runner\Release\ghost_p2p.dll
+          Get-Item build\windows\x64\runner\Release\ghost_p2p.dll | Format-List Name, Length
+
+      # The Google Messages sidecar (sidecar/gmessages, AGPL-3.0): beside the app, and so in the installer,
+      # only once its source is public (sidecar/gmessages/SOURCE_URL).
+      - uses: actions/setup-go@v5
+        if: hashFiles('sidecar/gmessages/SOURCE_URL') != ''
+        with:
+          go-version: '1.26'
+          cache-dependency-path: sidecar/gmessages/go.sum
+
+      - name: Build the Google Messages sidecar
+        if: hashFiles('sidecar/gmessages/SOURCE_URL') != ''
+        shell: pwsh
+        run: |
+          Push-Location sidecar/gmessages
+          $env:CGO_ENABLED = '0'
+          go build -trimpath -ldflags=-s -o ..\..\build\windows\x64\runner\Release\gmsidecar.exe .
+          Pop-Location
+          Copy-Item sidecar\gmessages\LICENSE build\windows\x64\runner\Release\gmsidecar-LICENSE.txt
+          Copy-Item sidecar\gmessages\SOURCE_URL build\windows\x64\runner\Release\gmsidecar-SOURCE.txt
+
+      # The account helpers (sidecar/<name>, AGPL-3.0; lib/inbox/account_helper.dart): Messenger, Instagram,
+      # Discord, X and Slack, each beside the app as <name>-sidecar.exe where the app looks for it, so in the installer
+      # and signed with the rest (Matt, 2026-11-21: "the windows app says coming soon"). Go alone, no cgo.
+      - name: Build the account helpers
+        shell: pwsh
+        run: |
+          $out = (Resolve-Path build\windows\x64\runner\Release).Path
+          $env:CGO_ENABLED = '0'
+          foreach ($name in @('messenger', 'instagram', 'discord', 'twitter', 'slack')) {
+            if (-not (Test-Path "sidecar\$name\SOURCE_URL")) { continue }
+            Push-Location "sidecar\$name"
+            go build -trimpath -ldflags=-s -o "$out\$name-sidecar.exe" .
+            if ($LASTEXITCODE -ne 0) { throw "the $name helper did not build" }
+            Pop-Location
+            Copy-Item "sidecar\$name\LICENSE" "$out\$name-sidecar-LICENSE.txt"
+            Copy-Item "sidecar\$name\SOURCE_URL" "$out\$name-sidecar-SOURCE.txt"
+          }
+
+      # Signing, where the account is set up: the app's own files first (the exe, its DLLs, the sidecars), then the
+      # installer and its uninstaller as Inno Setup writes them (windows/installer.iss, windows/sign.ps1).
+      - name: Sign in to Azure (OIDC)
+        if: env.SIGNING == 'true' && env.CLIENT_SECRET_SET != 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Sign the app
+        if: env.SIGNING == 'true'
+        uses: Azure/artifact-signing-action@v2.0.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\build\windows\x64\runner\Release
+          files-folder-filter: exe,dll
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          description: Uplink
+          description-url: https://gogho.st
+
+      - name: Build the installer
+        shell: pwsh
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+            if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+            $env:PATH += ';C:\Program Files (x86)\Inno Setup 6'
+          }
+          $sign = @()
+          if ($env:SIGNING -eq 'true') {
+            # Inno puts the quoted file name where $f is; the script's own path has no spaces on a runner.
+            $script = Join-Path $PWD 'windows\sign.ps1'
+            $sign = @('/DSign', ("/Sghost=pwsh -NoProfile -ExecutionPolicy Bypass -File $script " + '$f'))
+          }
+          iscc /DAppVersion=${{ inputs.version }} /DSource=build\windows\x64\runner\Release @sign windows\installer.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed (exit $LASTEXITCODE)" }
+          Get-Item build\windows-installer\ghost-messaging-setup.exe | Format-List Name, Length
+
+      # It built; does it run? Installed silently as a person's double click would, started, and looked at twenty
+      # seconds later: still up, with a window.
+      - name: Install it and start it
+        shell: pwsh
+        run: |
+          # The installer alone is waited for (-Wait would wait for anything it starts too).
+          $setup = Start-Process -FilePath build\windows-installer\ghost-messaging-setup.exe -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -PassThru
+          $setup.WaitForExit()
+          if ($setup.ExitCode -ne 0) { throw "the installer failed (exit $($setup.ExitCode))" }
+          $exe = "$env:LOCALAPPDATA\Programs\Ghost Messaging\ghost_messaging.exe"
+          if (-not (Test-Path $exe)) { throw "not installed at $exe" }
+          # Signed where it should be: the installer, the app and the uninstaller.
+          foreach ($f in @('build\windows-installer\ghost-messaging-setup.exe', $exe, "$env:LOCALAPPDATA\Programs\Ghost Messaging\unins000.exe")) {
+            $sig = Get-AuthenticodeSignature -FilePath $f
+            Write-Host "$f : $($sig.Status) $($sig.SignerCertificate.Subject)"
+            if ($env:SIGNING -eq 'true' -and $sig.Status -ne 'Valid') { throw "$f is not signed ($($sig.Status))" }
+          }
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          $p.Refresh()
+          if ($p.HasExited) { throw "the app closed by itself (exit $($p.ExitCode))" }
+          if ($p.MainWindowHandle -eq 0) { throw "the app is running with no window" }
+          Write-Host "running, window '$($p.MainWindowTitle)'"
+          Stop-Process -Id $p.Id
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghost-messaging-windows-${{ inputs.version }}
+          path: build/windows-installer/ghost-messaging-setup.exe
+          if-no-files-found: error

@@ -2,16 +2,20 @@
 /**
  * Uplink for Windows on ghost-sms.com (Matt, 2026-11-14: "Add a mac and windows build to ghost-sms.com").
  *
- *   node tool/release-windows.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--keep-connection] [--again] [--no-p2p]
+ *   node tool/release-windows.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
  *
- * A Mac cannot build the Windows app: .github/workflows/messaging-windows.yml does, on a Windows runner, for the
- * version in pubspec.yaml (this starts it, unless --run names one that already ran). Its installer is fetched with
- * `gh`, then put beside the APK and the Mac's zip in /opt/ghost-sms-release as ghost-messaging-setup.exe, with
- * windows.json saying its version, size and SHA-256. The site's Windows button reads windows.json.
+ * A Mac cannot build the Windows app: a Windows runner on GitHub does, for the version in pubspec.yaml (this starts
+ * it, unless --run names one that already ran). Its installer is fetched with `gh`, then put beside the APK and the
+ * Mac's zip in /opt/ghost-sms-release as ghost-messaging-setup.exe, with windows.json saying its version, size and
+ * SHA-256. The site's Windows button reads windows.json.
  *
- * One login to the box (the same box code as tool/release-mac.mjs, from Ghost.md's checkout). The workflow signs the
- * app and its installer once the repository has the Azure Artifact Signing secrets (its header lists them); until
- * then the installer is unsigned and Windows asks before running it the first time.
+ * WHERE IT IS BUILT (tool/lib/runners.mjs; --on uplink or --on glyph says outright): in Satellite-im/Uplink, the
+ * app's own repository (.github/workflows/windows.yml, which is published there with the source), once that
+ * repository has the Azure Artifact Signing secrets the workflow's header lists. Until it has, in the repository the
+ * app is developed in, which has them (its .github/workflows/messaging-windows.yml, at its main): the installer is
+ * signed either way, and an unsigned one never takes a signed one's place. This says which, and why.
+ *
+ * One login to the box (the same box code as tool/release-mac.mjs, from Ghost.md's checkout).
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -20,7 +24,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { requireNotes } from './lib/notes.mjs';
-import { refLacksRelease } from './lib/built_ref.mjs';
+import { GLYPH, UPLINK, finished, runnerFor, signingLacks, started } from './lib/runners.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // The site's address since 2026-11-15 (tool/deploy-site.mjs); /opt/ghost-sms-* keep their names on the box.
@@ -29,7 +33,6 @@ const RELEASE = '/opt/ghost-sms-release';
 const BACKUPS = '/opt/ghost-sms-releases';
 const EXE = 'ghost-messaging-setup.exe';
 const FEED = 'windows.json';
-const WORKFLOW = 'messaging-windows.yml';
 const OUT = join(ROOT, 'build/release-windows');
 
 const args = process.argv.slice(2);
@@ -69,38 +72,37 @@ async function liveRelease() {
   if (now && now.version === versionName && !has('again')) fail(`Uplink for Windows ${versionName} is already on the site (--again to send it again).`);
 }
 
-// The build: started here for this version, or one that already ran.
+/**
+ * Satellite-im/Uplink where an installer built there would be signed, else the repository that signed it until now.
+ * An unsigned installer is never released in a signed one's place: Windows would warn everyone who downloads it.
+ */
+function whereBuilt() {
+  const lacks = signingLacks();
+  if (lacks && lacks.length === 0) return 'uplink';
+  say(lacks ? `  ${UPLINK} has no ${lacks.join(', ')}: built in ${GLYPH}, which has the signing secrets, so the installer is signed.` : `  ${UPLINK}'s secrets could not be listed: built in ${GLYPH}.`);
+  return 'glyph';
+}
+
+// Where it is built (tool/lib/runners.mjs): the app's own repository, once it has the signing account's secrets; until then where it was built before, which has them.
+const on = flag('on') ?? whereBuilt();
+if (on !== 'uplink' && on !== 'glyph') fail(`--on ${on}: uplink (Satellite-im/Uplink) or glyph (where it was built before).`);
+
+// The build: started here for this version, or one that already ran (--run, with --on where it ran elsewhere).
 let run = flag('run');
+let built = { run, repo: runnerFor(on, 'windows').repo, sha: null };
 if (!run) {
-  const before = new Set(JSON.parse(out('gh', ['run', 'list', '--workflow', WORKFLOW, '--limit', '20', '--json', 'databaseId'])).map((r) => r.databaseId));
-  say(`> Building Uplink for Windows ${versionName} (${versionCode}) on GitHub`);
-  // --no-p2p: the runner leaves the direct network's core out (the workflow's own `p2p` input; the app then has no
-  // direct route). Not said at all otherwise, so a workflow from before the core is asked nothing it doesn't know.
-  // The runner builds what GitHub has at the branch, never what is here: refused unless that is this release
+  say(`> Building Uplink for Windows ${versionName} (${versionCode}) on GitHub, in ${built.repo}`);
+  // The runner builds what its repository holds, never what is here: Satellite-im/Uplink's main is brought up to this
+  // release first and the build held to that commit; the old repository's main is refused unless it is this release
   // (tool/lib/built_ref.mjs: 0.12.24 and 0.12.25 were 0.12.23's code under their numbers).
-  const ref = flag('ref') ?? 'main';
-  const lacks = refLacksRelease(ROOT, ref);
-  if (lacks) fail(`${lacks} Nothing was built.`);
-  out('gh', ['workflow', 'run', WORKFLOW, '--ref', ref, '-f', `version=${versionName}`, '-f', `build=${versionCode}`, ...(has('no-p2p') ? ['-f', 'p2p=no'] : [])]);
-  for (let i = 0; i < 30 && !run; i++) {
-    await sleep(4000);
-    const fresh = JSON.parse(out('gh', ['run', 'list', '--workflow', WORKFLOW, '--limit', '5', '--json', 'databaseId'])).find((r) => !before.has(r.databaseId));
-    if (fresh) run = String(fresh.databaseId);
-  }
-  if (!run) fail('The build did not start on GitHub.');
+  built = await started({ root: ROOT, on, name: 'windows', versionName, versionCode, noP2p: has('no-p2p'), ref: flag('ref'), out, say, fail, sleep });
+  run = built.run;
 }
 say(`  run ${run}`);
-for (;;) {
-  const r = JSON.parse(out('gh', ['run', 'view', run, '--json', 'status,conclusion']));
-  if (r.status === 'completed') {
-    if (r.conclusion !== 'success') fail(`The Windows build ended ${r.conclusion}: gh run view ${run} --log-failed`);
-    break;
-  }
-  await sleep(20000);
-}
+await finished({ run, repo: built.repo, sha: built.sha, what: 'Windows', out, fail, sleep });
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
-out('gh', ['run', 'download', run, '--dir', OUT]);
+out('gh', ['run', 'download', run, '--repo', built.repo, '--dir', OUT]);
 // The installer, wherever in the downloaded artifacts it lies.
 const found = (function find(dir) {
   for (const n of readdirSync(dir)) {

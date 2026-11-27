@@ -1854,9 +1854,26 @@ Each release publishes the source by itself: tool/release.mjs, release-mac.mjs a
 committed at HEAD; and the sidecar's own repository where it changed). `--no-source` skips it; a failure there is said
 and leaves the release live. A release that carries the Google Messages sidecar must have its source public.
 Since 2026-11-27 the same snapshot also goes to github.com/Satellite-im/Uplink's `main`, the app's home under its new
-name (Matt, asked whether every release should update it: "Yes, every release"), last of the three and without
-`.github/`, whose relay workflow would publish builds under that organization's name. That repository's `main` is
-its default branch; the Rust app it held before is on `dev` and in the 1.0.x tags.
+name (Matt, asked whether every release should update it: "Yes, every release"), last of the three. That
+repository's `main` is its default branch; the Rust app it held before is on `dev` and in the 1.0.x tags.
+
+**The runners are that repository's** (Matt, asked "Move the Windows, Linux and relay builds onto
+Satellite-im/Uplink?": "Yes, move them"). The build workflows are the app's own files now,
+`.github/workflows/windows.yml`, `linux.yml`, `relay.yml`, `p2p-core.yml` and `windows-video-check.yml` in this
+folder, which is that repository's root, so they are published with the source and build what was published beside
+them. `tool/release-linux.mjs` and `tool/release-windows.mjs` bring that repository's `main` up to the release
+(`tool/publish-source.mjs`), ask for the build there, and refuse one that was of any other commit
+(`tool/lib/runners.mjs`); merging a release into the developing repository's `main` first is needed only for a build
+that still runs there. Windows is the one that still does, and says so each time: its installer is signed with the
+Azure Artifact Signing secrets, which the developing repository has and Satellite-im/Uplink has not been given yet
+(`AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`,
+`AZURE_SIGNING_PROFILE`: Matt's to add; a secret's value cannot be read back out of GitHub). The day they are there,
+the script builds Windows there too with nothing else changed. `--on glyph` builds either where it was built before,
+from the copies the developing repository keeps at its own root (`messaging-windows.yml`, `messaging-linux.yml`): to
+be deleted once a release of each has gone out from the new place. The relay's workflow runs in both repositories
+the source is published to; its release in Satellite-im/Uplink is never marked the latest, which is the app's, and
+its container there (`ghcr.io/satellite-im/ghost-relay`) starts private until someone makes the package public by
+hand, so the docs still name `ghcr.io/infamousvague/ghost-relay`.
 
 And each release is a release on GitHub there too (`node tool/release-github.mjs`, run by the same four scripts
 after the source; Matt, asked whether every release should publish one: "Yes, every release"). It is tagged `v` and
