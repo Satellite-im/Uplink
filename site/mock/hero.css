@@ -1,0 +1,68 @@
+/* The hero's exploded conversation (site/mock/hero.html): each layer's box, and where its piece sits in it.
+   Boxes are the layer pictures' sizes in app pixels (site/shots/x-*.webp / 2); the two themes' pictures differ by a
+   pixel or two in a few, so light has its own --h there. Places are measured off the pictures. */
+
+/* --- the boxes ----------------------------------------------------------------------------------------------- */
+.gm-fit[data-mock='x-header']  { --w: 412; --h: 58; }
+.gm-fit[data-mock='x-link']    { --w: 322; --h: 72; }
+.gm-fit[data-mock='x-place']   { --w: 305; --h: 67; }
+.gm-fit[data-mock='x-out1']    { --w: 321; --h: 65.5; }
+.gm-fit[data-mock='x-out2']    { --w: 191; --h: 43; }
+.gm-fit[data-mock='x-heart']   { --w: 30;  --h: 27; }
+.gm-fit[data-mock='x-ticks']   { --w: 140; --h: 33; }
+.gm-fit[data-mock='x-in']      { --w: 322; --h: 68; }
+.gm-fit[data-mock='x-laugh']   { --w: 31;  --h: 24; }
+.gm-fit[data-mock='x-emoji']   { --w: 99;  --h: 52; }
+.gm-fit[data-mock='x-chips']   { --w: 248; --h: 41; }
+.gm-fit[data-mock='x-compose'] { --w: 393; --h: 54; }
+html[data-theme='light'] .gm-fit[data-mock='x-link']  { --h: 71; }
+html[data-theme='light'] .gm-fit[data-mock='x-out1']  { --h: 67.5; }
+html[data-theme='light'] .gm-fit[data-mock='x-out2']  { --w: 193; --h: 45.5; }
+html[data-theme='light'] .gm-fit[data-mock='x-heart'] { --h: 26; }
+html[data-theme='light'] .gm-fit[data-mock='x-in']    { --h: 69; }
+
+/* A layer floats over the others: what grows (a reaction's bounce, a longer bubble sent from the composer) may
+   reach past its box rather than be cut at it. */
+.gm-fit[data-mock^='x-'],
+.gm-fit[data-mock^='x-'] > .gm-stage { overflow: visible; contain: none; }
+.gm-fit[data-mock^='x-'] > .gm-stage > * { position: absolute; margin: 0; }
+
+/* --- the pieces ---------------------------------------------------------------------------------------------- */
+/* The bar as the thread's picture has it: the face right after Back, the number small and grey under the name. */
+[data-mock='x-header'] .gm-head { left: 0; top: 0; width: 412px; gap: 0; padding-left: 5px; background: transparent; }
+[data-mock='x-header'] .gm-head__who { padding: 0; gap: 10px; margin-right: 6px; }
+[data-mock='x-header'] .gm-head__name { margin-top: 0; }
+[data-mock='x-header'] .gm-head__sub { font-size: var(--fs-xs); line-height: 1.25; color: var(--ink-3); }
+[data-mock='x-link'] .gm-msg { left: 4px; top: 4px; }
+[data-mock='x-place'] .gm-preview { left: 4.5px; top: 3.5px; width: 296px; max-width: none; padding: 10.5px var(--s3) 12.5px; }
+[data-mock='x-place'] .gm-preview__title { font-weight: 700; }
+[data-mock='x-out1'] .gm-msg { right: 4.5px; top: 3.5px; }
+/* Right-anchored at its own width, so a longer message sent from the composer grows to the left, as the app's do. */
+[data-mock='x-out2'] .gm-msg { right: 4.5px; top: -2px; width: max-content; max-width: 313px; }
+[data-mock='x-heart'] .gm-react { left: 3.5px; top: 2.5px; }
+[data-mock='x-ticks'] .gm-msg { right: 1px; top: -3px; max-width: none; white-space: nowrap; }
+[data-mock='x-ticks'] .gm-meta { font-variant-numeric: normal; line-height: 1.5; }
+[data-mock='x-in'] .gm-msg { left: 4px; top: 1.5px; }
+[data-mock='x-laugh'] .gm-react { left: 3px; top: -1px; }
+[data-mock='x-emoji'] .gm-msg { left: 0; top: 0; }
+[data-mock='x-chips'] .gm-chips { left: 4px; top: 3.5px; padding: 0; overflow: visible; }
+[data-mock='x-chips'] .gm-chip { padding: 0 13.25px; }
+[data-mock='x-chips'] .gm-chip--emoji { min-width: 0; width: 44.5px; padding: 0; }
+[data-mock='x-compose'] .gm-composer { left: 4px; top: 5.5px; width: 384px; }
+[data-mock='x-compose'] .gm-composer__input { padding-left: 0; }
+[data-mock='x-compose'] .gm-composer__input:focus-visible { outline: none; }
+html[data-theme='light'] [data-mock='x-out1'] .gm-msg { top: 2.5px; }
+html[data-theme='light'] [data-mock='x-out2'] .gm-msg { top: 1px; }
+html[data-theme='light'] [data-mock='x-in'] .gm-msg { top: 2.5px; }
+
+/* --- what the hero adds ------------------------------------------------------------------------------------- */
+/* The newest bubble of yours, replaced by what the composer sends: it rises in from the composer's side. */
+[data-mock='x-out2'] .gm-msg.is-new > .gm-bubble { animation: hero-sent 520ms var(--ease) both; }
+@keyframes hero-sent { from { opacity: 0; transform: translateY(18px) scale(0.9); } to { opacity: 1; transform: none; } }
+/* A reaction leaving (its message was replaced) and coming back. */
+[data-mock^='x-'] .gm-react { transition: transform 200ms var(--ease-spring), opacity 200ms var(--ease); }
+[data-mock^='x-'] .gm-react.is-gone { opacity: 0; transform: scale(0.4); pointer-events: none; }
+/* The receipt line changing: the old words fade as the new ones come. */
+[data-mock='x-ticks'] .hero-state, [data-mock='x-ticks'] .hero-edited { transition: opacity var(--normal) var(--ease); }
+[data-mock='x-ticks'] .is-fading { opacity: 0; }
+[data-mock='x-ticks'] .gm-ticks.is-one use { opacity: 1; }

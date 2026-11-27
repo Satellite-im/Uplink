@@ -153,7 +153,7 @@ code { font-family: var(--u-mono); font-size: .9em; background: var(--u-rule); p
 }
 .u-sticker:hover::after { opacity: 1; }
 .u-sticker > * { position: relative; }
-.u-sticker p { margin: 0; color: var(--u-ink-2); font-size: .96rem; }
+.u-sticker p:not(.gm *) { margin: 0; color: var(--u-ink-2); font-size: .96rem; }
 /* The square that holds a card's icon. */
 .u-badge {
   width: 2.7rem; height: 2.7rem; display: grid; place-items: center; margin-bottom: 1rem;

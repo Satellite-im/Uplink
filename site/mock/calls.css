@@ -1,0 +1,90 @@
+/* The calls section's space ("Friday hang", site/mock/calls.html): its People and Chat tabs, the call's controls, the
+   space chat's lines and composer. Only what mock.css lacks; everything under .calls-mock. */
+
+.calls-mock .calls-seg { margin: 3px var(--s4) 0; height: 46px; flex: none; }
+
+/* The two tabs' pages, one over the other; the chosen one slides in a little from its side. */
+.calls-mock .calls-panes { position: relative; flex: 1; min-height: 0; }
+.calls-mock .calls-pane {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  transition: opacity 220ms var(--ease), transform 280ms var(--ease), visibility 0s linear 280ms;
+}
+.calls-mock[data-calls-tab='people'] .calls-pane--chat,
+.calls-mock[data-calls-tab='chat'] .calls-pane--people { opacity: 0; visibility: hidden; pointer-events: none; }
+.calls-mock[data-calls-tab='people'] .calls-pane--chat { transform: translateX(24px); }
+.calls-mock[data-calls-tab='chat'] .calls-pane--people { transform: translateX(-24px); }
+.calls-mock[data-calls-tab='people'] .calls-pane--people,
+.calls-mock[data-calls-tab='chat'] .calls-pane--chat { transition-delay: 0s; }
+
+/* --- People ---------------------------------------------------------------------------------------------------- */
+.calls-mock .gm-member { transition: background-color var(--fast), height 320ms var(--ease), opacity 240ms var(--ease); }
+/* Set against the screenshot: the rows sit 2px higher and the tags end 9px further in than the kit's list. */
+.calls-mock .gm-members { margin-top: -2px; padding-right: calc(var(--s4) + 9px); }
+/* Your own row: a red mic-off when you mute; gone while you are out of the space. */
+.calls-mock .calls-muted { display: none; margin-right: 2px; }
+.calls-mock.is-muted .calls-you .calls-muted { display: block; animation: calls-pop 260ms var(--ease-spring); }
+.calls-mock.is-out .calls-you { height: 0; opacity: 0; }
+
+.calls-mock .calls-foot { position: absolute; left: 0; right: 0; bottom: 34px; display: grid; place-items: center; }
+.calls-mock .calls-foot > * { grid-area: 1 / 1; transition: opacity 220ms var(--ease), transform 260ms var(--ease-spring); }
+.calls-mock .calls-join { height: 48px; padding: 0 26px; gap: 8px; background: var(--online); color: #fff; opacity: 0; transform: scale(.85); pointer-events: none; }@media (hover: hover) { .calls-mock .calls-join:hover { background: color-mix(in oklch, var(--online), #fff 10%); } }
+
+.calls-mock.is-out .calls-join { opacity: 1; transform: none; pointer-events: auto; }
+.calls-mock.is-out .gm-calldock { opacity: 0; transform: scale(.9); pointer-events: none; }
+/* A pressed control (muted, deafened): the ink's fill from mock.css; the camera on is the same. */
+.calls-mock .gm-ctl .gm-i:first-child { transition: transform 200ms var(--ease-spring); }
+.calls-mock .gm-ctl.is-flip .gm-i:first-child { animation: calls-pop 260ms var(--ease-spring); }
+
+/* --- Chat: who and when over their lines, no bubbles ------------------------------------------------------------ */
+.calls-mock .calls-chat { display: flex; flex-direction: column; gap: 9px; padding: 0 10px 15px; }
+.calls-mock .calls-group { padding: 0 8px; border-radius: var(--r-md); transition: background-color var(--fast); }@media (hover: hover) { .calls-mock .calls-group:hover { background: var(--paper-2); } }
+
+.calls-mock .calls-group.is-new { animation: calls-in 320ms var(--ease) both; }
+.calls-mock .calls-group p.is-new { animation: calls-in 320ms var(--ease) both; }
+.calls-mock .calls-by { display: flex; align-items: center; gap: 10px; height: 22px; white-space: nowrap; }
+.calls-mock .calls-by b { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+.calls-mock .calls-by .gm-tag { height: 15px; }
+.calls-mock .calls-by time { font-size: var(--fs-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.calls-mock .calls-chat p { margin: 0; font-size: var(--fs-md); line-height: 23px; color: var(--ink); overflow-wrap: anywhere; }
+
+.calls-mock .calls-composer {
+  flex: none; display: flex; align-items: center; gap: 6px;
+  height: 44px; margin: 0 18px 9px; padding: 0 4px 0 18px;
+  border-radius: 999px; background: var(--paper-2); border: 1px solid var(--rule);
+  transition: border-color var(--fast);
+}@media (hover: hover) { .calls-mock .calls-composer:hover { border-color: var(--border); } }
+
+.calls-mock .calls-composer:focus-within { border-color: var(--ink-3); }
+.calls-mock .calls-composer__input {
+  flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; padding: 0;
+  font: inherit; font-size: var(--fs-md); color: var(--ink); caret-color: var(--ink);
+}
+.calls-mock .calls-composer__input::placeholder { color: var(--ink-3); opacity: 1; }
+.calls-mock .calls-composer__send {
+  width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  background: var(--paper-3); color: var(--ink-3);
+  transition: background-color var(--fast), color var(--fast), transform 160ms var(--ease-spring);
+}
+.calls-mock .calls-composer__send .gm-i { width: 20px; height: 20px; }
+.calls-mock .calls-composer.has-text .calls-composer__send { background: var(--accent); color: var(--on-accent); }@media (hover: hover) { .calls-mock .calls-composer.has-text .calls-composer__send:hover { transform: scale(1.06); } }
+
+.calls-mock .calls-composer__send:active { transform: scale(0.88); }
+
+/* "Invite link copied": a small pill that rises over the foot and goes. */
+.calls-mock .calls-toast {
+  position: absolute; left: 50%; bottom: 110px; z-index: 5;
+  padding: 9px 16px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); font-size: var(--fs-sm); font-weight: 600; white-space: nowrap;
+  opacity: 0; transform: translate(-50%, 10px); pointer-events: none;
+  transition: opacity 200ms var(--ease), transform 260ms var(--ease);
+}
+.calls-mock .calls-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+@keyframes calls-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes calls-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.12); } 100% { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .calls-mock .calls-pane, .calls-mock .calls-foot > *, .calls-mock .gm-member, .calls-mock .calls-toast { transition-duration: 1ms; transform: none; }
+  .calls-mock .calls-group.is-new, .calls-mock p.is-new, .calls-mock .is-flip .gm-i, .calls-mock.is-muted .calls-muted { animation: none; }
+}

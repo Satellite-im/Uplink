@@ -1,0 +1,71 @@
+/* The pillar cards of #one-app (site/mock/pillars.html): what the mock kit (mock.css) does not already draw.
+   Everything here is scoped under [data-mock="list|hangout|voice-settings"]. */
+
+/* --- the box: where the <img> was (index.html: `.shot img { width: 76%; height: auto; border-radius: 1.4rem 1.4rem 0 0; … }`) */
+.shot > .gm-fit[data-mock] {
+  flex: none;
+  width: 76%;
+  align-self: flex-start;
+  border-radius: 1.4rem 1.4rem 0 0;
+  box-shadow: 0 0 0 1px var(--u-rule, rgba(127, 127, 127, .25)), 0 -8px 40px rgba(0, 0, 0, .35);
+  position: relative;
+}
+
+/* --- list: rows leave and come back when a tab filters them; Maya's row gets new words ----------------------- */
+[data-mock='list'] .gm-row { transition: background-color var(--fast), transform var(--fast) var(--ease), opacity var(--normal) var(--ease); }
+[data-mock='list'] .gm-row.pl-out { display: none; }
+[data-mock='list'] .gm-row.pl-in { animation: pl-rise 320ms var(--ease) both; }
+[data-mock='list'] .gm-row.pl-bump .gm-row__snip { animation: pl-fresh 420ms var(--ease) both; }
+[data-mock='list'] .pl-empty { padding: 40px 24px; text-align: center; color: var(--ink-3); font-size: var(--fs-sm); }
+[data-mock='list'] .pl-callbar.is-muted .pl-mute { color: var(--danger); }
+[data-mock='list'] .pl-callbar { transition: opacity var(--normal) var(--ease), transform var(--normal) var(--ease); }
+[data-mock='list'] .pl-callbar.is-gone { opacity: 0; transform: translateY(12px); pointer-events: none; }
+@keyframes pl-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pl-fresh { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* --- hangout: the chat tab (hangout_screen.dart's space chat: name, role, time, then the lines) ------------- */
+.pl-shot[data-mock='hangout'] .pl-pane[hidden] { display: none; }
+/* opacity only: a transform would make the pane the box the call dock is placed in */
+.pl-shot[data-mock='hangout'] .pl-pane { animation: pl-fade 260ms var(--ease) both; }
+.pl-shot[data-mock='hangout'] .pl-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pl-shot[data-mock='hangout'] .pl-lines { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 0 18px 12px; }
+.pl-shot[data-mock='hangout'] .pl-line p { margin: 0; font-size: var(--fs-md); line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+.pl-shot[data-mock='hangout'] .pl-line__who { display: flex; align-items: center; gap: 9px; margin-bottom: 2px; font-size: var(--fs-sm); }
+.pl-shot[data-mock='hangout'] .pl-line__who b { font-weight: 700; color: var(--ink); }
+.pl-shot[data-mock='hangout'] .pl-line__who .gm-tag { height: 15px; }
+.pl-shot[data-mock='hangout'] .pl-line__who time { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pl-shot[data-mock='hangout'] .pl-line.is-new { animation: pl-rise 320ms var(--ease) both; }
+.pl-shot[data-mock='hangout'] .pl-say { display: flex; align-items: center; gap: 8px; height: 44px; margin: 0 18px 9px; padding: 0 4px 0 18px; border-radius: 999px; background: var(--paper-2); transition: box-shadow var(--fast); }
+.pl-shot[data-mock='hangout'] .pl-say:focus-within { box-shadow: 0 0 0 1px var(--border); }
+.pl-shot[data-mock='hangout'] .pl-say__input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: var(--fs-md); color: var(--ink); padding: 0; }
+.pl-shot[data-mock='hangout'] .pl-say__input::placeholder { color: var(--ink-3); }
+.pl-shot[data-mock='hangout'] .pl-say__send { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--paper-3); color: var(--ink-3); cursor: pointer; transition: background-color var(--fast), color var(--fast), transform var(--fast) var(--ease); }
+.pl-shot[data-mock='hangout'] .pl-say.has-text .pl-say__send { background: var(--accent); color: var(--on-accent); }
+.pl-shot[data-mock='hangout'] .pl-say__send:active { transform: scale(.88); }
+.pl-shot[data-mock='hangout'] .pl-youmute[hidden] { display: none; }
+.pl-shot[data-mock='hangout'] .gm-member > .gm-i { transition: opacity var(--normal) var(--ease), transform var(--normal) var(--ease-spring); }
+.pl-shot[data-mock='hangout'] .gm-member.pl-unmuted > .gm-i { opacity: 0; transform: scale(.4); }
+.pl-shot[data-mock='hangout'] .gm-member.pl-leaving { animation: pl-leave 260ms var(--ease) both; }
+.pl-shot[data-mock='hangout'] .gm-member.pl-joining { animation: pl-rise 320ms var(--ease) both; }
+.pl-shot[data-mock='hangout'] .pl-dock, .pl-shot[data-mock='hangout'] .pl-join { transition: opacity var(--normal) var(--ease); }
+.pl-shot[data-mock='hangout'] .pl-join[hidden], .pl-shot[data-mock='hangout'] .pl-dock[hidden] { display: none; }
+.pl-shot[data-mock='hangout'] .pl-join { gap: 8px; display: inline-flex; align-items: center; animation: pl-pop 300ms var(--ease-spring) both; }
+.pl-shot[data-mock='hangout'] .pl-toast {
+  position: absolute; left: 50%; top: 128px; transform: translate(-50%, -6px);
+  padding: 8px 14px; border-radius: 999px; background: var(--ink); color: var(--paper);
+  font-size: var(--fs-sm); font-weight: 600; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--normal) var(--ease), transform var(--normal) var(--ease);
+}
+.pl-shot[data-mock='hangout'] .pl-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+@keyframes pl-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pl-leave { to { opacity: 0; transform: translateX(-10px); } }
+@keyframes pl-pop { from { opacity: 0; transform: translateX(-50%) scale(.8); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+/* --- voice settings: both sliders start where Microphone's does; music mode greys what it switches off -------- */
+[data-mock='voice-settings'] .pl-vlabel { flex: none; width: 92px; }
+[data-mock='voice-settings'] .gm-set__row { transition: opacity var(--normal) var(--ease), background-color var(--fast); }
+[data-mock='voice-settings'] .gm-set__row.is-off { opacity: .42; pointer-events: none; }
+[data-mock='voice-settings'] .pl-pick .gm-set__value { transition: opacity 140ms var(--ease); }
+[data-mock='voice-settings'] .pl-pick.pl-swap .gm-set__value { opacity: 0; }
+/* Matched to list.webp: "Messages" sits 4 px lower in the app's title bar than the kit's centring puts it (as inbox.css). */
+.pl-shot[data-mock='list'] .gm-titlebar__title { padding-top: 8px; }

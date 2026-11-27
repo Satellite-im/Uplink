@@ -1,0 +1,813 @@
+/* The app, drawn in HTML: the kit the landing page's mocks of Uplink are built from (site/mock/kit.html shows every
+   piece in both themes). Everything is under .gm, so nothing here reaches the site's own styles.
+
+   The numbers are the app's own. The app reads its look from CSS (assets/css/ink.css, assets/css/app.css,
+   packages/glacier/assets/css/tokens.css, lib/kit/settings_css.dart) and works it out at the phone's width, so the
+   tokens below are those, with `vw` read as --gm-vw (412, the phone the screenshots were taken on; 750 on a
+   computer): a mock is drawn at the phone's own size in CSS pixels on a .gm-stage and scaled to its box by
+   mock.js, so every length here is the app's length. Icons are the app's (site/mock/icons.svg, made by
+   tool/mock-icons.mjs from lib/art). Dark is the default; html[data-theme="light"] (the site's switch) or
+   .gm-light on a mock turns it light, .gm-dark keeps one dark. */
+
+@font-face {
+  font-family: 'GM Inter';
+  src: url('/fonts/InterVariable-latin.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.gm {
+  /* --- the tokens, at the phone's width ---------------------------------------------------------------------- */
+  --gm-vw: 412;
+  --v: calc(var(--gm-vw) * 0.01px);
+  --s1: calc(clamp(4px, 3.7376px + 0.0822 * var(--v), 5px) * 1.1);
+  --s2: calc(clamp(8px, 7.4736px + 0.1645 * var(--v), 10px) * 1.1);
+  --s3: calc(clamp(12px, 11.2112px + 0.2467 * var(--v), 15px) * 1.1);
+  --s4: calc(clamp(16px, 14.9472px + 0.3289 * var(--v), 20px) * 1.1);
+  --s5: calc(clamp(20px, 18.6848px + 0.4112 * var(--v), 25px) * 1.1);
+  --s6: calc(clamp(24px, 22.4208px + 0.4934 * var(--v), 30px) * 1.1);
+  --fs-xs: clamp(11.11px, 11.0032px + 0.0336 * var(--v), 11.52px);
+  --fs-sm: clamp(13.333px, 13.0528px + 0.0877 * var(--v), 14.4px);
+  --fs-md: clamp(16px, 15.4736px + 0.1645 * var(--v), 18px);
+  --fs-lg: clamp(19.2px, 18.3312px + 0.2714 * var(--v), 22.5px);
+  --fs-xl: clamp(23.04px, 21.7024px + 0.4182 * var(--v), 28.125px);
+  --fs-2xl: clamp(27.648px, 25.672px + 0.6175 * var(--v), 35.157px);
+  --fs-3xl: clamp(33.178px, 30.344px + 0.8855 * var(--v), 43.946px);
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fast: 150ms;
+  --normal: 250ms;
+  --font: 'GM Inter', 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+
+  /* --- the dark page (ink.css [data-theme='dark']) ------------------------------------------------------------ */
+  --g1: oklch(0.11 0 0);
+  --g2: oklch(0.14 0 0);
+  --g3: oklch(0.17 0 0);
+  --g4: oklch(0.205 0 0);
+  --g5: oklch(0.24 0 0);
+  --g6: oklch(0.28 0 0);
+  --g7: oklch(0.34 0 0);
+  --g8: oklch(0.44 0 0);
+  --g9: oklch(0.6 0 0);
+  --g10: oklch(0.69 0 0);
+  --g11: oklch(0.8 0 0);
+  --g12: oklch(0.965 0 0);
+  --bubble-mine: #ffffff;
+  --on-bubble-mine: #16181d;
+  --rim-mine: transparent;
+  --rim-theirs: var(--rule);
+  --online-wash: oklch(0.27 0.06 150);
+  --online-ink: #4cd571;
+  color-scheme: dark;
+
+  /* --- what the app names them (ink.css, app.css :root) ------------------------------------------------------- */
+  --paper: var(--g1);
+  --paper-2: var(--g3);
+  --paper-3: var(--g5);
+  --hover: color-mix(in oklch, var(--paper-2), var(--paper-3) 55%);
+  --rule: var(--g4);
+  --border: var(--g6);
+  --ink: var(--g12);
+  --ink-2: var(--g11);
+  --ink-3: var(--g9);
+  --ink-4: var(--g7);
+  --accent: var(--ink);
+  --on-accent: var(--paper);
+  --danger: #dd3a30;
+  --unread: #4f5bd5;
+  --chosen: #4f5bd5;
+  --online: #2fb35a;
+  --warn: #c27c00;
+  --pinned: #d38b00;
+  --bubble-theirs: var(--paper-3);
+
+  position: relative;
+  font-family: var(--font);
+  font-size: var(--fs-md);
+  font-feature-settings: 'cv11', 'calt';
+  line-height: 1.5;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  letter-spacing: 0;
+}
+
+/* The light page (ink.css :root): the site's switch, or one mock made light. */
+html[data-theme='light'] .gm:not(.gm-dark),
+.gm.gm-light {
+  --g1: oklch(0.995 0 0);
+  --g2: oklch(0.975 0 0);
+  --g3: oklch(0.955 0 0);
+  --g4: oklch(0.925 0 0);
+  --g5: oklch(0.895 0 0);
+  --g6: oklch(0.86 0 0);
+  --g7: oklch(0.8 0 0);
+  --g8: oklch(0.7 0 0);
+  --g9: oklch(0.56 0 0);
+  --g10: oklch(0.47 0 0);
+  --g11: oklch(0.36 0 0);
+  --g12: oklch(0.16 0 0);
+  --bubble-theirs: var(--paper-2);
+  --rim-mine: var(--rule);
+  --online-wash: oklch(0.93 0.04 150);
+  --online-ink: #2a9d4b;
+  color-scheme: light;
+}
+
+.gm *, .gm *::before, .gm *::after { box-sizing: border-box; }
+.gm :where(p, h1, h2, h3, h4, ul, ol, figure) { margin: 0; padding: 0; }
+.gm :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+.gm :where(input) { font: inherit; color: inherit; }
+.gm :where(button, [tabindex]):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* --- avatar and section colours (lib/kit/settings_css.dart): data-hue on anything ---------------------------- */
+.gm [data-hue='blue']     { --hue: #4ea1ff; }
+.gm [data-hue='purple']   { --hue: #c77dff; }
+.gm [data-hue='red']      { --hue: #ff6b61; }
+.gm [data-hue='graphite'] { --hue: #aeb2b8; }
+.gm [data-hue='coral']    { --hue: #f0906b; }
+.gm [data-hue='green']    { --hue: #4cd571; }
+.gm [data-hue='yellow']   { --hue: #ffd43b; }
+.gm [data-hue='grey']     { --hue: #a1a1a8; }
+.gm [data-hue='brown']    { --hue: #c7a57f; }
+.gm [data-hue='mint']     { --hue: #5fe0cf; }
+.gm [data-hue='amber']    { --hue: #ffb84d; }
+.gm [data-hue='indigo']   { --hue: #8c95ff; }
+.gm [data-hue='orange']   { --hue: #ff9a4d; }
+.gm [data-hue='cyan']     { --hue: #4cc9f0; }
+.gm [data-hue='lime']     { --hue: #a3d93f; }
+.gm [data-hue='rose']     { --hue: #ff7aa8; }
+.gm [data-hue='magenta']  { --hue: #f07ae0; }
+.gm [data-hue='slate']    { --hue: #8fa3bf; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='blue'], .gm.gm-light [data-hue='blue'] { --hue: #0a6fe0; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='purple'], .gm.gm-light [data-hue='purple'] { --hue: #9a45c9; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='red'], .gm.gm-light [data-hue='red'] { --hue: #dd3a30; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='graphite'], .gm.gm-light [data-hue='graphite'] { --hue: #5f6368; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='coral'], .gm.gm-light [data-hue='coral'] { --hue: #c8643f; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='green'], .gm.gm-light [data-hue='green'] { --hue: #2a9d4b; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='yellow'], .gm.gm-light [data-hue='yellow'] { --hue: #b58400; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='grey'], .gm.gm-light [data-hue='grey'] { --hue: #7c7c82; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='brown'], .gm.gm-light [data-hue='brown'] { --hue: #93724e; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='mint'], .gm.gm-light [data-hue='mint'] { --hue: #1f9e8f; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='amber'], .gm.gm-light [data-hue='amber'] { --hue: #c27c00; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='indigo'], .gm.gm-light [data-hue='indigo'] { --hue: #4f5bd5; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='orange'], .gm.gm-light [data-hue='orange'] { --hue: #d9600d; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='cyan'], .gm.gm-light [data-hue='cyan'] { --hue: #0a86a8; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='lime'], .gm.gm-light [data-hue='lime'] { --hue: #5a8a00; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='rose'], .gm.gm-light [data-hue='rose'] { --hue: #d6336c; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='magenta'], .gm.gm-light [data-hue='magenta'] { --hue: #b5279f; }
+html[data-theme='light'] .gm:not(.gm-dark) [data-hue='slate'], .gm.gm-light [data-hue='slate'] { --hue: #4a5a70; }
+
+/* --- the box: a mock keeps its screenshot's size and is scaled into it ---------------------------------------- */
+/* <div class="gm gm-fit" style="--w:412;--h:892"><div class="gm-stage">…</div></div>
+   --w/--h are the screenshot's size in the app's pixels (the .webp's pixels / 2). The box takes the width it is
+   given and that aspect; mock.js scales the stage (--k) so the app's pixels fill it. */
+.gm-fit {
+  --w: 412;
+  --h: 892;
+  --k: 1;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  contain: layout paint;
+  container-type: inline-size;
+}
+.gm-stage {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: calc(var(--w) * 1px);
+  height: calc(var(--h) * 1px);
+  transform-origin: 0 0;
+  transform: scale(var(--k));
+  overflow: hidden;
+}
+/* Before mock.js has measured (or without it): scaled by the box's own width where the browser can divide lengths. */
+@supports (width: calc(100cqw / 1px)) {
+  .gm-fit:not([data-fit]) > .gm-stage { transform: scale(calc(100cqw / (var(--w) * 1px))); }
+}
+/* A layer with no page behind it (the cut-outs laid over the hero): only what is drawn shows. */
+.gm-clear, .gm-clear .gm-stage { background: transparent; }
+
+/* --- icons: <svg class="gm-i"><use href="/mock/icons.svg#phone"/></svg> ----------------------------------- */
+.gm-i { width: 24px; height: 24px; flex: none; fill: currentColor; display: block; overflow: visible; }
+.gm-i--16 { width: 16px; height: 16px; }
+.gm-i--18 { width: 18px; height: 18px; }
+.gm-i--20 { width: 20px; height: 20px; }
+.gm-i--22 { width: 22px; height: 22px; }
+.gm-i--flat { --gm-wash: 0; }
+
+/* --- a phone's page -------------------------------------------------------------------------------------------- */
+.gm-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+/* The status bar's room (the screenshots keep it empty); .gm-status--shown draws a clock and the usual icons. */
+.gm-status { flex: none; height: 21px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.gm-status:not(.gm-status--shown) > * { visibility: hidden; }
+.gm-status__icons { display: flex; gap: 5px; align-items: center; }
+.gm-status__icons i { display: block; width: 15px; height: 10px; border-radius: 2px; background: currentColor; opacity: .9; }
+.gm-scroll { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+/* A conversation's scroll: held to its bottom, so a new message pushes the older ones up and out of sight. */
+.gm-scroll--end { display: flex; flex-direction: column; justify-content: flex-end; }
+.gm-scroll--end > * { flex: none; }
+
+/* --- pressables: every tap target ------------------------------------------------------------------------------ */
+.gm-press { transition: background-color var(--fast) var(--ease), transform 120ms var(--ease), color var(--fast) var(--ease), border-color var(--fast) var(--ease); }
+.gm-press:active, .gm-press.is-pressed { transform: scale(0.97); }
+
+/* IconTap (lib/ui/common.dart): a 44 circle, its icon in the ink; pressed it shrinks to 0.92 on paper-3. */
+.gm-iconbtn {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  transition: background-color var(--fast) var(--ease), transform 120ms var(--ease), color var(--fast);
+}
+.gm-iconbtn .gm-i { width: 24px; height: 24px; }@media (hover: hover) { .gm-iconbtn:hover { background: var(--paper-2); } }
+
+.gm-iconbtn:active, .gm-iconbtn.is-pressed { background: var(--paper-3); transform: scale(0.92); color: var(--ink-3); }
+.gm-iconbtn--muted { color: var(--ink-3); }
+/* A round button on paper-2 (the list's "read all", the filter beside the tabs). */
+.gm-roundbtn {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  transition: background-color var(--fast) var(--ease), transform 120ms var(--ease);
+}@media (hover: hover) { .gm-roundbtn:hover { background: var(--hover); } }
+
+.gm-roundbtn:active, .gm-roundbtn.is-pressed { background: var(--paper-3); transform: scale(0.92); }
+
+/* A pill button: the ink's fill (Turn on), or paper-2 (secondary). */
+.gm-pillbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 34px; padding: 0 var(--s3);
+  border-radius: 999px;
+  background: var(--accent); color: var(--on-accent);
+  font-size: var(--fs-md); font-weight: 600; white-space: nowrap;
+  transition: background-color var(--fast) var(--ease), transform 120ms var(--ease), opacity var(--fast);
+}@media (hover: hover) { .gm-pillbtn:hover { background: color-mix(in oklch, var(--accent), var(--paper) 12%); } }
+
+.gm-pillbtn:active { transform: scale(0.95); }
+.gm-pillbtn--soft { background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule); }@media (hover: hover) { .gm-pillbtn--soft:hover { background: var(--hover); } }
+
+
+/* --- headers --------------------------------------------------------------------------------------------------- */
+/* A page's big title row (Messages): 2xl bold, its round buttons to the right. */
+.gm-titlebar { display: flex; align-items: center; gap: var(--s1); padding: 0 calc(var(--s2) - 4px) 0 calc(var(--s2) + 10px); min-height: 58px; }
+.gm-titlebar__title { flex: 1; font-size: var(--fs-2xl); font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A thread's or a space's header: back, a face, a name and a line under it, actions. */
+.gm-head { flex: none; display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 8px 0 4px; background: var(--paper); position: relative; z-index: 2; }
+.gm-head__who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 2px; border-radius: 999px; transition: background-color var(--fast); }@media (hover: hover) { .gm-head__who:hover { background: var(--paper-2); } }
+
+.gm-head__text { min-width: 0; display: flex; flex-direction: column; }
+.gm-head__name { font-size: 16px; font-weight: 700; line-height: 1.25; margin-top: -2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-head__sub { font-size: 14px; line-height: 1.2; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-head__title { flex: 1; font-size: var(--fs-lg); font-weight: 700; margin-left: -6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 2px; }
+.gm-head__actions { display: flex; gap: 0; }
+
+/* --- search field ---------------------------------------------------------------------------------------------- */
+.gm-search {
+  display: flex; align-items: center; gap: 10px;
+  height: 44px; margin: 0 var(--s2); padding: 0 14px;
+  border-radius: 999px;
+  background: var(--paper-2); border: 1px solid var(--border); /* Glacier's field rim, as the screenshots have it */
+  color: var(--ink-3);
+  transition: border-color var(--fast) var(--ease), background-color var(--fast);
+}@media (hover: hover) { .gm-search:hover { border-color: var(--ink-4); } }
+
+.gm-search:focus-within { border-color: var(--ink-3); }
+.gm-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: var(--fs-sm); color: var(--ink); padding: 0; }
+.gm-search input::placeholder { color: var(--ink-3); opacity: 1; }
+.gm-search .gm-i { width: 19px; height: 19px; color: var(--ink-3); }
+
+/* --- segmented tabs (Glacier's segment: track paper-2, the chosen one's thumb in the accent) -------------------- */
+/* <div class="gm-seg" data-gm-tabs><span class="gm-seg__thumb"></span><button class="gm-seg__tab" aria-selected="true">…</button>… */
+.gm-seg {
+  position: relative; display: flex; align-items: stretch;
+  height: 44px; padding: 3px;
+  border-radius: 999px;
+  background: var(--paper-2); border: 1px solid var(--rule);
+  isolation: isolate;
+}
+.gm-seg__thumb {
+  position: absolute; z-index: -1; top: 3px; bottom: 3px; left: 0; width: 0;
+  border-radius: 999px; background: var(--accent);
+  transition: transform var(--normal) var(--ease), width var(--normal) var(--ease);
+}
+.gm-seg__tab {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 999px;
+  color: var(--ink-2); font-size: var(--fs-md); font-weight: 500;
+  transition: color var(--normal) var(--ease), background-color var(--fast);
+}@media (hover: hover) { .gm-seg__tab:not([aria-selected='true']):hover { color: var(--ink); background: color-mix(in oklch, var(--paper-3) 45%, transparent); } }
+
+.gm-seg__tab[aria-selected='true'] { color: var(--on-accent); }
+.gm-seg__tab .gm-i { width: 22px; height: 22px; }
+.gm-seg__count { font-size: var(--fs-md); color: var(--ink-3); }
+/* Before mock.js places the thumb, the chosen tab wears it. */
+.gm-seg:not([data-ready]) .gm-seg__tab[aria-selected='true'] { background: var(--accent); }
+
+/* --- notice card (the RCS note, "Write down your recovery words") ---------------------------------------------- */
+.gm-card {
+  position: relative;
+  display: flex; gap: var(--s3);
+  margin: 0 var(--s4); padding: calc(var(--s3) - 3px) var(--s3) calc(var(--s3) - 4px) var(--s3);
+  border-radius: var(--r-lg);
+  background: var(--paper-2); border: 1px solid var(--rule);
+  font-size: var(--fs-sm); line-height: 1.4; color: var(--ink-2);
+}
+.gm-card > .gm-i { width: 22px; height: 22px; color: var(--warn); flex: none; margin-top: 1px; }
+.gm-card b, .gm-card strong { display: block; color: var(--ink); font-weight: 600; }
+.gm-card__body { flex: 1; min-width: 0; padding-right: 22px; }
+.gm-card__link { display: inline-block; margin-top: 8px; color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; transition: color var(--fast); }@media (hover: hover) { .gm-card__link:hover { color: var(--ink-3); } }
+
+.gm-card__close { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); transition: background-color var(--fast); }@media (hover: hover) { .gm-card__close:hover { background: var(--paper-3); } }
+
+.gm-card__close .gm-i { width: 20px; height: 20px; }
+
+/* --- avatars (lib/ui/common.dart Avatar): the initials in the hue on a sixth of it ------------------------------- */
+/* <span class="gm-av" data-hue="magenta" style="--size:48px">MC</span> */
+.gm-av {
+  --size: 48px;
+  position: relative; flex: none;
+  width: var(--size); height: var(--size);
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hue, var(--ink)) 16%, var(--paper));
+  color: var(--hue, var(--ink));
+  font-size: calc(var(--size) * 0.38); font-weight: 600; line-height: 1;
+  letter-spacing: 0;
+  user-select: none;
+}
+.gm-av .gm-i { width: 50%; height: 50%; }
+.gm-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+/* Two people: two faces at 0.68, the second ringed in the page. */
+.gm-av--pair { background: none; }
+.gm-av--pair > .gm-av { --size: calc(var(--pair, 48px) * 0.68); position: absolute; }
+.gm-av--pair > .gm-av:first-child { left: 0; top: 0; }
+.gm-av--pair > .gm-av:last-child { right: 0; bottom: 0; box-shadow: 0 0 0 2px var(--paper); }
+/* The network a conversation is on: a small round badge at the face's corner. */
+.gm-badge {
+  position: absolute; right: -3px; bottom: -3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--net, var(--ink)); color: #fff;
+  box-shadow: 0 0 0 2px var(--paper-2);
+  font-size: 10px; font-weight: 700;
+}
+.gm-badge svg { width: 12px; height: 12px; fill: currentColor; }
+/* Someone on line: the green dot at the top right. */
+.gm-av__dot { position: absolute; top: 1%; right: 1%; width: 30%; height: 30%; max-width: 16px; max-height: 16px; border-radius: 50%; background: var(--online); box-shadow: 0 0 0 2px var(--paper); }
+
+/* --- the conversation list ------------------------------------------------------------------------------------- */
+.gm-list { display: flex; flex-direction: column; }
+/* One conversation: a card, paper-2, 16 round; pressed paper-3; chosen, a 2px line in the ink. */
+.gm-row {
+  display: block; margin: 3px var(--s2);
+  border-radius: var(--r-lg);
+  background: var(--paper-2);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease), transform 160ms var(--ease);
+}@media (hover: hover) { .gm-row:hover { background: var(--hover); } }
+
+.gm-row:active, .gm-row.is-pressed { background: var(--paper-3); transform: scale(0.985); }
+.gm-row.is-selected { border-color: var(--ink); }
+.gm-row__in { display: flex; align-items: center; gap: var(--s3); padding: calc(var(--s3) - 2px); }
+.gm-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.gm-row__top { display: flex; align-items: baseline; gap: 8px; }
+.gm-row__name { flex: 0 1 auto; min-width: 0; font-size: var(--fs-md); font-weight: 600; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.gm-row__name .gm-i { display: inline-block; width: 16px; height: 16px; vertical-align: -1px; margin-left: 4px; color: var(--ink-3); }
+.gm-row__fill { flex: 1; }
+.gm-row__pin { width: 16px; height: 16px; color: var(--ink-3); align-self: center; }
+.gm-row__time { flex: none; font-size: var(--fs-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.gm-row__bottom { display: flex; align-items: flex-start; gap: 8px; }
+.gm-row__snip { flex: 1; min-width: 0; font-size: var(--fs-sm); line-height: 1.35; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gm-row__dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--unread); align-self: center; transform: scale(0); transition: transform var(--normal) var(--ease-spring); }
+.gm-row.is-unread .gm-row__name { font-weight: 700; }
+.gm-row.is-unread .gm-row__time { color: var(--ink); font-weight: 600; }
+.gm-row.is-unread .gm-row__snip { color: var(--ink); font-weight: 500; }
+.gm-row.is-unread .gm-row__dot { transform: scale(1); }
+.gm-row__typing { display: inline-flex; gap: 3px; align-items: center; height: 1.35em; }
+.gm-row__typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); animation: gm-typing 1.2s infinite ease-in-out; }
+.gm-row__typing i:nth-child(2) { animation-delay: .15s; }
+.gm-row__typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes gm-typing { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-3px); opacity: 1; } }
+
+/* --- the navigation dock (lib/ui/nav_bar.dart): a pill of round buttons, the page shown filled in the ink -------- */
+/* <nav class="gm-dock gm-dock--v" data-gm-tabs="dock"><button class="gm-dock__btn" aria-selected="true">…</button>… */
+.gm-dock {
+  display: inline-flex; gap: 9px; padding: 9px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.28);
+}
+html[data-theme='light'] .gm:not(.gm-dark) .gm-dock, .gm.gm-light .gm-dock { box-shadow: 0 6px 24px rgb(0 0 0 / 0.10); }
+.gm-dock--v { flex-direction: column; }
+.gm-dock__btn {
+  position: relative;
+  width: 39px; height: 39px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-4);
+  color: var(--ink);
+  transition: background-color var(--normal) var(--ease), color var(--normal) var(--ease), border-color var(--normal), transform 120ms var(--ease);
+}
+.gm-dock__btn .gm-i { width: 20px; height: 20px; }@media (hover: hover) { .gm-dock__btn:hover { background: var(--paper-2); border-color: var(--ink-3); } }
+
+.gm-dock__btn:active { transform: scale(0.92); }
+.gm-dock__btn[aria-selected='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* A count on a button (archived, unread): white on the danger red. */
+.gm-count {
+  position: absolute; top: -7px; right: -7px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: var(--danger); color: #fff;
+  font-size: 12px; font-weight: 700; line-height: 20px; text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: gm-pop 400ms var(--ease-spring) both;
+}
+@keyframes gm-pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+/* --- the call bar (lib/ui/call_mini.dart): a green pill over the list while you are in a space ------------------- */
+.gm-callbar {
+  display: flex; align-items: center; gap: 10px;
+  height: 58px; padding: 0 5px 0 18px;
+  border-radius: 999px;
+  background: var(--online-wash);
+  border: 1.5px solid color-mix(in srgb, var(--online) 70%, transparent);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  cursor: pointer;
+  transition: transform 160ms var(--ease), background-color var(--fast);
+}@media (hover: hover) { .gm-callbar:hover { background: color-mix(in oklch, var(--online-wash), var(--online) 8%); } }
+
+.gm-callbar:active { transform: scale(0.98); }
+.gm-callbar__live { width: 8px; height: 8px; border-radius: 50%; background: var(--online); flex: none; animation: gm-breathe 2.4s ease-in-out infinite; }
+@keyframes gm-breathe { 50% { opacity: .45; } }
+.gm-callbar__text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.gm-callbar__name { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-callbar__sub { font-size: var(--fs-xs); color: var(--online-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.gm-callbar__faces { display: flex; gap: 2px; }
+.gm-callbar .gm-iconbtn { width: 40px; height: 40px; }
+.gm-callbar .gm-iconbtn .gm-i { width: 22px; height: 22px; }
+
+/* --- red end-call button, and the call's controls (hangout_screen.dart) ------------------------------------------ */
+.gm-endbtn {
+  width: 48px; height: 48px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--danger); color: #fff;
+  transition: transform 120ms var(--ease), filter var(--fast);
+}@media (hover: hover) { .gm-endbtn:hover { filter: brightness(1.08); } }
+
+.gm-endbtn:active { transform: scale(0.92); }
+.gm-endbtn .gm-i { width: 24px; height: 24px; }
+.gm-calldock {
+  display: inline-flex; align-items: center; gap: 10px; padding: 9px;
+  border-radius: 999px;
+  background: var(--paper); border: 1px solid var(--rule);
+}
+.gm-ctl {
+  height: 39px; min-width: 39px; padding: 0 8px 0 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 999px; border: 1px solid var(--rule);
+  color: var(--ink);
+  transition: background-color var(--fast) var(--ease), color var(--fast), transform 120ms var(--ease), border-color var(--fast);
+}
+.gm-ctl .gm-i { width: 20px; height: 20px; }
+.gm-ctl .gm-i--chev { width: 14px; height: 14px; color: var(--ink-2); }@media (hover: hover) { .gm-ctl:hover { background: var(--paper-2); } }
+
+.gm-ctl:active { transform: scale(0.94); }
+.gm-ctl[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.gm-ctl[aria-pressed='true'] .gm-i--chev { color: var(--paper-3); }
+.gm-ctl--round { width: 39px; padding: 0; }
+.gm-calldock .gm-endbtn { width: 39px; height: 39px; }
+.gm-calldock .gm-endbtn .gm-i { width: 20px; height: 20px; }
+
+/* --- a conversation ------------------------------------------------------------------------------------------- */
+.gm-thread { display: flex; flex-direction: column; padding: 0 var(--s3) var(--s2); }
+.gm-day { align-self: center; padding: var(--s4) 0 var(--s3); font-size: var(--fs-xs); font-weight: 600; color: var(--ink-3); }
+/* One message: .gm-msg--out (yours, to the right) or --in; data-g="top|mid|bottom|solo" says where it sits in a run
+   of one person's messages, which corners are tucked (thread.dart: big 1.15rem, small 0.3rem). */
+.gm-msg { display: flex; flex-direction: column; align-items: flex-start; align-self: flex-start; max-width: var(--msg-max, 313px); margin-top: 2px; }
+.gm-msg--out { align-items: flex-end; align-self: flex-end; }
+.gm-msg + .gm-msg:not([data-g='mid']):not([data-g='bottom']) { margin-top: 7px; }
+.gm-bubble {
+  --big: 18.4px;
+  --small: 4.8px;
+  position: relative;
+  max-width: 100%;
+  padding: var(--s2) calc(var(--s3) + 2px);
+  border-radius: var(--big);
+  background: var(--bubble-theirs);
+  border: 1px solid var(--rim-theirs);
+  color: var(--ink);
+  font-size: var(--fs-md); line-height: 1.35;
+  overflow-wrap: anywhere;
+  transform-origin: left bottom;
+  transition: background-color var(--fast), transform 160ms var(--ease), filter var(--fast);
+  cursor: default;
+}
+.gm-msg--out > .gm-bubble { background: var(--bubble-mine); color: var(--on-bubble-mine); border-color: var(--rim-mine); transform-origin: right bottom; }
+.gm-msg--in[data-g='top'] > .gm-bubble { border-bottom-left-radius: var(--small); }
+.gm-msg--in[data-g='mid'] > .gm-bubble { border-top-left-radius: var(--small); border-bottom-left-radius: var(--small); }
+.gm-msg--in[data-g='bottom'] > .gm-bubble { border-top-left-radius: var(--small); }
+.gm-msg--out[data-g='top'] > .gm-bubble { border-bottom-right-radius: var(--small); }
+.gm-msg--out[data-g='mid'] > .gm-bubble { border-top-right-radius: var(--small); border-bottom-right-radius: var(--small); }
+.gm-msg--out[data-g='bottom'] > .gm-bubble { border-top-right-radius: var(--small); }@media (hover: hover) { .gm-msg:hover > .gm-bubble { filter: brightness(0.97); } }
+@media (hover: hover) { html[data-theme='light'] .gm:not(.gm-dark) .gm-msg:hover > .gm-bubble, .gm.gm-light .gm-msg:hover > .gm-bubble { filter: brightness(0.985); } }
+
+.gm-msg:active > .gm-bubble { transform: scale(0.98); }
+.gm-bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.gm-desk .gm-bubble { --big: 16px; font-size: calc(var(--fs-md) * 0.88); padding: calc(var(--s2) - 2px) var(--s3); }
+/* A message arriving: rises in from its side. */
+.gm-msg.is-new > .gm-bubble, .gm-msg.is-new > .gm-jumbo { animation: gm-in 380ms var(--ease) both; }
+@keyframes gm-in { from { opacity: 0; transform: translateY(10px) scale(0.92); } to { opacity: 1; transform: none; } }
+
+/* Under a bubble: the time, and on yours how far it got. */
+.gm-meta { padding: 2px var(--s2) 0; font-size: var(--fs-xs); line-height: 1.4; color: var(--ink-3); display: flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.gm-msg--out .gm-meta { text-align: right; justify-content: flex-end; }
+.gm-meta__lines { display: flex; flex-direction: column; align-items: flex-end; }
+.gm-ticks { width: 15px; height: 15px; color: var(--ink-3); transition: color var(--normal); }
+.gm-ticks.is-read { color: var(--chosen); }
+/* A reaction: the emoji under the bubble's edge, as the app sets it; tapped, it bounces. */
+.gm-reacts { display: flex; gap: 2px; margin-top: 0; padding: 0 9px; position: relative; z-index: 1; align-self: stretch; }
+.gm-msg--in .gm-reacts { justify-content: flex-end; }
+.gm-react {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--emoji); font-size: 21px; line-height: 1;
+  border-radius: 999px; padding: 1px;
+  cursor: pointer; user-select: none;
+  transition: transform 200ms var(--ease-spring);
+}@media (hover: hover) { .gm-react:hover { transform: scale(1.12); } }
+
+.gm-react.is-mine { box-shadow: 0 0 0 2px var(--chosen); background: var(--paper-2); }
+.gm-react.is-pop { animation: gm-react 500ms var(--ease-spring); }
+@keyframes gm-react { 0% { transform: scale(0.3); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+/* One to three emoji and nothing else: large, on the page. */
+.gm-jumbo { font-family: var(--emoji); font-size: 40px; line-height: 1.2; padding: 0 var(--s1); letter-spacing: 4px; }
+.gm-jumbo--1 { font-size: 51px; }
+/* A card in the conversation (a link's preview, a place, a ticket): paper-2, 16 round. */
+.gm-preview {
+  max-width: 76%; margin: 2px var(--s3) 0;
+  padding: var(--s3) var(--s3);
+  border-radius: var(--r-lg);
+  background: var(--paper-2); border: 1px solid var(--rule);
+  transition: background-color var(--fast);
+  cursor: pointer;
+}@media (hover: hover) { .gm-preview:hover { background: var(--hover); } }
+
+.gm-preview__site { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-3); line-height: 1.3; }
+.gm-preview__title { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); line-height: 1.35; margin-top: 4px; }
+.gm-preview__img { display: block; width: calc(100% + 2 * var(--s3)); margin: calc(-1 * var(--s3)) calc(-1 * var(--s3)) var(--s2); aspect-ratio: 1.9; object-fit: cover; border-radius: var(--r-lg) var(--r-lg) 0 0; background: var(--paper-3); }
+/* A thing to act on in a message (a time to put in the calendar): an outlined pill. */
+.gm-action {
+  display: inline-flex; align-items: center; gap: 10px;
+  align-self: flex-start;
+  height: 28px; margin: 4px var(--s3) 0; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-2);
+  font-size: var(--fs-xs); font-weight: 600; color: var(--ink);
+  transition: background-color var(--fast), transform 120ms var(--ease);
+}@media (hover: hover) { .gm-action:hover { background: var(--hover); } }
+
+.gm-action:active { transform: scale(0.96); }
+.gm-action .gm-i { width: 18px; height: 18px; }
+/* A picture: cut to the bubble's corners. */
+.gm-pic { display: block; max-width: 76%; border-radius: var(--big, 18.4px); overflow: hidden; background: var(--paper-3); border: 1px solid var(--rule); }
+.gm-pic img, .gm-pic > div { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* A file: its icon in a tile, its name and size. */
+.gm-file { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.gm-file__tile { width: 38px; height: 38px; border-radius: var(--r-md); display: grid; place-items: center; background: color-mix(in srgb, currentColor 10%, transparent); flex: none; }
+.gm-file__tile .gm-i { width: 20px; height: 20px; }
+.gm-file__name { font-size: var(--fs-sm); font-weight: 600; line-height: 1.3; }
+.gm-file__size { font-size: var(--fs-xs); opacity: .65; }
+/* Someone typing: three dots in a bubble of theirs. */
+.gm-typing { display: inline-flex; gap: 4px; padding: 13px 16px; }
+.gm-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); animation: gm-typing 1.2s infinite ease-in-out; }
+.gm-typing i:nth-child(2) { animation-delay: .15s; }
+.gm-typing i:nth-child(3) { animation-delay: .3s; }
+
+/* --- chips (the suggested replies over the composer) ------------------------------------------------------------- */
+.gm-chips { display: flex; gap: 10px; padding: var(--s2) var(--s3); overflow: hidden; }
+.gm-chip {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; padding: 0 14px;
+  border-radius: 999px;
+  background: var(--paper-2); border: 1px solid var(--rule);
+  font-size: var(--fs-sm); font-weight: 600; color: var(--ink); white-space: nowrap;
+  transition: background-color var(--fast) var(--ease), transform 120ms var(--ease), border-color var(--fast);
+}@media (hover: hover) { .gm-chip:hover { background: var(--hover); border-color: var(--border); } }
+
+.gm-chip:active, .gm-chip.is-pressed { transform: scale(0.94); background: var(--paper-3); }
+.gm-chip[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.gm-chip--emoji { font-family: var(--emoji); font-size: 18px; min-width: 45px; }
+
+/* --- the offer over the composer (encrypt this conversation) ----------------------------------------------------- */
+.gm-offer {
+  display: flex; align-items: center; gap: 12px;
+  margin: var(--s2) var(--s3) 0; padding: 10px 10px 10px 14px;
+  border-radius: var(--r-lg); background: var(--paper-2);
+  font-size: var(--fs-sm); font-weight: 500; line-height: 1.3; color: var(--ink);
+}
+.gm-offer > .gm-i { width: 22px; height: 22px; color: var(--ink-2); }
+.gm-offer p { flex: 1; min-width: 0; }
+
+/* --- the composer (lib/ui/composer_box.dart): a 44 pill on paper-2, + to the left, a sticker and the mic or send - */
+/* <form class="gm-composer" data-gm-composer><button class="gm-composer__btn">+</button><input class="gm-composer__input">… */
+.gm-composer {
+  display: flex; align-items: center; gap: var(--s1);
+  min-height: 44px; margin: var(--s2) var(--s3); padding: 4px;
+  border-radius: 22px;
+  background: var(--paper-2);
+  transition: box-shadow var(--fast);
+}
+/* At a phone page's foot: above the gesture bar's room, as the screenshots have it. */
+.gm-composer--foot { margin-bottom: 25px; }
+.gm-composer:focus-within { box-shadow: 0 0 0 1px var(--border); }
+.gm-composer__btn {
+  width: 36px; height: 36px; flex: none;
+  display: grid; place-items: center; border-radius: 50%;
+  color: var(--ink-2);
+  transition: background-color var(--fast), transform 120ms var(--ease), opacity var(--fast);
+}@media (hover: hover) { .gm-composer__btn:hover { background: var(--paper-3); color: var(--ink); } }
+
+.gm-composer__btn:active { transform: scale(0.9); }
+.gm-composer__btn .gm-i { width: 22px; height: 22px; }
+.gm-composer__input {
+  flex: 1; min-width: 0; height: 36px;
+  border: 0; outline: 0; background: none; padding: 0 var(--s1);
+  font-size: var(--fs-md); line-height: 1.3; color: var(--ink);
+  caret-color: var(--ink);
+}
+.gm-composer__input::placeholder { color: var(--ink-3); opacity: 1; }
+/* Send: the accent's circle, shown once there are words (mock.js sets .has-text); the mic steps aside for it. */
+.gm-composer__send {
+  width: 36px; height: 36px; flex: none;
+  display: none; place-items: center; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  transition: transform 160ms var(--ease-spring);
+}
+.gm-composer__send .gm-i { width: 20px; height: 20px; }
+.gm-composer__send:active { transform: scale(0.88); }
+.gm-composer.has-text .gm-composer__send { display: grid; animation: gm-pop 260ms var(--ease-spring); }
+.gm-composer.has-text .gm-composer__mic { display: none; }
+
+/* --- settings (lib/kit/settings_kit.dart) ------------------------------------------------------------------------ */
+/* <section class="gm-sec"><h3 class="gm-sec__title">Volume</h3><p class="gm-sec__desc">…</p>
+     <div class="gm-set"><div class="gm-set__row">…</div>…</div></section> */
+.gm-sec { padding: 0 var(--s4); display: flex; flex-direction: column; gap: var(--s2); }
+.gm-sec + .gm-sec { margin-top: var(--s6); }
+.gm-sec__title { padding: 0 var(--s2); font-size: 11.52px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); line-height: 1.2; }
+.gm-sec__desc { padding: 0 var(--s2); font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-2); }
+.gm-set { border-radius: var(--r-lg); background: var(--paper-2); overflow: hidden; }
+.gm-set__row {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3);
+  position: relative;
+  transition: background-color var(--fast);
+}
+.gm-set__row + .gm-set__row { border-top: 1px solid var(--rule); }
+button.gm-set__row, .gm-set__row[data-press] { width: 100%; cursor: pointer; }@media (hover: hover) { button.gm-set__row:hover, .gm-set__row[data-press]:hover { background: color-mix(in oklch, var(--paper-3) 45%, transparent); } }
+
+button.gm-set__row:active, .gm-set__row[data-press]:active { background: var(--paper-3); }
+/* The icon's tile: 1.85rem, the section's hue on a sixth of it. */
+.gm-tile {
+  width: 29.6px; height: 29.6px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 8.8px;
+  background: color-mix(in srgb, var(--hue, var(--ink)) 16%, transparent);
+  color: var(--hue, var(--ink));
+}
+.gm-tile .gm-i { width: 16.8px; height: 16.8px; }
+.gm-set__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2.4px; }
+.gm-set__label { font-size: var(--fs-md); font-weight: 500; line-height: 1.2; color: var(--ink); }
+.gm-set__hint { font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-2); }
+.gm-set__value { max-width: 55%; font-size: var(--fs-sm); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.gm-chev { width: 18px; height: 18px; color: var(--ink-4); flex: none; transition: transform var(--fast) var(--ease); }@media (hover: hover) { .gm-set__row:hover .gm-chev { transform: translateX(2px); } }
+
+
+/* A switch (Glacier's): 44 by 26; off, the paper-3 track with the ink's dark knob; on, the accent's track. */
+/* <button class="gm-toggle" role="switch" aria-checked="true"></button> */
+.gm-toggle {
+  position: relative; flex: none;
+  width: 44px; height: 26px; border-radius: 13px;
+  background: var(--paper-3);
+  border: 1px solid var(--rule);
+  transition: background-color var(--normal) var(--ease), border-color var(--normal);
+}
+.gm-toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--paper);
+  transition: transform var(--normal) var(--ease-spring), width 160ms var(--ease), background-color var(--normal);
+}@media (hover: hover) { .gm-toggle:hover { border-color: var(--border); } }
+
+.gm-toggle:active::after { width: 24px; }
+.gm-toggle[aria-checked='true'] { background: var(--accent); border-color: var(--accent); }
+.gm-toggle[aria-checked='true']::after { transform: translateX(18px); background: var(--on-accent); }
+.gm-toggle[aria-checked='true']:active::after { transform: translateX(14px); }
+
+/* A slider (VolumeSlider): a thin track, filled in the ink to the knob, a paper knob ringed in the ink. */
+/* <input class="gm-slider" type="range" min="0" max="200" value="100" style="--p:50%"> (mock.js keeps --p) */
+.gm-slider {
+  --p: 50%;
+  -webkit-appearance: none; appearance: none;
+  flex: none; width: 132px; height: 32px; margin: 0;
+  background: transparent; cursor: pointer;
+}
+.gm-slider::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--ink) var(--p), var(--paper-3) var(--p)); }
+.gm-slider::-moz-range-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--ink) var(--p), var(--paper-3) var(--p)); }
+.gm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 21px; height: 21px; margin-top: -7.5px; border-radius: 50%;
+  background: var(--paper); border: 2.5px solid var(--ink);
+  transition: transform 160ms var(--ease-spring);
+}
+.gm-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--paper); border: 2.5px solid var(--ink); }@media (hover: hover) { .gm-slider:hover::-webkit-slider-thumb { transform: scale(1.1); } }
+
+.gm-slider:active::-webkit-slider-thumb { transform: scale(1.18); }
+.gm-slider:focus-visible { outline: none; }
+.gm-slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 30%, transparent); }
+
+/* --- a space's people (hangout_screen.dart): a ripple face, the name, their role ------------------------------- */
+.gm-members { display: flex; flex-direction: column; padding: calc(var(--s4) + 11px) var(--s4) 0 calc(var(--s4) + 9px); }
+.gm-member {
+  display: flex; align-items: center; gap: 14px;
+  height: 58px; padding: 0 var(--s2);
+  border-radius: var(--r-lg);
+  transition: background-color var(--fast);
+}@media (hover: hover) { .gm-member:hover { background: var(--paper-2); } }
+
+.gm-member__name { flex: 1; min-width: 0; font-size: var(--fs-md); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-member__name small { font-size: var(--fs-sm); font-weight: 400; color: var(--ink-3); margin-left: 6px; }
+.gm-member > .gm-i { width: 22px; height: 22px; color: var(--danger); }
+.gm-tag { flex: none; padding: 0 9px; height: 15px; display: inline-flex; align-items: center; border-radius: 999px; font-size: var(--fs-xs); font-weight: 600; background: var(--paper-3); color: var(--ink-2); }
+.gm-tag--solid { background: var(--ink); color: var(--paper); }
+
+/* RippleAvatar (lib/ui/ripple_avatar.dart): a face on paper-3 with the letter, ringed when speaking, and three
+   wobbling rings going out in the online green (drawn on a canvas by mock.js). */
+/* <span class="gm-rip" data-gm-ripple data-level="0.6" style="--size:40px">M</span> */
+.gm-rip {
+  --size: 40px;
+  --ring: var(--rule);
+  position: relative; flex: none;
+  width: var(--size); height: var(--size);
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--paper-3);
+  box-shadow: inset 0 0 0 1px var(--ring);
+  color: var(--ink);
+  font-size: calc(var(--size) * 0.4); font-weight: 700; line-height: 1;
+  transition: box-shadow var(--normal) var(--ease);
+}
+.gm-rip.is-speaking { box-shadow: inset 0 0 0 2.5px var(--online); }
+.gm-rip > canvas { position: absolute; left: 50%; top: 50%; width: calc(var(--size) * 2.2); height: calc(var(--size) * 2.2); transform: translate(-50%, -50%); pointer-events: none; }
+.gm-rip > span { position: relative; }
+
+/* --- a computer: the window and its two panes ------------------------------------------------------------------- */
+/* <div class="gm-win"><div class="gm-win__bar">…</div><div class="gm-split"><aside class="gm-split__list">…</aside><main class="gm-split__main">… */
+.gm-win {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--rule);
+}
+.gm-win__bar { flex: none; height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--rule); font-size: var(--fs-sm); font-weight: 600; color: var(--ink-2); }
+.gm-win__lights { display: flex; gap: 8px; }
+.gm-win__lights i { width: 12px; height: 12px; border-radius: 50%; background: var(--paper-3); transition: background-color var(--fast); }@media (hover: hover) { .gm-win__lights:hover i:nth-child(1) { background: #ff5f57; } }
+@media (hover: hover) { .gm-win__lights:hover i:nth-child(2) { background: #febc2e; } }
+@media (hover: hover) { .gm-win__lights:hover i:nth-child(3) { background: #28c840; } }
+
+.gm-win__title { flex: 1; text-align: center; margin-right: 52px; }
+.gm-split { flex: 1; min-height: 0; display: flex; }
+.gm-split__list { flex: none; width: 320px; position: relative; display: flex; flex-direction: column; border-right: 1px solid var(--rule); overflow: hidden; }
+.gm-split__main { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+.gm-desk { --gm-vw: 750; --msg-max: 465px; }
+
+/* --- floating things ------------------------------------------------------------------------------------------- */
+.gm-abs { position: absolute; }
+.gm-hr { height: 1px; background: var(--rule); flex: none; }
+.gm-grow { flex: 1; min-height: 0; }
+.gm-row-flex { display: flex; align-items: center; }
+.gm-muted { color: var(--ink-3); }
+
+/* Reduced motion: no loops, no bounces, nothing moving by itself. */
+@media (prefers-reduced-motion: reduce) {
+  .gm *, .gm *::before, .gm *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

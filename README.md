@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://gogho.st/"><b>gogho.st</b></a> &nbsp;·&nbsp;
+  <a href="https://satellite.im/"><b>satellite.im</b></a> &nbsp;·&nbsp;
   <a href="#get-uplink">Download</a> &nbsp;·&nbsp;
-  <a href="https://gogho.st/app/">Open in a browser</a> &nbsp;·&nbsp;
-  <a href="https://gogho.st/docs/">Docs and help</a>
+  <a href="https://satellite.im/app/">Open in a browser</a> &nbsp;·&nbsp;
+  <a href="https://satellite.im/docs/">Docs and help</a>
 </p>
 
 <p align="center">
@@ -26,30 +26,28 @@ group spaces you can drop into and talk, and your WhatsApp, Telegram, Signal and
 texts. It is free, it keeps itself up to date, and all of its source is here.
 
 > **Uplink is in alpha.** It is released often and things still change.
-> [Join the alpha](https://gogho.st/docs/alpha/) to try it early and tell us what breaks.
+> [Join the alpha](https://satellite.im/docs/alpha/) to try it early and tell us what breaks.
 
 ## Get Uplink
 
 | On | How |
 | --- | --- |
-| **Android** | [Download the APK](https://gogho.st/ghost-messaging.apk) on your phone and open it. Allow your browser to install apps if Android asks. |
-| **Mac** | [Download the disk image](https://gogho.st/ghost-messaging-mac.dmg), open it and drag Uplink to Applications. Signed, and checked by Apple. |
-| **Windows** | [Download the installer](https://gogho.st/ghost-messaging-setup.exe) and run it. Then open Uplink from the Start menu. |
-| **Linux** | A [.deb](https://gogho.st/ghost-messaging-linux.deb) for Ubuntu, Debian and their family, or a [.tar.gz](https://gogho.st/ghost-messaging-linux-x64.tar.gz) for any other: unpack it and run `ghost-messaging`. |
-| **Browser** | [gogho.st/app](https://gogho.st/app/). Nothing to install. |
+| **Android** | [Download the APK](https://satellite.im/ghost-messaging.apk) on your phone and open it. Allow your browser to install apps if Android asks. |
+| **Mac** | [Download the disk image](https://satellite.im/ghost-messaging-mac.dmg), open it and drag Uplink to Applications. Signed, and checked by Apple. |
+| **Windows** | [Download the installer](https://satellite.im/ghost-messaging-setup.exe) and run it. Then open Uplink from the Start menu. |
+| **Linux** | A [.deb](https://satellite.im/ghost-messaging-linux.deb) for Ubuntu, Debian and their family, or a [.tar.gz](https://satellite.im/ghost-messaging-linux-x64.tar.gz) for any other: unpack it and run `ghost-messaging`. |
+| **Browser** | [satellite.im/app](https://satellite.im/app/). Nothing to install. |
 | **iPhone** | Not out yet. |
 
 On Android, choose **Set as default SMS app**, or let Uplink work beside the texting app you have. On a computer,
 pair it with your phone to have your texts there too: on the phone open **Settings › Computers** and scan the code the
 computer shows. Every copy updates itself from then on, with no store in between. The
-[install guide](https://gogho.st/docs/install/) has each step.
+[install guide](https://satellite.im/docs/install/) has each step.
 
-The downloads are still named `ghost-messaging`: Uplink was called Ghost Messaging until November 2026, and the files,
-the `gogho.st` address and the names inside the source kept theirs so that nothing already installed would break.
+The downloads are still named `ghost-messaging`: Uplink was called Ghost Messaging until November 2026, and the files
+and the names inside the source kept theirs so that nothing already installed would break.
 
 ## What it does
-
-<img src="site/art/space/messages.webp" width="260" align="right" alt="Points of light arcing between a planet and a ring of satellites">
 
 ### One app instead of three
 
@@ -63,10 +61,6 @@ and the conversation is still all in one place.
   find theirs, so the people you talk to come first.
 - **Friends by username.** Pick a username, add friends by theirs, and make groups you can call all at once.
 
-<br clear="right">
-
-<img src="site/art/space/calls.webp" width="260" align="right" alt="A wave of light rippling between two planets">
-
 ### Talk like you're in the same room
 
 Every group has a space that stays open, so talking is as easy as texting: see who is in, drop in, drop out.
@@ -78,10 +72,6 @@ Every group has a space that stays open, so talking is as easy as texting: see w
 - **Yours to run.** Roles and moderators, and plugins that record a call, write it out, caption it live or let
   everyone watch a video together.
 
-<br clear="right">
-
-<img src="site/art/space/networks.webp" width="260" align="right" alt="A constellation of satellites linked by thin lines of light">
-
 ### Every chat app, beside your texts
 
 Sign in once and your other chats join your texts in one list, newest first, each marked with its app: **WhatsApp,
@@ -91,21 +81,13 @@ answer them and send pictures without switching apps.
 Each network runs on your own device and talks straight to its own servers. Your chats, codes and sign-ins never pass
 through ours. It is their messages only, not their calls, and not every network is on every computer yet (Telegram and
 Signal aren't on Windows). iMessage is not available to apps other than Apple's own.
-[How each one is linked](https://gogho.st/docs/networks/).
-
-<br clear="right">
-
-<img src="site/art/space/desktop.webp" width="340" align="right" alt="An observatory window onto a ringed planet, a desk and a glowing screen in front of it">
+[How each one is linked](https://satellite.im/docs/networks/).
 
 ### On your computer
 
 Uplink for Mac, Windows and Linux shows every conversation, sends texts through your phone (sealed between the two),
 and joins calls and spaces itself. It also runs with no phone at all, signed in to your account.
-[Pairing a computer](https://gogho.st/docs/pairing/).
-
-<br clear="right">
-
-<img src="site/art/space/privacy.webp" width="260" align="right" alt="A sealed capsule of light inside a thin geometric shield">
+[Pairing a computer](https://satellite.im/docs/pairing/).
 
 ### Private by default
 
@@ -115,25 +97,19 @@ and joins calls and spaces itself. It also runs with no phone at all, signed in 
   to remove.
 - **Texts stay texts.** SMS and picture messages go through your carrier as they always have. Nothing is copied to us.
 - **Check it, or run it.** Every part is in this repository, and you can
-  [run your own relay](https://gogho.st/docs/self-hosting/) and point the app at it.
+  [run your own relay](https://satellite.im/docs/self-hosting/) and point the app at it.
 
-[Privacy and safety, in full](https://gogho.st/docs/privacy/).
-
-<br clear="right">
-
-<img src="site/art/space/effects.webp" width="260" align="right" alt="A nebula bursting like fireworks">
+[Privacy and safety, in full](https://satellite.im/docs/privacy/).
 
 ### Make it yours
 
 - **Effects.** Balloons for "Happy birthday", confetti for "Congrats", lasers for "pew pew".
 - **Looks.** Four of them, from Uplink's own to one drawn like an old adventure game, with texture packs, your
   bubble colours, chat backgrounds and emoji set (your phone's own, Noto, Twemoji, OpenMoji or a clean outline).
-  [Looks, colours and fonts](https://gogho.st/docs/appearance/).
-- **Plugins.** The [Marketplace](https://gogho.st/docs/plugins/) adds what you want and nothing you don't: a spam
+  [Looks, colours and fonts](https://satellite.im/docs/appearance/).
+- **Plugins.** The [Marketplace](https://satellite.im/docs/plugins/) adds what you want and nothing you don't: a spam
   filter, translation, a soundboard, a voice changer, Spotify and Notion, and more. A plugin is a small file anyone
-  can write: [build one](https://gogho.st/docs/build-a-plugin/).
-
-<br clear="right">
+  can write: [build one](https://satellite.im/docs/build-a-plugin/).
 
 ## Open source
 
@@ -172,7 +148,7 @@ without them and leaves those features out.
 | [`sidecar/`](sidecar) | The helpers that speak to other chat networks, each a small program of its own. |
 | [`extension/`](extension) [`discord/`](discord) | The browser extension that shares your sign-ins with your devices, and the Discord bot. |
 | [`packages/glacier/`](packages/glacier) | Glacier, the UI kit everything is drawn with. |
-| [`site/`](site) [`docs-src/`](docs-src) | [gogho.st](https://gogho.st/) and its docs. The pictures on this page are the site's. |
+| [`site/`](site) [`docs-src/`](docs-src) | [satellite.im](https://satellite.im/) and its docs. The picture at the top of this page is the site's. |
 | [`tool/`](tool) [`test/`](test) | Build and release scripts, and the tests. |
 | [`docs/`](docs) | Design notes, and [the record](docs/RECORD.md) of every feature as it was built. |
 
@@ -180,11 +156,11 @@ without them and leaves those features out.
 
 The relay is a small server that passes sealed messages between devices. It can't read them, and you don't have to
 use ours: [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) sets one up, with a container or without, and
-[the guide on the site](https://gogho.st/docs/self-hosting/) shows how to point the app at it.
+[the guide on the site](https://satellite.im/docs/self-hosting/) shows how to point the app at it.
 
 ## Help and feedback
 
-- **Using Uplink:** [gogho.st/docs](https://gogho.st/docs/).
-- **Building on it:** the [developer docs](https://gogho.st/docs/developer/) cover how the app is built and both of
+- **Using Uplink:** [satellite.im/docs](https://satellite.im/docs/).
+- **Building on it:** the [developer docs](https://satellite.im/docs/developer/) cover how the app is built and both of
   its APIs.
 - **Something wrong, or something missing?** Choose **Share feedback** in the app. It takes screenshots too.

@@ -1,0 +1,38 @@
+/* The desktop section's window (desktop.html, data-mock="wide"): only what mock.css lacks.
+   The page showed wide.webp as the window's picture, 100% wide, 24rem tall (15rem on a phone), cropped from the top;
+   this box does the same, and the stage (750 x 832 app px) is scaled by the box's width. */
+.window > [data-mock='wide'] { aspect-ratio: auto; height: 24rem; position: relative; }
+@media (max-width: 520px) { .window > [data-mock='wide'] { height: 15rem; } }
+
+[data-mock='wide'] .dk-split { position: absolute; inset: 0; }
+/* The window is 750 app px wide, so glacier's clamp() sizes come out at 750 (the phone's mocks use 412). */
+.gm[data-mock='wide'] { --gm-vw: 750; }
+/* Bubbles here reach 327 px, as the app's conversation pane lets them (the phone's mocks: 313). */
+[data-mock='wide'] .gm-split__main { --msg-max: 327px; }
+[data-mock='wide'] .gm-split__list { width: 320px; }
+
+/* The computer build's dock: a little bigger than the phone's, along the bottom of the list. */
+[data-mock='wide'] .dk-dock { left: 15px; bottom: 36px; gap: 15px; padding: 10px; }
+[data-mock='wide'] .dk-dock .gm-dock__btn { width: 42px; height: 42px; }
+
+/* Changing conversation: the thread fades and rises in, as the app's pane does. */
+[data-mock='wide'] .js-dk-thread.is-swap { animation: dk-swap 260ms var(--ease) both; }
+@keyframes dk-swap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+[data-mock='wide'] .dk-offer[hidden] { display: none; }
+/* The group's picture (no photo shipped): a dusk sky in the pane's own colours. */
+[data-mock='wide'] .dk-pic { width: 220px; height: 160px; background: linear-gradient(160deg, #2b3a67 0%, #6b4c8a 45%, #e08b5d 100%); }
+/* Matched to wide.webp: the big emoji a little larger (the system emoji runs smaller than the app's Noto), the offer's words medium. */
+[data-mock='wide'] .gm-jumbo { font-size: 44px; margin-top: 8px; }
+[data-mock='wide'] .dk-offer p { font-weight: 500; }
+/* The notice card kept the phone's measures in this window. */
+[data-mock='wide'] .gm-card { --s3: 13.45px; --s4: 17.9px; padding-top: 13px; }
+[data-mock='wide'] .gm-card__body { padding-right: 28px; }
+[data-mock='wide'] .gm-card__close { top: 15px; right: 7px; }
+[data-mock='wide'] .gm-file__name, [data-mock='wide'] .gm-file__size { display: block; }
+/* Matched to wide.webp: the thread sits 6 px higher there, so the first message's time is under the header. */
+[data-mock='wide'] .js-dk-thread { padding-bottom: calc(var(--s2) + 6px); }
+/* The two panes meet on a fractional pixel once the window is scaled: paint the page under them, or the seam shows
+   whatever is behind the window (a dark line on the light page) instead of the app's hairline. */
+[data-mock='wide'] > .gm-stage { background: var(--paper); }
+/* Matched to wide.webp: "Messages" sits 3 px lower there. */
+[data-mock='wide'] .gm-titlebar__title { padding-top: 6px; }

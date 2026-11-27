@@ -39,6 +39,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/uplink.css">
+<!-- The app's screens are drawn in HTML by the mock kit (site/mock): mock.css/js, then each section's own. -->
+<link rel="stylesheet" href="/mock/mock.css">
+<link rel="stylesheet" href="/mock/hero.css">
+<link rel="stylesheet" href="/mock/pillars.css">
+<link rel="stylesheet" href="/mock/calls.css">
+<link rel="stylesheet" href="/mock/inbox.css">
+<link rel="stylesheet" href="/mock/desktop.css">
+<script src="/mock/mock.js" defer></script>
+<script src="/mock/hero.js" defer></script>
+<script src="/mock/pillars.js" defer></script>
+<script src="/mock/calls.js" defer></script>
+<script src="/mock/inbox.js" defer></script>
+<script src="/mock/desktop.js" defer></script>
 <style>
   /* --- hero: always night --- */
   .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--u-rule); }
@@ -90,7 +103,6 @@
   :root[data-theme="light"] .plate { background: linear-gradient(180deg, #fff, #f4f4f2); }
   .plate::after { content: ""; position: absolute; inset: -9px; border-radius: 42px; background: linear-gradient(135deg, #1b1b20, #08080a); transform: translateZ(-14px); box-shadow: 0 50px 80px -30px rgba(0, 0, 0, .6); }
   .layer { position: absolute; transform: translateZ(calc(var(--gap) * var(--z))); transition: transform 1.4s cubic-bezier(.2, .8, .2, 1); filter: drop-shadow(0 18px 22px rgba(0, 0, 0, .5)) drop-shadow(0 0 1px rgba(255, 255, 255, .35)); will-change: transform; }
-  .layer img { width: 100%; height: auto; }
   .stack:not(.open) .layer { filter: none; }
   .tag { position: absolute; z-index: 3; opacity: 0; transition: opacity .6s ease, translate .6s ease; translate: 0 8px; background: rgba(13,13,18,.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: var(--u-ink); font-weight: 700; }
   .tag .u-i { width: .95rem; height: .95rem; }
@@ -116,7 +128,7 @@
   .pillar .text { padding: 1.6rem 1.6rem 1.2rem; }
   .pillar .u-h3 { display: flex; align-items: center; gap: .75rem; font-size: 1.45rem; }
   .pillar .u-badge { margin: 0; width: 2.4rem; height: 2.4rem; }
-  .pillar p { margin-top: .5rem; }
+  .pillar p:not(.gm *) { margin-top: .5rem; }
   .shot { margin-top: auto; height: 21rem; overflow: hidden; display: flex; justify-content: center; padding-top: .4rem; background: linear-gradient(180deg, transparent, var(--u-glow)); }
   .shot img { width: 76%; height: auto; border-radius: 1.4rem 1.4rem 0 0; box-shadow: 0 0 0 1px var(--u-rule), 0 -8px 40px rgba(0, 0, 0, .35); align-self: flex-start; }
   .features { margin-top: 1.1rem; }
@@ -135,20 +147,20 @@
   @media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } }
   .split .u-chips { margin-top: 1.8rem; }
   .duo { position: relative; height: 36rem; }
-  .duo img { position: absolute; width: 15.5rem; border-radius: 1.8rem; box-shadow: 0 0 0 1.5px rgba(255,255,255,.4), 0 30px 60px -20px rgba(0, 0, 0, .7); }
-  .duo .a { left: 8%; top: 0; transform: rotate(-6deg); }
-  .duo .b { right: 6%; top: 4rem; transform: rotate(5deg); }
+  .duo > .gm { position: absolute; width: 15.5rem; border-radius: 1.8rem; box-shadow: 0 0 0 1.5px rgba(255,255,255,.4), 0 30px 60px -20px rgba(0, 0, 0, .7); }
+  .duo > .a { left: 8%; top: 0; transform: rotate(-6deg); }
+  .duo > .b { right: 6%; top: 4rem; transform: rotate(5deg); }
   .duo .u-needle { left: 50%; height: 115%; opacity: .5; }
-  @media (max-width: 520px) { .duo { height: 30rem; } .duo img { width: 11.5rem; } .duo .a { left: 0; } .duo .b { right: 0; } }
+  @media (max-width: 520px) { .duo { height: 30rem; } .duo > .gm { width: 11.5rem; } .duo > .a { left: 0; } .duo > .b { right: 0; } }
 
   /* one inbox: other networks among the texts */
   .nets { display: grid; grid-template-columns: .9fr 1.1fr; gap: 3rem; align-items: center; }
   @media (max-width: 900px) { .nets { grid-template-columns: minmax(0, 1fr); gap: 2rem; } }
   .netshots { position: relative; height: 32rem; }
-  .netshots img { position: absolute; width: 17rem; border-radius: 1.8rem; box-shadow: 0 0 0 1px var(--u-rule), 0 30px 60px -20px rgba(0, 0, 0, .55); }
-  .netshots .a { left: 0; top: 0; transform: rotate(-3deg); }
-  .netshots .b { right: 0; bottom: 0; transform: rotate(3deg); }
-  @media (max-width: 520px) { .netshots { height: 26rem; } .netshots img { width: 12.5rem; } }
+  .netshots > .gm { position: absolute; width: 17rem; border-radius: 1.8rem; box-shadow: 0 0 0 1px var(--u-rule), 0 30px 60px -20px rgba(0, 0, 0, .55); }
+  .netshots > .a { left: 0; top: 0; transform: rotate(-3deg); }
+  .netshots > .b { right: 0; bottom: 0; transform: rotate(3deg); }
+  @media (max-width: 520px) { .netshots { height: 26rem; } .netshots > .gm { width: 12.5rem; } }
   .netcards { display: grid; gap: 1rem; }
   .nethead { display: flex; align-items: center; gap: .9rem; margin-bottom: 1rem; }
   .nethead .u-badge { margin: 0; }
@@ -181,8 +193,6 @@
   .window { position: relative; background: #0d0d12; border: 1px solid rgba(255,255,255,.3); border-radius: var(--u-r); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8); overflow: hidden; }
   .window .chrome { display: flex; gap: .4rem; padding: .65rem .85rem; border-bottom: 1px solid rgba(255,255,255,.14); }
   .window .chrome i { width: .62rem; height: .62rem; border-radius: 50%; border: 1.25px solid rgba(255,255,255,.6); }
-  .window img { width: 100%; height: 24rem; object-fit: cover; object-position: top; }
-  @media (max-width: 520px) { .window img { height: 15rem; } }
   .steps { list-style: none; padding: 0; margin: 2rem 0 0; display: grid; gap: 1rem; counter-reset: s; }
   .steps li { display: flex; gap: 1rem; align-items: flex-start; color: var(--u-ink-2); }
   .steps li::before { counter-increment: s; content: counter(s); flex: none; width: 2.1rem; height: 2.1rem; display: grid; place-items: center; font-family: var(--u-display); font-style: italic; font-weight: 900; border: 1.5px solid var(--u-ink); border-radius: var(--u-r-sm); color: var(--u-ink); transform: skewX(var(--u-slant)); }
@@ -301,23 +311,63 @@
       <span class="u-tag tag t3"><svg class="u-i"><use href="#i-check2"/></svg><span>Sent, delivered, read</span></span>
       <div class="fit" id="fit">
         <!-- One conversation from the app (test/shots/2-thread-*.png) in three planes: the bubbles, the bar and the
-             composer above them, the reactions just over their bubbles. Written by tool/site-layers.py. -->
+             composer above them, the reactions just over their bubbles. The layers' places came from
+             tool/site-layers.py; each is drawn in HTML here (styled by site/mock/hero.css), so the page no longer has the STACK
+             markers that script would write its <img> layers between. -->
         <div class="stack" id="stack">
           <div class="plate"></div>
-<!-- STACK -->
-          <div class="layer" style="--z:2.1;left:0.00%;top:2.47%;width:100.00%" data-light="0.00,2.47,100.00" data-dark="0.00,2.47,100.00"><img src="/shots/x-header-dark.webp" data-shot="x-header" alt=""></div>
-          <div class="layer" style="--z:1.9;left:2.43%;top:10.20%;width:78.16%" data-light="2.43,9.75,78.16" data-dark="2.43,10.20,78.16"><img src="/shots/x-link-dark.webp" data-shot="x-link" alt=""></div>
-          <div class="layer" style="--z:1.75;left:5.58%;top:19.73%;width:74.03%" data-light="5.58,19.28,74.03" data-dark="5.58,19.73,74.03"><img src="/shots/x-place-dark.webp" data-shot="x-place" alt=""></div>
-          <div class="layer" style="--z:1.5;left:19.90%;top:32.51%;width:77.91%" data-light="19.90,32.17,77.91" data-dark="19.90,32.51,77.91"><img src="/shots/x-out1-dark.webp" data-shot="x-out1" alt=""></div>
-          <div class="layer" style="--z:1.5;left:51.46%;top:40.02%;width:46.36%" data-light="50.97,39.74,46.84" data-dark="51.46,40.02,46.36"><img src="/shots/x-out2-dark.webp" data-shot="x-out2" alt=""></div>
-          <div class="layer" style="--z:1.55;left:53.88%;top:44.51%;width:7.28%" data-light="53.40,44.62,7.28" data-dark="53.88,44.51,7.28"><img src="/shots/x-heart-dark.webp" data-shot="x-heart" alt=""></div>
-          <div class="layer" style="--z:1.35;left:63.11%;top:47.42%;width:33.98%" data-light="63.11,47.42,33.98" data-dark="63.11,47.42,33.98"><img src="/shots/x-ticks-dark.webp" data-shot="x-ticks" alt=""></div>
-          <div class="layer" style="--z:1.2;left:2.43%;top:51.68%;width:78.16%" data-light="2.43,51.57,78.16" data-dark="2.43,51.68,78.16"><img src="/shots/x-in-dark.webp" data-shot="x-in" alt=""></div>
-          <div class="layer" style="--z:1.25;left:70.63%;top:59.30%;width:7.52%" data-light="70.63,59.30,7.52" data-dark="70.63,59.30,7.52"><img src="/shots/x-laugh-dark.webp" data-shot="x-laugh" alt=""></div>
-          <div class="layer" style="--z:1.0;left:4.13%;top:68.50%;width:24.03%" data-light="4.13,68.50,24.03" data-dark="4.13,68.50,24.03"><img src="/shots/x-emoji-dark.webp" data-shot="x-emoji" alt=""></div>
-          <div class="layer" style="--z:0.85;left:2.43%;top:77.47%;width:60.19%" data-light="2.43,77.47,60.19" data-dark="2.43,77.47,60.19"><img src="/shots/x-chips-dark.webp" data-shot="x-chips" alt=""></div>
-          <div class="layer" style="--z:0.65;left:2.43%;top:91.70%;width:95.39%" data-light="2.43,91.70,95.39" data-dark="2.43,91.70,95.39"><img src="/shots/x-compose-dark.webp" data-shot="x-compose" alt=""></div>
-          <!-- /STACK -->
+          <div class="layer" style="--z:2.1;left:0.00%;top:2.47%;width:100.00%" data-light="0.00,2.47,100.00" data-dark="0.00,2.47,100.00"><div class="gm gm-fit gm-clear" data-mock="x-header"><div class="gm-stage">
+  <header class="gm-head">
+    <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+    <button class="gm-head__who" tabindex="-1">
+      <span class="gm-av" data-hue="magenta" style="--size:33px">MC</span>
+      <span class="gm-head__text"><span class="gm-head__name">Maya Chen</span><span class="gm-head__sub">+15551230001</span></span>
+    </button>
+    <span class="gm-head__actions">
+      <button class="gm-iconbtn" tabindex="-1" aria-label="Call"><svg class="gm-i"><use href="/mock/icons.svg#phone"/></svg></button>
+      <button class="gm-iconbtn" tabindex="-1" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
+    </span>
+  </header>
+</div></div></div>
+          <div class="layer" style="--z:1.9;left:2.43%;top:10.20%;width:78.16%" data-light="2.43,9.75,78.16" data-dark="2.43,10.20,78.16"><div class="gm gm-fit gm-clear" data-mock="x-link"><div class="gm-stage">
+  <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-bubble">Here's the link <a href="#" tabindex="-1" onclick="return false">https://example.com/<wbr>tickets</a></div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.75;left:5.58%;top:19.73%;width:74.03%" data-light="5.58,19.28,74.03" data-dark="5.58,19.73,74.03"><div class="gm gm-fit gm-clear" data-mock="x-place"><div class="gm-stage">
+  <div class="gm-preview"><div class="gm-preview__site">Hickory Premier</div><div class="gm-preview__title">Movie night: 7:00 PM, Theatre 2</div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.5;left:19.90%;top:32.51%;width:77.91%" data-light="19.90,32.17,77.91" data-dark="19.90,32.51,77.91"><div class="gm gm-fit gm-clear" data-mock="x-out1"><div class="gm-stage">
+  <div class="gm-msg gm-msg--out" data-g="top"><div class="gm-bubble">Movie night is still on for tonight right?</div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.5;left:51.46%;top:40.02%;width:46.36%" data-light="50.97,39.74,46.84" data-dark="51.46,40.02,46.36"><div class="gm gm-fit gm-clear" data-mock="x-out2"><div class="gm-stage">
+  <div class="gm-msg gm-msg--out" data-g="bottom"><div class="gm-bubble">Dinner at mine first?</div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.55;left:53.88%;top:44.51%;width:7.28%" data-light="53.40,44.62,7.28" data-dark="53.88,44.51,7.28"><div class="gm gm-fit gm-clear" data-mock="x-heart"><div class="gm-stage">
+  <span class="gm-react">❤️</span>
+</div></div></div>
+          <div class="layer" style="--z:1.35;left:63.11%;top:47.42%;width:33.98%" data-light="63.11,47.42,33.98" data-dark="63.11,47.42,33.98"><div class="gm gm-fit gm-clear" data-mock="x-ticks"><div class="gm-stage">
+  <div class="gm-msg gm-msg--out"><div class="gm-meta"><span class="gm-meta__lines"><span class="hero-edited">Edited · correction sent</span><span class="gm-row-flex"><span class="hero-state">Delivered · 11:27 PM</span>&nbsp;<svg class="gm-i gm-ticks"><use href="/mock/icons.svg#check-check"/></svg></span></span></div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.2;left:2.43%;top:51.68%;width:78.16%" data-light="2.43,51.57,78.16" data-dark="2.43,51.68,78.16"><div class="gm gm-fit gm-clear" data-mock="x-in"><div class="gm-stage">
+  <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-bubble">Sounds good, see you at 7! Bring the projector cable if you still have it</div></div>
+</div></div></div>
+          <div class="layer" style="--z:1.25;left:70.63%;top:59.30%;width:7.52%" data-light="70.63,59.30,7.52" data-dark="70.63,59.30,7.52"><div class="gm gm-fit gm-clear" data-mock="x-laugh"><div class="gm-stage">
+  <span class="gm-react">😂</span>
+</div></div></div>
+          <div class="layer" style="--z:1.0;left:4.13%;top:68.50%;width:24.03%" data-light="4.13,68.50,24.03" data-dark="4.13,68.50,24.03"><div class="gm gm-fit gm-clear" data-mock="x-emoji"><div class="gm-stage">
+  <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-jumbo"><span>🎉</span><span>🍿</span></div></div>
+</div></div></div>
+          <div class="layer" style="--z:0.85;left:2.43%;top:77.47%;width:60.19%" data-light="2.43,77.47,60.19" data-dark="2.43,77.47,60.19"><div class="gm gm-fit gm-clear" data-mock="x-chips"><div class="gm-stage">
+  <div class="gm-chips"><button class="gm-chip gm-chip--emoji" tabindex="-1">👍</button><button class="gm-chip" tabindex="-1">Sounds good</button><button class="gm-chip" tabindex="-1">Haha</button></div>
+</div></div></div>
+          <div class="layer" style="--z:0.65;left:2.43%;top:91.70%;width:95.39%" data-light="2.43,91.70,95.39" data-dark="2.43,91.70,95.39"><div class="gm gm-fit gm-clear" data-mock="x-compose"><div class="gm-stage">
+  <form class="gm-composer" data-gm-composer="">
+    <button type="button" class="gm-composer__btn" tabindex="-1" aria-label="Add"><svg class="gm-i"><use href="/mock/icons.svg#plus"/></svg></button>
+    <input class="gm-composer__input" tabindex="-1" placeholder="Text message" aria-label="Message" maxlength="48" autocomplete="off">
+    <button type="button" class="gm-composer__btn" tabindex="-1" aria-label="Stickers"><svg class="gm-i"><use href="/mock/icons.svg#sticker"/></svg></button>
+    <button type="button" class="gm-composer__btn gm-composer__mic" tabindex="-1" aria-label="Voice message"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></button>
+    <button class="gm-composer__send" tabindex="-1" aria-label="Send"><svg class="gm-i"><use href="/mock/icons.svg#arrow-up"/></svg></button>
+  </form>
+</div></div></div>
         </div>
       </div>
     </div>
@@ -337,15 +387,185 @@
     <div class="trio">
       <div class="u-sticker pillar">
         <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-msgs"/></svg></span>Messages</h3><p>Texts and picture messages, plus encrypted chats with friends on Uplink. Reactions, effects, stickers, groups with names and faces.</p></div>
-        <div class="shot"><img src="/shots/list-dark.webp" data-shot="list" alt="The conversation list" loading="lazy"></div>
+        <div class="shot">
+<div class="gm gm-fit pl-shot" data-mock="list" style="--w:412;--h:892" aria-label="The conversation list">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <div class="gm-status"><span>12:05</span><span class="gm-status__icons"><i></i></span></div>
+      <div class="gm-titlebar">
+        <h1 class="gm-titlebar__title">Messages</h1>
+        <button class="gm-iconbtn gm-iconbtn--muted" aria-label="Clean up"><svg class="gm-i"><use href="/mock/icons.svg#brush-cleaning"/></svg></button>
+        <button class="gm-roundbtn pl-markall" aria-label="Mark all read"><svg class="gm-i"><use href="/mock/icons.svg#check-check"/></svg></button>
+      </div>
+      <label class="gm-search"><svg class="gm-i"><use href="/mock/icons.svg#search"/></svg><input class="pl-search" placeholder="Search messages" aria-label="Search messages"></label>
+      <div class="gm-row-flex" style="gap:10px;margin:10px var(--s2) 0">
+        <div class="gm-seg" data-gm-tabs style="flex:1">
+          <span class="gm-seg__thumb"></span>
+          <button class="gm-seg__tab" aria-selected="true" aria-label="Chats"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+          <button class="gm-seg__tab" aria-label="Encrypted"><svg class="gm-i"><use href="/mock/icons.svg#key-round"/></svg></button>
+          <button class="gm-seg__tab" aria-label="Spaces"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><span class="gm-seg__count">1</span></button>
+        </div>
+        <button class="gm-roundbtn" aria-label="Filter"><svg class="gm-i"><use href="/mock/icons.svg#funnel"/></svg></button>
+      </div>
+      <div class="gm-scroll" style="padding-top:17px">
+        <div class="gm-card">
+          <svg class="gm-i"><use href="/mock/icons.svg#triangle-alert"/></svg>
+          <div class="gm-card__body"><b>Texts from some people not arriving?</b>If RCS chats were on in Google Messages, people who use RCS are still sending you chats there, not texts. Your old RCS chats are kept there too.<br><a class="gm-card__link" href="#" onclick="return false">What to do</a></div>
+          <button class="gm-card__close" aria-label="Close"><svg class="gm-i"><use href="/mock/icons.svg#x"/></svg></button>
+        </div>
+        <div class="gm-list" data-gm-select style="margin-top:9px">
+          <div class="gm-row" role="button" tabindex="0" data-tab="0 1"><div class="gm-row__in">
+            <span class="gm-av" data-hue="coral">D</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Dad</span><span class="gm-row__fill"></span><svg class="gm-i gm-row__pin"><use href="/mock/icons.svg#pin"/></svg><span class="gm-row__time">12:33 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Call me when you land</span></div>
+            </div>
+          </div></div>
+          <div class="gm-row is-unread pl-maya" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
+            <span class="gm-av" data-hue="magenta">MC</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Maya Chen</span><span class="gm-row__fill"></span><span class="gm-row__time">5:29 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Sounds good, see you at 7! Bring the projector cable if you still have it</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="0" data-tab="0 1"><div class="gm-row__in">
+            <span class="gm-av" data-hue="indigo">RF</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Riley Fox<svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg></span><span class="gm-row__fill"></span><span class="gm-row__time">5:03 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Only our two phones can read this now</span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="0" data-tab="0 2"><div class="gm-row__in">
+            <span class="gm-av gm-av--pair" style="--pair:48px"><span class="gm-av" data-hue="slate">JD</span><span class="gm-av" data-hue="blue">SR</span></span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Jordan, Sam, Alex</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Picture</span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
+            <span class="gm-av" data-hue="orange">NH</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Noor Haddad</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Encryption key</span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
+            <span class="gm-av" data-hue="green">PN</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Priya Natarajan</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">See you there</span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
+            <span class="gm-av" data-hue="amber"><svg class="gm-i"><use href="/mock/icons.svg#user-round"/></svg></span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">+15551230007</span><span class="gm-row__fill"></span><span class="gm-row__time">Nov 3</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Draft: The bus will be late</span></div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+      <div class="gm-callbar gm-abs pl-callbar" style="left:14px;width:320px;bottom:34px">
+        <span class="gm-callbar__live"></span>
+        <span class="gm-callbar__text"><span class="gm-callbar__name">Friday hang</span><span class="gm-callbar__sub">12:05 · Me, Maya Chen</span></span>
+        <span class="gm-callbar__faces"><span class="gm-rip" data-gm-ripple data-talk="auto" style="--size:26px">M</span><span class="gm-rip pl-me" data-gm-ripple data-level="0.5" style="--size:26px">M</span></span>
+        <button class="gm-iconbtn pl-mute" aria-label="Mute" aria-pressed="false"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></button>
+        <button class="gm-endbtn pl-leave" aria-label="Leave" style="width:35px;height:35px;margin-right:6px"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone-off"/></svg></button>
+      </div>
+      <nav class="gm-dock gm-dock--v gm-abs" data-gm-tabs style="right:9.5px;bottom:34.5px">
+        <button class="gm-dock__btn" aria-label="New"><svg class="gm-i"><use href="/mock/icons.svg#message-square-plus"/></svg></button>
+        <button class="gm-dock__btn" aria-selected="true" aria-label="Messages"><svg class="gm-i"><use href="/mock/icons.svg#message-square"/></svg></button>
+        <button class="gm-dock__btn" aria-label="Contacts"><svg class="gm-i"><use href="/mock/icons.svg#contact-round"/></svg></button>
+        <button class="gm-dock__btn" aria-label="Archived"><svg class="gm-i"><use href="/mock/icons.svg#archive"/></svg><span class="gm-count">1</span></button>
+        <button class="gm-dock__btn" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
+      </nav>
+    </div>
+  </div>
+</div>
+        </div>
       </div>
       <div class="u-sticker pillar">
         <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-phones"/></svg></span>Voice</h3><p>Every group has a space that's always open: see who's in, drop in, drop out. Share a space by link and anyone can join.</p></div>
-        <div class="shot"><img src="/shots/hangout-dark.webp" data-shot="hangout" alt="A space with four people" loading="lazy"></div>
+        <div class="shot">
+<div class="gm gm-fit pl-shot" data-mock="hangout" style="--w:412;--h:892" aria-label="A space with four people">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <div class="gm-status"><span>12:05</span><span class="gm-status__icons"><i></i></span></div>
+      <header class="gm-head">
+        <button class="gm-iconbtn" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+        <span class="gm-head__title">Friday hang</span>
+        <span class="gm-head__actions">
+          <button class="gm-iconbtn pl-copy" aria-label="Invite link"><svg class="gm-i"><use href="/mock/icons.svg#link"/></svg></button>
+          <button class="gm-iconbtn" aria-label="Moderation"><svg class="gm-i"><use href="/mock/icons.svg#shield-check"/></svg></button>
+        </span>
+      </header>
+      <div class="gm-seg pl-tabs" data-gm-tabs style="margin:3px var(--s4) 0;height:46px">
+        <span class="gm-seg__thumb"></span>
+        <button class="gm-seg__tab" aria-selected="true" aria-label="People"><svg class="gm-i"><use href="/mock/icons.svg#users"/></svg></button>
+        <button class="gm-seg__tab" aria-label="Chat"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+      </div>
+      <div class="pl-pane pl-people">
+        <div class="gm-members">
+          <div class="gm-member pl-you"><span class="gm-rip" data-gm-ripple data-level="0">M</span><span class="gm-member__name">You</span><span class="gm-tag gm-tag--solid">Owner</span><svg class="gm-i pl-youmute" hidden><use href="/mock/icons.svg#mic-off"/></svg></div>
+          <div class="gm-member"><span class="gm-rip" data-gm-ripple data-talk="auto">M</span><span class="gm-member__name">Maya Chen</span><span class="gm-tag">Moderator</span></div>
+          <div class="gm-member pl-sam"><span class="gm-rip" data-gm-ripple data-level="0">S</span><span class="gm-member__name">Sam</span><svg class="gm-i"><use href="/mock/icons.svg#mic-off"/></svg></div>
+          <div class="gm-member"><span class="gm-rip" data-gm-ripple data-level="0">R</span><span class="gm-member__name">Riley<small>guest</small></span></div>
+        </div>
+        <div class="gm-calldock gm-abs pl-dock" style="left:50%;transform:translateX(-50%);bottom:34px">
+          <button class="gm-ctl pl-mic" aria-pressed="false" aria-label="Microphone"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+          <button class="gm-ctl pl-sound" aria-pressed="false" aria-label="Sound"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+          <button class="gm-ctl gm-ctl--round pl-cam" aria-pressed="false" aria-label="Camera"><svg class="gm-i"><use href="/mock/icons.svg#video-off"/></svg></button>
+          <button class="gm-endbtn pl-leave" aria-label="Leave"><svg class="gm-i"><use href="/mock/icons.svg#phone-off"/></svg></button>
+        </div>
+        <button class="gm-pillbtn gm-abs pl-join" hidden style="left:50%;transform:translateX(-50%);bottom:44px"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone"/></svg>Join</button>
+      </div>
+      <div class="pl-pane pl-chat" hidden>
+        <div class="pl-lines js-pl-lines">
+          <div class="pl-line"><div class="pl-line__who"><b>Maya Chen</b><span class="gm-tag">Moderator</span><time>7:40 PM</time></div><p>Starting the movie in 10, hop in</p><p>Bring snacks 🍿</p></div>
+          <div class="pl-line"><div class="pl-line__who"><b>Riley</b><time>7:41 PM</time></div><p>On my way!</p></div>
+          <div class="pl-line"><div class="pl-line__who"><b>You</b><span class="gm-tag gm-tag--solid">Owner</span><time>7:41 PM</time></div><p>Saving you a seat</p></div>
+        </div>
+        <form class="pl-say">
+          <input class="pl-say__input" placeholder="Message Friday hang" aria-label="Message Friday hang">
+          <button class="pl-say__send" aria-label="Send"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#arrow-up"/></svg></button>
+        </form>
+      </div>
+      <div class="pl-toast" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+        </div>
       </div>
       <div class="u-sticker pillar">
         <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-video"/></svg></span>Video</h3><p>Turn your camera on in any call, up to 4K. Noise suppression keeps fans, keyboards and traffic out, and your mic can go to 200%.</p></div>
-        <div class="shot"><img src="/shots/voice-settings-dark.webp" data-shot="voice-settings" alt="Voice and video settings" loading="lazy"></div>
+        <div class="shot">
+<div class="gm gm-fit pl-shot" data-mock="voice-settings" style="--w:412;--h:805" aria-label="Voice and video settings">
+  <div class="gm-stage">
+    <div class="gm-screen" style="padding-top:17px">
+      <section class="gm-sec">
+        <h3 class="gm-sec__title">Volume</h3>
+        <p class="gm-sec__desc">Over 100% is boosted: your microphone louder than it picks up, or everyone louder than the device plays.</p>
+        <div class="gm-set" data-hue="mint">
+          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></span><span class="gm-set__label pl-vlabel">Microphone</span><input class="gm-slider pl-micvol" type="range" min="0" max="200" value="100" aria-label="Microphone"><span class="gm-set__value" style="width:62px">100%</span></div>
+          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg></span><span class="gm-set__label pl-vlabel">Output</span><input class="gm-slider" type="range" min="0" max="200" value="100" aria-label="Output"><span class="gm-set__value" style="width:62px">100%</span></div>
+        </div>
+      </section>
+      <section class="gm-sec">
+        <h3 class="gm-sec__title">Sound</h3>
+        <p class="gm-sec__desc">Opus, the codec calls use. 510 kb/s stereo is the most it carries: past what an ear can tell from the microphone itself. FLAC is not something a live call can carry.</p>
+        <div class="gm-set" data-hue="mint">
+          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#music"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Music mode</span><span class="gm-set__hint">The microphone as it is, for music: no echo cancellation, noise suppression or gain, 510 kb/s stereo at a constant rate. Use headphones.</span></span><button class="gm-toggle pl-music" role="switch" aria-checked="false" aria-label="Music mode"></button></div>
+          <button class="gm-set__row pl-pick" data-pick="Off|RNNoise (Standard here)|DeepFilterNet"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#waves-horizontal"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Noise suppression</span></span><span class="gm-set__value">RNNoise (Standard here)</span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></button>
+          <button class="gm-set__row pl-pick" data-pick="64 kb/s|128 kb/s|256 kb/s|510 kb/s"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#audio-lines"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Bit rate</span></span><span class="gm-set__value">510 kb/s</span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></button>
+          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Stereo</span><span class="gm-set__hint">Two channels; off sends one.</span></span><button class="gm-toggle" role="switch" aria-checked="true" aria-label="Stereo"></button></div>
+          <div class="gm-set__row pl-music-off"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Echo cancellation</span><span class="gm-set__hint">Keeps your speaker out of your microphone. Off for headphones only.</span></span><button class="gm-toggle" role="switch" aria-checked="true" aria-label="Echo cancellation"></button></div>
+          <div class="gm-set__row pl-music-off"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#sliders-horizontal"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Automatic gain</span><span class="gm-set__hint">Evens out how loud you are. Off keeps your own level.</span></span><button class="gm-toggle" role="switch" aria-checked="false" aria-label="Automatic gain"></button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+        </div>
       </div>
     </div>
     <div class="u-grid features">
@@ -382,8 +602,106 @@
     </div>
     <div class="duo" aria-hidden="true">
       <i class="u-needle u-needle--glow"></i>
-      <img class="a" src="/shots/hangout-dark.webp" data-shot="hangout" alt="" loading="lazy">
-      <img class="b" src="/shots/hangout-chat-dark.webp" data-shot="hangout-chat" alt="" loading="lazy">
+      <div class="gm gm-fit calls-mock a" data-mock="hangout" data-calls-tab="people" style="--w:412;--h:892" aria-label="A space with four people, Maya speaking">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <div class="gm-status"><span>7:42</span><span class="gm-status__icons"><i></i></span></div>
+      <header class="gm-head">
+        <button class="gm-iconbtn" aria-label="Back" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+        <span class="gm-head__title">Friday hang</span>
+        <span class="gm-head__actions">
+          <button class="gm-iconbtn calls-link" aria-label="Copy invite link" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#link"/></svg></button>
+          <button class="gm-iconbtn" aria-label="Roles and moderation" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#shield-check"/></svg></button>
+        </span>
+      </header>
+      <div class="gm-seg calls-seg" data-gm-tabs>
+        <span class="gm-seg__thumb"></span>
+        <button class="gm-seg__tab" aria-selected="true" aria-label="People" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#users"/></svg></button>
+        <button class="gm-seg__tab" aria-selected="false" aria-label="Chat" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+      </div>
+      <div class="calls-panes">
+        <div class="calls-pane calls-pane--people">
+          <div class="gm-members">
+            <div class="gm-member calls-you"><span class="gm-rip" data-gm-ripple data-level="0">M</span><span class="gm-member__name">You</span><svg class="gm-i calls-muted"><use href="/mock/icons.svg#mic-off"/></svg><span class="gm-tag gm-tag--solid">Owner</span></div>
+            <div class="gm-member" data-who="maya"><span class="gm-rip" data-gm-ripple data-level="0.6">M</span><span class="gm-member__name">Maya Chen</span><span class="gm-tag">Moderator</span></div>
+            <div class="gm-member" data-who="sam"><span class="gm-rip" data-gm-ripple data-level="0">S</span><span class="gm-member__name">Sam</span><svg class="gm-i"><use href="/mock/icons.svg#mic-off"/></svg></div>
+            <div class="gm-member" data-who="riley"><span class="gm-rip" data-gm-ripple data-level="0">R</span><span class="gm-member__name">Riley<small>guest</small></span></div>
+          </div>
+          <div class="calls-foot">
+            <div class="gm-calldock">
+              <button class="gm-ctl calls-mic" aria-pressed="false" aria-label="Mute" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+              <button class="gm-ctl calls-ears" aria-pressed="false" aria-label="Deafen" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+              <button class="gm-ctl gm-ctl--round calls-cam" aria-pressed="false" aria-label="Camera" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#video-off"/></svg></button>
+              <button class="gm-endbtn calls-leave" aria-label="Leave" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#phone-off"/></svg></button>
+            </div>
+            <button class="gm-pillbtn calls-join" tabindex="-1"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone"/></svg>Join</button>
+          </div>
+        </div>
+        <div class="calls-pane calls-pane--chat" aria-hidden="true">
+          <div class="gm-scroll gm-scroll--end">
+            <div class="calls-chat">
+              <div class="calls-group" data-from="maya" data-at="7:40 PM"><div class="calls-by"><b>Maya Chen</b><span class="gm-tag">Moderator</span><time>7:40 PM</time></div><p>Starting the movie in 10, hop in</p><p>Bring snacks 🍿</p></div>
+              <div class="calls-group" data-from="riley" data-at="7:41 PM"><div class="calls-by"><b>Riley</b><time>7:41 PM</time></div><p>On my way!</p></div>
+              <div class="calls-group" data-from="you" data-at="7:41 PM"><div class="calls-by"><b>You</b><span class="gm-tag gm-tag--solid">Owner</span><time>7:41 PM</time></div><p>Saving you a seat</p></div>
+            </div>
+          </div>
+          <form class="calls-composer"><input class="calls-composer__input" placeholder="Message Friday hang" aria-label="Message Friday hang" autocomplete="off" tabindex="-1"><button class="calls-composer__send" aria-label="Send" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#arrow-up"/></svg></button></form>
+        </div>
+      </div>
+      <div class="calls-toast" role="status">Invite link copied</div>
+    </div>
+  </div>
+</div>
+      <div class="gm gm-fit calls-mock b" data-mock="hangout-chat" data-calls-tab="chat" style="--w:412;--h:892" aria-label="The space's chat">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <div class="gm-status"><span>7:42</span><span class="gm-status__icons"><i></i></span></div>
+      <header class="gm-head">
+        <button class="gm-iconbtn" aria-label="Back" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+        <span class="gm-head__title">Friday hang</span>
+        <span class="gm-head__actions">
+          <button class="gm-iconbtn calls-link" aria-label="Copy invite link" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#link"/></svg></button>
+          <button class="gm-iconbtn" aria-label="Roles and moderation" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#shield-check"/></svg></button>
+        </span>
+      </header>
+      <div class="gm-seg calls-seg" data-gm-tabs>
+        <span class="gm-seg__thumb"></span>
+        <button class="gm-seg__tab" aria-selected="false" aria-label="People" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#users"/></svg></button>
+        <button class="gm-seg__tab" aria-selected="true" aria-label="Chat" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+      </div>
+      <div class="calls-panes">
+        <div class="calls-pane calls-pane--people" aria-hidden="true">
+          <div class="gm-members">
+            <div class="gm-member calls-you"><span class="gm-rip" data-gm-ripple data-level="0">M</span><span class="gm-member__name">You</span><svg class="gm-i calls-muted"><use href="/mock/icons.svg#mic-off"/></svg><span class="gm-tag gm-tag--solid">Owner</span></div>
+            <div class="gm-member" data-who="maya"><span class="gm-rip" data-gm-ripple data-level="0.6">M</span><span class="gm-member__name">Maya Chen</span><span class="gm-tag">Moderator</span></div>
+            <div class="gm-member" data-who="sam"><span class="gm-rip" data-gm-ripple data-level="0">S</span><span class="gm-member__name">Sam</span><svg class="gm-i"><use href="/mock/icons.svg#mic-off"/></svg></div>
+            <div class="gm-member" data-who="riley"><span class="gm-rip" data-gm-ripple data-level="0">R</span><span class="gm-member__name">Riley<small>guest</small></span></div>
+          </div>
+          <div class="calls-foot">
+            <div class="gm-calldock">
+              <button class="gm-ctl calls-mic" aria-pressed="false" aria-label="Mute" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+              <button class="gm-ctl calls-ears" aria-pressed="false" aria-label="Deafen" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
+              <button class="gm-ctl gm-ctl--round calls-cam" aria-pressed="false" aria-label="Camera" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#video-off"/></svg></button>
+              <button class="gm-endbtn calls-leave" aria-label="Leave" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#phone-off"/></svg></button>
+            </div>
+            <button class="gm-pillbtn calls-join" tabindex="-1"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone"/></svg>Join</button>
+          </div>
+        </div>
+        <div class="calls-pane calls-pane--chat">
+          <div class="gm-scroll gm-scroll--end">
+            <div class="calls-chat">
+              <div class="calls-group" data-from="maya" data-at="7:40 PM"><div class="calls-by"><b>Maya Chen</b><span class="gm-tag">Moderator</span><time>7:40 PM</time></div><p>Starting the movie in 10, hop in</p><p>Bring snacks 🍿</p></div>
+              <div class="calls-group" data-from="riley" data-at="7:41 PM"><div class="calls-by"><b>Riley</b><time>7:41 PM</time></div><p>On my way!</p></div>
+              <div class="calls-group" data-from="you" data-at="7:41 PM"><div class="calls-by"><b>You</b><span class="gm-tag gm-tag--solid">Owner</span><time>7:41 PM</time></div><p>Saving you a seat</p></div>
+            </div>
+          </div>
+          <form class="calls-composer"><input class="calls-composer__input" placeholder="Message Friday hang" aria-label="Message Friday hang" autocomplete="off" tabindex="-1"><button class="calls-composer__send" aria-label="Send" tabindex="-1"><svg class="gm-i"><use href="/mock/icons.svg#arrow-up"/></svg></button></form>
+        </div>
+      </div>
+      <div class="calls-toast" role="status">Invite link copied</div>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 </section>
@@ -399,8 +717,90 @@
   <div class="u-wrap after-head">
     <div class="nets">
       <div class="netshots" aria-hidden="true">
-        <img class="a" src="/shots/inbox-list-dark.webp" data-shot="inbox-list" alt="" loading="lazy">
-        <img class="b" src="/shots/inbox-chat-dark.webp" data-shot="inbox-chat" alt="" loading="lazy">
+        <div class="gm gm-fit a" data-mock="inbox-list" style="--w:412;--h:585" aria-hidden="true">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <div class="gm-titlebar">
+        <h1 class="gm-titlebar__title">Messages</h1>
+        <button class="gm-iconbtn gm-iconbtn--muted" tabindex="-1" aria-label="Clean up"><svg class="gm-i"><use href="/mock/icons.svg#brush-cleaning"/></svg></button>
+        <button class="gm-roundbtn ib-readall" tabindex="-1" aria-label="Mark all read"><svg class="gm-i"><use href="/mock/icons.svg#check-check"/></svg></button>
+        <button class="gm-iconbtn" tabindex="-1" aria-label="New message"><svg class="gm-i"><use href="/mock/icons.svg#message-square-plus"/></svg></button>
+        <button class="gm-iconbtn" tabindex="-1" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
+      </div>
+      <label class="gm-search"><svg class="gm-i"><use href="/mock/icons.svg#search"/></svg><input tabindex="-1" placeholder="Search messages" aria-label="Search messages"></label>
+      <div class="gm-row-flex ib-tabsrow">
+        <div class="gm-seg" data-gm-tabs style="flex:1">
+          <span class="gm-seg__thumb"></span>
+          <button class="gm-seg__tab" tabindex="-1" aria-selected="true" aria-label="Chats"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+          <button class="gm-seg__tab" tabindex="-1" aria-label="Spaces"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg></button>
+        </div>
+        <button class="gm-roundbtn ib-filter" tabindex="-1" aria-label="Filter"><svg class="gm-i"><use href="/mock/icons.svg#funnel"/></svg></button>
+      </div>
+      <div class="gm-scroll ib-scroll">
+        <div class="gm-list ib-list">
+          <div class="gm-row is-unread" role="button" tabindex="-1" data-id="jo"><div class="gm-row__in">
+            <span class="gm-av" data-hue="amber">JP<span class="ib-badge"><i></i></span></span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Jo Park</span><span class="gm-row__fill"></span><span class="gm-row__time">11:46 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">are you coming tonight?</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="-1" data-id="maya"><div class="gm-row__in">
+            <span class="gm-av" data-hue="magenta">MC</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Maya Chen</span><span class="gm-row__fill"></span><span class="gm-row__time">11:44 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Sounds good, see you at 7!</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="-1" data-id="crew"><div class="gm-row__in">
+            <span class="gm-av" data-hue="slate">WC<span class="ib-badge"><i></i></span></span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Weekend crew</span><span class="gm-row__fill"></span><span class="gm-row__time">8:48 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">tent is packed</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="-1" data-id="dad"><div class="gm-row__in">
+            <span class="gm-av" data-hue="coral">D</span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Dad</span><span class="gm-row__fill"></span><span class="gm-row__time">6:48 PM</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">Call me when you land</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+          <div class="gm-row" role="button" tabindex="-1" data-id="sam"><div class="gm-row__in">
+            <span class="gm-av" data-hue="orange">SR<span class="ib-badge"><i></i></span></span>
+            <div class="gm-row__main">
+              <div class="gm-row__top"><span class="gm-row__name">Sam Rivera</span><span class="gm-row__fill"></span><span class="gm-row__time">Fri</span></div>
+              <div class="gm-row__bottom"><span class="gm-row__snip">You: thanks!</span><span class="gm-row__dot"></span></div>
+            </div>
+          </div></div>
+        </div>
+        <div class="ib-empty"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><b>No spaces yet</b><span>Start one and your friends can drop in to talk.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+        <div class="gm gm-fit b" data-mock="inbox-chat" style="--w:412;--h:462.5" aria-hidden="true">
+  <div class="gm-stage">
+    <div class="gm-screen">
+      <header class="gm-head ib-head">
+        <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+        <button class="gm-head__who" tabindex="-1">
+          <span class="gm-av" data-hue="amber" style="--size:33px">JP<span class="ib-badge ib-badge--sm"><i></i></span></span>
+          <span class="gm-head__text"><span class="gm-head__name">Jo Park</span><span class="gm-head__sub">Telegram</span></span>
+        </button>
+      </header>
+      <div class="gm-scroll gm-scroll--end ib-chatscroll">
+        <div class="gm-thread ib-thread">
+          <div class="gm-day">Today</div>
+          <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-bubble">hey! long time</div><div class="gm-meta">11:27 PM</div></div>
+          <div class="gm-msg gm-msg--out" data-g="solo"><div class="gm-bubble">I know, how have you been?</div><div class="gm-meta">11:29 PM</div></div>
+          <div class="gm-msg gm-msg--in" data-g="top"><div class="gm-bubble">good! there's a thing at the park later</div></div>
+          <div class="gm-msg gm-msg--in" data-g="bottom"><div class="gm-bubble">are you coming tonight?</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
       <ul class="logos" aria-label="The chat apps Uplink brings together">
         <li class="logo"><span class="mark"><svg class="u-i"><use href="#i-msg"/></svg></span><span class="name">Texts &amp; picture messages</span></li>
@@ -433,7 +833,138 @@
       <img class="u-slot-img" src="/art/space/desktop.webp" alt="" loading="lazy" onerror="this.remove()">
       <div class="window">
         <div class="chrome"><i></i><i></i><i></i></div>
-        <img src="/shots/wide-dark.webp" data-shot="wide" alt="" loading="lazy">
+        <div class="gm gm-fit" data-mock="wide" style="--w:750;--h:832">
+  <div class="gm-stage">
+    <div class="gm-split dk-split">
+      <aside class="gm-split__list">
+        <div class="gm-screen">
+          <div class="gm-status"></div>
+          <div class="gm-titlebar">
+            <h1 class="gm-titlebar__title">Messages</h1>
+            <button class="gm-iconbtn gm-iconbtn--muted" aria-label="Clean up"><svg class="gm-i"><use href="/mock/icons.svg#brush-cleaning"/></svg></button>
+            <button class="gm-roundbtn dk-readall" aria-label="Mark all read"><svg class="gm-i"><use href="/mock/icons.svg#check-check"/></svg></button>
+          </div>
+          <label class="gm-search"><svg class="gm-i"><use href="/mock/icons.svg#search"/></svg><input placeholder="Search messages" aria-label="Search messages"></label>
+          <div class="gm-row-flex" style="gap:10px;margin:10px var(--s2) 0">
+            <div class="gm-seg" data-gm-tabs style="flex:1">
+              <span class="gm-seg__thumb"></span>
+              <button class="gm-seg__tab" aria-selected="true" aria-label="Chats"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
+              <button class="gm-seg__tab" aria-label="Encrypted"><svg class="gm-i"><use href="/mock/icons.svg#key-round"/></svg></button>
+              <button class="gm-seg__tab" aria-label="Spaces"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg></button>
+            </div>
+            <button class="gm-roundbtn" aria-label="Filter"><svg class="gm-i"><use href="/mock/icons.svg#funnel"/></svg></button>
+          </div>
+          <div class="gm-scroll" style="padding-top:17px">
+            <div class="gm-card">
+              <svg class="gm-i"><use href="/mock/icons.svg#triangle-alert"/></svg>
+              <div class="gm-card__body"><b>Texts from some people not arriving?</b>If RCS chats were on in Google Messages, people who use RCS are still sending you chats there, not texts. Your old RCS chats are kept there too.<br><a class="gm-card__link" href="#" onclick="return false">What to do</a></div>
+              <button class="gm-card__close" aria-label="Close"><svg class="gm-i"><use href="/mock/icons.svg#x"/></svg></button>
+            </div>
+            <div class="gm-list dk-list" data-gm-select style="margin-top:9px">
+              <div class="gm-row" role="button" tabindex="0" data-dk="dad"><div class="gm-row__in">
+                <span class="gm-av" data-hue="coral">D</span>
+                <div class="gm-row__main">
+                  <div class="gm-row__top"><span class="gm-row__name">Dad</span><span class="gm-row__fill"></span><svg class="gm-i gm-row__pin"><use href="/mock/icons.svg#pin"/></svg><span class="gm-row__time">3:59 PM</span></div>
+                  <div class="gm-row__bottom"><span class="gm-row__snip">Call me when you land</span></div>
+                </div>
+              </div></div>
+              <div class="gm-row is-selected" role="button" tabindex="0" data-dk="maya"><div class="gm-row__in">
+                <span class="gm-av" data-hue="magenta">MC</span>
+                <div class="gm-row__main">
+                  <div class="gm-row__top"><span class="gm-row__name">Maya Chen</span><span class="gm-row__fill"></span><span class="gm-row__time">8:55 PM</span></div>
+                  <div class="gm-row__bottom"><span class="gm-row__snip">Sounds good, see you at 7! Bring the projector cable if you still have it</span><span class="gm-row__dot"></span></div>
+                </div>
+              </div></div>
+              <div class="gm-row" role="button" tabindex="0" data-dk="riley"><div class="gm-row__in">
+                <span class="gm-av" data-hue="indigo">RF</span>
+                <div class="gm-row__main">
+                  <div class="gm-row__top"><span class="gm-row__name">Riley Fox<svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg></span><span class="gm-row__fill"></span><span class="gm-row__time">8:29 PM</span></div>
+                  <div class="gm-row__bottom"><span class="gm-row__snip">Only our two phones can read this now</span></div>
+                </div>
+              </div></div>
+              <div class="gm-row is-unread" role="button" tabindex="0" data-dk="group"><div class="gm-row__in">
+                <span class="gm-av gm-av--pair" style="--pair:48px"><span class="gm-av" data-hue="slate">JD</span><span class="gm-av" data-hue="blue">SR</span></span>
+                <div class="gm-row__main">
+                  <div class="gm-row__top"><span class="gm-row__name">Jordan, Sam, Alex</span><span class="gm-row__fill"></span><span class="gm-row__time">8:07 PM</span></div>
+                  <div class="gm-row__bottom"><span class="gm-row__snip">Picture</span><span class="gm-row__dot"></span></div>
+                </div>
+              </div></div>
+              <div class="gm-row" role="button" tabindex="0" data-dk="noor"><div class="gm-row__in">
+                <span class="gm-av" data-hue="orange">NH</span>
+                <div class="gm-row__main">
+                  <div class="gm-row__top"><span class="gm-row__name">Noor Haddad</span><span class="gm-row__fill"></span><span class="gm-row__time">6:59 PM</span></div>
+                  <div class="gm-row__bottom"><span class="gm-row__snip">Encryption key</span></div>
+                </div>
+              </div></div>
+            </div>
+          </div>
+          <nav class="gm-dock gm-abs dk-dock" data-gm-tabs>
+            <button class="gm-dock__btn" aria-label="New"><svg class="gm-i"><use href="/mock/icons.svg#message-square-plus"/></svg></button>
+            <button class="gm-dock__btn" aria-selected="true" aria-label="Messages"><svg class="gm-i"><use href="/mock/icons.svg#message-square"/></svg></button>
+            <button class="gm-dock__btn" aria-label="Contacts"><svg class="gm-i"><use href="/mock/icons.svg#contact-round"/></svg></button>
+            <button class="gm-dock__btn" aria-label="Archived"><svg class="gm-i"><use href="/mock/icons.svg#archive"/></svg><span class="gm-count">1</span></button>
+            <button class="gm-dock__btn" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
+          </nav>
+        </div>
+      </aside>
+      <main class="gm-split__main">
+        <div class="gm-screen">
+          <div class="gm-status"></div>
+          <header class="gm-head dk-head">
+            <button class="gm-head__who">
+              <span class="gm-av dk-av" data-hue="magenta" style="--size:33px">MC</span>
+              <span class="gm-head__text"><span class="gm-head__name dk-name">Maya Chen</span><span class="gm-head__sub dk-sub">+15551230001</span></span>
+            </button>
+            <span class="gm-head__actions">
+              <button class="gm-iconbtn" aria-label="Call"><svg class="gm-i"><use href="/mock/icons.svg#phone"/></svg></button>
+              <button class="gm-iconbtn" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
+            </span>
+          </header>
+          <div class="gm-scroll gm-scroll--end">
+            <div class="gm-thread js-dk-thread">
+              <div class="gm-msg gm-msg--in" data-g="solo">
+                <div class="gm-bubble">Here's the link <a href="#" onclick="return false">https://example.com/<wbr>tickets</a></div>
+                <div class="gm-meta">8:20 PM</div>
+              </div>
+              <div class="gm-preview"><div class="gm-preview__site">Hickory Premier</div><div class="gm-preview__title">Movie night: 7:00 PM, Theatre 2</div></div>
+              <div class="gm-day">Today</div>
+              <div class="gm-msg gm-msg--out" data-g="top"><div class="gm-bubble">Movie night is still on for tonight right?</div></div>
+              <div class="gm-msg gm-msg--out" data-g="bottom">
+                <div class="gm-bubble">Dinner at mine first?</div>
+                <div class="gm-reacts"><span class="gm-react">❤️</span></div>
+                <div class="gm-meta"><span class="gm-meta__lines"><span>Edited · correction sent</span><span class="gm-row-flex">Delivered · 8:29 PM&nbsp;<svg class="gm-i gm-ticks"><use href="/mock/icons.svg#check-check"/></svg></span></span></div>
+              </div>
+              <div class="gm-msg gm-msg--in" data-g="solo">
+                <div class="gm-bubble">Sounds good, see you at 7! Bring the projector cable if you still have it</div>
+                <div class="gm-reacts"><span class="gm-react">😂</span></div>
+                <div class="gm-meta">8:55 PM</div>
+              </div>
+              <button class="gm-action"><svg class="gm-i"><use href="/mock/icons.svg#calendar-plus"/></svg>Tomorrow 7 PM</button>
+              <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-jumbo">🎉🍿</div><div class="gm-meta">8:58 PM</div></div>
+            </div>
+          </div>
+          <div class="gm-chips" data-gm-chips=".js-dk-composer">
+            <button class="gm-chip gm-chip--emoji">👍</button><button class="gm-chip">Sounds good</button><button class="gm-chip">Haha</button>
+          </div>
+          <div class="gm-hr"></div>
+          <div class="gm-offer dk-offer">
+            <svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg>
+            <p>Maya Chen has Uplink too. Encrypt this conversation for better security?</p>
+            <button class="gm-pillbtn">Turn on</button>
+            <button class="gm-iconbtn" aria-label="Not now" style="width:36px;height:36px"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#x"/></svg></button>
+          </div>
+          <form class="gm-composer gm-composer--foot js-dk-composer" data-gm-composer=".js-dk-thread">
+            <button type="button" class="gm-composer__btn" aria-label="Add"><svg class="gm-i"><use href="/mock/icons.svg#plus"/></svg></button>
+            <input class="gm-composer__input" placeholder="Text message" aria-label="Message">
+            <button type="button" class="gm-composer__btn" aria-label="Stickers"><svg class="gm-i"><use href="/mock/icons.svg#sticker"/></svg></button>
+            <button type="button" class="gm-composer__btn gm-composer__mic" aria-label="Voice message"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></button>
+            <button class="gm-composer__send" aria-label="Send"><svg class="gm-i"><use href="/mock/icons.svg#arrow-up"/></svg></button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
       </div>
     </div>
     <div>
@@ -574,11 +1105,10 @@
     g.addEventListener('keydown', (e) => { if (e.key === 'Escape') { shut(); more.focus(); } });
   }
 
-  // Dark or light: the page's colours and the app's own screenshots in that theme (tool/site-layers.py cuts both).
+  // Dark or light: the page's colours. The app's screens (site/mock) follow html[data-theme] by CSS alone.
   const root = document.documentElement, mode = document.getElementById('mode');
   const shots = () => {
     const light = root.dataset.theme === 'light';
-    for (const img of document.querySelectorAll('img[data-shot]')) img.src = '/shots/' + img.dataset.shot + (light ? '' : '-dark') + '.webp';
     // Each piece sits a few pixels differently in the app's light and dark screens (tool/site-layers.py).
     for (const layer of document.querySelectorAll('.layer[data-light]')) {
       const [l, t, w] = (light ? layer.dataset.light : layer.dataset.dark).split(',');
@@ -606,10 +1136,10 @@
     stage.classList.add('open');
     stack.style.setProperty("--gap", "40px");
   };
-  // It opens once every layer has arrived (or after 2.5 s at most), so no piece pops in halfway through.
+  // It opens once the app's font has arrived (or after 2.5 s at most), so no piece reflows halfway through.
   if (still) open();
   else {
-    const ready = [...stack.querySelectorAll('img')].map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {})));
+    const ready = [document.fonts ? document.fonts.ready : Promise.resolve()];
     Promise.race([Promise.all(ready), new Promise((r) => setTimeout(r, 2500))]).then(() => setTimeout(open, 250));
   }
   if (!still) {
