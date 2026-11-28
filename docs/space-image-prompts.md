@@ -32,6 +32,15 @@ which side.
 | `site/art/space/effects.webp` | 1600×1000 | Landing: effects, reactions, stickers |
 | `site/art/space/join.webp` | 1600×1000 | Behind the invite and join pages |
 
+**On the site: the screen-print set**, Matt's first nine (the retro-futuristic styles below, style 1), at the
+sizes they were made (the hero 2400×1350, the share card 1200×630, the join picture 1200×2133, the desktop 1600×900
+and the rest 1400×1400). Every slot on the page fills itself from whatever shape it is given (`.u-slot-img`,
+`object-fit: cover`), so a set of another shape needs nothing but the files.
+
+Set B, the miniature tilt-shift set (below), was on the site for under an hour on 2026-11-27 and taken off again
+(Matt: "go back to the previous images as well the hyper realistic ones don't hit as hard"). The photographic sets
+stay here as prompts; the site keeps the drawn one.
+
 **hero.webp**: the uplink itself.
 > A lone satellite dish on a dark rocky ridge at night, sending a single thin, bright white beam of light straight up
 > into a vast starfield, the beam sharp as a needle and slightly angled forward, a faint arc of a planet's horizon

@@ -180,7 +180,7 @@ const SUMS = 'SHA256SUMS.txt';
 function words() {
   const notes = notesFor(ROOT, version) ?? [];
   return [
-    `The new Uplink: high-quality text, voice and video in one app, for Android, Mac, Windows, Linux and the browser. The [README](https://github.com/${REPO}#readme) says what it does and how to start.`,
+    `The new Uplink: private text, voice and video in full quality, for Android, Mac, Windows, Linux and the browser. The [README](https://github.com/${REPO}#readme) says what it does and how to start.`,
     '',
     ...(notes.length ? [`## What's new in ${version}`, '', ...notes.map((n) => `- ${n}`), ''] : []),
     '## Downloads',

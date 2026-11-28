@@ -5,7 +5,7 @@
 <h1 align="center">Uplink</h1>
 
 <p align="center">
-  <b>High-quality text, voice and video. In one app.</b><br>
+  <b>Private text, voice and video. In full quality.</b><br>
   Your texts, your friends, your group calls and your other chat apps in one place, on your phone and your computer.
 </p>
 
