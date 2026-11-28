@@ -54,6 +54,7 @@ type fake struct {
 	reads    *discordgo.ReadStateList
 	messages map[string][]*discordgo.Message // by channel, newest first
 	files    map[string]string               // by address
+	held     chan struct{}                   // where set, each Get writes half its file and waits for it to close
 	calls    []string
 	sent     []*discordgo.MessageSend
 	sendErr  error
@@ -170,6 +171,13 @@ func (f *fake) Get(_ context.Context, url string, w io.Writer, limit int64) erro
 	data, ok := f.files[url]
 	if !ok {
 		return &statusError{Code: 404}
+	}
+	if f.held != nil {
+		if _, err := io.WriteString(w, data[:len(data)/2]); err != nil {
+			return err
+		}
+		<-f.held
+		data = data[len(data)/2:]
 	}
 	_, err := io.WriteString(w, data)
 	return err
@@ -752,12 +760,63 @@ func TestDownload(t *testing.T) {
 	if !h.f.called("messages " + dmID + " 1  " + msg1) {
 		t.Fatalf("calls: %v", h.f.calls)
 	}
-	if _, err := os.Stat(path + ".part"); !os.IsNotExist(err) {
-		t.Fatal("the part file was left")
+	if left, _ := filepath.Glob(path + "*.part"); len(left) > 0 {
+		t.Fatalf("part files were left: %v", left)
 	}
 	bad := `{"url":"https://cdn.discordapp.com/gone"}`
 	if _, err := do(request{ID: 2, Op: "download", Pointer: json.RawMessage(bad), Path: path + "2"}); err == nil || !strings.Contains(err.Error(), "run out") {
 		t.Fatalf("gone: %v", err)
+	}
+}
+
+// One file asked for twice at once (the app asked each time the picture was drawn): both are answered, the file is
+// whole, and nothing is left beside it. The two shared one ".part" file, and the second's rename found it gone:
+// "rename …/discord/files/330240540.png.part …/330240540.png: no such file or directory".
+func TestDownloadTwiceAtOnce(t *testing.T) {
+	h := setup(t)
+	h.signIn()
+	url := "https://cdn.discordapp.com/attachments/1/77/menu.pdf?ex=1"
+	h.f.files[url] = "%PDF the whole of it"
+	h.f.held = make(chan struct{})
+	ptr := `{"url":"` + url + `","chat":"` + dmID + `","message":"` + msg1 + `","attachment":"77"}`
+	path := filepath.Join(t.TempDir(), "330240540.pdf")
+	errs := make(chan error, 2)
+	for id := range int64(2) {
+		go func() {
+			_, err := do(request{ID: id + 1, Op: "download", Pointer: json.RawMessage(ptr), Path: path})
+			errs <- err
+		}()
+	}
+	// Both under way, each with half its file written, before either goes on.
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		h.f.mu.Lock()
+		n := 0
+		for _, c := range h.f.calls {
+			if c == "get "+url {
+				n++
+			}
+		}
+		h.f.mu.Unlock()
+		if n == 2 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("both fetches never began: %v", h.f.calls)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	close(h.f.held)
+	for range 2 {
+		if err := <-errs; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if data, _ := os.ReadFile(path); string(data) != "%PDF the whole of it" {
+		t.Fatalf("file: %q", data)
+	}
+	if left, _ := filepath.Glob(path + "*.part"); len(left) > 0 {
+		t.Fatalf("part files were left: %v", left)
 	}
 }
 

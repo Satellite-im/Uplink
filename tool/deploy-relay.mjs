@@ -31,7 +31,7 @@
  * /opt/ghost-relay; what it keeps (the pairings' channels: a hash and a day each) in /var/lib/ghost-relay; a
  * systemd service that restarts it, may write nowhere else, and may use 300 MB and one processor at most.
  *
- * It uses Ghost.md's box account and its own deploy code, as tool/release.mjs does (--glyph <path> or GLYPH_ROOT).
+ * It reaches the box through tool/lib/box.mjs (its login in ~/.config/uplink/release.env), as tool/release.mjs does.
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -237,11 +237,6 @@ const secrets = envFile ? readEnvFile(envFile) : null;
 const secretsSum = secrets ? createHash('sha256').update(secrets.bytes).digest('hex') : '';
 if (secrets) console.log(`> ${envFile}: ${secrets.names.length} ${secrets.names.length === 1 ? 'value' : 'values'} for the box (${secrets.names.join(', ')})`);
 
-const at = args.indexOf('--glyph');
-const glyph = [at >= 0 ? args[at + 1] : null, process.env.GLYPH_ROOT, join(ROOT, '..'), join(ROOT, '..', 'glyph'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .find((dir) => existsSync(join(dir, 'tauri/scripts/lib/box.mjs')));
-if (!glyph && !printOnly) fail('No Ghost.md checkout found for its box code (--glyph <path> or GLYPH_ROOT).');
 
 // The box is x86-64 Linux (glyph's scripts/deploy-server.mjs builds for the same). Dart builds for it from here.
 const dart = [process.env.DART, 'dart'].filter(Boolean).find((d) => spawnSync(d, ['--version'], { stdio: 'ignore' }).status === 0);
@@ -330,8 +325,8 @@ if (printOnly) {
   process.exit(0);
 }
 
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20, knownHosts: join(homedir(), '.ssh', 'known_hosts') }));
 console.log('> Logging in to the box');

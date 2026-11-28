@@ -5,7 +5,7 @@
  * tool/release.mjs, for this app (Matt, 2026-11-13: "add auto update and serve it over ghost-sms.com I'll point the
  * domain to the same server ghost kbd uses").
  *
- *   node tool/release.mjs [--glyph ~/path/to/glyph] [--version 0.4.0] [--no-deploy] [--keep-connection] [--again] [--no-p2p] [--no-web]
+ *   node tool/release.mjs [--version 0.4.0] [--no-deploy] [--keep-connection] [--again] [--no-p2p] [--no-web]
  *
  * Once the release is live, the web client is built and published at gogho.st/app with it (tool/release-web.mjs;
  * GMFB-30), so it follows the app's releases; --no-web leaves it as it is.
@@ -18,11 +18,9 @@
  * RUN tool/deploy-site.mjs --caddy ONCE FIRST, so the domain has its block; a release before that is placed but
  * not served, and this says so.
  *
- * THE CREDENTIALS ARE GHOST.MD'S. Nothing is copied here: the box's address, account and password are read from
- * Ghost.md's own .env (tauri/.env: AFM_DEPLOY_HOST, AFM_DEPLOY_USER, AFM_DEPLOY_PASS) by Ghost.md's own loader, and the
- * box is reached through Ghost.md's box.mjs, so this spends ONE login on the shared, multiplexed connection exactly as
- * Ghost.md's deploys do (the box locks an account out after a few logins in a short window). This app lives in
- * Ghost.md's repository (messaging/), so the checkout is the folder above; --glyph or $GLYPH_ROOT say otherwise.
+ * THE CREDENTIALS are in ~/.config/uplink/release.env (UPLINK_DEPLOY_HOST, UPLINK_DEPLOY_USER, UPLINK_DEPLOY_PASS; see
+ * tool/lib/box.mjs), never in this repository. The box is reached through tool/lib/box.mjs, which spends ONE login on a
+ * shared, multiplexed connection (the box locks an account out after a few logins in a short window).
  *
  * THE RELEASE KEY is ~/.config/ghostmessaging/ (signing.properties and release.keystore), made here the first time.
  * Android installs an update only over the same certificate, so losing it means everyone reinstalls: back it up. The
@@ -79,25 +77,6 @@ const capture = (cmd, cmdArgs) => {
   if (result.status !== 0) fail(`${cmd} failed: ${result.stderr || result.stdout}`);
   return result.stdout;
 };
-
-// --- Ghost.md, for the box and its credentials ----------------------------------------------------------------------
-
-// The Ghost.md checkout, known by two of its scripts: --glyph, GLYPH_ROOT, beside this repository, or the usual
-// folders under the home directory.
-function findGlyph() {
-  const candidates = [
-    flag('glyph'),
-    process.env.GLYPH_ROOT,
-    join(ROOT, '..'),
-    join(ROOT, '..', 'glyph'),
-    join(ROOT, '..', 'Glyph'),
-    ...['Projects', 'Developer', 'dev', 'code', 'src', 'GitHub', 'Documents/GitHub', 'repos', ''].map((d) => join(homedir(), d, 'glyph')),
-  ].filter(Boolean);
-  for (const dir of candidates) {
-    if (existsSync(join(dir, 'tauri', 'scripts', 'lib', 'box.mjs')) && existsSync(join(dir, 'scripts', 'lib', 'env.mjs'))) return resolve(dir);
-  }
-  fail(`Could not find the Ghost.md checkout (looked in ${candidates.join(', ')}). Pass --glyph <path> or set GLYPH_ROOT.`);
-}
 
 // --- the Android SDK's tools --------------------------------------------------------------------------------------
 
@@ -169,8 +148,6 @@ function pubspecVersion() {
 
 // --- the release --------------------------------------------------------------------------------------------------
 
-const glyph = deploy ? findGlyph() : null;
-if (glyph) say(`ok Ghost.md at ${glyph} (the box's credentials)`);
 
 ensureSigningKey();
 
@@ -285,10 +262,10 @@ writeFileSync(join(out, 'apk.json'), `${JSON.stringify(info, null, 2)}\n`);
 say(`ok Uplink ${info.version} (code ${info.versionCode}), ${(info.bytes / 1e6).toFixed(1)} MB, in build/release`);
 if (!deploy) process.exit(0);
 
-// --- publishing, with Ghost.md's box ------------------------------------------------------------------------------
+// --- publishing, to the box -------------------------------------------------------------------------------------
 
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20 }));
 // Asked once more, just before the login: the build took minutes, and it may have been released by someone else
@@ -357,7 +334,7 @@ if (!process.argv.includes('--no-github')) {
 // fatal. --no-web leaves it out.
 if (!args.includes('--no-web')) {
   say('> The web client (gogho.st/app)');
-  const web = spawnSync('node', [join(ROOT, 'tool/release-web.mjs'), '--glyph', glyph, ...(keepConnection ? ['--keep-connection'] : [])], { cwd: ROOT, stdio: 'inherit' });
+  const web = spawnSync('node', [join(ROOT, 'tool/release-web.mjs'), ...(keepConnection ? ['--keep-connection'] : [])], { cwd: ROOT, stdio: 'inherit' });
   if (web.status !== 0) say('x The web client was not published; run node tool/release-web.mjs');
 } else {
   say('  (the web client not published: --no-web)');

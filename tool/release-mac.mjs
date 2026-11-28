@@ -7,7 +7,7 @@
  *   node tool/release-mac.mjs                        # build, sign, zip, describe: into build/release-mac
  *   node tool/release-mac.mjs --install              # ...and put the app in /Applications (once: it updates itself after)
  *   node tool/release-mac.mjs --notarize             # ...and have Apple notarise it and staple the ticket
- *   node tool/release-mac.mjs --publish [--glyph ~/path/to/glyph] [--keep-connection] [--again]
+ *   node tool/release-mac.mjs --publish [--keep-connection] [--again]
  *                                                    # ...and put the zip and its description on the box
  *   --no-p2p          leave the direct network's core out (the app then has no direct route, and is otherwise the same)
  *   --version 0.6.2   the version's name (pubspec.yaml's otherwise)
@@ -435,15 +435,11 @@ if (has('install')) {
 
 if (!has('publish')) process.exit(0);
 
-// --- publishing, with Ghost.md's box --------------------------------------------------------------------------------
+// --- publishing, to the box -----------------------------------------------------------------------------------------
 
 if (!notarised) say('! Not notarised: right for copies that update themselves, not for a download from a browser.');
-const glyph = [flag('glyph'), process.env.GLYPH_ROOT, join(ROOT, '..'), join(ROOT, '..', 'glyph'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .find((dir) => existsSync(join(dir, 'tauri/scripts/lib/box.mjs')) && existsSync(join(dir, 'scripts/lib/env.mjs')));
-if (!glyph) fail('No Ghost.md checkout found for its box code (--glyph <path> or GLYPH_ROOT).');
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20 }));
 const keepConnection = has('keep-connection');

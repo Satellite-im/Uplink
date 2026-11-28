@@ -34,7 +34,7 @@
  *   - swaps program, settings and service in, restarts, and checks it is listening and answers /healthz with
  *     gogho.st's certificate. Then the same question is asked from this Mac.
  *
- * It uses Ghost.md's box account and its deploy code, as tool/deploy-relay.mjs does (--glyph <path> or GLYPH_ROOT).
+ * It reaches the box through tool/lib/box.mjs (its login in ~/.config/uplink/release.env), as tool/deploy-relay.mjs does.
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -238,13 +238,8 @@ if (printOnly) {
 }
 
 console.log(`> ${BIN}: iroh-relay ${built}, ${(program.length / 1e6).toFixed(1)} MB, sha256 ${sum.slice(0, 16)}…`);
-const glyph = [flag('glyph'), process.env.GLYPH_ROOT, join(ROOT, '..'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .map((p) => resolve(p.replace(/^~(?=\/)/, homedir())))
-  .find((p) => existsSync(join(p, 'tauri/scripts/lib/box.mjs')));
-if (!glyph) fail('Ghost.md\'s checkout (for the box\'s login) was not found: --glyph <path>.');
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20, knownHosts: join(homedir(), '.ssh', 'known_hosts') }));
 console.log('> Logging in to the box');

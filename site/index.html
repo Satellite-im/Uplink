@@ -45,13 +45,13 @@
 <link rel="stylesheet" href="/mock/hero3d.css">
 <link rel="stylesheet" href="/mock/h3-plugins.css">
 <link rel="stylesheet" href="/mock/h3-space.css">
-<link rel="stylesheet" href="/mock/pillars.css">
+<link rel="stylesheet" href="/mock/features.css">
 <link rel="stylesheet" href="/mock/calls.css">
 <link rel="stylesheet" href="/mock/inbox.css">
 <link rel="stylesheet" href="/mock/desktop.css">
 <script src="/mock/mock.js" defer></script>
 <script src="/mock/hero.js" defer></script>
-<script src="/mock/pillars.js" defer></script>
+<script src="/mock/features.js" defer></script>
 <script src="/mock/calls.js" defer></script>
 <script src="/mock/inbox.js" defer></script>
 <script src="/mock/desktop.js" defer></script>
@@ -109,17 +109,8 @@
   @media (max-width: 700px) { .head { padding-top: 4.25rem; } .head .u-slot--bg { height: 26rem; } }
   .after-head { padding-top: 3rem; padding-bottom: 6rem; }
 
-  /* one app, three things */
-  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
-  @media (max-width: 900px) { .trio { grid-template-columns: minmax(0, 1fr); max-width: 27rem; margin-left: auto; margin-right: auto; } }
-  .pillar { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .pillar .text { padding: 1.6rem 1.6rem 1.2rem; }
-  .pillar .u-h3 { display: flex; align-items: center; gap: .75rem; font-size: 1.45rem; }
-  .pillar .u-badge { margin: 0; width: 2.4rem; height: 2.4rem; }
-  .pillar p:not(.gm *) { margin-top: .5rem; }
-  .shot { margin-top: auto; height: 21rem; overflow: hidden; display: flex; justify-content: center; padding-top: .4rem; background: linear-gradient(180deg, transparent, var(--u-glow)); }
-  .shot img { width: 76%; height: auto; border-radius: 1.4rem 1.4rem 0 0; box-shadow: 0 0 0 1px var(--u-rule), 0 -8px 40px rgba(0, 0, 0, .35); align-self: flex-start; }
-  .features { margin-top: 1.1rem; }
+  /* the features: the deck of cards is site/mock/features.css; these are the small cards under it */
+  .features { margin-top: 2.6rem; }
   .features .wide { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-items: stretch; padding: 0; overflow: hidden; }
   .features .wide .txt { padding: 1.5rem 0 1.5rem 1.45rem; }
   .features .wide .u-slot { margin: calc(var(--u-inset) + 6px); border-radius: var(--u-r-sm); min-height: 12rem; }
@@ -244,6 +235,14 @@
     <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
     <symbol id="i-at" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></symbol>
     <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+    <symbol id="i-foldersync" viewBox="0 0 24 24"><path d="M9 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v.5"/><path d="M12 10v4h4"/><path d="m12 14 1.535-1.605a5 5 0 0 1 8 1.5"/><path d="M22 22v-4h-4"/><path d="m22 18-1.535 1.605a5 5 0 0 1-8-1.5"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><path d="M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="m17 8 5-5"/><path d="M17 3h5v5"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
+    <symbol id="i-captions" viewBox="0 0 24 24"><rect width="18" height="14" x="3" y="5" rx="2" ry="2"/><path d="M7 15h4"/><path d="M15 15h2"/><path d="M7 11h2"/><path d="M13 11h4"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
   </defs>
 </svg>
 
@@ -251,7 +250,7 @@
   <div class="u-wrap">
     <a class="u-brand" href="#top"><img src="/art/uplink-logo.webp" width="1200" height="918" alt="Uplink"></a>
     <nav class="u-nav" aria-label="Sections">
-      <a href="#one-app">One app</a>
+      <a href="#features">Features</a>
       <a href="#calls">Voice and video</a>
       <a href="#inbox">One inbox</a>
       <a href="#desktop">Desktop</a>
@@ -539,193 +538,221 @@
   </div>
 </div>
 
-<section id="one-app">
+<section id="features">
   <div class="head">
     <div class="u-slot u-slot--bg u-slot--fade u-stars"><img class="u-slot-img" src="/art/space/messages.webp" alt="" loading="lazy" onerror="this.remove()"></div>
     <div class="u-wrap u-center">
-      <span class="u-kicker">One app instead of three</span>
-      <h2 class="u-h2">Chat, talk and see each other, <em>without switching apps.</em></h2>
-      <p class="u-sub">Your texts, your friends and your calls live together. Start in a chat, jump into the group's space, turn video on, and the conversation is all still in one place.</p>
+      <span class="u-kicker">More than a messenger</span>
+      <h2 class="u-h2">Share files, sync folders, <em style="display:inline-block">record every voice.</em></h2>
+      <p class="u-sub">Uplink also does the jobs you'd open another app for, and keeps them as private as your chats. Each one plays below.</p>
     </div>
   </div>
   <div class="u-wrap after-head">
-    <div class="trio">
-      <div class="u-sticker pillar">
-        <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-msgs"/></svg></span>Messages</h3><p>Texts and picture messages, plus encrypted chats with friends on Uplink. Reactions, effects, stickers, groups with names and faces.</p></div>
-        <div class="shot">
-<div class="gm gm-fit pl-shot" data-mock="list" style="--w:412;--h:892" aria-label="The conversation list">
-  <div class="gm-stage">
-    <div class="gm-screen">
-      <div class="gm-status"><span>12:05</span><span class="gm-status__icons"><i></i></span></div>
-      <div class="gm-titlebar">
-        <h1 class="gm-titlebar__title">Messages</h1>
-        <button class="gm-iconbtn gm-iconbtn--muted" aria-label="Clean up"><svg class="gm-i"><use href="/mock/icons.svg#brush-cleaning"/></svg></button>
-        <button class="gm-roundbtn pl-markall" aria-label="Mark all read"><svg class="gm-i"><use href="/mock/icons.svg#check-check"/></svg></button>
-      </div>
-      <label class="gm-search"><svg class="gm-i"><use href="/mock/icons.svg#search"/></svg><input class="pl-search" placeholder="Search messages" aria-label="Search messages"></label>
-      <div class="gm-row-flex" style="gap:10px;margin:10px var(--s2) 0">
-        <div class="gm-seg" data-gm-tabs style="flex:1">
-          <span class="gm-seg__thumb"></span>
-          <button class="gm-seg__tab" aria-selected="true" aria-label="Chats"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
-          <button class="gm-seg__tab" aria-label="Encrypted"><svg class="gm-i"><use href="/mock/icons.svg#key-round"/></svg></button>
-          <button class="gm-seg__tab" aria-label="Spaces"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><span class="gm-seg__count">1</span></button>
-        </div>
-        <button class="gm-roundbtn" aria-label="Filter"><svg class="gm-i"><use href="/mock/icons.svg#funnel"/></svg></button>
-      </div>
-      <div class="gm-scroll" style="padding-top:17px">
-        <div class="gm-list" data-gm-select>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0 1"><div class="gm-row__in">
-            <span class="gm-av" data-hue="coral">D</span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Dad</span><span class="gm-row__fill"></span><svg class="gm-i gm-row__pin"><use href="/mock/icons.svg#pin"/></svg><span class="gm-row__time">12:33 PM</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Call me when you land</span></div>
+    <!-- The features, a card each, one open at a time (site/mock/features.css and features.js: the script opens them in
+         turn and plays each one's stage; without it the cards show their words alone). A stage's markup is its last
+         frame, which is what shows where nothing may move. -->
+    <div class="ft">
+      <div class="ft-deck" data-ft-deck>
+
+        <article class="u-sticker ft-card is-open" data-ft="files">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-folder"/></svg></span><span class="ft-title">Shared files</span><span class="ft-num" aria-hidden="true">01</span></h3>
+          <div class="ft-body" id="ft-files">
+            <p class="ft-say">Every group gets a shared folder. A file goes up whole, tens of gigabytes at a time, sealed on your device before it leaves.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Drop a file in</li><li>Sealed, in pieces</li><li>Everyone has it</li></ol></div>
+            <div class="gm gm-fit ft-stage" data-mock="ft-files" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen">
+                <div class="fd-bar">
+                  <span class="fd-ico"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></span>
+                  <span class="fd-bar__text"><b>Shared</b><small>Book Club</small></span>
+                  <span class="fd-fill"></span>
+                  <span class="fd-ico fd-ico--muted"><svg class="gm-i"><use href="/mock/icons.svg#search"/></svg></span>
+                  <span class="gm-pillbtn"><svg class="gm-i gm-i--16"><use href="/mock/icons.svg#hard-drive-upload"/></svg>Upload</span>
+                </div>
+                <div class="fd-files">
+                  <div class="fd-file fd-file--new is-done" data-hue="purple">
+                    <span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#film"/></svg></span>
+                    <span class="fd-file__main">
+                      <span class="fd-file__top"><span class="fd-file__name">Highlights.mp4</span><span class="fd-file__hint">12.4 GB · You</span><span class="fd-faces"><span class="gm-av is-in" data-hue="magenta">M</span><span class="gm-av is-in" data-hue="amber">J</span><span class="gm-av is-in" data-hue="blue">S</span></span></span>
+                      <span class="fd-pieces"><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i><i class="is-up"></i></span>
+                    </span>
+                  </div>
+                  <div class="fd-file" data-hue="amber"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#folder"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">Trip</span><span class="fd-file__hint">8 files</span></span></span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></div>
+                  <div class="fd-file" data-hue="blue"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#file-text"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">menu.pdf</span><span class="fd-file__hint">1.2 MB · Maya</span></span></span></div>
+                  <div class="fd-file" data-hue="green"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#image"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">Trail map.png</span><span class="fd-file__hint">3.4 MB · Jo</span></span></span></div>
+                  <div class="fd-drop">Drop to add them here</div>
+                </div>
+                <div class="fd-foot"><svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg><span>Sealed end to end</span><span class="fd-fill"></span><span class="fd-room"><i></i></span><span class="js-free">41.8 GB free</span></div>
+                <div class="fd-drag" data-hue="purple"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#film"/></svg></span><span>Highlights.mp4<small>12.4 GB</small></span></div>
+                <div class="fd-toast">In Shared, for everyone in Book Club</div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row is-unread pl-maya" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
-            <span class="gm-av" data-hue="magenta">MC</span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Maya Chen</span><span class="gm-row__fill"></span><span class="gm-row__time">5:29 PM</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Sounds good, see you at 7! Bring the projector cable if you still have it</span><span class="gm-row__dot"></span></div>
+          </div>
+        </article>
+
+        <article class="u-sticker ft-card" data-ft="sync">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-foldersync"/></svg></span><span class="ft-title">Folder sync</span><span class="ft-num" aria-hidden="true">02</span></h3>
+          <div class="ft-body" id="ft-sync">
+            <p class="ft-say">Pick a folder on your computer and Uplink keeps it in step with your files. What you add there goes up, and what's added anywhere else comes down.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Choose a folder</li><li>New files go up</li><li>Changes come down</li></ol></div>
+            <div class="gm gm-fit ft-stage" data-mock="ft-sync" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen">
+                <div class="fs-pane fs-pane--disk">
+                  <div class="fs-chrome"><i></i><i></i><i></i><span>Trip</span></div>
+                  <div class="fs-path"><svg class="gm-i"><use href="/mock/icons.svg#folder-open"/></svg>~/Documents/Trip</div>
+                  <div class="fs-list js-disk"><div class="fs-file" data-hue="blue"><svg class="gm-i"><use href="/mock/icons.svg#file-text"/></svg><b>itinerary.pdf</b><small>212 KB</small></div><div class="fs-file" data-hue="green"><svg class="gm-i"><use href="/mock/icons.svg#image"/></svg><b>map.png</b><small>1.8 MB</small></div><div class="fs-file" data-hue="amber"><svg class="gm-i"><use href="/mock/icons.svg#image"/></svg><b>IMG_2041.jpg</b><small>3.4 MB</small></div></div>
+                </div>
+                <div class="fs-link"><svg class="gm-i gm-i--flat"><use href="/mock/icons.svg#refresh-cw"/></svg></div>
+                <div class="fs-pane fs-pane--drive">
+                  <div class="fs-head">My files</div>
+                  <div class="fs-call is-on">
+                    <svg class="gm-i"><use href="/mock/icons.svg#folder-input"/></svg>
+                    <span class="fs-call__text"><span class="fs-call__path">~/Documents/Trip</span><span class="fs-call__state">In step.</span></span>
+                    <span class="fs-call__act">Stop syncing</span>
+                  </div>
+                  <div class="fs-list js-drive"><div class="fs-file" data-hue="blue"><svg class="gm-i"><use href="/mock/icons.svg#file-text"/></svg><b>itinerary.pdf</b><small>212 KB</small></div><div class="fs-file" data-hue="green"><svg class="gm-i"><use href="/mock/icons.svg#image"/></svg><b>map.png</b><small>1.8 MB</small></div><div class="fs-file" data-hue="amber"><svg class="gm-i"><use href="/mock/icons.svg#image"/></svg><b>IMG_2041.jpg</b><small>3.4 MB</small></div></div>
+                </div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0 1"><div class="gm-row__in">
-            <span class="gm-av" data-hue="indigo">RF</span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Riley Fox<svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg></span><span class="gm-row__fill"></span><span class="gm-row__time">5:03 PM</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Only our two phones can read this now</span></div>
+          </div>
+        </article>
+
+        <article class="u-sticker ft-card" data-ft="rec">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-rec"/></svg></span><span class="ft-title">Multi-track recording</span><span class="ft-num" aria-hidden="true">03</span></h3>
+          <div class="ft-body" id="ft-rec">
+            <p class="ft-say">Record a call to one file with a track for each voice, named for them, so you can mute or edit one without the others. Everyone is asked first.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Everyone is asked</li><li>A track per voice</li><li>Mute one, then save</li></ol><span class="u-tag ft-plug"><svg class="u-i"><use href="#i-puzzle"/></svg><span>Plugin</span></span></div>
+            <div class="gm gm-dark gm-fit ft-stage" data-mock="ft-rec" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen fr">
+                <div class="fr-bar">
+                  <i class="fr-dot"></i><b class="fr-rec">REC</b><span class="fr-time">00:00:09.2</span><span class="fr-count"><span># Friday hang · </span><b class="js-count">3 tracks</b></span>
+                  <span class="fd-fill"></span>
+                  <span class="fr-mixer">Mixer<svg class="gm-i gm-i--flat"><use href="/mock/icons.svg#sliders-horizontal"/></svg></span>
+                  <span class="fr-stop"><i></i>Stop</span>
+                </div>
+                <div class="fr-rows" style="--t:9.2">
+                  <div class="fr-row fr-row--ruler"><div class="fr-cap">TRACKS</div><div class="fr-ruler"></div></div>
+                  <div class="fr-row" data-track="mix" style="--c:#7ee0a1"><div class="fr-head"><b>Everyone</b><span class="fr-keys"><i>Mix</i></span><span class="fr-meter"><i></i></span></div><div class="fr-lane"><div class="fr-clip"><span>Everyone</span><svg class="fr-wave" preserveAspectRatio="none"><path/></svg></div></div></div>
+                  <div class="fr-row" data-track="you" style="--c:#b79cff"><div class="fr-head"><b>You</b><span class="fr-keys"><i>A1</i><i class="fr-m">M</i><i>S</i></span><span class="fr-meter"><i></i></span></div><div class="fr-lane"><div class="fr-clip"><span>You</span><svg class="fr-wave" preserveAspectRatio="none"><path/></svg></div></div></div>
+                  <div class="fr-row" data-track="maya" style="--c:#4ea1ff;--from:1.5"><div class="fr-head"><b>Maya</b><span class="fr-keys"><i>A2</i><i class="fr-m">M</i><i>S</i></span><span class="fr-ask"></span><span class="fr-meter"><i></i></span></div><div class="fr-lane"><div class="fr-clip"><span>Maya</span><svg class="fr-wave" preserveAspectRatio="none"><path/></svg></div></div></div>
+                  <div class="fr-row is-muted" data-track="jo" style="--c:#ffb84d;--from:2.5"><div class="fr-head"><b>Jo</b><span class="fr-keys"><i>A3</i><i class="fr-m is-lit">M</i><i>S</i></span><span class="fr-ask"></span><span class="fr-meter"><i></i></span></div><div class="fr-lane"><div class="fr-clip"><span>Jo</span><svg class="fr-wave" preserveAspectRatio="none"><path/></svg></div></div></div>
+                  <i class="fr-playhead"></i>
+                </div>
+                <div class="fd-toast">Recording saved<i>Open</i></div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0 2"><div class="gm-row__in">
-            <span class="gm-av gm-av--pair" style="--pair:48px"><span class="gm-av" data-hue="slate">JD</span><span class="gm-av" data-hue="blue">SR</span></span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Jordan, Sam, Alex</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Picture</span></div>
+          </div>
+        </article>
+
+        <article class="u-sticker ft-card" data-ft="share">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-screen"/></svg></span><span class="ft-title">Screen sharing</span><span class="ft-num" aria-hidden="true">04</span></h3>
+          <div class="ft-body" id="ft-share">
+            <p class="ft-say">Show the call a whole screen or just one window, with its sound on a Mac or PC. Everyone sees it large and whole, never cropped.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Pick a window</li><li>Everyone sees it</li><li>Its sound goes too</li></ol></div>
+            <div class="gm gm-fit ft-stage" data-mock="ft-share" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen fh" data-view="live">
+                <div class="fh-pick">
+                  <div class="fd-bar fd-bar--plain"><span class="fd-bar__text"><b>Share your screen</b></span><span class="fd-fill"></span><span class="fd-ico fd-ico--muted"><svg class="gm-i"><use href="/mock/icons.svg#x"/></svg></span></div>
+                  <div class="fh-soundrow" data-hue="blue"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg></span><span class="fh-soundrow__text"><b>Share sound too</b><small>What your computer plays goes with your screen.</small></span><span class="gm-toggle" role="presentation" aria-checked="true"></span></div>
+                  <div class="fh-choices">
+                    <div class="fh-thumb"><small>Screens</small><div class="fh-pic fh-pic--desk"><i></i><i></i><i></i></div><b>Entire screen</b></div>
+                    <div class="fh-thumb js-window"><small>Windows</small><div class="fh-pic fh-pic--plan"><i></i><i></i><i></i><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M8 90C30 82 22 54 46 50S70 26 92 10"/></svg></div><b>Trip plan</b></div>
+                    <div class="fh-thumb"><small>&nbsp;</small><div class="fh-pic fh-pic--notes"><i></i><i></i><i></i><i></i><i></i></div><b>Notes</b></div>
+                  </div>
+                </div>
+                <div class="fh-live">
+                  <div class="fd-line"><i class="fh-on"></i><span class="fd-line__text"><b>You're sharing your screen</b> · Trip plan</span><span class="fd-line__act">Stop</span></div>
+                  <div class="fh-win">
+                    <div class="fh-win__bar"><i></i><i></i><i></i><span>Trip plan</span></div>
+                    <div class="fh-slide">
+                      <div class="fh-slide__text"><b>Coast road, day two</b><span>Leave by nine</span><span>Lunch at the harbour</span><span>Camp before dark</span></div>
+                      <svg class="fh-route" viewBox="0 0 120 100" preserveAspectRatio="xMidYMid meet"><path pathLength="100" d="M10 88C34 84 30 60 52 56S74 34 82 26S100 16 110 12"/><circle cx="10" cy="88" r="4"/><circle cx="110" cy="12" r="4"/></svg>
+                    </div>
+                  </div>
+                  <div class="fh-under"><span class="fh-watch"><span class="gm-av is-in" data-hue="magenta">M</span><span class="gm-av is-in" data-hue="amber">J</span><span class="gm-av is-in" data-hue="blue">S</span></span><span class="js-watching">Maya, Jo and Sam <i>are watching</i></span><span class="fd-fill"></span><span class="fh-sound is-on"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg><span class="fh-bars"><i></i><i></i><i></i><i></i></span><b>Sound on</b></span></div>
+                </div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
-            <span class="gm-av" data-hue="orange">NH</span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Noor Haddad</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Encryption key</span></div>
+          </div>
+        </article>
+
+        <article class="u-sticker ft-card" data-ft="watch">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-film"/></svg></span><span class="ft-title">Watch together</span><span class="ft-num" aria-hidden="true">05</span></h3>
+          <div class="ft-body" id="ft-watch">
+            <p class="ft-say">Play a video or a song from your shared files for everyone in the call, in step. Pause it, and it pauses for everyone.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Pick a video</li><li>Plays in step</li><li>Pause for everyone</li></ol><span class="u-tag ft-plug"><svg class="u-i"><use href="#i-puzzle"/></svg><span>Plugin</span></span></div>
+            <div class="gm gm-fit ft-stage" data-mock="ft-watch" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen fw" data-view="play">
+                <div class="fw-pick">
+                  <div class="fd-bar"><span class="fd-ico"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></span><span class="fd-bar__text"><b>Shared</b><small>Book Club</small></span></div>
+                  <div class="fd-files">
+                    <div class="fd-file js-film" data-hue="purple"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#film"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">Highlights.mp4</span><span class="fd-file__hint">12.4 GB · You</span></span></span></div>
+                    <div class="fd-file" data-hue="amber"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#folder"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">Trip</span><span class="fd-file__hint">8 files</span></span></span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></div>
+                    <div class="fd-file" data-hue="blue"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#file-text"/></svg></span><span class="fd-file__main"><span class="fd-file__top"><span class="fd-file__name">menu.pdf</span><span class="fd-file__hint">1.2 MB · Maya</span></span></span></div>
+                  </div>
+                  <div class="fw-incall"><i></i><b>Friday hang</b><span>In the call: you, Maya, Jo, Sam</span></div>
+                  <div class="fd-menu">
+                    <div class="fd-menu__title">Highlights.mp4</div>
+                    <div class="fd-menu__item"><svg class="gm-i"><use href="/mock/icons.svg#play"/></svg>Play</div>
+                    <div class="fd-menu__item js-together"><svg class="gm-i"><use href="/mock/icons.svg#film"/></svg>Watch together in the call</div>
+                    <div class="fd-menu__item"><svg class="gm-i"><use href="/mock/icons.svg#share-2"/></svg>Share</div>
+                  </div>
+                </div>
+                <div class="fw-play">
+                  <div class="fw-main">
+                    <div class="fw-player">
+                      <div class="fw-film"><i class="fw-sun"></i><i class="fw-hills"></i><i class="fw-hills fw-hills--near"></i></div>
+                      <div class="fw-ctl"><span class="fw-btn"><svg class="gm-i"><use href="/mock/icons.svg#pause"/></svg></span><span class="fw-now">0:06</span><span class="fw-seek"><i></i></span><span>3:10</span></div>
+                    </div>
+                    <div class="fw-people">
+                      <small>In step</small>
+                      <div class="fw-who"><span class="gm-av" data-hue="magenta">M</span><b>Maya</b><time>0:06</time><svg class="gm-i"><use href="/mock/icons.svg#play"/></svg></div>
+                      <div class="fw-who"><span class="gm-av" data-hue="amber">J</span><b>Jo</b><time>0:06</time><svg class="gm-i"><use href="/mock/icons.svg#play"/></svg></div>
+                      <div class="fw-who"><span class="gm-av" data-hue="blue">S</span><b>Sam</b><time>0:06</time><svg class="gm-i"><use href="/mock/icons.svg#play"/></svg></div>
+                    </div>
+                  </div>
+                  <div class="fd-line"><svg class="gm-i"><use href="/mock/icons.svg#film"/></svg><span class="fd-line__text"><b>You're watching Highlights.mp4 together</b></span><span class="fd-line__act">Stop</span></div>
+                </div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
-            <span class="gm-av" data-hue="green">PN</span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">Priya Natarajan</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">See you there</span></div>
+          </div>
+        </article>
+
+        <article class="u-sticker ft-card" data-ft="captions">
+          <h3 class="u-h3 ft-name"><span class="u-badge"><svg class="u-i"><use href="#i-captions"/></svg></span><span class="ft-title">Live captions</span><span class="ft-num" aria-hidden="true">06</span></h3>
+          <div class="ft-body" id="ft-captions">
+            <p class="ft-say">See what everyone in a call says, written out as they talk, each line named. Each voice is written out on its owner's device, never on a server.</p>
+            <div class="ft-meta"><ol class="ft-steps"><li>Turn captions on</li><li>Each line named</li><li>Made on each device</li></ol><span class="u-tag ft-plug"><svg class="u-i"><use href="#i-puzzle"/></svg><span>Plugin</span></span></div>
+            <div class="gm gm-fit ft-stage" data-mock="ft-captions" aria-hidden="true" inert>
+              <div class="gm-stage"><div class="gm-screen fc is-noted">
+                <div class="fd-bar"><span class="fd-ico"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></span><span class="fd-bar__text"><b>Friday hang</b><small>3 in voice</small></span><span class="fd-fill"></span><span class="fd-ico js-more"><svg class="gm-i"><use href="/mock/icons.svg#ellipsis"/></svg></span></div>
+                <div class="fc-faces">
+                  <div class="fc-face"><span class="gm-rip" data-gm-ripple data-level="0" data-who="maya">M</span>Maya<span class="fc-dev"><svg class="gm-i"><use href="/mock/icons.svg#smartphone"/></svg>phone</span></div>
+                  <div class="fc-face"><span class="gm-rip" data-gm-ripple data-level="0" data-who="jo">J</span>Jo<span class="fc-dev"><svg class="gm-i"><use href="/mock/icons.svg#laptop"/></svg>laptop</span></div>
+                  <div class="fc-face"><span class="gm-rip" data-gm-ripple data-level="0" data-who="sam">S</span>Sam<span class="fc-dev"><svg class="gm-i"><use href="/mock/icons.svg#smartphone"/></svg>phone</span></div>
+                </div>
+                <div class="fc-box is-on">
+                  <div class="fc-lines"><p><b>Jo</b><span>Works for me, Tuesday?</span></p><p><b>Sam</b><span>Tuesday it is</span></p></div>
+                  <div class="fc-note is-on"><svg class="gm-i"><use href="/mock/icons.svg#lock"/></svg>Written on each person's own device. No voice goes to a server.</div>
+                </div>
+                <div class="fd-menu">
+                  <div class="fd-menu__item js-captions"><svg class="gm-i"><use href="/mock/icons.svg#type"/></svg>Show captions</div>
+                  <div class="fd-menu__item"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg>Voice settings…</div>
+                </div>
+                <i class="fd-tap"></i>
+              </div></div>
             </div>
-          </div></div>
-          <div class="gm-row" role="button" tabindex="0" data-tab="0"><div class="gm-row__in">
-            <span class="gm-av" data-hue="amber"><svg class="gm-i"><use href="/mock/icons.svg#user-round"/></svg></span>
-            <div class="gm-row__main">
-              <div class="gm-row__top"><span class="gm-row__name">+15551230007</span><span class="gm-row__fill"></span><span class="gm-row__time">Nov 3</span></div>
-              <div class="gm-row__bottom"><span class="gm-row__snip">Draft: The bus will be late</span></div>
-            </div>
-          </div></div>
-        </div>
+          </div>
+        </article>
+
       </div>
-      <div class="gm-callbar gm-abs pl-callbar" style="left:14px;width:320px;bottom:34px">
-        <span class="gm-callbar__live"></span>
-        <span class="gm-callbar__text"><span class="gm-callbar__name">Friday hang</span><span class="gm-callbar__sub">12:05 · Me, Maya Chen</span></span>
-        <span class="gm-callbar__faces"><span class="gm-rip" data-gm-ripple data-talk="auto" style="--size:26px">M</span><span class="gm-rip pl-me" data-gm-ripple data-level="0.5" style="--size:26px">M</span></span>
-        <button class="gm-iconbtn pl-mute" aria-label="Mute" aria-pressed="false"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></button>
-        <button class="gm-endbtn pl-leave" aria-label="Leave" style="width:35px;height:35px;margin-right:6px"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone-off"/></svg></button>
-      </div>
-      <nav class="gm-dock gm-dock--v gm-abs" data-gm-tabs style="right:9.5px;bottom:34.5px">
-        <button class="gm-dock__btn" aria-label="New"><svg class="gm-i"><use href="/mock/icons.svg#message-square-plus"/></svg></button>
-        <button class="gm-dock__btn" aria-selected="true" aria-label="Messages"><svg class="gm-i"><use href="/mock/icons.svg#message-square"/></svg></button>
-        <button class="gm-dock__btn" aria-label="Contacts"><svg class="gm-i"><use href="/mock/icons.svg#contact-round"/></svg></button>
-        <button class="gm-dock__btn" aria-label="Archived"><svg class="gm-i"><use href="/mock/icons.svg#archive"/></svg><span class="gm-count">1</span></button>
-        <button class="gm-dock__btn" aria-label="Settings"><svg class="gm-i"><use href="/mock/icons.svg#settings"/></svg></button>
-      </nav>
-    </div>
-  </div>
-</div>
-        </div>
-      </div>
-      <div class="u-sticker pillar">
-        <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-phones"/></svg></span>Voice</h3><p>Every group has a space that's always open: see who's in, drop in, drop out. Share a space by link and anyone can join.</p></div>
-        <div class="shot">
-<div class="gm gm-fit pl-shot" data-mock="hangout" style="--w:412;--h:892" aria-label="A space with four people">
-  <div class="gm-stage">
-    <div class="gm-screen">
-      <div class="gm-status"><span>12:05</span><span class="gm-status__icons"><i></i></span></div>
-      <header class="gm-head">
-        <button class="gm-iconbtn" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
-        <span class="gm-head__title">Friday hang</span>
-        <span class="gm-head__actions">
-          <button class="gm-iconbtn pl-copy" aria-label="Invite link"><svg class="gm-i"><use href="/mock/icons.svg#link"/></svg></button>
-          <button class="gm-iconbtn" aria-label="Moderation"><svg class="gm-i"><use href="/mock/icons.svg#shield-check"/></svg></button>
-        </span>
-      </header>
-      <div class="gm-seg pl-tabs" data-gm-tabs style="margin:3px var(--s4) 0;height:46px">
-        <span class="gm-seg__thumb"></span>
-        <button class="gm-seg__tab" aria-selected="true" aria-label="People"><svg class="gm-i"><use href="/mock/icons.svg#users"/></svg></button>
-        <button class="gm-seg__tab" aria-label="Chat"><svg class="gm-i"><use href="/mock/icons.svg#message-circle"/></svg></button>
-      </div>
-      <div class="pl-pane pl-people">
-        <div class="gm-members">
-          <div class="gm-member pl-you"><span class="gm-rip" data-gm-ripple data-level="0">M</span><span class="gm-member__name">You</span><span class="gm-tag gm-tag--solid">Owner</span><svg class="gm-i pl-youmute" hidden><use href="/mock/icons.svg#mic-off"/></svg></div>
-          <div class="gm-member"><span class="gm-rip" data-gm-ripple data-talk="auto">M</span><span class="gm-member__name">Maya Chen</span><span class="gm-tag">Moderator</span></div>
-          <div class="gm-member pl-sam"><span class="gm-rip" data-gm-ripple data-level="0">S</span><span class="gm-member__name">Sam</span><svg class="gm-i"><use href="/mock/icons.svg#mic-off"/></svg></div>
-          <div class="gm-member"><span class="gm-rip" data-gm-ripple data-level="0">R</span><span class="gm-member__name">Riley<small>guest</small></span></div>
-        </div>
-        <div class="gm-calldock gm-abs pl-dock" style="left:50%;transform:translateX(-50%);bottom:34px">
-          <button class="gm-ctl pl-mic" aria-pressed="false" aria-label="Microphone"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
-          <button class="gm-ctl pl-sound" aria-pressed="false" aria-label="Sound"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg><svg class="gm-i gm-i--chev"><use href="/mock/icons.svg#chevron-up"/></svg></button>
-          <button class="gm-ctl gm-ctl--round pl-cam" aria-pressed="false" aria-label="Camera"><svg class="gm-i"><use href="/mock/icons.svg#video-off"/></svg></button>
-          <button class="gm-endbtn pl-leave" aria-label="Leave"><svg class="gm-i"><use href="/mock/icons.svg#phone-off"/></svg></button>
-        </div>
-        <button class="gm-pillbtn gm-abs pl-join" hidden style="left:50%;transform:translateX(-50%);bottom:44px"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#phone"/></svg>Join</button>
-      </div>
-      <div class="pl-pane pl-chat" hidden>
-        <div class="pl-lines js-pl-lines">
-          <div class="pl-line"><div class="pl-line__who"><b>Maya Chen</b><span class="gm-tag">Moderator</span><time>7:40 PM</time></div><p>Starting the movie in 10, hop in</p><p>Bring snacks 🍿</p></div>
-          <div class="pl-line"><div class="pl-line__who"><b>Riley</b><time>7:41 PM</time></div><p>On my way!</p></div>
-          <div class="pl-line"><div class="pl-line__who"><b>You</b><span class="gm-tag gm-tag--solid">Owner</span><time>7:41 PM</time></div><p>Saving you a seat</p></div>
-        </div>
-        <form class="pl-say">
-          <input class="pl-say__input" placeholder="Message Friday hang" aria-label="Message Friday hang">
-          <button class="pl-say__send" aria-label="Send"><svg class="gm-i gm-i--20"><use href="/mock/icons.svg#arrow-up"/></svg></button>
-        </form>
-      </div>
-      <div class="pl-toast" aria-live="polite"></div>
-    </div>
-  </div>
-</div>
-        </div>
-      </div>
-      <div class="u-sticker pillar">
-        <div class="text"><h3 class="u-h3"><span class="u-badge"><svg class="u-i"><use href="#i-video"/></svg></span>Video</h3><p>Turn your camera on in any call, up to 4K. Noise suppression keeps fans, keyboards and traffic out, and your mic can go to 200%.</p></div>
-        <div class="shot">
-<div class="gm gm-fit pl-shot" data-mock="voice-settings" style="--w:412;--h:805" aria-label="Voice and video settings">
-  <div class="gm-stage">
-    <div class="gm-screen" style="padding-top:17px">
-      <section class="gm-sec">
-        <h3 class="gm-sec__title">Volume</h3>
-        <p class="gm-sec__desc">Over 100% is boosted: your microphone louder than it picks up, or everyone louder than the device plays.</p>
-        <div class="gm-set" data-hue="mint">
-          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#mic"/></svg></span><span class="gm-set__label pl-vlabel">Microphone</span><input class="gm-slider pl-micvol" type="range" min="0" max="200" value="100" aria-label="Microphone"><span class="gm-set__value" style="width:62px">100%</span></div>
-          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg></span><span class="gm-set__label pl-vlabel">Output</span><input class="gm-slider" type="range" min="0" max="200" value="100" aria-label="Output"><span class="gm-set__value" style="width:62px">100%</span></div>
-        </div>
-      </section>
-      <section class="gm-sec">
-        <h3 class="gm-sec__title">Sound</h3>
-        <p class="gm-sec__desc">Opus, the codec calls use. 510 kb/s stereo is the most it carries: past what an ear can tell from the microphone itself. FLAC is not something a live call can carry.</p>
-        <div class="gm-set" data-hue="mint">
-          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#music"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Music mode</span><span class="gm-set__hint">The microphone as it is, for music: no echo cancellation, noise suppression or gain, 510 kb/s stereo at a constant rate. Use headphones.</span></span><button class="gm-toggle pl-music" role="switch" aria-checked="false" aria-label="Music mode"></button></div>
-          <button class="gm-set__row pl-pick" data-pick="Off|RNNoise (Standard here)|DeepFilterNet"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#waves-horizontal"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Noise suppression</span></span><span class="gm-set__value">RNNoise (Standard here)</span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></button>
-          <button class="gm-set__row pl-pick" data-pick="64 kb/s|128 kb/s|256 kb/s|510 kb/s"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#audio-lines"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Bit rate</span></span><span class="gm-set__value">510 kb/s</span><svg class="gm-i gm-chev"><use href="/mock/icons.svg#chevron-right"/></svg></button>
-          <div class="gm-set__row"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#headphones"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Stereo</span><span class="gm-set__hint">Two channels; off sends one.</span></span><button class="gm-toggle" role="switch" aria-checked="true" aria-label="Stereo"></button></div>
-          <div class="gm-set__row pl-music-off"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#volume-2"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Echo cancellation</span><span class="gm-set__hint">Keeps your speaker out of your microphone. Off for headphones only.</span></span><button class="gm-toggle" role="switch" aria-checked="true" aria-label="Echo cancellation"></button></div>
-          <div class="gm-set__row pl-music-off"><span class="gm-tile"><svg class="gm-i"><use href="/mock/icons.svg#sliders-horizontal"/></svg></span><span class="gm-set__text"><span class="gm-set__label">Automatic gain</span><span class="gm-set__hint">Evens out how loud you are. Off keeps your own level.</span></span><button class="gm-toggle" role="switch" aria-checked="false" aria-label="Automatic gain"></button></div>
-        </div>
-      </section>
-    </div>
-  </div>
-</div>
-        </div>
+      <div class="ft-ctl" hidden>
+        <span class="ft-hint">Plays by itself. Choose a card to jump to it.</span>
+        <button class="u-icon-btn ft-play" type="button" aria-pressed="false" aria-label="Pause the walkthroughs"><svg class="u-i i-pause"><use href="#i-pause"/></svg><svg class="u-i i-play"><use href="#i-play"/></svg></button>
       </div>
     </div>
     <div class="u-grid features">

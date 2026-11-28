@@ -1039,14 +1039,17 @@ func (a *account) download(ctx context.Context, raw json.RawMessage, path string
 	return err
 }
 
-// fetchTo fetches the file at [from] into [path], by way of path.part so a fetch that fails leaves nothing behind.
-// A file may be up to a gigabyte.
+// fetchTo fetches the file at [from] into [path], by way of a ".part" file beside it so a fetch that fails leaves
+// nothing behind. A file may be up to a gigabyte. Each fetch has a ".part" file of its own (name.png.<random>.part):
+// two asked for one path at once, as the app did each time a picture was drawn, shared one, and the first renamed it
+// into place while the second still wrote to it; the second's rename then found nothing ("rename …png.part …png: no
+// such file or directory").
 func (a *account) fetchTo(ctx context.Context, from, path string) error {
-	tmp := path + ".part"
-	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	f, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.part")
 	if err != nil {
 		return errors.New("the file could not be written: " + err.Error())
 	}
+	tmp := f.Name()
 	err = a.cli.Get(ctx, from, f, 1<<30)
 	if cerr := f.Close(); err == nil {
 		err = cerr

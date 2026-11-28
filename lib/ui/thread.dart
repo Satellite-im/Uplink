@@ -4,8 +4,9 @@ import 'dart:convert' show utf8;
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart' show RenderProxyBox;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:glacier/glacier.dart';
@@ -2549,6 +2550,13 @@ class _Pill extends StatelessWidget {
 }
 
 /// A message's picture, read from the phone by its part's [id]; a tap opens it over the whole screen ([_Viewer]).
+///
+/// It keeps the room it was last drawn in (GMFB-73, @kevin, Android 0.12.47: "When an image is present on mobile
+/// scrolling down seems to loop or jitter"). A picture scrolled away is let go and read again when scrolled back to
+/// (Sms.part keeps the last forty), and coming back it was a grey square, then nothing at all while its bytes were
+/// made into a picture, then its own shape: three heights in a list that holds its place from the foot, so everything
+/// above it jumped each time. Now the square is the picture's own shape from the first frame, and stays until the
+/// picture is drawn.
 class _Picture extends StatelessWidget {
   const _Picture({required this.id, required this.radius, required this.maxWidth, this.onTap, this.otherwise});
   final int id;
@@ -2562,16 +2570,35 @@ class _Picture extends StatelessWidget {
   /// What a tap does in place of opening the picture: sending a message that failed again.
   final VoidCallback? onTap;
 
+  /// Each picture's shape as it was last drawn, by its part's id: how wide it was of the width it was given, and how
+  /// tall. The last few hundred, far more than a conversation shows at once.
+  static final _shapes = <int, ({double across, double tall})>{};
+  static const _shapesKept = 400;
+
+  static void _keepShape(int id, Size size, double maxWidth) {
+    if (maxWidth <= 0 || size.width <= 0 || size.height <= 0) return;
+    _shapes.remove(id);
+    _shapes[id] = (across: size.width / maxWidth, tall: size.height / maxWidth);
+    while (_shapes.length > _shapesKept) {
+      _shapes.remove(_shapes.keys.first);
+    }
+  }
+
+  /// The room a picture takes before it is drawn: its own, where it was drawn before; else a square.
+  Size get _room {
+    final shape = _shapes[id];
+    return shape == null ? Size(maxWidth * 0.7, maxWidth * 0.7) : Size(maxWidth * shape.across, maxWidth * shape.tall);
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    Widget waiting() => Container(key: const ValueKey('picture-waiting'), width: _room.width, height: _room.height, decoration: BoxDecoration(color: t.color('app-paper-2'), borderRadius: radius));
     return FutureBuilder<Uint8List?>(
       future: Sms.instance.part(id),
       builder: (context, snap) {
         final bytes = snap.data;
-        if (bytes == null) {
-          return Container(width: maxWidth * 0.7, height: maxWidth * 0.7, decoration: BoxDecoration(color: t.color('app-paper-2'), borderRadius: radius));
-        }
+        if (bytes == null) return waiting();
         return GestureDetector(
           onTap: onTap ?? () => Navigator.of(context).push(PageRouteBuilder<void>(
             opaque: false,
@@ -2587,8 +2614,18 @@ class _Picture extends StatelessWidget {
               // One that cannot be drawn is its file's row, which opens, saves and shares it ([otherwise]; its own
               // press wins over this one's); with none given it keeps its place as the grey of one coming: it drew as
               // nothing at all, and a picture message showed only its "Delivered".
-              child: Image.memory(bytes, fit: BoxFit.cover, cacheWidth: (maxWidth * MediaQuery.devicePixelRatioOf(context)).round(), gaplessPlayback: true,
-                  errorBuilder: (context, _, _) => otherwise ?? Container(width: maxWidth * 0.7, height: maxWidth * 0.7, decoration: BoxDecoration(color: t.color('app-paper-2'), borderRadius: radius))),
+              child: Image.memory(
+                bytes,
+                fit: BoxFit.cover,
+                cacheWidth: (maxWidth * MediaQuery.devicePixelRatioOf(context)).round(),
+                gaplessPlayback: true,
+                // Until its first frame is made an image has no size at all: the room it will take stands for it.
+                frameBuilder: (context, child, frame, _) {
+                  if (frame == null) return waiting();
+                  return _Sized(onSize: (size) => _keepShape(id, size, maxWidth), child: child);
+                },
+                errorBuilder: (context, _, _) => otherwise ?? Container(width: maxWidth * 0.7, height: maxWidth * 0.7, decoration: BoxDecoration(color: t.color('app-paper-2'), borderRadius: radius)),
+              ),
             ),
           ),
         );
@@ -2596,6 +2633,36 @@ class _Picture extends StatelessWidget {
     );
   }
 }
+
+/// Tells [onSize] how large [child] was laid out, each time that changes.
+class _Sized extends SingleChildRenderObjectWidget {
+  const _Sized({required this.onSize, super.child});
+  final ValueChanged<Size> onSize;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderSized(onSize);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderSized renderObject) => renderObject.onSize = onSize;
+}
+
+class _RenderSized extends RenderProxyBox {
+  _RenderSized(this.onSize);
+  ValueChanged<Size> onSize;
+  Size? _told;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    if (size == _told) return;
+    _told = size;
+    onSize(size);
+  }
+}
+
+/// A conversation's picture by itself, for a test.
+@visibleForTesting
+Widget threadPictureForTest({required int id, required double maxWidth}) => _Picture(id: id, radius: BorderRadius.zero, maxWidth: maxWidth);
 
 /// A sticker in the conversation: its picture as it is, clear round its edge.
 class _Sticker extends StatelessWidget {

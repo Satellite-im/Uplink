@@ -25,6 +25,12 @@ class ReleaseNotes {
 
 /// Every release's entry, the newest first.
 const List<ReleaseNotes> changelog = [
+  ReleaseNotes('0.12.55', '2026-11-28', [
+    'Pictures from Discord, Slack, X, Messenger, Instagram, LinkedIn, WhatsApp and Matrix come through whole: one that was still loading could fail with an error about renaming a file, or arrive broken.',
+    'Your souls open over the whole app from the sidebar on a phone, where they were squeezed into the sidebar.',
+    'A file added to a Files space reaches the synced folder on your computer within moments, without opening the space first.',
+    'Scrolling a chat with pictures in it no longer jumps: a picture keeps its place as you scroll away from it and back.',
+  ]),
   ReleaseNotes('0.12.54', '2026-11-27', [
     'A loading splash on your phone: the Uplink logo turns on the screen for a moment as the app opens, then fades away over the app. Open the app from a notification, a link or something shared into it and it steps aside sooner.',
     'The launch splash on a computer: the logo is about twice as large and turns while the app looks for an update, where it stood still.',

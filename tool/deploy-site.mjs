@@ -30,8 +30,8 @@
  * do here. INSTALLED COPIES UPDATE FROM THOSE TWO ADDRESSES (Updater.BASE): a block under which they stop answering
  * is put back, never kept.
  *
- * It uses Ghost.md's box account and its own deploy code, as tool/release.mjs does (this app lives in Ghost.md's
- * repository, so the checkout is the folder above; --glyph <path> or GLYPH_ROOT say otherwise). THE CADDYFILE IS
+ * It reaches the box through tool/lib/box.mjs, its login read from ~/.config/uplink/release.env, as tool/release.mjs
+ * does. THE CADDYFILE IS
  * SHARED (attack.fm, ghostmarkdown.com, ghostkbd.com and more), so --caddy is glyph's scripts/deploy-landing.mjs
  * procedure, line for line: it touches only this site's own blocks (gogho.st's, ghost-sms.com's, app.gogho.st's, and those of the site's other names, satellite.im and deepspaceshipping.co, which serve the site themselves); a timestamped backup; every other site asked
  * for its page before; the block written; `caddy validate`; a reload; every other site asked again; a failed
@@ -116,11 +116,6 @@ if (!existsSync(join(SITE_DIR, 'index.html'))) fail('No site/index.html to ship.
 // The App Links file goes with the rest (the tarball takes dot folders too): without it, installed copies stop
 // opening gogho.st/join links straight away the next time Android checks.
 if (!existsSync(join(SITE_DIR, '.well-known', 'assetlinks.json'))) fail('No site/.well-known/assetlinks.json to ship.');
-const at = args.indexOf('--glyph');
-const glyph = [at >= 0 ? args[at + 1] : null, process.env.GLYPH_ROOT, join(ROOT, '..'), join(ROOT, '..', 'glyph'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .find((dir) => existsSync(join(dir, 'tauri/scripts/lib/box.mjs')));
-if (!glyph && !printOnly) fail('No Ghost.md checkout found for its box code (--glyph <path> or GLYPH_ROOT).');
 
 // www answers with a redirect to the bare name. The release's two files come from the release's own folder; every
 // other address is the site's. Nothing is cached hard: the site is small and changes with the app.
@@ -564,8 +559,8 @@ if (printOnly) {
   process.exit(0);
 }
 
-const { BOX_ENV_KEYS, boxSshOptions, openBox, tarball } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox, tarball } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 /** The site and the app in one tarball, under site/ and app/ (links to the two folders, followed by tar). */
 const both = () => {
   const stage = mkdtempSync(join(tmpdir(), 'ghost-site-'));

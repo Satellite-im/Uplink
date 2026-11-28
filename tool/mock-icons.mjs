@@ -19,6 +19,9 @@ const names = new Set([
   'waves-horizontal', 'audio-lines', 'music', 'sliders-horizontal', 'send', 'image', 'file', 'file-text', 'smile',
   'reply', 'copy', 'ellipsis', 'trash-2', 'bell', 'globe', 'screen-share', 'sparkles', 'map-pin', 'circle-check',
   'smartphone', 'laptop', 'monitor', 'download', 'play', 'pause', 'minimize', 'maximize',
+  // The feature walkthroughs' own (site/mock/features.js): files and folders, a recording, a shared window, captions.
+  'folder', 'folder-open', 'folder-input', 'film', 'hard-drive-upload', 'circle-dot', 'circle-stop', 'type',
+  'refresh-cw', 'app-window', 'share-2',
   ...process.argv.slice(2),
 ]);
 

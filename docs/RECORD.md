@@ -33,6 +33,28 @@ github.com/InfamousVague/ghost-gmessages-sidecar).
 
 ## What it does
 
+- **Fixes from the feedback board, and chat files downloaded once** (0.12.55, 2026-11-28).
+  - **A chat's file is downloaded once** (Matt, Mac: "rename …/discord/files/330240540.png.part …: no such file or
+    directory"). A picture asks for its file every time it is drawn (`lib/ui/inbox_ui.dart`), so a second download of
+    one file started while the first was still coming; both wrote through the helper's one `.part` path, and the
+    second's rename found it gone, or the first moved a file the second was still writing. The account helpers
+    (`lib/inbox/account_helper.dart`: Discord, Slack, X, Messenger, Instagram, LinkedIn), WhatsApp and Matrix now wait
+    on the download already under way, as Signal did (`lib/inbox/signal.dart`); and the Discord helper gives each fetch
+    a `.part` file of its own (`sidecar/discord/main.go`, `fetchTo`). Tests: `test/inbox_account_helper_test.dart`
+    ("downloaded once": five asks, one download, where the old code sent five) and `sidecar/discord/main_test.go`
+    (`TestDownloadTwiceAtOnce`, which failed with the reported error on the old code).
+  - **Souls open over the whole app** (GMFB-76, Matt, Android 0.12.48): `showSouls` (`lib/ui/souls.dart`) goes on the
+    root navigator, as Share feedback's drawer does, where from the sidebar it stopped at the rail.
+  - **A synced folder follows its drive as it changes** (GMFB-74, @kevin, Android 0.12.47: a file added to the server
+    reached the desktop folder only once the space was opened). `FolderSync` (`lib/files/folder_sync.dart`) listens to
+    its drive's log and runs a pass a moment after it grows, where it ran on choosing, on opening the page and every
+    four minutes.
+  - **A picture keeps its room while it is read again** (GMFB-73, @kevin, Android 0.12.47: scrolling past an image
+    looped or jittered). A picture scrolled back to keeps the shape it was last drawn in until it is decoded
+    (`lib/ui/thread.dart`), where it went from a grey square to nothing to its own shape and moved what was above it.
+  - **Releases log in to the box themselves** (`tool/lib/box.mjs`): the login is read from
+    `~/.config/uplink/release.env` (`UPLINK_DEPLOY_HOST`, `UPLINK_DEPLOY_USER`, `UPLINK_DEPLOY_PASS`), where the scripts
+    borrowed a Ghost.md checkout's box code and `tauri/.env`.
 - **The logo turns while the app loads: larger on a computer's splash, and a splash on the phone** (0.12.54;
   Matt, 2026-11-27: "update the update screen to use the loading_logo.mp4 and make it larger so it is visible, also
   on the phone add a loading splash screen using the same logo"). His film (`art/loading_logo.mp4`: the white logo

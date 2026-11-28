@@ -87,6 +87,17 @@ void main() {
         await tester.tapAt(const Offset(4, 4));
         await settle(tester);
         expect(_key('feedback-drawer'), findsNothing);
+        // What souls are opens over the whole app too, not in the list's column beside the rail (GMFB-76, Matt, Android
+        // 0.12.48: "Viewing souls from the sidebar on mobile limits the popup to the sidebar instead it should open over
+        // the whole app like the share feedback modal does").
+        await tester.tap(_key('souls'));
+        await settle(tester);
+        expect(_key('souls-sheet'), findsOneWidget);
+        expect(tester.getCenter(_key('souls-sheet')).dx, closeTo(at.width / 2, 2));
+        await _keep(tester, '${style.name}-$size-souls');
+        await tester.tapAt(const Offset(4, 4));
+        await settle(tester);
+        expect(_key('souls-sheet'), findsNothing);
 
         AppShellState.live!.openCircle(_owls);
         await settle(tester);

@@ -185,13 +185,8 @@ if (!envFile) fail('Name the relay\'s environment file: --env <file> (it holds G
 const secret = readSecret(resolve(envFile.replace(/^~(?=\/)/, homedir())));
 console.log(`> ${envFile}: GHOST_TURN_SECRET (${secret.length} characters) for the box`);
 
-const glyph = [flag('glyph'), process.env.GLYPH_ROOT, join(ROOT, '..'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .map((p) => resolve(p.replace(/^~(?=\/)/, homedir())))
-  .find((p) => existsSync(join(p, 'tauri/scripts/lib/box.mjs')));
-if (!glyph) fail('Ghost.md\'s checkout (for the box\'s login) was not found: --glyph <path>.');
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20, knownHosts: join(homedir(), '.ssh', 'known_hosts') }));
 console.log('> Logging in to the box');

@@ -3,7 +3,7 @@
  * Uplink for Linux on gogho.st (Matt, 2026-11-20: "add support on the website for linux based systems and
  * downloads").
  *
- *   node tool/release-linux.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--ref <branch>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
+ *   node tool/release-linux.mjs [--run <id>] [--ref <branch>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
  *
  * A Mac cannot build the Linux app: an Ubuntu runner on GitHub does, for the version in pubspec.yaml (this starts it,
  * unless --run names one that already ran), in Satellite-im/Uplink, the app's own repository
@@ -118,13 +118,9 @@ const info = { version: versionName, versionCode: Number(versionCode), ...deb, t
 writeFileSync(join(OUT, FEED), JSON.stringify(info, null, 2) + '\n');
 say(`ok ${DEB}: ${(deb.bytes / 1e6).toFixed(1)} MB; ${TAR}: ${(tar.bytes / 1e6).toFixed(1)} MB`);
 
-// The box and its login are Ghost.md's: its checkout is found, and its own scripts open the connection.
-const glyph = [flag('glyph'), process.env.GLYPH_ROOT, join(ROOT, '..'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .find((dir) => existsSync(join(dir, 'tauri/scripts/lib/box.mjs')) && existsSync(join(dir, 'scripts/lib/env.mjs')));
-if (!glyph) fail('No Ghost.md checkout found for its box code (--glyph <path> or GLYPH_ROOT).');
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+// The box and its login: tool/lib/box.mjs, from ~/.config/uplink/release.env.
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const box = openBox(loadEnv(BOX_ENV_KEYS), boxSshOptions({ connectTimeout: 20 }));
 say('> Logging in to the box');
 box.logIn();

@@ -674,10 +674,23 @@ class WhatsApp extends InboxNetwork {
   @override
   void wantFile(int fileId) => unawaited(fileOf(fileId));
 
+  /// Files being brought down now, by id: asked for again while one is coming (a picture asks each time it is drawn),
+  /// the one download is waited for, as lib/inbox/signal.dart and lib/inbox/account_helper.dart do. Two at once wrote
+  /// one path through one `.part` file, and the second found it renamed away.
+  final Map<int, Future<String?>> _fetching = {};
+
   @override
   Future<String?> fileOf(int fileId) async {
     final known = _files[fileId];
     if (known != null) return known;
+    // A block, not an arrow: remove's value is this very future, which whenComplete would wait for, forever.
+    return _fetching[fileId] ??= _fetch(fileId).whenComplete(() {
+      _fetching.remove(fileId);
+    });
+  }
+
+  /// Brings the file [fileId] down through the helper; its path on this device, or null where it can't be had.
+  Future<String?> _fetch(int fileId) async {
     final a = _pointers[fileId];
     if (a == null) return null;
     final local = a['local'] as String?;

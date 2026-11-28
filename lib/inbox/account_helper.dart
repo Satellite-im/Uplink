@@ -1010,10 +1010,25 @@ class AccountHelper extends InboxNetwork {
   @override
   void wantFile(int fileId) => unawaited(fileOf(fileId));
 
+  /// Files being brought down now, by id: asked for again while one is coming (a picture asks each time it is drawn,
+  /// lib/ui/inbox_ui.dart), the one download is waited for. Without it two downloads of one file ran at once into one
+  /// path, the helper's `.part` file shared between them: the first renamed it into place and the second's rename found
+  /// nothing ("rename …/discord/files/330240540.png.part …: no such file or directory"), as Signal's did before
+  /// (lib/inbox/signal.dart).
+  final Map<int, Future<String?>> _fetching = {};
+
   @override
   Future<String?> fileOf(int fileId) async {
     final known = _files[fileId];
     if (known != null) return known;
+    // A block, not an arrow: remove's value is this very future, which whenComplete would wait for, forever.
+    return _fetching[fileId] ??= _fetch(fileId).whenComplete(() {
+      _fetching.remove(fileId);
+    });
+  }
+
+  /// Brings the file [fileId] down through the helper; its path on this device, or null where it can't be had.
+  Future<String?> _fetch(int fileId) async {
     final a = _pointers[fileId];
     if (a == null) return null;
     final local = a['local'] as String?;

@@ -1,0 +1,492 @@
+/* The feature cards of #features (Matt, 2026-11-28: "rework the section ... to instead show off the features of the
+   app such as file sharing, local folder sync, recording calls to multiple audio tracks ... animate through making
+   different sections grow larger and show an animation going through the feature then shrink back down and expand a
+   different feature").
+
+   A deck of cards (.ft-deck), one open at a time. The open one is wide and plays its feature on a small stage of the
+   app (.ft-stage, drawn with the mock kit); the closed ones stand beside it as narrow tabs, their names turned on
+   their side. site/mock/features.js opens them in turn. On a narrow screen the deck is a column and the open card is
+   tall instead of wide.
+
+   Without the script (a deck with no data-live) the cards lie in a grid with their words and no stage: a stage is
+   scaled to its box by mock.js. The markup of each stage in index.html is its last frame, which is what shows where
+   nothing may move (prefers-reduced-motion). Part 1 is the deck, in the site's look (uplink.css); part 2 is what
+   the stages draw that mock.css does not, in the app's. */
+
+/* === 1. The deck ================================================================================================ */
+.ft { container-type: inline-size; }   /* a card's inside is laid out at the open width, read from here (cqw) */
+.ft-deck {
+  --ft-n: 6;                                     /* how many cards */
+  --ft-gap: .7rem;
+  --ft-tab: clamp(4.5rem, 6.4vw, 5.5rem);        /* a closed card, across */
+  --ft-badge: 2.4rem;
+  --ft-th: 1.75rem;                              /* the name's line */
+  --ft-in: calc((var(--ft-tab) - var(--ft-badge)) / 2);   /* the badge sits in the middle of a closed card */
+  --ft-pad: var(--ft-in);
+  --ft-h: 34rem;
+  --ft-ms: 780ms;
+  --ft-ease: cubic-bezier(.32, .72, 0, 1);
+  display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+}
+.ft-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.ft-card > .ft-name { position: static; display: flex; align-items: center; gap: .8rem; margin: 0; padding: var(--ft-pad) var(--ft-pad) 0; font-size: 1.35rem; }
+.ft-name .u-badge { flex: none; margin: 0; width: var(--ft-badge); height: var(--ft-badge); transition: background-color .25s ease, color .25s ease; }
+.ft-title { white-space: nowrap; }
+.ft-num { display: none; }
+.ft-card > .ft-body { flex: 1; display: flex; flex-direction: column; gap: .9rem; padding: .9rem var(--ft-pad) var(--ft-pad); }
+.ft-say { max-width: 42rem; }
+.ft-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+
+/* What a walkthrough goes through: three short lines, the one playing in the ink. */
+.ft-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .45rem 1.15rem; counter-reset: ft; font-size: .84rem; font-weight: 600; color: var(--u-ink-2); }
+.ft-steps li { display: flex; align-items: center; gap: .5rem; white-space: nowrap; transition: color .3s ease; }
+.ft-steps li::before {
+  counter-increment: ft; content: counter(ft); flex: none; width: 1.35rem; height: 1.35rem; display: grid; place-items: center;
+  font-family: var(--u-display); font-style: italic; font-weight: 900; font-size: .78rem; line-height: 1;
+  border: 1.25px solid currentColor; border-radius: 3px; transform: skewX(var(--u-slant));
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+}
+.ft-deck[data-run] .ft-steps li { color: var(--u-ink-3); }
+.ft-deck[data-run] .ft-steps li.is-done { color: var(--u-ink-2); }
+.ft-deck[data-run] .ft-steps li.is-on { color: var(--u-ink); }
+.ft-deck[data-run] .ft-steps li.is-on::before { background: var(--u-ink); color: var(--u-bg); border-color: var(--u-ink); }
+/* A feature that is a plugin says so (the Marketplace adds it). */
+.ft-plug { flex: none; padding: .2rem .7rem .2rem .45rem; font-size: .78rem; }
+.ft-plug .u-i { width: .95rem; height: .95rem; }
+
+/* The stage: a piece of the app, as wide as the card lets it be. */
+.ft-stage { --w: 520; --h: 300; border-radius: 10px; box-shadow: 0 0 0 1px var(--u-rule); }
+.ft-deck:not([data-live]) .ft-stage { display: none; }
+
+/* --- with the script: one open, the rest tabs -------------------------------------------------------------- */
+.ft-deck[data-live] { display: flex; gap: var(--ft-gap); height: var(--ft-h); }
+/* As the script takes the deck over, nothing is seen to move into its place. */
+.ft-deck[data-live]:not([data-ready]) .ft-card, .ft-deck[data-live]:not([data-ready]) .ft-card * { transition: none !important; }
+@supports (width: 1cqw) {
+  .ft-deck[data-live] { --ft-open: calc(100cqw - (var(--ft-n) - 1) * (var(--ft-tab) + var(--ft-gap))); }
+}
+.ft-deck[data-live] .ft-card { display: block; flex: 0 1 var(--ft-tab); min-width: 0; transition: flex-grow var(--ft-ms) var(--ft-ease); }
+.ft-deck[data-live] .ft-card.is-open { flex-grow: 1; }
+.ft-deck[data-live] .ft-card.is-open::after { opacity: 1; }
+.ft-deck[data-live] .ft-name { display: block; padding: 0; }
+/* The card's own button: all of a closed card, and the open one's head. */
+.ft-tab {
+  position: absolute; inset: 0; z-index: 1; display: block; width: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit;
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ft-tab:focus-visible { outline-offset: -5px; }
+.ft-tab .u-badge { position: absolute; left: var(--ft-in); top: var(--ft-in); }
+.ft-card.is-open .ft-tab .u-badge { background: var(--u-ink); color: var(--u-bg); }
+@media (hover: hover) { .ft-tab:hover .u-badge { background: var(--u-ink); color: var(--u-bg); } }
+/* The name: along the head of the open card, and turned down the middle of a closed one. It is placed where the open
+   card has it and carried to the other by its transform, so it swings between the two as the card grows. */
+.ft-deck[data-live] .ft-title {
+  position: absolute; left: calc(var(--ft-in) + var(--ft-badge) + .8rem); top: calc(var(--ft-in) + (var(--ft-badge) - var(--ft-th)) / 2);
+  height: var(--ft-th); line-height: var(--ft-th); font-size: 1.35rem; color: var(--u-ink-2);
+  transform-origin: 0 0;
+  transform: translate(calc((var(--ft-th) - var(--ft-badge)) / 2 - .8rem), calc((var(--ft-badge) + var(--ft-th)) / 2 + 1rem)) rotate(90deg);
+  transition: transform var(--ft-ms) var(--ft-ease), color .3s ease;
+}
+.ft-deck[data-live] .ft-card.is-open .ft-title { transform: translate(0, 0) rotate(0deg); color: var(--u-ink); }
+@media (hover: hover) { .ft-deck[data-live] .ft-tab:hover .ft-title { color: var(--u-ink); } }
+.ft-deck[data-live] .ft-num {
+  display: block; position: absolute; left: 0; bottom: var(--ft-in); width: var(--ft-tab); text-align: center;
+  font-family: var(--u-display); font-style: italic; font-weight: 800; font-size: .92rem; letter-spacing: .1em; color: var(--u-ink-3);
+  transition: opacity .3s ease;
+}
+.ft-deck[data-live] .ft-card.is-open .ft-num { opacity: 0; }
+/* What the open card shows, laid out at the open width from the start: the growing card uncovers it, so nothing in it
+   moves as it comes. */
+.ft-deck[data-live] .ft-card > .ft-body {
+  position: absolute; z-index: 2; left: 0; top: calc(var(--ft-in) + var(--ft-badge) + .9rem); bottom: 0; width: var(--ft-open, 100%);
+  padding-top: 0; opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s linear .22s;
+}
+.ft-deck[data-live] .ft-card.is-open > .ft-body { opacity: 1; visibility: visible; transition: opacity .5s ease .3s, visibility 0s; }
+.ft-deck[data-live] .ft-plug { position: absolute; right: var(--ft-pad); top: calc(-.9rem - var(--ft-badge) / 2); transform: translateY(-50%) skewX(var(--u-slant)); }
+/* The stage takes what room the words leave; the app's page in it is as tall as that makes it. */
+.ft-deck[data-live] .ft-stage { flex: 1 1 0; min-height: 0; width: auto; aspect-ratio: auto; }
+.ft-deck[data-live] .ft-stage > .gm-stage { height: calc(100% / var(--k)); }
+
+/* Under the deck: what it does by itself, and the button that holds it still. */
+.ft-ctl { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .85rem; padding: 0 .2rem; color: var(--u-ink-3); font-size: .86rem; }
+.ft-play { width: 2.1rem; height: 2.1rem; }
+.ft-play .u-i { width: .95rem; height: .95rem; }
+.ft-play .i-play, .ft-play[aria-pressed='true'] .i-pause { display: none; }
+.ft-play[aria-pressed='true'] .i-play { display: block; }
+.ft-deck.is-paused .ft-stage *, .ft-deck.is-paused .ft-stage *::before, .ft-deck.is-paused .ft-stage *::after { animation-play-state: paused !important; }
+
+/* --- a narrow screen: a column, the open card tall --------------------------------------------------------- */
+@media (max-width: 940px) {
+  .ft-deck { --ft-badge: 2.1rem; --ft-tab: 3.5rem; --ft-pad: 1rem; --ft-openh: 32.5rem; --ft-gap: .55rem; }
+  .ft-deck[data-live] { flex-direction: column; height: auto; max-width: 38rem; margin-inline: auto; }
+  .ft-ctl { max-width: 38rem; margin-inline: auto; }
+  .ft-deck[data-live] .ft-card { flex: none; height: var(--ft-tab); transition: height var(--ft-ms) var(--ft-ease); }
+  .ft-deck[data-live] .ft-card.is-open { height: var(--ft-openh); }
+  .ft-deck[data-live] .ft-title, .ft-deck[data-live] .ft-card.is-open .ft-title { transform: none; font-size: 1.2rem; }
+  .ft-deck[data-live] .ft-num { left: auto; right: var(--ft-pad); bottom: auto; top: 0; width: auto; line-height: var(--ft-tab); }
+  .ft-deck[data-live] .ft-card > .ft-body { top: var(--ft-tab); bottom: auto; width: 100%; height: calc(var(--ft-openh) - var(--ft-tab)); padding-bottom: var(--ft-in); gap: .75rem; }
+  .ft-deck[data-live] .ft-plug { position: static; transform: skewX(var(--u-slant)); }
+  .ft-deck[data-live] .ft-stage { margin-inline: calc(var(--ft-in) - var(--ft-pad)); }
+  /* One line of the three at a time, with which it is: laid one over another, so each keeps its own number. */
+  .ft-deck[data-run] .ft-steps { position: relative; flex: 1; min-width: 0; height: 1.5rem; }
+  .ft-deck[data-run] .ft-steps li { position: absolute; left: 0; top: 0; height: 1.5rem; opacity: 0; transition: opacity .3s ease; }
+  .ft-deck[data-run] .ft-steps li.is-on { opacity: 1; }
+}
+@media (max-width: 600px) {
+  .ft-stage { --w: 344; --h: 290; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ft-deck[data-live] .ft-card, .ft-deck[data-live] .ft-title, .ft-deck[data-live] .ft-card > .ft-body { transition: none; }
+}
+
+/* === 2. The stages ============================================================================================== */
+/* A stage is a small window of the app: smaller type than a phone's page, the same tokens. Nothing in one takes a
+   press (the markup is inert): the script plays it. */
+.ft-stage .gm-screen { font-size: 14px; line-height: 1.35; }
+.ft-stage .fd-fill { flex: 1; }
+.ft-stage .is-pressed { transform: scale(.94); filter: brightness(.86); }
+/* A window's bar: back, what it is, and what can be done. */
+.fd-bar { flex: none; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 6px; border-bottom: 1px solid var(--rule); }
+.fd-bar--plain { padding-left: 14px; }
+.fd-ico { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--ink); transition: transform 120ms var(--ease), background-color var(--fast); }
+.fd-ico .gm-i { width: 19px; height: 19px; }
+.fd-ico--muted { color: var(--ink-3); }
+.fd-ico.is-pressed { background: var(--paper-3); }
+.fd-bar__text { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.fd-bar__text b { font-size: 15.5px; font-weight: 700; white-space: nowrap; }
+.fd-bar__text small { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ft-stage .gm-pillbtn { height: 30px; padding: 0 12px; font-size: 13.5px; }
+/* The press: where the walkthrough's finger is. */
+.fd-tap {
+  position: absolute; left: 0; top: 0; z-index: 30; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; pointer-events: none;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--ink) 78%, transparent), 0 3px 12px rgb(0 0 0 / .35);
+  opacity: 0; transform: translate(var(--x, 0px), var(--y, 0px)) scale(1);
+  transition: transform 600ms var(--ease), opacity 220ms ease;
+}
+.fd-tap.is-on { opacity: 1; }
+.fd-tap.is-down { transform: translate(var(--x, 0px), var(--y, 0px)) scale(.68); transition-duration: 130ms, 220ms; }
+/* A toast at the stage's foot, and a line over a call. */
+.fd-toast {
+  position: absolute; left: 50%; bottom: 14px; z-index: 25; display: flex; align-items: center; gap: 12px; padding: 8px 15px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 600; white-space: nowrap; pointer-events: none;
+  opacity: 0; transform: translate(-50%, 8px); transition: opacity var(--normal) var(--ease), transform var(--normal) var(--ease);
+}
+.fd-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.fd-toast i { font-style: normal; opacity: .6; }
+.fd-line { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 5px 6px 5px 12px; border-radius: 12px; background: var(--paper-2); border: 1px solid var(--rule); font-size: 13px; line-height: 1.3; color: var(--ink-2); }
+.fd-line b { color: var(--ink); font-weight: 600; }
+.fd-line > .gm-i { width: 17px; height: 17px; flex: none; color: var(--ink-2); }
+.fd-line__text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fd-line__act { flex: none; height: 26px; padding: 0 11px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--paper-3); color: var(--ink); font-size: 12.5px; font-weight: 600; }
+/* The menu a long press or a call's three dots opens. */
+.fd-menu {
+  position: absolute; z-index: 22; min-width: 214px; padding: 6px; border-radius: 14px; background: var(--paper-2); border: 1px solid var(--border);
+  box-shadow: 0 14px 34px rgb(0 0 0 / .45); pointer-events: none;
+  opacity: 0; transform: scale(.94); transition: opacity 180ms var(--ease), transform 240ms var(--ease-spring);
+}
+html[data-theme='light'] .gm:not(.gm-dark) .fd-menu { box-shadow: 0 14px 34px rgb(0 0 0 / .16); }
+.fd-menu.is-on { opacity: 1; transform: none; }
+.fd-menu__title { padding: 6px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.fd-menu__item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 14px; font-weight: 500; color: var(--ink); transition: background-color var(--fast); }
+.fd-menu__item .gm-i { width: 18px; height: 18px; color: var(--ink-2); }
+.fd-menu__item.is-pressed { background: var(--paper-3); transform: none; filter: none; }
+
+/* --- shared files: a Files space, a file dropped in and going up -------------------------------------------- */
+.fd-files { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px 0; overflow: hidden; }
+.fd-file { position: relative; flex: none; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 6px 10px; border-radius: 12px; background: var(--paper-2); }
+.fd-file .gm-tile { width: 28px; height: 28px; border-radius: 8px; }
+.fd-file .gm-tile .gm-i { width: 16px; height: 16px; }
+.fd-file__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fd-file__top { display: flex; align-items: center; gap: 10px; }
+.fd-file__name { flex: 0 1 auto; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fd-file__hint { flex: none; margin-left: auto; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fd-file .gm-chev { width: 16px; height: 16px; margin-left: -4px; }
+/* The file that comes: it opens a row for itself, its pieces fill, and the people who now have it show. */
+.fd-file--new { overflow: hidden; max-height: 64px; transition: max-height 420ms var(--ease), min-height 420ms var(--ease), padding 420ms var(--ease), margin 420ms var(--ease), opacity 300ms ease; }
+.fd-file--new.is-out { max-height: 0; min-height: 0; padding-block: 0; margin-bottom: -4px; opacity: 0; }
+.fd-pieces { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 5px; margin-top: 7px; transition: height 320ms var(--ease), margin 320ms var(--ease), opacity 240ms ease; }
+.fd-pieces i { border-radius: 1.5px; background: var(--paper-3); transition: background-color 160ms ease; }
+.fd-pieces i.is-up { background: var(--hue); }
+.fd-file--new.is-done .fd-pieces { height: 0; margin-top: 0; opacity: 0; }
+.fd-faces { display: flex; flex: none; padding-left: 5px; }
+.fd-faces .gm-av { --size: 20px; margin-left: -5px; box-shadow: 0 0 0 2px var(--paper-2); transition: transform 340ms var(--ease-spring), margin 300ms var(--ease), width 300ms var(--ease); }
+.fd-faces .gm-av:not(.is-in) { transform: scale(0); width: 0; margin-left: 0; }
+.fd-drop {
+  position: absolute; inset: 6px 8px 2px; z-index: 5; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 13px; border: 1.5px dashed var(--ink-3); border-radius: 14px;
+  background: color-mix(in srgb, var(--paper) 80%, transparent); font-size: 14px; font-weight: 600; color: var(--ink);
+  opacity: 0; transition: opacity 200ms ease; pointer-events: none;
+}
+.fd-files.is-over .fd-drop { opacity: 1; }
+.fd-drag {
+  position: absolute; left: 0; top: 0; z-index: 12; display: flex; align-items: center; gap: 9px; padding: 7px 13px 7px 8px; border-radius: 12px;
+  background: var(--paper-2); border: 1px solid var(--border); box-shadow: 0 14px 30px rgb(0 0 0 / .45); font-weight: 600; line-height: 1.25; white-space: nowrap; pointer-events: none;
+  opacity: 0; transform: translate(var(--x, 0px), var(--y, 0px)) rotate(-4deg); transition: transform 900ms var(--ease), opacity 220ms ease;
+}
+.fd-drag small { display: block; font-size: 11.5px; font-weight: 500; color: var(--ink-3); }
+.fd-drag .gm-tile { width: 28px; height: 28px; border-radius: 8px; }
+.fd-drag.is-on { opacity: 1; }
+.fd-drag.is-dropped { opacity: 0; transform: translate(var(--x, 0px), var(--y, 0px)) rotate(0deg) scale(.86); transition-duration: 280ms, 240ms; }
+.fd-foot { flex: none; display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.fd-foot .gm-i { width: 14px; height: 14px; }
+.fd-room { flex: none; width: 64px; height: 4px; border-radius: 2px; background: var(--paper-3); overflow: hidden; }
+.fd-room i { display: block; height: 100%; width: var(--p, 48%); border-radius: 2px; background: var(--ink-2); transition: width 700ms var(--ease); }
+[data-mock='ft-files'] .fd-toast { bottom: 44px; }
+
+/* --- folder sync: a folder on the computer beside My files, files crossing between them ---------------------- */
+[data-mock='ft-sync'] .gm-screen { flex-direction: row; align-items: stretch; padding: 12px; }
+.fs-pane { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid var(--rule); overflow: hidden; }
+.fs-pane--disk { flex-grow: .86; background: var(--paper-2); }
+.fs-link { flex: none; width: 38px; position: relative; display: grid; place-items: center; }
+.fs-link::before { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; border-top: 1.5px dashed var(--ink-4); }
+.fs-link .gm-i { position: relative; width: 26px; height: 26px; padding: 4px; border-radius: 50%; background: var(--paper); color: var(--ink-3); transition: color 200ms ease; }
+.fs-link.is-busy .gm-i { color: var(--ink); animation: fs-spin 1.1s linear infinite; }
+@keyframes fs-spin { to { transform: rotate(360deg); } }
+/* The computer's own window: plain, not the app's. */
+.fs-chrome { flex: none; height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--rule); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.fs-chrome i { width: 8px; height: 8px; border-radius: 50%; background: var(--paper-3); box-shadow: inset 0 0 0 1px var(--border); }
+.fs-chrome span { flex: 1; text-align: center; margin-right: 36px; }
+.fs-path { flex: none; display: flex; align-items: center; gap: 7px; padding: 9px 12px 5px; font: 500 11.5px/1.3 var(--u-mono, ui-monospace, Menlo, monospace); color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.fs-path .gm-i { width: 14px; height: 14px; }
+.fs-head { flex: none; height: 36px; display: flex; align-items: center; padding: 0 12px; font-size: 14.5px; font-weight: 700; }
+/* "Sync a folder" at the top of My files: its words, then its folder, how it stands, and Stop syncing. */
+.fs-call { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 7px 9px; margin: 0 8px 4px; padding: 9px 9px 9px 10px; border-radius: 11px; background: var(--paper-2); border: 1px solid var(--rule); font-size: 12px; line-height: 1.35; }
+.fs-call > .gm-i { width: 17px; height: 17px; margin-top: 1px; color: var(--ink-2); }
+.fs-call__text { min-width: 0; min-height: 33px; display: flex; flex-direction: column; justify-content: center; gap: 1px; }
+.fs-call__path { color: var(--ink-2); }
+.fs-call__path i { font-style: normal; }
+.fs-call.is-on .fs-call__path { color: var(--ink); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-call__state { font-size: 11.5px; color: var(--ink-3); }
+.fs-call__state:empty { display: none; }
+.fs-call__act { grid-column: 2; justify-self: end; padding: 5px 11px; border-radius: 999px; background: var(--paper-3); color: var(--ink); font-size: 12px; font-weight: 600; white-space: nowrap; transition: transform 120ms var(--ease), filter var(--fast); }
+.fs-list { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 3px; padding: 4px 8px 8px; overflow: hidden; }
+.fs-list:empty::after { content: 'No files yet'; margin: auto; font-size: 12.5px; color: var(--ink-3); }
+.fs-file { flex: none; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 9px; border-radius: 9px; font-size: 13px; background: var(--paper-2); }
+.fs-pane--disk .fs-file { background: color-mix(in oklch, var(--paper-3) 60%, transparent); }
+.fs-file .gm-i { width: 16px; height: 16px; color: var(--hue, var(--ink-2)); }
+.fs-file b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-file small { flex: none; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.fs-file.is-coming { opacity: 0; }
+.fs-file.is-new { animation: fs-land 420ms var(--ease) both; }
+@keyframes fs-land { from { transform: scale(.95); box-shadow: 0 0 0 2px var(--ink); } to { transform: none; box-shadow: 0 0 0 2px transparent; } }
+/* A file on its way across: lifted off its row, set down on the other side. */
+.fs-ghost { position: absolute; left: 0; top: 0; z-index: 15; margin: 0; pointer-events: none; background: var(--paper-3) !important; box-shadow: 0 10px 24px rgb(0 0 0 / .4); transition: transform 760ms cubic-bezier(.5, 0, .2, 1); }
+
+/* --- multi-track recording: the recording's timeline (lib/ui/recording_float.dart, its own dark colours) ------ */
+[data-mock='ft-rec'] .gm-screen {
+  --st-panel: #17171a; --st-bar: #1f1f23; --st-header: #242428; --st-lane: #1b1b1e; --st-edge: #2e2e33; --st-tick: #6b6b73;
+  --st-ink: #f2f2f5; --st-ink2: #a9a9b2; --st-ink3: #6e6e78; --st-rec: #ff3b30;
+  background: var(--st-panel); color: var(--st-ink);
+}
+.fr-bar { flex: none; height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 9px 0 14px; background: var(--st-bar); border-bottom: 1px solid var(--st-edge); white-space: nowrap; }
+.fr-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--st-rec); animation: gm-breathe 1.2s ease-in-out infinite; }
+.fr-rec { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--st-rec); }
+.fr-time { font: 600 15px/1 var(--u-mono, ui-monospace, Menlo, monospace); font-variant-numeric: tabular-nums; }
+.fr-count { min-width: 0; font-size: 12.5px; color: var(--st-ink2); overflow: hidden; text-overflow: ellipsis; }
+.fr-mixer { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; }
+.fr-mixer .gm-i { width: 15px; height: 15px; }
+.fr-stop { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 13px 0 11px; border-radius: 999px; background: var(--st-rec); color: #fff; font-size: 13px; font-weight: 700; transition: transform 120ms var(--ease), filter var(--fast), opacity 240ms ease; }
+.fr-stop i { width: 9px; height: 9px; border-radius: 2px; background: #fff; }
+.fr.is-saved .fr-dot { animation: none; background: var(--st-ink3); }
+.fr.is-saved .fr-rec { color: var(--st-ink3); }
+.fr.is-saved .fr-stop { opacity: .35; }
+/* The tracks: a head for each at the left, its clip growing to the right, the playhead at the live end. */
+.fr-rows { --fr-head: 128px; --t: 0; --pps: 40; position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.fr-row { flex: 0 1 58px; min-height: 0; display: grid; grid-template-columns: var(--fr-head) minmax(0, 1fr); overflow: hidden; transition: flex-basis 440ms var(--ease), opacity 320ms ease; }
+.fr-row.is-out { flex-basis: 0px; opacity: 0; }
+.fr-row--ruler { flex: none; height: 20px; }
+.fr-cap { display: flex; align-items: center; padding: 0 12px; background: var(--st-header); border-bottom: 1px solid var(--st-edge); font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--st-ink3); }
+.fr-ruler { position: relative; background: var(--st-bar); border-bottom: 1px solid var(--st-edge); font: 500 9.5px/20px var(--u-mono, ui-monospace, Menlo, monospace); color: var(--st-ink3); overflow: hidden; }
+.fr-ruler span { position: absolute; top: 0; padding-left: 4px; }
+.fr-ruler span::before { content: ''; position: absolute; left: 0; bottom: 0; width: 1px; height: 7px; background: var(--st-tick); }
+.fr-head { position: relative; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 20px 0 10px; background: var(--st-header); border-left: 3px solid var(--c); border-bottom: 1px solid var(--st-edge); transition: opacity 260ms ease; }
+.fr-head b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 260ms ease; }
+.fr-keys { display: flex; gap: 4px; height: 16px; }
+.fr-keys i { min-width: 18px; height: 16px; padding: 0 4px; display: grid; place-items: center; border-radius: 4px; background: var(--st-lane); box-shadow: inset 0 0 0 1px var(--st-edge); font: 600 9px/1 var(--u-mono, ui-monospace, Menlo, monospace); color: var(--st-ink2); transition: background-color 150ms ease, color 150ms ease, transform 120ms var(--ease); }
+.fr-m.is-lit { background: #ff9f0a; box-shadow: none; color: #1b1b1e; }
+/* Someone asked, and their yes: in place of the track's keys until they are in. */
+.fr-ask { display: none; height: 16px; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: var(--st-ink3); white-space: nowrap; }
+.fr-ask .gm-i { width: 12px; height: 12px; }
+.fr-head.is-asked .fr-keys, .fr-head.is-yes .fr-keys { display: none; }
+.fr-head.is-asked .fr-ask, .fr-head.is-yes .fr-ask { display: flex; }
+.fr-head.is-yes .fr-ask { color: #34c759; }
+.fr-meter { position: absolute; right: 8px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--st-lane); overflow: hidden; }
+.fr-meter i { position: absolute; inset: 0; background: linear-gradient(to top, #34c759 0 72%, #ffd60a 72% 90%, #ff453a 90%); clip-path: inset(calc((1 - var(--lv, 0)) * 100%) 0 0 0); transition: clip-path 100ms linear; }
+.fr-lane { position: relative; min-width: 0; background: var(--st-lane); border-bottom: 1px solid var(--st-edge); overflow: hidden; transition: opacity 260ms ease; }
+.fr-clip {
+  position: absolute; top: 3px; bottom: 3px; left: calc(var(--from, 0) * var(--pps) * 1px); width: calc(max(0, var(--t) - var(--from, 0)) * var(--pps) * 1px);
+  border-radius: 5px; overflow: hidden; background: color-mix(in srgb, var(--c) 20%, var(--st-lane)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+  transition: width 100ms linear;
+}
+.fr-clip > span { position: absolute; left: 0; right: 0; top: 0; height: 13px; padding: 0 6px; background: color-mix(in srgb, var(--c) 52%, var(--st-lane)); font-size: 9.5px; font-weight: 700; line-height: 13px; color: #fff; white-space: nowrap; overflow: hidden; }
+.fr-wave { position: absolute; top: 13px; left: calc(var(--from, 0) * var(--pps) * -1px); height: calc(100% - 13px); overflow: visible; }
+.fr-wave path { fill: none; stroke: var(--c); stroke-width: 2; }
+.fr-row.is-muted .fr-head b { color: var(--st-ink3); }
+.fr-row.is-muted .fr-lane { opacity: .42; }
+.fr-playhead { position: absolute; z-index: 3; top: 20px; bottom: 0; left: calc(var(--fr-head) + var(--t) * var(--pps) * 1px); width: 1.5px; background: var(--st-rec); transition: left 100ms linear; }
+.fr-playhead::before { content: ''; position: absolute; left: -4.2px; top: -6px; border: 5px solid transparent; border-top: 6px solid var(--st-rec); }
+[data-mock='ft-rec'] .fd-toast { background: #f2f2f5; color: #17171a; }
+
+/* --- screen sharing: what to share, then the call looking at it ------------------------------------------------ */
+.fh-pick, .fh-live { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity 320ms ease, transform 420ms var(--ease), visibility 0s; }
+.fh[data-view='pick'] .fh-live { opacity: 0; visibility: hidden; transform: scale(1.03); transition: opacity 320ms ease, transform 420ms var(--ease), visibility 0s linear 320ms; }
+.fh[data-view='live'] .fh-pick { opacity: 0; visibility: hidden; transform: scale(.97); transition: opacity 320ms ease, transform 420ms var(--ease), visibility 0s linear 320ms; }
+.fh-soundrow { flex: none; display: flex; align-items: center; gap: 12px; margin: 10px 14px 0; padding: 9px 12px; border-radius: 12px; background: var(--paper-2); }
+.fh-soundrow .gm-tile { width: 28px; height: 28px; border-radius: 8px; }
+.fh-soundrow .gm-tile .gm-i { width: 16px; height: 16px; }
+.fh-soundrow__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fh-soundrow__text b { font-size: 14px; font-weight: 600; }
+.fh-soundrow__text small { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fh-soundrow .gm-toggle { transform: scale(.86); transform-origin: right center; }
+.fh-choices { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-content: center; padding: 10px 14px 14px; }
+.fh-thumb { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.fh-thumb > small { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.fh-thumb > b { font-size: 12.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fh-pic { position: relative; aspect-ratio: 16 / 10; border-radius: 10px; background: var(--paper-2); border: 1px solid var(--rule); overflow: hidden; transition: box-shadow 200ms ease, transform 120ms var(--ease), filter var(--fast); }
+.fh-thumb.is-picked .fh-pic { box-shadow: 0 0 0 2px var(--ink); }
+/* What each choice shows, in little: a desk with two windows, a plan with its route, a page of notes. */
+.fh-pic i { position: absolute; border-radius: 3px; background: var(--paper-3); }
+.fh-pic--desk i:nth-child(1) { left: 8%; top: 12%; width: 50%; height: 56%; background: var(--ink-4); }
+.fh-pic--desk i:nth-child(2) { left: 44%; top: 34%; width: 46%; height: 50%; box-shadow: 0 0 0 1px var(--paper-2); }
+.fh-pic--desk i:nth-child(3) { left: 30%; right: 30%; bottom: 5%; height: 6%; border-radius: 99px; }
+.fh-pic--plan { background: color-mix(in srgb, #4ea1ff 14%, var(--paper-2)); }
+.fh-pic--plan i:nth-child(1) { left: 9%; top: 14%; width: 34%; height: 9%; background: var(--ink-2); }
+.fh-pic--plan i:nth-child(2) { left: 9%; top: 34%; width: 26%; height: 6%; }
+.fh-pic--plan i:nth-child(3) { left: 9%; top: 48%; width: 30%; height: 6%; }
+.fh-pic--plan svg { position: absolute; right: 6%; top: 14%; width: 44%; height: 72%; fill: none; stroke: #4ea1ff; stroke-width: 5; stroke-linecap: round; }
+.fh-pic--notes i { left: 10%; height: 6%; }
+.fh-pic--notes i:nth-child(1) { top: 16%; width: 46%; height: 9%; background: var(--ink-2); }
+.fh-pic--notes i:nth-child(2) { top: 36%; width: 76%; }
+.fh-pic--notes i:nth-child(3) { top: 50%; width: 68%; }
+.fh-pic--notes i:nth-child(4) { top: 64%; width: 72%; }
+.fh-pic--notes i:nth-child(5) { top: 78%; width: 40%; }
+/* Shared: your own line over the call, the window large and whole, who is looking, and its sound beside it. */
+.fh-live { padding: 10px 12px 10px; gap: 9px; }
+.fh-live .fd-line > .fh-on { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--online); animation: gm-breathe 1.6s ease-in-out infinite; }
+.fh-win { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in srgb, #4ea1ff 9%, var(--paper-2)); overflow: hidden; }
+.fh-win__bar { flex: none; height: 24px; display: flex; align-items: center; gap: 5px; padding: 0 9px; border-bottom: 1px solid var(--rule); font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+.fh-win__bar i { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-3); box-shadow: inset 0 0 0 1px var(--border); }
+.fh-win__bar span { flex: 1; text-align: center; margin-right: 31px; }
+.fh-slide { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; gap: 14px; padding: 12px 18px; }
+.fh-slide__text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.fh-slide__text b { font-size: 19px; font-weight: 700; line-height: 1.15; letter-spacing: -.01em; }
+.fh-slide__text span { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.fh-slide__text span::before { content: ''; flex: none; width: 5px; height: 5px; border-radius: 50%; background: #4ea1ff; }
+.fh-route { flex: 1 1 0; min-width: 0; align-self: stretch; }
+.fh-route path { fill: none; stroke: #4ea1ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 0; }
+.fh-route circle { fill: var(--paper); stroke: #4ea1ff; stroke-width: 2.5; }
+.fh[data-view='live'].is-drawing .fh-route path { animation: fh-draw 2600ms cubic-bezier(.4, 0, .2, 1) both; }
+@keyframes fh-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+.fh-under { flex: none; display: flex; align-items: center; gap: 8px; height: 26px; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.fh-under .js-watching { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.fh-under .js-watching i { font-style: normal; }
+.fh-sound { flex: none; }
+.fh-watch { display: flex; padding-left: 5px; }
+.fh-watch .gm-av { --size: 22px; margin-left: -5px; box-shadow: 0 0 0 2px var(--paper); transition: transform 340ms var(--ease-spring); }
+.fh-watch .gm-av:not(.is-in) { transform: scale(0); }
+.fh-sound { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px 0 9px; border-radius: 999px; background: var(--paper-2); border: 1px solid var(--rule); color: var(--ink-3); font-weight: 600; transition: color 260ms ease, border-color 260ms ease, transform 300ms var(--ease-spring); }
+.fh-sound .gm-i { width: 15px; height: 15px; }
+.fh-sound b { max-width: 0; margin-left: -7px; overflow: hidden; font-weight: 600; opacity: 0; transition: max-width 360ms var(--ease), margin 360ms var(--ease), opacity 260ms ease; }
+.fh-sound.is-on { color: var(--ink); border-color: var(--ink-3); animation: fh-pop 520ms var(--ease-spring); }
+.fh-sound.is-on b { max-width: 80px; margin-left: 0; opacity: 1; }
+@keyframes fh-pop { 40% { transform: scale(1.12); } }
+.fh-bars { display: inline-flex; align-items: center; gap: 2px; height: 12px; }
+.fh-bars i { width: 2px; height: 3px; border-radius: 1px; background: currentColor; }
+.fh-sound.is-on .fh-bars i { animation: fh-bar 760ms ease-in-out infinite alternate; }
+.fh-sound.is-on .fh-bars i:nth-child(2) { animation-delay: -320ms; }
+.fh-sound.is-on .fh-bars i:nth-child(3) { animation-delay: -560ms; }
+.fh-sound.is-on .fh-bars i:nth-child(4) { animation-delay: -140ms; }
+@keyframes fh-bar { from { height: 3px; } to { height: 12px; } }
+
+/* --- watch together: a video picked in a call, playing for everyone in step -------------------------------- */
+.fw-pick, .fw-play { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity 320ms ease, visibility 0s; }
+.fw[data-view='pick'] .fw-play, .fw[data-view='play'] .fw-pick { opacity: 0; visibility: hidden; transition: opacity 320ms ease, visibility 0s linear 320ms; }
+.fw-pick .fd-files { padding-top: 10px; }
+.fw-pick .fd-menu { right: 16px; top: 96px; transform-origin: 80% 0; }
+.fw-incall { flex: none; display: flex; align-items: center; gap: 9px; margin: 0 12px 12px; height: 38px; padding: 0 14px; border-radius: 999px; background: var(--online-wash); border: 1.5px solid color-mix(in srgb, var(--online) 70%, transparent); font-size: 12.5px; white-space: nowrap; }
+.fw-incall i { width: 7px; height: 7px; border-radius: 50%; background: var(--online); animation: gm-breathe 2.4s ease-in-out infinite; }
+.fw-incall b { font-weight: 700; }
+.fw-incall span { color: var(--online-ink); overflow: hidden; text-overflow: ellipsis; }
+.fw-play { padding: 12px; gap: 10px; }
+.fw-main { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.fw-player { position: relative; flex: 1.75 1 0; min-width: 0; border-radius: 12px; overflow: hidden; background: #10131f; }
+/* The film: a road at dusk, the sun going down and the hills going by while it plays. */
+.fw-film { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(180deg, #24305e 0%, #6b4c8a 46%, #e08b5d 82%, #f2b866 100%); }
+.fw-film i { position: absolute; }
+.fw-sun { left: 62%; top: 34%; width: 15%; aspect-ratio: 1; border-radius: 50%; background: #ffe2a6; box-shadow: 0 0 36px 10px rgb(255 214 150 / .5); animation: fw-sun 14s linear infinite; animation-play-state: paused; }
+.fw-hills { left: 0; bottom: 0; width: 200%; height: 46%; background: #2b2545; clip-path: polygon(0 62%, 6% 40%, 13% 58%, 21% 26%, 30% 60%, 38% 42%, 44% 54%, 50% 62%, 56% 40%, 63% 58%, 71% 26%, 80% 60%, 88% 42%, 94% 54%, 100% 62%, 100% 100%, 0 100%); animation: fw-pan 9s linear infinite; animation-play-state: paused; }
+.fw-hills--near { height: 26%; background: #171428; clip-path: polygon(0 50%, 8% 20%, 17% 55%, 27% 30%, 36% 60%, 50% 50%, 58% 20%, 67% 55%, 77% 30%, 86% 60%, 100% 50%, 100% 100%, 0 100%); animation-duration: 4.5s; }
+.fw.is-playing .fw-film i { animation-play-state: running; }
+@keyframes fw-pan { to { transform: translateX(-50%); } }
+@keyframes fw-sun { to { transform: translateY(160%); } }
+.fw-ctl { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 9px; padding: 22px 12px 9px; background: linear-gradient(180deg, transparent, rgb(0 0 0 / .62)); color: #fff; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fw-btn { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: rgb(255 255 255 / .18); transition: transform 120ms var(--ease), filter var(--fast); }
+.fw-btn .gm-i { width: 15px; height: 15px; --gm-wash: 0; }
+.fw-seek { flex: 1; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .28); overflow: hidden; }
+.fw-seek i { display: block; height: 100%; width: var(--p, 4%); border-radius: 2px; background: #fff; transition: width 100ms linear; }
+.fw-people { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.fw-people > small { padding: 0 4px 2px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.fw-who { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 9px 0 6px; border-radius: 10px; background: var(--paper-2); font-size: 13px; }
+.fw-who .gm-av { --size: 22px; }
+.fw-who b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fw-who time { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.fw-who .gm-i { width: 13px; height: 13px; color: var(--ink-3); --gm-wash: 0; }
+.fw.is-playing .fw-who .gm-i { color: var(--online-ink); }
+.fw-who.is-tick time { animation: fw-tick 320ms var(--ease); }
+@keyframes fw-tick { from { color: var(--ink); transform: translateY(-2px); } to { transform: none; } }
+
+/* --- live captions: a call, and what is said in it written under the faces ----------------------------------- */
+.fc-faces { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-evenly; padding: 4px 16px 0; }
+.fc-face { display: flex; flex-direction: column; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.fc-face .gm-rip { --size: 46px; }
+.fc-face span.fc-dev { display: inline-flex; align-items: center; gap: 4px; margin-top: -5px; font-size: 10.5px; font-weight: 500; color: var(--ink-3); opacity: 0; transform: translateY(-3px); transition: opacity 300ms ease, transform 300ms var(--ease); }
+.fc-face span.fc-dev .gm-i { width: 11px; height: 11px; }
+.fc.is-noted .fc-dev { opacity: 1; transform: none; }
+.fc-box { flex: none; margin: 0 14px 12px; padding: 10px 14px; min-height: 76px; border-radius: 14px; background: var(--paper-2); border: 1px solid var(--rule); display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; opacity: 0; transform: translateY(10px); transition: opacity 300ms ease, transform 380ms var(--ease); }
+.fc-box.is-on { opacity: 1; transform: none; }
+.fc-lines { display: flex; flex-direction: column; gap: 3px; }
+.fc-lines p { font-size: 14.5px; line-height: 1.35; color: var(--ink); animation: fc-in 260ms var(--ease) both; }
+.fc-lines p b { font-weight: 700; margin-right: 6px; }
+.fc-lines p:not(:last-child) { color: var(--ink-3); }
+@keyframes fc-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.fc-note { display: flex; align-items: flex-start; gap: 6px; max-height: 0; overflow: hidden; font-size: 11.5px; line-height: 1.35; color: var(--ink-3); opacity: 0; transition: max-height 320ms var(--ease), opacity 320ms ease, margin 320ms var(--ease); }
+.fc-note .gm-i { width: 12px; height: 12px; flex: none; margin-top: 2px; }
+.fc-note.is-on { max-height: 34px; margin-top: 4px; opacity: 1; }
+.fc .fd-menu { right: 12px; top: 40px; transform-origin: 90% 0; }
+
+/* --- the stages on a narrow screen (344 across) ---------------------------------------------------------------- */
+@media (max-width: 600px) {
+  .fd-bar__text small, .fd-foot .fd-room, .fr-mixer, .fr-count span { display: none; }
+  /* Folder sync: the folder over My files, each as short as three files let it be. */
+  [data-mock='ft-sync'] .gm-screen { flex-direction: column; padding: 8px; }
+  .fs-link { width: auto; height: 16px; }
+  .fs-link::before { left: 50%; right: auto; top: 1px; bottom: 1px; border-top: 0; border-left: 1.5px dashed var(--ink-4); }
+  .fs-link .gm-i { width: 20px; height: 20px; padding: 2px; }
+  .fs-chrome { display: none; }
+  .fs-pane--disk { flex: none; }
+  .fs-path { padding: 7px 11px 3px; }
+  .fs-head { height: 27px; padding-top: 2px; font-size: 13.5px; }
+  .fs-list { gap: 2px; padding: 3px 7px 6px; }
+  .fs-pane--disk .fs-list { flex: none; min-height: 88px; }
+  .fs-file { height: 26px; font-size: 12.5px; }
+  .fs-call { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; margin: 0 7px 3px; padding: 7px 8px 7px 10px; }
+  .fs-call > .gm-i { margin-top: 0; }
+  .fs-call__act { grid-column: 3; grid-row: 1; }
+  .fs-call__path i { display: none; }
+  .fr-rows { --fr-head: 96px; }
+  .fr-bar { gap: 8px; padding-left: 11px; }
+  .fh-choices { gap: 9px; padding-inline: 11px; }
+  .fh-soundrow { margin-inline: 11px; }
+  .fh-slide { padding: 9px 12px; gap: 8px; }
+  .fh-slide__text b { font-size: 16px; }
+  .fh-slide__text span:last-child, .fh-under .js-watching i { display: none; }
+  .fh-soundrow__text small { white-space: normal; line-height: 1.3; }
+  .fw-main { flex-direction: column; gap: 8px; }
+  .fw-player { flex: 1 1 0; }
+  .fw-people { flex: none; flex-direction: row; gap: 6px; }
+  .fw-people > small { display: none; }
+  .fw-who { flex: 1 1 0; min-width: 0; padding: 0 7px 0 5px; gap: 6px; }
+  .fw-who b { display: none; }
+  .fw-who time { flex: 1; }
+  .fc-face .gm-rip { --size: 42px; }
+}

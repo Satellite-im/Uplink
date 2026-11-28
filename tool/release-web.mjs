@@ -4,7 +4,7 @@
  * follows the app's releases instead of being deployed by hand. tool/release.mjs runs it after a release is live
  * (--no-web there leaves it out); it can be run by itself as well, as the chain's other scripts are.
  *
- *   node tool/release-web.mjs [--glyph ~/path/to/glyph] [--keep-connection]
+ *   node tool/release-web.mjs [--keep-connection]
  *                                        build (tool/build-web.mjs --app --base /app/ --hub wss://gogho.st/hub, into
  *                                        build/web-app) and ship it with the site (tool/deploy-site.mjs --app
  *                                        build/web-app), as gogho.st/app was first deployed on 2026-11-23
@@ -54,6 +54,5 @@ if (has('no-deploy')) {
   console.log(`ok the web client is built in ${OUT}; nothing was sent (--no-deploy).`);
   process.exit(0);
 }
-const glyph = option('glyph');
-run('tool/deploy-site.mjs', ['--app', OUT, ...(glyph ? ['--glyph', glyph] : []), ...(has('keep-connection') ? ['--keep-connection'] : []), ...(has('print') ? ['--print'] : [])]);
+run('tool/deploy-site.mjs', ['--app', OUT, ...(has('keep-connection') ? ['--keep-connection'] : []), ...(has('print') ? ['--print'] : [])]);
 if (!has('print')) console.log(`ok the web client is live: https://gogho.st${BASE}`);

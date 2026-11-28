@@ -819,12 +819,20 @@ class StoreDrive implements SyncDrive {
   }
 }
 
+/// Watches a drive for files added or removed from somewhere else, telling [changed] each time, until what it answers
+/// is called; null where there is nothing to watch yet (no account, a space not on this computer).
+typedef DriveWatch = Future<void Function()?> Function(void Function() changed);
+
 /// One of this computer's synced folders, My files' or a Files space's: which it is, what its state line says, and
-/// when a pass runs (on choosing, when its page is opened, and every few minutes while the app is open).
+/// when a pass runs (on choosing, when its page is opened, every few minutes while the app is open, and as soon as the
+/// drive's files change elsewhere: GMFB-74, @kevin, "When a file is added to the server, for it to sync with the folder
+/// on my desktop I have to open the folder in the server to nudge the app to sync it").
 class FolderSync extends ChangeNotifier {
-  FolderSync({Directory Function()? data, Future<SyncDrive?> Function()? drive, String? Function()? home, List<String> Function()? own, this.every = const Duration(minutes: 4), this.quiet = const Duration(seconds: 5), this.space, this.driveName = Drive.name})
+  FolderSync({Directory Function()? data, Future<SyncDrive?> Function()? drive, String? Function()? home, List<String> Function()? own, DriveWatch? watch, this.every = const Duration(minutes: 4), this.quiet = const Duration(seconds: 5), this.settle = const Duration(seconds: 1), this.space, this.driveName = Drive.name})
       : assert(space == null || RegExp(r'^[0-9A-Za-z_-]{1,128}$').hasMatch(space)),
         _data = data ?? (() => Directory('${DeskStore.defaultDir().path}${PlatformInfo.pathSeparator}folder-sync')),
+        // The app's own drives are watched in the app's own store; a drive given (a test's) only where a watch is too.
+        _watch = watch ?? (drive != null ? null : (changed) => _storeWatch(space == null ? Drive.mine : () async => _spaceChannel(space), changed)),
         _drive = drive ?? (space == null ? _appDrive : () => _spaceDrive(space)),
         _home = home ?? (() => PlatformInfo.environment['USERPROFILE'] ?? PlatformInfo.environment['HOME']),
         _own = own;
@@ -859,10 +867,35 @@ class FolderSync extends ChangeNotifier {
   /// The Files space the relay calls [space], where this device still has it; and only while it may add files there,
   /// since a pass sends up what is new in the folder.
   static Future<SyncDrive?> _spaceDrive(String space) async {
-    final c = Voice.instance.channels.where((c) => c.kind == SpaceKind.files && FileSeal.filesRoom(c.seed) == space).firstOrNull;
+    final c = _spaceChannel(space);
     if (c == null) return null;
     if (!FilesStore.instance.canUpload(c)) throw const SyncStop('your role in this space can\'t add files.');
     return StoreDrive(FilesStore.instance, c, name: c.name);
+  }
+
+  /// The Files space the relay calls [space], where this device has it.
+  static VoiceChannel? _spaceChannel(String space) => Voice.instance.channels.where((c) => c.kind == SpaceKind.files && FileSeal.filesRoom(c.seed) == space).firstOrNull;
+
+  /// Watches the app's own store for [channel]'s list growing: the space is held open there, so it hears others say
+  /// its log has grown and reads it again now and then (FilesStore.open), as its page does while it is shown.
+  static Future<void Function()?> _storeWatch(Future<VoiceChannel?> Function() channel, void Function() changed) async {
+    final c = await channel();
+    if (c == null) return null;
+    final store = FilesStore.instance;
+    var seen = store.of(c).seq;
+    void heard() {
+      final now = store.of(c).seq;
+      if (now == seen) return;
+      seen = now;
+      changed();
+    }
+
+    store.addListener(heard);
+    unawaited(store.open(c).catchError((_) {}));
+    return () {
+      store.removeListener(heard);
+      store.close(c);
+    };
   }
 
   /// Every space's folder chosen on this computer before this run, from the choices kept ([_choice]).
@@ -887,7 +920,11 @@ class FolderSync extends ChangeNotifier {
   final Future<SyncDrive?> Function() _drive;
   final String? Function() _home;
   final List<String> Function()? _own;
+  final DriveWatch? _watch;
   final Duration every, quiet;
+
+  /// How long after the drive changes elsewhere a pass begins: several changes close together are one pass.
+  final Duration settle;
 
   /// The app's own folders: where it keeps things, and where it keeps what came down.
   List<String> _ownFolders() {
@@ -939,6 +976,50 @@ class FolderSync extends ChangeNotifier {
   bool _loaded = false;
   Timer? _timer;
   int _gen = 0;
+
+  /// What ends the watching of the drive, while it is watched; whether a watch is being set up; the pass a change
+  /// waits for; and whether the drive changed while a pass ran, which then runs again.
+  void Function()? _unwatch;
+  bool _watching = false, _again = false;
+  Timer? _soon;
+
+  /// Watches the drive while a folder is chosen. Tried again at each pass until there is something to watch (the
+  /// account signed in, the space come to this computer).
+  Future<void> _ensureWatch() async {
+    final watch = _watch;
+    if (watch == null || _root == null || _unwatch != null || _watching) return;
+    _watching = true;
+    void Function()? end;
+    try {
+      end = await watch(_driveChanged);
+    } catch (_) {
+    } finally {
+      _watching = false;
+    }
+    // Stopped, or watched already, while it was being set up.
+    if (_root == null || _unwatch != null) return end?.call();
+    _unwatch = end;
+  }
+
+  void _stopWatch() {
+    _soon?.cancel();
+    _soon = null;
+    _again = false;
+    _unwatch?.call();
+    _unwatch = null;
+  }
+
+  /// The drive's files changed somewhere else: a pass soon, or after the one running (which may have listed the drive
+  /// before the change).
+  void _driveChanged() {
+    if (_root == null) return;
+    if (_running) {
+      _again = true;
+      return;
+    }
+    _soon?.cancel();
+    _soon = Timer(settle, () => unawaited(pass()));
+  }
 
   /// The last pass's report, for a test.
   SyncReport? last;
@@ -999,6 +1080,13 @@ class FolderSync extends ChangeNotifier {
     if (!here) return;
     load();
     if (identical(this, instance)) _loadSpaces();
+    // Watched from the start, so what changed while the app was closed, and what changes from now, is a pass at once.
+    unawaited(_ensureWatch());
+    if (identical(this, instance)) {
+      for (final s in _spaces.values.toList()) {
+        unawaited(s._ensureWatch());
+      }
+    }
     _timer ??= Timer.periodic(every, (_) => unawaited(() async {
           await pass();
           if (!identical(this, instance)) return;
@@ -1030,6 +1118,7 @@ class FolderSync extends ChangeNotifier {
   /// Stops syncing. Nothing is removed from the folder or from the drive.
   void stop() {
     _gen++;
+    _stopWatch();
     _root = null;
     _line = '';
     _clearHeld();
@@ -1050,7 +1139,9 @@ class FolderSync extends ChangeNotifier {
     if (root == null || _running) return;
     final gen = _gen;
     _running = true;
+    _soon?.cancel();
     notifyListeners();
+    unawaited(_ensureWatch());
     try {
       // Looked at again each pass: what was fine to sync when chosen may have been moved or become the home folder.
       if (FolderSyncEngine.resolve(root) != root) return _say('Stopped: the folder isn\'t there any more.');
@@ -1096,12 +1187,17 @@ class FolderSync extends ChangeNotifier {
     } finally {
       _running = false;
       notifyListeners();
+      if (_again) {
+        _again = false;
+        _driveChanged();
+      }
     }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _stopWatch();
     super.dispose();
   }
 }

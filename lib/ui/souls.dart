@@ -202,9 +202,11 @@ Future<void> showSoulsGifts(BuildContext context, List<SoulsGift> gifts) {
   );
 }
 
-/// What souls are, how many this person has, and their badges.
+/// What souls are, how many this person has, and their badges. Over the whole app, as Share feedback's drawer is, not
+/// in the list's column it was pressed in (GMFB-76, Matt, Android 0.12.48: "Viewing souls from the sidebar on mobile
+/// limits the popup to the sidebar instead it should open over the whole app like the share feedback modal does").
 Future<void> showSouls(BuildContext context) {
-  return Navigator.of(context).push<void>(PageRouteBuilder<void>(
+  return Navigator.of(context, rootNavigator: true).push<void>(PageRouteBuilder<void>(
     opaque: false,
     barrierDismissible: true,
     barrierColor: context.tokens.sheetScrim,

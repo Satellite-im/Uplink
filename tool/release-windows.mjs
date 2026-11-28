@@ -2,7 +2,7 @@
 /**
  * Uplink for Windows on ghost-sms.com (Matt, 2026-11-14: "Add a mac and windows build to ghost-sms.com").
  *
- *   node tool/release-windows.mjs --glyph ~/Development/Apps/glyph [--run <id>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
+ *   node tool/release-windows.mjs [--run <id>] [--keep-connection] [--again] [--no-p2p] [--on uplink|glyph]
  *
  * A Mac cannot build the Windows app: a Windows runner on GitHub does, for the version in pubspec.yaml (this starts
  * it, unless --run names one that already ran). Its installer is fetched with `gh`, then put beside the APK and the
@@ -123,13 +123,9 @@ const info = { version: versionName, versionCode: Number(versionCode), sha256: c
 writeFileSync(join(OUT, FEED), JSON.stringify(info, null, 2) + '\n');
 say(`ok ${EXE}: ${(info.bytes / 1e6).toFixed(1)} MB, sha256 ${info.sha256.slice(0, 16)}…`);
 
-// The box and its login are Ghost.md's: its checkout is found, and its own scripts open the connection.
-const glyph = [flag('glyph'), process.env.GLYPH_ROOT, join(ROOT, '..'), join(homedir(), 'Development/Apps/glyph')]
-  .filter(Boolean)
-  .find((dir) => existsSync(join(dir, 'tauri/scripts/lib/box.mjs')) && existsSync(join(dir, 'scripts/lib/env.mjs')));
-if (!glyph) fail('No Ghost.md checkout found for its box code (--glyph <path> or GLYPH_ROOT).');
-const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import(pathToFileURL(join(glyph, 'tauri/scripts/lib/box.mjs')).href);
-const { loadEnv } = await import(pathToFileURL(join(glyph, 'scripts/lib/env.mjs')).href);
+// The box and its login: tool/lib/box.mjs, from ~/.config/uplink/release.env.
+const { BOX_ENV_KEYS, boxSshOptions, openBox } = await import('./lib/box.mjs');
+const { loadEnv } = await import('./lib/box.mjs');
 const box = openBox(loadEnv(BOX_ENV_KEYS), boxSshOptions({ connectTimeout: 20 }));
 say('> Logging in to the box');
 box.logIn();

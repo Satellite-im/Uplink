@@ -343,6 +343,30 @@ void main() {
       n.dispose();
     });
 
+    // A picture asks for its file each time it is drawn (lib/ui/inbox_ui.dart), so it was asked for again while the first
+    // download was still coming: two ran at once into one path, sharing the helper's ".part" file, and the second failed
+    // with "rename …/discord/files/330240540.png.part …: no such file or directory".
+    test('a picture asked for again and again while it comes is downloaded once', () async {
+      final (n, helper) = await started(linked: true, service: discordService);
+      helper.event(msg('t1', 'm1', '', media: [{'pointer': {'url': 'https://cdn.example/p.png'}, 'mime': 'image/png', 'name': 'p.png', 'size': 3, 'width': 10, 'height': 10}]));
+      await settle();
+      final id = n.messagesOf('t1').single.media.single.fileId;
+      helper.answer = (r) {
+        if (r['op'] == 'download') File('${r['path']}').writeAsBytesSync([1, 2, 3]);
+        return null;
+      };
+      n.wantFile(id);
+      n.wantFile(id);
+      final paths = await Future.wait([n.fileOf(id), n.fileOf(id), n.fileOf(id)]);
+      expect(paths.toSet(), hasLength(1));
+      expect(File(paths.first!).readAsBytesSync(), [1, 2, 3]);
+      expect(helper.asked.where((r) => r['op'] == 'download'), hasLength(1));
+      // Once it is here it is not asked for again, and a later ask starts no second download.
+      expect(await n.fileOf(id), paths.first);
+      expect(helper.asked.where((r) => r['op'] == 'download'), hasLength(1));
+      n.dispose();
+    });
+
     test('a reply says who and what it answers: from the message kept here, else from what the helper sent (GMFB-44)', () async {
       final (n, helper) = await started(linked: true, service: discordService);
       helper.event({'ev': 'chat', 'id': 't1', 'title': 'Jo Park', 'group': false, 'members': [{'id': 'jo-1', 'name': 'Jo Park'}], 'unread': 0, 'last': 1});

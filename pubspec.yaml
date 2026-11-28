@@ -1,7 +1,7 @@
 name: ghost_messaging
 description: "Uplink: an SMS and MMS app for Android, drawn with Glacier (Ghost.md's UI kit)."
 publish_to: 'none'
-version: 0.12.54+182
+version: 0.12.55+183
 
 environment:
   sdk: ^3.11.0

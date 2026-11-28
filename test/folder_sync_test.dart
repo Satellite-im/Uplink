@@ -520,6 +520,66 @@ void main() {
           quiet: Duration.zero,
         );
 
+    // GMFB-74 (@kevin, 0.12.47: "When a file is added to the server, for it to sync with the folder on my desktop I
+    // have to open the folder in the server to nudge the app to sync it"): a pass waited for the page or the timer.
+    test('a file added to the drive elsewhere comes down by itself, with no page opened and no timer; stopping ends the watch', () async {
+      void Function()? changed;
+      var watches = 0, ended = 0;
+      final s = FolderSync(
+        data: () => Directory('${tmp.path}/app/folder-sync'),
+        drive: () async => drive,
+        home: () => '${tmp.path}/home',
+        own: () => ['${tmp.path}/app'],
+        quiet: Duration.zero,
+        settle: const Duration(milliseconds: 20),
+        every: const Duration(days: 1),
+        watch: (tell) async {
+          watches++;
+          changed = tell;
+          return () => ended++;
+        },
+      );
+      Future<void> settled() async {
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        while (s.running) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      }
+
+      write('a.txt', 'a');
+      expect(s.choose(root), isNull);
+      await settled();
+      expect(watches, 1, reason: 'watched from the first pass');
+      expect(drive.paths, ['a.txt']);
+
+      // Someone else adds two files, one just after the other: one pass brings both down.
+      drive.put('from-kevin.txt', 'hello');
+      changed!();
+      drive.put('Shared/notes.txt', 'notes');
+      changed!();
+      await settled();
+      expect(local('from-kevin.txt').readAsStringSync(), 'hello');
+      expect(local('Shared/notes.txt').readAsStringSync(), 'notes');
+      expect(watches, 1, reason: 'one watch, kept');
+
+      // A change that comes while a pass runs is not lost: the pass runs again after.
+      write('big.txt', 'x' * 1000);
+      final going = s.pass();
+      drive.put('late.txt', 'late');
+      changed!();
+      await going;
+      await settled();
+      expect(local('late.txt').readAsStringSync(), 'late');
+
+      s.stop();
+      expect(ended, 1, reason: 'the watch ends with the sync');
+      drive.put('after.txt', 'after');
+      changed!();
+      await settled();
+      expect(local('after.txt').existsSync(), isFalse, reason: 'nothing comes down once stopped');
+      s.dispose();
+    });
+
     test('choosing runs a pass and is remembered on this device; stopping forgets it and removes nothing', () async {
       Directory('${tmp.path}/home').createSync();
       write('a.txt', 'a');
