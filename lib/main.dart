@@ -5,7 +5,7 @@ import 'api/server.dart';
 import 'dart:async';
 import 'dart:io' show File;
 import 'platform_info.dart';
-import 'dart:ui' show PlatformDispatcher;
+import 'dart:ui' show FramePhase, PlatformDispatcher;
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/services.dart';
@@ -29,6 +29,7 @@ import 'inbox/curl_sync.dart';
 import 'kept_lists.dart';
 import 'looks.dart';
 import 'packs/resource_pack.dart';
+import 'ui/launch_gate.dart';
 import 'ui/text_scale.dart';
 import 'backgrounds.dart';
 import 'bubble.dart';
@@ -121,11 +122,12 @@ Future<void> main() async {
   // yet): Direct is offered in Settings › Routes, and nothing of the core is opened until it is switched on.
   if (p2pCoreHere) Net.p2pNode = makeP2pNode;
   // Each frame's times in the log, for a performance pass on an emulator (built with --dart-define=GHOST_FRAME_LOG=true;
-  // left out of every other build): how long the frame took to build, to draw, and in all.
+  // left out of every other build): how long the frame took to build, to draw, and in all, and when it was done (in
+  // thousandths of a second on the engine's clock, to lay a stretch of frames out in time).
   if (const bool.fromEnvironment('GHOST_FRAME_LOG')) {
     SchedulerBinding.instance.addTimingsCallback((timings) {
       for (final f in timings) {
-        debugPrint('GFRAME build=${f.buildDuration.inMicroseconds} raster=${f.rasterDuration.inMicroseconds} total=${f.totalSpan.inMicroseconds}');
+        debugPrint('GFRAME build=${f.buildDuration.inMicroseconds} raster=${f.rasterDuration.inMicroseconds} total=${f.totalSpan.inMicroseconds} at=${f.timestampInMicroseconds(FramePhase.rasterFinish) ~/ 1000}');
       }
     });
   }
@@ -133,8 +135,12 @@ Future<void> main() async {
   // Uplink of its own: friends by username, groups and calls over the internet (lib/standalone; Matt,
   // 2026-11-15: "roll a version of the app that works without sms"). One already paired with an Android phone as a
   // computer is (lib/desktop) stays that phone's companion.
+  if (PlatformInfo.isIOS && File('${DeskStore.defaultDir().path}/pairing.json').existsSync()) return desktopMain();
+  // The loading splash (lib/ui/launch_gate.dart; Matt, 2026-11-27: "on the phone add a loading splash screen using
+  // the same logo"): the logo turning, up as the first frame and before anything below is read; the app goes under
+  // it at the end of this, and the splash comes off it once the logo has been seen for a moment.
+  final launch = LaunchGate.show();
   if (PlatformInfo.isIOS) {
-    if (File('${DeskStore.defaultDir().path}/pairing.json').existsSync()) return desktopMain();
     // What an iPhone deletes everything of the person's under, when it does (lib/account/account.dart): the folder its
     // store is in.
     AppAccountProfiles.appFolder = StandaloneCalls.defaultDir().path;
@@ -202,7 +208,12 @@ Future<void> main() async {
   // do, from its scene (ios/Runner/SceneDelegate.swift) on "ghost_desktop/links": held until the frame is up where
   // they come before it (lib/desktop/links.dart). Android's come with what the app was opened to show (OpenRequest).
   if (PlatformInfo.isIOS) unawaited(DeskLinks.start());
-  runApp(GhostMessagingApp(sheet: sheet, state: state, accents: accents));
+  launch.open(GhostMessagingApp(sheet: sheet, state: state, accents: accents));
+  // How the start went, in the log beside each frame's times for a performance pass (GHOST_FRAME_LOG, above): how
+  // long the reading took, when the logo was first seen and when the splash was gone, each from when it went up.
+  if (const bool.fromEnvironment('GHOST_FRAME_LOG')) {
+    unawaited(launch.left.then((_) => debugPrint('GLAUNCH read=${launch.took?.inMilliseconds} seen=${launch.seenAt?.inMilliseconds} left=${launch.leftAt?.inMilliseconds}')));
+  }
 }
 
 /// A conversation's bubble on the side of the screen (android BubbleActivity.kt; GMFB-8): an engine of its own, started
@@ -489,6 +500,8 @@ class _HomeState extends State<_Home> with WidgetsBindingObserver {
   /// Opens what was asked for from outside the app, in the frame: a circle, a space, a network's chat, a pairing,
   /// a conversation by its thread or its people, or a new message.
   Future<void> _open(OpenRequest req) async {
+    // Somewhere to go: the loading splash, if it is still up, doesn't wait for its logo to have been seen.
+    LaunchGate.hurry();
     // A circle's link opened before the app is set up: held, and the circle opened once it is (lib/circles/pending_link.dart).
     if (req.circle != null && (_isDefault != true || _walking || (Sms.standalone && Me.instance.username == null))) {
       if (!await PendingCircleLink.hold(req.circle!) && mounted) toast(context, 'That circle link isn\'t complete. Ask for it again.');

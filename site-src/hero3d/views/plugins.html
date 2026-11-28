@@ -1,0 +1,71 @@
+<!-- The inner screen's two halves: the Marketplace's Discover (lib/ui/plugins_page/plugins_page.dart, as
+     lib/plugins/settings.dart marketPluginsScreen builds it) and one plugin's own page, Codes (plugin_detail.dart),
+     each as a phone 418 wide lays it out with the inner screen's tokens (the kit's at its computer width, 750). The
+     words and the counts are the app's as it is now, on a phone with nothing from other developers: its 31 plugins,
+     the nine that start added, eight of them a circle's (lib/plugins/registry.dart), so Added is 9 of 23 and a For
+     circles chip follows Added. test/shots/12-plugins-settings-*.png are these pages before plugins moved into the
+     Marketplace (2026-11-20): the look is theirs, the words are not.
+
+     Every piece is the app's, drawn by the kit and site/mock/h3-plugins.css, and stands where the app's own layout
+     puts it: a layer's left, top and width are worked out from those rules, the page's gutter 19.16px (space 4) and
+     its first piece 89.58px down (the status bar's 24px, the bar's 56px, space 2). Only whole pieces: the Featured
+     shelf, the second row and "What it adds" do not fit 588px, so they are not here. The two icons the kit's sheet
+     has no symbol for (Translate's, and Remove's dash) are the app's own paths (lib/art), drawn in place; the
+     search's magnifier is the field's own drawing. The chip of glass on the head is glass, so it lifts only a little
+     (1.2): higher, it leaves the colour it is read against. The head's tags lift little too (1.15): higher, they are
+     drawn over the Built in line above them while the layers are apart. -->
+<div class="gm h3-pane" data-screen="inner-l" data-view="plugins">
+  <div class="h3-l" data-name="header" data-z="0.5" style="left:4.79px;top:30px;width:128.7px"><div class="gm-head h3p-head">
+    <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+    <span class="gm-head__title">Discover</span>
+  </div></div>
+  <div class="h3-l" data-name="banner" data-z="0.9" style="left:19.16px;top:89.58px;width:379.69px"><div class="h3p-band">
+    <div class="h3p-band__text">
+      <b class="h3p-band__title">Marketplace</b>
+      <span class="h3p-band__line">Extras for your messages, built in or from other developers, each on this phone alone.</span>
+      <span class="h3p-band__count">31 plugins · 9 added</span>
+    </div>
+  </div></div>
+  <div class="h3-l" data-name="banner-translate" data-z="2.4" style="left:314.57px;top:110.79px;width:63.06px"><div class="h3p-float" style="--h3p-lean:-0.1rad"><span class="h3p-tile" data-hue="purple" style="--h3p-size:57.6px"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M247.15,212.42l-56-112a8,8,0,0,0-14.31,0l-21.71,43.43A88,88,0,0,1,108,126.93,103.65,103.65,0,0,0,135.69,64H160a8,8,0,0,0,0-16H104V32a8,8,0,0,0-16,0V48H32a8,8,0,0,0,0,16h87.63A87.7,87.7,0,0,1,96,116.35a87.74,87.74,0,0,1-19-31,8,8,0,1,0-15.08,5.34A103.63,103.63,0,0,0,84,127a87.55,87.55,0,0,1-52,17,8,8,0,0,0,0,16,103.46,103.46,0,0,0,64-22.08,104.18,104.18,0,0,0,51.44,21.31l-26.6,53.19a8,8,0,0,0,14.31,7.16L148.94,192h70.11l13.79,27.58A8,8,0,0,0,240,224a8,8,0,0,0,7.15-11.58ZM156.94,176,184,121.89,211.05,176Z"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-codes" data-z="2.1" style="left:237.53px;top:131.71px;width:51.68px"><div class="h3p-float" style="--h3p-lean:0.08rad"><span class="h3p-tile" data-hue="amber" style="--h3p-size:48px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-spam" data-z="1.85" style="left:316.87px;top:197.69px;width:46.28px"><div class="h3p-float" style="--h3p-lean:0.12rad"><span class="h3p-tile" data-hue="red" style="--h3p-size:41.6px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#triangle-alert"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-kinds" data-z="1.6" style="left:275.17px;top:202.12px;width:40.63px"><div class="h3p-float" style="--h3p-lean:0.06rad"><span class="h3p-tile" data-hue="slate" style="--h3p-size:38.4px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#list-filter"/></svg></span></div></div>
+  <div class="h3-l" data-name="search" data-z="0.7" style="left:19.16px;top:299.69px;width:379.69px"><div class="gm-search h3p-search">
+    <svg class="h3p-search__glass" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
+    <span class="h3p-search__hint">Search the Marketplace</span>
+  </div></div>
+  <div class="h3-l" data-name="filters" data-z="1.0" style="left:19.16px;top:358.05px;width:354.3px"><div class="h3p-chips">
+    <button class="gm-chip h3p-chip" tabindex="-1" aria-pressed="true">All</button>
+    <button class="gm-chip h3p-chip" tabindex="-1">Added<span class="h3p-chip__count">&nbsp;&nbsp;9</span></button>
+    <button class="gm-chip h3p-chip" tabindex="-1">For circles</button>
+    <button class="gm-chip h3p-chip" tabindex="-1">Organise</button>
+  </div></div>
+  <div class="h3-l" data-name="added-heading" data-z="0.4" style="left:19.16px;top:425.1px;width:119.3px"><div class="h3p-shelf"><b class="h3p-shelf__title">Added</b><span class="h3p-shelf__meta">9 of 23</span></div></div>
+  <div class="h3-l" data-name="row" data-z="1.0" style="left:19.16px;top:464.47px;width:379.69px"><div class="h3p-card" style="--h3p-end:62.9px">
+    <span class="h3p-card__name">Codes</span>
+    <span class="h3p-card__line">Sign-in codes in a tab of their own, a tap to copy one.</span>
+  </div></div>
+  <div class="h3-l" data-name="row-tile" data-z="1.9" style="left:33.52px;top:482.93px;width:51.2px"><span class="h3p-tile" data-hue="amber"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div>
+  <div class="h3-l" data-name="row-added" data-z="1.45" style="left:321.58px;top:500.53px;width:62.9px"><span class="h3p-added"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#circle-check"/></svg>Added</span></div>
+</div>
+<div class="gm h3-pane" data-screen="inner-r" data-view="plugins">
+  <div class="h3-l" data-name="page-header" data-z="0.5" style="left:4.79px;top:30px;width:106.2px"><div class="gm-head h3p-head">
+    <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+    <span class="gm-head__title">Codes</span>
+  </div></div>
+  <div class="h3-l" data-name="hero" data-z="0.9" style="left:19.16px;top:89.58px;width:379.69px"><div class="h3p-hero" data-hue="amber">
+    <svg class="gm-i gm-i--flat h3p-hero__faint" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg>
+    <b class="h3p-hero__name">Codes</b>
+    <span class="h3p-hero__line">Sign-in codes in a tab of their own, a tap to copy one.</span>
+    <span class="h3p-hero__source">Built in</span>
+  </div></div>
+  <div class="h3-l" data-name="hero-tile" data-z="1.2" style="left:43.1px;top:113.52px;width:57.6px"><span class="h3p-glass"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div>
+  <div class="h3-l" data-name="tag-added" data-z="1.15" style="left:43.1px;top:318.55px;width:56.52px"><span class="gm-tag h3p-tag">Added</span></div>
+  <div class="h3-l" data-name="tag-organise" data-z="1.15" style="left:109.2px;top:318.55px;width:69.54px"><span class="gm-tag h3p-tag">Organise</span></div>
+  <div class="h3-l" data-name="remove" data-z="1.3" style="left:19.16px;top:381.48px;width:135px"><button class="gm-pillbtn h3p-ring" tabindex="-1"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z"/></svg>Remove</button></div>
+  <div class="h3-l" data-name="note" data-z="0.4" style="left:19.16px;top:432.66px;width:379.69px"><div class="h3p-quiet">Added. Removed, it does nothing until it is added again, and keeps your choices for it.</div></div>
+  <div class="h3-l" data-name="what-it-does" data-z="0.6" style="left:19.16px;top:499.73px;width:379.69px"><div class="h3p-sec">
+    <b class="h3p-sec__title">What it does</b>
+    <span class="h3p-sec__body">Sign-in codes get a section of their own, newest first. Tap one to copy it.</span>
+  </div></div>
+</div>

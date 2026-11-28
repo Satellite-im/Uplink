@@ -1,0 +1,203 @@
+/* The hero's Plugins view (site-src/hero3d/views/plugins.html): what the kit (mock.css) does not already draw of the
+   Marketplace's Discover page and of one plugin's own page. Each piece is a layer of the hero's phone (hero3d.css),
+   so each stands by itself: nothing here is laid out by a neighbour. Where a kit class is under one of these, the
+   rule names both, so it holds whichever sheet is loaded first.
+
+   The numbers are the app's own, from the Dart that draws them: lib/ui/plugins_page/plugins_band.dart (the band and
+   the tiles on it), plugin_art.dart (a plugin's colour, its tile, the chip of glass), market_parts.dart (a card, a
+   shelf's chip and heading, the small tag, the capsule button), plugin_cards.dart (a row), plugin_detail.dart (a
+   plugin's page), lib/ui/common.dart GhostPage (the page's bar) and the kit's search field
+   (packages/glacier/lib/src/components/search_field.dart). A length the Dart writes in rem is in px here (1rem is
+   16px), as the kit's are. */
+
+.gm.h3-pane[data-view='plugins'] {
+  /* The steps of the app's spacing that the kit does not name (tokens.css --glacier-space-8, -12, -16). */
+  --h3p-s8: calc(clamp(32px, 29.8944px + 0.6579 * var(--v), 40px) * 1.1);
+  --h3p-s12: calc(clamp(48px, 44.8416px + 0.9868 * var(--v), 60px) * 1.1);
+  --h3p-s16: calc(clamp(64px, 59.7888px + 1.3158 * var(--v), 80px) * 1.1);
+  /* `line-height: normal` of the app's face at each step of its type on this screen: the face's ascent and descent,
+     each rounded to a pixel, as the app works it out (packages/glacier line_height.dart). Written out, so a layer is
+     as tall on every screen as the place it was given. */
+  --h3p-lh-xs: 14px;
+  --h3p-lh-sm: 16px;
+  --h3p-lh-md: 20px;
+  --h3p-lh-lg: 25px;
+  --h3p-lh-2xl: 36px;
+  /* The lighter and the darker of the page's paper and ink (plugin_art.dart PluginHues.light and .dark): the glow
+     over a colour, and the shade under a tile and in a tag. */
+  --h3p-light: var(--ink);
+  --h3p-dark: var(--paper);
+  /* How much of a hue its colour starts from, the rest the page's paper: on the dark page the hue is taken a little
+     way into the dark, on the light one it is the deep shade whole. */
+  --h3p-deep: 76%;
+  /* The band's four hues (plugins_band.dart bandHues: indigo, purple, rose, orange), which are Settings' own
+     (lib/kit/settings_css.dart): bright on the dark page, deep on the light one. */
+  --h3p-band-1: #8c95ff;
+  --h3p-band-2: #c77dff;
+  --h3p-band-3: #ff7aa8;
+  --h3p-band-4: #ff9a4d;
+}
+html[data-theme='light'] .gm.h3-pane[data-view='plugins']:not(.gm-dark),
+.gm.gm-light.h3-pane[data-view='plugins'] {
+  --h3p-light: var(--paper);
+  --h3p-dark: var(--ink);
+  --h3p-deep: 100%;
+  --h3p-band-1: #4f5bd5;
+  --h3p-band-2: #9a45c9;
+  --h3p-band-3: #d6336c;
+  --h3p-band-4: #d9600d;
+}
+
+/* --- a plugin's colour (plugin_art.dart PluginHues) ----------------------------------------------------------------
+   data-hue on the element gives --hue (the kit's: bright on the dark page, deep on the light one). The colour runs
+   from the element's top left corner to its bottom right: from the hue (--h3p-deep of it) to seven tenths of its
+   bright shade over it, which on the dark page is the hue itself. Over it, a glow from the top left corner.
+   --h3p-turn is the angle of that diagonal, which is the box's own (135deg for a square), and --h3p-glow the glow's
+   reach, 1.1 of the box's shorter side. */
+.h3p-tile,
+.h3p-hero {
+  --h3p-from: color-mix(in srgb, var(--hue) var(--h3p-deep), var(--paper));
+  --h3p-to: color-mix(in srgb, var(--h3p-bright, var(--hue)) 70%, var(--hue));
+  --h3p-turn: 135deg;
+  background:
+    radial-gradient(circle var(--h3p-glow) at 10% 5%, color-mix(in srgb, var(--h3p-light) 22%, transparent), transparent),
+    linear-gradient(var(--h3p-turn), var(--h3p-from), color-mix(in srgb, var(--h3p-to) 55%, var(--h3p-from)), var(--h3p-to));
+  color: #fff;
+}
+/* Each hue's bright shade (lib/kit/settings_css.dart --hue-dark), for the plugins drawn here. */
+.h3p-tile[data-hue='purple'], .h3p-hero[data-hue='purple'] { --h3p-bright: #c77dff; }
+.h3p-tile[data-hue='amber'], .h3p-hero[data-hue='amber'] { --h3p-bright: #ffb84d; }
+.h3p-tile[data-hue='red'], .h3p-hero[data-hue='red'] { --h3p-bright: #ff6b61; }
+.h3p-tile[data-hue='slate'], .h3p-hero[data-hue='slate'] { --h3p-bright: #8fa3bf; }
+
+/* --- the page's bar (GhostPage): the way back in its 2.75rem round, then the page's name --------------------------- */
+/* The radius draws nothing: it is the shape of the outline the layer leaves on the glass (hero3d's radiusOf). */
+.gm-head.h3p-head { height: 44px; padding: 0; gap: 0; background: none; border-radius: 22px; z-index: auto; }
+.h3p-head .gm-iconbtn .gm-i { width: 22px; height: 22px; }
+.h3p-head .gm-head__title { margin: 0; padding: 0; font-weight: 600; line-height: var(--h3p-lh-lg); overflow: visible; }
+
+/* --- the band (PluginsBand): four hues from corner to corner, its words at its foot -------------------------------- */
+.h3p-band {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+  min-height: 176px;
+  padding: var(--s5);
+  border-radius: calc(var(--r-lg) * 1.6);
+  /* 116.7deg: from the top left corner to the bottom right of a band this wide (379.69px) and as tall as its words
+     make it (190.95px, past its least of 11rem); the glow reaches 1.1 of that height. */
+  background:
+    radial-gradient(circle 210.05px at 10% 5%, color-mix(in srgb, var(--h3p-light) 22%, transparent), transparent),
+    linear-gradient(116.7deg,
+      color-mix(in srgb, var(--h3p-band-1) var(--h3p-deep), var(--paper)) 0%,
+      color-mix(in srgb, var(--h3p-band-2) var(--h3p-deep), var(--paper)) 38%,
+      color-mix(in srgb, var(--h3p-band-3) var(--h3p-deep), var(--paper)) 72%,
+      color-mix(in srgb, var(--h3p-band-4) var(--h3p-deep), var(--paper)) 100%);
+  color: #fff;
+}
+/* The words keep clear of the tiles' corner, 42% of the band from its end. */
+.h3p-band__text { display: flex; flex-direction: column; align-items: flex-start; max-width: calc(58% + 0.16 * var(--s5)); }
+.h3p-band__title { font-size: var(--fs-2xl); font-weight: 700; line-height: var(--h3p-lh-2xl); }
+.h3p-band__line { margin-top: var(--s1); font-size: var(--fs-sm); line-height: 1.35; color: rgb(255 255 255 / 0.92); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.h3p-band__count { margin-top: var(--s3); font-size: var(--fs-xs); font-weight: 600; line-height: var(--h3p-lh-xs); color: rgb(255 255 255 / 0.82); white-space: nowrap; }
+
+/* --- a plugin's tile (PluginTile): its colour, its icon in the middle at half its size ----------------------------- */
+.h3p-tile {
+  --h3p-size: 51.2px;
+  --h3p-glow: calc(var(--h3p-size) * 1.1);
+  flex: none;
+  display: grid; place-items: center;
+  width: var(--h3p-size); height: var(--h3p-size);
+  border-radius: calc(var(--h3p-size) * 0.28);
+}
+.h3p-tile > .gm-i { width: calc(var(--h3p-size) * 0.5); height: calc(var(--h3p-size) * 0.5); }
+/* A tile floating on the band, turned a little (--h3p-lean), a soft shadow under it (the app's blurRadius of 14 is a
+   blur of 17.17px here). Its layer is the square the turned tile stands in. */
+.h3p-float { display: grid; place-items: center; aspect-ratio: 1; }
+.h3p-float > .h3p-tile { transform: rotate(var(--h3p-lean, 0rad)); box-shadow: 0 6px 17.17px color-mix(in srgb, var(--h3p-dark) 22%, transparent); }
+
+/* --- the search (GlacierSearchField, md): 2.75rem tall, the field's own magnifier at its start --------------------- */
+.gm-search.h3p-search { position: relative; gap: 0; margin: 0; padding: 0 var(--h3p-s8); border-radius: var(--r-lg); cursor: text; }
+.h3p-search__glass { position: absolute; left: calc(var(--s3) - 1px); top: 50%; width: 16px; height: 16px; margin-top: -8px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.h3p-search__hint { font-size: var(--fs-sm); line-height: var(--h3p-lh-sm); color: var(--ink-3); white-space: nowrap; }
+
+/* --- the shelves' chips (MarketChip): a capsule, filled when it is the one chosen ---------------------------------- */
+/* The row's radius draws nothing: it is the shape of the outline the layer leaves on the glass. */
+.h3p-chips { display: flex; gap: var(--s2); border-radius: 999px; }
+.gm-chip.h3p-chip { height: auto; min-height: var(--h3p-s8); padding: 0 var(--s3); background: transparent; border-color: var(--rule); color: var(--ink-2); font-weight: 500; line-height: var(--h3p-lh-sm); }
+.h3p-chip__count { color: var(--ink-3); }
+.gm-chip.h3p-chip[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.gm-chip.h3p-chip:active { transform: none; background: var(--paper-3); }
+.gm-chip.h3p-chip[aria-pressed='true']:active { background: var(--ink); }
+
+/* --- a shelf's heading (MarketHeading): its name, and how many quietly after it ------------------------------------ */
+.h3p-shelf { display: flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+.h3p-shelf__title { font-size: var(--fs-lg); font-weight: 600; line-height: var(--h3p-lh-lg); color: var(--ink); }
+.h3p-shelf__meta { font-size: var(--fs-sm); line-height: var(--h3p-lh-sm); color: var(--ink-3); }
+
+/* --- a plugin's row (PluginCard in MarketCard) --------------------------------------------------------------------- */
+/* Room at its start for its tile (3.2rem) and at its end for Added (--h3p-end wide), which are layers of their own. */
+.h3p-card {
+  --h3p-end: 62.9px;
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: calc(51.2px + 2 * var(--s3));
+  padding: calc(var(--s3) - 1px) calc(var(--s3) + var(--h3p-end) + var(--s2) - 1px) calc(var(--s3) - 1px) calc(var(--s3) * 2 + 51.2px - 1px);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-2);
+  cursor: pointer;
+  transition: background-color 140ms linear, border-color 140ms linear;
+}
+.h3p-card:active { background: var(--paper-3); }
+.h3p-card__name { font-size: var(--fs-md); font-weight: 600; line-height: var(--h3p-lh-md); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h3p-card__line { margin-top: 2.4px; font-size: var(--fs-sm); line-height: 1.35; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Added, with its tick (MarketAdded): where Add was. */
+.h3p-added { display: flex; align-items: center; gap: var(--s1); font-size: var(--fs-sm); font-weight: 500; line-height: var(--h3p-lh-sm); color: var(--ink-3); white-space: nowrap; }
+.h3p-added > .gm-i { width: 15px; height: 15px; }
+
+/* --- a plugin's page: its head (PluginDetail._hero) ---------------------------------------------------------------- */
+/* Room at its top for the chip of glass (3.6rem) and at its foot for its tags (19.84px tall), which are layers of
+   their own. */
+.h3p-hero {
+  --h3p-glow: 300.03px;
+  /* 125.69deg: from the top left corner to the bottom right of a head this wide (379.69px) and as tall as its words
+     make it (272.75px). */
+  --h3p-turn: 125.69deg;
+  position: relative;
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: calc(var(--s5) + 57.6px + var(--s4)) var(--s5) calc(var(--s5) + 19.84px + var(--s3));
+  border-radius: calc(var(--r-lg) * 1.5);
+  overflow: hidden;
+}
+/* Its icon, large and faint, low and mostly past its end. */
+.h3p-hero__faint.gm-i { position: absolute; right: calc(-1 * var(--h3p-s16)); bottom: calc(-1 * var(--h3p-s12)); width: 192px; height: 192px; color: rgb(255 255 255 / 0.1); }
+.h3p-hero__name { position: relative; font-size: var(--fs-2xl); font-weight: 700; line-height: var(--h3p-lh-2xl); }
+.h3p-hero__line { position: relative; width: 68%; margin-top: var(--s1); font-size: var(--fs-md); line-height: 1.35; color: rgb(255 255 255 / 0.92); }
+/* Where it comes from, under its line (PluginDetail._source): Built in. */
+.h3p-hero__source { position: relative; margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 500; line-height: 1.35; color: rgb(255 255 255 / 0.92); white-space: nowrap; }
+/* The chip of glass its icon is on (GlassChip, 3.6rem): white at 18%, a rim of white at 30% round it. */
+.h3p-glass { display: grid; place-items: center; width: 57.6px; height: 57.6px; border: 1px solid rgb(255 255 255 / 0.3); border-radius: 17.28px; background: rgb(255 255 255 / 0.18); color: #fff; }
+.h3p-glass > .gm-i { width: 31.104px; height: 31.104px; }
+/* A small tag on the colour (MarketTag): the page's darker colour at a third, a hairline of white round it. */
+.gm-tag.h3p-tag { display: flex; justify-content: center; height: auto; padding: 1.92px var(--s2); border: 1px solid rgb(255 255 255 / 0.22); background: color-mix(in srgb, var(--h3p-dark) 34%, transparent); color: #fff; font-weight: 500; line-height: var(--h3p-lh-xs); white-space: nowrap; }
+
+/* --- a plugin's page: Remove (MarketButton, ring, large), the line under it, a section ----------------------------- */
+.gm-pillbtn.h3p-ring { display: flex; height: 41.6px; padding: 0 var(--s5); gap: var(--s1); border: 1px solid var(--rule); background: transparent; color: var(--ink); line-height: var(--h3p-lh-md); }
+.h3p-ring > .gm-i { width: 16px; height: 16px; }
+.gm-pillbtn.h3p-ring:active { transform: none; opacity: 0.8; }
+.h3p-quiet { font-size: var(--fs-sm); line-height: 1.4; color: var(--ink-3); }
+.h3p-sec { display: flex; flex-direction: column; }
+.h3p-sec__title { font-size: var(--fs-md); font-weight: 600; line-height: var(--h3p-lh-md); color: var(--ink); }
+.h3p-sec__body { margin-top: var(--s1); font-size: var(--fs-md); line-height: 1.45; color: var(--ink); }
+
+/* --- under a pointer ------------------------------------------------------------------------------------------------ */
+@media (hover: hover) {
+  /* The app's own: a card's rim darkens (over its tile and its Added too, which are the card's), and the search's.
+     The second rule is by itself, so a browser without :has() keeps the first. */
+  .h3p-card:hover { border-color: color-mix(in oklch, var(--ink) 22%, transparent); }
+  .h3-pane[data-view='plugins']:has(> .h3-l:is([data-name='row-tile'], [data-name='row-added']):hover) .h3p-card { border-color: color-mix(in oklch, var(--ink) 22%, transparent); }
+  .h3-pane[data-view='plugins'] > .h3-l:is([data-name='row-tile'], [data-name='row-added']) { cursor: pointer; }
+  .gm-search.h3p-search:hover { border-color: var(--g8); }
+  /* The app draws these pressed only; under a pointer they answer as the kit's own controls do. */
+  .gm-chip.h3p-chip:hover { background: var(--paper-2); border-color: var(--border); }
+  .gm-chip.h3p-chip[aria-pressed='true']:hover { background: var(--ink); border-color: var(--ink); }
+  .gm-pillbtn.h3p-ring:hover { background: var(--paper-2); }
+}

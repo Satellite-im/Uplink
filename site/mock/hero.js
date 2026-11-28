@@ -1,4 +1,4 @@
-/* The hero's exploded conversation (site/mock/hero.html), alive across its layers. Needs mock.js (window.GM) first.
+/* The hero's exploded conversation (site-src/hero3d/views/thread.html), alive across its layers. Needs mock.js (window.GM) first.
    Each set of layers is found by the stack it sits in (.stack, or anything marked data-hero):
      - the composer sends: what you send becomes your newest bubble (x-out2), rising in; the heart under the old one
        leaves, and the receipt under it goes Sent, Delivered, Read. Some seconds later the conversation is as it was.
@@ -93,7 +93,7 @@
       if (!b || !root.contains(b)) return;
       e.stopPropagation(); e.preventDefault();
       const layer = b.closest('[data-mock]').dataset.mock;
-      const r = (layer === 'x-in' || layer === 'x-emoji' || layer === 'x-link' ? laugh : heart);
+      const r = (layer === 'x-in' || layer === 'x-emoji' ? laugh : heart);
       const em = r && r.querySelector('.gm-react');
       if (!em) return;
       em.classList.remove('is-gone');

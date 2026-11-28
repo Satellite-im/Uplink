@@ -1,0 +1,214 @@
+/* The hero's space view (site-src/hero3d/views/space.html): the app's wide screen on the phone's inner screen, the
+   list of conversations on its left half and a voice space, in its call, on its right (test/shots/22-hangout-wide-*).
+   What the kit (mock.css) does not already draw of the two, and the app's own numbers where a piece of the kit's is
+   an older build's. Each piece is a layer of the hero's phone (hero3d.css), so each stands by itself: nothing here
+   is laid out by a neighbour.
+
+   The numbers are the app's own, from the Dart that draws them: lib/ui/conversations.dart (the search row, the
+   tabs' row, a conversation's card), lib/ui/souls.dart (the souls), lib/plugins/ui.dart (the tabs' icons, the
+   filter), lib/ui/common.dart (a face, the unread dot), lib/ui/nav_bar.dart (the dock, its count),
+   lib/ui/space_designs/telegram.dart (the call: its header, its people, its buttons), lib/ui/ripple_avatar.dart (a
+   face in a call and its rings), lib/ui/split_handle.dart (the grip on the line between call and chat),
+   lib/ui/hangout_screen.dart (a message of the space's chat), lib/ui/composer_box.dart (the composer) and the kit's
+   search field (packages/glacier/lib/src/components/search_field.dart). A length the Dart writes in rem is in px
+   here (1rem is 16px), as the kit's are. */
+
+.gm.h3-pane[data-view='space'] {
+  /* The step of the app's spacing that the kit does not name (tokens.css --glacier-space-8), and the dock's ring
+     (app.css --app-ring: --glacier-space-10 at 0.88). */
+  --h3s-s8: calc(clamp(32px, 29.8944px + 0.6579 * var(--v), 40px) * 1.1);
+  --h3s-ring: calc(clamp(40px, 37.368px + 0.8224 * var(--v), 50px) * 1.1 * 0.88);
+  /* `line-height: normal` of the app's face at each step of its type on this screen (the face's ascent and descent,
+     each rounded to a pixel, as the app works it out: packages/glacier line_height.dart). Written out, so a layer is
+     as tall on every screen as the place it was given. */
+  --h3s-lh-xs: 14px;
+  --h3s-lh-sm: 16px;
+  --h3s-lh-md: 20px;
+  --h3s-lh-lg: 25px;
+  /* The souls' flame (souls.dart soulsFlame): pale on the dark page, a deeper mint on the light one. */
+  --h3s-flame: #c9ffe6;
+  /* An admin's name (lib/voice/roles.dart Role.defaultColor), which the owner's is drawn in on either page. */
+  --h3s-admin: #e74c3c;
+}
+html[data-theme='light'] .gm.h3-pane[data-view='space']:not(.gm-dark),
+.gm.gm-light.h3-pane[data-view='space'] {
+  --h3s-flame: #3dbf8f;
+}
+
+/* ================================================= the list ==================================================== */
+
+/* --- the search (GlacierSearchField, md): 2.75rem tall, 1rem round, the kit's own magnifier at its start ----------- */
+.gm-search.h3s-search { position: relative; gap: 0; margin: 0; padding: 0 var(--h3s-s8); border-radius: var(--r-lg); cursor: text; }
+.h3s-search__glass { position: absolute; left: calc(var(--s3) - 1px); top: 50%; width: 16px; height: 16px; margin-top: -8px; fill: none; stroke: currentColor; stroke-width: 1.5; pointer-events: none; }
+.gm-search.h3s-search input { height: 100%; line-height: var(--h3s-lh-sm); }
+
+/* --- the souls beside it (SoulsChip): as tall, round, the flame and how many --------------------------------------- */
+/* (A button of this file's own is named under .gm, so the kit's reset of a button never outranks it, whichever sheet
+   the page links first.) */
+.gm .h3s-souls {
+  display: flex; align-items: center; justify-content: center; gap: var(--s1);
+  width: 100%; height: 44px; padding: 0 var(--s3);
+  border-radius: 22px;
+  background: var(--paper-2); border: 1px solid var(--rule);
+  transition: background-color var(--fast) var(--ease);
+}
+.gm .h3s-souls:active { background: var(--paper-3); }
+.h3s-souls__count { font-size: var(--fs-sm); font-weight: 700; line-height: var(--h3s-lh-sm); color: var(--ink); }
+/* The flame (SoulFlame): washed in its own colour, and on the dark page a soft glow behind it (a round 0.55 of its
+   size, spread 0.05 and blurred 0.6 of it: a blur of 6.04px here). */
+.h3s-flame { position: relative; flex: none; display: grid; place-items: center; width: 16px; height: 16px; color: var(--h3s-flame); }
+.h3s-flame > .gm-i { position: relative; width: 16px; height: 16px; }
+.h3s-flame::before { content: ''; position: absolute; left: 2.8px; top: 2.8px; width: 10.4px; height: 10.4px; border-radius: 50%; background: color-mix(in srgb, var(--h3s-flame) 55%, transparent); filter: blur(6.04px); }
+html[data-theme='light'] .gm:not(.gm-dark) .h3s-flame::before, .gm.gm-light .h3s-flame::before { content: none; }
+
+/* --- the tabs (SectionTabs: the kit's toggle, its icons 18 across and unwashed) and the filter (FilterButton) ------ */
+.gm-seg.h3s-seg .gm-seg__tab .gm-i { width: 18px; height: 18px; }
+.gm-roundbtn.h3s-filter .gm-i { width: 16px; height: 16px; }
+
+/* --- a conversation (ConversationRow): the kit's card, its words set as the app sets them ------------------------- */
+/* The face, the unread dot and (in a group) the two faces are layers of their own: the card keeps their room. */
+.gm-row.h3s-row { display: flex; align-items: center; gap: var(--s3); margin: 0; padding: calc(var(--s3) - 2px); }
+.h3s-row__face { flex: none; width: 48px; height: 48px; }
+.h3s-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2.4px; }
+.h3s-row__top { display: flex; align-items: center; }
+.h3s-row__who { flex: 1; min-width: 0; display: flex; align-items: center; }
+.h3s-row__name { flex: 0 1 auto; min-width: 0; font-size: var(--fs-md); font-weight: 600; line-height: var(--h3s-lh-md); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h3s-row__lock.gm-i { flex: none; width: 12px; height: 12px; margin-left: var(--s1); color: var(--ink-3); }
+.h3s-row__pin.gm-i { flex: none; width: 13px; height: 13px; margin-left: var(--s1); color: var(--ink-3); }
+.h3s-row__time { flex: none; margin-left: var(--s2); font-size: var(--fs-xs); line-height: var(--h3s-lh-xs); color: var(--ink-3); white-space: nowrap; }
+.h3s-row__bottom { display: flex; align-items: center; }
+.h3s-row__snip { flex: 1; min-width: 0; font-size: var(--fs-sm); line-height: 1.35; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.h3s-row__dot { flex: none; width: 12px; height: 12px; margin-left: var(--s2); }
+.gm-row.is-unread .h3s-row__name { font-weight: 700; }
+.gm-row.is-unread .h3s-row__time { color: var(--ink); font-weight: 600; }
+.gm-row.is-unread .h3s-row__snip { color: var(--ink); font-weight: 500; }
+
+/* A face on a card (Avatar): its hue's wash is a sixth of the hue over the card, not over the page. */
+.gm-av.h3s-on-card { background: color-mix(in srgb, var(--hue, var(--ink)) 16%, var(--paper-2)); }
+/* Two faces for a group: the second in a ring of the page's colour, the ring inside the pair's own box. */
+.gm-av--pair.h3s-pair > .gm-av:last-child { right: 2px; bottom: 2px; }
+
+/* The unread dot (UnreadBadge with no count): 0.75rem. It goes as its card is read (mock.js takes is-unread away). */
+.h3s-dot { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--unread); transition: transform var(--normal) var(--ease-spring); }
+.h3-pane[data-view='space'] > .h3-l[data-name='row-maya']:not(:has(.is-unread)) ~ .h3-l[data-name='unread-maya'] > .h3s-dot,
+.h3-pane[data-view='space'] > .h3-l[data-name='row-group']:not(:has(.is-unread)) ~ .h3-l[data-name='unread-group'] > .h3s-dot { transform: scale(0); }
+
+/* --- the dock (NavPill, laid along): a pill nearly the page's colour, its rings spread across it -------------------- */
+.h3s-dock {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--s2);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  border: 1px solid var(--rule);
+}
+.gm-dock__btn.h3s-dock__btn { width: var(--h3s-ring); height: var(--h3s-ring); background: var(--paper); border-color: var(--g8); }
+.gm-dock__btn.h3s-dock__btn .gm-i { width: 18.4px; height: 18.4px; }
+.gm-dock__btn.h3s-dock__btn[aria-selected='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+/* A ring's count: white on the red, a line of the page's colour round it. */
+.h3s-count {
+  display: grid; place-items: center;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px;
+  background: var(--danger); border: 2px solid var(--paper);
+  color: #fff; font-size: 12px; font-weight: 700; line-height: 1.15;
+}
+
+/* ================================================ the space ==================================================== */
+
+/* --- the call's header (_Header): the space's name, how many are in voice, the menu's round button ------------------ */
+.h3s-title { display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap; }
+.h3s-title__name { font-size: var(--fs-lg); font-weight: 700; line-height: var(--h3s-lh-lg); color: var(--ink); }
+.h3s-title__sub { font-size: var(--fs-sm); line-height: var(--h3s-lh-sm); color: var(--ink-3); }
+.gm .h3s-more {
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--paper-2); color: var(--ink);
+  transition: background-color var(--fast) var(--ease);
+}
+.gm .h3s-more > .gm-i { width: 20px; height: 20px; }
+.gm .h3s-more:active { background: var(--paper-3); }
+
+/* --- the people (_People): one card, a row each, a hairline between rows from where the names start ---------------- */
+/* A row keeps room for the face (38) and for the microphone (22), which are layers of their own. */
+.h3s-people { border-radius: var(--r-xl); background: var(--paper-2); border: 1px solid var(--rule); }
+.h3s-person { display: flex; align-items: center; padding: 14px 14px 14px 18px; cursor: pointer; transition: background-color var(--fast) var(--ease); }
+.h3s-person:first-child { border-radius: calc(var(--r-xl) - 1px) calc(var(--r-xl) - 1px) 0 0; }
+.h3s-person:last-child { border-radius: 0 0 calc(var(--r-xl) - 1px) calc(var(--r-xl) - 1px); }
+.h3s-person:active { background: var(--paper-3); }
+.h3s-person__face { flex: none; width: 38px; height: 38px; margin-right: 18px; }
+.h3s-person__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
+.h3s-person__name { font-size: var(--fs-md); font-weight: 600; line-height: var(--h3s-lh-md); color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.h3s-person__name--owner { color: var(--h3s-admin); }
+.h3s-person__state { font-size: var(--fs-sm); line-height: var(--h3s-lh-sm); color: var(--ink-3); }
+.h3s-person__state--talking { font-weight: 600; color: var(--online); }
+.h3s-person__state--muted { font-weight: 600; color: var(--danger); }
+.h3s-person__mic { flex: none; width: 22px; height: 22px; margin-left: 8px; }
+.h3s-people__rule { display: block; height: 1px; margin-left: 74px; background: var(--rule); }
+
+/* What someone is doing, as their row's microphone says it (_MicMark): quiet ink listening, green talking (and a
+   little larger with the voice: 1.14 at this level), red muted. */
+.gm-i.h3s-mic { width: 22px; height: 22px; color: var(--ink-3); }
+.gm-i.h3s-mic--talking { width: 25.08px; height: 25.08px; color: var(--online); }
+.gm-i.h3s-mic--muted { color: var(--danger); }
+
+/* The rings round whoever talks (RippleAvatar): the kit's, with no face of their own under them, and their reach
+   (2.2 of the face) as the layer's own box. */
+.h3s-reach { display: grid; place-items: center; width: 83.6px; height: 83.6px; border-radius: 50%; }
+.gm-rip.h3s-ring { --ring: transparent; background: none; }
+
+/* --- the call's buttons (_RoundButton, _MicButton): a round, its words under it ---------------------------------- */
+.gm .h3s-ctl { display: flex; flex-direction: column; align-items: center; width: 100%; border-radius: 25px; white-space: nowrap; }
+.h3s-ctl__btn {
+  flex: none;
+  display: grid; place-items: center;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: var(--paper-2); border: 1px solid var(--rule);
+  color: var(--ink);
+  transition: background-color var(--fast) var(--ease), transform 100ms var(--ease);
+}
+.h3s-ctl__btn > .gm-i { width: 22px; height: 22px; }
+.h3s-ctl:active .h3s-ctl__btn { transform: scale(0.94); }
+.h3s-ctl__label { margin-top: 6px; font-size: var(--fs-xs); font-weight: 600; line-height: var(--h3s-lh-xs); color: var(--ink-2); }
+/* Leave: the app's red. None of the others is on here (video off, hearing, nothing shared), so none is filled. */
+.h3s-ctl--leave .h3s-ctl__btn { background: var(--danger); border-color: var(--danger); color: #fff; }
+/* The microphone, live: a little larger, green, and what it means under it (14 under the round: the room its rings
+   have in the app). */
+.gm .h3s-ctl--mic { border-radius: 30px; }
+.h3s-ctl--mic .h3s-ctl__btn { width: 60px; height: 60px; background: var(--online); border-color: var(--online); color: #fff; }
+.h3s-ctl--mic .h3s-ctl__btn > .gm-i { width: 26px; height: 26px; }
+.h3s-ctl--mic:active .h3s-ctl__btn { transform: scale(0.95); }
+.h3s-ctl__title { margin-top: 14px; font-size: var(--fs-xs); font-weight: 700; line-height: var(--h3s-lh-xs); color: var(--online); }
+.h3s-ctl__hint { font-size: var(--fs-xs); line-height: var(--h3s-lh-xs); color: var(--ink-3); }
+
+/* --- the line between the call and the chat (SpaceSplit), and the grip on it (SplitHandle, a touch screen's) -------- */
+.h3s-split { display: block; height: 1px; background: var(--rule); }
+.h3s-grip { display: block; width: 36px; height: 6px; border-radius: 3px; background: var(--ink-4); border: 1.5px solid var(--paper); }
+
+/* --- the space's chat (_Message): who, over their bubble; the bubble as the space sets it ------------------------- */
+.h3s-who { display: block; font-size: var(--fs-xs); font-weight: 600; line-height: var(--h3s-lh-xs); color: var(--accent); white-space: nowrap; }
+.gm-msg.h3s-msg { max-width: none; margin: 0; }
+.gm-msg.h3s-msg > .gm-bubble { padding: var(--s2) var(--s3); border: 0; border-radius: 18px; font-size: var(--fs-md); line-height: 1.3; white-space: nowrap; }
+
+/* --- the composer (ComposerBox): the kit's, its icons 19 across and its words straight after the plus --------------- */
+.gm-composer.h3s-composer { margin: 0; }
+.gm-composer.h3s-composer .gm-composer__btn .gm-i, .gm-composer.h3s-composer .gm-composer__send .gm-i { width: 19px; height: 19px; }
+.gm-composer.h3s-composer .gm-composer__input { padding-left: 0; }
+
+/* --- under the pointer -------------------------------------------------------------------------------------------- */
+/* What lies on a card, on the page beside a bubble or on the dock is not pressed by itself: the pointer goes through
+   it to what it lies on. */
+.h3-pane[data-view='space'] > .h3-l:is([data-name^='avatar-'], [data-name^='unread-'], [data-name='dock-count'], [data-name^='face-'], [data-name='talking-ring'], [data-name^='mic-'], [data-name='split'], [data-name='split-grip'], [data-name='message-face']) { pointer-events: none; }
+@media (hover: hover) {
+  /* The app's own: the search's rim darkens; a ring of the dock, a person's row, the menu's button and a round
+     button of the call (but Leave and the microphone) each take the next paper. */
+  .gm-search.h3s-search:hover { border-color: var(--g8); }
+  .gm-dock__btn.h3s-dock__btn:hover { background: var(--paper-2); border-color: var(--g8); }
+  .gm-dock__btn.h3s-dock__btn[aria-selected='true']:hover { background: var(--accent); border-color: var(--accent); }
+  .h3s-person:hover { background: var(--paper-3); }
+  .gm .h3s-more:hover { background: var(--paper-3); }
+  .h3s-ctl:not(.h3s-ctl--leave, .h3s-ctl--mic):hover .h3s-ctl__btn { background: var(--paper-3); }
+  /* The app has the souls pressed only; under a pointer they answer as the kit's own round buttons do. */
+  .gm .h3s-souls:hover { background: var(--hover); }
+}

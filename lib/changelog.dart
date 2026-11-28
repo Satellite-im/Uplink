@@ -25,6 +25,11 @@ class ReleaseNotes {
 
 /// Every release's entry, the newest first.
 const List<ReleaseNotes> changelog = [
+  ReleaseNotes('0.12.54', '2026-11-27', [
+    'A loading splash on your phone: the Uplink logo turns on the screen for a moment as the app opens, then fades away over the app. Open the app from a notification, a link or something shared into it and it steps aside sooner.',
+    'The launch splash on a computer: the logo is about twice as large and turns while the app looks for an update, where it stood still.',
+    'Where your device is set to reduce motion, the splash shows the logo still.',
+  ]),
   ReleaseNotes('0.12.53', '2026-11-27', [
     'On a computer, the launch splash shows the Uplink logo by itself, twice as large, where it sat in a black tile.',
   ]),

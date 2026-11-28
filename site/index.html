@@ -24,8 +24,8 @@
   The site as Uplink (Matt, 2026-11-27: "Redo the whole website with branding geared towards uplink, remove the ghost
   images and give me space type images prompts to generate").
   - The look is /uplink.css, shared with every page: black and white, slanted display type, sticker cards, the needle.
-  - Every picture of the app is the app: tool/site-layers.py cuts the screen tests' own pictures (test/shots) into
-    site/shots/. The hero lifts one conversation apart into its layers.
+  - Every picture of the app is the app, drawn in HTML by the kit in site/mock. The hero is a foldable phone in 3D
+    (site/hero3d.js, from site-src/hero3d) with the app on its screens, lifted apart into its layers and drawn back.
   - The space pictures under /art/space/ are Matt's to make; until they are there each slot shows the CSS starfield
     (every <img> there removes itself on error).
   - Icons are Lucide's (ISC licence), inline. The display face is Saira (OFL), from Google Fonts; no scripts from
@@ -42,6 +42,9 @@
 <!-- The app's screens are drawn in HTML by the mock kit (site/mock): mock.css/js, then each section's own. -->
 <link rel="stylesheet" href="/mock/mock.css">
 <link rel="stylesheet" href="/mock/hero.css">
+<link rel="stylesheet" href="/mock/hero3d.css">
+<link rel="stylesheet" href="/mock/h3-plugins.css">
+<link rel="stylesheet" href="/mock/h3-space.css">
 <link rel="stylesheet" href="/mock/pillars.css">
 <link rel="stylesheet" href="/mock/calls.css">
 <link rel="stylesheet" href="/mock/inbox.css">
@@ -93,25 +96,10 @@
   .getit-item.picked { display: none; }
   a.dl small:empty { display: none; }
 
-  /* the exploded conversation: the app's own layers, lifted apart */
-  .stage { position: relative; height: 40rem; display: grid; place-items: center; perspective: 2600px; }
+  /* the phone: a foldable in 3D, the app on its screens lifted apart and drawn back in (site/mock/hero3d.css) */
+  .stage { position: relative; height: 40rem; }
   @media (max-width: 940px) { .stage { height: 34rem; margin-top: -1rem; } }
-  .fit { transform: scale(var(--fit, 1)); }
-  .stack { --gap: 0px; --rx: 0deg; --rz: 0deg; position: relative; width: 300px; height: 650px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(var(--rz)); transition: transform 1.4s cubic-bezier(.2, .8, .2, 1); }
-  .stack.open { --rx: 46deg; --rz: -27deg; }
-  .plate { position: absolute; inset: 0; transform: translateZ(calc(var(--gap) * .5)); transition: transform 1.4s cubic-bezier(.2, .8, .2, 1); border-radius: 34px; background: linear-gradient(180deg, #08080b, #040406); box-shadow: 0 0 0 1.5px rgba(255,255,255,.55), 0 40px 70px -20px rgba(0, 0, 0, .6), 0 0 80px -10px rgba(255,255,255,.12); }
-  :root[data-theme="light"] .plate { background: linear-gradient(180deg, #fff, #f4f4f2); }
-  .plate::after { content: ""; position: absolute; inset: -9px; border-radius: 42px; background: linear-gradient(135deg, #1b1b20, #08080a); transform: translateZ(-14px); box-shadow: 0 50px 80px -30px rgba(0, 0, 0, .6); }
-  .layer { position: absolute; transform: translateZ(calc(var(--gap) * var(--z))); transition: transform 1.4s cubic-bezier(.2, .8, .2, 1); filter: drop-shadow(0 18px 22px rgba(0, 0, 0, .5)) drop-shadow(0 0 1px rgba(255, 255, 255, .35)); will-change: transform; }
-  .stack:not(.open) .layer { filter: none; }
-  .tag { position: absolute; z-index: 3; opacity: 0; transition: opacity .6s ease, translate .6s ease; translate: 0 8px; background: rgba(13,13,18,.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: var(--u-ink); font-weight: 700; }
-  .tag .u-i { width: .95rem; height: .95rem; }
-  .stage.open .tag { opacity: 1; translate: 0 0; }
-  .t1 { left: 2%; top: 20%; transition-delay: .9s; }
-  .t2 { right: 0; top: 52%; transition-delay: 1.1s; }
-  .t3 { left: 8%; bottom: 12%; transition-delay: 1.3s; }
-  @media (max-width: 520px) { .t1 { left: 2%; } .t2 { right: 2%; } }
-  @media (prefers-reduced-motion: reduce) { .stack, .layer, .tag { transition: none !important; } }
+  .hero .u-wrap > div:first-child { position: relative; z-index: 2; }
 
   /* section heads over their space picture */
   .head { position: relative; padding: 6rem 0 0; }
@@ -307,17 +295,21 @@
     </div>
 
     <div class="stage" id="stage" aria-hidden="true">
-      <span class="u-tag tag t1"><svg class="u-i"><use href="#i-heart"/></svg><span>Reactions that land</span></span>
-      <span class="u-tag tag t2"><svg class="u-i"><use href="#i-lock"/></svg><span>End-to-end encrypted</span></span>
-      <span class="u-tag tag t3"><svg class="u-i"><use href="#i-check2"/></svg><span>Sent, delivered, read</span></span>
-      <div class="fit" id="fit">
-        <!-- One conversation from the app (test/shots/2-thread-*.png) in three planes: the bubbles, the bar and the
-             composer above them, the reactions just over their bubbles. The layers' places came from
-             tool/site-layers.py; each is drawn in HTML here (styled by site/mock/hero.css), so the page no longer has the STACK
-             markers that script would write its <img> layers between. -->
-        <div class="stack" id="stack">
-          <div class="plate"></div>
-          <div class="layer" style="--z:2.1;left:0.00%;top:2.47%;width:100.00%" data-light="0.00,2.47,100.00" data-dark="0.00,2.47,100.00"><div class="gm gm-fit gm-clear" data-mock="x-header"><div class="gm-stage">
+      <!-- The phone, in 3D (site/hero3d.js, built by tool/build-hero3d.mjs from site-src/hero3d: the camera's path,
+           the fold and the timing are there). The phone itself is /model/duo.bin where the site has it: a real
+           phone's model, laid over the site as it ships and never in this repository (tool/hero3d-model.py);
+           without it, a plain foldable of our own. Its screens are the app in HTML, each piece a layer the script
+           lifts off the glass: the build writes the views of site-src/hero3d/views between the H3 marks below, so
+           change a view there, not here. Until the script has drawn the phone (and with no script) the outer
+           screen lies flat in a plain edge. -->
+      <div class="h3" id="h3">
+        <canvas class="h3-gl"></canvas>
+        <div class="h3-space"><div class="h3-cam">
+          <div class="gm h3-screen" data-screen="cover">
+            <div class="h3-paper"><div class="gm-status gm-status--shown"><span>7:42</span><span class="gm-status__icons"><i></i></span></div></div>
+<!-- H3:cover -->
+<div class="gm h3-pane" data-screen="cover" data-view="thread" data-hero>
+  <div class="h3-l" data-name="header" data-z="2.2" style="left:0px;top:62px;width:412px"><div class="gm gm-fit gm-clear" data-mock="x-header"><div class="gm-stage">
   <header class="gm-head">
     <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
     <button class="gm-head__who" tabindex="-1">
@@ -330,37 +322,31 @@
     </span>
   </header>
 </div></div></div>
-          <div class="layer" style="--z:1.9;left:2.43%;top:10.20%;width:78.16%" data-light="2.43,9.75,78.16" data-dark="2.43,10.20,78.16"><div class="gm gm-fit gm-clear" data-mock="x-link"><div class="gm-stage">
-  <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-bubble">Here's the link <a href="#" tabindex="-1" onclick="return false">https://example.com/<wbr>tickets</a></div></div>
-</div></div></div>
-          <div class="layer" style="--z:1.75;left:5.58%;top:19.73%;width:74.03%" data-light="5.58,19.28,74.03" data-dark="5.58,19.73,74.03"><div class="gm gm-fit gm-clear" data-mock="x-place"><div class="gm-stage">
-  <div class="gm-preview"><div class="gm-preview__site">Hickory Premier</div><div class="gm-preview__title">Movie night: 7:00 PM, Theatre 2</div></div>
-</div></div></div>
-          <div class="layer" style="--z:1.5;left:19.90%;top:32.51%;width:77.91%" data-light="19.90,32.17,77.91" data-dark="19.90,32.51,77.91"><div class="gm gm-fit gm-clear" data-mock="x-out1"><div class="gm-stage">
+  <div class="h3-l" data-name="yours" data-z="1.5" style="left:82px;top:134px;width:321px"><div class="gm gm-fit gm-clear" data-mock="x-out1"><div class="gm-stage">
   <div class="gm-msg gm-msg--out" data-g="top"><div class="gm-bubble">Movie night is still on for tonight right?</div></div>
 </div></div></div>
-          <div class="layer" style="--z:1.5;left:51.46%;top:40.02%;width:46.36%" data-light="50.97,39.74,46.84" data-dark="51.46,40.02,46.36"><div class="gm gm-fit gm-clear" data-mock="x-out2"><div class="gm-stage">
+  <div class="h3-l" data-name="yours-last" data-z="1.5" style="left:212px;top:201px;width:191px"><div class="gm gm-fit gm-clear" data-mock="x-out2"><div class="gm-stage">
   <div class="gm-msg gm-msg--out" data-g="bottom"><div class="gm-bubble">Dinner at mine first?</div></div>
 </div></div></div>
-          <div class="layer" style="--z:1.55;left:53.88%;top:44.51%;width:7.28%" data-light="53.40,44.62,7.28" data-dark="53.88,44.51,7.28"><div class="gm gm-fit gm-clear" data-mock="x-heart"><div class="gm-stage">
+  <div class="h3-l" data-name="heart" data-z="1.9" style="left:222px;top:241px;width:30px"><div class="gm gm-fit gm-clear" data-mock="x-heart"><div class="gm-stage">
   <span class="gm-react">❤️</span>
 </div></div></div>
-          <div class="layer" style="--z:1.35;left:63.11%;top:47.42%;width:33.98%" data-light="63.11,47.42,33.98" data-dark="63.11,47.42,33.98"><div class="gm gm-fit gm-clear" data-mock="x-ticks"><div class="gm-stage">
+  <div class="h3-l" data-name="receipt" data-z="1.15" style="left:260px;top:267px;width:140px"><div class="gm gm-fit gm-clear" data-mock="x-ticks"><div class="gm-stage">
   <div class="gm-msg gm-msg--out"><div class="gm-meta"><span class="gm-meta__lines"><span class="hero-edited">Edited · correction sent</span><span class="gm-row-flex"><span class="hero-state">Delivered · 11:27 PM</span>&nbsp;<svg class="gm-i gm-ticks"><use href="/mock/icons.svg#check-check"/></svg></span></span></div></div>
 </div></div></div>
-          <div class="layer" style="--z:1.2;left:2.43%;top:51.68%;width:78.16%" data-light="2.43,51.57,78.16" data-dark="2.43,51.68,78.16"><div class="gm gm-fit gm-clear" data-mock="x-in"><div class="gm-stage">
+  <div class="h3-l" data-name="theirs" data-z="1.3" style="left:10px;top:305px;width:322px"><div class="gm gm-fit gm-clear" data-mock="x-in"><div class="gm-stage">
   <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-bubble">Sounds good, see you at 7! Bring the projector cable if you still have it</div></div>
 </div></div></div>
-          <div class="layer" style="--z:1.25;left:70.63%;top:59.30%;width:7.52%" data-light="70.63,59.30,7.52" data-dark="70.63,59.30,7.52"><div class="gm gm-fit gm-clear" data-mock="x-laugh"><div class="gm-stage">
+  <div class="h3-l" data-name="laugh" data-z="1.75" style="left:291px;top:373px;width:31px"><div class="gm gm-fit gm-clear" data-mock="x-laugh"><div class="gm-stage">
   <span class="gm-react">😂</span>
 </div></div></div>
-          <div class="layer" style="--z:1.0;left:4.13%;top:68.50%;width:24.03%" data-light="4.13,68.50,24.03" data-dark="4.13,68.50,24.03"><div class="gm gm-fit gm-clear" data-mock="x-emoji"><div class="gm-stage">
+  <div class="h3-l" data-name="emoji" data-z="1.0" style="left:17px;top:411px;width:99px"><div class="gm gm-fit gm-clear" data-mock="x-emoji"><div class="gm-stage">
   <div class="gm-msg gm-msg--in" data-g="solo"><div class="gm-jumbo"><span>🎉</span><span>🍿</span></div></div>
 </div></div></div>
-          <div class="layer" style="--z:0.85;left:2.43%;top:77.47%;width:60.19%" data-light="2.43,77.47,60.19" data-dark="2.43,77.47,60.19"><div class="gm gm-fit gm-clear" data-mock="x-chips"><div class="gm-stage">
+  <div class="h3-l" data-name="replies" data-z="0.8" style="left:10px;top:478px;width:248px"><div class="gm gm-fit gm-clear" data-mock="x-chips"><div class="gm-stage">
   <div class="gm-chips"><button class="gm-chip gm-chip--emoji" tabindex="-1">👍</button><button class="gm-chip" tabindex="-1">Sounds good</button><button class="gm-chip" tabindex="-1">Haha</button></div>
 </div></div></div>
-          <div class="layer" style="--z:0.65;left:2.43%;top:91.70%;width:95.39%" data-light="2.43,91.70,95.39" data-dark="2.43,91.70,95.39"><div class="gm gm-fit gm-clear" data-mock="x-compose"><div class="gm-stage">
+  <div class="h3-l" data-name="composer" data-z="0.6" style="left:10px;top:532px;width:393px"><div class="gm gm-fit gm-clear" data-mock="x-compose"><div class="gm-stage">
   <form class="gm-composer" data-gm-composer="">
     <button type="button" class="gm-composer__btn" tabindex="-1" aria-label="Add"><svg class="gm-i"><use href="/mock/icons.svg#plus"/></svg></button>
     <input class="gm-composer__input" tabindex="-1" placeholder="Text message" aria-label="Message" maxlength="48" autocomplete="off">
@@ -369,7 +355,185 @@
     <button class="gm-composer__send" tabindex="-1" aria-label="Send"><svg class="gm-i"><use href="/mock/icons.svg#arrow-up"/></svg></button>
   </form>
 </div></div></div>
-        </div>
+</div>
+<!-- /H3:cover -->
+          </div>
+          <div class="gm h3-screen" data-screen="inner-l">
+            <div class="h3-paper"><div class="gm-status gm-status--shown"><span>7:42</span></div></div>
+<!-- H3:inner-l -->
+<div class="gm h3-pane" data-screen="inner-l" data-view="plugins">
+  <div class="h3-l" data-name="header" data-z="0.5" style="left:4.79px;top:30px;width:128.7px"><div class="gm-head h3p-head">
+    <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+    <span class="gm-head__title">Discover</span>
+  </div></div>
+  <div class="h3-l" data-name="banner" data-z="0.9" style="left:19.16px;top:89.58px;width:379.69px"><div class="h3p-band">
+    <div class="h3p-band__text">
+      <b class="h3p-band__title">Marketplace</b>
+      <span class="h3p-band__line">Extras for your messages, built in or from other developers, each on this phone alone.</span>
+      <span class="h3p-band__count">31 plugins · 9 added</span>
+    </div>
+  </div></div>
+  <div class="h3-l" data-name="banner-translate" data-z="2.4" style="left:314.57px;top:110.79px;width:63.06px"><div class="h3p-float" style="--h3p-lean:-0.1rad"><span class="h3p-tile" data-hue="purple" style="--h3p-size:57.6px"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M247.15,212.42l-56-112a8,8,0,0,0-14.31,0l-21.71,43.43A88,88,0,0,1,108,126.93,103.65,103.65,0,0,0,135.69,64H160a8,8,0,0,0,0-16H104V32a8,8,0,0,0-16,0V48H32a8,8,0,0,0,0,16h87.63A87.7,87.7,0,0,1,96,116.35a87.74,87.74,0,0,1-19-31,8,8,0,1,0-15.08,5.34A103.63,103.63,0,0,0,84,127a87.55,87.55,0,0,1-52,17,8,8,0,0,0,0,16,103.46,103.46,0,0,0,64-22.08,104.18,104.18,0,0,0,51.44,21.31l-26.6,53.19a8,8,0,0,0,14.31,7.16L148.94,192h70.11l13.79,27.58A8,8,0,0,0,240,224a8,8,0,0,0,7.15-11.58ZM156.94,176,184,121.89,211.05,176Z"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-codes" data-z="2.1" style="left:237.53px;top:131.71px;width:51.68px"><div class="h3p-float" style="--h3p-lean:0.08rad"><span class="h3p-tile" data-hue="amber" style="--h3p-size:48px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-spam" data-z="1.85" style="left:316.87px;top:197.69px;width:46.28px"><div class="h3p-float" style="--h3p-lean:0.12rad"><span class="h3p-tile" data-hue="red" style="--h3p-size:41.6px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#triangle-alert"/></svg></span></div></div>
+  <div class="h3-l" data-name="banner-kinds" data-z="1.6" style="left:275.17px;top:202.12px;width:40.63px"><div class="h3p-float" style="--h3p-lean:0.06rad"><span class="h3p-tile" data-hue="slate" style="--h3p-size:38.4px"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#list-filter"/></svg></span></div></div>
+  <div class="h3-l" data-name="search" data-z="0.7" style="left:19.16px;top:299.69px;width:379.69px"><div class="gm-search h3p-search">
+    <svg class="h3p-search__glass" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
+    <span class="h3p-search__hint">Search the Marketplace</span>
+  </div></div>
+  <div class="h3-l" data-name="filters" data-z="1.0" style="left:19.16px;top:358.05px;width:354.3px"><div class="h3p-chips">
+    <button class="gm-chip h3p-chip" tabindex="-1" aria-pressed="true">All</button>
+    <button class="gm-chip h3p-chip" tabindex="-1">Added<span class="h3p-chip__count">&nbsp;&nbsp;9</span></button>
+    <button class="gm-chip h3p-chip" tabindex="-1">For circles</button>
+    <button class="gm-chip h3p-chip" tabindex="-1">Organise</button>
+  </div></div>
+  <div class="h3-l" data-name="added-heading" data-z="0.4" style="left:19.16px;top:425.1px;width:119.3px"><div class="h3p-shelf"><b class="h3p-shelf__title">Added</b><span class="h3p-shelf__meta">9 of 23</span></div></div>
+  <div class="h3-l" data-name="row" data-z="1.0" style="left:19.16px;top:464.47px;width:379.69px"><div class="h3p-card" style="--h3p-end:62.9px">
+    <span class="h3p-card__name">Codes</span>
+    <span class="h3p-card__line">Sign-in codes in a tab of their own, a tap to copy one.</span>
+  </div></div>
+  <div class="h3-l" data-name="row-tile" data-z="1.9" style="left:33.52px;top:482.93px;width:51.2px"><span class="h3p-tile" data-hue="amber"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div>
+  <div class="h3-l" data-name="row-added" data-z="1.45" style="left:321.58px;top:500.53px;width:62.9px"><span class="h3p-added"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#circle-check"/></svg>Added</span></div>
+</div>
+<div class="gm h3-pane" data-screen="inner-l" data-view="space">
+  <div class="h3-l" data-name="row-dad" data-z="0.5" style="left:9.58px;top:151.52px;width:398.84px"><div class="gm-row h3s-row" role="button" tabindex="-1">
+    <span class="h3s-row__face"></span>
+    <span class="h3s-row__main">
+      <span class="h3s-row__top"><span class="h3s-row__who"><span class="h3s-row__name">Dad</span></span><svg class="gm-i h3s-row__pin" aria-hidden="true"><use href="/mock/icons.svg#pin"/></svg><span class="h3s-row__time">12:33 PM</span></span>
+      <span class="h3s-row__bottom"><span class="h3s-row__snip">Call me when you land</span></span>
+    </span>
+  </div></div>
+  <div class="h3-l" data-name="row-maya" data-z="0.5" style="left:9.58px;top:234.26px;width:398.84px"><div class="gm-row h3s-row is-unread" role="button" tabindex="-1">
+    <span class="h3s-row__face"></span>
+    <span class="h3s-row__main">
+      <span class="h3s-row__top"><span class="h3s-row__who"><span class="h3s-row__name">Maya Chen</span></span><span class="h3s-row__time">5:29 PM</span></span>
+      <span class="h3s-row__bottom"><span class="h3s-row__snip">Sounds good, see you at 7! Bring the projector cable if you still have it</span><span class="h3s-row__dot"></span></span>
+    </span>
+  </div></div>
+  <div class="h3-l" data-name="row-riley" data-z="0.5" style="left:9.58px;top:328.41px;width:398.84px"><div class="gm-row h3s-row" role="button" tabindex="-1">
+    <span class="h3s-row__face"></span>
+    <span class="h3s-row__main">
+      <span class="h3s-row__top"><span class="h3s-row__who"><span class="h3s-row__name">Riley Fox</span><svg class="gm-i h3s-row__lock gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#lock"/></svg></span><span class="h3s-row__time">5:03 PM</span></span>
+      <span class="h3s-row__bottom"><span class="h3s-row__snip">Only our two phones can read this now</span></span>
+    </span>
+  </div></div>
+  <div class="h3-l" data-name="row-group" data-z="0.5" style="left:9.58px;top:411.15px;width:398.84px"><div class="gm-row h3s-row is-unread" role="button" tabindex="-1">
+    <span class="h3s-row__face"></span>
+    <span class="h3s-row__main">
+      <span class="h3s-row__top"><span class="h3s-row__who"><span class="h3s-row__name">Jordan, Sam, Alex</span></span><span class="h3s-row__time">4:41 PM</span></span>
+      <span class="h3s-row__bottom"><span class="h3s-row__snip">Picture</span><span class="h3s-row__dot"></span></span>
+    </span>
+  </div></div>
+  <div class="h3-l" data-name="row-noor" data-z="0.5" style="left:9.58px;top:493.88px;width:398.84px"><div class="gm-row h3s-row" role="button" tabindex="-1">
+    <span class="h3s-row__face"></span>
+    <span class="h3s-row__main">
+      <span class="h3s-row__top"><span class="h3s-row__who"><span class="h3s-row__name">Noor Haddad</span></span><span class="h3s-row__time">3:33 PM</span></span>
+      <span class="h3s-row__bottom"><span class="h3s-row__snip">Encryption key</span></span>
+    </span>
+  </div></div>
+  <div class="h3-l" data-name="search" data-z="0.8" style="left:9.58px;top:38.37px;width:328.5px"><label class="gm-search h3s-search">
+    <svg class="h3s-search__glass" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m11 11 3.5 3.5" stroke-linecap="round"/></svg>
+    <input tabindex="-1" placeholder="Search messages" aria-label="Search messages" autocomplete="off">
+  </label></div>
+  <div class="h3-l" data-name="tabs" data-z="0.8" style="left:9.58px;top:94.95px;width:345.27px"><div class="gm-seg h3s-seg" data-gm-tabs>
+    <span class="gm-seg__thumb"></span>
+    <button class="gm-seg__tab" tabindex="-1" aria-selected="true" aria-label="Messages"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#message-circle"/></svg></button>
+    <button class="gm-seg__tab" tabindex="-1" aria-selected="false" aria-label="Codes"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></button>
+    <button class="gm-seg__tab" tabindex="-1" aria-selected="false" aria-label="Circles"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm0-160a72,72,0,1,0,72,72A72.08,72.08,0,0,0,128,56Zm0,128a56,56,0,1,1,56-56A56.06,56.06,0,0,1,128,184Z"/></svg></button>
+  </div></div>
+  <div class="h3-l" data-name="souls" data-z="1.1" style="left:347.65px;top:38.37px;width:60.77px"><button class="h3s-souls" tabindex="-1" aria-label="0 souls"><span class="h3s-flame"><svg class="gm-i" viewBox="0 0 256 256" aria-hidden="true"><path d="M208,144A80,80,0,0,1,130.06,224,40,40,0,0,0,168,184c0-40-40-64-40-64s-40,24-40,64A40,40,0,0,0,125.94,224,80,80,0,0,1,48,144c0-72,80-120,80-120S208,72,208,144Z" style="opacity:var(--gm-wash,.2)"/><path d="M173.79,51.48a221.25,221.25,0,0,0-41.67-34.34,8,8,0,0,0-8.24,0A221.25,221.25,0,0,0,82.21,51.48C54.59,80.48,40,112.47,40,144a88,88,0,0,0,176,0C216,112.47,201.41,80.48,173.79,51.48ZM96,184c0-27.67,22.53-47.28,32-54.3,9.48,7,32,26.63,32,54.3a32,32,0,0,1-64,0Zm77.27,15.93A47.8,47.8,0,0,0,176,184c0-44-42.09-69.79-43.88-70.86a8,8,0,0,0-8.24,0C122.09,114.21,80,140,80,184a47.8,47.8,0,0,0,2.73,15.93A71.88,71.88,0,0,1,56,144c0-34.41,20.4-63.15,37.52-81.19A216.21,216.21,0,0,1,128,33.54a215.77,215.77,0,0,1,34.48,29.27C193.49,95.5,200,125,200,144A71.88,71.88,0,0,1,173.27,199.93Z"/></svg></span><span class="h3s-souls__count">0</span></button></div>
+  <div class="h3-l" data-name="filter" data-z="1.1" style="left:364.42px;top:94.95px;width:44px"><button class="gm-roundbtn h3s-filter" tabindex="-1" aria-label="Filter"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#funnel"/></svg></button></div>
+  <div class="h3-l" data-name="avatar-dad" data-z="1.3" style="left:23.95px;top:165.89px;width:48px"><span class="gm-av h3s-on-card" data-hue="coral">D</span></div>
+  <div class="h3-l" data-name="avatar-maya" data-z="1.3" style="left:23.95px;top:254.34px;width:48px"><span class="gm-av h3s-on-card" data-hue="magenta">MC</span></div>
+  <div class="h3-l" data-name="avatar-riley" data-z="1.3" style="left:23.95px;top:342.78px;width:48px"><span class="gm-av h3s-on-card" data-hue="indigo">RF</span></div>
+  <div class="h3-l" data-name="avatar-group" data-z="1.3" style="left:23.95px;top:425.52px;width:48px"><span class="gm-av gm-av--pair h3s-pair" style="--pair:48px"><span class="gm-av h3s-on-card" data-hue="slate">JD</span><span class="gm-av" data-hue="blue">SR</span></span></div>
+  <div class="h3-l" data-name="avatar-noor" data-z="1.3" style="left:23.95px;top:508.25px;width:48px"><span class="gm-av h3s-on-card" data-hue="orange">NH</span></div>
+  <div class="h3-l" data-name="unread-maya" data-z="1.6" style="left:382.05px;top:283.54px;width:12px"><i class="h3s-dot"></i></div>
+  <div class="h3-l" data-name="unread-group" data-z="1.6" style="left:382.05px;top:454.72px;width:12px"><i class="h3s-dot"></i></div>
+  <div class="h3-l" data-name="dock" data-z="2.1" style="left:19.16px;top:505.55px;width:379.69px"><nav class="h3s-dock" data-gm-tabs aria-label="Navigation">
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="New"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#plus"/></svg></button>
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="Messages"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#message-square"/></svg></button>
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="Contacts"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#contact-round"/></svg></button>
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="Archive"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#archive"/></svg></button>
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="Marketplace"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M231.69,93.81,217.35,43.6A16.07,16.07,0,0,0,202,32H54A16.07,16.07,0,0,0,38.65,43.6L24.31,93.81A7.94,7.94,0,0,0,24,96v16a40,40,0,0,0,16,32v72a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V144a40,40,0,0,0,16-32V96A7.94,7.94,0,0,0,231.69,93.81ZM54,48H202l11.42,40H42.61Zm98,56v8a24,24,0,0,1-48,0v-8ZM51.06,132.2A24,24,0,0,1,40,112v-8H88v8a24,24,0,0,1-35.12,21.26A7.88,7.88,0,0,0,51.06,132.2ZM200,208H56V151.2a40.57,40.57,0,0,0,8,.8,40,40,0,0,0,32-16,40,40,0,0,0,64,0,40,40,0,0,0,32,16,40.57,40.57,0,0,0,8-.8Zm16-96a24,24,0,0,1-11.07,20.2,8.08,8.08,0,0,0-1.8,1.05A24,24,0,0,1,168,112v-8h48Z"/></svg></button>
+    <button class="gm-dock__btn h3s-dock__btn" tabindex="-1" aria-selected="false" aria-label="Settings"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#settings"/></svg></button>
+  </nav></div>
+  <div class="h3-l" data-name="dock-count" data-z="2.4" style="left:117.56px;top:512.12px;width:21.59px"><span class="h3s-count">2</span></div>
+</div>
+<!-- /H3:inner-l -->
+          </div>
+          <div class="gm h3-screen" data-screen="inner-r">
+            <div class="h3-paper"><div class="gm-status gm-status--shown"><span class="gm-status__icons"><i></i></span></div></div>
+<!-- H3:inner-r -->
+<div class="gm h3-pane" data-screen="inner-r" data-view="plugins">
+  <div class="h3-l" data-name="page-header" data-z="0.5" style="left:4.79px;top:30px;width:106.2px"><div class="gm-head h3p-head">
+    <button class="gm-iconbtn" tabindex="-1" aria-label="Back"><svg class="gm-i"><use href="/mock/icons.svg#arrow-left"/></svg></button>
+    <span class="gm-head__title">Codes</span>
+  </div></div>
+  <div class="h3-l" data-name="hero" data-z="0.9" style="left:19.16px;top:89.58px;width:379.69px"><div class="h3p-hero" data-hue="amber">
+    <svg class="gm-i gm-i--flat h3p-hero__faint" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg>
+    <b class="h3p-hero__name">Codes</b>
+    <span class="h3p-hero__line">Sign-in codes in a tab of their own, a tap to copy one.</span>
+    <span class="h3p-hero__source">Built in</span>
+  </div></div>
+  <div class="h3-l" data-name="hero-tile" data-z="1.2" style="left:43.1px;top:113.52px;width:57.6px"><span class="h3p-glass"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#key-round"/></svg></span></div>
+  <div class="h3-l" data-name="tag-added" data-z="1.15" style="left:43.1px;top:318.55px;width:56.52px"><span class="gm-tag h3p-tag">Added</span></div>
+  <div class="h3-l" data-name="tag-organise" data-z="1.15" style="left:109.2px;top:318.55px;width:69.54px"><span class="gm-tag h3p-tag">Organise</span></div>
+  <div class="h3-l" data-name="remove" data-z="1.3" style="left:19.16px;top:381.48px;width:135px"><button class="gm-pillbtn h3p-ring" tabindex="-1"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z"/></svg>Remove</button></div>
+  <div class="h3-l" data-name="note" data-z="0.4" style="left:19.16px;top:432.66px;width:379.69px"><div class="h3p-quiet">Added. Removed, it does nothing until it is added again, and keeps your choices for it.</div></div>
+  <div class="h3-l" data-name="what-it-does" data-z="0.6" style="left:19.16px;top:499.73px;width:379.69px"><div class="h3p-sec">
+    <b class="h3p-sec__title">What it does</b>
+    <span class="h3p-sec__body">Sign-in codes get a section of their own, newest first. Tap one to copy it.</span>
+  </div></div>
+</div>
+<div class="gm h3-pane" data-screen="inner-r" data-view="space">
+  <div class="h3-l" data-name="split" data-z="0.4" style="left:0px;top:441.16px;width:418px"><i class="h3s-split"></i></div>
+  <div class="h3-l" data-name="people" data-z="0.5" style="left:14.37px;top:86.79px;width:389.26px"><div class="h3s-people">
+    <div class="h3s-person" role="button" tabindex="-1"><span class="h3s-person__face"></span><span class="h3s-person__text"><span class="h3s-person__name h3s-person__name--owner">You</span><span class="h3s-person__state">listening</span></span><span class="h3s-person__mic"></span></div>
+    <i class="h3s-people__rule"></i>
+    <div class="h3s-person" role="button" tabindex="-1"><span class="h3s-person__face"></span><span class="h3s-person__text"><span class="h3s-person__name">Maya Chen</span><span class="h3s-person__state h3s-person__state--talking">talking</span></span><span class="h3s-person__mic"></span></div>
+    <i class="h3s-people__rule"></i>
+    <div class="h3s-person" role="button" tabindex="-1"><span class="h3s-person__face"></span><span class="h3s-person__text"><span class="h3s-person__name">Sam</span><span class="h3s-person__state h3s-person__state--muted">muted</span></span><span class="h3s-person__mic"></span></div>
+  </div></div>
+  <div class="h3-l" data-name="split-grip" data-z="0.6" style="left:191px;top:438.16px;width:36px"><i class="h3s-grip"></i></div>
+  <div class="h3-l" data-name="title" data-z="0.7" style="left:151.72px;top:32px;width:114.56px"><div class="h3s-title"><b class="h3s-title__name">Friday hang</b><span class="h3s-title__sub">3 in voice</span></div></div>
+  <div class="h3-l" data-name="message" data-z="0.7" style="left:51.95px;top:464.97px;width:267.87px"><div class="gm-msg gm-msg--in h3s-msg" data-g="solo"><div class="gm-bubble">Starting the movie in 10, hop in</div></div></div>
+  <div class="h3-l" data-name="message-name" data-z="0.8" style="left:66.31px;top:448.97px;width:61.21px"><span class="h3s-who">Maya Chen</span></div>
+  <div class="h3-l" data-name="composer" data-z="0.9" style="left:14.37px;top:525px;width:389.26px"><form class="gm-composer h3s-composer" data-gm-composer="">
+    <button type="button" class="gm-composer__btn" tabindex="-1" aria-label="Add an attachment"><svg class="gm-i" aria-hidden="true"><use href="/mock/icons.svg#plus"/></svg></button>
+    <input class="gm-composer__input" tabindex="-1" placeholder="Message Friday hang" aria-label="Message Friday hang" maxlength="48" autocomplete="off">
+    <button type="button" class="gm-composer__btn" tabindex="-1" aria-label="Stickers"><svg class="gm-i" aria-hidden="true"><use href="/mock/icons.svg#sticker"/></svg></button>
+    <button type="button" class="gm-composer__btn gm-composer__mic" tabindex="-1" aria-label="Record a voice message"><svg class="gm-i" aria-hidden="true"><use href="/mock/icons.svg#mic"/></svg></button>
+    <button class="gm-composer__send" tabindex="-1" aria-label="Send"><svg class="gm-i" aria-hidden="true"><use href="/mock/icons.svg#arrow-up"/></svg></button>
+  </form></div>
+  <div class="h3-l" data-name="more" data-z="1.0" style="left:365.63px;top:34px;width:38px"><button class="h3s-more" tabindex="-1" aria-label="More: invite, devices, settings, leave"><svg class="gm-i gm-i--flat" viewBox="0 0 256 256" aria-hidden="true"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM128,72a12,12,0,1,0-12-12A12,12,0,0,0,128,72Zm0,112a12,12,0,1,0,12,12A12,12,0,0,0,128,184Z"/></svg></button></div>
+  <div class="h3-l" data-name="mic-you" data-z="1.1" style="left:366.63px;top:109.79px;width:22px"><svg class="gm-i h3s-mic gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#mic"/></svg></div>
+  <div class="h3-l" data-name="mic-maya" data-z="1.1" style="left:365.09px;top:175.25px;width:25.08px"><svg class="gm-i h3s-mic h3s-mic--talking gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#mic"/></svg></div>
+  <div class="h3-l" data-name="mic-sam" data-z="1.1" style="left:366.63px;top:243.79px;width:22px"><svg class="gm-i h3s-mic h3s-mic--muted gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#mic-off"/></svg></div>
+  <div class="h3-l" data-name="face-you" data-z="1.3" style="left:33.37px;top:101.79px;width:38px"><span class="gm-rip" style="--size:38px">M</span></div>
+  <div class="h3-l" data-name="face-maya" data-z="1.3" style="left:33.37px;top:168.79px;width:38px"><span class="gm-rip" style="--size:38px">M</span></div>
+  <div class="h3-l" data-name="face-sam" data-z="1.3" style="left:33.37px;top:235.79px;width:38px"><span class="gm-rip" style="--size:38px">S</span></div>
+  <div class="h3-l" data-name="message-face" data-z="1.3" style="left:14.37px;top:477.84px;width:28px"><span class="gm-av" data-hue="cyan" style="--size:28px">MC</span></div>
+  <div class="h3-l" data-name="talking-ring" data-z="1.5" style="left:10.57px;top:145.99px;width:83.6px"><span class="h3s-reach"><span class="gm-rip h3s-ring is-speaking" data-gm-ripple data-level="0.4" style="--size:38px"></span></span></div>
+  <div class="h3-l" data-name="call-video" data-z="1.6" style="left:23.2px;top:330.16px;width:50px"><button class="h3s-ctl" tabindex="-1"><span class="h3s-ctl__btn"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#video-off"/></svg></span><span class="h3s-ctl__label">Video</span></button></div>
+  <div class="h3-l" data-name="call-deafen" data-z="1.6" style="left:103.6px;top:330.16px;width:50px"><button class="h3s-ctl" tabindex="-1"><span class="h3s-ctl__btn"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#headphones"/></svg></span><span class="h3s-ctl__label">Deafen</span></button></div>
+  <div class="h3-l" data-name="call-share" data-z="1.6" style="left:253.62px;top:330.16px;width:71.56px"><button class="h3s-ctl" tabindex="-1"><span class="h3s-ctl__btn"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#screen-share"/></svg></span><span class="h3s-ctl__label">Share screen</span></button></div>
+  <div class="h3-l" data-name="call-leave" data-z="1.6" style="left:344.8px;top:330.16px;width:50px"><button class="h3s-ctl h3s-ctl--leave" tabindex="-1"><span class="h3s-ctl__btn"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#x"/></svg></span><span class="h3s-ctl__label">Leave</span></button></div>
+  <div class="h3-l" data-name="call-mic" data-z="2.4" style="left:177.52px;top:325.16px;width:62.96px"><button class="h3s-ctl h3s-ctl--mic" tabindex="-1" aria-label="Mute"><span class="h3s-ctl__btn"><svg class="gm-i gm-i--flat" aria-hidden="true"><use href="/mock/icons.svg#mic"/></svg></span><span class="h3s-ctl__title">Mic on</span><span class="h3s-ctl__hint">Tap to mute</span></button></div>
+</div>
+<!-- /H3:inner-r -->
+          </div>
+        </div></div>
+        <svg class="h3-lines"></svg>
+        <div class="h3-tag" data-view="thread" data-for="header" data-at="90,11" data-at-s="74,7" data-pin="0.86,0.5"><span class="u-tag"><svg class="u-i"><use href="#i-lock"/></svg><span>End-to-end encrypted</span></span></div>
+        <div class="h3-tag" data-view="thread" data-for="heart" data-at="14,18" data-at-s="27,22"><span class="u-tag"><svg class="u-i"><use href="#i-heart"/></svg><span>Reactions that land</span></span></div>
+        <div class="h3-tag" data-view="thread" data-for="receipt" data-at="96,46"><span class="u-tag"><svg class="u-i"><use href="#i-check2"/></svg><span>Sent, delivered, read</span></span></div>
+        <div class="h3-tag" data-view="plugins" data-for="banner" data-at="12,9" data-at-s="30,9"><span class="u-tag"><svg class="u-i"><use href="#i-puzzle"/></svg><span>Plugins, a switch each</span></span></div>
+        <div class="h3-tag" data-view="plugins" data-for="hero" data-at="86,6" data-at-s="64,92"><span class="u-tag"><svg class="u-i"><use href="#i-shield"/></svg><span>Each runs on this phone alone</span></span></div>
+        <div class="h3-tag" data-view="plugins" data-for="row" data-at="10,93"><span class="u-tag"><svg class="u-i"><use href="#i-key"/></svg><span>Sign-in codes, sorted</span></span></div>
+        <div class="h3-tag" data-view="space" data-for="talking-ring" data-at="50,5" data-at-s="50,8"><span class="u-tag"><svg class="u-i"><use href="#i-wave"/></svg><span>See who is talking</span></span></div>
+        <div class="h3-tag" data-view="space" data-for="call-mic" data-at="92,93" data-at-s="70,93"><span class="u-tag"><svg class="u-i"><use href="#i-mic"/></svg><span>510 kb/s stereo voice</span></span></div>
+        <div class="h3-tag" data-view="space" data-for="dock" data-at="8,96"><span class="u-tag"><svg class="u-i"><use href="#i-msgs"/></svg><span>Every chat in one list</span></span></div>
       </div>
     </div>
   </div>
@@ -1100,11 +1264,6 @@
   const root = document.documentElement, mode = document.getElementById('mode');
   const shots = () => {
     const light = root.dataset.theme === 'light';
-    // Each piece sits a few pixels differently in the app's light and dark screens (tool/site-layers.py).
-    for (const layer of document.querySelectorAll('.layer[data-light]')) {
-      const [l, t, w] = (light ? layer.dataset.light : layer.dataset.dark).split(',');
-      Object.assign(layer.style, { left: l + '%', top: t + '%', width: w + '%' });
-    }
     mode.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
     document.querySelector('meta[name="theme-color"]').content = light ? '#f5f5f2' : '#040406';
   };
@@ -1115,33 +1274,13 @@
     shots();
   });
 
-  // The exploded view: the conversation stands as a phone, then tips back and lifts apart into its layers; scrolling
-  // lifts them further. Held open and still where motion is asked to be reduced.
-  const stage = document.getElementById('stage'), stack = document.getElementById('stack'), fit = document.getElementById('fit');
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const size = () => fit.style.setProperty('--fit', Math.min(1, (stage.clientHeight - 40) / 720, (stage.clientWidth - 20) / 520).toFixed(3));
-  size();
-  addEventListener('resize', size);
-  const open = () => {
-    stack.classList.add('open');
-    stage.classList.add('open');
-    stack.style.setProperty("--gap", "40px");
-  };
-  // It opens once the app's font has arrived (or after 2.5 s at most), so no piece reflows halfway through.
-  if (still) open();
-  else {
-    const ready = [document.fonts ? document.fonts.ready : Promise.resolve()];
-    Promise.race([Promise.all(ready), new Promise((r) => setTimeout(r, 2500))]).then(() => setTimeout(open, 250));
-  }
-  if (!still) {
-    addEventListener('scroll', () => {
-      if (!stack.classList.contains('open')) return;
-      const more = Math.min(1, scrollY / 500);
-      stack.style.transition = 'none';
-      for (const l of stack.querySelectorAll('.layer')) l.style.transition = 'none';
-      stack.style.setProperty('--gap', (40 + more * 20).toFixed(1) + 'px');
-    }, { passive: true });
-  }
+  // The hero's phone (site/hero3d.js draws it). Until it has, the page shows the outer screen flat: at the size the
+  // phone will first be drawn, so nothing jumps when it arrives.
+  const stage = document.getElementById('stage'), h3 = document.getElementById('h3');
+  const fit = () => h3.style.setProperty('--h3-fit', Math.min((stage.clientWidth * 0.8) / 436, (stage.clientHeight * 0.86) / 624).toFixed(4));
+  fit();
+  addEventListener('resize', fit);
 </script>
+<script type="module" src="/hero3d.js"></script>
 </body>
 </html>

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:glacier/glacier.dart';
 
+import '../../art/loading_logo.dart';
 import '../../kit/settings_type.dart' show pageText;
 import '../updates.dart';
 import '../window_size.dart';
@@ -12,7 +13,7 @@ import '../window_size.dart';
 typedef SplashStep = ({String words, double? progress});
 
 /// The launch splash (Matt, 2026-11-20: "add a checking for updates splash window that shows before the app launches
-/// and load the app on this screen too similar to how discord does on launch"): a small window with the logo, which
+/// and load the app on this screen too similar to how discord does on launch"): a small window with the logo turning, which
 /// looks for a newer version first, brings it down and restarts into it where there is one, and otherwise loads the
 /// app, then gives the window its size back and opens the app in it (lib/desktop/main.dart). The window is made small
 /// by the Mac's and Windows' own halves (MainFlutterWindow.swift, splash.cpp) before anything is drawn.
@@ -20,6 +21,10 @@ class LaunchSplash extends StatelessWidget {
   const LaunchSplash({super.key, required this.step});
 
   final ValueListenable<SplashStep> step;
+
+  /// How wide the logo is: 248 of the window's 300 (MainFlutterWindow.swift, splash.cpp), and 212 high of its 340,
+  /// with the words and a download's bar under it.
+  static const logoWidth = '15.5rem';
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +35,12 @@ class LaunchSplash extends StatelessWidget {
         child: ValueListenableBuilder<SplashStep>(
           valueListenable: step,
           builder: (context, now, _) => Column(mainAxisSize: MainAxisSize.min, children: [
-            // The logo by itself, in the page's ink: out of the black tile it stood in, and twice the size it had in it
-            // (Matt, 2026-11-27: "remove the uplink logo from the squircle on the loading page. and make it twice as
-            // large"). The mark is white on nothing (tool/app_icon.py), so the ink is what shows it on a light page.
-            _Breathing(
-              child: Image.asset('assets/art/ghost-mark.png', width: t.lenOf('8rem'), height: t.lenOf('8rem'), filterQuality: FilterQuality.medium, color: t.color('app-ink'), colorBlendMode: BlendMode.srcIn, excludeFromSemantics: true),
-            ),
-            // Less under it than the tile had: the mark's own square has room below the bubble.
+            // The logo turning (lib/art/loading_logo.dart; Matt, 2026-11-27: "update the update screen to use the
+            // loading_logo.mp4 and make it larger so it is visible"), in the page's ink and by itself: no tile behind
+            // it ("remove the uplink logo from the squircle on the loading page"). It is most of the window across
+            // ([logoWidth] of the splash's 300), where the still mark it replaces was 128 with air round it; it
+            // turns by itself, so nothing breathes it larger and smaller any more.
+            LoadingLogo(key: const ValueKey('splash-logo'), width: t.lenOf(logoWidth), color: t.color('app-ink')),
             SizedBox(height: t.space(2)),
             Text(
               now.words,
@@ -56,28 +60,6 @@ class LaunchSplash extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The logo growing and shrinking a little while the splash waits, as Discord's does.
-class _Breathing extends StatefulWidget {
-  const _Breathing({required this.child});
-  final Widget child;
-
-  @override
-  State<_Breathing> createState() => _BreathingState();
-}
-
-class _BreathingState extends State<_Breathing> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ScaleTransition(scale: Tween(begin: 0.94, end: 1.04).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)), child: widget.child);
 }
 
 /// Looks for an update while [step] says so: a few seconds for the look itself, as long as a download takes once one

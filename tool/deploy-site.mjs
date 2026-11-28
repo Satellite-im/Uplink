@@ -39,7 +39,7 @@
  * domain's DNS points at the box. The box counts logins: this spends one.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -50,6 +50,11 @@ const HEADERS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.u
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_DIR = join(ROOT, 'site');
+// What the site serves but this repository does not hold, because the repository is public and these are not ours to
+// pass on: a folder outside the checkout, laid over site/ as it ships (its paths are in site/'s .gitignore, so a
+// checkout it was laid over is no dirtier for it). Today it is the hero's phone, model/duo.bin, which
+// tool/hero3d-model.py packs; without it the hero draws a plain phone of its own. UPLINK_SITE_PRIVATE says another folder.
+const SITE_PRIVATE = process.env.UPLINK_SITE_PRIVATE || join(homedir(), '.config', 'mattssoftware', 'uplink-site-private');
 const SITE = '/opt/ghost-sms-site';
 const RELEASE = '/opt/ghost-sms-release';
 const APK = 'ghost-messaging.apk';
@@ -574,6 +579,12 @@ const both = () => {
     rmSync(stage, { recursive: true, force: true });
   }
 };
+if (existsSync(SITE_PRIVATE)) {
+  cpSync(SITE_PRIVATE, SITE_DIR, { recursive: true });
+  console.log(`+ ${SITE_PRIVATE} laid over the site: ${readdirSync(SITE_PRIVATE, { recursive: true }).filter((f) => statSync(join(SITE_PRIVATE, String(f))).isFile()).join(', ')}`);
+} else {
+  console.log(`! no ${SITE_PRIVATE}: the site ships without the hero's phone model, and draws its own plain phone there.`);
+}
 const site = APP_BUILD ? both() : tarball(SITE_DIR, 64 * 1024 * 1024);
 const env = loadEnv(BOX_ENV_KEYS);
 const box = openBox(env, boxSshOptions({ connectTimeout: 20, knownHosts: join(homedir(), '.ssh', 'known_hosts') }));

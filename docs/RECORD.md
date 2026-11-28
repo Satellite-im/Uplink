@@ -33,6 +33,30 @@ github.com/InfamousVague/ghost-gmessages-sidecar).
 
 ## What it does
 
+- **The logo turns while the app loads: larger on a computer's splash, and a splash on the phone** (0.12.54;
+  Matt, 2026-11-27: "update the update screen to use the loading_logo.mp4 and make it larger so it is visible, also
+  on the phone add a loading splash screen using the same logo"). His film (`art/loading_logo.mp4`: the white logo
+  turning on black, four seconds that come back to where they began) is carried as a picture that moves
+  (`assets/art/loading-logo.webp`, 0.95 MB, made by `tool/loading_logo.sh`: a film takes a player, and black is the
+  page only in the dark) and drawn by `LoadingLogo` (`lib/art/loading_logo.dart`) in the page's ink, taking how
+  bright each dot of the picture is for how much of the ink it gets. What packing the film small leaves in its black
+  (a part or two in 255, a speckle on a black page) is cut to nothing. A device asked to move less gets the film's
+  first frame and no more (`loading-logo-still.webp`), drawn the same way: the tinted still mark it replaces left a
+  faint line round its place on the emulator. **On a computer** (`lib/desktop/ui/launch_splash.dart`) it is 248
+  across in the splash's 300 where the still mark was 128, and the logo in it about 217 where it was 115; nothing
+  breathes it larger and smaller any more. **On a phone** (`lib/ui/launch_gate.dart`, put up first thing in
+  `lib/main.dart`) the logo turns on a black or a white page, by the phone's own setting as Android's launch window
+  is, from the app's first frame. The app goes under it the moment it has read what it starts with and draws its
+  first page there, and the splash fades away over it once the logo has been seen for 0.9 s. That is counted from
+  the frame the logo is first in, on a screen that has drawn: Android starts the app's Dart while it is still making
+  the screen, so on the emulator the reading took 0.33 s and the first frame came 0.31 s in, and a splash timed from
+  the app's start was seen for a blink. Opened to show something (a notification pressed, something shared in, a
+  link), the app says so and the splash goes as soon as the app has settled under it: gone 0.55 s in on the
+  emulator, against 1.5 s. It is never up more than 3 s after the app is under it. **What it costs:** about a
+  second on a start from nothing (a process Android had closed); an app still in memory opens as it did.
+  **Tried** in tests (`test/loading_logo_test.dart`, `test/launch_gate_test.dart`, `test/launch_splash_test.dart`,
+  with pictures in `build/themes`) and, for the phone, on the Android emulator, light, dark and with animations
+  off; not on a real phone, not on an iPhone, and not in a computer's own window.
 - **The launch splash: the logo by itself** (0.12.53; Matt, 2026-11-27: "remove the uplink logo from the squircle on
   the loading page. and make it twice as large"). The small window a computer's app opens with while it looks for an
   update (`lib/desktop/ui/launch_splash.dart`) drew `GhostLogo`, the mark at 4rem inside a black tile of 5rem. It

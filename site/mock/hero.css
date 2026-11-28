@@ -1,11 +1,10 @@
-/* The hero's exploded conversation (site/mock/hero.html): each layer's box, and where its piece sits in it.
+/* The hero's exploded conversation (site-src/hero3d/views/thread.html, the phone's outer screen): each layer's box,
+   and where its piece sits in it.
    Boxes are the layer pictures' sizes in app pixels (site/shots/x-*.webp / 2); the two themes' pictures differ by a
    pixel or two in a few, so light has its own --h there. Places are measured off the pictures. */
 
 /* --- the boxes ----------------------------------------------------------------------------------------------- */
 .gm-fit[data-mock='x-header']  { --w: 412; --h: 58; }
-.gm-fit[data-mock='x-link']    { --w: 322; --h: 72; }
-.gm-fit[data-mock='x-place']   { --w: 305; --h: 67; }
 .gm-fit[data-mock='x-out1']    { --w: 321; --h: 65.5; }
 .gm-fit[data-mock='x-out2']    { --w: 191; --h: 43; }
 .gm-fit[data-mock='x-heart']   { --w: 30;  --h: 27; }
@@ -15,7 +14,6 @@
 .gm-fit[data-mock='x-emoji']   { --w: 99;  --h: 52; }
 .gm-fit[data-mock='x-chips']   { --w: 248; --h: 41; }
 .gm-fit[data-mock='x-compose'] { --w: 393; --h: 54; }
-html[data-theme='light'] .gm-fit[data-mock='x-link']  { --h: 71; }
 html[data-theme='light'] .gm-fit[data-mock='x-out1']  { --h: 67.5; }
 html[data-theme='light'] .gm-fit[data-mock='x-out2']  { --w: 193; --h: 45.5; }
 html[data-theme='light'] .gm-fit[data-mock='x-heart'] { --h: 26; }
@@ -33,9 +31,6 @@ html[data-theme='light'] .gm-fit[data-mock='x-in']    { --h: 69; }
 [data-mock='x-header'] .gm-head__who { padding: 0; gap: 10px; margin-right: 6px; }
 [data-mock='x-header'] .gm-head__name { margin-top: 0; }
 [data-mock='x-header'] .gm-head__sub { font-size: var(--fs-xs); line-height: 1.25; color: var(--ink-3); }
-[data-mock='x-link'] .gm-msg { left: 4px; top: 4px; }
-[data-mock='x-place'] .gm-preview { left: 4.5px; top: 3.5px; width: 296px; max-width: none; padding: 10.5px var(--s3) 12.5px; }
-[data-mock='x-place'] .gm-preview__title { font-weight: 700; }
 [data-mock='x-out1'] .gm-msg { right: 4.5px; top: 3.5px; }
 /* Right-anchored at its own width, so a longer message sent from the composer grows to the left, as the app's do. */
 [data-mock='x-out2'] .gm-msg { right: 4.5px; top: -2px; width: max-content; max-width: 313px; }

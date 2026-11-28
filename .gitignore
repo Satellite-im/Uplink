@@ -72,3 +72,6 @@ app.*.map.json
 /build/p2p/
 # The link helper's proof (native/link-check, a crate of its own): cargo's output. The helper itself is built into build/.
 /native/link-check/target/
+
+# The phone the landing page's hero shows: a model that is not ours to pass on (tool/hero3d-model.py).
+/site/model/

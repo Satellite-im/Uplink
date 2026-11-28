@@ -1,0 +1,102 @@
+/* The hero's phone, in 3D (site/hero3d.js, built from site-src/hero3d by tool/build-hero3d.mjs).
+
+   The phone is a foldable of our own, drawn in WebGL; what is on its screens is the app, drawn in HTML by the kit
+   (site/mock/mock.css), laid over the phone with the same camera. A screen is a PANE at the app's own size, and
+   every piece of the app on it is a LAYER of that pane, placed in the app's pixels. Flat, the layers make the
+   screen; lifted apart along the screen's own normal they are the exploded view.
+
+     <div class="gm h3-pane" data-screen="cover">            the outer screen, 412 by 600
+       <div class="h3-l" data-name="header" data-z="2.1" style="left:0;top:28px;width:412px"> … kit markup … </div>
+       …
+     </div>
+
+   data-screen   cover (412 x 600), inner-l and inner-r (418 x 588 each: the two halves of the inner screen, which
+                 is one 836 x 588 page; the tokens there are worked out at the kit's computer width, as the app's
+                 are on a wide window).
+   data-z        how far the layer lifts, in steps of the gap: 0.4 (just off the glass) to 2.4 (nearest the eye).
+   data-name     what it is, for the callouts and the notes.
+   A layer stands by itself: its place and width are its own (left, top, width in px), nothing of it reaches past
+   its pane or into the pane's rounded corners, and it needs no neighbour to lay itself out. */
+
+.h3-pane {
+  position: relative;
+  flex: none;
+  width: calc(var(--pw) * 1px);
+  height: calc(var(--ph) * 1px);
+  background: var(--paper);
+  overflow: hidden;
+  text-align: left;
+}
+.h3-pane[data-screen='cover'] { --pw: 412; --ph: 600; }
+.gm.h3-pane[data-screen='inner-l'], .gm.h3-pane[data-screen='inner-r'] { --pw: 418; --ph: 588; --gm-vw: 750; }
+.h3-l { position: absolute; }
+
+/* --- the stage -------------------------------------------------------------------------------------------------
+   .h3 is the box the phone is drawn in: wider and taller than the stage it stands in, so a layer lifted off the
+   glass has room, and through which a click falls to the page except where a screen is. */
+.h3 { position: absolute; inset: -5rem -9rem; pointer-events: none; }
+@media (max-width: 940px) { .h3 { inset: -3rem -1.25rem; } }
+.h3-gl, .h3-space, .h3-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The phone has the page's own white line round it, as its stickers have. */
+.h3-gl { display: block; opacity: 0; transition: opacity .5s ease; filter: drop-shadow(0 0 .7px rgba(255, 255, 255, .85)); }
+.h3-live .h3-gl { opacity: 1; }
+.h3-cam { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+
+/* A screen: its glass's page (.h3-paper, which stays on the phone), then the app's panes over it. */
+.h3-screen { --thud: 0; }
+.gm.h3-screen[data-screen^='inner'] { --gm-vw: 750; }
+.h3-paper { position: absolute; inset: 0; background: var(--paper); overflow: hidden; }
+/* Every screen is a D: square where it meets the hinge, round at the open side (Matt, 2026-11-27: "the radii should
+   be D shaped"). The outer screen's hinge is at its left. */
+.h3-screen[data-screen='cover'] .h3-paper { border-radius: 4px 52px 52px 4px;
+  /* The camera is under the glass in the corner away from the hinge: the page stops round it. */
+  -webkit-mask: radial-gradient(circle at 369.6px 42.8px, transparent 15.6px, #000 16.4px); mask: radial-gradient(circle at 369.6px 42.8px, transparent 15.6px, #000 16.4px); }
+.h3-screen[data-screen='inner-l'] .h3-paper { border-radius: 48px 0 0 48px; }
+.h3-screen[data-screen='inner-r'] .h3-paper { border-radius: 0 48px 48px 0; box-shadow: inset 1px 0 0 var(--rule, rgba(128, 128, 128, .2)); }
+/* The glass answers when the layers land on it. */
+.h3-paper::after { content: ''; position: absolute; inset: 0; background: var(--ink); opacity: calc(var(--thud) * .14); pointer-events: none; }
+.h3-paper .gm-status { height: 26px; padding: 6px 34px 0; font-size: 12.5px; }
+/* On the outer screen the clock and the battery are level with the camera, the battery just short of it. */
+.h3-screen[data-screen='cover'] .h3-paper .gm-status { position: absolute; left: 0; top: 30px; width: 346px; padding: 0 0 0 30px; font-size: 14px; }
+.h3-screen[data-screen='inner-l'] .h3-paper .gm-status { padding-right: 0; }
+.h3-screen[data-screen='inner-r'] .h3-paper .gm-status { padding-left: 0; justify-content: flex-end; }
+
+/* Before the phone is drawn, and with no script at all: the outer screen lying flat, in a plain edge. */
+.h3:not(.h3-live) .h3-cam { display: grid; place-items: center; }
+.h3:not(.h3-live) .h3-screen { display: none; }
+.h3:not(.h3-live) .h3-screen[data-screen='cover'] { display: block; position: relative; width: 412px; height: 600px; transform: scale(var(--h3-fit, .8)); border-radius: 4px 52px 52px 4px; box-shadow: 0 0 0 12px #060607, 0 0 0 13.5px rgba(255, 255, 255, .5), 0 40px 80px -20px rgba(0, 0, 0, .7); }
+.h3:not(.h3-live) .h3-pane { position: absolute; inset: 0; background: transparent; }
+.h3:not(.h3-live) .h3-tag { display: none; }
+
+/* In 3D: the camera's box holds every screen in one space; a screen holds its panes, a pane its layers. Nothing
+   between the camera and a layer may clip, fade or filter, or the layers would be pressed flat again; a screen or a
+   pane is faded only while its layers lie on the glass. */
+.h3-live .h3-cam { transform-style: preserve-3d; }
+.h3-live .h3-screen { position: absolute; left: 0; top: 0; transform-style: preserve-3d; pointer-events: auto; visibility: hidden; }
+.h3-live .h3-pane { position: absolute; inset: 0; width: auto; height: auto; background: transparent; overflow: visible; transform-style: preserve-3d; visibility: hidden; }
+.h3-live .h3-pane.is-on { visibility: inherit; }
+.h3-live .h3-paper, .h3-live .h3-l, .h3-ghost { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.h3-live .h3-l { will-change: transform; transition: filter .5s ease; }
+/* A screen lighting or going dark: what is on it is blurred and a little large, inside the screen's own shape. Its
+   layers lie on the glass then, so pressing them flat (which a clip and a filter do) changes nothing. */
+.h3-live .h3-screen.is-waking { overflow: hidden; }
+.h3-screen[data-screen='cover'].is-waking { border-radius: 4px 52px 52px 4px; }
+.h3-screen[data-screen='inner-l'].is-waking { border-radius: 48px 0 0 48px; }
+.h3-screen[data-screen='inner-r'].is-waking { border-radius: 0 48px 48px 0; }
+.h3-live .h3-screen.is-waking > .h3-pane { filter: blur(var(--wake-blur, 0px)); transform: scale(var(--wake-size, 1)); }
+/* Lifted, a layer has an edge of light and a shadow under it. */
+.h3-live .h3-pane.is-out > .h3-l { filter: drop-shadow(0 0 .7px color-mix(in srgb, var(--ink) 50%, transparent)) drop-shadow(0 20px 24px rgba(0, 0, 0, .4)); }
+/* And leaves its outline on the glass. */
+.h3-ghost { position: absolute; box-sizing: border-box; border: 1px dashed color-mix(in srgb, var(--ink) 26%, transparent); background: color-mix(in srgb, var(--ink) 3.5%, transparent); opacity: 0; transition: opacity .5s ease; pointer-events: none; }
+.h3-pane.is-out > .h3-ghost { opacity: 1; }
+/* With no WebGL there is no phone under the screens: each has an edge of its own. */
+.h3-flat .h3-paper { box-shadow: 0 0 0 12px #060607, 0 0 0 13.5px rgba(255, 255, 255, .45); }
+
+/* The callouts: a tag beside a lifted layer, and a line to it (placed by the script as the phone turns). */
+.h3-tag { position: absolute; left: 0; top: 0; z-index: 3; opacity: 0; pointer-events: none; will-change: transform, opacity; }
+.h3-tag .u-tag { background: rgba(13, 13, 18, .86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: var(--u-ink); font-weight: 700; white-space: nowrap; }
+.h3-tag .u-i { width: .95rem; height: .95rem; }
+.h3-lines { overflow: visible; pointer-events: none; z-index: 2; }
+.h3-lines line { stroke: var(--u-ink); stroke-width: 1; opacity: 0; }
+.h3-lines circle { fill: var(--u-ink); opacity: 0; }
+@media (max-width: 520px) { .h3-tag .u-tag { font-size: .78rem; } }
